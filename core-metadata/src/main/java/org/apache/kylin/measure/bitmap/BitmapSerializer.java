@@ -18,11 +18,11 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
     private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;

@@ -87,7 +87,6 @@ public class OneMoreByteVLongDimEncTest {
         }
     }
 
- 
     private void testEncodeDecode(OneMoreByteVLongDimEnc enc, long value) {
         String valueStr = "" + value;
         byte[] buf = new byte[enc.getLengthOfEncoding()];
@@ -95,7 +94,6 @@ public class OneMoreByteVLongDimEncTest {
         String decode = enc.decode(buf, 0, buf.length);
         Assert.assertEquals(valueStr, decode);
     }
-
 
     @Test
     public void testSerDes() {

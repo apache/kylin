@@ -73,7 +73,8 @@ public class AccessController extends BasicController {
      */
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
-    public List<AccessEntryResponse> grant(@PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
+    public List<AccessEntryResponse> grant(@PathVariable String type, @PathVariable String uuid,
+            @RequestBody AccessRequest accessRequest) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Sid sid = accessService.getSid(accessRequest.getSid(), accessRequest.isPrincipal());
         Permission permission = AclPermissionFactory.getPermission(accessRequest.getPermission());
@@ -89,7 +90,8 @@ public class AccessController extends BasicController {
      */
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
-    public List<AccessEntryResponse> update(@PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
+    public List<AccessEntryResponse> update(@PathVariable String type, @PathVariable String uuid,
+            @RequestBody AccessRequest accessRequest) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Permission permission = AclPermissionFactory.getPermission(accessRequest.getPermission());
         Acl acl = accessService.update(ae, accessRequest.getAccessEntryId(), permission);
@@ -103,7 +105,8 @@ public class AccessController extends BasicController {
      * @param accessRequest
      */
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE }, produces = { "application/json" })
-    public List<AccessEntryResponse> revoke(@PathVariable String type, @PathVariable String uuid, AccessRequest accessRequest) {
+    public List<AccessEntryResponse> revoke(@PathVariable String type, @PathVariable String uuid,
+            AccessRequest accessRequest) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.revoke(ae, accessRequest.getAccessEntryId());
 

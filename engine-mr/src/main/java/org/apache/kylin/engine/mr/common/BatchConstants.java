@@ -62,7 +62,6 @@ public interface BatchConstants {
     String CFG_OUTPUT_STATISTICS = "statistics";
     String CFG_OUTPUT_PARTITION = "partition";
 
-
     /**
      * command line ARGuments
      */

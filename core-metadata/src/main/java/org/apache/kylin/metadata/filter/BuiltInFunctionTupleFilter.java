@@ -54,7 +54,8 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     }
 
     public BuiltInFunctionTupleFilter(String name, FilterOperatorEnum filterOperatorEnum) {
-        super(Lists.<TupleFilter> newArrayList(), filterOperatorEnum == null ? FilterOperatorEnum.FUNCTION : filterOperatorEnum);
+        super(Lists.<TupleFilter> newArrayList(),
+                filterOperatorEnum == null ? FilterOperatorEnum.FUNCTION : filterOperatorEnum);
         this.methodParams = Lists.newArrayList();
 
         if (name != null) {
@@ -91,7 +92,8 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
         if (columnContainerFilter instanceof ColumnTupleFilter)
             methodParams.set(colPosition, (Serializable) input);
         else if (columnContainerFilter instanceof BuiltInFunctionTupleFilter)
-            methodParams.set(colPosition, (Serializable) ((BuiltInFunctionTupleFilter) columnContainerFilter).invokeFunction(input));
+            methodParams.set(colPosition,
+                    (Serializable) ((BuiltInFunctionTupleFilter) columnContainerFilter).invokeFunction(input));
         return method.invoke(null, (Object[]) (methodParams.toArray()));
     }
 
@@ -128,7 +130,8 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
                 if (!Primitives.isWrapperType(clazz))
                     methodParams.add(constVal);
                 else
-                    methodParams.add((Serializable) clazz.cast(clazz.getDeclaredMethod("valueOf", String.class).invoke(null, constVal)));
+                    methodParams.add((Serializable) clazz
+                            .cast(clazz.getDeclaredMethod("valueOf", String.class).invoke(null, constVal)));
             } catch (Exception e) {
                 logger.warn("Reflection failed for methodParams. ", e);
                 isValidFunc = false;

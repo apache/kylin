@@ -71,7 +71,8 @@ public class OLAPJoinRule extends ConverterRule {
             // return null;
         }
         if (!info.isEqui()) {
-            newRel = new OLAPFilterRel(cluster, newRel.getTraitSet(), newRel, info.getRemaining(cluster.getRexBuilder()));
+            newRel = new OLAPFilterRel(cluster, newRel.getTraitSet(), newRel,
+                    info.getRemaining(cluster.getRexBuilder()));
         }
         return newRel;
     }

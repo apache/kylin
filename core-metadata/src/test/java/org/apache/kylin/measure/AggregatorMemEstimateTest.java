@@ -84,11 +84,8 @@ public class AggregatorMemEstimateTest extends LocalFileMetadataTestCase {
         decimalMax.aggregate(decimal);
         decimalSum.aggregate(decimal);
 
-        return Lists.newArrayList(
-                longMin, longMax, longSum,
-                doubleMin, doubleMax, doubleSum,
-                decimalMin, decimalMax, decimalSum
-        );
+        return Lists.newArrayList(longMin, longMax, longSum, doubleMin, doubleMax, doubleSum, decimalMin, decimalMax,
+                decimalSum);
     }
 
     private String getAggregatorName(Class<? extends MeasureAggregator> clazz) {
@@ -111,7 +108,8 @@ public class AggregatorMemEstimateTest extends LocalFileMetadataTestCase {
         }
         bitmapAggregator.aggregate(bitmapCounter);
 
-        ExtendedColumnMeasureType extendedColumnType = new ExtendedColumnMeasureType("EXTENDED_COLUMN", DataType.getType("extendedcolumn(100)"));
+        ExtendedColumnMeasureType extendedColumnType = new ExtendedColumnMeasureType("EXTENDED_COLUMN",
+                DataType.getType("extendedcolumn(100)"));
         MeasureAggregator<ByteArray> extendedColumnAggregator = extendedColumnType.newAggregator();
         extendedColumnAggregator.aggregate(new ByteArray(100));
 
@@ -123,7 +121,8 @@ public class AggregatorMemEstimateTest extends LocalFileMetadataTestCase {
         System.out.printf("%40s %10s %10s\n", "Class", "Estimate", "Actual");
         for (MeasureAggregator aggregator : aggregators) {
             String clzName = getAggregatorName(aggregator.getClass());
-            System.out.printf("%40s %10d %10d\n", clzName, aggregator.getMemBytesEstimate(), meter.measureDeep(aggregator));
+            System.out.printf("%40s %10d %10d\n", clzName, aggregator.getMemBytesEstimate(),
+                    meter.measureDeep(aggregator));
         }
     }
 

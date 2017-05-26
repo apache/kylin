@@ -46,7 +46,9 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
         {
             String sql = "select ( date '2001-09-28' + interval floor(2) month) from test_kylin_fact group by ( date '2001-09-28' + interval floor(2) month)";
             String s = QueryUtil.massageSql(sql, 0, 0);
-            Assert.assertEquals("select ( date '2001-09-28' + interval '2' month) from test_kylin_fact group by ( date '2001-09-28' + interval '2' month)", s);
+            Assert.assertEquals(
+                    "select ( date '2001-09-28' + interval '2' month) from test_kylin_fact group by ( date '2001-09-28' + interval '2' month)",
+                    s);
         }
     }
 

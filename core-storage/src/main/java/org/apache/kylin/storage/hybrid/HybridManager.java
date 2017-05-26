@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -41,10 +40,13 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
+
 /**
  */
 public class HybridManager implements IRealizationProvider {
-    public static final Serializer<HybridInstance> HYBRID_SERIALIZER = new JsonSerializer<HybridInstance>(HybridInstance.class);
+    public static final Serializer<HybridInstance> HYBRID_SERIALIZER = new JsonSerializer<HybridInstance>(
+            HybridInstance.class);
 
     private static final Logger logger = LoggerFactory.getLogger(HybridManager.class);
 
@@ -112,7 +114,8 @@ public class HybridManager implements IRealizationProvider {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                throws IOException {
             if ("hybrid".equals(entity)) {
                 String hybridName = cacheKey;
 
@@ -121,7 +124,8 @@ public class HybridManager implements IRealizationProvider {
                 else
                     reloadHybridInstance(hybridName);
 
-                for (ProjectInstance prj : ProjectManager.getInstance(config).findProjects(RealizationType.HYBRID, hybridName)) {
+                for (ProjectInstance prj : ProjectManager.getInstance(config).findProjects(RealizationType.HYBRID,
+                        hybridName)) {
                     broadcaster.notifyProjectSchemaUpdate(prj.getName());
                 }
             } else if ("cube".equals(entity)) {
@@ -151,7 +155,8 @@ public class HybridManager implements IRealizationProvider {
         List<HybridInstance> result = Lists.newArrayList();
         for (HybridInstance hybridInstance : hybridMap.values()) {
             for (RealizationEntry realizationEntry : hybridInstance.getRealizationEntries()) {
-                if (realizationEntry.getType() == type && realizationEntry.getRealization().equalsIgnoreCase(realizationName)) {
+                if (realizationEntry.getType() == type
+                        && realizationEntry.getRealization().equalsIgnoreCase(realizationName)) {
                     result.add(hybridInstance);
                 }
             }

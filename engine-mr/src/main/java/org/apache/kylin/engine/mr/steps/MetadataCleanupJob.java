@@ -47,7 +47,8 @@ import com.google.common.collect.Sets;
 public class MetadataCleanupJob extends AbstractHadoopJob {
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused metadata").create("delete");
+    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false)
+            .withDescription("Delete the unused metadata").create("delete");
 
     protected static final Logger logger = LoggerFactory.getLogger(MetadataCleanupJob.class);
 
@@ -100,7 +101,8 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         List<String> toDeleteResource = Lists.newArrayList();
 
         // two level resources, snapshot tables and cube statistics
-        for (String resourceRoot : new String[] { ResourceStore.SNAPSHOT_RESOURCE_ROOT, ResourceStore.CUBE_STATISTICS_ROOT }) {
+        for (String resourceRoot : new String[] { ResourceStore.SNAPSHOT_RESOURCE_ROOT,
+                ResourceStore.CUBE_STATISTICS_ROOT }) {
             NavigableSet<String> snapshotTables = getStore().listResources(resourceRoot);
 
             if (snapshotTables != null) {
@@ -149,7 +151,9 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         for (ExecutablePO executable : allExecutable) {
             long lastModified = executable.getLastModified();
             ExecutableOutputPO output = executableDao.getJobOutput(executable.getUuid());
-            if (System.currentTimeMillis() - lastModified > TIME_THREADSHOLD_FOR_JOB && (ExecutableState.SUCCEED.toString().equals(output.getStatus()) || ExecutableState.DISCARDED.toString().equals(output.getStatus()))) {
+            if (System.currentTimeMillis() - lastModified > TIME_THREADSHOLD_FOR_JOB
+                    && (ExecutableState.SUCCEED.toString().equals(output.getStatus())
+                            || ExecutableState.DISCARDED.toString().equals(output.getStatus()))) {
                 toDeleteResource.add(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executable.getUuid());
                 toDeleteResource.add(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executable.getUuid());
 
@@ -160,7 +164,8 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         }
 
         if (toDeleteResource.size() > 0) {
-            logger.info("The following resources have no reference or is too old, will be cleaned from metadata store: \n");
+            logger.info(
+                    "The following resources have no reference or is too old, will be cleaned from metadata store: \n");
 
             for (String s : toDeleteResource) {
                 logger.info(s);
@@ -175,7 +180,8 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
     }
 
     public static void main(String[] args) throws Exception {
-        logger.warn("org.apache.kylin.engine.mr.steps.MetadataCleanupJob is deprecated, use org.apache.kylin.tool.MetadataCleanupJob instead");
+        logger.warn(
+                "org.apache.kylin.engine.mr.steps.MetadataCleanupJob is deprecated, use org.apache.kylin.tool.MetadataCleanupJob instead");
 
         int exitCode = ToolRunner.run(new MetadataCleanupJob(), args);
         System.exit(exitCode);

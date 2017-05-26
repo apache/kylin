@@ -37,8 +37,10 @@ public class Results {
             return null;
         } else {
             for (Cell c : cells) {
-                if (Bytes.compareTo(cf, 0, cf.length, c.getFamilyArray(), c.getFamilyOffset(), c.getFamilyLength()) == 0 && //
-                        Bytes.compareTo(cq, 0, cq.length, c.getQualifierArray(), c.getQualifierOffset(), c.getQualifierLength()) == 0) {
+                if (Bytes.compareTo(cf, 0, cf.length, c.getFamilyArray(), c.getFamilyOffset(), c.getFamilyLength()) == 0
+                        && //
+                        Bytes.compareTo(cq, 0, cq.length, c.getQualifierArray(), c.getQualifierOffset(),
+                                c.getQualifierLength()) == 0) {
                     return ByteBuffer.wrap(c.getValueArray(), c.getValueOffset(), c.getValueLength());
                 }
             }

@@ -48,7 +48,8 @@ public abstract class RoutingRule {
             String before = getPrintableText(candidates);
             rule.apply(candidates);
             String after = getPrintableText(candidates);
-            logger.info("Applying rule: " + rule + ", realizations before: " + before + ", realizations after: " + after);
+            logger.info(
+                    "Applying rule: " + rule + ", realizations before: " + before + ", realizations after: " + after);
         }
     }
 
@@ -76,7 +77,8 @@ public abstract class RoutingRule {
      */
     public static void registerRule(RoutingRule rule, int applyOrder) {
         if (applyOrder > rules.size()) {
-            logger.warn("apply order " + applyOrder + "  is larger than rules size " + rules.size() + ", will put the new rule at the end");
+            logger.warn("apply order " + applyOrder + "  is larger than rules size " + rules.size()
+                    + ", will put the new rule at the end");
             rules.add(rule);
         }
 

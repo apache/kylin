@@ -54,7 +54,8 @@ public class ZipFileUtils {
             zipInputStream = new ZipInputStream(new FileInputStream(zipFileName));
             ZipEntry zipEntry = null;
             while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                logger.info("decompressing " + zipEntry.getName() + " is directory:" + zipEntry.isDirectory() + " available: " + zipInputStream.available());
+                logger.info("decompressing " + zipEntry.getName() + " is directory:" + zipEntry.isDirectory()
+                        + " available: " + zipInputStream.available());
 
                 File temp = new File(outputFolder, zipEntry.getName());
                 if (zipEntry.isDirectory()) {
@@ -76,7 +77,8 @@ public class ZipFileUtils {
         }
     }
 
-    private static void compressDirectoryToZipfile(String rootDir, String sourceDir, ZipOutputStream out) throws IOException {
+    private static void compressDirectoryToZipfile(String rootDir, String sourceDir, ZipOutputStream out)
+            throws IOException {
         File[] files = new File(sourceDir).listFiles();
         if (files == null)
             return;
@@ -84,7 +86,9 @@ public class ZipFileUtils {
             if (sourceFile.isDirectory()) {
                 compressDirectoryToZipfile(rootDir, sourceDir + normDir(sourceFile.getName()), out);
             } else {
-                ZipEntry entry = new ZipEntry(normDir(StringUtils.isEmpty(rootDir) ? sourceDir : sourceDir.replace(rootDir, "")) + sourceFile.getName());
+                ZipEntry entry = new ZipEntry(
+                        normDir(StringUtils.isEmpty(rootDir) ? sourceDir : sourceDir.replace(rootDir, ""))
+                                + sourceFile.getName());
                 entry.setTime(sourceFile.lastModified());
                 out.putNextEntry(entry);
                 FileInputStream in = new FileInputStream(sourceDir + sourceFile.getName());

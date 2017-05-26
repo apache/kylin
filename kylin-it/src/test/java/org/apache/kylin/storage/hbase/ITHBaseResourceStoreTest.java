@@ -18,6 +18,9 @@
 
 package org.apache.kylin.storage.hbase;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -29,9 +32,6 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
 
@@ -59,7 +59,8 @@ public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
         String path = "/cube/_test_large_cell.json";
         String largeContent = "THIS_IS_A_LARGE_CELL";
         StringEntity content = new StringEntity(largeContent);
-        String oldUrl = ResourceStoreTest.replaceMetadataUrl(kylinConfig, ResourceStoreTest.mockUrl("hbase", kylinConfig));
+        String oldUrl = ResourceStoreTest.replaceMetadataUrl(kylinConfig,
+                ResourceStoreTest.mockUrl("hbase", kylinConfig));
         HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
         Configuration hconf = store.getConnection().getConfiguration();
         int origSize = Integer.parseInt(hconf.get("hbase.client.keyvalue.maxsize", "10485760"));

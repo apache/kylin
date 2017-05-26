@@ -54,14 +54,17 @@ public class SaveStatisticsStep extends AbstractExecutable {
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        CubeSegment newSegment = CubingExecutableUtil.findSegment(context, CubingExecutableUtil.getCubeName(this.getParams()), CubingExecutableUtil.getSegmentId(this.getParams()));
+        CubeSegment newSegment = CubingExecutableUtil.findSegment(context,
+                CubingExecutableUtil.getCubeName(this.getParams()),
+                CubingExecutableUtil.getSegmentId(this.getParams()));
         KylinConfig kylinConf = newSegment.getConfig();
 
         ResourceStore rs = ResourceStore.getStore(kylinConf);
         try {
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             Path statisticsDir = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()));
-            Path statisticsFilePath = HadoopUtil.getFilterOnlyPath(fs, statisticsDir, BatchConstants.CFG_OUTPUT_STATISTICS);
+            Path statisticsFilePath = HadoopUtil.getFilterOnlyPath(fs, statisticsDir,
+                    BatchConstants.CFG_OUTPUT_STATISTICS);
             if (statisticsFilePath == null) {
                 throw new IOException("fail to find the statistics file in base dir: " + statisticsDir);
             }
@@ -111,7 +114,8 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 double mapperOverlapRatio = cubeStats.getMapperOverlapRatioOfFirstBuild();
                 double overlapThreshold = kylinConf.getCubeAlgorithmAutoThreshold();
                 logger.info("mapperNumber for " + seg + " is " + mapperNumber + " and threshold is " + mapperNumLimit);
-                logger.info("mapperOverlapRatio for " + seg + " is " + mapperOverlapRatio + " and threshold is " + overlapThreshold);
+                logger.info("mapperOverlapRatio for " + seg + " is " + mapperOverlapRatio + " and threshold is "
+                        + overlapThreshold);
 
                 // in-mem cubing is good when
                 // 1) the cluster has enough mapper slots to run in parallel

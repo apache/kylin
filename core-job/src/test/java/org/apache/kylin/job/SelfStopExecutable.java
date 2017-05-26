@@ -38,11 +38,11 @@ public class SelfStopExecutable extends BaseTestExecutable {
         try {
             for (int i = 0; i < 20; i++) {
                 sleepOneSecond();
-                
+
                 if (isDiscarded())
                     return new ExecuteResult(ExecuteResult.State.STOPPED, "stopped");
             }
-                
+
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } finally {
             doingWork = false;

@@ -17,11 +17,11 @@
 */
 package org.apache.kylin.measure.bitmap;
 
-import org.apache.kylin.measure.ParamAsMeasureCount;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.kylin.measure.ParamAsMeasureCount;
 
 /**
  * BitmapIntersectDistinctCountAggFunc is an UDAF used for calculating the intersection of two or more bitmaps
@@ -99,4 +99,3 @@ public class BitmapIntersectDistinctCountAggFunc implements ParamAsMeasureCount 
         return result.result();
     }
 }
-

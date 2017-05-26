@@ -18,18 +18,18 @@
 
 package org.apache.kylin.measure.bitmap;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.nio.BufferOverflowException;
+import java.nio.ByteBuffer;
+
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.nio.BufferOverflowException;
-import java.nio.ByteBuffer;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class BitmapSerializerTest extends LocalFileMetadataTestCase {
     @BeforeClass

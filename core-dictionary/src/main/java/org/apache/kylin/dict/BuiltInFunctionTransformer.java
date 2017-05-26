@@ -70,7 +70,8 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
             }
         } else if (tupleFilter instanceof LogicalTupleFilter) {
             @SuppressWarnings("unchecked")
-            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) tupleFilter.getChildren().listIterator();
+            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) tupleFilter.getChildren()
+                    .listIterator();
             while (childIterator.hasNext()) {
                 TupleFilter transformed = transform(childIterator.next());
                 if (transformed != null) {
@@ -92,7 +93,8 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
         if (dict == null)
             return null;
 
-        CompareTupleFilter translated = new CompareTupleFilter(builtInFunctionTupleFilter.isReversed() ? FilterOperatorEnum.NOTIN : FilterOperatorEnum.IN);
+        CompareTupleFilter translated = new CompareTupleFilter(
+                builtInFunctionTupleFilter.isReversed() ? FilterOperatorEnum.NOTIN : FilterOperatorEnum.IN);
         translated.addChild(new ColumnTupleFilter(columnRef));
 
         try {
@@ -118,10 +120,12 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private TupleFilter translateCompareTupleFilter(CompareTupleFilter compTupleFilter) {
-        if (compTupleFilter.getFunction() == null || (!(compTupleFilter.getFunction() instanceof BuiltInFunctionTupleFilter)))
+        if (compTupleFilter.getFunction() == null
+                || (!(compTupleFilter.getFunction() instanceof BuiltInFunctionTupleFilter)))
             return null;
 
-        BuiltInFunctionTupleFilter builtInFunctionTupleFilter = (BuiltInFunctionTupleFilter) compTupleFilter.getFunction();
+        BuiltInFunctionTupleFilter builtInFunctionTupleFilter = (BuiltInFunctionTupleFilter) compTupleFilter
+                .getFunction();
 
         if (!builtInFunctionTupleFilter.isValid())
             return null;
@@ -131,7 +135,8 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
         if (dict == null)
             return null;
 
-        CompareTupleFilter translated = new CompareTupleFilter(builtInFunctionTupleFilter.isReversed() ? FilterOperatorEnum.NOTIN : FilterOperatorEnum.IN);
+        CompareTupleFilter translated = new CompareTupleFilter(
+                builtInFunctionTupleFilter.isReversed() ? FilterOperatorEnum.NOTIN : FilterOperatorEnum.IN);
         translated.addChild(new ColumnTupleFilter(columnRef));
 
         try {
@@ -142,7 +147,8 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
                 Class clazz = Primitives.wrap(computedVal.getClass());
                 Object targetVal = compTupleFilter.getFirstValue();
                 if (Primitives.isWrapperType(clazz))
-                    targetVal = clazz.cast(clazz.getDeclaredMethod("valueOf", String.class).invoke(null, compTupleFilter.getFirstValue()));
+                    targetVal = clazz.cast(clazz.getDeclaredMethod("valueOf", String.class).invoke(null,
+                            compTupleFilter.getFirstValue()));
 
                 int comp = ((Comparable) computedVal).compareTo(targetVal);
                 boolean compResult = false;

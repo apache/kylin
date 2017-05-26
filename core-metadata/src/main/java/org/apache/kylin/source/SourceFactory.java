@@ -33,7 +33,7 @@ public class SourceFactory {
         Map<Integer, String> impls = KylinConfig.getInstanceFromEnv().getSourceEngines();
         sources = new ImplementationSwitch<>(impls, ISource.class);
     }
-    
+
     public static ISource getDefaultSource() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         return sources.get(config.getDefaultSource());

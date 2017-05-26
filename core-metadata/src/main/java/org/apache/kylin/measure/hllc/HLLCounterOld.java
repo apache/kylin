@@ -294,7 +294,7 @@ public class HLLCounterOld implements Serializable, Comparable<HLLCounterOld> {
     /*public void writeRegistersArray(final ByteBuffer out) {
         out.put(this.registers);
     }
-
+    
     public void readRegistersArray(ByteBuffer in) {
         in.get(registers, 0, m);
         singleBucket = Integer.MIN_VALUE;
@@ -362,7 +362,8 @@ public class HLLCounterOld implements Serializable, Comparable<HLLCounterOld> {
             double er2 = Math.round(rate * 2 * 10000) / 100D;
             double er3 = Math.round(rate * 3 * 10000) / 100D;
             long size = Math.round(Math.pow(2, p));
-            System.out.println("HLLC" + p + ",\t" + size + " bytes,\t68% err<" + er + "%" + ",\t95% err<" + er2 + "%" + ",\t99.7% err<" + er3 + "%");
+            System.out.println("HLLC" + p + ",\t" + size + " bytes,\t68% err<" + er + "%" + ",\t95% err<" + er2 + "%"
+                    + ",\t99.7% err<" + er3 + "%");
         }
     }
 

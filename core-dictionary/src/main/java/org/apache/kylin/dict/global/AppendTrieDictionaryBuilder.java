@@ -18,17 +18,17 @@
 
 package org.apache.kylin.dict.global;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.dict.AppendTrieDictionary;
-import org.apache.kylin.dict.BytesConverter;
-import org.apache.kylin.dict.StringBytesConverter;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.TreeMap;
 
-import static com.google.common.base.Preconditions.checkState;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.dict.AppendTrieDictionary;
+import org.apache.kylin.dict.BytesConverter;
+import org.apache.kylin.dict.StringBytesConverter;
 
 public class AppendTrieDictionaryBuilder {
 
@@ -47,7 +47,8 @@ public class AppendTrieDictionaryBuilder {
     private AppendDictNode curNode;
 
     public AppendTrieDictionaryBuilder(String resourceDir, int maxEntriesPerSlice) throws IOException {
-        this.baseDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/GlobalDict" + resourceDir + "/";
+        this.baseDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/GlobalDict" + resourceDir
+                + "/";
         this.workingDir = this.baseDir + "/working";
         this.maxEntriesPerSlice = maxEntriesPerSlice;
         init();
@@ -83,7 +84,8 @@ public class AppendTrieDictionaryBuilder {
             curNode = new AppendDictNode(new byte[0], false);
             sliceFileMap.put(AppendDictSliceKey.START_KEY, null);
         }
-        checkState(sliceFileMap.firstKey().equals(AppendDictSliceKey.START_KEY), "first key should be \"\", but got \"%s\"", sliceFileMap.firstKey());
+        checkState(sliceFileMap.firstKey().equals(AppendDictSliceKey.START_KEY),
+                "first key should be \"\", but got \"%s\"", sliceFileMap.firstKey());
 
         AppendDictSliceKey nextKey = sliceFileMap.floorKey(AppendDictSliceKey.wrap(valueBytes));
 
@@ -121,7 +123,8 @@ public class AppendTrieDictionaryBuilder {
             flushCurrentNode();
         }
 
-        GlobalDictMetadata metadata = new GlobalDictMetadata(baseId, this.maxId, this.maxValueLength, this.nValues, this.bytesConverter, sliceFileMap);
+        GlobalDictMetadata metadata = new GlobalDictMetadata(baseId, this.maxId, this.maxValueLength, this.nValues,
+                this.bytesConverter, sliceFileMap);
         store.commit(workingDir, metadata);
 
         AppendTrieDictionary dict = new AppendTrieDictionary();
@@ -158,7 +161,8 @@ public class AppendTrieDictionaryBuilder {
                 }
             } else {
                 // otherwise, split the current node into two
-                AppendDictNode c = new AppendDictNode(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
+                AppendDictNode c = new AppendDictNode(BytesUtil.subarray(node.part, i, n), node.isEndOfValue,
+                        node.children);
                 c.id = node.id;
                 node.reset(BytesUtil.subarray(node.part, 0, i), true);
                 node.addChild(c);
@@ -170,7 +174,8 @@ public class AppendTrieDictionaryBuilder {
         // if partially matched the current, split the current node, add the new
         // value, make a 3-way
         if (i < n) {
-            AppendDictNode c1 = new AppendDictNode(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
+            AppendDictNode c1 = new AppendDictNode(BytesUtil.subarray(node.part, i, n), node.isEndOfValue,
+                    node.children);
             c1.id = node.id;
             AppendDictNode c2 = addNodeMaybeOverflow(value, j, nn);
             node.reset(BytesUtil.subarray(node.part, 0, i), false);

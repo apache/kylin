@@ -57,7 +57,8 @@ public class AdminControllerV2 extends BasicController {
     @Qualifier("cubeMgmtService")
     private CubeService cubeMgmtService;
 
-    @RequestMapping(value = "/env", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/env", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getEnvV2(@RequestHeader("Accept-Language") String lang) throws ConfigurationException {
         MsgPicker.setMsg(lang);
@@ -65,7 +66,8 @@ public class AdminControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, adminService.getEnv(), "");
     }
 
-    @RequestMapping(value = "/config", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/config", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getConfigV2(@RequestHeader("Accept-Language") String lang) throws IOException {
         MsgPicker.setMsg(lang);
@@ -73,13 +75,15 @@ public class AdminControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, adminService.getConfigAsString(), "");
     }
 
-    @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse cubeMetricsV2(@RequestHeader("Accept-Language") String lang, MetricsRequest request) {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeMgmtService.calculateMetrics(request), "");
     }
 
-    @RequestMapping(value = "/storage", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/storage", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public void cleanupStorageV2(@RequestHeader("Accept-Language") String lang) {
         MsgPicker.setMsg(lang);
@@ -87,9 +91,11 @@ public class AdminControllerV2 extends BasicController {
         adminService.cleanupStorage();
     }
 
-    @RequestMapping(value = "/config", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/config", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void updateKylinConfigV2(@RequestHeader("Accept-Language") String lang, @RequestBody UpdateConfigRequest updateConfigRequest) {
+    public void updateKylinConfigV2(@RequestHeader("Accept-Language") String lang,
+            @RequestBody UpdateConfigRequest updateConfigRequest) {
         MsgPicker.setMsg(lang);
 
         KylinConfig.getInstanceFromEnv().setProperty(updateConfigRequest.getKey(), updateConfigRequest.getValue());

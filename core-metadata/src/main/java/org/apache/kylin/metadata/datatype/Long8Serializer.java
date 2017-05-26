@@ -18,9 +18,9 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import org.apache.kylin.common.util.BytesUtil;
-
 import java.nio.ByteBuffer;
+
+import org.apache.kylin.common.util.BytesUtil;
 
 /**
  */
@@ -33,7 +33,6 @@ public class Long8Serializer extends DataTypeSerializer<Long> {
     public void serialize(Long value, ByteBuffer out) {
         BytesUtil.writeLong(value, out);
     }
-
 
     @Override
     public Long deserialize(ByteBuffer in) {

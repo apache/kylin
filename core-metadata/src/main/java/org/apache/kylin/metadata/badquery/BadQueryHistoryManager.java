@@ -33,7 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BadQueryHistoryManager {
-    public static final Serializer<BadQueryHistory> BAD_QUERY_INSTANCE_SERIALIZER = new JsonSerializer<>(BadQueryHistory.class);
+    public static final Serializer<BadQueryHistory> BAD_QUERY_INSTANCE_SERIALIZER = new JsonSerializer<>(
+            BadQueryHistory.class);
     private static final Logger logger = LoggerFactory.getLogger(BadQueryHistoryManager.class);
 
     private static final ConcurrentMap<KylinConfig, BadQueryHistoryManager> CACHE = new ConcurrentHashMap<>();
@@ -77,7 +78,8 @@ public class BadQueryHistoryManager {
     }
 
     public BadQueryHistory getBadQueriesForProject(String project) throws IOException {
-        BadQueryHistory badQueryHistory = getStore().getResource(getResourcePathForProject(project), BadQueryHistory.class, BAD_QUERY_INSTANCE_SERIALIZER);
+        BadQueryHistory badQueryHistory = getStore().getResource(getResourcePathForProject(project),
+                BadQueryHistory.class, BAD_QUERY_INSTANCE_SERIALIZER);
         if (badQueryHistory == null) {
             badQueryHistory = new BadQueryHistory(project);
         }
@@ -117,12 +119,16 @@ public class BadQueryHistoryManager {
         return badQueryHistory;
     }
 
-    public BadQueryHistory addEntryToProject(String sql, long startTime, String adj, float runningSecs, String server, String threadName, String user, String project) throws IOException {
-        return addEntryToProject(new BadQueryEntry(sql, adj, startTime, runningSecs, server, threadName, user), project);
+    public BadQueryHistory addEntryToProject(String sql, long startTime, String adj, float runningSecs, String server,
+            String threadName, String user, String project) throws IOException {
+        return addEntryToProject(new BadQueryEntry(sql, adj, startTime, runningSecs, server, threadName, user),
+                project);
     }
 
-    public BadQueryHistory updateEntryToProject(String sql, long startTime, String adj, float runningSecs, String server, String threadName, String user, String project) throws IOException {
-        return updateEntryToProject(new BadQueryEntry(sql, adj, startTime, runningSecs, server, threadName, user), project);
+    public BadQueryHistory updateEntryToProject(String sql, long startTime, String adj, float runningSecs,
+            String server, String threadName, String user, String project) throws IOException {
+        return updateEntryToProject(new BadQueryEntry(sql, adj, startTime, runningSecs, server, threadName, user),
+                project);
     }
 
     public void removeBadQueryHistory(String project) throws IOException {

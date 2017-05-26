@@ -132,7 +132,8 @@ public class LikeMatchers {
             return new OnePercentSignLikeMatcher(patternStr);
         } else if (count == 2 && patternStr.startsWith(PERCENT_SIGN) && patternStr.endsWith(PERCENT_SIGN)) {
             return new TwoPercentSignLikeMatcher(patternStr);
-        } else if (count == 3 && patternStr.startsWith(PERCENT_SIGN) && patternStr.endsWith(PERCENT_SIGN) && !patternStr.contains(PERCENT_SIGN + PERCENT_SIGN)) {
+        } else if (count == 3 && patternStr.startsWith(PERCENT_SIGN) && patternStr.endsWith(PERCENT_SIGN)
+                && !patternStr.contains(PERCENT_SIGN + PERCENT_SIGN)) {
             return new ThreePercentSignLikeMatcher(patternStr);
         } else {
             return new DefaultLikeMatcher(patternStr);

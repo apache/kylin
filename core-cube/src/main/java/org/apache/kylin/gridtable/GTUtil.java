@@ -81,8 +81,9 @@ public class GTUtil {
             final Set<TblColRef> unevaluatableColumnCollector) {
 
         IFilterCodeSystem<ByteArray> filterCodeSystem = wrap(info.codeSystem.getComparator());
-        
-        GTConvertDecorator decorator = new GTConvertDecorator(unevaluatableColumnCollector, colMapping, info, encodeConstants);
+
+        GTConvertDecorator decorator = new GTConvertDecorator(unevaluatableColumnCollector, colMapping, info,
+                encodeConstants);
 
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, decorator, filterCodeSystem);
         return TupleFilterSerializer.deserialize(bytes, filterCodeSystem);
@@ -122,14 +123,15 @@ public class GTUtil {
         protected final GTInfo info;
         protected final boolean encodeConstants;
 
-        public GTConvertDecorator(Set<TblColRef> unevaluatableColumnCollector, Map<TblColRef, Integer> colMapping, GTInfo info, boolean encodeConstants) {
+        public GTConvertDecorator(Set<TblColRef> unevaluatableColumnCollector, Map<TblColRef, Integer> colMapping,
+                GTInfo info, boolean encodeConstants) {
             this.unevaluatableColumnCollector = unevaluatableColumnCollector;
             this.colMapping = colMapping;
             this.info = info;
             this.encodeConstants = encodeConstants;
             buf = ByteBuffer.allocate(info.getMaxColumnLength());
         }
-        
+
         protected int mapCol(TblColRef col) {
             Integer i = colMapping.get(col);
             return i == null ? -1 : i;
@@ -143,7 +145,8 @@ public class GTUtil {
             // In case of NOT(unEvaluatableFilter), we should immediately replace it as TRUE,
             // Otherwise, unEvaluatableFilter will later be replace with TRUE and NOT(unEvaluatableFilter)
             // will always return FALSE.
-            if (filter.getOperator() == TupleFilter.FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
+            if (filter.getOperator() == TupleFilter.FilterOperatorEnum.NOT
+                    && !TupleFilter.isEvaluableRecursively(filter)) {
                 TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
                 return ConstantTupleFilter.TRUE;
             }

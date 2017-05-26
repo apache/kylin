@@ -188,7 +188,8 @@ public class DFSFileTableReader implements TableReader {
         if (expectedColumnNumber > 0) {
             for (String delim : DETECT_DELIMS) {
                 if (StringSplitter.split(line, delim).length == expectedColumnNumber) {
-                    logger.info("Auto detect delim to be '" + delim + "', split line to " + expectedColumnNumber + " columns -- " + line);
+                    logger.info("Auto detect delim to be '" + delim + "', split line to " + expectedColumnNumber
+                            + " columns -- " + line);
                     return delim;
                 }
             }

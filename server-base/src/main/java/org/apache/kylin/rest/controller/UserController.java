@@ -76,7 +76,8 @@ public class UserController extends BasicController {
         return null;
     }
 
-    @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = { "application/json" })
+    @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = {
+            "application/json" })
     public List<String> getAuthorities() throws IOException {
         return userService.listUserAuthorities();
     }

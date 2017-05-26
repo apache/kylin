@@ -49,7 +49,9 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
     public void serialize(BigDecimal value, ByteBuffer out) {
         if (value.scale() > type.getScale()) {
             if (avoidVerbose++ % 10000 == 0) {
-                logger.warn("value's scale has exceeded the " + type.getScale() + ", cut it off, to ensure encoded value do not exceed maxLength " + maxLength + " times:" + (avoidVerbose));
+                logger.warn("value's scale has exceeded the " + type.getScale()
+                        + ", cut it off, to ensure encoded value do not exceed maxLength " + maxLength + " times:"
+                        + (avoidVerbose));
             }
             value = value.setScale(type.getScale(), BigDecimal.ROUND_HALF_EVEN);
         }

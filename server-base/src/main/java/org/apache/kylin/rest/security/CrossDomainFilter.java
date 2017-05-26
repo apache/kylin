@@ -52,11 +52,14 @@ public class CrossDomainFilter implements Filter {
      * javax.servlet.ServletResponse, javax.servlet.FilterChain)
      */
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
         if (KylinConfig.getInstanceFromEnv().isWebCrossDomainEnabled()) {
             ((HttpServletResponse) response).addHeader("Access-Control-Allow-Origin", "*");
-            ((HttpServletResponse) response).addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            ((HttpServletResponse) response).addHeader("Access-Control-Allow-Headers", "Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With, Accept, Authorization");
+            ((HttpServletResponse) response).addHeader("Access-Control-Allow-Methods",
+                    "GET, POST, PUT, DELETE, OPTIONS");
+            ((HttpServletResponse) response).addHeader("Access-Control-Allow-Headers",
+                    "Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With, Accept, Authorization");
         }
 
         chain.doFilter(request, response);

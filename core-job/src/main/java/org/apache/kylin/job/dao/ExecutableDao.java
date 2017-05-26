@@ -42,7 +42,8 @@ import com.google.common.collect.Lists;
 public class ExecutableDao {
 
     private static final Serializer<ExecutablePO> JOB_SERIALIZER = new JsonSerializer<ExecutablePO>(ExecutablePO.class);
-    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(ExecutableOutputPO.class);
+    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(
+            ExecutableOutputPO.class);
     private static final Logger logger = LoggerFactory.getLogger(ExecutableDao.class);
     private static final ConcurrentMap<KylinConfig, ExecutableDao> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableDao>();
 
@@ -106,7 +107,8 @@ public class ExecutableDao {
 
     public List<ExecutableOutputPO> getJobOutputs() throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, ExecutableOutputPO.class,
+                    JOB_OUTPUT_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -115,7 +117,8 @@ public class ExecutableDao {
 
     public List<ExecutableOutputPO> getJobOutputs(long timeStart, long timeEndExclusive) throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, timeStart, timeEndExclusive, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, timeStart, timeEndExclusive,
+                    ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -133,7 +136,8 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs(long timeStart, long timeEndExclusive) throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, timeStart, timeEndExclusive, ExecutablePO.class, JOB_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, timeStart, timeEndExclusive,
+                    ExecutablePO.class, JOB_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);

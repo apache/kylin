@@ -18,16 +18,16 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.apache.kylin.common.util.ByteBufferOutputStream;
-import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
-import org.roaringbitmap.buffer.MutableRoaringBitmap;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+
+import org.apache.kylin.common.util.ByteBufferOutputStream;
+import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
+import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 /**
  * A {@link BitmapCounter} based on roaring bitmap.
@@ -134,8 +134,7 @@ public class RoaringBitmapCounter implements BitmapCounter, Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        return (obj instanceof RoaringBitmapCounter) &&
-                bitmap.equals(((RoaringBitmapCounter) obj).bitmap);
+        return (obj instanceof RoaringBitmapCounter) && bitmap.equals(((RoaringBitmapCounter) obj).bitmap);
     }
 
     @Override

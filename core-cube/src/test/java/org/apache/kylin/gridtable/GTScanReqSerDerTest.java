@@ -88,7 +88,8 @@ public class GTScanReqSerDerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testGTInfo() {
-        CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube("test_kylin_cube_with_slr_ready");
+        CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getCube("test_kylin_cube_with_slr_ready");
         CubeSegment segment = cube.getFirstSegment();
 
         Cuboid baseCuboid = Cuboid.getBaseCuboid(cube.getDescriptor());

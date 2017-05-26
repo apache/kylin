@@ -41,12 +41,13 @@ public class ZookeeperUtil {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         final String serverList = conf.get(HConstants.ZOOKEEPER_QUORUM);
         final String port = conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-        return StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
-            @Nullable
-            @Override
-            public String apply(String input) {
-                return input + ":" + port;
-            }
-        }), ",");
+        return StringUtils
+                .join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
+                    @Nullable
+                    @Override
+                    public String apply(String input) {
+                        return input + ":" + port;
+                    }
+                }), ",");
     }
 }

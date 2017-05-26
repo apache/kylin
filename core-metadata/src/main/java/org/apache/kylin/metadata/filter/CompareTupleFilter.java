@@ -105,7 +105,8 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
     }
 
     private boolean needSwapOperator() {
-        return operator == FilterOperatorEnum.LT || operator == FilterOperatorEnum.GT || operator == FilterOperatorEnum.LTE || operator == FilterOperatorEnum.GTE;
+        return operator == FilterOperatorEnum.LT || operator == FilterOperatorEnum.GT
+                || operator == FilterOperatorEnum.LTE || operator == FilterOperatorEnum.GTE;
     }
 
     @Override
@@ -177,7 +178,7 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
             else if (operator == FilterOperatorEnum.ISNULL)
                 return false;
         }
-        
+
         if (cs.isNull(firstCondValue)) {
             return false;
         }
@@ -225,7 +226,8 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
     @Override
     public boolean isEvaluable() {
         return (column != null || (function != null && function.isEvaluable())) //
-                && (!conditionValues.isEmpty() || operator == FilterOperatorEnum.ISNOTNULL || operator == FilterOperatorEnum.ISNULL) //
+                && (!conditionValues.isEmpty() || operator == FilterOperatorEnum.ISNOTNULL
+                        || operator == FilterOperatorEnum.ISNULL) //
                 && secondColumn == null;
     }
 
@@ -235,10 +237,13 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
             if (this.children != null && this.children.size() == 2 && //
                     this.children.get(0) instanceof ConstantTupleFilter && //
                     this.children.get(1) instanceof ConstantTupleFilter) {
-                if (((ConstantTupleFilter) this.children.get(0)).getValues().equals(((ConstantTupleFilter) this.children.get(1)).getValues())) {
-                    return this.operator == FilterOperatorEnum.EQ ? CompareResultType.AlwaysTrue : CompareResultType.AlwaysFalse;
+                if (((ConstantTupleFilter) this.children.get(0)).getValues()
+                        .equals(((ConstantTupleFilter) this.children.get(1)).getValues())) {
+                    return this.operator == FilterOperatorEnum.EQ ? CompareResultType.AlwaysTrue
+                            : CompareResultType.AlwaysFalse;
                 } else {
-                    return this.operator == FilterOperatorEnum.EQ ? CompareResultType.AlwaysFalse : CompareResultType.AlwaysTrue;
+                    return this.operator == FilterOperatorEnum.EQ ? CompareResultType.AlwaysFalse
+                            : CompareResultType.AlwaysTrue;
                 }
             }
         }

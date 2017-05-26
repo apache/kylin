@@ -43,22 +43,23 @@ public class HLLCMeasureTypeTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testIngest() {
-        MeasureType<HLLCounter> mtype = (MeasureType<HLLCounter>) MeasureTypeFactory.create(HLLCMeasureType.FUNC_COUNT_DISTINCT, DataType.getType("hllc(10)"));
+        MeasureType<HLLCounter> mtype = (MeasureType<HLLCounter>) MeasureTypeFactory
+                .create(HLLCMeasureType.FUNC_COUNT_DISTINCT, DataType.getType("hllc(10)"));
         MeasureIngester<HLLCounter> ingester = mtype.newIngester();
         HLLCounter hllc;
-        
+
         hllc = ingester.valueOf(new String[] { null }, null, null);
         assertEquals(0, hllc.getCountEstimate());
-        
+
         hllc = ingester.valueOf(new String[] { null, null }, null, null);
         assertEquals(0, hllc.getCountEstimate());
-        
+
         hllc = ingester.valueOf(new String[] { "" }, null, null);
         assertEquals(1, hllc.getCountEstimate());
-        
+
         hllc = ingester.valueOf(new String[] { "", null }, null, null);
         assertEquals(1, hllc.getCountEstimate());
-        
+
         hllc = ingester.valueOf(new String[] { "abc" }, null, null);
         assertEquals(1, hllc.getCountEstimate());
     }

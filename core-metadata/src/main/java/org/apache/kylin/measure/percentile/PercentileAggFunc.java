@@ -20,7 +20,7 @@ package org.apache.kylin.measure.percentile;
 
 import org.apache.kylin.measure.ParamAsMeasureCount;
 
-public class PercentileAggFunc implements ParamAsMeasureCount{
+public class PercentileAggFunc implements ParamAsMeasureCount {
     public static PercentileCounter init() {
         return null;
     }

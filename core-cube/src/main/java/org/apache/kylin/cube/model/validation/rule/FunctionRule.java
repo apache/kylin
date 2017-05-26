@@ -72,22 +72,26 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
             FunctionDesc func = measure.getFunction();
             ParameterDesc parameter = func.getParameter();
             if (parameter == null) {
-                context.addResult(ResultLevel.ERROR, "Must define parameter for function " + func.getExpression() + " in " + measure.getName());
+                context.addResult(ResultLevel.ERROR,
+                        "Must define parameter for function " + func.getExpression() + " in " + measure.getName());
                 return;
             }
 
             String type = func.getParameter().getType();
             String value = func.getParameter().getValue();
             if (StringUtils.isEmpty(type)) {
-                context.addResult(ResultLevel.ERROR, "Must define type for parameter type " + func.getExpression() + " in " + measure.getName());
+                context.addResult(ResultLevel.ERROR,
+                        "Must define type for parameter type " + func.getExpression() + " in " + measure.getName());
                 return;
             }
             if (StringUtils.isEmpty(value)) {
-                context.addResult(ResultLevel.ERROR, "Must define type for parameter value " + func.getExpression() + " in " + measure.getName());
+                context.addResult(ResultLevel.ERROR,
+                        "Must define type for parameter value " + func.getExpression() + " in " + measure.getName());
                 return;
             }
             if (StringUtils.isEmpty(func.getReturnType())) {
-                context.addResult(ResultLevel.ERROR, "Must define return type for function " + func.getExpression() + " in " + measure.getName());
+                context.addResult(ResultLevel.ERROR,
+                        "Must define return type for function " + func.getExpression() + " in " + measure.getName());
                 return;
             }
 
@@ -108,7 +112,8 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
 
             if (TopNMeasureType.FUNC_TOP_N.equalsIgnoreCase(func.getExpression())) {
                 if (parameter.getNextParameter() == null) {
-                    context.addResult(ResultLevel.ERROR, "Must define at least 2 parameters for function " + func.getExpression() + " in " + measure.getName());
+                    context.addResult(ResultLevel.ERROR, "Must define at least 2 parameters for function "
+                            + func.getExpression() + " in " + measure.getName());
                     return;
                 }
 
@@ -117,7 +122,8 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
                 while (groupByCol != null) {
                     String embeded_groupby = groupByCol.getValue();
                     for (DimensionDesc dimensionDesc : cube.getDimensions()) {
-                        if (dimensionDesc.getColumn() != null && dimensionDesc.getColumn().equalsIgnoreCase(embeded_groupby)) {
+                        if (dimensionDesc.getColumn() != null
+                                && dimensionDesc.getColumn().equalsIgnoreCase(embeded_groupby)) {
                             duplicatedCol.add(embeded_groupby);
                         }
                     }
@@ -128,7 +134,8 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
         }
 
         if (countFuncs.size() != 1) {
-            context.addResult(ResultLevel.ERROR, "Must define one and only one count(1) function, but there are " + countFuncs.size() + " -- " + countFuncs);
+            context.addResult(ResultLevel.ERROR, "Must define one and only one count(1) function, but there are "
+                    + countFuncs.size() + " -- " + countFuncs);
         }
     }
 
@@ -164,8 +171,8 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
      */
     private boolean validateMeasureNamesDuplicated(List<MeasureDesc> measures, ValidateContext context) {
         Set<String> nameSet = new HashSet<>();
-        for (MeasureDesc measure: measures){
-            if (nameSet.contains(measure.getName())){
+        for (MeasureDesc measure : measures) {
+            if (nameSet.contains(measure.getName())) {
                 context.addResult(ResultLevel.ERROR, "There is duplicated measure's name: " + measure.getName());
                 return true;
             } else {

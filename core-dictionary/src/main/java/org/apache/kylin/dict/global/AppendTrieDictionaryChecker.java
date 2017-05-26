@@ -17,6 +17,8 @@
 */
 package org.apache.kylin.dict.global;
 
+import static org.apache.kylin.dict.global.GlobalDictHDFSStore.BUFFER_SIZE;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +29,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
-
-import static org.apache.kylin.dict.global.GlobalDictHDFSStore.BUFFER_SIZE;
 
 /**
  * Created by sunyerui on 16/11/15.

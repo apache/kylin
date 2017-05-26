@@ -53,7 +53,7 @@ public class HDFSResourceStore extends ResourceStore {
     public HDFSResourceStore(KylinConfig kylinConfig) throws Exception {
         super(kylinConfig);
         StorageURL metadataUrl = kylinConfig.getMetadataUrl();
-        
+
         if (!metadataUrl.getScheme().equals("hdfs"))
             throw new IOException("kylin.metadata.url not recognized for HDFSResourceStore:" + metadataUrl);
 
@@ -101,7 +101,8 @@ public class HDFSResourceStore extends ResourceStore {
     }
 
     @Override
-    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException {
+    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive)
+            throws IOException {
         NavigableSet<String> resources = listResources(folderPath);
         if (resources == null)
             return Collections.emptyList();
@@ -177,17 +178,20 @@ public class HDFSResourceStore extends ResourceStore {
     }
 
     @Override
-    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException {
+    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
+            throws IOException, IllegalStateException {
         Path p = getRealHDFSPath(resPath);
         if (!fs.exists(p)) {
             if (oldTS != 0) {
-                throw new IllegalStateException("For not exist file. OldTS have to be 0. but Actual oldTS is : " + oldTS);
+                throw new IllegalStateException(
+                        "For not exist file. OldTS have to be 0. but Actual oldTS is : " + oldTS);
             }
 
         } else {
             long realLastModify = getResourceTimestamp(resPath);
             if (realLastModify != oldTS) {
-                throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but found " + realLastModify);
+                throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS
+                        + ", but found " + realLastModify);
             }
         }
         putResourceImpl(resPath, new ByteArrayInputStream(content), newTS);

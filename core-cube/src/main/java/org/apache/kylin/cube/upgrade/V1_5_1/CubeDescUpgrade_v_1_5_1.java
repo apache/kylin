@@ -226,7 +226,8 @@ public class CubeDescUpgrade_v_1_5_1 {
         }
 
         org.apache.kylin.cube.model.RowKeyDesc newRowKey = new org.apache.kylin.cube.model.RowKeyDesc();
-        org.apache.kylin.cube.model.RowKeyColDesc[] cols = new org.apache.kylin.cube.model.RowKeyColDesc[oldRowKey.getRowKeyColumns().length];
+        org.apache.kylin.cube.model.RowKeyColDesc[] cols = new org.apache.kylin.cube.model.RowKeyColDesc[oldRowKey
+                .getRowKeyColumns().length];
         int index = 0;
         for (RowKeyColDesc oldRowKeyCol : oldRowKey.getRowKeyColumns()) {
             org.apache.kylin.cube.model.RowKeyColDesc newRowKeyCol = new org.apache.kylin.cube.model.RowKeyColDesc();
@@ -242,7 +243,8 @@ public class CubeDescUpgrade_v_1_5_1 {
             } else if (oldRowKeyCol.getLength() > 0) {
                 newRowKeyCol.setEncoding("fixed_length:" + oldRowKeyCol.getLength());
             } else {
-                throw new IllegalArgumentException("Unknow encoding: Dictionary " + oldRowKeyCol.getDictionary() + ", length: " + oldRowKeyCol.getLength());
+                throw new IllegalArgumentException("Unknow encoding: Dictionary " + oldRowKeyCol.getDictionary()
+                        + ", length: " + oldRowKeyCol.getLength());
             }
             cols[index++] = newRowKeyCol;
         }
@@ -260,7 +262,8 @@ public class CubeDescUpgrade_v_1_5_1 {
             JsonUtil.writeValueIndent(os, hbaseMappingDesc);
             byte[] blob = os.toByteArray();
             ByteArrayInputStream is = new ByteArrayInputStream(blob);
-            org.apache.kylin.cube.model.HBaseMappingDesc newHBaseMappingDesc = JsonUtil.readValue(is, org.apache.kylin.cube.model.HBaseMappingDesc.class);
+            org.apache.kylin.cube.model.HBaseMappingDesc newHBaseMappingDesc = JsonUtil.readValue(is,
+                    org.apache.kylin.cube.model.HBaseMappingDesc.class);
             newModel.setHbaseMapping(newHBaseMappingDesc);
 
         } catch (IOException e) {

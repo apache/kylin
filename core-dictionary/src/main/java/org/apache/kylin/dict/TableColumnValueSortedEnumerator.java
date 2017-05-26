@@ -41,7 +41,8 @@ public class TableColumnValueSortedEnumerator implements IDictionaryValueEnumera
 
     private PriorityQueue<ReaderBuffer> pq;
 
-    public TableColumnValueSortedEnumerator(Collection<IReadableTable.TableReader> readers, int colIndex, final Comparator<String> comparator) {
+    public TableColumnValueSortedEnumerator(Collection<IReadableTable.TableReader> readers, int colIndex,
+            final Comparator<String> comparator) {
         this.readers = readers;
         this.colIndex = colIndex;
         this.comparator = comparator;
@@ -89,7 +90,6 @@ public class TableColumnValueSortedEnumerator implements IDictionaryValueEnumera
         return false;
     }
 
-
     @Override
     public void close() throws IOException {
         for (IReadableTable.TableReader reader : readers) {
@@ -136,7 +136,8 @@ public class TableColumnValueSortedEnumerator implements IDictionaryValueEnumera
                 } else {
                     // normal case
                     if (split.length <= colIndex) {
-                        throw new ArrayIndexOutOfBoundsException("Column no. " + colIndex + " not found, line split is " + Arrays.asList(split));
+                        throw new ArrayIndexOutOfBoundsException(
+                                "Column no. " + colIndex + " not found, line split is " + Arrays.asList(split));
                     }
                     this.cache = split[colIndex];
                 }

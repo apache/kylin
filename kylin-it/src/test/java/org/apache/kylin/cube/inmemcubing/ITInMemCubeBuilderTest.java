@@ -119,21 +119,24 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         try {
             // round 1
             {
-                Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
+                Future<?> future = executorService
+                        .submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
                 feedData(cube, flatTable, queue, nInpRows);
                 future.get();
             }
 
             // round 2, zero input
             {
-                Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
+                Future<?> future = executorService
+                        .submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
                 feedData(cube, flatTable, queue, 0);
                 future.get();
             }
 
             // round 3
             {
-                Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
+                Future<?> future = executorService
+                        .submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
                 feedData(cube, flatTable, queue, nInpRows);
                 future.get();
             }
@@ -144,11 +147,13 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         }
     }
 
-    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count) throws IOException, InterruptedException {
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue,
+            int count) throws IOException, InterruptedException {
         feedData(cube, flatTable, queue, count, 0);
     }
 
-    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count, long randSeed) throws IOException, InterruptedException {
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue,
+            int count, long randSeed) throws IOException, InterruptedException {
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
         int nColumns = flatDesc.getAllColumns().size();
 
@@ -190,7 +195,8 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
     static Map<TblColRef, Dictionary<String>> getDictionaryMap(CubeInstance cube, String flatTable) throws IOException {
         Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
         CubeDesc desc = cube.getDescriptor();
-        CubeJoinedFlatTableEnrich flatDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(desc), desc);
+        CubeJoinedFlatTableEnrich flatDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(desc),
+                desc);
         int nColumns = flatDesc.getAllColumns().size();
 
         List<TblColRef> columns = Cuboid.getBaseCuboid(desc).getColumns();
@@ -199,7 +205,8 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
             if (desc.getRowkey().isUseDictionary(col)) {
                 logger.info("Building dictionary for " + col);
                 List<String> valueList = readValueList(flatTable, nColumns, flatDesc.getRowKeyColumnIndexes()[c]);
-                Dictionary<String> dict = DictionaryGenerator.buildDictionary(col.getType(), new IterableDictionaryValueEnumerator(valueList));
+                Dictionary<String> dict = DictionaryGenerator.buildDictionary(col.getType(),
+                        new IterableDictionaryValueEnumerator(valueList));
                 result.put(col, dict);
             }
         }
@@ -219,7 +226,8 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
                     int colIdxOnFlat = flatTableIdx[i];
                     logger.info("Building dictionary for " + col);
                     List<String> valueList = readValueList(flatTable, nColumns, colIdxOnFlat);
-                    Dictionary<String> dict = DictionaryGenerator.buildDictionary(col.getType(), new IterableDictionaryValueEnumerator(valueList));
+                    Dictionary<String> dict = DictionaryGenerator.buildDictionary(col.getType(),
+                            new IterableDictionaryValueEnumerator(valueList));
 
                     result.put(col, dict);
                 }

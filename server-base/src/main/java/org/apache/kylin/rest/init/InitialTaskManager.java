@@ -42,7 +42,7 @@ public class InitialTaskManager implements InitializingBean {
     private void runInitialTasks() {
         // init metrics system for kylin
         QueryMetricsFacade.init();
-        
+
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String initTasks = kylinConfig.getInitTasks();
         if (!StringUtils.isEmpty(initTasks)) {

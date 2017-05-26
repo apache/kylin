@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("rawtypes")
 public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(MergeCuboidMapperTest.class);
 
     MapDriver<Text, Text, Text, Text> mapDriver;
@@ -75,7 +75,8 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         List<String> values = new ArrayList<>();
         values.add("eee");
         values.add("fff");
-        Dictionary<String> dict = DictionaryGenerator.buildDictionary(DataType.getType(newDictInfo.getDataType()), new IterableDictionaryValueEnumerator(values));
+        Dictionary<String> dict = DictionaryGenerator.buildDictionary(DataType.getType(newDictInfo.getDataType()),
+                new IterableDictionaryValueEnumerator(values));
         dictionaryManager.trySaveNewDict(dict, newDictInfo);
         dict.dump(System.out);
 
@@ -127,7 +128,8 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
                 values.add("ccc");
             else
                 values.add("bbb");
-            Dictionary<String> dict = DictionaryGenerator.buildDictionary(DataType.getType(newDictInfo.getDataType()), new IterableDictionaryValueEnumerator(values));
+            Dictionary<String> dict = DictionaryGenerator.buildDictionary(DataType.getType(newDictInfo.getDataType()),
+                    new IterableDictionaryValueEnumerator(values));
             dictionaryManager.trySaveNewDict(dict, newDictInfo);
             dict.dump(System.out);
 

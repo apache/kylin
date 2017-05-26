@@ -65,7 +65,7 @@ public class ModelDataGenerator {
     private ModelDataGenerator(DataModelDesc model, int nRows, ResourceStore outputStore) {
         this(model, nRows, outputStore, "/data");
     }
-    
+
     private ModelDataGenerator(DataModelDesc model, int nRows, ResourceStore outputStore, String outputPath) {
         this.model = model;
         this.targetRows = nRows;
@@ -79,9 +79,10 @@ public class ModelDataGenerator {
 
         JoinTableDesc[] allTables = model.getJoinTables();
         for (int i = allTables.length - 1; i >= -1; i--) {
-            TableDesc table = (i == -1) ? model.getRootFactTable().getTableDesc() : allTables[i].getTableRef().getTableDesc();
+            TableDesc table = (i == -1) ? model.getRootFactTable().getTableDesc()
+                    : allTables[i].getTableRef().getTableDesc();
             allTableDesc.add(table);
-            
+
             if (generated.contains(table))
                 continue;
 
@@ -175,7 +176,7 @@ public class ModelDataGenerator {
         for (TableDesc t : tables) {
             if (t.isView())
                 continue;
-            
+
             out.print("DROP TABLE IF EXISTS " + normHiveIdentifier(t.getIdentity()) + ";\n");
 
             out.print("CREATE TABLE " + normHiveIdentifier(t.getIdentity()) + "(" + "\n");
@@ -216,15 +217,16 @@ public class ModelDataGenerator {
                 out.print("-- " + t.getIdentity() + " is view \n");
                 continue;
             }
-            
-            out.print("LOAD DATA LOCAL INPATH '" + t.getIdentity() + ".csv' OVERWRITE INTO TABLE " + normHiveIdentifier(t.getIdentity()) + ";\n");
+
+            out.print("LOAD DATA LOCAL INPATH '" + t.getIdentity() + ".csv' OVERWRITE INTO TABLE "
+                    + normHiveIdentifier(t.getIdentity()) + ";\n");
         }
     }
 
     public boolean existsInStore(TableDesc table) throws IOException {
         return outputStore.exists(path(table));
     }
-    
+
     public boolean isPK(ColumnDesc col) {
         for (JoinTableDesc joinTable : model.getJoinTables()) {
             JoinDesc join = joinTable.getJoin();
@@ -235,7 +237,7 @@ public class ModelDataGenerator {
         }
         return false;
     }
-    
+
     public List<String> getPkValuesIfIsFk(ColumnDesc fk) throws IOException {
         JoinTableDesc[] joinTables = model.getJoinTables();
         for (int i = 0; i < joinTables.length; i++) {
@@ -266,7 +268,8 @@ public class ModelDataGenerator {
 
         List<String> r = new ArrayList<>();
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(outputStore.getResource(path(pk.getTable())).inputStream, "UTF-8"));
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(outputStore.getResource(path(pk.getTable())).inputStream, "UTF-8"));
         try {
             String line;
             while ((line = in.readLine()) != null) {
@@ -302,11 +305,12 @@ public class ModelDataGenerator {
         String modelName = args[0];
         int nRows = Integer.parseInt(args[1]);
         String outputDir = args.length > 2 ? args[2] : null;
-        
+
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
         DataModelDesc model = MetadataManager.getInstance(conf).getDataModelDesc(modelName);
-        ResourceStore store = outputDir == null ? ResourceStore.getStore(conf) : ResourceStore.getStore(mockup(outputDir));
-        
+        ResourceStore store = outputDir == null ? ResourceStore.getStore(conf)
+                : ResourceStore.getStore(mockup(outputDir));
+
         ModelDataGenerator gen = new ModelDataGenerator(model, nRows, store);
         gen.generate();
     }

@@ -60,7 +60,8 @@ public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupl
     public TupleFilter reverse() {
         switch (operator) {
         case NOT:
-            throw new IllegalStateException("NOT will be replaced in org.apache.kylin.query.relnode.OLAPFilterRel.TupleFilterVisitor");
+            throw new IllegalStateException(
+                    "NOT will be replaced in org.apache.kylin.query.relnode.OLAPFilterRel.TupleFilterVisitor");
         case AND:
         case OR:
             LogicalTupleFilter reverse = new LogicalTupleFilter(REVERSE_OP_MAP.get(operator));

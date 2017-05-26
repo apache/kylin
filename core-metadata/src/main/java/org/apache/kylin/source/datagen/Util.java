@@ -27,7 +27,7 @@ public class Util {
 
     static Map<String, String> parseEqualCommaPairs(String equalCommaPairs, String defaultKey) {
         Map<String, String> r = new LinkedHashMap<>();
-        
+
         if (StringUtils.isBlank(equalCommaPairs))
             return r;
 

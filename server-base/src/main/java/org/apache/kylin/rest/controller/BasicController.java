@@ -59,7 +59,8 @@ public class BasicController {
         Throwable cause = ex;
         while (cause != null) {
             if (cause.getClass().getPackage().getName().startsWith("org.apache.hadoop.hbase")) {
-                return new ErrorResponse(req.getRequestURL().toString(), new InternalErrorException(String.format(msg.getHBASE_FAIL(), ex.getMessage()), ex));
+                return new ErrorResponse(req.getRequestURL().toString(),
+                        new InternalErrorException(String.format(msg.getHBASE_FAIL(), ex.getMessage()), ex));
             }
             cause = cause.getCause();
         }
@@ -97,7 +98,8 @@ public class BasicController {
 
     protected void setDownloadResponse(String downloadFile, final HttpServletResponse response) {
         File file = new File(downloadFile);
-        try (InputStream fileInputStream = new FileInputStream(file); OutputStream output = response.getOutputStream();) {
+        try (InputStream fileInputStream = new FileInputStream(file);
+                OutputStream output = response.getOutputStream();) {
             response.reset();
             response.setContentType("application/octet-stream");
             response.setContentLength((int) (file.length()));

@@ -57,8 +57,8 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
-import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.ISourceMetadataExplorer;
+import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,15 +69,18 @@ import com.google.common.collect.Maps;
 public class StorageCleanupJob extends AbstractApplication {
 
     @SuppressWarnings("static-access")
-    protected static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused storage").create("delete");
-    protected static final Option OPTION_FORCE = OptionBuilder.withArgName("force").hasArg().isRequired(false).withDescription("Warning: will delete all kylin intermediate hive tables").create("force");
+    protected static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false)
+            .withDescription("Delete the unused storage").create("delete");
+    protected static final Option OPTION_FORCE = OptionBuilder.withArgName("force").hasArg().isRequired(false)
+            .withDescription("Warning: will delete all kylin intermediate hive tables").create("force");
 
     protected static final Logger logger = LoggerFactory.getLogger(StorageCleanupJob.class);
     public static final int deleteTimeout = 10; // Unit minute
 
     protected boolean delete = false;
     protected boolean force = false;
-    protected static ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
+    protected static ExecutableManager executableManager = ExecutableManager
+            .getInstance(KylinConfig.getInstanceFromEnv());
 
     private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -100,7 +103,8 @@ public class StorageCleanupJob extends AbstractApplication {
                     String tablename = seg.getStorageLocationIdentifier();
                     if (allTablesNeedToBeDropped.contains(tablename)) {
                         allTablesNeedToBeDropped.remove(tablename);
-                        logger.info("Exclude table " + tablename + " from drop list, as the table belongs to cube " + cube.getName() + " with status " + cube.getStatus());
+                        logger.info("Exclude table " + tablename + " from drop list, as the table belongs to cube "
+                                + cube.getName() + " with status " + cube.getStatus());
                     }
                 }
             }
@@ -114,7 +118,8 @@ public class StorageCleanupJob extends AbstractApplication {
                     try {
                         futureTask.get(deleteTimeout, TimeUnit.MINUTES);
                     } catch (TimeoutException e) {
-                        logger.warn("It fails to delete htable " + htableName + ", for it cost more than " + deleteTimeout + " minutes!");
+                        logger.warn("It fails to delete htable " + htableName + ", for it cost more than "
+                                + deleteTimeout + " minutes!");
                         futureTask.cancel(true);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -208,7 +213,8 @@ public class StorageCleanupJob extends AbstractApplication {
             if (!state.isFinalState()) {
                 String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobId);
                 allHdfsPathsNeedToBeDeleted.remove(path);
-                logger.info("Skip " + path + " from deletion list, as the path belongs to job " + jobId + " with status " + state);
+                logger.info("Skip " + path + " from deletion list, as the path belongs to job " + jobId
+                        + " with status " + state);
             }
         }
 
@@ -219,7 +225,8 @@ public class StorageCleanupJob extends AbstractApplication {
                 if (jobUuid != null && jobUuid.equals("") == false) {
                     String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobUuid);
                     allHdfsPathsNeedToBeDeleted.remove(path);
-                    logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg + " of cube " + cube.getName());
+                    logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg
+                            + " of cube " + cube.getName());
                 }
             }
         }
@@ -345,17 +352,21 @@ public class StorageCleanupJob extends AbstractApplication {
                     String segmentId = uuid.replace("_", "-");
 
                     if (segmentId2JobId.containsKey(segmentId)) {
-                        String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), segmentId2JobId.get(segmentId)) + "/" + tableToDelete;
+                        String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(),
+                                segmentId2JobId.get(segmentId)) + "/" + tableToDelete;
                         Path externalDataPath = new Path(path);
                         FileSystem fs = HadoopUtil.getWorkingFileSystem();
                         if (fs.exists(externalDataPath)) {
                             fs.delete(externalDataPath, true);
                             logger.info("Hive table {}'s external path {} deleted", tableToDelete, path);
                         } else {
-                            logger.info("Hive table {}'s external path {} not exist. It's normal if kylin.source.hive.keep-flat-table set false (By default)", tableToDelete, path);
+                            logger.info(
+                                    "Hive table {}'s external path {} not exist. It's normal if kylin.source.hive.keep-flat-table set false (By default)",
+                                    tableToDelete, path);
                         }
                     } else {
-                        logger.warn("Hive table {}'s job ID not found, segmentId2JobId: {}", tableToDelete, segmentId2JobId.toString());
+                        logger.warn("Hive table {}'s job ID not found, segmentId2JobId: {}", tableToDelete,
+                                segmentId2JobId.toString());
                     }
                 }
             } catch (IOException e) {

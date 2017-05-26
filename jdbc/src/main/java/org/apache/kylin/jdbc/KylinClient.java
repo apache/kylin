@@ -85,7 +85,8 @@ public class KylinClient implements IRemoteClient {
         if (isSSL()) {
             try {
                 SSLSocketFactory sslsf = new SSLSocketFactory(new TrustStrategy() {
-                    public boolean isTrusted(final X509Certificate[] chain, String authType) throws CertificateException {
+                    public boolean isTrusted(final X509Certificate[] chain, String authType)
+                            throws CertificateException {
                         // Oh, I am easy...
                         return true;
                     }
@@ -250,8 +251,9 @@ public class KylinClient implements IRemoteClient {
             throw asIOException(get, response);
         }
 
-        List<TableMetaStub> tableMetaStubs = jsonMapper.readValue(response.getEntity().getContent(), new TypeReference<List<TableMetaStub>>() {
-        });
+        List<TableMetaStub> tableMetaStubs = jsonMapper.readValue(response.getEntity().getContent(),
+                new TypeReference<List<TableMetaStub>>() {
+                });
 
         List<KMetaTable> tables = convertMetaTables(tableMetaStubs);
         List<KMetaSchema> schemas = convertMetaSchemas(tables);
@@ -313,15 +315,21 @@ public class KylinClient implements IRemoteClient {
         for (ColumnMetaStub columnStub : tableStub.getColumns()) {
             columns.add(convertMetaColumn(columnStub));
         }
-        return new KMetaTable(tableStub.getTABLE_CAT(), tableStub.getTABLE_SCHEM(), tableStub.getTABLE_NAME(), tableStub.getTABLE_TYPE(), columns);
+        return new KMetaTable(tableStub.getTABLE_CAT(), tableStub.getTABLE_SCHEM(), tableStub.getTABLE_NAME(),
+                tableStub.getTABLE_TYPE(), columns);
     }
 
     private KMetaColumn convertMetaColumn(ColumnMetaStub columnStub) {
-        return new KMetaColumn(columnStub.getTABLE_CAT(), columnStub.getTABLE_SCHEM(), columnStub.getTABLE_NAME(), columnStub.getCOLUMN_NAME(), columnStub.getDATA_TYPE(), columnStub.getTYPE_NAME(), columnStub.getCOLUMN_SIZE(), columnStub.getDECIMAL_DIGITS(), columnStub.getNUM_PREC_RADIX(), columnStub.getNULLABLE(), columnStub.getCHAR_OCTET_LENGTH(), columnStub.getORDINAL_POSITION(), columnStub.getIS_NULLABLE());
+        return new KMetaColumn(columnStub.getTABLE_CAT(), columnStub.getTABLE_SCHEM(), columnStub.getTABLE_NAME(),
+                columnStub.getCOLUMN_NAME(), columnStub.getDATA_TYPE(), columnStub.getTYPE_NAME(),
+                columnStub.getCOLUMN_SIZE(), columnStub.getDECIMAL_DIGITS(), columnStub.getNUM_PREC_RADIX(),
+                columnStub.getNULLABLE(), columnStub.getCHAR_OCTET_LENGTH(), columnStub.getORDINAL_POSITION(),
+                columnStub.getIS_NULLABLE());
     }
 
     @Override
-    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues, Map<String, String> queryToggles) throws IOException {
+    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues,
+            Map<String, String> queryToggles) throws IOException {
 
         SQLResponseStub queryResp = executeKylinQuery(sql, convertParameters(params, paramValues), queryToggles);
         if (queryResp.getIsException())
@@ -346,7 +354,8 @@ public class KylinClient implements IRemoteClient {
         return result;
     }
 
-    private SQLResponseStub executeKylinQuery(String sql, List<StatementParameter> params, Map<String, String> queryToggles) throws IOException {
+    private SQLResponseStub executeKylinQuery(String sql, List<StatementParameter> params,
+            Map<String, String> queryToggles) throws IOException {
         String url = baseUrl() + "/kylin/api/query";
         String project = conn.getProject();
 
@@ -388,7 +397,11 @@ public class KylinClient implements IRemoteClient {
             Class columnClass = convertType(scm.getColumnType());
             ScalarType type = ColumnMetaData.scalar(scm.getColumnType(), scm.getColumnTypeName(), Rep.of(columnClass));
 
-            ColumnMetaData meta = new ColumnMetaData(i, scm.isAutoIncrement(), scm.isCaseSensitive(), scm.isSearchable(), scm.isCurrency(), scm.getIsNullable(), scm.isSigned(), scm.getDisplaySize(), scm.getLabel(), scm.getName(), scm.getSchemaName(), scm.getPrecision(), scm.getScale(), scm.getTableName(), scm.getSchemaName(), type, scm.isReadOnly(), scm.isWritable(), scm.isWritable(), columnClass.getCanonicalName());
+            ColumnMetaData meta = new ColumnMetaData(i, scm.isAutoIncrement(), scm.isCaseSensitive(),
+                    scm.isSearchable(), scm.isCurrency(), scm.getIsNullable(), scm.isSigned(), scm.getDisplaySize(),
+                    scm.getLabel(), scm.getName(), scm.getSchemaName(), scm.getPrecision(), scm.getScale(),
+                    scm.getTableName(), scm.getSchemaName(), type, scm.isReadOnly(), scm.isWritable(), scm.isWritable(),
+                    columnClass.getCanonicalName());
 
             metas.add(meta);
         }
@@ -413,7 +426,8 @@ public class KylinClient implements IRemoteClient {
     }
 
     private IOException asIOException(HttpRequestBase request, HttpResponse response) throws IOException {
-        return new IOException(request.getMethod() + " failed, error code " + response.getStatusLine().getStatusCode() + " and response: " + EntityUtils.toString(response.getEntity()));
+        return new IOException(request.getMethod() + " failed, error code " + response.getStatusLine().getStatusCode()
+                + " and response: " + EntityUtils.toString(response.getEntity()));
     }
 
     @Override

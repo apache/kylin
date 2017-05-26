@@ -81,7 +81,8 @@ abstract public class ResourceStore {
             Class<? extends ResourceStore> cls = ClassUtil.forName(clsName, ResourceStore.class);
             ResourceStore store = cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
             if (!store.exists(METASTORE_UUID_TAG)) {
-                store.putResource(METASTORE_UUID_TAG, new StringEntity(store.createMetaStoreUUID()), 0, StringEntity.serializer);
+                store.putResource(METASTORE_UUID_TAG, new StringEntity(store.createMetaStoreUUID()), 0,
+                        StringEntity.serializer);
             }
             return store;
         } catch (Throwable e) {
@@ -127,9 +128,11 @@ abstract public class ResourceStore {
 
     public String getMetaStoreUUID() throws IOException {
         if (!exists(ResourceStore.METASTORE_UUID_TAG)) {
-            putResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(createMetaStoreUUID()), 0, StringEntity.serializer);
+            putResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(createMetaStoreUUID()), 0,
+                    StringEntity.serializer);
         }
-        StringEntity entity = getResource(ResourceStore.METASTORE_UUID_TAG, StringEntity.class, StringEntity.serializer);
+        StringEntity entity = getResource(ResourceStore.METASTORE_UUID_TAG, StringEntity.class,
+                StringEntity.serializer);
         return entity.toString();
     }
 
@@ -145,7 +148,8 @@ abstract public class ResourceStore {
     /**
      * Read a resource, return null in case of not found or is a folder
      */
-    final public <T extends RootPersistentEntity> T getResource(String resPath, Class<T> clz, Serializer<T> serializer) throws IOException {
+    final public <T extends RootPersistentEntity> T getResource(String resPath, Class<T> clz, Serializer<T> serializer)
+            throws IOException {
         resPath = norm(resPath);
         RawResource res = getResourceImpl(resPath);
         if (res == null)
@@ -173,14 +177,16 @@ abstract public class ResourceStore {
     /**
      * Read all resources under a folder. Return empty list if folder not exist.
      */
-    final public <T extends RootPersistentEntity> List<T> getAllResources(String folderPath, Class<T> clazz, Serializer<T> serializer) throws IOException {
+    final public <T extends RootPersistentEntity> List<T> getAllResources(String folderPath, Class<T> clazz,
+            Serializer<T> serializer) throws IOException {
         return getAllResources(folderPath, Long.MIN_VALUE, Long.MAX_VALUE, clazz, serializer);
     }
 
     /**
      * Read all resources under a folder having last modified time between given range. Return empty list if folder not exist.
      */
-    final public <T extends RootPersistentEntity> List<T> getAllResources(String folderPath, long timeStart, long timeEndExclusive, Class<T> clazz, Serializer<T> serializer) throws IOException {
+    final public <T extends RootPersistentEntity> List<T> getAllResources(String folderPath, long timeStart,
+            long timeEndExclusive, Class<T> clazz, Serializer<T> serializer) throws IOException {
         final List<RawResource> allResources = getAllResourcesImpl(folderPath, timeStart, timeEndExclusive);
         if (allResources == null || allResources.isEmpty()) {
             return Collections.emptyList();
@@ -201,7 +207,8 @@ abstract public class ResourceStore {
         }
     }
 
-    abstract protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException;
+    abstract protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive)
+            throws IOException;
 
     /**
      * returns null if not exists
@@ -232,14 +239,16 @@ abstract public class ResourceStore {
     /**
      * check & set, overwrite a resource
      */
-    final public <T extends RootPersistentEntity> long putResource(String resPath, T obj, Serializer<T> serializer) throws IOException {
+    final public <T extends RootPersistentEntity> long putResource(String resPath, T obj, Serializer<T> serializer)
+            throws IOException {
         return putResource(resPath, obj, System.currentTimeMillis(), serializer);
     }
 
     /**
      * check & set, overwrite a resource
      */
-    final public <T extends RootPersistentEntity> long putResource(String resPath, T obj, long newTS, Serializer<T> serializer) throws IOException {
+    final public <T extends RootPersistentEntity> long putResource(String resPath, T obj, long newTS,
+            Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);
         //logger.debug("Saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
 
@@ -265,7 +274,8 @@ abstract public class ResourceStore {
         }
     }
 
-    private long checkAndPutResourceCheckpoint(String resPath, byte[] content, long oldTS, long newTS) throws IOException {
+    private long checkAndPutResourceCheckpoint(String resPath, byte[] content, long oldTS, long newTS)
+            throws IOException {
         beforeChange(resPath);
         return checkAndPutResourceImpl(resPath, content, oldTS, newTS);
     }
@@ -273,7 +283,8 @@ abstract public class ResourceStore {
     /**
      * checks old timestamp when overwriting existing
      */
-    abstract protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException;
+    abstract protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
+            throws IOException, IllegalStateException;
 
     /**
      * delete a resource, does nothing on a folder

@@ -43,7 +43,8 @@ public enum JobStatusEnum {
     }
 
     public boolean isComplete() {
-        return code == JobStatusEnum.FINISHED.getCode() || code == JobStatusEnum.ERROR.getCode() || code == JobStatusEnum.DISCARDED.getCode();
+        return code == JobStatusEnum.FINISHED.getCode() || code == JobStatusEnum.ERROR.getCode()
+                || code == JobStatusEnum.DISCARDED.getCode();
     }
 
 }

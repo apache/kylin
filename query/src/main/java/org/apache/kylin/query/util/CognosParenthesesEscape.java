@@ -29,7 +29,8 @@ import java.util.regex.Pattern;
 import com.google.common.collect.Lists;
 
 public class CognosParenthesesEscape implements QueryUtil.IQueryTransformer {
-    private static final Pattern FROM_PATTERN = Pattern.compile("\\s+from\\s+(\\s*\\(\\s*)+(?!\\s*select\\s)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern FROM_PATTERN = Pattern.compile("\\s+from\\s+(\\s*\\(\\s*)+(?!\\s*select\\s)",
+            Pattern.CASE_INSENSITIVE);
 
     @Override
     public String transform(String sql) {

@@ -19,14 +19,12 @@
 package org.apache.kylin.common.restclient;
 
 import java.io.IOException;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class RestClientTest {
-
-
 
     private static final Logger logger = LoggerFactory.getLogger(RestClientTest.class);
 

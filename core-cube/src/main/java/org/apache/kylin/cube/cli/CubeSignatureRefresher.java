@@ -53,7 +53,8 @@ public class CubeSignatureRefresher {
     }
 
     public void update() {
-        logger.info("Reloading Cube Metadata from store: " + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
+        logger.info("Reloading Cube Metadata from store: "
+                + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
         CubeDescManager cubeDescManager = CubeDescManager.getInstance(config);
         List<CubeDesc> cubeDescs;
         if (ArrayUtils.isEmpty(cubeNames)) {

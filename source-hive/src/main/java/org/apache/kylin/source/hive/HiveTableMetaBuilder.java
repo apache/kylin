@@ -106,6 +106,7 @@ public class HiveTableMetaBuilder {
     }
 
     public HiveTableMeta createHiveTableMeta() {
-        return new HiveTableMeta(tableName, sdLocation, sdInputFormat, sdOutputFormat, owner, tableType, lastAccessTime, fileSize, fileNum, skipHeaderLineCount, isNative, allColumns, partitionColumns);
+        return new HiveTableMeta(tableName, sdLocation, sdInputFormat, sdOutputFormat, owner, tableType, lastAccessTime,
+                fileSize, fileNum, skipHeaderLineCount, isNative, allColumns, partitionColumns);
     }
 }

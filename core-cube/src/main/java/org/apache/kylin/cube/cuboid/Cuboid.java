@@ -58,12 +58,14 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
     };
 
     // this is the only entry point for query to find the right cuboid
-    public static Cuboid identifyCuboid(CubeDesc cubeDesc, Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
+    public static Cuboid identifyCuboid(CubeDesc cubeDesc, Set<TblColRef> dimensions,
+            Collection<FunctionDesc> metrics) {
         long cuboidID = identifyCuboidId(cubeDesc, dimensions, metrics);
         return Cuboid.findById(cubeDesc, cuboidID);
     }
 
-    public static long identifyCuboidId(CubeDesc cubeDesc, Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
+    public static long identifyCuboidId(CubeDesc cubeDesc, Set<TblColRef> dimensions,
+            Collection<FunctionDesc> metrics) {
         for (FunctionDesc metric : metrics) {
             if (metric.getMeasureType().onlyAggrInBaseCuboid())
                 return Cuboid.getBaseCuboidId(cubeDesc);
@@ -176,14 +178,16 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
 
         if (!agg.isOnTree(cuboidID)) {
             // no column, add one column
-            long nonJointDims = removeBits((agg.getPartialCubeFullMask() ^ agg.getMandatoryColumnMask()), agg.getJoints());
+            long nonJointDims = removeBits((agg.getPartialCubeFullMask() ^ agg.getMandatoryColumnMask()),
+                    agg.getJoints());
             if (nonJointDims != 0) {
-                long nonJointNonHierarchy = removeBits(nonJointDims, Collections2.transform(agg.getHierarchyMasks(), new Function<HierarchyMask, Long>() {
-                    @Override
-                    public Long apply(HierarchyMask input) {
-                        return input.fullMask;
-                    }
-                }));
+                long nonJointNonHierarchy = removeBits(nonJointDims,
+                        Collections2.transform(agg.getHierarchyMasks(), new Function<HierarchyMask, Long>() {
+                            @Override
+                            public Long apply(HierarchyMask input) {
+                                return input.fullMask;
+                            }
+                        }));
                 if (nonJointNonHierarchy != 0) {
                     //there exists dim that does not belong to any joint or any hierarchy, that's perfect
                     return cuboidID | Long.lowestOneBit(nonJointNonHierarchy);

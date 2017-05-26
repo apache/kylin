@@ -99,7 +99,8 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             float hfileSizeGB = kylinConfig.getHBaseHFileSizeGB();
             float regionSplitSize = kylinConfig.getKylinHBaseRegionCut();
 
-            int compactionThreshold = Integer.valueOf(HBaseConnection.getCurrentHBaseConfiguration().get("hbase.hstore.compactionThreshold", "3"));
+            int compactionThreshold = Integer.valueOf(
+                    HBaseConnection.getCurrentHBaseConfiguration().get("hbase.hstore.compactionThreshold", "3"));
             if (hfileSizeGB > 0 && hfileSizeGB * compactionThreshold < regionSplitSize) {
                 hfileSizeGB = regionSplitSize / compactionThreshold;
                 logger.info("Adjust hfile size' to " + hfileSizeGB);
@@ -112,7 +113,8 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_REGION_NUMBER_MAX, String.valueOf(maxRegionCount));
             job.getConfiguration().set(BatchConstants.CFG_REGION_NUMBER_MIN, String.valueOf(minRegionCount));
             // The partition file for hfile is sequenece file consists of ImmutableBytesWritable and NullWritable
-            TableMapReduceUtil.addDependencyJars(job.getConfiguration(), ImmutableBytesWritable.class, NullWritable.class);
+            TableMapReduceUtil.addDependencyJars(job.getConfiguration(), ImmutableBytesWritable.class,
+                    NullWritable.class);
 
             return waitForCompletion(job);
         } catch (Exception e) {

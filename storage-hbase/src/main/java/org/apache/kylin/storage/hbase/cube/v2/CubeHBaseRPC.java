@@ -72,7 +72,7 @@ public abstract class CubeHBaseRPC implements IGTStorage {
 
     public CubeHBaseRPC(ISegment segment, Cuboid cuboid, GTInfo fullGTInfo, StorageContext context) {
         Preconditions.checkArgument(segment instanceof CubeSegment, "segment must be CubeSegment");
-        
+
         this.cubeSeg = (CubeSegment) segment;
         this.cuboid = cuboid;
         this.fullGTInfo = fullGTInfo;
@@ -106,7 +106,8 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         return scan;
     }
 
-    private RawScan preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
+    private RawScan preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys,
+            ImmutableBitSet selectedColBlocks) {
         final List<Pair<byte[], byte[]>> selectedColumns = makeHBaseColumns(selectedColBlocks);
 
         LazyRowKeyEncoder encoder = new LazyRowKeyEncoder(cubeSeg, cuboid);
@@ -246,10 +247,12 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         }
     }
 
-    private static List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> convertToHBasePair(List<org.apache.kylin.common.util.Pair<byte[], byte[]>> pairList) {
+    private static List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> convertToHBasePair(
+            List<org.apache.kylin.common.util.Pair<byte[], byte[]>> pairList) {
         List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> result = Lists.newArrayList();
         for (org.apache.kylin.common.util.Pair<byte[], byte[]> pair : pairList) {
-            org.apache.hadoop.hbase.util.Pair<byte[], byte[]> element = new org.apache.hadoop.hbase.util.Pair<byte[], byte[]>(pair.getFirst(), pair.getSecond());
+            org.apache.hadoop.hbase.util.Pair<byte[], byte[]> element = new org.apache.hadoop.hbase.util.Pair<byte[], byte[]>(
+                    pair.getFirst(), pair.getSecond());
             result.add(element);
         }
 
@@ -292,23 +295,24 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         } else {
             coopTimeout = cubeSeg.getConfig().getQueryCoprocessorTimeoutSeconds() * 1000;
         }
-        
+
         int rpcTimeout;
         Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
         rpcTimeout = hconf.getInt(HConstants.HBASE_RPC_TIMEOUT_KEY, HConstants.DEFAULT_HBASE_RPC_TIMEOUT);
-        
+
         // HBase rpc timeout must be longer than coprocessor timeout
         if ((int) (coopTimeout * 1.1) > rpcTimeout) {
             rpcTimeout = (int) (coopTimeout * 1.1);
             hconf.setInt(HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout);
         }
-        
+
         // coprocessor timeout is 0 by default
         if (coopTimeout <= 0) {
             coopTimeout = (int) (rpcTimeout * 0.9);
         }
-        
-        logger.debug("{} = {} ms, use {} ms as timeout for coprocessor", HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, coopTimeout);
+
+        logger.debug("{} = {} ms, use {} ms as timeout for coprocessor", HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout,
+                coopTimeout);
         return coopTimeout;
     }
 

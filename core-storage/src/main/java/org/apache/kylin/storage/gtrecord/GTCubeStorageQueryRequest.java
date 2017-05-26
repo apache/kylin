@@ -39,7 +39,8 @@ public class GTCubeStorageQueryRequest implements Serializable {
     private StorageContext context;
 
     public GTCubeStorageQueryRequest(Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
-            Set<TblColRef> filterCols, Set<FunctionDesc> metrics, TupleFilter filter, TupleFilter havingFilter, StorageContext context) {
+            Set<TblColRef> filterCols, Set<FunctionDesc> metrics, TupleFilter filter, TupleFilter havingFilter,
+            StorageContext context) {
         this.cuboid = cuboid;
         this.dimensions = dimensions;
         this.groups = groups;

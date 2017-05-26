@@ -18,9 +18,9 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import org.apache.kylin.common.util.BytesUtil;
-
 import java.nio.ByteBuffer;
+
+import org.apache.kylin.common.util.BytesUtil;
 
 /**
  */

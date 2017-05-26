@@ -28,9 +28,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.pool.impl.GenericObjectPool;
-import org.apache.kylin.storage.adhoc.AdHocRunnerBase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.storage.adhoc.AdHocRunnerBase;
 
 public class AdHocRunnerJdbcImpl extends AdHocRunnerBase {
 
@@ -48,7 +48,8 @@ public class AdHocRunnerJdbcImpl extends AdHocRunnerBase {
     public void init() {
         if (this.pool == null) {
             this.pool = new JdbcConnectionPool();
-            JdbcConnectionFactory factory = new JdbcConnectionFactory(this.config.getJdbcUrl(), this.config.getJdbcDriverClass(), this.config.getJdbcUsername(), this.config.getJdbcPassword());
+            JdbcConnectionFactory factory = new JdbcConnectionFactory(this.config.getJdbcUrl(),
+                    this.config.getJdbcDriverClass(), this.config.getJdbcUsername(), this.config.getJdbcPassword());
             GenericObjectPool.Config poolConfig = new GenericObjectPool.Config();
             poolConfig.maxActive = this.config.getPoolMaxTotal();
             poolConfig.maxIdle = this.config.getPoolMaxIdle();
@@ -63,7 +64,8 @@ public class AdHocRunnerJdbcImpl extends AdHocRunnerBase {
     }
 
     @Override
-    public void executeQuery(String query, List<List<String>> results, List<SelectedColumnMeta> columnMetas) throws Exception {
+    public void executeQuery(String query, List<List<String>> results, List<SelectedColumnMeta> columnMetas)
+            throws Exception {
         Statement statement = null;
         Connection connection = this.getConnection();
         ResultSet resultSet = null;
@@ -85,7 +87,11 @@ public class AdHocRunnerJdbcImpl extends AdHocRunnerBase {
 
             // fill in selected column meta
             for (int i = 1; i <= columnCount; ++i) {
-                columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), false, metaData.isCurrency(i), metaData.isNullable(i), false, metaData.getColumnDisplaySize(i), metaData.getColumnLabel(i), metaData.getColumnName(i), null, null, null, metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i), metaData.getColumnTypeName(i), metaData.isReadOnly(i), false, false));
+                columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), false,
+                        metaData.isCurrency(i), metaData.isNullable(i), false, metaData.getColumnDisplaySize(i),
+                        metaData.getColumnLabel(i), metaData.getColumnName(i), null, null, null,
+                        metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i),
+                        metaData.getColumnTypeName(i), metaData.isReadOnly(i), false, false));
             }
 
         } catch (SQLException sqlException) {
@@ -102,7 +108,6 @@ public class AdHocRunnerJdbcImpl extends AdHocRunnerBase {
     private void closeConnection(Connection connection) {
         this.pool.returnConnection(connection);
     }
-
 
     static void extractResults(ResultSet resultSet, List<List<String>> results) throws SQLException {
         List<String> oneRow = new LinkedList<String>();
@@ -121,6 +126,5 @@ public class AdHocRunnerJdbcImpl extends AdHocRunnerBase {
             throw sqlException;
         }
     }
-
 
 }

@@ -31,7 +31,8 @@ public class MapContextGTRecordWriter extends KVGTRecordWriter {
 
     protected MapContext<?, ?, ByteArrayWritable, ByteArrayWritable> mapContext;
 
-    public MapContextGTRecordWriter(MapContext<?, ?, ByteArrayWritable, ByteArrayWritable> mapContext, CubeDesc cubeDesc, CubeSegment cubeSegment) {
+    public MapContextGTRecordWriter(MapContext<?, ?, ByteArrayWritable, ByteArrayWritable> mapContext,
+            CubeDesc cubeDesc, CubeSegment cubeSegment) {
         super(cubeDesc, cubeSegment);
         this.mapContext = mapContext;
     }

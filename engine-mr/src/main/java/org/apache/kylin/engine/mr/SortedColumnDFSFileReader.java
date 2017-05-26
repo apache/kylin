@@ -17,12 +17,12 @@
 */
 package org.apache.kylin.engine.mr;
 
-import org.apache.kylin.source.IReadableTable;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.PriorityQueue;
+
+import org.apache.kylin.source.IReadableTable;
 
 /**
  * Created by xiefan on 16-11-22.
@@ -37,7 +37,8 @@ public class SortedColumnDFSFileReader implements IReadableTable.TableReader {
 
     private String[] row;
 
-    public SortedColumnDFSFileReader(Collection<IReadableTable.TableReader> readers, final Comparator<String> comparator) {
+    public SortedColumnDFSFileReader(Collection<IReadableTable.TableReader> readers,
+            final Comparator<String> comparator) {
         this.readers = readers;
         this.comparator = comparator;
         pq = new PriorityQueue<ReaderBuffer>(11, new Comparator<ReaderBuffer>() {

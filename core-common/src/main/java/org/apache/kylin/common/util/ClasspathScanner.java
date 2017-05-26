@@ -40,9 +40,9 @@ public class ClasspathScanner {
             }
             System.exit(0);
         }
-        
+
         final int[] hitCount = new int[1];
-        
+
         scanner.scan("", new ResourceVisitor() {
             public void accept(File dir, String relativeFileName) {
                 check(dir.getAbsolutePath(), relativeFileName.replace('\\', '/'));
@@ -64,7 +64,7 @@ public class ClasspathScanner {
                 }
             }
         });
-        
+
         int exitCode = hitCount[0] > 0 ? 0 : 1;
         System.exit(exitCode);
     }
@@ -118,9 +118,9 @@ public class ClasspathScanner {
                 break;
             loader = loader.getParent();
         }
-        
+
         List<File> roots = new ArrayList();
-        
+
         // parent first
         for (int i = loaders.size() - 1; i >= 0; i--) {
             ClassLoader l = loaders.get(i);

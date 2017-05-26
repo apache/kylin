@@ -95,11 +95,12 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
     public MeasureIngester<HLLCounter> newIngester() {
         return new MeasureIngester<HLLCounter>() {
             private static final long serialVersionUID = 1L;
-            
+
             HLLCounter current = new HLLCounter(dataType.getPrecision());
 
             @Override
-            public HLLCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+            public HLLCounter valueOf(String[] values, MeasureDesc measureDesc,
+                    Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 HLLCounter hllc = current;
                 hllc.clear();
                 if (values.length == 1) {
@@ -135,8 +136,9 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
         return true;
     }
 
-    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.<String, Class<?>> of(FUNC_COUNT_DISTINCT, HLLDistinctCountAggFunc.class);
-    
+    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.<String, Class<?>> of(FUNC_COUNT_DISTINCT,
+            HLLDistinctCountAggFunc.class);
+
     @Override
     public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {
         return UDAF_MAP;
@@ -145,5 +147,5 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
     public static boolean isCountDistinct(FunctionDesc func) {
         return FUNC_COUNT_DISTINCT.equalsIgnoreCase(func.getExpression());
     }
-    
+
 }

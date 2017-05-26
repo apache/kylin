@@ -188,7 +188,8 @@ public class Tuple implements ITuple {
         if (strValue == null)
             return null;
 
-        if ((strValue.equals("") || strValue.equals("\\N")) && !dataTypeName.equals("string") && !dataTypeName.startsWith("varchar"))
+        if ((strValue.equals("") || strValue.equals("\\N")) && !dataTypeName.equals("string")
+                && !dataTypeName.startsWith("varchar"))
             return null;
 
         switch (dataTypeName) {

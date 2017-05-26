@@ -42,7 +42,9 @@ public class TableMeta implements Serializable {
     public TableMeta() {
     }
 
-    public TableMeta(String tABLE_CAT, String tABLE_SCHEM, String tABLE_NAME, String tABLE_TYPE, String rEMARKS, String tYPE_CAT, String tYPE_SCHEM, String tYPE_NAME, String sELF_REFERENCING_COL_NAME, String rEF_GENERATION) {
+    public TableMeta(String tABLE_CAT, String tABLE_SCHEM, String tABLE_NAME, String tABLE_TYPE, String rEMARKS,
+            String tYPE_CAT, String tYPE_SCHEM, String tYPE_NAME, String sELF_REFERENCING_COL_NAME,
+            String rEF_GENERATION) {
         super();
         TABLE_CAT = tABLE_CAT;
         TABLE_SCHEM = tABLE_SCHEM;

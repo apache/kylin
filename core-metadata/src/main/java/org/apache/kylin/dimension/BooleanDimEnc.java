@@ -34,13 +34,14 @@ import com.google.common.collect.Maps;
 /**
  * Encoding Boolean values to bytes
  */
-public class BooleanDimEnc extends DimensionEncoding implements Serializable{
+public class BooleanDimEnc extends DimensionEncoding implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public static final String ENCODING_NAME = "boolean";
 
     //NOTE: when add new value, append to the array tail, DO NOT insert!
-    public static String[] ALLOWED_VALUES = new String[] { "", "true", "false", "TRUE", "FALSE", "True", "False", "t", "f", "T", "F", "yes", "no", "YES", "NO", "Yes", "No", "y", "n", "Y", "N", "1", "0" };
+    public static String[] ALLOWED_VALUES = new String[] { "", "true", "false", "TRUE", "FALSE", "True", "False", "t",
+            "f", "T", "F", "yes", "no", "YES", "NO", "Yes", "No", "y", "n", "Y", "N", "1", "0" };
 
     public static final Map<String, Integer> map = Maps.newHashMap();
 

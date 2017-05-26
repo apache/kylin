@@ -18,6 +18,8 @@
 
 package org.apache.kylin.cube.model;
 
+import java.util.List;
+
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -25,8 +27,6 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import java.util.List;
 
 /**
  * An enrich of IJoinedFlatTableDesc for cubes

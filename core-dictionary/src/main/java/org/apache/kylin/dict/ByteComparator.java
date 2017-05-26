@@ -18,9 +18,9 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.ByteArray;
-
 import java.util.Comparator;
+
+import org.apache.kylin.common.util.ByteArray;
 
 /**
  * Created by xiefan on 16-10-28.

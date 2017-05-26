@@ -80,7 +80,8 @@ public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
         // CubeManager cubeManager =
         // CubeManager.getInstanceFromEnv(getTestConfig());
 
-        String[] args = { "-input", baseFolder.getAbsolutePath() + "," + eightFoler.getAbsolutePath(), "-cubename", cubeName, "-segmentname", "20130331080000_20131212080000", "-output", output, "-jobname", jobname };
+        String[] args = { "-input", baseFolder.getAbsolutePath() + "," + eightFoler.getAbsolutePath(), "-cubename",
+                cubeName, "-segmentname", "20130331080000_20131212080000", "-output", output, "-jobname", jobname };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new MergeCuboidJob(), args));
 
     }

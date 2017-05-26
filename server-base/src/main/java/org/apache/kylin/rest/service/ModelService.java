@@ -84,7 +84,8 @@ public class ModelService extends BasicService {
 
         List<DataModelDesc> filterModels = new ArrayList<DataModelDesc>();
         for (DataModelDesc modelDesc : models) {
-            boolean isModelMatch = (null == modelName) || modelName.length() == 0 || modelDesc.getName().toLowerCase().equals(modelName.toLowerCase());
+            boolean isModelMatch = (null == modelName) || modelName.length() == 0
+                    || modelDesc.getName().toLowerCase().equals(modelName.toLowerCase());
 
             if (isModelMatch) {
                 filterModels.add(modelDesc);
@@ -94,7 +95,8 @@ public class ModelService extends BasicService {
         return filterModels;
     }
 
-    public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit, final Integer offset) throws IOException {
+    public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit,
+            final Integer offset) throws IOException {
 
         List<DataModelDesc> modelDescs = listAllModels(modelName, projectName);
 
@@ -127,14 +129,16 @@ public class ModelService extends BasicService {
         return createdDesc;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public DataModelDesc updateModelAndDesc(DataModelDesc desc) throws IOException {
 
         getMetadataManager().updateDataModelDesc(desc);
         return desc;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public void dropModel(DataModelDesc desc) throws IOException {
         Message msg = MsgPicker.getMsg();
 
@@ -151,21 +155,24 @@ public class ModelService extends BasicService {
         accessService.clean(desc, true);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public boolean isTableInAnyModel(String tableName) {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
         return getMetadataManager().isTableInAnyModel(tableName);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public boolean isTableInModel(String tableName, String projectName) throws IOException {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
         return getMetadataManager().isTableInModel(tableName, projectName);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public List<String> getModelsUsingTable(String tableName, String projectName) throws IOException {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
@@ -342,7 +349,8 @@ public class ModelService extends BasicService {
         return youngerSelf;
     }
 
-    public DataModelDesc updateModelToResourceStore(DataModelDesc modelDesc, String projectName, boolean createNew, boolean isDraft) throws IOException {
+    public DataModelDesc updateModelToResourceStore(DataModelDesc modelDesc, String projectName, boolean createNew,
+            boolean isDraft) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         if (createNew) {

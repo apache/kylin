@@ -18,28 +18,28 @@
 
 package org.apache.kylin.storage.gtrecord;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.PeekingIterator;
-import com.google.common.collect.UnmodifiableIterator;
-import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTRecord;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
+
+import org.apache.kylin.gridtable.GTInfo;
+import org.apache.kylin.gridtable.GTRecord;
+
+import com.google.common.collect.Iterators;
+import com.google.common.collect.PeekingIterator;
+import com.google.common.collect.UnmodifiableIterator;
 
 /**
  * Merge-sort {@code GTRecord}s in all partitions, assume each partition contains sorted elements.
  */
 public class SortMergedPartitionResultIterator extends UnmodifiableIterator<GTRecord> {
 
-    final GTRecord record ; // reuse to avoid object creation
+    final GTRecord record; // reuse to avoid object creation
     PriorityQueue<PeekingIterator<GTRecord>> heap;
 
-    SortMergedPartitionResultIterator(
-            List<PartitionResultIterator> partitionResults,
-            GTInfo info, final Comparator<GTRecord> comparator) {
+    SortMergedPartitionResultIterator(List<PartitionResultIterator> partitionResults, GTInfo info,
+            final Comparator<GTRecord> comparator) {
 
         this.record = new GTRecord(info);
         Comparator<PeekingIterator<GTRecord>> heapComparator = new Comparator<PeekingIterator<GTRecord>>() {

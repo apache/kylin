@@ -33,7 +33,8 @@ import org.apache.kylin.cube.model.validation.rule.StreamingCubeRule;
  */
 public class CubeMetadataValidator {
     @SuppressWarnings("unchecked")
-    private IValidatorRule<CubeDesc>[] rules = new IValidatorRule[] { new FunctionRule(), new AggregationGroupRule(), new RowKeyAttrRule(), new DictionaryRule(), new StreamingCubeRule() };
+    private IValidatorRule<CubeDesc>[] rules = new IValidatorRule[] { new FunctionRule(), new AggregationGroupRule(),
+            new RowKeyAttrRule(), new DictionaryRule(), new StreamingCubeRule() };
 
     public ValidateContext validate(CubeDesc cube) {
         ValidateContext context = new ValidateContext();

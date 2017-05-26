@@ -83,7 +83,8 @@ public class GridTableHBaseBenchmark {
         Hits hits = new Hits(N_ROWS, hitRatio, indexRatio);
 
         for (int i = 0; i < ROUND; i++) {
-            System.out.println("==================================== ROUND " + (i + 1) + " ========================================");
+            System.out.println("==================================== ROUND " + (i + 1)
+                    + " ========================================");
             testRowScanWithIndex(conn, hits.getHitsForRowScanWithIndex());
             testRowScanNoIndexFullScan(conn, hits.getHitsForRowScanNoIndex());
             testRowScanNoIndexSkipScan(conn, hits.getHitsForRowScanNoIndex());
@@ -386,7 +387,8 @@ public class GridTableHBaseBenchmark {
         public void markEnd() {
             endTime = System.currentTimeMillis();
             System.out.println();
-            System.out.println(name + " ends, " + (endTime - startTime) + " ms, " + rowsRead + " rows read, " + bytesRead + " bytes read");
+            System.out.println(name + " ends, " + (endTime - startTime) + " ms, " + rowsRead + " rows read, "
+                    + bytesRead + " bytes read");
         }
     }
 

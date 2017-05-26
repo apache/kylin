@@ -53,9 +53,11 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseUsageExtractor.class);
     @SuppressWarnings("static-access")
-    private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false).withDescription("Specify which cube to extract").create("cube");
+    private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false)
+            .withDescription("Specify which cube to extract").create("cube");
     @SuppressWarnings("static-access")
-    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
+    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false)
+            .withDescription("Specify realizations in which project to extract").create("project");
 
     private List<String> htables = Lists.newArrayList();
     private Configuration conf;
@@ -101,7 +103,7 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
 
         if (optionsHelper.hasOption(OPTION_PROJECT)) {
             String projectNames = optionsHelper.getOptionValue(OPTION_PROJECT);
-            for (String projectName: projectNames.split(",")) {
+            for (String projectName : projectNames.split(",")) {
                 ProjectInstance projectInstance = projectManager.getProject(projectName);
                 if (projectInstance == null) {
                     throw new IllegalArgumentException("Project " + projectName + " does not exist");
@@ -188,9 +190,11 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
             File hdfsDir = new File(dest, "hdfs");
             FileUtils.forceMkdir(hdfsDir);
             CliCommandExecutor cliCommandExecutor = kylinConfig.getCliCommandExecutor();
-            String output = cliCommandExecutor.execute("hadoop fs -ls -R " + conf.get("hbase.rootdir") + "/data/default/KYLIN_*").getSecond();
+            String output = cliCommandExecutor
+                    .execute("hadoop fs -ls -R " + conf.get("hbase.rootdir") + "/data/default/KYLIN_*").getSecond();
             FileUtils.writeStringToFile(new File(hdfsDir, "hdfs-files.list"), output, Charset.defaultCharset());
-            output = cliCommandExecutor.execute("hadoop fs -ls -R " + conf.get("hbase.rootdir") + "/data/default/kylin_*").getSecond();
+            output = cliCommandExecutor
+                    .execute("hadoop fs -ls -R " + conf.get("hbase.rootdir") + "/data/default/kylin_*").getSecond();
             FileUtils.writeStringToFile(new File(hdfsDir, "hdfs-files.list"), output, Charset.defaultCharset(), true);
         } catch (Exception e) {
             logger.warn("HBase hdfs status fetch failed: ", e);

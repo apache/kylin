@@ -71,20 +71,26 @@ public class SortedIteratorMergerWithLimitTest {
     @Test
     public void basic1() {
 
-        List<CloneableInteger> a = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(3));
-        List<CloneableInteger> b = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(3));
-        List<CloneableInteger> c = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(5));
+        List<CloneableInteger> a = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2),
+                new CloneableInteger(3));
+        List<CloneableInteger> b = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2),
+                new CloneableInteger(3));
+        List<CloneableInteger> c = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2),
+                new CloneableInteger(5));
         List<Iterator<CloneableInteger>> input = Lists.newArrayList();
         input.add(a.iterator());
         input.add(b.iterator());
         input.add(c.iterator());
-        SortedIteratorMergerWithLimit<CloneableInteger> merger = new SortedIteratorMergerWithLimit<CloneableInteger>(input.iterator(), 3, getComp());
+        SortedIteratorMergerWithLimit<CloneableInteger> merger = new SortedIteratorMergerWithLimit<CloneableInteger>(
+                input.iterator(), 3, getComp());
         Iterator<CloneableInteger> iterator = merger.getIterator();
         List<CloneableInteger> result = Lists.newArrayList();
         while (iterator.hasNext()) {
             result.add(iterator.next());
         }
-        Assert.assertEquals(Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(1), new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(2), new CloneableInteger(2), new CloneableInteger(3), new CloneableInteger(3)), result);
+        Assert.assertEquals(Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(1),
+                new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(2), new CloneableInteger(2),
+                new CloneableInteger(3), new CloneableInteger(3)), result);
     }
 
     @Test
@@ -92,18 +98,21 @@ public class SortedIteratorMergerWithLimitTest {
 
         List<CloneableInteger> a = Lists.newArrayList(new CloneableInteger(2));
         List<CloneableInteger> b = Lists.newArrayList();
-        List<CloneableInteger> c = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(5));
+        List<CloneableInteger> c = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2),
+                new CloneableInteger(5));
         List<Iterator<CloneableInteger>> input = Lists.newArrayList();
         input.add(a.iterator());
         input.add(b.iterator());
         input.add(c.iterator());
-        SortedIteratorMergerWithLimit<CloneableInteger> merger = new SortedIteratorMergerWithLimit<CloneableInteger>(input.iterator(), 3, getComp());
+        SortedIteratorMergerWithLimit<CloneableInteger> merger = new SortedIteratorMergerWithLimit<CloneableInteger>(
+                input.iterator(), 3, getComp());
         Iterator<CloneableInteger> iterator = merger.getIterator();
         List<CloneableInteger> result = Lists.newArrayList();
         while (iterator.hasNext()) {
             result.add(iterator.next());
         }
-        Assert.assertEquals(Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(2), new CloneableInteger(5)), result);
+        Assert.assertEquals(Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2),
+                new CloneableInteger(2), new CloneableInteger(5)), result);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -111,12 +120,14 @@ public class SortedIteratorMergerWithLimitTest {
 
         List<CloneableInteger> a = Lists.newArrayList(new CloneableInteger(2), new CloneableInteger(1));
         List<CloneableInteger> b = Lists.newArrayList();
-        List<CloneableInteger> c = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2), new CloneableInteger(5));
+        List<CloneableInteger> c = Lists.newArrayList(new CloneableInteger(1), new CloneableInteger(2),
+                new CloneableInteger(5));
         List<Iterator<CloneableInteger>> input = Lists.newArrayList();
         input.add(a.iterator());
         input.add(b.iterator());
         input.add(c.iterator());
-        SortedIteratorMergerWithLimit<CloneableInteger> merger = new SortedIteratorMergerWithLimit<CloneableInteger>(input.iterator(), 3, getComp());
+        SortedIteratorMergerWithLimit<CloneableInteger> merger = new SortedIteratorMergerWithLimit<CloneableInteger>(
+                input.iterator(), 3, getComp());
         Iterator<CloneableInteger> iterator = merger.getIterator();
         List<CloneableInteger> result = Lists.newArrayList();
         while (iterator.hasNext()) {

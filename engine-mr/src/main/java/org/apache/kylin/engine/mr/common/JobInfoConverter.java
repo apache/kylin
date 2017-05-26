@@ -80,7 +80,9 @@ public class JobInfoConverter {
         }
         if (task instanceof MapReduceExecutable) {
             result.setExecCmd(((MapReduceExecutable) task).getMapReduceParams());
-            result.setExecWaitTime(AbstractExecutable.getExtraInfoAsLong(stepOutput, MapReduceExecutable.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
+            result.setExecWaitTime(
+                    AbstractExecutable.getExtraInfoAsLong(stepOutput, MapReduceExecutable.MAP_REDUCE_WAIT_TIME, 0L)
+                            / 1000);
         }
         if (task instanceof HadoopShellExecutable) {
             result.setExecCmd(((HadoopShellExecutable) task).getJobParams());

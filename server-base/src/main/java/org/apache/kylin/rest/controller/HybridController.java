@@ -46,7 +46,8 @@ public class HybridController extends BasicController {
         checkRequiredArg("project", request.getProject());
         checkRequiredArg("model", request.getModel());
         checkRequiredArg("cubes", request.getCubes());
-        HybridInstance instance = hybridService.createHybridCube(request.getHybrid(), request.getProject(), request.getModel(), request.getCubes());
+        HybridInstance instance = hybridService.createHybridCube(request.getHybrid(), request.getProject(),
+                request.getModel(), request.getCubes());
         return instance;
     }
 
@@ -57,7 +58,8 @@ public class HybridController extends BasicController {
         checkRequiredArg("project", request.getProject());
         checkRequiredArg("model", request.getModel());
         checkRequiredArg("cubes", request.getCubes());
-        HybridInstance instance = hybridService.updateHybridCube(request.getHybrid(), request.getProject(), request.getModel(), request.getCubes());
+        HybridInstance instance = hybridService.updateHybridCube(request.getHybrid(), request.getProject(),
+                request.getModel(), request.getCubes());
         return instance;
     }
 
@@ -72,7 +74,8 @@ public class HybridController extends BasicController {
 
     @RequestMapping(value = "", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
-    public Collection<HybridInstance> list(@RequestParam(required = false) String project, @RequestParam(required = false) String model) {
+    public Collection<HybridInstance> list(@RequestParam(required = false) String project,
+            @RequestParam(required = false) String model) {
         return hybridService.listHybrids(project, model);
     }
 

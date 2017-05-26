@@ -18,12 +18,11 @@
 
 package org.apache.kylin.rest.adhoc;
 
-
-import org.apache.commons.pool.PoolableObjectFactory;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
+import org.apache.commons.pool.PoolableObjectFactory;
 
 class JdbcConnectionFactory implements PoolableObjectFactory {
 
@@ -34,7 +33,6 @@ class JdbcConnectionFactory implements PoolableObjectFactory {
     private final String username;
 
     private final String password;
-
 
     public JdbcConnectionFactory(String jdbcUrl, String driverClass, String username, String password) {
         this.jdbcUrl = jdbcUrl;
@@ -49,13 +47,11 @@ class JdbcConnectionFactory implements PoolableObjectFactory {
         }
     }
 
-
     @Override
     public Connection makeObject() throws Exception {
         Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
         return connection;
     }
-
 
     @Override
     public void activateObject(Object o) throws Exception {
@@ -70,7 +66,7 @@ class JdbcConnectionFactory implements PoolableObjectFactory {
     @Override
     public void destroyObject(Object pooledObject) throws Exception {
 
-        if(pooledObject instanceof Connection) {
+        if (pooledObject instanceof Connection) {
             Connection connection = (Connection) pooledObject;
 
             if (connection != null)
@@ -81,7 +77,7 @@ class JdbcConnectionFactory implements PoolableObjectFactory {
 
     @Override
     public boolean validateObject(Object pooledObject) {
-        if(pooledObject instanceof Connection) {
+        if (pooledObject instanceof Connection) {
             Connection connection = (Connection) pooledObject;
 
             if (connection != null) {

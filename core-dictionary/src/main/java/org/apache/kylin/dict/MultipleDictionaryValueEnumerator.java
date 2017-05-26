@@ -57,7 +57,7 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
         while (curDictIndex < dictionaryList.size()) {
             if (curKey <= curDict.getMaxId()) {
                 curValue = curDict.getValueFromId(curKey);
-                curKey ++;
+                curKey++;
 
                 return true;
             }

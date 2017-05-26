@@ -94,7 +94,8 @@ public class GTRowBlock {
             primaryKey.copyFrom(other.primaryKey);
             for (int i = 0; i < info.colBlocks.length; i++) {
                 cellBlockBuffers[i].clear();
-                cellBlockBuffers[i].put(other.cellBlocks[i].array(), other.cellBlocks[i].offset(), other.cellBlocks[i].length());
+                cellBlockBuffers[i].put(other.cellBlocks[i].array(), other.cellBlocks[i].offset(),
+                        other.cellBlocks[i].length());
             }
         }
 

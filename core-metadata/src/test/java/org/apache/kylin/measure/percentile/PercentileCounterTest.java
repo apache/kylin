@@ -109,7 +109,7 @@ public class PercentileCounterTest {
         ObjectInputStream in = null;
         try {
             in = new ObjectInputStream(is);
-            serialized_counter = (PercentileCounter)in.readObject();
+            serialized_counter = (PercentileCounter) in.readObject();
 
             Assert.assertNotNull(serialized_counter);
             Assert.assertNotNull(serialized_counter.registers);

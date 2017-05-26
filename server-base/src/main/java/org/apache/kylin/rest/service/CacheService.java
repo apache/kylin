@@ -70,7 +70,8 @@ public class CacheService extends BasicService {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                throws IOException {
             if ("cube".equals(entity) && event == Event.UPDATE) {
                 final String cubeName = cacheKey;
                 new Thread() { // do not block the event broadcast thread

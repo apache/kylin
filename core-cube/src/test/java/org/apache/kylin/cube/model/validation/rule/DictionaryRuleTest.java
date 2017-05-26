@@ -30,7 +30,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -41,6 +40,8 @@ import org.apache.kylin.dict.GlobalDictionaryBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 public class DictionaryRuleTest extends LocalFileMetadataTestCase {
     private static KylinConfig config;
@@ -74,13 +75,16 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBadDesc() throws IOException {
-        testDictionaryDesc(ERROR_DUPLICATE_DICTIONARY_COLUMN, DictionaryDesc.create("ORDER_ID", null, "FakeBuilderClass"));
-        testDictionaryDesc(ERROR_DUPLICATE_DICTIONARY_COLUMN, DictionaryDesc.create("ORDER_ID", null, GlobalDictionaryBuilder.class.getName()));
+        testDictionaryDesc(ERROR_DUPLICATE_DICTIONARY_COLUMN,
+                DictionaryDesc.create("ORDER_ID", null, "FakeBuilderClass"));
+        testDictionaryDesc(ERROR_DUPLICATE_DICTIONARY_COLUMN,
+                DictionaryDesc.create("ORDER_ID", null, GlobalDictionaryBuilder.class.getName()));
     }
 
     @Test
     public void testBadDesc2() throws IOException {
-        testDictionaryDesc(ERROR_REUSE_BUILDER_BOTH_SET, DictionaryDesc.create("lstg_site_id", "SITE_NAME", "FakeBuilderClass"));
+        testDictionaryDesc(ERROR_REUSE_BUILDER_BOTH_SET,
+                DictionaryDesc.create("lstg_site_id", "SITE_NAME", "FakeBuilderClass"));
     }
 
     @Test
@@ -90,8 +94,7 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBadDesc4() throws IOException {
-        testDictionaryDesc(ERROR_TRANSITIVE_REUSE,
-                DictionaryDesc.create("lstg_site_id", "SELLER_ID", null),
+        testDictionaryDesc(ERROR_TRANSITIVE_REUSE, DictionaryDesc.create("lstg_site_id", "SELLER_ID", null),
                 DictionaryDesc.create("price", "lstg_site_id", null));
     }
 
@@ -108,7 +111,8 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
 
     private void testDictionaryDesc(String expectMessage, DictionaryDesc... descs) throws IOException {
         DictionaryRule rule = new DictionaryRule();
-        File f = new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_without_slr_left_join_desc.json");
+        File f = new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA
+                + "/cube_desc/test_kylin_cube_without_slr_left_join_desc.json");
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
 
         List<DictionaryDesc> newDicts = Lists.newArrayList(desc.getDictionaries());

@@ -57,9 +57,11 @@ public class ExternalFilterControllerV2 extends BasicController {
     @Qualifier("extFilterService")
     private ExtFilterService extFilterService;
 
-    @RequestMapping(value = "/saveExtFilter", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/saveExtFilter", method = { RequestMethod.POST }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void saveExternalFilterV2(@RequestHeader("Accept-Language") String lang, @RequestBody ExternalFilterRequest request) throws IOException {
+    public void saveExternalFilterV2(@RequestHeader("Accept-Language") String lang,
+            @RequestBody ExternalFilterRequest request) throws IOException {
         MsgPicker.setMsg(lang);
 
         String filterProject = request.getProject();
@@ -69,9 +71,11 @@ public class ExternalFilterControllerV2 extends BasicController {
         extFilterService.syncExtFilterToProject(new String[] { desc.getName() }, filterProject);
     }
 
-    @RequestMapping(value = "/updateExtFilter", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/updateExtFilter", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void updateExternalFilterV2(@RequestHeader("Accept-Language") String lang, @RequestBody ExternalFilterRequest request) throws IOException {
+    public void updateExternalFilterV2(@RequestHeader("Accept-Language") String lang,
+            @RequestBody ExternalFilterRequest request) throws IOException {
         MsgPicker.setMsg(lang);
 
         ExternalFilterDesc desc = JsonUtil.readValue(request.getExtFilter(), ExternalFilterDesc.class);
@@ -79,9 +83,11 @@ public class ExternalFilterControllerV2 extends BasicController {
         extFilterService.syncExtFilterToProject(new String[] { desc.getName() }, request.getProject());
     }
 
-    @RequestMapping(value = "/{filter}/{project}", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{filter}/{project}", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void removeFilterV2(@RequestHeader("Accept-Language") String lang, @PathVariable String filter, @PathVariable String project) throws IOException {
+    public void removeFilterV2(@RequestHeader("Accept-Language") String lang, @PathVariable String filter,
+            @PathVariable String project) throws IOException {
         MsgPicker.setMsg(lang);
 
         extFilterService.removeExtFilterFromProject(filter, project);
@@ -90,7 +96,8 @@ public class ExternalFilterControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getExternalFiltersV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "project", required = true) String project) throws IOException {
+    public EnvelopeResponse getExternalFiltersV2(@RequestHeader("Accept-Language") String lang,
+            @RequestParam(value = "project", required = true) String project) throws IOException {
         MsgPicker.setMsg(lang);
 
         List<ExternalFilterDesc> filterDescs = Lists.newArrayList();

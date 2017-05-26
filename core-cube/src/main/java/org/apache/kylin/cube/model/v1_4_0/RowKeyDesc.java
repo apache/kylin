@@ -188,7 +188,8 @@ public class RowKeyDesc {
 
     @Override
     public String toString() {
-        return "RowKeyDesc [rowkeyColumns=" + Arrays.toString(rowkeyColumns) + ", aggregationGroups=" + Arrays.toString(aggregationGroups) + "]";
+        return "RowKeyDesc [rowkeyColumns=" + Arrays.toString(rowkeyColumns) + ", aggregationGroups="
+                + Arrays.toString(aggregationGroups) + "]";
     }
 
     private void buildRowKey(Map<String, TblColRef> colNameAbbr) {
@@ -235,7 +236,8 @@ public class RowKeyDesc {
             for (int j = 0; j < aggGrp.length; j++) {
                 TblColRef aggCol = colNameAbbr.get(aggGrp[j].toUpperCase());
                 if (aggCol == null) {
-                    throw new IllegalArgumentException("Can't find aggregation column " + aggGrp[j] + " in  cube " + this.cubeDesc.getName());
+                    throw new IllegalArgumentException(
+                            "Can't find aggregation column " + aggGrp[j] + " in  cube " + this.cubeDesc.getName());
                 }
                 Integer index = getColumnBitIndex(aggCol);
                 mask.groupMask |= 1L << index;

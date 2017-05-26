@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
@@ -52,6 +51,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -112,7 +112,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             isStatistics = true;
             baseCuboidRowCountInMappers = Lists.newArrayList();
             cuboidHLLMap = Maps.newHashMap();
-            samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
+            samplingPercentage = Integer
+                    .parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
             logger.info("Reducer " + taskId + " handling stats");
         } else if (collectStatistics && (taskId == numberOfTasks - 2)) {
             // partition col
@@ -133,7 +134,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             if (cubeDesc.getDictionaryBuilderClass(col) != null) { // only works with default dictionary builder
                 buildDictInReducer = false;
             }
-            if(config.getUHCReducerCount() > 1) {
+            if (config.getUHCReducerCount() > 1) {
                 int[] uhcIndex = CubeManager.getInstance(config).getUHCIndex(cubeDesc);
                 int colIndex = reducerIdToColumnIndex.get(taskId);
                 if (uhcIndex[colIndex] == 1)
@@ -162,7 +163,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     }
 
     @Override
-    public void doReduce(SelfDefineSortableKey skey, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    public void doReduce(SelfDefineSortableKey skey, Iterable<Text> values, Context context)
+            throws IOException, InterruptedException {
         Text key = skey.getText();
         if (isStatistics) {
             // for hll
@@ -243,9 +245,12 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             // output written to baseDir/colName/colName.pci-r-00000 (etc)
             String partitionFileName = col.getIdentity() + "/" + col.getName() + PARTITION_COL_INFO_FILE_POSTFIX;
 
-            mos.write(BatchConstants.CFG_OUTPUT_PARTITION, NullWritable.get(), new LongWritable(timeMinValue), partitionFileName);
-            mos.write(BatchConstants.CFG_OUTPUT_PARTITION, NullWritable.get(), new LongWritable(timeMaxValue), partitionFileName);
-            logger.info("write partition info for col : " + col.getName() + "  minValue:" + timeMinValue + " maxValue:" + timeMaxValue);
+            mos.write(BatchConstants.CFG_OUTPUT_PARTITION, NullWritable.get(), new LongWritable(timeMinValue),
+                    partitionFileName);
+            mos.write(BatchConstants.CFG_OUTPUT_PARTITION, NullWritable.get(), new LongWritable(timeMaxValue),
+                    partitionFileName);
+            logger.info("write partition info for col : " + col.getName() + "  minValue:" + timeMinValue + " maxValue:"
+                    + timeMaxValue);
         }
     }
 
@@ -253,11 +258,13 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         // output written to baseDir/colName/colName.rldict-r-00000 (etc)
         String dictFileName = col.getIdentity() + "/" + col.getName() + DICT_FILE_POSTFIX;
 
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); DataOutputStream outputStream = new DataOutputStream(baos);) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                DataOutputStream outputStream = new DataOutputStream(baos);) {
             outputStream.writeUTF(dict.getClass().getName());
             dict.write(outputStream);
 
-            mos.write(BatchConstants.CFG_OUTPUT_DICT, NullWritable.get(), new BytesWritable(baos.toByteArray()), dictFileName);
+            mos.write(BatchConstants.CFG_OUTPUT_DICT, NullWritable.get(), new BytesWritable(baos.toByteArray()),
+                    dictFileName);
         }
     }
 
@@ -273,19 +280,23 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             grandTotal += hll.getCountEstimate();
         }
         double mapperOverlapRatio = grandTotal == 0 ? 0 : (double) totalRowsBeforeMerge / grandTotal;
-        mos.write(BatchConstants.CFG_OUTPUT_STATISTICS, new LongWritable(-1), new BytesWritable(Bytes.toBytes(mapperOverlapRatio)), statisticsFileName);
+        mos.write(BatchConstants.CFG_OUTPUT_STATISTICS, new LongWritable(-1),
+                new BytesWritable(Bytes.toBytes(mapperOverlapRatio)), statisticsFileName);
 
         // mapper number at key -2
-        mos.write(BatchConstants.CFG_OUTPUT_STATISTICS, new LongWritable(-2), new BytesWritable(Bytes.toBytes(baseCuboidRowCountInMappers.size())), statisticsFileName);
+        mos.write(BatchConstants.CFG_OUTPUT_STATISTICS, new LongWritable(-2),
+                new BytesWritable(Bytes.toBytes(baseCuboidRowCountInMappers.size())), statisticsFileName);
 
         // sampling percentage at key 0
-        mos.write(BatchConstants.CFG_OUTPUT_STATISTICS, new LongWritable(0L), new BytesWritable(Bytes.toBytes(samplingPercentage)), statisticsFileName);
+        mos.write(BatchConstants.CFG_OUTPUT_STATISTICS, new LongWritable(0L),
+                new BytesWritable(Bytes.toBytes(samplingPercentage)), statisticsFileName);
 
         for (long i : allCuboids) {
             valueBuf.clear();
             cuboidHLLMap.get(i).writeRegisters(valueBuf);
             valueBuf.flip();
-            mos.write(BatchConstants.CFG_OUTPUT_STATISTICS, new LongWritable(i), new BytesWritable(valueBuf.array(), valueBuf.limit()), statisticsFileName);
+            mos.write(BatchConstants.CFG_OUTPUT_STATISTICS, new LongWritable(i),
+                    new BytesWritable(valueBuf.array(), valueBuf.limit()), statisticsFileName);
         }
     }
 

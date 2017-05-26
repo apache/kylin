@@ -21,15 +21,14 @@ package org.apache.kylin.source.kafka;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.TreeMap;
-import java.util.Collections;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ByteBufferBackedInputStream;
 import org.apache.kylin.common.util.StreamingMessageRow;
@@ -37,6 +36,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
@@ -68,7 +68,8 @@ public final class TimedJsonStreamParser extends StreamingParser {
     private final Map<String, Object> tempMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private final Map<String, String[]> nameMap = new HashMap<>();
 
-    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
+    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class),
+            SimpleType.construct(Object.class));
 
     private AbstractTimeParser streamTimeParser;
 
@@ -88,10 +89,12 @@ public final class TimedJsonStreamParser extends StreamingParser {
                 Constructor constructor = clazz.getConstructor(Map.class);
                 streamTimeParser = (AbstractTimeParser) constructor.newInstance(properties);
             } catch (Exception e) {
-                throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", parserProperties " + properties + ".", e);
+                throw new IllegalStateException(
+                        "Invalid StreamingConfig, tsParser " + tsParser + ", parserProperties " + properties + ".", e);
             }
         } else {
-            throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", parserProperties " + properties + ".");
+            throw new IllegalStateException(
+                    "Invalid StreamingConfig, tsParser " + tsParser + ", parserProperties " + properties + ".");
         }
         mapper = new ObjectMapper();
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -116,7 +119,8 @@ public final class TimedJsonStreamParser extends StreamingParser {
                 }
             }
 
-            StreamingMessageRow streamingMessageRow = new StreamingMessageRow(result, 0, t, Collections.<String, Object>emptyMap());
+            StreamingMessageRow streamingMessageRow = new StreamingMessageRow(result, 0, t,
+                    Collections.<String, Object> emptyMap());
             List<StreamingMessageRow> messageRowList = new ArrayList<StreamingMessageRow>();
             messageRowList.add(streamingMessageRow);
             return messageRowList;

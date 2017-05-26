@@ -47,7 +47,8 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
     /**
      * thisIsAsecretKey
      */
-    private static byte[] key = { 0x74, 0x68, 0x69, 0x73, 0x49, 0x73, 0x41, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79 };
+    private static byte[] key = { 0x74, 0x68, 0x69, 0x73, 0x49, 0x73, 0x41, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b,
+            0x65, 0x79 };
 
     /**
      * The PasswordPlaceholderConfigurer will read Kylin properties as the Spring resource
@@ -112,7 +113,8 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
     }
 
     private static void printUsage() {
-        System.out.println("Usage: java org.apache.kylin.rest.security.PasswordPlaceholderConfigurer <EncryptMethod> <your_password>");
+        System.out.println(
+                "Usage: java org.apache.kylin.rest.security.PasswordPlaceholderConfigurer <EncryptMethod> <your_password>");
         System.out.println("EncryptMethod: AES or BCrypt");
     }
 

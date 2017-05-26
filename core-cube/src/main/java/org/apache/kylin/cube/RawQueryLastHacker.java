@@ -39,7 +39,8 @@ public class RawQueryLastHacker {
 
         // If no group by and metric found, then it's simple query like select ... from ... where ...,
         // But we have no raw data stored, in order to return better results, we hack to output sum of metric column
-        logger.info("No group by and aggregation found in this query, will hack some result for better look of output...");
+        logger.info(
+                "No group by and aggregation found in this query, will hack some result for better look of output...");
 
         // If it's select * from ...,
         // We need to retrieve cube to manually add columns into sqlDigest, so that we have full-columns results as output.

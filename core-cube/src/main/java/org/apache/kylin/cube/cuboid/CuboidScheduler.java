@@ -19,10 +19,6 @@
 package org.apache.kylin.cube.cuboid;
 
 import java.io.Serializable;
-
-/**
- */
-
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +41,9 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+/**
+ */
 
 @SuppressWarnings("serial")
 public class CuboidScheduler implements Serializable {
@@ -143,7 +142,8 @@ public class CuboidScheduler implements Serializable {
         maxCombination = maxCombination < 0 ? Long.MAX_VALUE : maxCombination;
         while (!children.isEmpty()) {
             if (cuboidHolder.size() > maxCombination) {
-                throw new IllegalStateException("Too many cuboids for the cube. Cuboid combination reached " + cuboidHolder.size() + " and limit is " + maxCombination + ". Abort calculation.");
+                throw new IllegalStateException("Too many cuboids for the cube. Cuboid combination reached "
+                        + cuboidHolder.size() + " and limit is " + maxCombination + ". Abort calculation.");
             }
             cuboidHolder.addAll(children);
             children = getOnTreeParentsByLayer(children);

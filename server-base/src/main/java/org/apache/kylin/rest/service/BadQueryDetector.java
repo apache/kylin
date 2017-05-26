@@ -95,7 +95,8 @@ public class BadQueryDetector extends Thread {
         notifiers.add(notifier);
     }
 
-    private void notify(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
+    private void notify(String adj, float runningSec, long startTime, String project, String sql, String user,
+            Thread t) {
         for (Notifier notifier : notifiers) {
             try {
                 notifier.badQueryFound(adj, runningSec, startTime, project, sql, user, t);
@@ -140,7 +141,8 @@ public class BadQueryDetector extends Thread {
         for (Entry e : entries) {
             float runningSec = (float) (now - e.startTime) / 1000;
             if (runningSec >= alertRunningSec) {
-                notify("Slow", runningSec, e.startTime, e.sqlRequest.getProject(), e.sqlRequest.getSql(), e.user, e.thread);
+                notify("Slow", runningSec, e.startTime, e.sqlRequest.getProject(), e.sqlRequest.getSql(), e.user,
+                        e.thread);
                 dumpStackTrace(e.thread);
             } else {
                 break; // entries are sorted by startTime
@@ -171,13 +173,16 @@ public class BadQueryDetector extends Thread {
     }
 
     public interface Notifier {
-        void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t);
+        void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user,
+                Thread t);
     }
 
     private class LoggerNotifier implements Notifier {
         @Override
-        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
-            logger.info("{} query has been running {} seconds (project:{}, thread: 0x{}, user:{}) -- {}", adj, runningSec, project, Long.toHexString(t.getId()), user, sql);
+        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user,
+                Thread t) {
+            logger.info("{} query has been running {} seconds (project:{}, thread: 0x{}, user:{}) -- {}", adj,
+                    runningSec, project, Long.toHexString(t.getId()), user, sql);
         }
     }
 
@@ -207,18 +212,23 @@ public class BadQueryDetector extends Thread {
         }
 
         @Override
-        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
+        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user,
+                Thread t) {
             try {
                 long cachingSeconds = (kylinConfig.getBadQueryDefaultAlertingSeconds() + 1) * 30L;
                 Pair<Long, String> sqlPair = new Pair<>(startTime, sql);
                 if (!cacheQueue.contains(sqlPair)) {
-                    badQueryManager.addEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(), user, project);
+                    badQueryManager.addEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(),
+                            user, project);
                     cacheQueue.add(sqlPair);
-                    while (!cacheQueue.isEmpty() && (System.currentTimeMillis() - cacheQueue.first().getFirst() > cachingSeconds * 1000 || cacheQueue.size() > kylinConfig.getBadQueryHistoryNum() * 3)) {
+                    while (!cacheQueue.isEmpty()
+                            && (System.currentTimeMillis() - cacheQueue.first().getFirst() > cachingSeconds * 1000
+                                    || cacheQueue.size() > kylinConfig.getBadQueryHistoryNum() * 3)) {
                         cacheQueue.pollFirst();
                     }
                 } else {
-                    badQueryManager.updateEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(), user, project);
+                    badQueryManager.updateEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(),
+                            user, project);
                 }
             } catch (IOException e) {
                 logger.error("Error in bad query persistence.", e);

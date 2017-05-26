@@ -119,7 +119,8 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         assertEquals(one.getStatus(), another.getStatus());
         assertEquals(one.isRunnable(), another.isRunnable());
         assertEquals(one.getOutput(), another.getOutput());
-        assertTrue((one.getParams() == null && another.getParams() == null) || (one.getParams() != null && another.getParams() != null));
+        assertTrue((one.getParams() == null && another.getParams() == null)
+                || (one.getParams() != null && another.getParams() != null));
         if (one.getParams() != null) {
             assertEquals(one.getParams().size(), another.getParams().size());
             for (String key : one.getParams().keySet()) {

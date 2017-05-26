@@ -29,7 +29,7 @@ import java.io.Serializable;
  * 
  * @param <T>
  */
-public class Counter<T> implements Externalizable, Serializable{
+public class Counter<T> implements Externalizable, Serializable {
 
     protected T item;
     protected double count;
@@ -50,7 +50,6 @@ public class Counter<T> implements Externalizable, Serializable{
         this.count = count;
     }
 
-
     public T getItem() {
         return item;
     }
@@ -62,6 +61,7 @@ public class Counter<T> implements Externalizable, Serializable{
     public void setCount(double count) {
         this.count = count;
     }
+
     @Override
     public String toString() {
         return item + ":" + count;

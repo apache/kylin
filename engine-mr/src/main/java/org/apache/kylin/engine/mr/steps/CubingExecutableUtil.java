@@ -23,17 +23,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import org.apache.commons.lang.StringUtils;
+import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.execution.ExecutableContext;
 
-import javax.annotation.Nullable;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class CubingExecutableUtil {
 
@@ -78,13 +78,14 @@ public class CubingExecutableUtil {
         final CubeInstance cube = mgr.getCube(cubeName);
 
         if (cube == null) {
-            String cubeList = StringUtils.join(Iterables.transform(mgr.listAllCubes(), new Function<CubeInstance, String>() {
-                @Nullable
-                @Override
-                public String apply(@Nullable CubeInstance input) {
-                    return input.getName();
-                }
-            }).iterator(), ",");
+            String cubeList = StringUtils
+                    .join(Iterables.transform(mgr.listAllCubes(), new Function<CubeInstance, String>() {
+                        @Nullable
+                        @Override
+                        public String apply(@Nullable CubeInstance input) {
+                            return input.getName();
+                        }
+                    }).iterator(), ",");
 
             throw new IllegalStateException("target cube name: " + cubeName + " cube list: " + cubeList);
         }
@@ -92,13 +93,14 @@ public class CubingExecutableUtil {
         final CubeSegment newSegment = cube.getSegmentById(segmentId);
 
         if (newSegment == null) {
-            String segmentList = StringUtils.join(Iterables.transform(cube.getSegments(), new Function<CubeSegment, String>() {
-                @Nullable
-                @Override
-                public String apply(@Nullable CubeSegment input) {
-                    return input.getUuid();
-                }
-            }).iterator(), ",");
+            String segmentList = StringUtils
+                    .join(Iterables.transform(cube.getSegments(), new Function<CubeSegment, String>() {
+                        @Nullable
+                        @Override
+                        public String apply(@Nullable CubeSegment input) {
+                            return input.getUuid();
+                        }
+                    }).iterator(), ",");
 
             throw new IllegalStateException("target segment id: " + segmentId + " segment list: " + segmentList);
         }

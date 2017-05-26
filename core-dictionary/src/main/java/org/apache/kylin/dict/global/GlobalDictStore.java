@@ -18,11 +18,12 @@
 
 package org.apache.kylin.dict.global;
 
-import com.google.common.base.Preconditions;
+import java.io.IOException;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 
-import java.io.IOException;
+import com.google.common.base.Preconditions;
 
 public abstract class GlobalDictStore {
 
@@ -73,7 +74,8 @@ public abstract class GlobalDictStore {
      * @return file name of the new written slice
      * @throws IOException on I/O error
      */
-    public abstract String writeSlice(String workingDir, AppendDictSliceKey key, AppendDictNode slice) throws IOException;
+    public abstract String writeSlice(String workingDir, AppendDictSliceKey key, AppendDictNode slice)
+            throws IOException;
 
     /**
      * Delete a slice with the specified file name.

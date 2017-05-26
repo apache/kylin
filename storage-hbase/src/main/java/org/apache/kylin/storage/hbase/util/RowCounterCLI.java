@@ -42,7 +42,8 @@ public class RowCounterCLI {
     public static void main(String[] args) throws IOException {
 
         if (args == null || args.length != 3) {
-            System.out.println("Usage: hbase org.apache.hadoop.util.RunJar kylin-job-latest.jar org.apache.kylin.job.tools.RowCounterCLI [HTABLE_NAME] [STARTKEY] [ENDKEY]");
+            System.out.println(
+                    "Usage: hbase org.apache.hadoop.util.RunJar kylin-job-latest.jar org.apache.kylin.job.tools.RowCounterCLI [HTABLE_NAME] [STARTKEY] [ENDKEY]");
         }
 
         System.out.println(args[0]);

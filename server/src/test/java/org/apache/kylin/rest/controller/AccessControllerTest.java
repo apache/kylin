@@ -18,6 +18,13 @@
 
 package org.apache.kylin.rest.controller;
 
+import static junit.framework.TestCase.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.AccessRequest;
@@ -37,13 +44,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.io.IOException;
-import java.util.List;
-
-import static junit.framework.TestCase.fail;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author xduo
@@ -88,7 +88,8 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
     @Test
     public void testBasics() throws IOException {
         swichToAdmin();
-        List<AccessEntryResponse> aes = accessController.getAccessEntities(CUBE_INSTANCE, "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
+        List<AccessEntryResponse> aes = accessController.getAccessEntities(CUBE_INSTANCE,
+                "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
         Assert.assertTrue(aes.size() == 0);
 
         AccessRequest accessRequest = getAccessRequest(MODELER, ADMINISTRATION);

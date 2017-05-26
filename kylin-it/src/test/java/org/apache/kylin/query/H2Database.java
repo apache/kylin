@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
@@ -37,6 +36,8 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 public class H2Database {
     @SuppressWarnings("unused")
@@ -138,7 +139,8 @@ public class H2Database {
             csvColumns.append(col.getName());
         }
         ddl.append(")" + "\n");
-        ddl.append("AS SELECT * FROM CSVREAD('" + csvFilePath + "', '" + csvColumns + "', 'charset=UTF-8 fieldSeparator=,');");
+        ddl.append("AS SELECT * FROM CSVREAD('" + csvFilePath + "', '" + csvColumns
+                + "', 'charset=UTF-8 fieldSeparator=,');");
 
         return ddl.toString();
     }
@@ -149,7 +151,8 @@ public class H2Database {
         for (ColumnDesc col : tableDesc.getColumns()) {
             if ("T".equalsIgnoreCase(col.getIndex())) {
                 StringBuilder ddl = new StringBuilder();
-                ddl.append("CREATE INDEX IDX_" + tableDesc.getName() + "_" + x + " ON " + tableDesc.getIdentity() + "(" + col.getName() + ")");
+                ddl.append("CREATE INDEX IDX_" + tableDesc.getName() + "_" + x + " ON " + tableDesc.getIdentity() + "("
+                        + col.getName() + ")");
                 ddl.append("\n");
                 result.add(ddl.toString());
                 x++;

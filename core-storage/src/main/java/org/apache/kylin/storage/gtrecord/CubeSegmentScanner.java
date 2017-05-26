@@ -51,10 +51,11 @@ public class CubeSegmentScanner implements IGTScanner {
     final GTScanRequest scanRequest;
 
     public CubeSegmentScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
-            Collection<FunctionDesc> metrics, TupleFilter originalfilter, TupleFilter havingFilter, StorageContext context) {
-        
+            Collection<FunctionDesc> metrics, TupleFilter originalfilter, TupleFilter havingFilter,
+            StorageContext context) {
+
         logger.info("Init CubeSegmentScanner for segment {}", cubeSeg.getName());
-        
+
         this.cuboid = cuboid;
         this.cubeSeg = cubeSeg;
 
@@ -70,19 +71,20 @@ public class CubeSegmentScanner implements IGTScanner {
 
         CubeScanRangePlanner scanRangePlanner;
         try {
-            scanRangePlanner = new CubeScanRangePlanner(cubeSeg, cuboid, filter, dimensions, groups, metrics, havingFilter, context);
+            scanRangePlanner = new CubeScanRangePlanner(cubeSeg, cuboid, filter, dimensions, groups, metrics,
+                    havingFilter, context);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        
+
         scanRequest = scanRangePlanner.planScanRequest();
-        
+
         String gtStorage = ((GTCubeStorageQueryBase) context.getStorageQuery()).getGTStorage();
         scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest, gtStorage, context);
     }
-    
+
     public boolean isSegmentSkipped() {
         return scanner.isSegmentSkipped();
     }

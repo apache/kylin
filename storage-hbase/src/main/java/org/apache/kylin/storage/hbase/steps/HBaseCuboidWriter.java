@@ -101,7 +101,8 @@ public class HBaseCuboidWriter implements ICuboidWriter {
             final KeyValue keyValue = keyValueCreators.get(i).create(key, 0, key.length, values);
             final Put put = new Put(copy(key, 0, key.length));
             byte[] family = copy(keyValue.getFamilyArray(), keyValue.getFamilyOffset(), keyValue.getFamilyLength());
-            byte[] qualifier = copy(keyValue.getQualifierArray(), keyValue.getQualifierOffset(), keyValue.getQualifierLength());
+            byte[] qualifier = copy(keyValue.getQualifierArray(), keyValue.getQualifierOffset(),
+                    keyValue.getQualifierLength());
             byte[] value = copy(keyValue.getValueArray(), keyValue.getValueOffset(), keyValue.getValueLength());
             put.add(family, qualifier, value);
             puts.add(put);
@@ -118,7 +119,8 @@ public class HBaseCuboidWriter implements ICuboidWriter {
             if (hTable != null) {
                 hTable.put(puts);
             }
-            logger.info("commit total " + puts.size() + " puts, totally cost:" + (System.currentTimeMillis() - t) + "ms");
+            logger.info(
+                    "commit total " + puts.size() + " puts, totally cost:" + (System.currentTimeMillis() - t) + "ms");
             puts.clear();
         }
     }

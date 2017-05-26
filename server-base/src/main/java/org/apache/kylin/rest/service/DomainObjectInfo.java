@@ -20,7 +20,6 @@ package org.apache.kylin.rest.service;
 
 import org.springframework.security.acls.model.ObjectIdentity;
 
-
 class DomainObjectInfo {
     private String id;
     private String type;

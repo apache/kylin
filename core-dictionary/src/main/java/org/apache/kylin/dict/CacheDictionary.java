@@ -18,11 +18,11 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.Dictionary;
-
 import java.lang.ref.SoftReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.kylin.common.util.Dictionary;
 
 /**
  */

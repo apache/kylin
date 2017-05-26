@@ -59,7 +59,8 @@ public class JobEngineConfig {
 
         File jobConfig = getJobConfig(hadoopJobConfFile);
         if (jobConfig == null || !jobConfig.exists()) {
-            logger.warn("fail to locate " + hadoopJobConfFile + ", trying to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
+            logger.warn(
+                    "fail to locate " + hadoopJobConfFile + ", trying to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
             jobConfig = getJobConfig(HADOOP_JOB_CONF_FILENAME + ".xml");
             if (jobConfig == null || !jobConfig.exists()) {
                 logger.error("fail to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");

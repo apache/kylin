@@ -37,7 +37,8 @@ public class RangeUtil {
     /**
      * for NavigableMap sorted by C, given a range of C, return the sub map whose key falls in the range
      */
-    public static <C extends Comparable<?>, V> NavigableMap<C, V> filter(NavigableMap<C, V> values, Range<C> filterRange) {
+    public static <C extends Comparable<?>, V> NavigableMap<C, V> filter(NavigableMap<C, V> values,
+            Range<C> filterRange) {
         if (filterRange == null || filterRange.isEmpty()) {
             return Maps.newTreeMap();
         } else if (filterRange.equals(Range.all())) {

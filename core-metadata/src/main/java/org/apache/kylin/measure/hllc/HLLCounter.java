@@ -18,16 +18,17 @@
 
 package org.apache.kylin.measure.hllc;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
-import org.apache.kylin.common.util.BytesUtil;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
+
+import org.apache.kylin.common.util.BytesUtil;
+
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 @SuppressWarnings("serial")
 public class HLLCounter implements Serializable, Comparable<HLLCounter> {
@@ -99,7 +100,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         add(hashFunc.hashBytes(value, offset, length).asLong());
     }
 
-    public void addHashDirectly(long hash){
+    public void addHashDirectly(long hash) {
         add(hash);
     }
 
@@ -141,36 +142,36 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         assert this.p == another.p;
         assert this.hashFunc == another.hashFunc;
         switch (register.getRegisterType()) {
+        case SINGLE_VALUE:
+            switch (another.getRegisterType()) {
             case SINGLE_VALUE:
-                switch (another.getRegisterType()) {
-                    case SINGLE_VALUE:
-                        if (register.getSize() > 0 && another.register.getSize() > 0) {
-                            register = ((SingleValueRegister) register).toSparse();
-                        } else {
-                            SingleValueRegister sr = (SingleValueRegister) another.register;
-                            if (sr.getSize() > 0)
-                                register.set(sr.getSingleValuePos(), sr.getValue());
-                            return;
-                        }
-                        break;
-                    case SPARSE:
-                        register = ((SingleValueRegister) register).toSparse();
-                        break;
-                    case DENSE:
-                        register = ((SingleValueRegister) register).toDense(this.p);
-                        break;
-                    default:
-                        break;
+                if (register.getSize() > 0 && another.register.getSize() > 0) {
+                    register = ((SingleValueRegister) register).toSparse();
+                } else {
+                    SingleValueRegister sr = (SingleValueRegister) another.register;
+                    if (sr.getSize() > 0)
+                        register.set(sr.getSingleValuePos(), sr.getValue());
+                    return;
                 }
-
                 break;
             case SPARSE:
-                if (another.getRegisterType() == RegisterType.DENSE) {
-                    register = ((SparseRegister) register).toDense(p);
-                }
+                register = ((SingleValueRegister) register).toSparse();
+                break;
+            case DENSE:
+                register = ((SingleValueRegister) register).toDense(this.p);
                 break;
             default:
                 break;
+            }
+
+            break;
+        case SPARSE:
+            if (another.getRegisterType() == RegisterType.DENSE) {
+                register = ((SparseRegister) register).toDense(p);
+            }
+            break;
+        default:
+            break;
         }
         register.merge(another.register);
         toDenseIfNeeded();
@@ -252,7 +253,8 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
             double er2 = Math.round(rate * 2 * 10000) / 100D;
             double er3 = Math.round(rate * 3 * 10000) / 100D;
             long size = Math.round(Math.pow(2, p));
-            System.out.println("HLLC" + p + ",\t" + size + " bytes,\t68% err<" + er + "%" + ",\t95% err<" + er2 + "%" + ",\t99.7% err<" + er3 + "%");
+            System.out.println("HLLC" + p + ",\t" + size + " bytes,\t68% err<" + er + "%" + ",\t95% err<" + er2 + "%"
+                    + ",\t99.7% err<" + er3 + "%");
         }
     }
 

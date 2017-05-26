@@ -78,26 +78,38 @@ public class StreamingControllerV2 extends BasicController {
     @Qualifier("tableService")
     private TableService tableService;
 
-    @RequestMapping(value = "/getConfig", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/getConfig", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getStreamingsV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "table", required = false) String table, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) throws IOException {
+    public EnvelopeResponse getStreamingsV2(@RequestHeader("Accept-Language") String lang,
+            @RequestParam(value = "table", required = false) String table,
+            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
+            throws IOException {
         MsgPicker.setMsg(lang);
 
         int offset = pageOffset * pageSize;
         int limit = pageSize;
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, streamingService.getStreamingConfigs(table, limit, offset), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS,
+                streamingService.getStreamingConfigs(table, limit, offset), "");
     }
 
-    @RequestMapping(value = "/getKfkConfig", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/getKfkConfig", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getKafkaConfigsV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "kafkaConfigName", required = false) String kafkaConfigName, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) throws IOException {
+    public EnvelopeResponse getKafkaConfigsV2(@RequestHeader("Accept-Language") String lang,
+            @RequestParam(value = "kafkaConfigName", required = false) String kafkaConfigName,
+            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
+            throws IOException {
         MsgPicker.setMsg(lang);
 
         int offset = pageOffset * pageSize;
         int limit = pageSize;
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, kafkaConfigService.getKafkaConfigs(kafkaConfigName, limit, offset), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS,
+                kafkaConfigService.getKafkaConfigs(kafkaConfigName, limit, offset), "");
     }
 
     /**
@@ -108,7 +120,8 @@ public class StreamingControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void saveStreamingConfigV2(@RequestHeader("Accept-Language") String lang, @RequestBody StreamingRequest streamingRequest) throws IOException {
+    public void saveStreamingConfigV2(@RequestHeader("Accept-Language") String lang,
+            @RequestBody StreamingRequest streamingRequest) throws IOException {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
@@ -161,7 +174,8 @@ public class StreamingControllerV2 extends BasicController {
             if (saveKafkaSuccess == false || saveStreamingSuccess == false) {
 
                 if (saveStreamingSuccess == true) {
-                    StreamingConfig sConfig = streamingService.getStreamingManager().getStreamingConfig(streamingConfig.getName());
+                    StreamingConfig sConfig = streamingService.getStreamingManager()
+                            .getStreamingConfig(streamingConfig.getName());
                     try {
                         streamingService.dropStreamingConfig(sConfig);
                     } catch (IOException e) {
@@ -183,7 +197,8 @@ public class StreamingControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void updateStreamingConfigV2(@RequestHeader("Accept-Language") String lang, @RequestBody StreamingRequest streamingRequest) throws IOException {
+    public void updateStreamingConfigV2(@RequestHeader("Accept-Language") String lang,
+            @RequestBody StreamingRequest streamingRequest) throws IOException {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
@@ -206,9 +221,11 @@ public class StreamingControllerV2 extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{configName}", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{configName}", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void deleteConfigV2(@RequestHeader("Accept-Language") String lang, @PathVariable String configName) throws IOException {
+    public void deleteConfigV2(@RequestHeader("Accept-Language") String lang, @PathVariable String configName)
+            throws IOException {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 

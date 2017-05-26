@@ -72,7 +72,7 @@ public class KafkaInputSplit extends InputSplit implements Writable {
 
     @Override
     public String[] getLocations() throws IOException, InterruptedException {
-        return new String[]{brokers};
+        return new String[] { brokers };
     }
 
     public int getPartition() {

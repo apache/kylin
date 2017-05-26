@@ -43,7 +43,9 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
     private static final int DEFAULT_LOG_PERIOD = 3;
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_LOG_PERIOD = OptionBuilder.withArgName("logPeriod").hasArg().isRequired(false).withDescription("specify how many days of kylin logs to extract. Default " + DEFAULT_LOG_PERIOD + ".").create("logPeriod");
+    private static final Option OPTION_LOG_PERIOD = OptionBuilder.withArgName("logPeriod").hasArg().isRequired(false)
+            .withDescription("specify how many days of kylin logs to extract. Default " + DEFAULT_LOG_PERIOD + ".")
+            .create("logPeriod");
 
     KylinConfig config;
 
@@ -74,7 +76,8 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         beforeExtract();
 
-        int logPeriod = optionsHelper.hasOption(OPTION_LOG_PERIOD) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_LOG_PERIOD)) : DEFAULT_LOG_PERIOD;
+        int logPeriod = optionsHelper.hasOption(OPTION_LOG_PERIOD)
+                ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_LOG_PERIOD)) : DEFAULT_LOG_PERIOD;
 
         if (logPeriod < 1) {
             logger.warn("No logs to extract.");

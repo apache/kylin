@@ -101,7 +101,8 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
         cubeBuilder.setConcurrentThreads(taskCount);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new MapContextGTRecordWriter(context, cubeDesc, cubeSegment)));
+        future = executorService.submit(
+                cubeBuilder.buildAsRunnable(queue, new MapContextGTRecordWriter(context, cubeDesc, cubeSegment)));
 
     }
 
@@ -119,7 +120,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
         // put each row to the queue
         Collection<String[]> rowCollection = flatTableInputFormat.parseMapperInput(record);
 
-        for(String[] row: rowCollection) {
+        for (String[] row : rowCollection) {
             List<String> rowAsList = Arrays.asList(row);
             while (!future.isDone()) {
                 if (queue.offer(rowAsList, 1, TimeUnit.SECONDS)) {
@@ -142,7 +143,8 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
         try {
             future.get();
         } catch (Exception e) {
-            throw new IOException("Failed to build cube in mapper " + context.getTaskAttemptID().getTaskID().getId(), e);
+            throw new IOException("Failed to build cube in mapper " + context.getTaskAttemptID().getTaskID().getId(),
+                    e);
         }
         queue.clear();
     }

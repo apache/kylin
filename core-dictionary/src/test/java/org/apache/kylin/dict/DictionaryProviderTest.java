@@ -37,7 +37,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DictionaryProviderTest extends LocalFileMetadataTestCase{
+public class DictionaryProviderTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setUp() throws Exception {
@@ -52,23 +52,28 @@ public class DictionaryProviderTest extends LocalFileMetadataTestCase{
     @Test
     public void testReadWrite() throws Exception {
         //string dict
-        Dictionary<String> dict = getDict(DataType.getType("string"), Arrays.asList(new String[] { "a", "b" }).iterator());
+        Dictionary<String> dict = getDict(DataType.getType("string"),
+                Arrays.asList(new String[] { "a", "b" }).iterator());
         readWriteTest(dict);
         //number dict
-        Dictionary<String> dict2 = getDict(DataType.getType("long"), Arrays.asList(new String[] { "1", "2" }).iterator());
+        Dictionary<String> dict2 = getDict(DataType.getType("long"),
+                Arrays.asList(new String[] { "1", "2" }).iterator());
         readWriteTest(dict2);
 
         //date dict
-        Dictionary<String> dict3 = getDict(DataType.getType("datetime"), Arrays.asList(new String[] { "20161122", "20161123" }).iterator());
+        Dictionary<String> dict3 = getDict(DataType.getType("datetime"),
+                Arrays.asList(new String[] { "20161122", "20161123" }).iterator());
         readWriteTest(dict3);
 
         //date dict
-        Dictionary<String> dict4 = getDict(DataType.getType("datetime"), Arrays.asList(new String[] { "2016-11-22", "2016-11-23" }).iterator());
+        Dictionary<String> dict4 = getDict(DataType.getType("datetime"),
+                Arrays.asList(new String[] { "2016-11-22", "2016-11-23" }).iterator());
         readWriteTest(dict4);
 
         //date dict
         try {
-            Dictionary<String> dict5 = getDict(DataType.getType("date"), Arrays.asList(new String[] { "2016-11-22", "20161122" }).iterator());
+            Dictionary<String> dict5 = getDict(DataType.getType("date"),
+                    Arrays.asList(new String[] { "2016-11-22", "20161122" }).iterator());
             readWriteTest(dict5);
             fail("Date format not correct.Should throw exception");
         } catch (IllegalArgumentException e) {

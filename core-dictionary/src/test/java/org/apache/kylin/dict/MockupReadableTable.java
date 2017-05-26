@@ -34,7 +34,7 @@ public class MockupReadableTable implements IReadableTable {
         }
         return new MockupReadableTable(content, sig, true);
     }
-    
+
     public static IReadableTable newNonExistTable(String path) {
         TableSignature sig = new TableSignature(path, -1, 0);
         return new MockupReadableTable(null, sig, false);

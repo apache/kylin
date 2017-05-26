@@ -18,7 +18,11 @@
 
 package org.apache.kylin.cube.kv;
 
-import com.google.common.base.Preconditions;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -28,10 +32,7 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.base.Preconditions;
 
 public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Serializable {
 
@@ -74,8 +75,10 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Seri
             int shardSeedOffset = uhcOffset == -1 ? 0 : uhcOffset;
             int shardSeedLength = uhcLength == -1 ? bodyLength : uhcLength;
             short cuboidShardNum = cubeSeg.getCuboidShardNum(cuboid.getId());
-            short shardOffset = ShardingHash.getShard(key, RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN + shardSeedOffset, shardSeedLength, cuboidShardNum);
-            return ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), shardOffset, cubeSeg.getTotalShards(cuboid.getId()));
+            short shardOffset = ShardingHash.getShard(key, RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN + shardSeedOffset,
+                    shardSeedLength, cuboidShardNum);
+            return ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), shardOffset,
+                    cubeSeg.getTotalShards(cuboid.getId()));
         } else {
             throw new RuntimeException("If enableSharding false, you should never calculate shard");
         }
@@ -107,7 +110,8 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Seri
             int c = selectedCols.trueBitAt(i);
             ByteArray columnC = record.get(c);
             if (columnC.array() != null) {
-                System.arraycopy(record.get(c).array(), columnC.offset(), buf.array(), buf.offset() + pos, columnC.length());
+                System.arraycopy(record.get(c).array(), columnC.offset(), buf.array(), buf.offset() + pos,
+                        columnC.length());
                 pos += columnC.length();
             } else {
                 int maxLength = record.getInfo().getCodeSystem().maxCodeLength(c);
@@ -122,7 +126,8 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Seri
     public void encode(ByteArray bodyBytes, ByteArray outputBuf) {
         Preconditions.checkState(bodyBytes.length() == bodyLength);
         Preconditions.checkState(bodyBytes.length() + getHeaderLength() == outputBuf.length(), //
-                "bodybytes length: " + bodyBytes.length() + " outputBuf length: " + outputBuf.length() + " header length: " + getHeaderLength());
+                "bodybytes length: " + bodyBytes.length() + " outputBuf length: " + outputBuf.length()
+                        + " header length: " + getHeaderLength());
         System.arraycopy(bodyBytes.array(), bodyBytes.offset(), outputBuf.array(), getHeaderLength(), bodyLength);
 
         //fill shard and cuboid
@@ -171,7 +176,8 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Seri
         //return offset;
     }
 
-    protected void fillColumnValue(TblColRef column, int columnLen, String valueStr, byte[] outputValue, int outputValueOffset) {
+    protected void fillColumnValue(TblColRef column, int columnLen, String valueStr, byte[] outputValue,
+            int outputValueOffset) {
         // special null value case
         if (valueStr == null) {
             Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen, defaultValue());

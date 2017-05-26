@@ -68,7 +68,7 @@ public class RowKeyDistributionCheckerMapper extends KylinMapper<Text, Text, Tex
         for (Text t : keyList) {
             if (key.compareTo(t) < 0) {
                 Long v = resultMap.get(t);
-                long length = (long)key.getLength() + value.getLength();
+                long length = (long) key.getLength() + value.getLength();
                 v += length;
                 resultMap.put(t, v);
                 break;

@@ -66,7 +66,8 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
 
         FileUtil.fullyDelete(new File(output));
 
-        String[] args = { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output, "-jobname", jobname, "-level", level };
+        String[] args = { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output,
+                "-jobname", jobname, "-level", level };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new NDCuboidJob(), args));
     }
 
@@ -81,7 +82,8 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
 
         FileUtil.fullyDelete(new File(output));
 
-        String[] args = { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output, "-jobname", jobname, "-level", level };
+        String[] args = { "-input", input, "-cubename", cubeName, "-segmentname", segmentName, "-output", output,
+                "-jobname", jobname, "-level", level };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new NDCuboidJob(), args));
     }
 }

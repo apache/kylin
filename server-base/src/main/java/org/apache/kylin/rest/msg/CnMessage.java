@@ -21,7 +21,7 @@ package org.apache.kylin.rest.msg;
 /**
  * Created by luwei on 17-4-12.
  */
-public class CnMessage extends Message{
+public class CnMessage extends Message {
 
     private static CnMessage instance = null;
 

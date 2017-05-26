@@ -42,10 +42,12 @@ public class MailService {
     private String sender;
 
     public MailService(KylinConfig config) {
-        this(config.isMailEnabled(), config.isStarttlsEnabled(), config.getMailHost(), config.getSmtpPort(), config.getMailUsername(), config.getMailPassword(), config.getMailSender());
+        this(config.isMailEnabled(), config.isStarttlsEnabled(), config.getMailHost(), config.getSmtpPort(),
+                config.getMailUsername(), config.getMailPassword(), config.getMailSender());
     }
 
-    private MailService(boolean enabled, boolean starttlsEnabled, String host, String port, String username, String password, String sender) {
+    private MailService(boolean enabled, boolean starttlsEnabled, String host, String port, String username,
+            String password, String sender) {
         this.enabled = enabled;
         this.starttlsEnabled = starttlsEnabled;
         this.host = host;
@@ -95,7 +97,7 @@ public class MailService {
         } else {
             email.setSmtpPort(Integer.valueOf(port));
         }
-        
+
         if (username != null && username.trim().length() > 0) {
             email.setAuthentication(username, password);
         }

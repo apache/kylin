@@ -177,7 +177,8 @@ public class DriverTest {
         info.put("password", "KYLIN");
         Connection conn = driver.connect("jdbc:kylin://localhost:7070/default", info);
 
-        PreparedStatement state = conn.prepareStatement("select cal_dt, count(*) from test_kylin_fact where seller_id=? group by cal_dt");
+        PreparedStatement state = conn
+                .prepareStatement("select cal_dt, count(*) from test_kylin_fact where seller_id=? group by cal_dt");
         state.setLong(1, 10000001);
         ResultSet resultSet = state.executeQuery();
 
@@ -211,7 +212,12 @@ public class DriverTest {
         System.out.println("Metadata:");
 
         for (int i = 0; i < metadata.getColumnCount(); i++) {
-            String metaStr = metadata.getCatalogName(i + 1) + " " + metadata.getColumnClassName(i + 1) + " " + metadata.getColumnDisplaySize(i + 1) + " " + metadata.getColumnLabel(i + 1) + " " + metadata.getColumnName(i + 1) + " " + metadata.getColumnType(i + 1) + " " + metadata.getColumnTypeName(i + 1) + " " + metadata.getPrecision(i + 1) + " " + metadata.getScale(i + 1) + " " + metadata.getSchemaName(i + 1) + " " + metadata.getTableName(i + 1);
+            String metaStr = metadata.getCatalogName(i + 1) + " " + metadata.getColumnClassName(i + 1) + " "
+                    + metadata.getColumnDisplaySize(i + 1) + " " + metadata.getColumnLabel(i + 1) + " "
+                    + metadata.getColumnName(i + 1) + " " + metadata.getColumnType(i + 1) + " "
+                    + metadata.getColumnTypeName(i + 1) + " " + metadata.getPrecision(i + 1) + " "
+                    + metadata.getScale(i + 1) + " " + metadata.getSchemaName(i + 1) + " "
+                    + metadata.getTableName(i + 1);
             System.out.println(metaStr);
         }
     }

@@ -68,7 +68,9 @@ public class SequenceFileCuboidWriter extends KVGTRecordWriter {
 
             Path cuboidFile = new Path(cuboidPath, "data.seq");
             logger.debug("Cuboid is written to " + cuboidFile);
-            writer = SequenceFile.createWriter(HadoopUtil.getCurrentConfiguration(), SequenceFile.Writer.file(cuboidFile), SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(Text.class));
+            writer = SequenceFile.createWriter(HadoopUtil.getCurrentConfiguration(),
+                    SequenceFile.Writer.file(cuboidFile), SequenceFile.Writer.keyClass(Text.class),
+                    SequenceFile.Writer.valueClass(Text.class));
         }
 
     }

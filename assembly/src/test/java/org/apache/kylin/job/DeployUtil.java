@@ -153,9 +153,11 @@ public class DeployUtil {
         deployHiveTables();
     }
 
-    public static void prepareTestDataForStreamingCube(long startTime, long endTime, int numberOfRecords, String cubeName, StreamDataLoader streamDataLoader) throws IOException {
+    public static void prepareTestDataForStreamingCube(long startTime, long endTime, int numberOfRecords,
+            String cubeName, StreamDataLoader streamDataLoader) throws IOException {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-        List<String> data = StreamingTableDataGenerator.generate(numberOfRecords, startTime, endTime, cubeInstance.getRootFactTable());
+        List<String> data = StreamingTableDataGenerator.generate(numberOfRecords, startTime, endTime,
+                cubeInstance.getRootFactTable());
         //load into kafka
         streamDataLoader.loadIntoKafka(data);
         logger.info("Write {} messages into {}", data.size(), streamDataLoader.toString());

@@ -222,7 +222,9 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
     public void testPreparedStatement() throws Exception {
         Connection conn = getConnection();
 
-        PreparedStatement statement = conn.prepareStatement("select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact " + "where LSTG_FORMAT_NAME = ? group by LSTG_FORMAT_NAME");
+        PreparedStatement statement = conn.prepareStatement(
+                "select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact "
+                        + "where LSTG_FORMAT_NAME = ? group by LSTG_FORMAT_NAME");
 
         statement.setString(1, "FP-GTC");
 
@@ -242,7 +244,8 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     @Test
     public void testResultSet() throws Exception {
-        String sql = "select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact \n" + " group by LSTG_FORMAT_NAME ";
+        String sql = "select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact \n"
+                + " group by LSTG_FORMAT_NAME ";
 
         Connection conn = getConnection();
         Statement statement = conn.createStatement();
@@ -270,7 +273,8 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     @Test
     public void testResultSetWithMaxRows() throws Exception {
-        String sql = "select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact \n" + " group by LSTG_FORMAT_NAME ";
+        String sql = "select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact \n"
+                + " group by LSTG_FORMAT_NAME ";
 
         Connection conn = getConnection();
         Statement statement = conn.createStatement();

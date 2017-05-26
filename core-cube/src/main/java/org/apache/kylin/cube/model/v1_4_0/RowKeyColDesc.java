@@ -86,7 +86,8 @@ public class RowKeyColDesc {
 
     @Override
     public String toString() {
-        return "RowKeyColDesc [column=" + column + ", length=" + length + ", dictionary=" + dictionary + ", mandatory=" + mandatory + "]";
+        return "RowKeyColDesc [column=" + column + ", length=" + length + ", dictionary=" + dictionary + ", mandatory="
+                + mandatory + "]";
     }
 
 }

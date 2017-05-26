@@ -46,7 +46,8 @@ public class HybridStorageQuery implements IStorageQuery {
     }
 
     @Override
-    public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo) {
+    public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest,
+            final TupleInfo returnTupleInfo) {
         List<ITupleIterator> tupleIterators = Lists.newArrayList();
         for (int i = 0; i < realizations.length; i++) {
             if (realizations[i].isReady() && realizations[i].isCapable(sqlDigest).capable) {

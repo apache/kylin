@@ -107,12 +107,14 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         return getCubeDescManager().getCubeDesc("ci_inner_join_cube");
     }
 
-    private void testSpanningAndGetParent(CuboidScheduler scheduler, CubeDesc cube, long[] cuboidIds, long[] expectChildren) {
+    private void testSpanningAndGetParent(CuboidScheduler scheduler, CubeDesc cube, long[] cuboidIds,
+            long[] expectChildren) {
         Set<Long> totalSpanning = Sets.newHashSet();
         for (long cuboidId : cuboidIds) {
             List<Long> spannings = scheduler.getSpanningCuboid(cuboidId);
             totalSpanning.addAll(spannings);
-            System.out.println("Spanning result for " + cuboidId + "(" + Long.toBinaryString(cuboidId) + "): " + toString(spannings));
+            System.out.println("Spanning result for " + cuboidId + "(" + Long.toBinaryString(cuboidId) + "): "
+                    + toString(spannings));
 
             for (long child : spannings) {
                 assertTrue(Cuboid.isValid(cube, child));
@@ -135,16 +137,20 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         testSpanningAndGetParent(scheduler, cube, new long[] { 511 }, new long[] { 504, 447, 503, 383 });
         // generate 7d
         System.out.println("Spanning for 7D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[] { 504, 447, 503, 383 }, new long[] { 440, 496, 376, 439, 487, 319, 375 });
+        testSpanningAndGetParent(scheduler, cube, new long[] { 504, 447, 503, 383 },
+                new long[] { 440, 496, 376, 439, 487, 319, 375 });
         // generate 6d
         System.out.println("Spanning for 6D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[] { 440, 496, 376, 439, 487, 319, 375 }, new long[] { 432, 480, 312, 368, 423, 455, 311, 359 });
+        testSpanningAndGetParent(scheduler, cube, new long[] { 440, 496, 376, 439, 487, 319, 375 },
+                new long[] { 432, 480, 312, 368, 423, 455, 311, 359 });
         // generate 5d
         System.out.println("Spanning for 5D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[] { 432, 480, 312, 368, 423, 455, 311, 359 }, new long[] { 416, 448, 304, 352, 391, 295, 327 });
+        testSpanningAndGetParent(scheduler, cube, new long[] { 432, 480, 312, 368, 423, 455, 311, 359 },
+                new long[] { 416, 448, 304, 352, 391, 295, 327 });
         // generate 4d
         System.out.println("Spanning for 4D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[] { 416, 448, 304, 352, 391, 295, 327 }, new long[] { 384, 288, 320, 263 });
+        testSpanningAndGetParent(scheduler, cube, new long[] { 416, 448, 304, 352, 391, 295, 327 },
+                new long[] { 384, 288, 320, 263 });
         // generate 3d
         System.out.println("Spanning for 3D Cuboids");
         testSpanningAndGetParent(scheduler, cube, new long[] { 384, 288, 320, 263 }, new long[0]);
@@ -163,10 +169,12 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         testSpanningAndGetParent(scheduler, cube, new long[] { 255 }, new long[] { 135, 251, 253, 254 });
         // generate 6d
         System.out.println("Spanning for 6D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[] { 135, 251, 253, 254 }, new long[] { 131, 133, 134, 249, 250, 252 });
+        testSpanningAndGetParent(scheduler, cube, new long[] { 135, 251, 253, 254 },
+                new long[] { 131, 133, 134, 249, 250, 252 });
         // generate 5d
         System.out.println("Spanning for 5D Cuboids");
-        testSpanningAndGetParent(scheduler, cube, new long[] { 131, 133, 134, 249, 250, 252 }, new long[] { 129, 130, 132, 248 });
+        testSpanningAndGetParent(scheduler, cube, new long[] { 131, 133, 134, 249, 250, 252 },
+                new long[] { 129, 130, 132, 248 });
         // generate 4d
         System.out.println("Spanning for 4D Cuboids");
         testSpanningAndGetParent(scheduler, cube, new long[] { 129, 130, 132, 248 }, new long[] { 184, 240 });
@@ -324,7 +332,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         System.out.println("build tree takes: " + (System.currentTimeMillis() - start) + "ms");
     }
 
-    @Test(expected=RuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testTooManyCombination() {
         File twentyFile = new File(new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA, "cube_desc"), "twenty_dim");
         twentyFile.renameTo(new File(twentyFile.getPath().substring(0, twentyFile.getPath().length() - 4)));

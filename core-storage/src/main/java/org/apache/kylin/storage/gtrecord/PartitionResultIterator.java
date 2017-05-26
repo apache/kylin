@@ -18,13 +18,14 @@
 
 package org.apache.kylin.storage.gtrecord;
 
-import com.google.common.collect.UnmodifiableIterator;
+import java.nio.ByteBuffer;
+import java.util.NoSuchElementException;
+
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 
-import java.nio.ByteBuffer;
-import java.util.NoSuchElementException;
+import com.google.common.collect.UnmodifiableIterator;
 
 /**
  * Support iterate over {@code GTRecord}s in storage partition result.

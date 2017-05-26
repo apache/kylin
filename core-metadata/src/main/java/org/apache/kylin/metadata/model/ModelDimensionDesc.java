@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class ModelDimensionDesc implements Serializable {
     private static final long serialVersionUID = 1L;
-    
+
     @JsonProperty("table")
     private String table;
     @JsonProperty("columns")
@@ -58,7 +58,7 @@ public class ModelDimensionDesc implements Serializable {
         if (columns != null) {
             StringUtil.toUpperCaseArray(columns, columns);
         }
-        
+
         if (model != null) {
             table = model.findTable(table).getAlias();
             if (columns != null) {

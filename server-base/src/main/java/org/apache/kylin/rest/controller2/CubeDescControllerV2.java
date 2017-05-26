@@ -60,7 +60,8 @@ public class CubeDescControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getCubeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
         MsgPicker.setMsg(lang);
@@ -88,7 +89,8 @@ public class CubeDescControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}/desc", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/desc", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getDescV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
         MsgPicker.setMsg(lang);

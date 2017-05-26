@@ -371,9 +371,11 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
     public void validate() throws IllegalStateException {
         if (cubeInstance.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
             if (!isSourceOffsetsOn() && dateRangeStart >= dateRangeEnd)
-                throw new IllegalStateException("Invalid segment, dateRangeStart(" + dateRangeStart + ") must be smaller than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
+                throw new IllegalStateException("Invalid segment, dateRangeStart(" + dateRangeStart
+                        + ") must be smaller than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
             if (isSourceOffsetsOn() && sourceOffsetStart >= sourceOffsetEnd)
-                throw new IllegalStateException("Invalid segment, sourceOffsetStart(" + sourceOffsetStart + ") must be smaller than sourceOffsetEnd(" + sourceOffsetEnd + ") in segment " + this);
+                throw new IllegalStateException("Invalid segment, sourceOffsetStart(" + sourceOffsetStart
+                        + ") must be smaller than sourceOffsetEnd(" + sourceOffsetEnd + ") in segment " + this);
         }
     }
 

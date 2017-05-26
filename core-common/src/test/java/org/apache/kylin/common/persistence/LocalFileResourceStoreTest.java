@@ -68,16 +68,16 @@ public class LocalFileResourceStoreTest extends LocalFileMetadataTestCase {
             ByteArrayInputStream is = new ByteArrayInputStream(bytes);
             store.putResource("/res2", is, 2000);
             is.close();
-            
+
             store.putResource("/res1", str, 2000, StringEntity.serializer);
             store.deleteResource("/res1");
 
             assertEquals(null, store.getResource("/res1"));
             assertEquals(2000, (raw = store.getResource("/res2")).timestamp);
             raw.inputStream.close();
-            
+
             cp.rollback();
-            
+
             assertEquals(null, store.getResource("/res2"));
             assertEquals(1000, (raw = store.getResource("/res1")).timestamp);
             raw.inputStream.close();

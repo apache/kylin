@@ -58,15 +58,23 @@ public class ClassUtil {
     private static final Map<String, String> classRenameMap;
     static {
         classRenameMap = new HashMap<>();
-        classRenameMap.put("org.apache.kylin.job.common.HadoopShellExecutable", "org.apache.kylin.engine.mr.common.HadoopShellExecutable");
-        classRenameMap.put("org.apache.kylin.job.common.MapReduceExecutable", "org.apache.kylin.engine.mr.common.MapReduceExecutable");
+        classRenameMap.put("org.apache.kylin.job.common.HadoopShellExecutable",
+                "org.apache.kylin.engine.mr.common.HadoopShellExecutable");
+        classRenameMap.put("org.apache.kylin.job.common.MapReduceExecutable",
+                "org.apache.kylin.engine.mr.common.MapReduceExecutable");
         classRenameMap.put("org.apache.kylin.job.cube.CubingJob", "org.apache.kylin.engine.mr.CubingJob");
-        classRenameMap.put("org.apache.kylin.job.cube.GarbageCollectionStep", "org.apache.kylin.storage.hbase.steps.DeprecatedGCStep");
-        classRenameMap.put("org.apache.kylin.job.cube.MergeDictionaryStep", "org.apache.kylin.engine.mr.steps.MergeDictionaryStep");
-        classRenameMap.put("org.apache.kylin.job.cube.UpdateCubeInfoAfterBuildStep", "org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterBuildStep");
-        classRenameMap.put("org.apache.kylin.job.cube.UpdateCubeInfoAfterMergeStep", "org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterMergeStep");
-        classRenameMap.put("org.apache.kylin.rest.util.KeywordDefaultDirtyHack", "org.apache.kylin.query.util.KeywordDefaultDirtyHack");
-        classRenameMap.put("org.apache.kylin.rest.util.CognosParenthesesEscape", "org.apache.kylin.query.util.CognosParenthesesEscape");
+        classRenameMap.put("org.apache.kylin.job.cube.GarbageCollectionStep",
+                "org.apache.kylin.storage.hbase.steps.DeprecatedGCStep");
+        classRenameMap.put("org.apache.kylin.job.cube.MergeDictionaryStep",
+                "org.apache.kylin.engine.mr.steps.MergeDictionaryStep");
+        classRenameMap.put("org.apache.kylin.job.cube.UpdateCubeInfoAfterBuildStep",
+                "org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterBuildStep");
+        classRenameMap.put("org.apache.kylin.job.cube.UpdateCubeInfoAfterMergeStep",
+                "org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterMergeStep");
+        classRenameMap.put("org.apache.kylin.rest.util.KeywordDefaultDirtyHack",
+                "org.apache.kylin.query.util.KeywordDefaultDirtyHack");
+        classRenameMap.put("org.apache.kylin.rest.util.CognosParenthesesEscape",
+                "org.apache.kylin.query.util.CognosParenthesesEscape");
     }
 
     @SuppressWarnings("unchecked")

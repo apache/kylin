@@ -34,13 +34,15 @@ public class ReducerNumSizing {
 
     private static final Logger logger = LoggerFactory.getLogger(ReducerNumSizing.class);
 
-    public static int getLayeredCubingReduceTaskNum(CubeSegment cubeSegment, double totalMapInputMB, int level) throws ClassNotFoundException, IOException, InterruptedException, JobException {
+    public static int getLayeredCubingReduceTaskNum(CubeSegment cubeSegment, double totalMapInputMB, int level)
+            throws ClassNotFoundException, IOException, InterruptedException, JobException {
         CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         KylinConfig kylinConfig = cubeDesc.getConfig();
 
         double perReduceInputMB = kylinConfig.getDefaultHadoopJobReducerInputMB();
         double reduceCountRatio = kylinConfig.getDefaultHadoopJobReducerCountRatio();
-        logger.info("Having per reduce MB " + perReduceInputMB + ", reduce count ratio " + reduceCountRatio + ", level " + level);
+        logger.info("Having per reduce MB " + perReduceInputMB + ", reduce count ratio " + reduceCountRatio + ", level "
+                + level);
 
         CubeStatsReader cubeStatsReader = new CubeStatsReader(cubeSegment, kylinConfig);
 
@@ -50,7 +52,8 @@ public class ReducerNumSizing {
             //merge case
             double estimatedSize = cubeStatsReader.estimateCubeSize();
             adjustedCurrentLayerSizeEst = estimatedSize > totalMapInputMB ? totalMapInputMB : estimatedSize;
-            logger.debug("estimated size {}, input size {}, adjustedCurrentLayerSizeEst: {}", estimatedSize, totalMapInputMB, adjustedCurrentLayerSizeEst);
+            logger.debug("estimated size {}, input size {}, adjustedCurrentLayerSizeEst: {}", estimatedSize,
+                    totalMapInputMB, adjustedCurrentLayerSizeEst);
         } else if (level == 0) {
             //base cuboid case TODO: the estimation could be very WRONG because it has no correction
             adjustedCurrentLayerSizeEst = cubeStatsReader.estimateLayerSize(0);
@@ -59,7 +62,9 @@ public class ReducerNumSizing {
             parentLayerSizeEst = cubeStatsReader.estimateLayerSize(level - 1);
             currentLayerSizeEst = cubeStatsReader.estimateLayerSize(level);
             adjustedCurrentLayerSizeEst = totalMapInputMB / parentLayerSizeEst * currentLayerSizeEst;
-            logger.debug("totalMapInputMB: {}, parentLayerSizeEst: {}, currentLayerSizeEst: {}, adjustedCurrentLayerSizeEst: {}", totalMapInputMB, parentLayerSizeEst, currentLayerSizeEst, adjustedCurrentLayerSizeEst);
+            logger.debug(
+                    "totalMapInputMB: {}, parentLayerSizeEst: {}, currentLayerSizeEst: {}, adjustedCurrentLayerSizeEst: {}",
+                    totalMapInputMB, parentLayerSizeEst, currentLayerSizeEst, adjustedCurrentLayerSizeEst);
         }
 
         // number of reduce tasks

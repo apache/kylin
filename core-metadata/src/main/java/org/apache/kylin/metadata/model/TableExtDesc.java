@@ -181,7 +181,8 @@ public class TableExtDesc extends RootPersistentEntity {
     }
 
     public boolean isPartitioned() {
-        return this.dataSourceProps.get("partition_column") == null ? false : !this.dataSourceProps.get("partition_column").isEmpty();
+        return this.dataSourceProps.get("partition_column") == null ? false
+                : !this.dataSourceProps.get("partition_column").isEmpty();
     }
 
     @Override
@@ -198,7 +199,8 @@ public class TableExtDesc extends RootPersistentEntity {
 
     @Override
     public String toString() {
-        return "TableExtDesc{" + "name='" + (null == tableName ? "NULL" : tableName) + '\'' + ", columns_samples=" + (null == columnStats ? "null" : Arrays.toString(columnStats.toArray()));
+        return "TableExtDesc{" + "name='" + (null == tableName ? "NULL" : tableName) + '\'' + ", columns_samples="
+                + (null == columnStats ? "null" : Arrays.toString(columnStats.toArray()));
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

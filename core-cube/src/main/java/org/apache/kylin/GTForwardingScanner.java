@@ -18,14 +18,14 @@
 
 package org.apache.kylin;
 
-import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.gridtable.IGTScanner;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.apache.kylin.gridtable.GTInfo;
+import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.IGTScanner;
 
 /**
  * A {@link IGTScanner} which forwards all its method calls to another scanner.

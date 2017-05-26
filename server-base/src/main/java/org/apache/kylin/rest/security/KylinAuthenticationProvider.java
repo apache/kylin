@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.security;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.rest.service.UserService;
 import org.slf4j.Logger;
@@ -34,6 +32,9 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
+
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -91,7 +92,8 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
 
             if (authed.getDetails() == null) {
                 //authed.setAuthenticated(false);
-                throw new UsernameNotFoundException("User not found in LDAP, check whether he/she has been added to the groups.");
+                throw new UsernameNotFoundException(
+                        "User not found in LDAP, check whether he/she has been added to the groups.");
             }
 
             if (authed.getDetails() instanceof UserDetails) {

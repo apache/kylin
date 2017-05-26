@@ -101,7 +101,8 @@ public class RangeTest {
         Assert.assertTrue(RangeUtil.remove(r1, c3).equals(Lists.newArrayList(Range.closed(2, 4), Range.closed(5, 5))));
 
         Assert.assertTrue(RangeUtil.remove(r1, d1).equals(Lists.newArrayList(Range.openClosed(3, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, d2).equals(Lists.newArrayList(Range.closedOpen(2, 3), Range.openClosed(4, 5))));
+        Assert.assertTrue(
+                RangeUtil.remove(r1, d2).equals(Lists.newArrayList(Range.closedOpen(2, 3), Range.openClosed(4, 5))));
         Assert.assertTrue(RangeUtil.remove(r1, d3).equals(Lists.newArrayList(Range.closedOpen(2, 4))));
 
     }
@@ -164,7 +165,8 @@ public class RangeTest {
         Assert.assertTrue(RangeUtil.remove(r1, b9).equals(Lists.newArrayList()));
 
         Assert.assertTrue(RangeUtil.remove(r1, c1).equals(Lists.newArrayList(Range.closedOpen(3, 5))));
-        Assert.assertTrue(RangeUtil.remove(r1, c2).equals(Lists.newArrayList(Range.openClosed(2, 3), Range.closedOpen(4, 5))));
+        Assert.assertTrue(
+                RangeUtil.remove(r1, c2).equals(Lists.newArrayList(Range.openClosed(2, 3), Range.closedOpen(4, 5))));
         Assert.assertTrue(RangeUtil.remove(r1, c3).equals(Lists.newArrayList(Range.openClosed(2, 4))));
 
         Assert.assertTrue(RangeUtil.remove(r1, d1).equals(Lists.newArrayList(Range.open(3, 5))));

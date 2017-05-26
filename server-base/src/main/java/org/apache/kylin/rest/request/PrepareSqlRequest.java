@@ -41,7 +41,7 @@ public class PrepareSqlRequest extends SQLRequest {
         this.params = params;
     }
 
-    public static class StateParam implements Serializable{
+    public static class StateParam implements Serializable {
         private String className;
         private String value;
 

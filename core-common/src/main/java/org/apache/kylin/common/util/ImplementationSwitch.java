@@ -58,7 +58,8 @@ public class ImplementationSwitch<I> {
     public synchronized I get(int id) {
         String clzName = impls.get(id);
         if (clzName == null) {
-            throw new IllegalArgumentException("Implementation class missing, ID " + id + ", interface " + interfaceClz.getName());
+            throw new IllegalArgumentException(
+                    "Implementation class missing, ID " + id + ", interface " + interfaceClz.getName());
         }
 
         @SuppressWarnings("unchecked")
@@ -74,7 +75,8 @@ public class ImplementationSwitch<I> {
         }
 
         if (result == null)
-            throw new IllegalArgumentException("Implementations missing, ID " + id + ", interface " + interfaceClz.getName());
+            throw new IllegalArgumentException(
+                    "Implementations missing, ID " + id + ", interface " + interfaceClz.getName());
 
         return result;
     }

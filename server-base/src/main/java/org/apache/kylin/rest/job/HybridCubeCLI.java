@@ -18,6 +18,10 @@
 
 package org.apache.kylin.rest.job;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -39,10 +43,6 @@ import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * 1. Create new HybridCube
  * bin/kylin.sh org.apache.kylin.tool.HybridCubeCLI -action create -name hybrid_name -project project_name -model model_name -cubes cube1,cube2
@@ -55,15 +55,21 @@ public class HybridCubeCLI extends AbstractApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(HybridCubeCLI.class);
 
-    private static final Option OPTION_ACTION = OptionBuilder.withArgName("action").hasArg().isRequired(true).withDescription("create/update/delete").create("action");
+    private static final Option OPTION_ACTION = OptionBuilder.withArgName("action").hasArg().isRequired(true)
+            .withDescription("create/update/delete").create("action");
 
-    private static final Option OPTION_HYBRID_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true).withDescription("HybridCube name").create("name");
+    private static final Option OPTION_HYBRID_NAME = OptionBuilder.withArgName("name").hasArg().isRequired(true)
+            .withDescription("HybridCube name").create("name");
 
-    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(true).withDescription("the target project for the hybrid cube").create("project");
+    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(true)
+            .withDescription("the target project for the hybrid cube").create("project");
 
-    private static final Option OPTION_MODEL = OptionBuilder.withArgName("model").hasArg().isRequired(true).withDescription("the target model for the hybrid cube").create("model");
+    private static final Option OPTION_MODEL = OptionBuilder.withArgName("model").hasArg().isRequired(true)
+            .withDescription("the target model for the hybrid cube").create("model");
 
-    private static final Option OPTION_CUBES = OptionBuilder.withArgName("cubes").hasArg().isRequired(false).withDescription("the cubes used in HybridCube, seperated by comma, empty if to delete HybridCube").create("cubes");
+    private static final Option OPTION_CUBES = OptionBuilder.withArgName("cubes").hasArg().isRequired(false)
+            .withDescription("the cubes used in HybridCube, seperated by comma, empty if to delete HybridCube")
+            .create("cubes");
 
     private final Options options;
 
@@ -152,27 +158,32 @@ public class HybridCubeCLI extends AbstractApplication {
 
     }
 
-    private HybridInstance create(String hybridName, List<RealizationEntry> realizationEntries, String projectName, String owner) throws IOException {
+    private HybridInstance create(String hybridName, List<RealizationEntry> realizationEntries, String projectName,
+            String owner) throws IOException {
         checkSegmentOffset(realizationEntries);
         HybridInstance hybridInstance = HybridInstance.create(kylinConfig, hybridName, realizationEntries);
         store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
-        ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);
+        ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID,
+                hybridInstance.getName(), projectName, owner);
         hybridManager.reloadHybridInstance(hybridName);
         logger.info("HybridInstance was created at: " + hybridInstance.getResourcePath());
         return hybridInstance;
     }
 
-    private void update(HybridInstance hybridInstance, List<RealizationEntry> realizationEntries, String projectName, String owner) throws IOException {
+    private void update(HybridInstance hybridInstance, List<RealizationEntry> realizationEntries, String projectName,
+            String owner) throws IOException {
         checkSegmentOffset(realizationEntries);
         hybridInstance.setRealizationEntries(realizationEntries);
         store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
-        ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);
+        ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID,
+                hybridInstance.getName(), projectName, owner);
         hybridManager.reloadHybridInstance(hybridInstance.getName());
         logger.info("HybridInstance was updated at: " + hybridInstance.getResourcePath());
     }
 
     private void delete(HybridInstance hybridInstance) throws IOException {
-        ProjectManager.getInstance(kylinConfig).removeRealizationsFromProjects(RealizationType.HYBRID, hybridInstance.getName());
+        ProjectManager.getInstance(kylinConfig).removeRealizationsFromProjects(RealizationType.HYBRID,
+                hybridInstance.getName());
         store.deleteResource(hybridInstance.getResourcePath());
         hybridManager.reloadAllHybridInstance();
         logger.info("HybridInstance was deleted at: " + hybridInstance.getResourcePath());
@@ -197,7 +208,8 @@ public class HybridCubeCLI extends AbstractApplication {
                 lastOffset = segment.getSourceOffsetEnd();
             } else {
                 if (lastOffset > segment.getSourceOffsetStart()) {
-                    throw new RuntimeException("Segments has overlap, could not hybrid. Last Segment End: " + lastOffset + ", Next Segment Start: " + segment.getSourceOffsetStart());
+                    throw new RuntimeException("Segments has overlap, could not hybrid. Last Segment End: " + lastOffset
+                            + ", Next Segment Start: " + segment.getSourceOffsetStart());
                 }
                 lastOffset = segment.getSourceOffsetEnd();
             }

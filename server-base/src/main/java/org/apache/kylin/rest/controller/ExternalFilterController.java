@@ -80,7 +80,8 @@ public class ExternalFilterController extends BasicController {
 
     @RequestMapping(value = "/{filter}/{project}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
-    public Map<String, String> removeFilter(@PathVariable String filter, @PathVariable String project) throws IOException {
+    public Map<String, String> removeFilter(@PathVariable String filter, @PathVariable String project)
+            throws IOException {
         Map<String, String> result = new HashMap<String, String>();
         extFilterService.removeExtFilterFromProject(filter, project);
         extFilterService.removeExternalFilter(filter);
@@ -90,7 +91,8 @@ public class ExternalFilterController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<ExternalFilterDesc> getExternalFilters(@RequestParam(value = "project", required = true) String project) throws IOException {
+    public List<ExternalFilterDesc> getExternalFilters(@RequestParam(value = "project", required = true) String project)
+            throws IOException {
         List<ExternalFilterDesc> filterDescs = Lists.newArrayList();
         filterDescs.addAll(extFilterService.getProjectManager().listExternalFilterDescs(project).values());
         return filterDescs;

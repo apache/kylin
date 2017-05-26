@@ -18,11 +18,12 @@
 
 package org.apache.kylin.dict.global;
 
-import com.google.common.base.Preconditions;
-import org.apache.kylin.dict.BytesConverter;
-
 import java.util.NavigableMap;
 import java.util.TreeMap;
+
+import org.apache.kylin.dict.BytesConverter;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Encapsulates the metadata for a particular version of the global dictionary.
@@ -36,7 +37,8 @@ public class GlobalDictMetadata {
     public final BytesConverter bytesConverter;
     public final TreeMap<AppendDictSliceKey, String> sliceFileMap; // slice key -> slice file name
 
-    public GlobalDictMetadata(int baseId, int maxId, int maxValueLength, int nValues, BytesConverter bytesConverter, NavigableMap<AppendDictSliceKey, String> sliceFileMap) {
+    public GlobalDictMetadata(int baseId, int maxId, int maxValueLength, int nValues, BytesConverter bytesConverter,
+            NavigableMap<AppendDictSliceKey, String> sliceFileMap) {
 
         Preconditions.checkNotNull(bytesConverter, "bytesConverter");
         Preconditions.checkNotNull(sliceFileMap, "sliceFileMap");

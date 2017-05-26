@@ -35,7 +35,7 @@ public abstract class DistributedLockFactory {
     private static String threadProcessAndHost() {
         return Thread.currentThread().getId() + "-" + processAndHost();
     }
-    
+
     private static String processAndHost() {
         byte[] bytes = ManagementFactory.getRuntimeMXBean().getName().getBytes();
         return new String(bytes);

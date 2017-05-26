@@ -18,6 +18,9 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.IOException;
+import java.util.Collection;
+
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ByteArray;
@@ -35,9 +38,6 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.NDCuboidBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * @author George Song (ysong1)
@@ -79,8 +79,6 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
     }
 
-
-
     @Override
     public void doMap(Text key, Text value, Context context) throws IOException, InterruptedException {
         long cuboidId = rowKeySplitter.split(key.getBytes());
@@ -105,7 +103,8 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
         for (Long child : myChildren) {
             Cuboid childCuboid = Cuboid.findById(cubeDesc, child);
-            Pair<Integer, ByteArray> result = ndCuboidBuilder.buildKey(parentCuboid, childCuboid, rowKeySplitter.getSplitBuffers());
+            Pair<Integer, ByteArray> result = ndCuboidBuilder.buildKey(parentCuboid, childCuboid,
+                    rowKeySplitter.getSplitBuffers());
             outputKey.set(result.getSecond().array(), 0, result.getFirst());
             context.write(outputKey, value);
         }

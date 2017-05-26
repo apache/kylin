@@ -27,10 +27,10 @@ import org.apache.kylin.metadata.model.TableExtDesc;
 public interface ISourceMetadataExplorer {
 
     List<String> listDatabases() throws Exception;
-    
+
     List<String> listTables(String database) throws Exception;
-    
+
     Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table) throws Exception;
-    
+
     List<String> getRelatedKylinResources(TableDesc table);
 }

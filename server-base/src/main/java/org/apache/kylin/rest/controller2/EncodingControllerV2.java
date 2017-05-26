@@ -58,7 +58,8 @@ public class EncodingControllerV2 extends BasicController {
      * @return suggestion map
      */
 
-    @RequestMapping(value = "valid_encodings", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "valid_encodings", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getValidEncodingsV2(@RequestHeader("Accept-Language") String lang) {
         MsgPicker.setMsg(lang);

@@ -18,13 +18,13 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.junit.Test;
 
 public class BitmapAggregatorTest {
     private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
@@ -84,7 +84,6 @@ public class BitmapAggregatorTest {
         result.orWith(counter2);
         result.orWith(counter3);
         assertEquals(result, aggregator.getState());
-
 
     }
 }

@@ -46,7 +46,8 @@ public class CompressionUtils {
         outputStream.close();
         byte[] output = outputStream.toByteArray();
 
-        logger.debug("Original: " + data.length + " bytes. " + "Compressed: " + output.length + " byte. Time: " + (System.currentTimeMillis() - startTime));
+        logger.debug("Original: " + data.length + " bytes. " + "Compressed: " + output.length + " byte. Time: "
+                + (System.currentTimeMillis() - startTime));
         return output;
     }
 
@@ -64,7 +65,8 @@ public class CompressionUtils {
         outputStream.close();
         byte[] output = outputStream.toByteArray();
 
-        logger.debug("Original: " + data.length + " bytes. " + "Decompressed: " + output.length + " bytes. Time: " + (System.currentTimeMillis() - startTime));
+        logger.debug("Original: " + data.length + " bytes. " + "Decompressed: " + output.length + " bytes. Time: "
+                + (System.currentTimeMillis() - startTime));
         return output;
     }
 }

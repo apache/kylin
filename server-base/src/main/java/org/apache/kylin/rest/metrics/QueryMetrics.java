@@ -18,15 +18,15 @@
 
 package org.apache.kylin.rest.metrics;
 
+import javax.annotation.concurrent.ThreadSafe;
+
 import org.apache.hadoop.metrics2.annotation.Metric;
 import org.apache.hadoop.metrics2.annotation.Metrics;
+import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.lib.MetricsRegistry;
 import org.apache.hadoop.metrics2.lib.MutableCounterLong;
 import org.apache.hadoop.metrics2.lib.MutableQuantiles;
 import org.apache.hadoop.metrics2.lib.MutableRate;
-import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
-
-import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * properties and methods about query.
@@ -69,10 +69,14 @@ public class QueryMetrics {
         for (int i = 0; i < intervals.length; i++) {
             int interval = intervals[i];
 
-            queryLatencyTimeMillisQuantiles[i] = registry.newQuantiles("QueryLatency" + interval + "s", "Query queue time in milli second", "ops", "", interval);
-            scanRowCountQuantiles[i] = registry.newQuantiles("ScanRowCount" + interval + "s", "Scan row count in milli second", "ops", "", interval);
-            resultRowCountQuantiles[i] = registry.newQuantiles("ResultRowCount" + interval + "s", "Result row count in milli second", "ops", "", interval);
-            cacheHitCountQuantiles[i] = registry.newQuantiles("CacheHitCount" + interval + "s", "Cache Hit Count in milli second", "ops", "", interval);
+            queryLatencyTimeMillisQuantiles[i] = registry.newQuantiles("QueryLatency" + interval + "s",
+                    "Query queue time in milli second", "ops", "", interval);
+            scanRowCountQuantiles[i] = registry.newQuantiles("ScanRowCount" + interval + "s",
+                    "Scan row count in milli second", "ops", "", interval);
+            resultRowCountQuantiles[i] = registry.newQuantiles("ResultRowCount" + interval + "s",
+                    "Result row count in milli second", "ops", "", interval);
+            cacheHitCountQuantiles[i] = registry.newQuantiles("CacheHitCount" + interval + "s",
+                    "Cache Hit Count in milli second", "ops", "", interval);
         }
 
         queryLatency = registry.newRate("QueryLatency", "", true);

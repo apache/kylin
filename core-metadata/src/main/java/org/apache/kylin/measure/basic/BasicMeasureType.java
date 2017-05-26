@@ -67,15 +67,18 @@ public class BasicMeasureType extends MeasureType {
 
         if (funcName.equals(FunctionDesc.FUNC_SUM)) {
             if (rtype.isNumberFamily() == false) {
-                throw new IllegalArgumentException("Return type for function " + funcName + " must be one of " + DataType.NUMBER_FAMILY);
+                throw new IllegalArgumentException(
+                        "Return type for function " + funcName + " must be one of " + DataType.NUMBER_FAMILY);
             }
         } else if (funcName.equals(FunctionDesc.FUNC_COUNT)) {
             if (rtype.isIntegerFamily() == false) {
-                throw new IllegalArgumentException("Return type for function " + funcName + " must be one of " + DataType.INTEGER_FAMILY);
+                throw new IllegalArgumentException(
+                        "Return type for function " + funcName + " must be one of " + DataType.INTEGER_FAMILY);
             }
         } else if (funcName.equals(FunctionDesc.FUNC_MAX) || funcName.equals(FunctionDesc.FUNC_MIN)) {
             if (rtype.isNumberFamily() == false) {
-                throw new IllegalArgumentException("Return type for function " + funcName + " must be one of " + DataType.NUMBER_FAMILY);
+                throw new IllegalArgumentException(
+                        "Return type for function " + funcName + " must be one of " + DataType.NUMBER_FAMILY);
             }
         } else {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -120,7 +123,8 @@ public class BasicMeasureType extends MeasureType {
             else if (dataType.isNumberFamily())
                 return new DoubleMinAggregator();
         }
-        throw new IllegalArgumentException("No aggregator for func '" + funcName + "' and return type '" + dataType + "'");
+        throw new IllegalArgumentException(
+                "No aggregator for func '" + funcName + "' and return type '" + dataType + "'");
     }
 
     private boolean isSum() {

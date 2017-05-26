@@ -180,9 +180,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         if (columns == null) {
             return -1;
         }
-        
+
         int max = -1;
-        
+
         for (ColumnDesc col : columns) {
             int idx = col.getZeroBasedIndex();
             max = Math.max(max, idx);
@@ -264,7 +264,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     @Override
     public String toString() {
-        return "TableDesc{" + "name='" + name + '\'' + ", columns=" + Arrays.toString(columns) + ", sourceType=" + sourceType + ", tableType='" + tableType + '\'' + ", database=" + database + ", identity='" + getIdentity() + '\'' + '}';
+        return "TableDesc{" + "name='" + name + '\'' + ", columns=" + Arrays.toString(columns) + ", sourceType="
+                + sourceType + ", tableType='" + tableType + '\'' + ", database=" + database + ", identity='"
+                + getIdentity() + '\'' + '}';
     }
 
     /** create a mockup table for unit test */

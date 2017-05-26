@@ -85,7 +85,8 @@ public class ConcurrentDiskStoreTest extends LocalFileMetadataTestCase {
             t[i] = new Thread() {
                 public void run() {
                     try {
-                        IGTScanner scanner = table.scan(new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
+                        IGTScanner scanner = table.scan(new GTScanRequestBuilder().setInfo(table.getInfo())
+                                .setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
                         int i = 0;
                         for (GTRecord r : scanner) {
                             assertEquals(data.get(i++), r);

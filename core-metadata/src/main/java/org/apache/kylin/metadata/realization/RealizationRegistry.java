@@ -94,7 +94,8 @@ public class RealizationRegistry {
         for (String clsName : providerNames) {
             try {
                 Class<? extends IRealizationProvider> cls = ClassUtil.forName(clsName, IRealizationProvider.class);
-                IRealizationProvider p = (IRealizationProvider) cls.getMethod("getInstance", KylinConfig.class).invoke(null, config);
+                IRealizationProvider p = (IRealizationProvider) cls.getMethod("getInstance", KylinConfig.class)
+                        .invoke(null, config);
                 providers.put(p.getRealizationType(), p);
 
             } catch (Exception | NoClassDefFoundError e) {
@@ -106,7 +107,8 @@ public class RealizationRegistry {
         }
 
         if (providers.isEmpty())
-            throw new IllegalArgumentException("Failed to find realization provider by url: " + config.getMetadataUrl());
+            throw new IllegalArgumentException(
+                    "Failed to find realization provider by url: " + config.getMetadataUrl());
 
         logger.info("RealizationRegistry is " + providers);
     }

@@ -24,6 +24,6 @@ import java.io.Serializable;
  * @author xduo
  * 
  */
-public enum SegmentStatusEnum implements Serializable{
+public enum SegmentStatusEnum implements Serializable {
     NEW, READY, READY_PENDING
 }

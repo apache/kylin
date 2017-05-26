@@ -49,7 +49,9 @@ public class RowKeyAttrRuleTest {
     @Test
     public void testBadDesc() throws IOException {
         ValidateContext vContext = new ValidateContext();
-        CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
+        CubeDesc desc = JsonUtil.readValue(new FileInputStream(
+                LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"),
+                CubeDesc.class);
         desc.getRowkey().getRowKeyColumns()[2].setColumn("");
         IValidatorRule<CubeDesc> rule = new RowKeyAttrRule();
         rule.validate(desc, vContext);

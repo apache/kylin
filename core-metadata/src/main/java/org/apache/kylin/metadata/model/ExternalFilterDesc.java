@@ -89,7 +89,8 @@ public class ExternalFilterDesc extends RootPersistentEntity implements ISourceA
 
     @Override
     public String toString() {
-        return "ExternalFilterDesc [ name=" + name + " filter table resource identifier " + this.filterResourceIdentifier + "]";
+        return "ExternalFilterDesc [ name=" + name + " filter table resource identifier "
+                + this.filterResourceIdentifier + "]";
     }
 
     /** create a mockup table for unit test */

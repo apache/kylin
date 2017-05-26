@@ -215,8 +215,9 @@ public interface OLAPRel extends RelNode {
         }
 
         @Override
-        public EnumerableRel.Result visitChild(EnumerableRel parent, int ordinal, EnumerableRel child, EnumerableRel.Prefer prefer) {
-            
+        public EnumerableRel.Result visitChild(EnumerableRel parent, int ordinal, EnumerableRel child,
+                EnumerableRel.Prefer prefer) {
+
             if (calciteDebug) {
                 OLAPContext context;
                 if (child instanceof OLAPRel)

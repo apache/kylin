@@ -68,21 +68,21 @@ public class HadoopUtil {
     public static FileSystem getWorkingFileSystem() throws IOException {
         return getFileSystem(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
     }
-    
+
     public static FileSystem getWorkingFileSystem(Configuration conf) throws IOException {
         Path workingPath = new Path(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
         return getFileSystem(workingPath, conf);
     }
-    
+
     public static FileSystem getFileSystem(String path) throws IOException {
         return getFileSystem(new Path(makeURI(path)));
     }
-    
+
     public static FileSystem getFileSystem(Path path) throws IOException {
         Configuration conf = getCurrentConfiguration();
         return getFileSystem(path, conf);
     }
-    
+
     public static FileSystem getFileSystem(Path path, Configuration conf) {
         try {
             return path.getFileSystem(conf);

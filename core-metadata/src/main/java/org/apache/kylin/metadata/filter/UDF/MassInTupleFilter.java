@@ -114,7 +114,8 @@ public class MassInTupleFilter extends FunctionTupleFilter {
             super.addChild(child);
             ColumnTupleFilter columnFilter = (ColumnTupleFilter) child;
             if (this.column != null) {
-                throw new IllegalStateException("Duplicate columns! old is " + column.getName() + " and new is " + columnFilter.getColumn().getName());
+                throw new IllegalStateException("Duplicate columns! old is " + column.getName() + " and new is "
+                        + columnFilter.getColumn().getName());
             }
             this.column = columnFilter.getColumn();
 
@@ -124,7 +125,8 @@ public class MassInTupleFilter extends FunctionTupleFilter {
 
             if (filterTableName == null) {
                 filterTableName = (String) child.getValues().iterator().next();
-                ExternalFilterDesc externalFilterDesc = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getExtFilterDesc(filterTableName);
+                ExternalFilterDesc externalFilterDesc = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv())
+                        .getExtFilterDesc(filterTableName);
                 if (externalFilterDesc == null) {
                     throw new IllegalArgumentException("External filter named " + filterTableName + " is not found");
                 }
@@ -132,7 +134,8 @@ public class MassInTupleFilter extends FunctionTupleFilter {
                 filterTableResourceIdentifier = externalFilterDesc.getFilterResourceIdentifier();
             }
         } else {
-            throw new IllegalStateException("MassInTupleFilter only has two children: one ColumnTupleFilter and one ConstantTupleFilter");
+            throw new IllegalStateException(
+                    "MassInTupleFilter only has two children: one ColumnTupleFilter and one ConstantTupleFilter");
         }
     }
 

@@ -86,7 +86,7 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         kylinConfig2 = KylinConfig.createInstanceFromUri(new File(confDstPath2).getAbsolutePath());
 
         initZk();
-        
+
         ZookeeperDistributedLock.Factory factory = new ZookeeperDistributedLock.Factory(kylinConfig1);
         jobLock1 = (ZookeeperDistributedLock) factory.lockForClient(serverName1);
         jobLock2 = (ZookeeperDistributedLock) factory.lockForClient(serverName2);
@@ -114,7 +114,7 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     @AfterClass
     public static void after() throws Exception {
         jobLock1.purgeLocks("");
-        
+
         if (scheduler1 != null) {
             scheduler1.shutdown();
             scheduler1 = null;
@@ -138,7 +138,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         while (true) {
             AbstractExecutable job = execMgr.getJob(jobId);
             final ExecutableState status = job.getStatus();
-            if (status == ExecutableState.SUCCEED || status == ExecutableState.ERROR || status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED) {
+            if (status == ExecutableState.SUCCEED || status == ExecutableState.ERROR
+                    || status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED) {
                 break;
             } else {
                 try {
@@ -196,6 +197,7 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     }
 
     private String getFullLockPath(String segName) {
-        return DistributedScheduler.dropDoubleSlash("/kylin/" + kylinConfig1.getMetadataUrlPrefix() + DistributedScheduler.getLockPath(segName));
+        return DistributedScheduler.dropDoubleSlash(
+                "/kylin/" + kylinConfig1.getMetadataUrlPrefix() + DistributedScheduler.getLockPath(segName));
     }
 }

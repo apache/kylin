@@ -54,7 +54,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class ProjectController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(ProjectController.class);
 
-    private static final char[] VALID_PROJECTNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
+    private static final char[] VALID_PROJECTNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+            .toCharArray();
 
     @Autowired
     @Qualifier("projectService")
@@ -78,13 +79,15 @@ public class ProjectController extends BasicController {
      */
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
+    public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "offset", required = false) Integer offset) {
         return projectService.listProjects(limit, offset);
     }
 
     @RequestMapping(value = "/readable", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<ProjectInstance> getReadableProjects(@RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
+    public List<ProjectInstance> getReadableProjects(@RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "offset", required = false) Integer offset) {
 
         List<ProjectInstance> readableProjects = new ArrayList<ProjectInstance>();
 
@@ -121,7 +124,7 @@ public class ProjectController extends BasicController {
                     }
                 }
             }
-            
+
             if (hasProjectPermission) {
                 readableProjects.add(projectInstance);
             }
@@ -140,7 +143,8 @@ public class ProjectController extends BasicController {
         }
 
         if (!StringUtils.containsOnly(projectDesc.getName(), VALID_PROJECTNAME)) {
-            logger.info("Invalid Project name {}, only letters, numbers and underline supported.", projectDesc.getName());
+            logger.info("Invalid Project name {}, only letters, numbers and underline supported.",
+                    projectDesc.getName());
             throw new BadRequestException("Invalid Project name, only letters, numbers and underline supported.");
         }
 

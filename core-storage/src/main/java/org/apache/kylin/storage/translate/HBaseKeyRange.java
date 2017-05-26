@@ -69,7 +69,9 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
     private long partitionColumnStartDate = Long.MIN_VALUE;
     private long partitionColumnEndDate = Long.MAX_VALUE;
 
-    public HBaseKeyRange(CubeSegment cubeSeg, Cuboid cuboid, byte[] startKey, byte[] stopKey, List<Pair<byte[], byte[]>> fuzzyKeys, List<Collection<ColumnValueRange>> flatColumnValueFilter, long partitionColumnStartDate, long partitionColumnEndDate) {
+    public HBaseKeyRange(CubeSegment cubeSeg, Cuboid cuboid, byte[] startKey, byte[] stopKey,
+            List<Pair<byte[], byte[]>> fuzzyKeys, List<Collection<ColumnValueRange>> flatColumnValueFilter,
+            long partitionColumnStartDate, long partitionColumnEndDate) {
         this.cubeSeg = cubeSeg;
         this.cuboid = cuboid;
         this.startKey = startKey;
@@ -81,7 +83,8 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
         initDebugString();
     }
 
-    public HBaseKeyRange(Collection<TblColRef> dimensionColumns, Collection<ColumnValueRange> andDimensionRanges, CubeSegment cubeSeg, CubeDesc cubeDesc) {
+    public HBaseKeyRange(Collection<TblColRef> dimensionColumns, Collection<ColumnValueRange> andDimensionRanges,
+            CubeSegment cubeSeg, CubeDesc cubeDesc) {
         this.cubeSeg = cubeSeg;
         long cuboidId = this.calculateCuboidID(cubeDesc, dimensionColumns);
         this.cuboid = Cuboid.findById(cubeDesc, cuboidId);
@@ -111,7 +114,8 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
             stopValues.put(column, dimRange.getEndValue());
             fuzzyValues.put(column, dimRange.getEqualValues());
 
-            TblColRef partitionDateColumnRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
+            TblColRef partitionDateColumnRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc()
+                    .getPartitionDateColumnRef();
             if (column.equals(partitionDateColumnRef)) {
                 initPartitionRange(dimRange);
             }
@@ -268,6 +272,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
     }
 
     public boolean hitSegment() {
-        return cubeSeg.getDateRangeStart() <= getPartitionColumnEndDate() && cubeSeg.getDateRangeEnd() >= getPartitionColumnStartDate();
+        return cubeSeg.getDateRangeStart() <= getPartitionColumnEndDate()
+                && cubeSeg.getDateRangeEnd() >= getPartitionColumnStartDate();
     }
 }

@@ -39,7 +39,8 @@ public class IllegalStateTranferException extends RuntimeException {
         super(cause);
     }
 
-    public IllegalStateTranferException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public IllegalStateTranferException(String message, Throwable cause, boolean enableSuppression,
+            boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

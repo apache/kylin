@@ -84,7 +84,8 @@ public class MeasureDesc implements Serializable {
         if (!function.equals(that.getFunction()))
             return false;
 
-        if (dependentMeasureRef != null && that.getDependentMeasureRef() == null || dependentMeasureRef == null && that.getDependentMeasureRef() != null)
+        if (dependentMeasureRef != null && that.getDependentMeasureRef() == null
+                || dependentMeasureRef == null && that.getDependentMeasureRef() != null)
             return false;
 
         if (dependentMeasureRef == null && that.getDependentMeasureRef() == null)

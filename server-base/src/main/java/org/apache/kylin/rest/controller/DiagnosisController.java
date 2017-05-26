@@ -72,9 +72,11 @@ public class DiagnosisController extends BasicController {
     /**
      * Get diagnosis information for project
      */
-    @RequestMapping(value = "/project/{project}/download", method = { RequestMethod.GET }, produces = { "application/json" })
+    @RequestMapping(value = "/project/{project}/download", method = { RequestMethod.GET }, produces = {
+            "application/json" })
     @ResponseBody
-    public void dumpProjectDiagnosisInfo(@PathVariable String project, final HttpServletRequest request, final HttpServletResponse response) {
+    public void dumpProjectDiagnosisInfo(@PathVariable String project, final HttpServletRequest request,
+            final HttpServletResponse response) {
         String filePath;
         try {
             filePath = dgService.dumpProjectDiagnosisInfo(project);
@@ -90,7 +92,8 @@ public class DiagnosisController extends BasicController {
      */
     @RequestMapping(value = "/job/{jobId}/download", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public void dumpJobDiagnosisInfo(@PathVariable String jobId, final HttpServletRequest request, final HttpServletResponse response) {
+    public void dumpJobDiagnosisInfo(@PathVariable String jobId, final HttpServletRequest request,
+            final HttpServletResponse response) {
         String filePath;
         try {
             filePath = dgService.dumpJobDiagnosisInfo(jobId);

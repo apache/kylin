@@ -26,10 +26,10 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMeta;
+import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.request.MetaRequest;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
@@ -82,7 +82,8 @@ public class QueryController extends BasicController {
     @ResponseBody
     public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
-        Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
+        Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(),
+                sqlRequest.getDescription());
 
         queryService.saveQuery(creator, newQuery);
     }

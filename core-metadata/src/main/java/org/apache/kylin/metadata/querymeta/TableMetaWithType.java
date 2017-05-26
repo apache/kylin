@@ -33,7 +33,9 @@ public class TableMetaWithType extends TableMeta {
 
     private HashSet<tableTypeEnum> TYPE;
 
-    public TableMetaWithType(String tABLE_CAT, String tABLE_SCHEM, String tABLE_NAME, String tABLE_TYPE, String rEMARKS, String tYPE_CAT, String tYPE_SCHEM, String tYPE_NAME, String sELF_REFERENCING_COL_NAME, String rEF_GENERATION) {
+    public TableMetaWithType(String tABLE_CAT, String tABLE_SCHEM, String tABLE_NAME, String tABLE_TYPE, String rEMARKS,
+            String tYPE_CAT, String tYPE_SCHEM, String tYPE_NAME, String sELF_REFERENCING_COL_NAME,
+            String rEF_GENERATION) {
         TABLE_CAT = tABLE_CAT;
         TABLE_SCHEM = tABLE_SCHEM;
         TABLE_NAME = tABLE_NAME;

@@ -67,9 +67,14 @@ public class DiagnosisControllerV2 extends BasicController {
      * Get bad query history
      */
 
-    @RequestMapping(value = "/sql", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/sql", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getBadQuerySqlV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "project", required = false) String project, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) throws IOException {
+    public EnvelopeResponse getBadQuerySqlV2(@RequestHeader("Accept-Language") String lang,
+            @RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
+            throws IOException {
         MsgPicker.setMsg(lang);
 
         HashMap<String, Object> data = new HashMap<String, Object>();
@@ -106,9 +111,11 @@ public class DiagnosisControllerV2 extends BasicController {
      * Get diagnosis information for project
      */
 
-    @RequestMapping(value = "/project/{project}/download", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/project/{project}/download", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void dumpProjectDiagnosisInfoV2(@RequestHeader("Accept-Language") String lang, @PathVariable String project, final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+    public void dumpProjectDiagnosisInfoV2(@RequestHeader("Accept-Language") String lang, @PathVariable String project,
+            final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         MsgPicker.setMsg(lang);
 
         String filePath;
@@ -121,9 +128,11 @@ public class DiagnosisControllerV2 extends BasicController {
      * Get diagnosis information for job
      */
 
-    @RequestMapping(value = "/job/{jobId}/download", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/job/{jobId}/download", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void dumpJobDiagnosisInfoV2(@RequestHeader("Accept-Language") String lang, @PathVariable String jobId, final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+    public void dumpJobDiagnosisInfoV2(@RequestHeader("Accept-Language") String lang, @PathVariable String jobId,
+            final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         MsgPicker.setMsg(lang);
 
         String filePath;

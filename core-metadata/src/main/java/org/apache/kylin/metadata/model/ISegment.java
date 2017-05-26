@@ -37,7 +37,7 @@ public interface ISegment {
     public SegmentStatusEnum getStatus();
 
     public long getLastBuildTime();
-    
+
     public void validate() throws IllegalStateException;
-    
+
 }

@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FixedLenDimEnc extends DimensionEncoding implements Serializable{
+public class FixedLenDimEnc extends DimensionEncoding implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static Logger logger = LoggerFactory.getLogger(FixedLenDimEnc.class);
@@ -100,7 +100,9 @@ public class FixedLenDimEnc extends DimensionEncoding implements Serializable{
         int valueLen = value.length;
         if (valueLen > fixedLen) {
             if (avoidVerbose++ % 10000 == 0) {
-                logger.warn("Expect at most " + fixedLen + " bytes, but got " + valueLen + ", will truncate, value string: " + Bytes.toString(value, 0, valueLen) + " times:" + avoidVerbose);
+                logger.warn(
+                        "Expect at most " + fixedLen + " bytes, but got " + valueLen + ", will truncate, value string: "
+                                + Bytes.toString(value, 0, valueLen) + " times:" + avoidVerbose);
             }
         }
 

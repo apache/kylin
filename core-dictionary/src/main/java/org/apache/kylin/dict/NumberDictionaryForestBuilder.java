@@ -41,10 +41,12 @@ public class NumberDictionaryForestBuilder extends TrieDictionaryForestBuilder<S
     }
 
     public NumberDictionaryForestBuilder(int baseId) {
-        super(new org.apache.kylin.dict.Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT), 0);
+        super(new org.apache.kylin.dict.Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT),
+                0);
     }
 
     public NumberDictionaryForestBuilder(int baseId, int maxTrieSizeMB) {
-        super(new org.apache.kylin.dict.Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT), 0, maxTrieSizeMB);
+        super(new org.apache.kylin.dict.Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT), 0,
+                maxTrieSizeMB);
     }
 }

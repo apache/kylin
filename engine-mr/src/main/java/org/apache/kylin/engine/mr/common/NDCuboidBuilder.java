@@ -18,6 +18,8 @@
 
 package org.apache.kylin.engine.mr.common;
 
+import java.io.Serializable;
+
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SplittedBytes;
@@ -29,8 +31,6 @@ import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.kv.RowKeyEncoderProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.Serializable;
 
 /**
  */
@@ -57,7 +57,6 @@ public class NDCuboidBuilder implements Serializable {
         this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
     }
 
-
     public Pair<Integer, ByteArray> buildKey(Cuboid parentCuboid, Cuboid childCuboid, SplittedBytes[] splitBuffers) {
         RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(childCuboid);
 
@@ -67,7 +66,7 @@ public class NDCuboidBuilder implements Serializable {
         long mask = Long.highestOneBit(parentCuboid.getId());
         long parentCuboidId = parentCuboid.getId();
         long childCuboidId = childCuboid.getId();
-        long parentCuboidIdActualLength = (long)Long.SIZE - Long.numberOfLeadingZeros(parentCuboid.getId());
+        long parentCuboidIdActualLength = (long) Long.SIZE - Long.numberOfLeadingZeros(parentCuboid.getId());
         int index = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboidId
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
             if ((mask & parentCuboidId) > 0) {// if the this bit position equals

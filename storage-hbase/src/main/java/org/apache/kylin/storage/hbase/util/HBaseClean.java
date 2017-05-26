@@ -44,10 +44,12 @@ import com.google.common.collect.Lists;
 public class HBaseClean extends AbstractApplication {
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(true).withDescription("actually delete or not").create("delete");
+    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(true)
+            .withDescription("actually delete or not").create("delete");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_TAG = OptionBuilder.withArgName("tag").hasArg().isRequired(true).withDescription("the tag of HTable").create("tag");
+    private static final Option OPTION_TAG = OptionBuilder.withArgName("tag").hasArg().isRequired(true)
+            .withDescription("the tag of HTable").create("tag");
 
     protected static final Logger logger = LoggerFactory.getLogger(HBaseClean.class);
 

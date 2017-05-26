@@ -53,7 +53,8 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
     /**
      * @see SecureProtocolSocketFactory#createSocket(java.lang.String,int,java.net.InetAddress,int)
      */
-    public Socket createSocket(String host, int port, InetAddress clientHost, int clientPort) throws IOException, UnknownHostException {
+    public Socket createSocket(String host, int port, InetAddress clientHost, int clientPort)
+            throws IOException, UnknownHostException {
         return getSSLContext().getSocketFactory().createSocket(host, port, clientHost, clientPort);
     }
 
@@ -91,7 +92,8 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
      * @throws IllegalArgumentException
      *             DOCUMENT ME!
      */
-    public Socket createSocket(final String host, final int port, final InetAddress localAddress, final int localPort, final HttpConnectionParams params) throws IOException, UnknownHostException, ConnectTimeoutException {
+    public Socket createSocket(final String host, final int port, final InetAddress localAddress, final int localPort,
+            final HttpConnectionParams params) throws IOException, UnknownHostException, ConnectTimeoutException {
         if (params == null) {
             throw new IllegalArgumentException("Parameters may not be null");
         }
@@ -116,7 +118,8 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
     /**
      * @see SecureProtocolSocketFactory#createSocket(java.net.Socket,java.lang.String,int,boolean)
      */
-    public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException, UnknownHostException {
+    public Socket createSocket(Socket socket, String host, int port, boolean autoClose)
+            throws IOException, UnknownHostException {
         return getSSLContext().getSocketFactory().createSocket(socket, host, port, autoClose);
     }
 

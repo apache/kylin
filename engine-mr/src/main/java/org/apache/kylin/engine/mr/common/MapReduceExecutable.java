@@ -108,7 +108,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                 job = new Cluster(conf).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
                 logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID) + " resumed");
             } else {
-                final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil.forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
+                final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil
+                        .forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
                 final AbstractHadoopJob hadoopJob = constructor.newInstance();
                 hadoopJob.setConf(HadoopUtil.getCurrentConfiguration());
                 hadoopJob.setAsync(true); // so the ToolRunner.run() returns right away
@@ -154,7 +155,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                     mgr.updateJobOutput(getId(), ExecutableState.ERROR, hadoopCmdOutput.getInfo(), "killed by admin");
                     return new ExecuteResult(ExecuteResult.State.FAILED, "killed by admin");
                 }
-                if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
+                if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED
+                        || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
                     final long waitTime = System.currentTimeMillis() - getStartTime();
                     setMapReduceWaitTime(waitTime);
                 }

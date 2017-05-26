@@ -48,7 +48,8 @@ public class TimeConditionLiteralsReplacerTest extends FilterBaseTest {
 
         TimeConditionLiteralsReplacer filterDecorator = new TimeConditionLiteralsReplacer(compareFilter);
         byte[] bytes = TupleFilterSerializer.serialize(compareFilter, filterDecorator, DictCodeSystem.INSTANCE);
-        CompareTupleFilter compareTupleFilter = (CompareTupleFilter) TupleFilterSerializer.deserialize(bytes, DictCodeSystem.INSTANCE);
+        CompareTupleFilter compareTupleFilter = (CompareTupleFilter) TupleFilterSerializer.deserialize(bytes,
+                DictCodeSystem.INSTANCE);
         Assert.assertEquals("2000-01-01", compareTupleFilter.getFirstValue());
     }
 }

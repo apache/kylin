@@ -78,7 +78,8 @@ public class GTScanRequest {
     private transient boolean doingStorageAggregation = false;
 
     GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
-            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown, TupleFilter havingFilterPushDown, // 
+            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown,
+            TupleFilter havingFilterPushDown, // 
             boolean allowStorageAggregation, double aggCacheMemThreshold, int storageScanRowNumThreshold, //
             int storagePushDownLimit, String storageBehavior, long startTime, long timeout) {
         this.info = info;
@@ -172,14 +173,16 @@ public class GTScanRequest {
      * 
      * Refer to CoprocessorBehavior for explanation
      */
-    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn) throws IOException {
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn)
+            throws IOException {
         return decorateScanner(scanner, filterToggledOn, aggrToggledOn, false, true);
     }
 
     /**
      * hasPreFiltered indicate the data has been filtered before scanning
      */
-    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, boolean hasPreFiltered, boolean spillEnabled) throws IOException {
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn,
+            boolean hasPreFiltered, boolean spillEnabled) throws IOException {
         IGTScanner result = scanner;
         if (!filterToggledOn) { //Skip reading this section if you're not profiling! 
             lookAndForget(result);
@@ -280,7 +283,7 @@ public class GTScanRequest {
     public TupleFilter getHavingFilterPushDown() {
         return havingFilterPushDown;
     }
-    
+
     public ImmutableBitSet getDimensions() {
         return this.getColumns().andNot(this.getAggrMetrics());
     }
@@ -334,7 +337,9 @@ public class GTScanRequest {
 
     @Override
     public String toString() {
-        return "GTScanRequest [range=" + ranges + ", columns=" + columns + ", filterPushDown=" + filterPushDown + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs=" + Arrays.toString(aggrMetricsFuncs) + "]";
+        return "GTScanRequest [range=" + ranges + ", columns=" + columns + ", filterPushDown=" + filterPushDown
+                + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs="
+                + Arrays.toString(aggrMetricsFuncs) + "]";
     }
 
     public byte[] toByteArray() {
@@ -364,7 +369,8 @@ public class GTScanRequest {
 
             ImmutableBitSet.serializer.serialize(value.columns, out);
             BytesUtil.writeByteArray(GTUtil.serializeGTFilter(value.filterPushDown, value.info), out);
-            BytesUtil.writeByteArray(TupleFilterSerializer.serialize(value.havingFilterPushDown, StringCodeSystem.INSTANCE), out);
+            BytesUtil.writeByteArray(
+                    TupleFilterSerializer.serialize(value.havingFilterPushDown, StringCodeSystem.INSTANCE), out);
 
             ImmutableBitSet.serializer.serialize(value.aggrGroupBy, out);
             ImmutableBitSet.serializer.serialize(value.aggrMetrics, out);
@@ -398,7 +404,8 @@ public class GTScanRequest {
 
             ImmutableBitSet sColumns = ImmutableBitSet.serializer.deserialize(in);
             TupleFilter sGTFilter = GTUtil.deserializeGTFilter(BytesUtil.readByteArray(in), sInfo);
-            TupleFilter sGTHavingFilter = TupleFilterSerializer.deserialize(BytesUtil.readByteArray(in), StringCodeSystem.INSTANCE);
+            TupleFilter sGTHavingFilter = TupleFilterSerializer.deserialize(BytesUtil.readByteArray(in),
+                    StringCodeSystem.INSTANCE);
 
             ImmutableBitSet sAggGroupBy = ImmutableBitSet.serializer.deserialize(in);
             ImmutableBitSet sAggrMetrics = ImmutableBitSet.serializer.deserialize(in);
@@ -413,7 +420,8 @@ public class GTScanRequest {
 
             return new GTScanRequestBuilder().setInfo(sInfo).setRanges(sRanges).setDimensions(sColumns).//
             setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs).//
-            setFilterPushDown(sGTFilter).setHavingFilterPushDown(sGTHavingFilter).setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB).//
+            setFilterPushDown(sGTFilter).setHavingFilterPushDown(sGTHavingFilter)
+                    .setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB).//
             setStorageScanRowNumThreshold(storageScanRowNumThreshold).setStoragePushDownLimit(storagePushDownLimit).//
             setStartTime(startTime).setTimeout(timeout).setStorageBehavior(storageBehavior).createGTScanRequest();
         }

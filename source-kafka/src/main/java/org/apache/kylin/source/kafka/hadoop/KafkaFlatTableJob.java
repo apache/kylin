@@ -97,7 +97,8 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
             String topic = kafkaConfig.getTopic();
 
             if (brokers == null || brokers.length() == 0 || topic == null) {
-                throw new IllegalArgumentException("Invalid Kafka information, brokers " + brokers + ", topic " + topic);
+                throw new IllegalArgumentException(
+                        "Invalid Kafka information, brokers " + brokers + ", topic " + topic);
             }
 
             JobEngineConfig jobEngineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
@@ -143,7 +144,7 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
         job.getConfiguration().set(CONFIG_KAFKA_PARITION_MIN, minPartition.toString());
         job.getConfiguration().set(CONFIG_KAFKA_PARITION_MAX, maxPartition.toString());
 
-        for(Integer partition: offsetStart.keySet()) {
+        for (Integer partition : offsetStart.keySet()) {
             job.getConfiguration().set(CONFIG_KAFKA_PARITION_START + partition, offsetStart.get(partition).toString());
             job.getConfiguration().set(CONFIG_KAFKA_PARITION_END + partition, offsetEnd.get(partition).toString());
         }

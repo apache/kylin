@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query.optrule;
 
+import java.util.List;
+
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
@@ -25,8 +27,6 @@ import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.core.Union;
 import org.apache.kylin.query.relnode.OLAPRel;
 import org.apache.kylin.query.relnode.OLAPUnionRel;
-
-import java.util.List;
 
 /**
  */

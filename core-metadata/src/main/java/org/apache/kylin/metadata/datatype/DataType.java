@@ -164,14 +164,16 @@ public class DataType implements Serializable {
                 try {
                     n = Integer.parseInt(parts[i]);
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("bad data type -- " + datatype + ", precision/scale not numeric");
+                    throw new IllegalArgumentException(
+                            "bad data type -- " + datatype + ", precision/scale not numeric");
                 }
                 if (i == 0)
                     precision = n;
                 else if (i == 1)
                     scale = n;
                 else
-                    throw new IllegalArgumentException("bad data type -- " + datatype + ", too many precision/scale parts");
+                    throw new IllegalArgumentException(
+                            "bad data type -- " + datatype + ", too many precision/scale parts");
             }
         }
 
@@ -217,7 +219,7 @@ public class DataType implements Serializable {
     public boolean isTimeFamily() {
         return DATETIME_FAMILY.contains(name) && !isDate();
     }
-    
+
     public boolean isDate() {
         return name.equals("date");
     }

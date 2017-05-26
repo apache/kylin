@@ -71,7 +71,8 @@ public class MemDiskStore implements IGTStore, Closeable {
         this(info, budgetCtrl, diskFile, false);
     }
 
-    private MemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl, File diskFile, boolean delOnClose) throws IOException {
+    private MemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl, File diskFile, boolean delOnClose)
+            throws IOException {
         this.info = info;
         this.lock = this;
         this.memPart = new MemPart(budgetCtrl);
@@ -167,7 +168,8 @@ public class MemDiskStore implements IGTStore, Closeable {
                         if (available() <= 0)
                             return -1;
 
-                        if (memChunk == null && memPart.headOffset() <= readOffset && readOffset < memPart.tailOffset()) {
+                        if (memChunk == null && memPart.headOffset() <= readOffset
+                                && readOffset < memPart.tailOffset()) {
                             memChunk = memPart.seekMemChunk(readOffset);
                         }
 
@@ -219,7 +221,8 @@ public class MemDiskStore implements IGTStore, Closeable {
                 din.close();
                 diskPart.closeRead();
                 if (debug)
-                    logger.debug(MemDiskStore.this + " read end @ " + readOffset + ", " + (memRead) + " from mem, " + (diskRead) + " from disk, " + nReadCalls + " read() calls");
+                    logger.debug(MemDiskStore.this + " read end @ " + readOffset + ", " + (memRead) + " from mem, "
+                            + (diskRead) + " from disk, " + nReadCalls + " read() calls");
             }
         }
 
@@ -358,7 +361,8 @@ public class MemDiskStore implements IGTStore, Closeable {
                     diskPart.closeWrite();
                     ongoingWriter = null;
                     if (debug)
-                        logger.debug(MemDiskStore.this + " write end @ " + writeOffset + ", " + (memWrite) + " to mem, " + (diskWrite) + " to disk, " + nWriteCalls + " write() calls");
+                        logger.debug(MemDiskStore.this + " write end @ " + writeOffset + ", " + (memWrite) + " to mem, "
+                                + (diskWrite) + " to disk, " + nWriteCalls + " write() calls");
                 } else {
                     // the asyncFlusher will call this close() again later
                 }
@@ -663,11 +667,13 @@ public class MemDiskStore implements IGTStore, Closeable {
 
         public void openWrite(boolean append) throws IOException {
             if (append) {
-                writeChannel = FileChannel.open(diskFile.toPath(), StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
+                writeChannel = FileChannel.open(diskFile.toPath(), StandardOpenOption.CREATE, StandardOpenOption.APPEND,
+                        StandardOpenOption.WRITE);
                 tailOffset = diskFile.length();
             } else {
                 diskFile.delete();
-                writeChannel = FileChannel.open(diskFile.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+                writeChannel = FileChannel.open(diskFile.toPath(), StandardOpenOption.CREATE_NEW,
+                        StandardOpenOption.WRITE);
                 tailOffset = 0;
             }
         }

@@ -44,7 +44,8 @@ public class MRUtil {
     }
 
     public static IMRTableInputFormat getTableInputFormat(String tableName) {
-        return SourceFactory.createEngineAdapter(getTableDesc(tableName), IMRInput.class).getTableInputFormat(getTableDesc(tableName));
+        return SourceFactory.createEngineAdapter(getTableDesc(tableName), IMRInput.class)
+                .getTableInputFormat(getTableDesc(tableName));
     }
 
     public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc) {

@@ -84,7 +84,8 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testSomeNull() {
-        System.out.println("test some null ============================================================================");
+        System.out
+                .println("test some null ============================================================================");
         Map<TblColRef, Set<String>> values = Maps.newHashMap();
         values.put(col1, set("a", "b", "c"));
         values.put(col2, set());
@@ -98,7 +99,8 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testAllNulls() {
-        System.out.println("test all nulls ============================================================================");
+        System.out
+                .println("test all nulls ============================================================================");
         Map<TblColRef, Set<String>> values = Maps.newHashMap();
         values.put(col1, set());
         values.put(col2, set());

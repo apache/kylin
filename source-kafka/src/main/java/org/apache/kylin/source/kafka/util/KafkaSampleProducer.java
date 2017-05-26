@@ -48,9 +48,12 @@ public class KafkaSampleProducer {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaSampleProducer.class);
     @SuppressWarnings("static-access")
-    private static final Option OPTION_TOPIC = OptionBuilder.withArgName("topic").hasArg().isRequired(true).withDescription("Kafka topic").create("topic");
-    private static final Option OPTION_BROKER = OptionBuilder.withArgName("broker").hasArg().isRequired(true).withDescription("Kafka broker").create("broker");
-    private static final Option OPTION_INTERVAL = OptionBuilder.withArgName("interval").hasArg().isRequired(false).withDescription("Simulated message interval in mili-seconds, default 1000").create("interval");
+    private static final Option OPTION_TOPIC = OptionBuilder.withArgName("topic").hasArg().isRequired(true)
+            .withDescription("Kafka topic").create("topic");
+    private static final Option OPTION_BROKER = OptionBuilder.withArgName("broker").hasArg().isRequired(true)
+            .withDescription("Kafka broker").create("broker");
+    private static final Option OPTION_INTERVAL = OptionBuilder.withArgName("interval").hasArg().isRequired(false)
+            .withDescription("Simulated message interval in mili-seconds, default 1000").create("interval");
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -131,7 +134,8 @@ public class KafkaSampleProducer {
             user.put("age", rnd.nextInt(20) + 10);
             record.put("user", user);
             //send message
-            ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
+            ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "",
+                    mapper.writeValueAsString(record));
             System.out.println("Sending 1 message: " + JsonUtil.writeValueAsString(record));
             producer.send(data);
             Thread.sleep(interval);

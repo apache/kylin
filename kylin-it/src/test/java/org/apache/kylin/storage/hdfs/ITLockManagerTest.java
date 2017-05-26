@@ -17,6 +17,19 @@
 */
 package org.apache.kylin.storage.hdfs;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -30,19 +43,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.junit.Assert.assertEquals;
 
 public class ITLockManagerTest extends HBaseMetadataTestCase {
 
@@ -110,7 +110,8 @@ public class ITLockManagerTest extends HBaseMetadataTestCase {
                     public Void call() throws Exception {
                         LockManager threadLocalLockManager = new LockManager(kylinConfig, lockRootPath);
                         try {
-                            ExampleClientThatLocks example = new ExampleClientThatLocks(threadLocalLockManager, lockRootPath, resource, "Client " + index);
+                            ExampleClientThatLocks example = new ExampleClientThatLocks(threadLocalLockManager,
+                                    lockRootPath, resource, "Client " + index);
                             for (int j = 0; j < REPETITIONS; ++j) {
                                 example.doWork(10, TimeUnit.SECONDS);
                             }
@@ -182,7 +183,8 @@ public class ITLockManagerTest extends HBaseMetadataTestCase {
 
         private String lockPath;
 
-        public ExampleClientThatLocks(LockManager lockManager, String lockPath, FakeLimitedResource resource, String clientName) {
+        public ExampleClientThatLocks(LockManager lockManager, String lockPath, FakeLimitedResource resource,
+                String clientName) {
             this.resource = resource;
             this.clientName = clientName;
             this.lockManager = lockManager;

@@ -63,7 +63,8 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             if (lock.lock(getLockPath(sourceColumn))) {
                 logger.info("processed {} values for {}", counter, sourceColumn);
             } else {
-                throw new RuntimeException("Failed to create global dictionary on " + sourceColumn + " This client doesn't keep the lock");
+                throw new RuntimeException(
+                        "Failed to create global dictionary on " + sourceColumn + " This client doesn't keep the lock");
             }
         }
 

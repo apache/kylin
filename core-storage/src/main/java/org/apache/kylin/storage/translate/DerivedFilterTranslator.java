@@ -50,7 +50,8 @@ public class DerivedFilterTranslator {
 
     private static final Logger logger = LoggerFactory.getLogger(DerivedFilterTranslator.class);
 
-    public static Pair<TupleFilter, Boolean> translate(LookupStringTable lookup, DeriveInfo hostInfo, CompareTupleFilter compf) {
+    public static Pair<TupleFilter, Boolean> translate(LookupStringTable lookup, DeriveInfo hostInfo,
+            CompareTupleFilter compf) {
 
         TblColRef derivedCol = compf.getColumn();
         TblColRef[] hostCols = hostInfo.columns;
@@ -78,7 +79,8 @@ public class DerivedFilterTranslator {
         SingleColumnTuple tuple = new SingleColumnTuple(derivedCol);
         for (String[] row : lookup.getAllRows()) {
             tuple.value = row[di];
-            if (compf.evaluate(tuple, FilterCodeSystemFactory.getFilterCodeSystem(derivedCol.getColumnDesc().getType()))) {
+            if (compf.evaluate(tuple,
+                    FilterCodeSystemFactory.getFilterCodeSystem(derivedCol.getColumnDesc().getType()))) {
                 collect(row, pi, satisfyingHostRecords);
             }
         }
@@ -87,8 +89,7 @@ public class DerivedFilterTranslator {
         boolean loosened;
         if (satisfyingHostRecords.size() > KylinConfig.getInstanceFromEnv().getDerivedInThreshold()) {
             logger.info("Deciding to loosen filter on derived filter as host candidates number {} exceeds threshold {}", //
-                    satisfyingHostRecords.size(), KylinConfig.getInstanceFromEnv().getDerivedInThreshold()
-            );
+                    satisfyingHostRecords.size(), KylinConfig.getInstanceFromEnv().getDerivedInThreshold());
             translated = buildRangeFilter(hostCols, satisfyingHostRecords);
             loosened = true;
         } else {
@@ -162,7 +163,8 @@ public class DerivedFilterTranslator {
         return and;
     }
 
-    private static void findMinMax(Set<Array<String>> satisfyingHostRecords, TblColRef[] hostCols, String[] min, String[] max) {
+    private static void findMinMax(Set<Array<String>> satisfyingHostRecords, TblColRef[] hostCols, String[] min,
+            String[] max) {
 
         RowKeyColumnOrder[] orders = new RowKeyColumnOrder[hostCols.length];
         for (int i = 0; i < hostCols.length; i++) {

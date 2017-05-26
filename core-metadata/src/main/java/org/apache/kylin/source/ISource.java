@@ -41,7 +41,7 @@ public interface ISource {
      * Return a ReadableTable that can iterate through the rows of given table.
      */
     IReadableTable createReadableTable(TableDesc tableDesc);
-    
+
     /**
      * Give the source a chance to enrich a SourcePartition before build start.
      * Particularly, Kafka source use this chance to define start/end offsets within each partition.

@@ -51,7 +51,8 @@ public class RealAclHBaseStorage implements AclHBaseStorage {
             return aclTableName;
         } else if (clazz == LegacyUserService.class) {
             userTableName = tableNameBase + USER_TABLE_NAME;
-            HBaseConnection.createHTableIfNeeded(hbaseUrl, userTableName, USER_AUTHORITY_FAMILY, QueryService.USER_QUERY_FAMILY);
+            HBaseConnection.createHTableIfNeeded(hbaseUrl, userTableName, USER_AUTHORITY_FAMILY,
+                    QueryService.USER_QUERY_FAMILY);
             return userTableName;
         } else {
             throw new IllegalStateException("prepareHBaseTable for unknown class: " + clazz);

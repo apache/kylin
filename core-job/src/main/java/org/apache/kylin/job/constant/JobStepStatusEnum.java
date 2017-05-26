@@ -42,7 +42,8 @@ public enum JobStepStatusEnum {
     }
 
     public boolean isComplete() {
-        return code == JobStepStatusEnum.FINISHED.getCode() || code == JobStepStatusEnum.ERROR.getCode() || code == JobStepStatusEnum.DISCARDED.getCode();
+        return code == JobStepStatusEnum.FINISHED.getCode() || code == JobStepStatusEnum.ERROR.getCode()
+                || code == JobStepStatusEnum.DISCARDED.getCode();
     }
 
     public boolean isRunable() {

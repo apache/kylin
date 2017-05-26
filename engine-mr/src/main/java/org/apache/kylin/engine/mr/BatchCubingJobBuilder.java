@@ -42,7 +42,8 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
     public BatchCubingJobBuilder(CubeSegment newSegment, String submitter) {
         super(newSegment, submitter);
 
-        Preconditions.checkArgument(!newSegment.isEnableSharding(), "V1 job engine does not support building sharded cubes");
+        Preconditions.checkArgument(!newSegment.isEnableSharding(),
+                "V1 job engine does not support building sharded cubes");
 
         this.inputSide = MRUtil.getBatchCubingInputSide(seg);
         this.outputSide = MRUtil.getBatchCubingOutputSide((CubeSegment) seg);
@@ -69,7 +70,8 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         result.addTask(createBaseCuboidStep(getCuboidOutputPathsByLevel(cuboidRootPath, 0), jobId));
         // n dim cuboid steps
         for (int i = 1; i <= groupRowkeyColumnsCount; i++) {
-            result.addTask(createNDimensionCuboidStep(getCuboidOutputPathsByLevel(cuboidRootPath, i - 1), getCuboidOutputPathsByLevel(cuboidRootPath, i), i));
+            result.addTask(createNDimensionCuboidStep(getCuboidOutputPathsByLevel(cuboidRootPath, i - 1),
+                    getCuboidOutputPathsByLevel(cuboidRootPath, i), i));
         }
         outputSide.addStepPhase3_BuildCube(result, cuboidRootPath);
 
@@ -94,7 +96,8 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
         appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, "FLAT_TABLE"); // marks flat table input
         appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, cuboidOutputPath);
-        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Base_Cuboid_Builder_" + seg.getRealization().getName());
+        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME,
+                "Kylin_Base_Cuboid_Builder_" + seg.getRealization().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_LEVEL, "0");
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBING_JOB_ID, jobId);
 
@@ -115,7 +118,8 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
         appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, parentPath);
         appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, outputPath);
-        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_ND-Cuboid_Builder_" + seg.getRealization().getName() + "_Step");
+        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME,
+                "Kylin_ND-Cuboid_Builder_" + seg.getRealization().getName() + "_Step");
         appendExecCmdParameters(cmd, BatchConstants.ARG_LEVEL, "" + level);
 
         ndCuboidStep.setMapReduceParams(cmd.toString());

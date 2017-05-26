@@ -18,20 +18,21 @@
 
 package org.apache.kylin.engine.spark.util;
 
-import org.apache.kylin.common.util.BytesSerializer;
-import org.apache.kylin.measure.MeasureIngester;
-import org.reflections.Reflections;
-
 import java.io.Serializable;
 import java.util.Set;
 import java.util.TreeSet;
+
+import org.apache.kylin.common.util.BytesSerializer;
+import org.apache.kylin.measure.MeasureIngester;
+import org.reflections.Reflections;
 
 /**
  * Generate Kyro Registrator class, the output will be added into KylinKyroRegistrator manually. No runtime dependency with Reflections.
  */
 public class KyroMappingGenerator {
     public static void main(String[] args) {
-        Set<Class<? extends Serializable>> subTypesOfSerializable = new Reflections("org.apache.kylin").getSubTypesOf(Serializable.class);
+        Set<Class<? extends Serializable>> subTypesOfSerializable = new Reflections("org.apache.kylin")
+                .getSubTypesOf(Serializable.class);
         String begin = "kyroClasses.add(";
         String end = ".class);";
         TreeSet<String> sortedSet = new TreeSet();
@@ -39,12 +40,14 @@ public class KyroMappingGenerator {
             if (clazz.getCanonicalName() != null)
                 sortedSet.add(clazz.getCanonicalName());
         }
-        Set<Class<? extends BytesSerializer>> subTypesOfBytes = new Reflections("org.apache.kylin.metadata.datatype").getSubTypesOf(BytesSerializer.class);
+        Set<Class<? extends BytesSerializer>> subTypesOfBytes = new Reflections("org.apache.kylin.metadata.datatype")
+                .getSubTypesOf(BytesSerializer.class);
         for (Class clazz : subTypesOfBytes) {
             if (clazz.getCanonicalName() != null)
                 sortedSet.add(clazz.getCanonicalName());
         }
-        Set<Class<? extends MeasureIngester>> subTypesOfMeasure = new Reflections("org.apache.kylin.measure").getSubTypesOf(MeasureIngester.class);
+        Set<Class<? extends MeasureIngester>> subTypesOfMeasure = new Reflections("org.apache.kylin.measure")
+                .getSubTypesOf(MeasureIngester.class);
         for (Class clazz : subTypesOfMeasure) {
             if (clazz.getCanonicalName() != null)
                 sortedSet.add(clazz.getCanonicalName());

@@ -39,7 +39,8 @@ import kafka.cluster.Broker;
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class KafkaClusterConfig extends RootPersistentEntity {
-    public static Serializer<KafkaClusterConfig> SERIALIZER = new JsonSerializer<KafkaClusterConfig>(KafkaClusterConfig.class);
+    public static Serializer<KafkaClusterConfig> SERIALIZER = new JsonSerializer<KafkaClusterConfig>(
+            KafkaClusterConfig.class);
 
     @JsonProperty("brokers")
     private List<BrokerConfig> brokerConfigs;

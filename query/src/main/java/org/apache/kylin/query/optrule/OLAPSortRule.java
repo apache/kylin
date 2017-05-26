@@ -44,7 +44,9 @@ public class OLAPSortRule extends ConverterRule {
         }
         final RelTraitSet traitSet = sort.getTraitSet().replace(OLAPRel.CONVENTION);
         final RelNode input = sort.getInput();
-        return new OLAPSortRel(rel.getCluster(), traitSet, convert(input, input.getTraitSet().replace(OLAPRel.CONVENTION)), sort.getCollation(), sort.offset, sort.fetch);
+        return new OLAPSortRel(rel.getCluster(), traitSet,
+                convert(input, input.getTraitSet().replace(OLAPRel.CONVENTION)), sort.getCollation(), sort.offset,
+                sort.fetch);
     }
 
 }

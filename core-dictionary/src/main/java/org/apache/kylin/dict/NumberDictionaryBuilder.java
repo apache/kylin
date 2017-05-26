@@ -18,7 +18,6 @@
 
 package org.apache.kylin.dict;
 
-
 /**
  * Use <code>NumberDictionaryForestBuilder</code> instead.
  * 
@@ -27,11 +26,9 @@ package org.apache.kylin.dict;
 @Deprecated
 public class NumberDictionaryBuilder extends TrieDictionaryBuilder<String> {
 
-
     public NumberDictionaryBuilder() {
         super(new Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT));
     }
-
 
     public NumberDictionary build(int baseId) {
         byte[] trieBytes = buildTrieBytes(baseId);

@@ -33,8 +33,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
@@ -90,7 +90,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private Object[] totalSumForSanityCheck;
     private ICuboidCollector resultCollector;
 
-    public InMemCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+    public InMemCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc,
+            Map<TblColRef, Dictionary<String>> dictionaryMap) {
         super(cubeDesc, flatDesc, dictionaryMap);
         this.cuboidScheduler = new CuboidScheduler(cubeDesc);
         this.baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
@@ -109,10 +110,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
-        GTInfo info = CubeGridTable.newGTInfo(
-                Cuboid.findById(cubeDesc, cuboidID),
-                new CubeDimEncMap(cubeDesc, dictionaryMap)
-        );
+        GTInfo info = CubeGridTable.newGTInfo(Cuboid.findById(cubeDesc, cuboidID),
+                new CubeDimEncMap(cubeDesc, dictionaryMap));
 
         // Below several store implementation are very similar in performance. The ConcurrentDiskStore is the simplest.
         // MemDiskStore store = new MemDiskStore(info, memBudget == null ? MemoryBudgetController.ZERO_BUDGET : memBudget);
@@ -232,7 +231,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         } else {
             for (Throwable t : errors)
                 logger.error("Exception during in-mem cube build", t);
-            throw new IOException(errors.size() + " exceptions during in-mem cube build, cause set to the first, check log for more", errors.get(0));
+            throw new IOException(
+                    errors.size() + " exceptions during in-mem cube build, cause set to the first, check log for more",
+                    errors.get(0));
         }
     }
 
@@ -322,7 +323,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         if (budget < baseResult.aggrCacheMB) {
             // make sure we have base aggr cache as minimal
             budget = baseResult.aggrCacheMB;
-            logger.warn("System avail memory (" + systemAvailMB + " MB) is less than base aggr cache (" + baseResult.aggrCacheMB + " MB) + minimal reservation (" + reserve + " MB), consider increase JVM heap -Xmx");
+            logger.warn("System avail memory (" + systemAvailMB + " MB) is less than base aggr cache ("
+                    + baseResult.aggrCacheMB + " MB) + minimal reservation (" + reserve
+                    + " MB), consider increase JVM heap -Xmx");
         }
 
         logger.debug("Memory Budget is " + budget + " MB");
@@ -337,8 +340,11 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         GTBuilder baseBuilder = baseCuboid.rebuild();
         IGTScanner baseInput = new InputConverter(baseCuboid.getInfo(), input);
 
-        Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(baseCuboid.getInfo()).setRanges(null).setDimensions(null).setAggrGroupBy(dimensionMetricsBitSet.getFirst()).setAggrMetrics(dimensionMetricsBitSet.getSecond()).setAggrMetricsFuncs(metricsAggrFuncs).setFilterPushDown(null).createGTScanRequest();
+        Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils
+                .getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(baseCuboid.getInfo()).setRanges(null).setDimensions(null)
+                .setAggrGroupBy(dimensionMetricsBitSet.getFirst()).setAggrMetrics(dimensionMetricsBitSet.getSecond())
+                .setAggrMetricsFuncs(metricsAggrFuncs).setFilterPushDown(null).createGTScanRequest();
         GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req);
         aggregationScanner.trackMemoryLevel(baseCuboidMemTracker);
 
@@ -356,13 +362,15 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         long timeSpent = System.currentTimeMillis() - startTime;
         logger.info("Cuboid " + baseCuboidId + " has " + count + " rows, build takes " + timeSpent + "ms");
 
-        int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache() / MemoryBudgetController.ONE_MB);
+        int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache()
+                / MemoryBudgetController.ONE_MB);
         logger.info("Wild estimate of base aggr cache is " + mbEstimateBaseAggrCache + " MB");
 
         return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, 0);
     }
 
-    private CuboidResult updateCuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB) {
+    private CuboidResult updateCuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent,
+            int aggrCacheMB) {
         if (aggrCacheMB <= 0 && baseResult != null) {
             aggrCacheMB = (int) Math.round(//
                     (DERIVE_AGGR_CACHE_CONSTANT_FACTOR + DERIVE_AGGR_CACHE_VARIABLE_FACTOR * nRows / baseResult.nRows) //
@@ -400,13 +408,18 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private CuboidResult aggregateCuboid(CuboidResult parent, long cuboidId) throws IOException {
-        final Pair<ImmutableBitSet, ImmutableBitSet> allNeededColumns = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(parent.cuboidId, cuboidId, measureCount);
-        return scanAndAggregateGridTable(parent.table, parent.cuboidId, cuboidId, allNeededColumns.getFirst(), allNeededColumns.getSecond());
+        final Pair<ImmutableBitSet, ImmutableBitSet> allNeededColumns = InMemCubeBuilderUtils
+                .getDimensionAndMetricColumnBitSet(parent.cuboidId, cuboidId, measureCount);
+        return scanAndAggregateGridTable(parent.table, parent.cuboidId, cuboidId, allNeededColumns.getFirst(),
+                allNeededColumns.getSecond());
     }
 
-    private GTAggregateScanner prepareGTAggregationScanner(GridTable gridTable, long parentId, long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
+    private GTAggregateScanner prepareGTAggregationScanner(GridTable gridTable, long parentId, long cuboidId,
+            ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
         GTInfo info = gridTable.getInfo();
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setAggrGroupBy(aggregationColumns).setAggrMetrics(measureColumns).setAggrMetricsFuncs(metricsAggrFuncs).setFilterPushDown(null).createGTScanRequest();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null)
+                .setAggrGroupBy(aggregationColumns).setAggrMetrics(measureColumns).setAggrMetricsFuncs(metricsAggrFuncs)
+                .setFilterPushDown(null).createGTScanRequest();
         GTAggregateScanner scanner = (GTAggregateScanner) gridTable.scan(req);
 
         // for child cuboid, some measures don't need aggregation.
@@ -425,11 +438,13 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         return scanner;
     }
 
-    private CuboidResult scanAndAggregateGridTable(GridTable gridTable, long parentId, long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
+    private CuboidResult scanAndAggregateGridTable(GridTable gridTable, long parentId, long cuboidId,
+            ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
         long startTime = System.currentTimeMillis();
         logger.info("Calculating cuboid " + cuboidId);
 
-        GTAggregateScanner scanner = prepareGTAggregationScanner(gridTable, parentId, cuboidId, aggregationColumns, measureColumns);
+        GTAggregateScanner scanner = prepareGTAggregationScanner(gridTable, parentId, cuboidId, aggregationColumns,
+                measureColumns);
         GridTable newGridTable = newGridTableByCuboidID(cuboidId);
         GTBuilder builder = newGridTable.rebuild();
 
@@ -524,7 +539,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             this.info = info;
             this.input = input;
             this.record = new GTRecord(info);
-            this.inMemCubeBuilderInputConverter = new InMemCubeBuilderInputConverter(cubeDesc, flatDesc, dictionaryMap, info);
+            this.inMemCubeBuilderInputConverter = new InMemCubeBuilderInputConverter(cubeDesc, flatDesc, dictionaryMap,
+                    info);
         }
 
         @Override

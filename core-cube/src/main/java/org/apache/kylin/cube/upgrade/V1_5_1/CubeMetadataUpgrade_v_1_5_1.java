@@ -90,7 +90,8 @@ public class CubeMetadataUpgrade_v_1_5_1 extends CubeMetadataUpgrade {
                 CubeDescUpgrade_v_1_5_1 upgrade = new CubeDescUpgrade_v_1_5_1(path, store);
                 CubeDesc ndesc = upgrade.upgrade();
 
-                ResourceStore.getStore(config).putResource(ndesc.getResourcePath(), ndesc, CubeDescManager.CUBE_DESC_SERIALIZER);
+                ResourceStore.getStore(config).putResource(ndesc.getResourcePath(), ndesc,
+                        CubeDescManager.CUBE_DESC_SERIALIZER);
                 updatedResources.add(ndesc.getResourcePath());
             } catch (Exception e) {
                 logger.error("error", e);
@@ -129,8 +130,11 @@ public class CubeMetadataUpgrade_v_1_5_1 extends CubeMetadataUpgrade {
         for (CubeInstance cube : cubes) {
             try {
                 org.apache.kylin.cube.model.CubeDesc cubeDesc = cube.getDescriptor();
-                if (cube.getFirstSegment() == null && cubeDesc != null && cubeDesc.getStorageType() == IStorageAware.ID_HBASE && cubeDesc.getEngineType() == IEngineAware.ID_MR_V1) {
-                    logger.info("CubeMetadataUpgrade_v_1_5_1 handling in upgradeEngineTypeStorageType {}", cube.getName());
+                if (cube.getFirstSegment() == null && cubeDesc != null
+                        && cubeDesc.getStorageType() == IStorageAware.ID_HBASE
+                        && cubeDesc.getEngineType() == IEngineAware.ID_MR_V1) {
+                    logger.info("CubeMetadataUpgrade_v_1_5_1 handling in upgradeEngineTypeStorageType {}",
+                            cube.getName());
 
                     cubeDesc.setEngineType(IEngineAware.ID_MR_V2);
                     cubeDesc.setStorageType(IStorageAware.ID_SHARDED_HBASE);
@@ -138,11 +142,14 @@ public class CubeMetadataUpgrade_v_1_5_1 extends CubeMetadataUpgrade {
                     store.putResource(cubeDesc.getResourcePath(), cubeDesc, CubeDescManager.CUBE_DESC_SERIALIZER);
                     updatedResources.add(cubeDesc.getResourcePath());
                 } else {
-                    logger.info("CubeDesc {}'s storage type and engine type will not be upgraded because they're not empty", cubeDesc.getName());
+                    logger.info(
+                            "CubeDesc {}'s storage type and engine type will not be upgraded because they're not empty",
+                            cubeDesc.getName());
                 }
             } catch (Exception e) {
                 logger.error("error", e);
-                errorMsgs.add("upgradeEngineTypeStorageType [" + cube.getName() + "] failed: " + e.getLocalizedMessage());
+                errorMsgs.add(
+                        "upgradeEngineTypeStorageType [" + cube.getName() + "] failed: " + e.getLocalizedMessage());
             }
         }
     }

@@ -71,10 +71,12 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
 
         byte[] encodedKey = rowKeyEncoder.encode(data);
         assertEquals(22 + rowKeyEncoder.getHeaderLength(), encodedKey.length);
-        byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN, rowKeyEncoder.getHeaderLength());
+        byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN,
+                rowKeyEncoder.getHeaderLength());
         byte[] rest = Arrays.copyOfRange(encodedKey, rowKeyEncoder.getHeaderLength(), encodedKey.length);
         assertEquals(255, Bytes.toLong(cuboidId));
-        assertArrayEquals(new byte[] { 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
+        assertArrayEquals(
+                new byte[] { 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
     }
 
     @Ignore
@@ -104,13 +106,16 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         assertEquals(43 + rowKeyEncoder.getHeaderLength(), encodedKey.length);
         byte[] shard = Arrays.copyOfRange(encodedKey, 0, RowConstants.ROWKEY_SHARDID_LEN);
         @SuppressWarnings("unused")
-        byte[] sellerId = Arrays.copyOfRange(encodedKey, rowKeyEncoder.getHeaderLength(), 4 + rowKeyEncoder.getHeaderLength());
-        byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN, rowKeyEncoder.getHeaderLength());
+        byte[] sellerId = Arrays.copyOfRange(encodedKey, rowKeyEncoder.getHeaderLength(),
+                4 + rowKeyEncoder.getHeaderLength());
+        byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN,
+                rowKeyEncoder.getHeaderLength());
         byte[] rest = Arrays.copyOfRange(encodedKey, 4 + rowKeyEncoder.getHeaderLength(), encodedKey.length);
         assertEquals(0, Bytes.toShort(shard));
         //        assertTrue(Bytes.toString(sellerId).startsWith("123456789"));
         assertEquals(511, Bytes.toLong(cuboidId));
-        assertArrayEquals(new byte[] { 11, 55, -13, 49, 49, 56, 52, 56, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
+        assertArrayEquals(new byte[] { 11, 55, -13, 49, 49, 56, 52, 56, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 22, 34,
+                121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
     }
 
     @Ignore
@@ -139,13 +144,16 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         byte[] encodedKey = rowKeyEncoder.encode(data);
         assertEquals(43 + rowKeyEncoder.getHeaderLength(), encodedKey.length);
         byte[] shard = Arrays.copyOfRange(encodedKey, 0, RowConstants.ROWKEY_SHARDID_LEN);
-        byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN, rowKeyEncoder.getHeaderLength());
+        byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN,
+                rowKeyEncoder.getHeaderLength());
         @SuppressWarnings("unused")
-        byte[] sellerId = Arrays.copyOfRange(encodedKey, rowKeyEncoder.getHeaderLength(), 18 + rowKeyEncoder.getHeaderLength());
+        byte[] sellerId = Arrays.copyOfRange(encodedKey, rowKeyEncoder.getHeaderLength(),
+                18 + rowKeyEncoder.getHeaderLength());
         byte[] rest = Arrays.copyOfRange(encodedKey, 4 + rowKeyEncoder.getHeaderLength(), encodedKey.length);
         assertEquals(0, Bytes.toShort(shard));
         //assertTrue(Bytes.toString(sellerId).startsWith("123456789"));
         assertEquals(511, Bytes.toLong(cuboidId));
-        assertArrayEquals(new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, rest);
+        assertArrayEquals(new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, rest);
     }
 }

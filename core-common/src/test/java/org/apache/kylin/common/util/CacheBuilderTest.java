@@ -28,12 +28,13 @@ import com.google.common.cache.RemovalNotification;
 public class CacheBuilderTest {
     @Test
     public void foo() {
-        Cache<Object, Object> build = CacheBuilder.newBuilder().maximumSize(1).weakValues().removalListener(new RemovalListener<Object, Object>() {
-            @Override
-            public void onRemoval(RemovalNotification<Object, Object> notification) {
-                System.out.println(notification.getCause());
-            }
-        }).build();
+        Cache<Object, Object> build = CacheBuilder.newBuilder().maximumSize(1).weakValues()
+                .removalListener(new RemovalListener<Object, Object>() {
+                    @Override
+                    public void onRemoval(RemovalNotification<Object, Object> notification) {
+                        System.out.println(notification.getCause());
+                    }
+                }).build();
 
         build.put(1, 1);
         build.put(1, 2);

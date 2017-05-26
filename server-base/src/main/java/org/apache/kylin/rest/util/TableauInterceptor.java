@@ -48,7 +48,8 @@ public class TableauInterceptor {
         private static final long serialVersionUID = -8086728462624901359L;
 
         {
-            add(new SelectedColumnMeta(false, false, true, false, 2, true, 11, "COL", "COL", "", "", "", 10, 0, 4, "int4", false, true, false));
+            add(new SelectedColumnMeta(false, false, true, false, 2, true, 11, "COL", "COL", "", "", "", 10, 0, 4,
+                    "int4", false, true, false));
         }
     }, new LinkedList<List<String>>() {
         private static final long serialVersionUID = -470083340592928073L;
@@ -110,6 +111,5 @@ public class TableauInterceptor {
         }
         return true;
     }
-
 
 }

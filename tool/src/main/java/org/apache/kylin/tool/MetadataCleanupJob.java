@@ -46,10 +46,13 @@ import com.google.common.collect.Sets;
 public class MetadataCleanupJob extends AbstractHadoopJob {
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused metadata").create("delete");
+    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false)
+            .withDescription("Delete the unused metadata").create("delete");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_THRESHOLD_FOR_JOB = OptionBuilder.withArgName("jobThreshold").hasArg().isRequired(false).withDescription("Specify how many days of job metadata keeping. Default 30 days").create("jobThreshold");
+    private static final Option OPTION_THRESHOLD_FOR_JOB = OptionBuilder.withArgName("jobThreshold").hasArg()
+            .isRequired(false).withDescription("Specify how many days of job metadata keeping. Default 30 days")
+            .create("jobThreshold");
 
     protected static final Logger logger = LoggerFactory.getLogger(MetadataCleanupJob.class);
 
@@ -58,7 +61,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
     private KylinConfig config = null;
 
     private static final long TIME_THREADSHOLD = 1 * 3600 * 1000L; // 1 hour
-    private static final int DEFAULT_DAY_THREADSHOLD_FOR_JOB = 30 ; // 30 days
+    private static final int DEFAULT_DAY_THREADSHOLD_FOR_JOB = 30; // 30 days
 
     /*
      * (non-Javadoc)
@@ -104,7 +107,8 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         List<String> toDeleteResource = Lists.newArrayList();
 
         // two level resources, snapshot tables and cube statistics
-        for (String resourceRoot : new String[] { ResourceStore.SNAPSHOT_RESOURCE_ROOT, ResourceStore.CUBE_STATISTICS_ROOT }) {
+        for (String resourceRoot : new String[] { ResourceStore.SNAPSHOT_RESOURCE_ROOT,
+                ResourceStore.CUBE_STATISTICS_ROOT }) {
             NavigableSet<String> snapshotTables = getStore().listResources(resourceRoot);
 
             if (snapshotTables != null) {
@@ -153,10 +157,14 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         for (ExecutablePO executable : allExecutable) {
             long lastModified = executable.getLastModified();
             ExecutableOutputPO output = executableDao.getJobOutput(executable.getUuid());
-            int jobThresholdDay = optionsHelper.hasOption(OPTION_THRESHOLD_FOR_JOB) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_THRESHOLD_FOR_JOB)) : DEFAULT_DAY_THREADSHOLD_FOR_JOB;
+            int jobThresholdDay = optionsHelper.hasOption(OPTION_THRESHOLD_FOR_JOB)
+                    ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_THRESHOLD_FOR_JOB))
+                    : DEFAULT_DAY_THREADSHOLD_FOR_JOB;
             long jobThresholdTime = jobThresholdDay * 24 * 3600 * 1000L;
 
-            if (System.currentTimeMillis() - lastModified > jobThresholdTime && (ExecutableState.SUCCEED.toString().equals(output.getStatus()) || ExecutableState.DISCARDED.toString().equals(output.getStatus()))) {
+            if (System.currentTimeMillis() - lastModified > jobThresholdTime
+                    && (ExecutableState.SUCCEED.toString().equals(output.getStatus())
+                            || ExecutableState.DISCARDED.toString().equals(output.getStatus()))) {
                 toDeleteResource.add(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executable.getUuid());
                 toDeleteResource.add(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executable.getUuid());
 
@@ -167,7 +175,8 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         }
 
         if (toDeleteResource.size() > 0) {
-            logger.info("The following resources have no reference or is too old, will be cleaned from metadata store: \n");
+            logger.info(
+                    "The following resources have no reference or is too old, will be cleaned from metadata store: \n");
 
             for (String s : toDeleteResource) {
                 logger.info(s);

@@ -72,7 +72,8 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testMapRange() throws Exception {
-        Pair<String, String> results = lookupTable.mapRange("CAL_DT", millis("2012-01-24"), millis("2012-12-30"), "QTR_BEG_DT");
+        Pair<String, String> results = lookupTable.mapRange("CAL_DT", millis("2012-01-24"), millis("2012-12-30"),
+                "QTR_BEG_DT");
 
         Assert.assertTrue(results != null);
         System.out.println("The first qtr_beg_dt is " + results.getFirst());
@@ -84,7 +85,8 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testMapRange2() throws Exception {
-        Pair<String, String> results = lookupTable.mapRange("WEEK_BEG_DT", millis("2013-05-01"), millis("2013-08-01"), "CAL_DT");
+        Pair<String, String> results = lookupTable.mapRange("WEEK_BEG_DT", millis("2013-05-01"), millis("2013-08-01"),
+                "CAL_DT");
 
         System.out.println(DateFormat.formatToDateStr(Long.parseLong(results.getFirst())));
         System.out.println(DateFormat.formatToDateStr(Long.parseLong(results.getSecond())));
@@ -109,7 +111,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetClassName(){
+    public void testGetClassName() {
         String name = TrieDictionaryForest.class.getName();
         System.out.println(name);
 

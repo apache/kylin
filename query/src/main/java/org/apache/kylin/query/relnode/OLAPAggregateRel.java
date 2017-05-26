@@ -91,7 +91,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         Map<String, Class<?>> udafs = MeasureTypeFactory.getUDAFs();
         for (String func : udafs.keySet()) {
             try {
-                AGGR_FUNC_PARAM_AS_MEASTURE_MAP.put(func, ((ParamAsMeasureCount) (udafs.get(func).newInstance())).getParamAsMeasureCount());
+                AGGR_FUNC_PARAM_AS_MEASTURE_MAP.put(func,
+                        ((ParamAsMeasureCount) (udafs.get(func).newInstance())).getParamAsMeasureCount());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -122,7 +123,9 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     private List<TblColRef> groups;
     private List<FunctionDesc> aggregations;
 
-    public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) throws InvalidRelException {
+    public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator,
+            ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls)
+            throws InvalidRelException {
         super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         this.afterAggregate = false;
@@ -131,7 +134,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     }
 
     @Override
-    public Aggregate copy(RelTraitSet traitSet, RelNode input, boolean indicator, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
+    public Aggregate copy(RelTraitSet traitSet, RelNode input, boolean indicator, ImmutableBitSet groupSet,
+            List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
         try {
             return new OLAPAggregateRel(getCluster(), traitSet, input, indicator, groupSet, groupSets, aggCalls);
         } catch (InvalidRelException e) {
@@ -149,7 +153,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         if (getGroupType() == Group.SIMPLE) {
             cost = super.computeSelfCost(planner, mq).multiplyBy(.05);
         } else {
-            cost = super.computeSelfCost(planner, mq).multiplyBy(.05).plus(planner.getCost(getInput(), mq)).multiplyBy(groupSets.size() * 1.5);
+            cost = super.computeSelfCost(planner, mq).multiplyBy(.05).plus(planner.getCost(getInput(), mq))
+                    .multiplyBy(groupSets.size() * 1.5);
         }
         return cost;
     }
@@ -167,7 +172,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         if (!this.afterAggregate) {
             addToContextGroupBy(this.groups);
             this.context.aggregations.addAll(this.aggregations);
-            this.context.aggrOutCols.addAll(columnRowType.getAllColumns().subList(groups.size(), columnRowType.getAllColumns().size()));
+            this.context.aggrOutCols
+                    .addAll(columnRowType.getAllColumns().subList(groups.size(), columnRowType.getAllColumns().size()));
             this.context.afterAggregate = true;
 
             if (this.context.afterLimit) {
@@ -215,7 +221,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             } else {
                 AggregateCall aggCall = this.rewriteAggCalls.get(i);
                 int index = aggCall.getArgList().get(0);
-                aggOutName = getSqlFuncName(aggCall) + "_" + inputColumnRowType.getColumnByIndex(index).getIdentity().replace('.', '_') + "_";
+                aggOutName = getSqlFuncName(aggCall) + "_"
+                        + inputColumnRowType.getColumnByIndex(index).getIdentity().replace('.', '_') + "_";
             }
             TblColRef aggOutCol = TblColRef.newInnerColumn(aggOutName, TblColRef.InnerDataTypeEnum.LITERAL);
             aggOutCol.getColumnDesc().setId("" + (i + 1)); // mark the index of aggregation
@@ -358,7 +365,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
             if (aggFunc.needRewriteField()) {
                 String rewriteFieldName = aggFunc.getRewriteFieldName();
-                RelDataType rewriteFieldType = OLAPTable.createSqlType(typeFactory, aggFunc.getRewriteFieldType(), true);
+                RelDataType rewriteFieldType = OLAPTable.createSqlType(typeFactory, aggFunc.getRewriteFieldType(),
+                        true);
                 this.context.rewriteFields.put(rewriteFieldName, rewriteFieldType);
 
                 TblColRef column = buildRewriteColumn(aggFunc);
@@ -452,7 +460,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             argTypes.add(type);
             typeFamilies.add(Util.first(type.getSqlTypeName().getFamily(), SqlTypeFamily.ANY));
         }
-        return new SqlUserDefinedAggFunction(sqlIdentifier, ReturnTypes.explicit(returnType), InferTypes.explicit(argTypes), OperandTypes.family(typeFamilies), aggFunction);
+        return new SqlUserDefinedAggFunction(sqlIdentifier, ReturnTypes.explicit(returnType),
+                InferTypes.explicit(argTypes), OperandTypes.family(typeFamilies), aggFunction);
     }
 
     @Override

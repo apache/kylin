@@ -52,14 +52,17 @@ public class KafkaConsumerPropertiesTest extends LocalFileMetadataTestCase {
         KafkaConsumerProperties kafkaConsumerProperties = KafkaConsumerProperties.getInstanceFromEnv();
         assertFalse(kafkaConsumerProperties.extractKafkaConfigToProperties().containsKey("acks"));
         assertTrue(kafkaConsumerProperties.extractKafkaConfigToProperties().containsKey("session.timeout.ms"));
-        assertEquals("30000", kafkaConsumerProperties.extractKafkaConfigToProperties().getProperty("session.timeout.ms"));
+        assertEquals("30000",
+                kafkaConsumerProperties.extractKafkaConfigToProperties().getProperty("session.timeout.ms"));
     }
 
     @Test
-    public void testLoadKafkaPropertiesAsHadoopJobConf() throws IOException, ParserConfigurationException, SAXException {
+    public void testLoadKafkaPropertiesAsHadoopJobConf()
+            throws IOException, ParserConfigurationException, SAXException {
         KafkaConsumerProperties kafkaConsumerProperties = KafkaConsumerProperties.getInstanceFromEnv();
         Configuration conf = new Configuration(false);
-        conf.addResource(new FileInputStream(new File(kafkaConsumerProperties.getKafkaConsumerHadoopJobConf())), KafkaConsumerProperties.KAFKA_CONSUMER_FILE);
+        conf.addResource(new FileInputStream(new File(kafkaConsumerProperties.getKafkaConsumerHadoopJobConf())),
+                KafkaConsumerProperties.KAFKA_CONSUMER_FILE);
         assertEquals("30000", conf.get("session.timeout.ms"));
 
         Properties prop = KafkaConsumerProperties.extractKafkaConfigToProperties(conf);

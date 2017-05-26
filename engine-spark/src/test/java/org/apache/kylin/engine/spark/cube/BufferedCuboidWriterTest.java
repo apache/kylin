@@ -38,7 +38,8 @@ public class BufferedCuboidWriterTest {
         final BufferedCuboidWriter bufferedCuboidWriter = new BufferedCuboidWriter(new TupleConverter() {
             @Override
             public Tuple2<byte[], byte[]> convert(long cuboidId, GTRecord record) {
-                return new Tuple2<>(Long.valueOf(cuboidId).toString().getBytes(), Long.valueOf(cuboidId).toString().getBytes());
+                return new Tuple2<>(Long.valueOf(cuboidId).toString().getBytes(),
+                        Long.valueOf(cuboidId).toString().getBytes());
             }
         });
         final int testCount = 10000000;

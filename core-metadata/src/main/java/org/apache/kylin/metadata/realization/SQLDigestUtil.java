@@ -35,7 +35,8 @@ import com.google.common.collect.Range;
  */
 public class SQLDigestUtil {
 
-    public static <F, T> T appendTsFilterToExecute(SQLDigest sqlDigest, TblColRef partitionColRef, Range<Long> tsRange, Function<F, T> action) {
+    public static <F, T> T appendTsFilterToExecute(SQLDigest sqlDigest, TblColRef partitionColRef, Range<Long> tsRange,
+            Function<F, T> action) {
 
         // add the boundary condition to query real-time
         TupleFilter originalFilter = sqlDigest.filter;
@@ -80,7 +81,8 @@ public class SQLDigestUtil {
         return ret;
     }
 
-    private static TupleFilter createFilterForRealtime(TupleFilter originFilter, TblColRef partitionColRef, Range<Long> tsRange) {
+    private static TupleFilter createFilterForRealtime(TupleFilter originFilter, TblColRef partitionColRef,
+            Range<Long> tsRange) {
         DataType type = partitionColRef.getColumnDesc().getType();
 
         String startTimeStr, endTimeStr;

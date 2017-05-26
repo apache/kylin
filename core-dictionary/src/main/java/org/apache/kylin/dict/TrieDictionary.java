@@ -29,7 +29,6 @@ import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 
-
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
@@ -52,11 +51,11 @@ import com.google.common.base.Preconditions;
  *
  * @author yangli9
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class TrieDictionary<T> extends CacheDictionary<T> {
     private static final long serialVersionUID = 1L;
 
-    public static final byte[] MAGIC = new byte[]{0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74}; // "TrieDict"
+    public static final byte[] MAGIC = new byte[] { 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74 }; // "TrieDict"
     public static final int MAGIC_SIZE_I = MAGIC.length;
 
     public static final int BIT_IS_LAST_CHILD = 0x80;
@@ -78,7 +77,6 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
     transient private int sizeOfId;
     transient private long childOffsetMask;
     transient private int firstByteOffset;
-
 
     public TrieDictionary() { // default constructor for Writable interface
     }
@@ -142,7 +140,6 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
     public int getSizeOfValue() {
         return maxValueLength;
     }
-
 
     @Override
     protected int getIdFromValueBytesWithoutCache(byte[] value, int offset, int len, int roundingFlag) {
@@ -232,7 +229,6 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
         else
             return k;
     }
-
 
     @Override
     protected byte[] getValueBytesFromIdWithoutCache(int id) {
@@ -413,7 +409,8 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new ObjectOutputStream(baos).writeObject(dict);
 
-        TrieDictionary<String> dict2 = (TrieDictionary<String>) new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray())).readObject();
+        TrieDictionary<String> dict2 = (TrieDictionary<String>) new ObjectInputStream(
+                new ByteArrayInputStream(baos.toByteArray())).readObject();
         Preconditions.checkArgument(dict.contains(dict2));
         Preconditions.checkArgument(dict2.contains(dict));
         Preconditions.checkArgument(dict.equals(dict2));

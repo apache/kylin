@@ -41,7 +41,8 @@ public class QueryRouter {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryRouter.class);
 
-    public static IRealization selectRealization(OLAPContext olapContext, Set<IRealization> realizations) throws NoRealizationFoundException {
+    public static IRealization selectRealization(OLAPContext olapContext, Set<IRealization> realizations)
+            throws NoRealizationFoundException {
 
         String factTableName = olapContext.firstTableScan.getTableName();
         String projectName = olapContext.olapSchema.getProjectName();
@@ -53,7 +54,8 @@ public class QueryRouter {
                 candidates.add(new Candidate(real, sqlDigest));
         }
 
-        logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : " + StringUtils.join(candidates, ","));
+        logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : "
+                + StringUtils.join(candidates, ","));
 
         // rule based realization selection, rules might reorder realizations or remove specific realization
         RoutingRule.applyRules(candidates);
@@ -65,7 +67,8 @@ public class QueryRouter {
         Candidate chosen = candidates.get(0);
         adjustForDimensionAsMeasure(chosen, olapContext);
 
-        logger.info("The realizations remaining: " + RoutingRule.getPrintableText(candidates) + " And the final chosen one is the first one");
+        logger.info("The realizations remaining: " + RoutingRule.getPrintableText(candidates)
+                + " And the final chosen one is the first one");
 
         return chosen.realization;
     }

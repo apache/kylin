@@ -27,7 +27,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-
 @SuppressWarnings("serial")
 public class UserInfo extends RootPersistentEntity {
 

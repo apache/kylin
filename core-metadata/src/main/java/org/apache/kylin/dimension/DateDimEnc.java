@@ -96,7 +96,8 @@ public class DateDimEnc extends AbstractDateDimEnc implements Serializable {
         return millis;
     }
 
-    public static String[] replaceEncodingArgs(String encoding, String[] encodingArgs, String encodingName, DataType type) {
+    public static String[] replaceEncodingArgs(String encoding, String[] encodingArgs, String encodingName,
+            DataType type) {
         // https://issues.apache.org/jira/browse/KYLIN-2495
         if (DateDimEnc.ENCODING_NAME.equals(encodingName)) {
             if (type.isIntegerFamily()) {

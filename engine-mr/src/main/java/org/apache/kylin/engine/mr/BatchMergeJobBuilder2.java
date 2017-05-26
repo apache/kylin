@@ -50,7 +50,8 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
         final String jobId = result.getId();
 
         final List<CubeSegment> mergingSegments = cubeSegment.getCubeInstance().getMergingSegments(cubeSegment);
-        Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge, target segment " + cubeSegment);
+        Preconditions.checkState(mergingSegments.size() > 1,
+                "there should be more than 2 segments to merge, target segment " + cubeSegment);
         final List<String> mergingSegmentIds = Lists.newArrayList();
         for (CubeSegment merging : mergingSegments) {
             mergingSegmentIds.add(merging.getUuid());
@@ -72,7 +73,8 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
         return result;
     }
 
-    private MergeStatisticsStep createMergeStatisticsStep(CubeSegment seg, List<String> mergingSegmentIds, String mergedStatisticsFolder) {
+    private MergeStatisticsStep createMergeStatisticsStep(CubeSegment seg, List<String> mergingSegmentIds,
+            String mergedStatisticsFolder) {
         MergeStatisticsStep result = new MergeStatisticsStep();
         result.setName(ExecutableConstants.STEP_NAME_MERGE_STATISTICS);
 

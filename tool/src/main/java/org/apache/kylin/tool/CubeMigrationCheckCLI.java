@@ -54,11 +54,14 @@ public class CubeMigrationCheckCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeMigrationCheckCLI.class);
 
-    private static final Option OPTION_FIX = OptionBuilder.withArgName("fix").hasArg().isRequired(false).withDescription("Fix the inconsistent cube segments' HOST").create("fix");
+    private static final Option OPTION_FIX = OptionBuilder.withArgName("fix").hasArg().isRequired(false)
+            .withDescription("Fix the inconsistent cube segments' HOST").create("fix");
 
-    private static final Option OPTION_DST_CFG_URI = OptionBuilder.withArgName("dstCfgUri").hasArg().isRequired(false).withDescription("The KylinConfig of the cube’s new home").create("dstCfgUri");
+    private static final Option OPTION_DST_CFG_URI = OptionBuilder.withArgName("dstCfgUri").hasArg().isRequired(false)
+            .withDescription("The KylinConfig of the cube’s new home").create("dstCfgUri");
 
-    private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false).withDescription("The name of cube migrated").create("cube");
+    private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false)
+            .withDescription("The name of cube migrated").create("cube");
 
     private KylinConfig dstCfg;
     private HBaseAdmin hbaseAdmin;
@@ -188,7 +191,9 @@ public class CubeMigrationCheckCLI {
             for (String segFullName : inconsistentHTables) {
                 String[] sepNameList = segFullName.split(",");
                 HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(sepNameList[0]));
-                logger.info("Change the host of htable " + sepNameList[0] + "belonging to cube " + sepNameList[1] + " from " + desc.getValue(IRealizationConstants.HTableTag) + " to " + dstCfg.getMetadataUrlPrefix());
+                logger.info("Change the host of htable " + sepNameList[0] + "belonging to cube " + sepNameList[1]
+                        + " from " + desc.getValue(IRealizationConstants.HTableTag) + " to "
+                        + dstCfg.getMetadataUrlPrefix());
                 hbaseAdmin.disableTable(sepNameList[0]);
                 desc.setValue(IRealizationConstants.HTableTag, dstCfg.getMetadataUrlPrefix());
                 hbaseAdmin.modifyTable(sepNameList[0], desc);
@@ -208,7 +213,8 @@ public class CubeMigrationCheckCLI {
         logger.info("------ HTables exist issues in hbase : not existing, metadata broken ------");
         for (String segFullName : issueExistHTables) {
             String[] sepNameList = segFullName.split(",");
-            logger.error(sepNameList[0] + " belonging to cube " + sepNameList[1] + " has some issues and cannot be read successfully!!!");
+            logger.error(sepNameList[0] + " belonging to cube " + sepNameList[1]
+                    + " has some issues and cannot be read successfully!!!");
         }
         logger.info("----------------------------------------------------");
     }

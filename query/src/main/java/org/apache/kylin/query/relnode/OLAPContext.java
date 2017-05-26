@@ -175,7 +175,7 @@ public class OLAPContext {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -207,7 +207,8 @@ public class OLAPContext {
         * @realization the cube used in this query
         * @OLAPInsufficientException no rights exception
         */
-        public TupleFilter check(OLAPAuthentication olapAuthentication, Collection<TblColRef> columns, IRealization realization) throws IllegalArgumentException;
+        public TupleFilter check(OLAPAuthentication olapAuthentication, Collection<TblColRef> columns,
+                IRealization realization) throws IllegalArgumentException;
     }
 
 }

@@ -18,10 +18,10 @@
 
 package org.apache.kylin.source.hive;
 
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
-
 import java.io.IOException;
 import java.util.List;
+
+import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 
 public interface IHiveClient {
     void executeHQL(String hql) throws CommandNeedRetryException, IOException;

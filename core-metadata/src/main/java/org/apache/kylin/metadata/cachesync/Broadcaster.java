@@ -116,7 +116,8 @@ public class Broadcaster {
                 for (String node : config.getRestServers()) {
                     restClients.add(new RestClient(node));
                 }
-                final ExecutorService wipingCachePool = Executors.newFixedThreadPool(restClients.size(), new DaemonThreadFactory());
+                final ExecutorService wipingCachePool = Executors.newFixedThreadPool(restClients.size(),
+                        new DaemonThreadFactory());
                 while (true) {
                     try {
                         final BroadcastEvent broadcastEvent = broadcastEvents.takeFirst();
@@ -126,7 +127,8 @@ public class Broadcaster {
                                 @Override
                                 public void run() {
                                     try {
-                                        restClient.wipeCache(broadcastEvent.getEntity(), broadcastEvent.getEvent(), broadcastEvent.getCacheKey());
+                                        restClient.wipeCache(broadcastEvent.getEntity(), broadcastEvent.getEvent(),
+                                                broadcastEvent.getCacheKey());
                                     } catch (IOException e) {
                                         logger.warn("Thread failed during wipe cache at " + broadcastEvent, e);
                                     }
@@ -185,7 +187,8 @@ public class Broadcaster {
         if (list == null)
             return;
 
-        logger.debug("Broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey + ", listeners=" + list);
+        logger.debug("Broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey
+                + ", listeners=" + list);
 
         // prevents concurrent modification exception
         list = Lists.newArrayList(list);
@@ -215,7 +218,8 @@ public class Broadcaster {
             break;
         }
 
-        logger.debug("Done broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey);
+        logger.debug(
+                "Done broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey);
     }
 
     /**
@@ -272,7 +276,8 @@ public class Broadcaster {
         public void onProjectDataChange(Broadcaster broadcaster, String project) throws IOException {
         }
 
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                throws IOException {
         }
     }
 
@@ -336,7 +341,8 @@ public class Broadcaster {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("entity", entity).add("event", event).add("cacheKey", cacheKey).toString();
+            return Objects.toStringHelper(this).add("entity", entity).add("event", event).add("cacheKey", cacheKey)
+                    .toString();
         }
 
     }

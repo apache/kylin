@@ -70,7 +70,8 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     public JobStep getRunningStep() {
         for (JobStep step : this.getSteps()) {
-            if (step.getStatus().equals(JobStepStatusEnum.RUNNING) || step.getStatus().equals(JobStepStatusEnum.WAITING)) {
+            if (step.getStatus().equals(JobStepStatusEnum.RUNNING)
+                    || step.getStatus().equals(JobStepStatusEnum.WAITING)) {
                 return step;
             }
         }

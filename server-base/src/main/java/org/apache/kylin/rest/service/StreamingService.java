@@ -49,7 +49,8 @@ public class StreamingService extends BasicService {
         return streamingConfigs;
     }
 
-    public List<StreamingConfig> getStreamingConfigs(final String table, final Integer limit, final Integer offset) throws IOException {
+    public List<StreamingConfig> getStreamingConfigs(final String table, final Integer limit, final Integer offset)
+            throws IOException {
 
         List<StreamingConfig> streamingConfigs;
         streamingConfigs = listAllStreamingConfigs(table);

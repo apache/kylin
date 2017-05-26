@@ -58,21 +58,29 @@ public class StreamSQLDigest {
 
         StreamSQLDigest other = (StreamSQLDigest) o;
 
-        if (filterSerialized != null ? !Arrays.equals(filterSerialized, other.filterSerialized) : other.filterSerialized != null)
+        if (filterSerialized != null ? !Arrays.equals(filterSerialized, other.filterSerialized)
+                : other.filterSerialized != null)
             return false;
-        if (sqlDigest.aggregations != null ? !sqlDigest.aggregations.equals(other.sqlDigest.aggregations) : other.sqlDigest.aggregations != null)
+        if (sqlDigest.aggregations != null ? !sqlDigest.aggregations.equals(other.sqlDigest.aggregations)
+                : other.sqlDigest.aggregations != null)
             return false;
-        if (sqlDigest.allColumns != null ? !sqlDigest.allColumns.equals(other.sqlDigest.allColumns) : other.sqlDigest.allColumns != null)
+        if (sqlDigest.allColumns != null ? !sqlDigest.allColumns.equals(other.sqlDigest.allColumns)
+                : other.sqlDigest.allColumns != null)
             return false;
-        if (sqlDigest.factTable != null ? !sqlDigest.factTable.equals(other.sqlDigest.factTable) : other.sqlDigest.factTable != null)
+        if (sqlDigest.factTable != null ? !sqlDigest.factTable.equals(other.sqlDigest.factTable)
+                : other.sqlDigest.factTable != null)
             return false;
-        if (sqlDigest.filterColumns != null ? !sqlDigest.filterColumns.equals(other.sqlDigest.filterColumns) : other.sqlDigest.filterColumns != null)
+        if (sqlDigest.filterColumns != null ? !sqlDigest.filterColumns.equals(other.sqlDigest.filterColumns)
+                : other.sqlDigest.filterColumns != null)
             return false;
-        if (sqlDigest.groupbyColumns != null ? !sqlDigest.groupbyColumns.equals(other.sqlDigest.groupbyColumns) : other.sqlDigest.groupbyColumns != null)
+        if (sqlDigest.groupbyColumns != null ? !sqlDigest.groupbyColumns.equals(other.sqlDigest.groupbyColumns)
+                : other.sqlDigest.groupbyColumns != null)
             return false;
-        if (sqlDigest.joinDescs != null ? !sqlDigest.joinDescs.equals(other.sqlDigest.joinDescs) : other.sqlDigest.joinDescs != null)
+        if (sqlDigest.joinDescs != null ? !sqlDigest.joinDescs.equals(other.sqlDigest.joinDescs)
+                : other.sqlDigest.joinDescs != null)
             return false;
-        if (sqlDigest.metricColumns != null ? !sqlDigest.metricColumns.equals(other.sqlDigest.metricColumns) : other.sqlDigest.metricColumns != null)
+        if (sqlDigest.metricColumns != null ? !sqlDigest.metricColumns.equals(other.sqlDigest.metricColumns)
+                : other.sqlDigest.metricColumns != null)
             return false;
 
         return true;

@@ -32,7 +32,6 @@ public class HiveTableRequestV2 {
 
     private boolean needProfile = true;
 
-
     public String[] getTables() {
         return tables;
     }

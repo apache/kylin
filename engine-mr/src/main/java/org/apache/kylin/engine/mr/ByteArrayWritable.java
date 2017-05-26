@@ -113,7 +113,8 @@ public class ByteArrayWritable implements WritableComparable<ByteArrayWritable> 
      *         negative if left is smaller than right.
      */
     public int compareTo(ByteArrayWritable that) {
-        return WritableComparator.compareBytes(this.data, this.offset, this.length, that.data, that.offset, that.length);
+        return WritableComparator.compareBytes(this.data, this.offset, this.length, that.data, that.offset,
+                that.length);
     }
 
     /**

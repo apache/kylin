@@ -18,11 +18,11 @@
 
 package org.apache.kylin.common.persistence;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+
+import org.apache.commons.lang.StringUtils;
 
 public class StringEntity extends RootPersistentEntity {
 

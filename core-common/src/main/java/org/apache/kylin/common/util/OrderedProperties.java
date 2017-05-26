@@ -345,7 +345,8 @@ public final class OrderedProperties implements Serializable {
          * @return the new instance
          */
         public OrderedProperties build() {
-            Map<String, String> properties = (this.comparator != null) ? new TreeMap<String, String>(comparator) : new LinkedHashMap<String, String>();
+            Map<String, String> properties = (this.comparator != null) ? new TreeMap<String, String>(comparator)
+                    : new LinkedHashMap<String, String>();
             return new OrderedProperties(properties);
         }
 

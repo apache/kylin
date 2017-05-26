@@ -77,13 +77,16 @@ public abstract class AggregationCache {
         int size = aggBufMap.size();
         long memUsage = (40L + rowMemBytes) * size;
         if (memUsage > MEMORY_USAGE_CAP) {
-            throw new RuntimeException("Kylin coprocessor memory usage goes beyond cap, (40 + " + rowMemBytes + ") * " + size + " > " + MEMORY_USAGE_CAP + ". Abort coprocessor.");
+            throw new RuntimeException("Kylin coprocessor memory usage goes beyond cap, (40 + " + rowMemBytes + ") * "
+                    + size + " > " + MEMORY_USAGE_CAP + ". Abort coprocessor.");
         }
 
         //If less than 5% of max memory
         long avail = MemoryBudgetController.getSystemAvailBytes();
         if (avail < (MEMOERY_MAX_BYTES / 20)) {
-            throw new RuntimeException("Running Kylin coprocessor when too little memory is left. Abort coprocessor. Current available memory is " + avail + ". Max memory is " + MEMOERY_MAX_BYTES);
+            throw new RuntimeException(
+                    "Running Kylin coprocessor when too little memory is left. Abort coprocessor. Current available memory is "
+                            + avail + ". Max memory is " + MEMOERY_MAX_BYTES);
         }
     }
 }

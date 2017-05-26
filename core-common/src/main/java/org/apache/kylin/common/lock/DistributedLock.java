@@ -32,14 +32,14 @@ public interface DistributedLock {
      * Returns the client that owns this instance.
      */
     String getClient();
-    
+
     /**
      * Acquire the lock at given path, non-blocking.
      * 
      * @return If the lock is acquired or not.
      */
     boolean lock(String lockPath);
-    
+
     /**
      * Acquire the lock at given path, block until given timeout.
      * 
@@ -51,12 +51,12 @@ public interface DistributedLock {
      * Returns if lock is available at given path.
      */
     boolean isLocked(String lockPath);
-    
+
     /**
      * Returns if lock is available at given path.
      */
     boolean isLockedByMe(String lockPath);
-    
+
     /**
      * Returns the owner of a lock path; returns null if the path is not locked by any one.
      */
@@ -73,7 +73,7 @@ public interface DistributedLock {
      * Purge all locks under given path. For clean up.
      */
     void purgeLocks(String lockPathRoot);
-    
+
     /**
      * Watch lock events under given path, notifies the watcher on all lock/unlock events under the given path root.
      * 
@@ -83,6 +83,7 @@ public interface DistributedLock {
 
     public interface Watcher {
         void onLock(String lockPath, String client);
+
         void onUnlock(String lockPath, String client);
     }
 }

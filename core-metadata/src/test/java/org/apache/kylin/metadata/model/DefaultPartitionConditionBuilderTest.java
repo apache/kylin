@@ -38,8 +38,10 @@ public class DefaultPartitionConditionBuilderTest {
         partitionDesc.setPartitionDateColumnRef(col);
         partitionDesc.setPartitionDateColumn(col.getCanonicalName());
         partitionDesc.setPartitionDateFormat("yyyy-MM-dd");
-        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, DateFormat.stringToMillis("2016-02-22"), DateFormat.stringToMillis("2016-02-23"));
-        Assert.assertEquals("UNKNOWN_ALIAS.DATE_COLUMN >= '2016-02-22' AND UNKNOWN_ALIAS.DATE_COLUMN < '2016-02-23'", condition);
+        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc,
+                DateFormat.stringToMillis("2016-02-22"), DateFormat.stringToMillis("2016-02-23"));
+        Assert.assertEquals("UNKNOWN_ALIAS.DATE_COLUMN >= '2016-02-22' AND UNKNOWN_ALIAS.DATE_COLUMN < '2016-02-23'",
+                condition);
     }
 
     @Test
@@ -49,7 +51,8 @@ public class DefaultPartitionConditionBuilderTest {
         partitionDesc.setPartitionTimeColumnRef(col);
         partitionDesc.setPartitionTimeColumn(col.getCanonicalName());
         partitionDesc.setPartitionTimeFormat("HH");
-        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, DateFormat.stringToMillis("2016-02-22 00:00:00"), DateFormat.stringToMillis("2016-02-23 01:00:00"));
+        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc,
+                DateFormat.stringToMillis("2016-02-22 00:00:00"), DateFormat.stringToMillis("2016-02-23 01:00:00"));
         Assert.assertEquals("UNKNOWN_ALIAS.HOUR_COLUMN >= '00' AND UNKNOWN_ALIAS.HOUR_COLUMN < '01'", condition);
     }
 
@@ -64,8 +67,11 @@ public class DefaultPartitionConditionBuilderTest {
         partitionDesc.setPartitionTimeColumnRef(col2);
         partitionDesc.setPartitionTimeColumn(col2.getCanonicalName());
         partitionDesc.setPartitionTimeFormat("H");
-        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, DateFormat.stringToMillis("2016-02-22 00:00:00"), DateFormat.stringToMillis("2016-02-23 01:00:00"));
-        Assert.assertEquals("((UNKNOWN_ALIAS.DATE_COLUMN = '2016-02-22' AND UNKNOWN_ALIAS.HOUR_COLUMN >= '0') OR (UNKNOWN_ALIAS.DATE_COLUMN > '2016-02-22')) AND ((UNKNOWN_ALIAS.DATE_COLUMN = '2016-02-23' AND UNKNOWN_ALIAS.HOUR_COLUMN < '1') OR (UNKNOWN_ALIAS.DATE_COLUMN < '2016-02-23'))", condition);
+        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc,
+                DateFormat.stringToMillis("2016-02-22 00:00:00"), DateFormat.stringToMillis("2016-02-23 01:00:00"));
+        Assert.assertEquals(
+                "((UNKNOWN_ALIAS.DATE_COLUMN = '2016-02-22' AND UNKNOWN_ALIAS.HOUR_COLUMN >= '0') OR (UNKNOWN_ALIAS.DATE_COLUMN > '2016-02-22')) AND ((UNKNOWN_ALIAS.DATE_COLUMN = '2016-02-23' AND UNKNOWN_ALIAS.HOUR_COLUMN < '1') OR (UNKNOWN_ALIAS.DATE_COLUMN < '2016-02-23'))",
+                condition);
     }
 
 }

@@ -54,11 +54,13 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
 
-        byte[] key = { 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 };
+        byte[] key = { 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9,
+                9, 9, 0, 10, 5 };
 
         rowKeyDecoder.decode(key);
         List<String> values = rowKeyDecoder.getValues();
-        assertEquals("[" + millis("2012-12-15") + ", 11848, Health & Beauty, Fragrances, Women, FP-GTC, 0, 15]", values.toString());
+        assertEquals("[" + millis("2012-12-15") + ", 11848, Health & Beauty, Fragrances, Women, FP-GTC, 0, 15]",
+                values.toString());
     }
 
     @Ignore
@@ -68,11 +70,13 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
 
-        byte[] key = { 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, -104, -106, -128, 11, 54, -105, 50, 48, 50, 49, 51, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
+        byte[] key = { 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, -104, -106, -128, 11, 54, -105, 50, 48, 50, 49, 51, 9, 9, 9, 9,
+                9, 9, 9, 9, 9, 9, 9, 9, 9, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
 
         rowKeyDecoder.decode(key);
         List<String> values = rowKeyDecoder.getValues();
-        assertEquals("[10000000, " + millis("2012-01-02") + ", 20213, Collectibles, Postcards, US StateCities & Towns, ABIN, 0, -99]", values.toString());
+        assertEquals("[10000000, " + millis("2012-01-02")
+                + ", 20213, Collectibles, Postcards, US StateCities & Towns, ABIN, 0, -99]", values.toString());
     }
 
     @Test
@@ -100,7 +104,8 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
         rowKeyDecoder.decode(encodedKey);
         List<String> values = rowKeyDecoder.getValues();
-        assertEquals("[" + millis("2012-12-15") + ", 11848, Health & Beauty, Fragrances, Women, 刊登格式, 0, 15]", values.toString());
+        assertEquals("[" + millis("2012-12-15") + ", 11848, Health & Beauty, Fragrances, Women, 刊登格式, 0, 15]",
+                values.toString());
     }
 
     private String millis(String dateStr) {

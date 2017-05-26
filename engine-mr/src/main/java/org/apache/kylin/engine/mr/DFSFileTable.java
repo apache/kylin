@@ -70,7 +70,7 @@ public class DFSFileTable implements IReadableTable {
         }
         return new TableSignature(path, sizeAndLastModified.getFirst(), sizeAndLastModified.getSecond());
     }
-    
+
     @Override
     public boolean exists() throws IOException {
         try {

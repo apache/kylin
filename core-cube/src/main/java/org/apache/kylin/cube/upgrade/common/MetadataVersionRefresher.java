@@ -59,7 +59,8 @@ public class MetadataVersionRefresher {
         collectFiles(this.store, "/", all);
 
         for (String path : all) {
-            if (path.endsWith(MetadataConstants.FILE_SURFIX) && !(path.startsWith(ResourceStore.DICT_RESOURCE_ROOT) || path.startsWith(ResourceStore.SNAPSHOT_RESOURCE_ROOT))) {
+            if (path.endsWith(MetadataConstants.FILE_SURFIX) && !(path.startsWith(ResourceStore.DICT_RESOURCE_ROOT)
+                    || path.startsWith(ResourceStore.SNAPSHOT_RESOURCE_ROOT))) {
                 logger.info("Updating metadata version of path {}", path);
                 ObjectNode objectNode = (ObjectNode) mapper.readTree(this.store.getResource(path).inputStream);
                 objectNode.put("version", version);

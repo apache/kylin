@@ -49,7 +49,8 @@ abstract public class AbstractInMemCubeBuilder {
     protected int taskThreadCount = 1;
     protected int reserveMemoryMB = 100;
 
-    public AbstractInMemCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+    public AbstractInMemCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc,
+            Map<TblColRef, Dictionary<String>> dictionaryMap) {
         if (flatDesc == null)
             throw new NullPointerException();
         if (cubeDesc == null)
@@ -91,7 +92,8 @@ abstract public class AbstractInMemCubeBuilder {
 
     protected void outputCuboid(long cuboidId, GridTable gridTable, ICuboidWriter output) throws IOException {
         long startTime = System.currentTimeMillis();
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(gridTable.getInfo()).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(gridTable.getInfo()).setRanges(null).setDimensions(null)
+                .setFilterPushDown(null).createGTScanRequest();
         IGTScanner scanner = gridTable.scan(req);
         for (GTRecord record : scanner) {
             output.write(cuboidId, record);

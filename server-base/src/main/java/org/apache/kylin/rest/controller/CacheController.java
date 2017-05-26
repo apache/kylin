@@ -52,18 +52,22 @@ public class CacheController extends BasicController {
     /**
      * Announce wipe cache to all cluster nodes
      */
-    @RequestMapping(value = "/announce/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @RequestMapping(value = "/announce/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
     @ResponseBody
-    public void announceWipeCache(@PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
+    public void announceWipeCache(@PathVariable String entity, @PathVariable String event,
+            @PathVariable String cacheKey) throws IOException {
         cacheService.annouceWipeCache(entity, event, cacheKey);
     }
 
     /**
      * Wipe cache on this node
      */
-    @RequestMapping(value = "/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @RequestMapping(value = "/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
     @ResponseBody
-    public void wipeCache(@PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
+    public void wipeCache(@PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey)
+            throws IOException {
         cacheService.notifyMetadataChange(entity, Broadcaster.Event.getEvent(event), cacheKey);
     }
 

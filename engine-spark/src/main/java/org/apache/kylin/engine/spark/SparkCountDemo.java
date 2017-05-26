@@ -37,7 +37,8 @@ import scala.Tuple2;
  */
 public class SparkCountDemo extends AbstractApplication {
 
-    private static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("Input path").create("input");
+    private static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true)
+            .withDescription("Input path").create("input");
 
     private Options options;
 
@@ -56,25 +57,29 @@ public class SparkCountDemo extends AbstractApplication {
         String logFile = "hdfs://10.249.65.231:8020/tmp/kylin.properties"; // Should be some file on your system
         SparkConf conf = new SparkConf().setAppName("Simple Application");
         JavaSparkContext sc = new JavaSparkContext(conf);
-        final JavaPairRDD<String, Integer> logData = sc.textFile(logFile).mapToPair(new PairFunction<String, String, Integer>() {
+        final JavaPairRDD<String, Integer> logData = sc.textFile(logFile)
+                .mapToPair(new PairFunction<String, String, Integer>() {
 
-            @Override
-            public Tuple2<String, Integer> call(String s) throws Exception {
-                return new Tuple2<String, Integer>(s, s.length());
-            }
-        }).sortByKey();
+                    @Override
+                    public Tuple2<String, Integer> call(String s) throws Exception {
+                        return new Tuple2<String, Integer>(s, s.length());
+                    }
+                }).sortByKey();
         logData.persist(StorageLevel.MEMORY_AND_DISK_SER());
 
         System.out.println("line number:" + logData.count());
 
         logData.mapToPair(new PairFunction<Tuple2<String, Integer>, ImmutableBytesWritable, KeyValue>() {
             @Override
-            public Tuple2<ImmutableBytesWritable, KeyValue> call(Tuple2<String, Integer> stringIntegerTuple2) throws Exception {
+            public Tuple2<ImmutableBytesWritable, KeyValue> call(Tuple2<String, Integer> stringIntegerTuple2)
+                    throws Exception {
                 ImmutableBytesWritable key = new ImmutableBytesWritable(stringIntegerTuple2._1().getBytes());
-                KeyValue value = new KeyValue(stringIntegerTuple2._1().getBytes(), "f".getBytes(), "c".getBytes(), String.valueOf(stringIntegerTuple2._2()).getBytes());
+                KeyValue value = new KeyValue(stringIntegerTuple2._1().getBytes(), "f".getBytes(), "c".getBytes(),
+                        String.valueOf(stringIntegerTuple2._2()).getBytes());
                 return new Tuple2(key, value);
             }
-        }).saveAsNewAPIHadoopFile("hdfs://10.249.65.231:8020/tmp/hfile", ImmutableBytesWritable.class, KeyValue.class, HFileOutputFormat.class);
+        }).saveAsNewAPIHadoopFile("hdfs://10.249.65.231:8020/tmp/hfile", ImmutableBytesWritable.class, KeyValue.class,
+                HFileOutputFormat.class);
 
     }
 }
