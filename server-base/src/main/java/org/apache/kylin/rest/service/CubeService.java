@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.cube.model.CubeDesc.STATUS_DRAFT;
 import static org.apache.kylin.rest.controller2.CubeControllerV2.VALID_CUBENAME;
 
 import java.io.IOException;
@@ -95,7 +94,7 @@ public class CubeService extends BasicService {
     @Autowired
     @Qualifier("jobService")
     private JobService jobService;
-    
+
     @Autowired
     @Qualifier("modelMgmtService")
     private ModelService modelService;
@@ -176,7 +175,7 @@ public class CubeService extends BasicService {
             throw new BadRequestException(String.format(msg.getBROKEN_CUBE_DESC(), cubeName));
         }
 
-        if (desc.getStatus() == null) {
+        if (!desc.isDraft()) {
             try {
                 int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc, false);
                 logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
@@ -250,7 +249,7 @@ public class CubeService extends BasicService {
         }
 
         CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
-        if (desc.getStatus() == null) {
+        if (!desc.isDraft()) {
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc, false);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
         }
@@ -285,6 +284,7 @@ public class CubeService extends BasicService {
         getCubeManager().dropCube(cube.getName(), cubeNum == 1);//only delete cube desc when no other cube is using it
         accessService.clean(cube, true);
     }
+
     /**
      * Stop all jobs belonging to this cube and clean out all segments
      *
@@ -607,8 +607,7 @@ public class CubeService extends BasicService {
                 throw new BadRequestException(String.format(msg.getMODEL_NOT_FOUND(), desc.getModelName()));
             }
 
-            String modelDescStatus = modelDesc.getStatus();
-            if (modelDescStatus != null && modelDescStatus.equals(DataModelDesc.STATUS_DRAFT)) {
+            if (modelDesc.isDraft()) {
                 logger.info("Cannot use draft model.");
                 throw new BadRequestException(String.format(msg.getUSE_DRAFT_MODEL(), desc.getModelName()));
             }
@@ -621,9 +620,9 @@ public class CubeService extends BasicService {
         if (isDraft) {
             name += "_draft";
             desc.setName(name);
-            desc.setStatus(STATUS_DRAFT);
+            desc.setDraft(true);
         } else {
-            desc.setStatus(null);
+            desc.setDraft(false);
         }
 
         if (desc.getUuid() == null) {
@@ -653,7 +652,7 @@ public class CubeService extends BasicService {
             CubeDesc cubeDesc = cube.getDescriptor();
             if (cubeDesc.getUuid().equals(uuid)) {
                 boolean toDrop = true;
-                boolean sameStatus = sameStatus(cubeDesc.getStatus(), isDraft);
+                boolean sameStatus = cubeDesc.isDraft() == isDraft;
                 if (sameStatus && !cubeDesc.getName().equals(name)) {
                     rename = true;
                 }
@@ -661,7 +660,7 @@ public class CubeService extends BasicService {
                     youngerSelf = cubeDesc;
                     toDrop = false;
                 }
-                if (cubeDesc.getStatus() == null) {
+                if (!cubeDesc.isDraft()) {
                     official = cubeDesc;
                     toDrop = false;
                 }
@@ -674,14 +673,6 @@ public class CubeService extends BasicService {
             throw new BadRequestException(msg.getCUBE_RENAME());
         }
         return youngerSelf;
-    }
-
-    private boolean sameStatus(String status, boolean isDraft) {
-        if (status == null || !status.equals(STATUS_DRAFT)) {
-            return !isDraft;
-        } else {
-            return isDraft;
-        }
     }
 
     public CubeDesc updateCubeToResourceStore(CubeDesc desc, String projectName, boolean createNew) throws IOException {

@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.metadata.model.DataModelDesc.STATUS_DRAFT;
 import static org.apache.kylin.rest.controller2.ModelControllerV2.VALID_MODELNAME;
 
 import java.io.IOException;
@@ -120,7 +119,7 @@ public class ModelService extends BasicService {
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         createdDesc = getMetadataManager().createDataModelDesc(desc, projectName, owner);
 
-        if (desc.getStatus() == null || !desc.getStatus().equals(STATUS_DRAFT)) {
+        if (!desc.isDraft()) {
             accessService.init(createdDesc, AclPermission.ADMINISTRATION);
             ProjectInstance project = getProjectManager().getProject(projectName);
             accessService.inherit(createdDesc, project);
@@ -178,7 +177,7 @@ public class ModelService extends BasicService {
 
         return models.isEmpty();
     }
-    
+
     public Map<TblColRef, Set<CubeInstance>> getUsedDimCols(String modelName) {
         Map<TblColRef, Set<CubeInstance>> ret = Maps.newHashMap();
         List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, null, modelName);
@@ -289,9 +288,9 @@ public class ModelService extends BasicService {
         if (isDraft) {
             name += "_draft";
             desc.setName(name);
-            desc.setStatus(STATUS_DRAFT);
+            desc.setDraft(true);
         } else {
-            desc.setStatus(null);
+            desc.setDraft(false);
         }
 
         if (desc.getUuid() == null) {
@@ -320,7 +319,7 @@ public class ModelService extends BasicService {
         for (DataModelDesc model : models) {
             if (model.getUuid().equals(uuid)) {
                 boolean toDrop = true;
-                boolean sameStatus = sameStatus(model.getStatus(), isDraft);
+                boolean sameStatus = model.isDraft() == isDraft;
                 if (sameStatus && !model.getName().equals(name)) {
                     rename = true;
                 }
@@ -328,7 +327,7 @@ public class ModelService extends BasicService {
                     youngerSelf = model;
                     toDrop = false;
                 }
-                if (model.getStatus() == null) {
+                if (!model.isDraft()) {
                     official = model;
                     toDrop = false;
                 }
@@ -341,14 +340,6 @@ public class ModelService extends BasicService {
             throw new BadRequestException(msg.getMODEL_RENAME());
         }
         return youngerSelf;
-    }
-
-    private boolean sameStatus(String status, boolean isDraft) {
-        if (status == null || !status.equals(STATUS_DRAFT)) {
-            return !isDraft;
-        } else {
-            return isDraft;
-        }
     }
 
     public DataModelDesc updateModelToResourceStore(DataModelDesc modelDesc, String projectName, boolean createNew, boolean isDraft) throws IOException {

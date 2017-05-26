@@ -67,8 +67,6 @@ public class DataModelDesc extends RootPersistentEntity {
         SMALL, MEDIUM, LARGE
     }
 
-    public static final String STATUS_DRAFT = "DRAFT";
-
     private KylinConfig config;
 
     @JsonProperty("name")
@@ -77,8 +75,8 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("owner")
     private String owner;
 
-    @JsonProperty("status")
-    private String status;
+    @JsonProperty("is_draft")
+    private boolean isDraft;
 
     @JsonProperty("description")
     private String description;
@@ -148,12 +146,12 @@ public class DataModelDesc extends RootPersistentEntity {
         this.owner = owner;
     }
 
-    public String getStatus() {
-        return status;
+    public boolean isDraft() {
+        return isDraft;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setDraft(boolean isDraft) {
+        this.isDraft = isDraft;
     }
 
     public String getDescription() {
@@ -749,7 +747,7 @@ public class DataModelDesc extends RootPersistentEntity {
     public static DataModelDesc getCopyOf(DataModelDesc orig) {
         DataModelDesc copy = new DataModelDesc();
         copy.name = orig.name;
-        copy.status = orig.status;
+        copy.isDraft = orig.isDraft;
         copy.owner = orig.owner;
         copy.description = orig.description;
         copy.rootFactTable = orig.rootFactTable;

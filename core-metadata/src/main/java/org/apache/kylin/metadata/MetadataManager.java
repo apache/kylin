@@ -604,7 +604,7 @@ public class MetadataManager {
         try {
             DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
             
-            if (dataModelDesc.getStatus() == null)
+            if (!dataModelDesc.isDraft())
                 dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
 
             dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
@@ -655,7 +655,7 @@ public class MetadataManager {
 
     private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
         
-        if (dataModelDesc.getStatus() == null)
+        if (!dataModelDesc.isDraft())
             dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
 
         String path = dataModelDesc.getResourcePath();

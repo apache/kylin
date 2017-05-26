@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.controller2;
 
-import static org.apache.kylin.cube.model.CubeDesc.STATUS_DRAFT;
-
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -107,25 +105,25 @@ public class CubeDescControllerV2 extends BasicController {
         if (desc == null)
             throw new BadRequestException(String.format(msg.getCUBE_DESC_NOT_FOUND(), cubeName));
 
-        if (desc.getStatus() == null) {
+        if (!desc.isDraft()) {
             data.put("cube", desc);
 
             String draftName = cubeName + "_draft";
             CubeInstance draftCubeInstance = cubeService.getCubeManager().getCube(draftName);
             if (draftCubeInstance != null) {
                 CubeDesc draftCubeDesc = draftCubeInstance.getDescriptor();
-                if (draftCubeDesc != null && draftCubeDesc.getStatus() != null && draftCubeDesc.getStatus().equals(STATUS_DRAFT)) {
+                if (draftCubeDesc != null && draftCubeDesc.isDraft()) {
                     data.put("draft", draftCubeDesc);
                 }
             }
-        } else if (desc.getStatus().equals(STATUS_DRAFT)) {
+        } else {
             data.put("draft", desc);
 
             String parentName = cubeName.substring(0, cubeName.lastIndexOf("_draft"));
             CubeInstance parentCubeInstance = cubeService.getCubeManager().getCube(parentName);
             if (parentCubeInstance != null) {
                 CubeDesc parentDesc = parentCubeInstance.getDescriptor();
-                if (parentDesc != null && parentDesc.getStatus() == null) {
+                if (parentDesc != null && !parentDesc.isDraft()) {
                     data.put("cube", parentDesc);
                 }
             }

@@ -99,8 +99,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         LOOKUP, PK_FK, EXTENDED_COLUMN
     }
 
-    public static final String STATUS_DRAFT = "DRAFT";
-
     public static class DeriveInfo implements java.io.Serializable {
         public DeriveType type;
         public JoinDesc join;
@@ -126,8 +124,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     @JsonProperty("name")
     private String name;
-    @JsonProperty("status")
-    private String status;
+    @JsonProperty("is_draft")
+    private boolean isDraft;
     @JsonProperty("model_name")
     private String modelName;
     @JsonProperty("description")
@@ -336,12 +334,12 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.name = name;
     }
 
-    public String getStatus() {
-        return status;
+    public boolean isDraft() {
+        return isDraft;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setDraft(boolean isDraft) {
+        this.isDraft = isDraft;
     }
 
     public String getModelName() {
@@ -1296,7 +1294,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     public static CubeDesc getCopyOf(CubeDesc cubeDesc) {
         CubeDesc newCubeDesc = new CubeDesc();
         newCubeDesc.setName(cubeDesc.getName());
-        newCubeDesc.setStatus(cubeDesc.getStatus());
+        newCubeDesc.setDraft(cubeDesc.isDraft());
         newCubeDesc.setModelName(cubeDesc.getModelName());
         newCubeDesc.setDescription(cubeDesc.getDescription());
         newCubeDesc.setNullStrings(cubeDesc.getNullStrings());

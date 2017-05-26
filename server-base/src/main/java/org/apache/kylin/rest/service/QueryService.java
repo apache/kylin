@@ -637,7 +637,7 @@ public class QueryService extends BasicService {
         ProjectInstance projectInstance = getProjectManager().getProject(project);
         for (String modelName : projectInstance.getModels()) {
             DataModelDesc dataModelDesc = modelService.listAllModels(modelName, project).get(0);
-            if (dataModelDesc.getStatus() == null) {
+            if (!dataModelDesc.isDraft()) {
 
                 // update table type: FACT
                 for (TableRef factTable : dataModelDesc.getFactTables()) {
@@ -663,7 +663,7 @@ public class QueryService extends BasicService {
                 // update column type: PK and FK
                 for (JoinTableDesc joinTableDesc : dataModelDesc.getJoinTables()) {
                     JoinDesc joinDesc = joinTableDesc.getJoin();
-                    for (String  pk : joinDesc.getPrimaryKey()) {
+                    for (String pk : joinDesc.getPrimaryKey()) {
                         String columnIdentity = (dataModelDesc.findTable(pk.substring(0, pk.indexOf("."))).getTableIdentity() + pk.substring(pk.indexOf("."))).replace('.', '#');
                         if (columnMap.containsKey(columnIdentity)) {
                             columnMap.get(columnIdentity).getTYPE().add(ColumnMetaWithType.columnTypeEnum.PK);
@@ -672,7 +672,7 @@ public class QueryService extends BasicService {
                         }
                     }
 
-                    for (String  fk : joinDesc.getForeignKey()) {
+                    for (String fk : joinDesc.getForeignKey()) {
                         String columnIdentity = (dataModelDesc.findTable(fk.substring(0, fk.indexOf("."))).getTableIdentity() + fk.substring(fk.indexOf("."))).replace('.', '#');
                         if (columnMap.containsKey(columnIdentity)) {
                             columnMap.get(columnIdentity).getTYPE().add(ColumnMetaWithType.columnTypeEnum.FK);

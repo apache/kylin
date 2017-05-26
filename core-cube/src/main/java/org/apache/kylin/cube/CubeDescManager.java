@@ -185,7 +185,7 @@ public class CubeDescManager {
             throw new IllegalArgumentException("No cube desc found at " + path);
 
         try {
-            if (ndesc.getStatus() == null) {
+            if (!ndesc.isDraft()) {
                 ndesc.init(config);
             } else {
                 ndesc.initConfig(config);
@@ -215,7 +215,7 @@ public class CubeDescManager {
         if (cubeDescMap.containsKey(cubeDesc.getName()))
             throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' already exists");
 
-        if (cubeDesc.getStatus() == null) {
+        if (!cubeDesc.isDraft()) {
             try {
                 cubeDesc.init(config);
             } catch (Exception e) {
@@ -349,7 +349,7 @@ public class CubeDescManager {
             throw new IllegalArgumentException("CubeDesc '" + name + "' does not exist.");
         }
 
-        if (desc.getStatus() == null) {
+        if (!desc.isDraft()) {
             try {
                 desc.init(config);
             } catch (Exception e) {

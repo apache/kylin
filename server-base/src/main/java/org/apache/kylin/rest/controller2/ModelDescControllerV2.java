@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.controller2;
 
-import static org.apache.kylin.metadata.model.DataModelDesc.STATUS_DRAFT;
-
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -79,22 +77,22 @@ public class ModelDescControllerV2 extends BasicController {
         DataModelDescResponse dataModelDescResponse = new DataModelDescResponse(modelDesc);
         dataModelDescResponse.setProject(projectService.getProjectOfModel(modelName));
 
-        if (modelDesc.getStatus() == null) {
+        if (!modelDesc.isDraft()) {
             data.put("model", dataModelDescResponse);
 
             String draftName = modelName + "_draft";
             DataModelDesc draftDesc = metaManager.getDataModelDesc(draftName);
-            if (draftDesc != null && draftDesc.getStatus() != null && draftDesc.getStatus().equals(STATUS_DRAFT)) {
+            if (draftDesc != null && draftDesc.isDraft()) {
                 DataModelDescResponse draftModelDescResponse = new DataModelDescResponse(draftDesc);
                 draftModelDescResponse.setProject(projectService.getProjectOfModel(draftName));
                 data.put("draft", draftModelDescResponse);
             }
-        } else if (modelDesc.getStatus().equals(STATUS_DRAFT)) {
+        } else {
             data.put("draft", dataModelDescResponse);
 
             String parentName = modelName.substring(0, modelName.lastIndexOf("_draft"));
             DataModelDesc parentDesc = metaManager.getDataModelDesc(parentName);
-            if (parentDesc != null && parentDesc.getStatus() == null) {
+            if (parentDesc != null && !parentDesc.isDraft()) {
                 DataModelDescResponse parentModelDescResponse = new DataModelDescResponse(parentDesc);
                 parentModelDescResponse.setProject(projectService.getProjectOfModel(parentName));
                 data.put("model", parentModelDescResponse);

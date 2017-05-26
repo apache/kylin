@@ -50,7 +50,7 @@ public class DataModelDescResponse extends DataModelDesc {
         setVersion(dataModelDesc.getVersion());
         setName(dataModelDesc.getName());
         setOwner(dataModelDesc.getOwner());
-        setStatus(dataModelDesc.getStatus());
+        setDraft(dataModelDesc.isDraft());
         setDescription(dataModelDesc.getDescription());
         setRootFactTableName(dataModelDesc.getRootFactTableName());
         setJoinTables(dataModelDesc.getJoinTables());
