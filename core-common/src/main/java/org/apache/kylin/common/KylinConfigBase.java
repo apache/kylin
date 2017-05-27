@@ -195,7 +195,7 @@ abstract public class KylinConfigBase implements Serializable {
         
         String root = getRequired("kylin.env.hdfs-working-dir");
         Path path = new Path(root);
-        if (path.isAbsolute() == false)
+        if (!path.isAbsolute())
             throw new IllegalArgumentException("kylin.env.hdfs-working-dir must be absolute, but got " + root);
         
         // make sure path is qualified
@@ -209,10 +209,13 @@ abstract public class KylinConfigBase implements Serializable {
         // append metadata-url prefix
         root = new Path(path, StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).toString();
         
-        if (root.endsWith("/") == false)
+        if (!root.endsWith("/"))
             root += "/";
         
         cachedHdfsWorkingDirectory = root;
+        if (cachedHdfsWorkingDirectory.startsWith("file:")) {
+            cachedHdfsWorkingDirectory = cachedHdfsWorkingDirectory.replace("file:", "file://");
+        }
         return cachedHdfsWorkingDirectory;
     }
 
