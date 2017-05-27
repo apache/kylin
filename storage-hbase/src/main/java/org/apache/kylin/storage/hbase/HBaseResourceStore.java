@@ -149,9 +149,11 @@ public class HBaseResourceStore extends ResourceStore {
     @Override
     public String getMetaStoreUUID() throws IOException {
         if (!exists(ResourceStore.METASTORE_UUID_TAG)) {
-            putResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(createMetaStoreUUID()), 0, StringEntity.serializer);
+            putResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(createMetaStoreUUID()), 0,
+                    StringEntity.serializer);
         }
-        StringEntity entity = getResource(ResourceStore.METASTORE_UUID_TAG, StringEntity.class, StringEntity.serializer);
+        StringEntity entity = getResource(ResourceStore.METASTORE_UUID_TAG, StringEntity.class,
+                StringEntity.serializer);
         return entity.toString();
     }
 
@@ -202,7 +204,8 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     @Override
-    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException {
+    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive)
+            throws IOException {
         FilterList filter = generateTimeFilterList(timeStart, timeEndExclusive);
         final List<RawResource> result = Lists.newArrayList();
         try {
@@ -226,11 +229,13 @@ public class HBaseResourceStore extends ResourceStore {
     private FilterList generateTimeFilterList(long timeStart, long timeEndExclusive) {
         FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
         if (timeStart != Long.MIN_VALUE) {
-            SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.GREATER_OR_EQUAL, Bytes.toBytes(timeStart));
+            SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS,
+                    CompareFilter.CompareOp.GREATER_OR_EQUAL, Bytes.toBytes(timeStart));
             filterList.addFilter(timeStartFilter);
         }
         if (timeEndExclusive != Long.MAX_VALUE) {
-            SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.LESS, Bytes.toBytes(timeEndExclusive));
+            SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS,
+                    CompareFilter.CompareOp.LESS, Bytes.toBytes(timeEndExclusive));
             filterList.addFilter(timeEndFilter);
         }
         return filterList.getFilters().size() == 0 ? null : filterList;
@@ -245,7 +250,11 @@ public class HBaseResourceStore extends ResourceStore {
             Path redirectPath = bigCellHDFSPath(resPath);
             FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
 
-            return fileSystem.open(redirectPath);
+            try {
+                return fileSystem.open(redirectPath);
+            } catch (IOException ex) {
+                throw new IOException("Failed to read resource at " + resPath, ex);
+            }
         } else {
             return new ByteArrayInputStream(value);
         }
@@ -291,7 +300,8 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     @Override
-    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException {
+    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
+            throws IOException, IllegalStateException {
         Table table = getConnection().getTable(TableName.valueOf(getAllInOneTableName()));
         try {
             byte[] row = Bytes.toBytes(resPath);
@@ -299,10 +309,12 @@ public class HBaseResourceStore extends ResourceStore {
             Put put = buildPut(resPath, newTS, row, content, table);
 
             boolean ok = table.checkAndPut(row, B_FAMILY, B_COLUMN_TS, bOldTS, put);
-            logger.trace("Update row " + resPath + " from oldTs: " + oldTS + ", to newTs: " + newTS + ", operation result: " + ok);
+            logger.trace("Update row " + resPath + " from oldTs: " + oldTS + ", to newTs: " + newTS
+                    + ", operation result: " + ok);
             if (!ok) {
                 long real = getResourceTimestampImpl(resPath);
-                throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but it is " + real);
+                throw new IllegalStateException(
+                        "Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but it is " + real);
             }
 
             return newTS;
@@ -355,7 +367,8 @@ public class HBaseResourceStore extends ResourceStore {
 
     }
 
-    private Result internalGetFromHTable(Table table, String path, boolean fetchContent, boolean fetchTimestamp) throws IOException {
+    private Result internalGetFromHTable(Table table, String path, boolean fetchContent, boolean fetchTimestamp)
+            throws IOException {
         byte[] rowkey = Bytes.toBytes(path);
 
         Get get = new Get(rowkey);
@@ -400,7 +413,8 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     private Put buildPut(String resPath, long ts, byte[] row, byte[] content, Table table) throws IOException {
-        int kvSizeLimit = Integer.parseInt(getConnection().getConfiguration().get("hbase.client.keyvalue.maxsize", "10485760"));
+        int kvSizeLimit = Integer
+                .parseInt(getConnection().getConfiguration().get("hbase.client.keyvalue.maxsize", "10485760"));
         if (content.length > kvSizeLimit) {
             writeLargeCellToHdfs(resPath, content, table);
             content = BytesUtil.EMPTY_BYTE_ARRAY;
