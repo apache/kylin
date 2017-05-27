@@ -124,4 +124,11 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
             }
         }).start();
     }
+    
+    @Test
+    public void testHdfsWorkingDir() {
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        String hdfsWorkingDirectory = conf.getHdfsWorkingDirectory();
+        assertTrue(hdfsWorkingDirectory.startsWith("file:/"));
+    }
 }

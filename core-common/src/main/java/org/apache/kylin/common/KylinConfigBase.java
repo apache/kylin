@@ -29,6 +29,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -184,21 +187,33 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.env", "DEV");
     }
 
+    private String cachedHdfsWorkingDirectory;
+    
     public String getHdfsWorkingDirectory() {
+        if (cachedHdfsWorkingDirectory != null)
+            return cachedHdfsWorkingDirectory;
+        
         String root = getRequired("kylin.env.hdfs-working-dir");
-        if (!root.endsWith("/")) {
+        Path path = new Path(root);
+        if (path.isAbsolute() == false)
+            throw new IllegalArgumentException("kylin.env.hdfs-working-dir must be absolute, but got " + root);
+        
+        // make sure path is qualified
+        try {
+            FileSystem fs = path.getFileSystem(new Configuration());
+            path = fs.makeQualified(path);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        
+        // append metadata-url prefix
+        root = new Path(path, StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).toString();
+        
+        if (root.endsWith("/") == false)
             root += "/";
-        }
-
-        // make sure path qualified
-        if (!root.contains("://")) {
-            if (!root.startsWith("/"))
-                root = "hdfs:///" + root;
-            else
-                root = "hdfs://" + root;
-        }
-
-        return new StringBuffer(root).append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).append("/").toString();
+        
+        cachedHdfsWorkingDirectory = root;
+        return cachedHdfsWorkingDirectory;
     }
 
     // ============================================================================
@@ -1028,5 +1043,4 @@ abstract public class KylinConfigBase implements Serializable {
     public boolean isWebCrossDomainEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.web.cross-domain-enabled", "true"));
     }
-
 }
