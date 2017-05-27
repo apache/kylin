@@ -48,6 +48,7 @@ import javax.sql.DataSource;
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
@@ -437,7 +438,7 @@ public class QueryService extends BasicService {
                 sqlResponse.setTotalScanCount(queryContext.getScannedRows());
                 sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
 
-                if (queryCacheEnabled && e.getCause() != null && e.getCause() instanceof ResourceLimitExceededException) {
+                if (queryCacheEnabled && e.getCause() != null && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
                     Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
                     exceptionCache.put(new Element(sqlRequest, sqlResponse));
                 }
