@@ -131,18 +131,21 @@ public class JobControllerV2 extends BasicController {
         if (sortby.equals("last_modify")) {
             if (reverse) {
                 Collections.sort(jobInstanceList, lastModifyComparatorReverse);
+            } else {
+                Collections.sort(jobInstanceList, lastModifyComparator);
             }
-            Collections.sort(jobInstanceList, lastModifyComparator);
         } else if (sortby.equals("job_name")) {
             if (reverse) {
                 Collections.sort(jobInstanceList, jobNameComparatorReverse);
+            } else {
+                Collections.sort(jobInstanceList, jobNameComparator);
             }
-            Collections.sort(jobInstanceList, jobNameComparator);
         } else if (sortby.equals("cube_name")) {
             if (reverse) {
                 Collections.sort(jobInstanceList, cubeNameComparatorReverse);
+            } else {
+                Collections.sort(jobInstanceList, cubeNameComparator);
             }
-            Collections.sort(jobInstanceList, cubeNameComparator);
         }
 
         int offset = pageOffset * pageSize;
