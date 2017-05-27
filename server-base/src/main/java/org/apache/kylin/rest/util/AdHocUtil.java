@@ -64,7 +64,7 @@ public class AdHocUtil {
             try {
                 String adhocSql = converter.convert(sql);
                 if (!sql.equals(adhocSql)) {
-                    logger.info("the original query is converted to {} before delegating to ", adhocSql);
+                    logger.info("the original query is converted to {} before delegating to adhoc", adhocSql);
                 }
 
                 runner.executeQuery(adhocSql, results, columnMetas);
