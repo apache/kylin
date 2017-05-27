@@ -18,6 +18,7 @@
 #
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/load-hive-conf.sh
 
 echo Retrieving hive dependency...
 
@@ -27,9 +28,9 @@ hive_env=
 if [ "${client_mode}" == "beeline" ]
 then
     beeline_params=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.beeline-params`
-    hive_env=`beeline ${beeline_params} --outputformat=dsv -e set 2>&1 | grep 'env:CLASSPATH' `
+    hive_env=`beeline ${hive_conf_properties} ${beeline_params} --outputformat=dsv -e set 2>&1 | grep 'env:CLASSPATH' `
 else
-    hive_env=`hive -e set 2>&1 | grep 'env:CLASSPATH'`
+    hive_env=`hive ${hive_conf_properties} -e set 2>&1 | grep 'env:CLASSPATH'`
 fi
 
 hive_classpath=`echo $hive_env | grep 'env:CLASSPATH' | awk -F '=' '{print $2}'`
