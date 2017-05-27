@@ -40,7 +40,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,7 +53,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class ProjectControllerV2 extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(ProjectControllerV2.class);
 
-    private static final char[] VALID_PROJECTNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
+    private static final char[] VALID_PROJECTNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+            .toCharArray();
 
     @Autowired
     @Qualifier("projectService")
@@ -62,8 +62,9 @@ public class ProjectControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getProjectsV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getProjectsV2(
+            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
 
         int offset = pageOffset * pageSize;
         int limit = pageSize;
@@ -71,10 +72,12 @@ public class ProjectControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, projectService.listProjects(limit, offset), "");
     }
 
-    @RequestMapping(value = "/readable", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/readable", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getReadableProjectsV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getReadableProjectsV2(
+            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
 
@@ -98,8 +101,7 @@ public class ProjectControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse saveProjectV2(@RequestHeader("Accept-Language") String lang, @RequestBody ProjectRequest projectRequest) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse saveProjectV2(@RequestBody ProjectRequest projectRequest) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         ProjectInstance projectDesc = deserializeProjectDescV2(projectRequest);
@@ -109,7 +111,8 @@ public class ProjectControllerV2 extends BasicController {
         }
 
         if (!StringUtils.containsOnly(projectDesc.getName(), VALID_PROJECTNAME)) {
-            logger.info("Invalid Project name {}, only letters, numbers and underline supported.", projectDesc.getName());
+            logger.info("Invalid Project name {}, only letters, numbers and underline supported.",
+                    projectDesc.getName());
             throw new BadRequestException(String.format(msg.getINVALID_PROJECT_NAME(), projectDesc.getName()));
         }
 
@@ -121,8 +124,7 @@ public class ProjectControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse updateProjectV2(@RequestHeader("Accept-Language") String lang, @RequestBody ProjectRequest projectRequest) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse updateProjectV2(@RequestBody ProjectRequest projectRequest) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         String formerProjectName = projectRequest.getFormerProjectName();
@@ -150,10 +152,10 @@ public class ProjectControllerV2 extends BasicController {
         return projectDesc;
     }
 
-    @RequestMapping(value = "/{projectName}", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{projectName}", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void deleteProjectV2(@RequestHeader("Accept-Language") String lang, @PathVariable String projectName) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void deleteProjectV2(@PathVariable String projectName) throws IOException {
 
         ProjectInstance project = projectService.getProjectManager().getProject(projectName);
         projectService.deleteProject(projectName, project);

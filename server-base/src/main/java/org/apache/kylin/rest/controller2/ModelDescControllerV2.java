@@ -36,7 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -61,10 +60,10 @@ public class ModelDescControllerV2 extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{modelName}", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{modelName}", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getModelV2(@RequestHeader("Accept-Language") String lang, @PathVariable String modelName) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getModelV2(@PathVariable String modelName) {
         Message msg = MsgPicker.getMsg();
 
         HashMap<String, DataModelDescResponse> data = new HashMap<String, DataModelDescResponse>();

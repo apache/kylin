@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.rest.controller.BasicController;
-import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
@@ -36,7 +35,6 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -61,10 +59,10 @@ public class AccessControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getAccessEntitiesV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type, @PathVariable String uuid) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getAccessEntitiesV2(@PathVariable String type, @PathVariable String uuid) {
 
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.getAcl(ae);
@@ -77,10 +75,11 @@ public class AccessControllerV2 extends BasicController {
      * @param accessRequest
      */
 
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse grantV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse grantV2(@PathVariable String type, @PathVariable String uuid,
+            @RequestBody AccessRequest accessRequest) {
 
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Sid sid = accessService.getSid(accessRequest.getSid(), accessRequest.isPrincipal());
@@ -96,10 +95,11 @@ public class AccessControllerV2 extends BasicController {
      * @param accessRequest
      */
 
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse updateV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse updateV2(@PathVariable String type, @PathVariable String uuid,
+            @RequestBody AccessRequest accessRequest) {
 
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Permission permission = AclPermissionFactory.getPermission(accessRequest.getPermission());
@@ -114,10 +114,11 @@ public class AccessControllerV2 extends BasicController {
      * @param accessRequest
      */
 
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse revokeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type, @PathVariable String uuid, AccessRequest accessRequest) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse revokeV2(@PathVariable String type, @PathVariable String uuid,
+            AccessRequest accessRequest) {
 
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.revoke(ae, accessRequest.getAccessEntryId());

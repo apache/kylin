@@ -30,7 +30,6 @@ import org.apache.kylin.metadata.badquery.BadQueryEntry;
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.controller.BasicController;
-import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.DiagnosisService;
@@ -41,7 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -67,10 +65,13 @@ public class DiagnosisControllerV2 extends BasicController {
      * Get bad query history
      */
 
-    @RequestMapping(value = "/sql", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/sql", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getBadQuerySqlV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "project", required = false) String project, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getBadQuerySqlV2(@RequestParam(value = "project", required = false) String project,
+            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
+            throws IOException {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
         List<BadQueryEntry> badEntry = Lists.newArrayList();
@@ -106,10 +107,11 @@ public class DiagnosisControllerV2 extends BasicController {
      * Get diagnosis information for project
      */
 
-    @RequestMapping(value = "/project/{project}/download", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/project/{project}/download", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void dumpProjectDiagnosisInfoV2(@RequestHeader("Accept-Language") String lang, @PathVariable String project, final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void dumpProjectDiagnosisInfoV2(@PathVariable String project, final HttpServletRequest request,
+            final HttpServletResponse response) throws IOException {
 
         String filePath;
         filePath = dgService.dumpProjectDiagnosisInfo(project);
@@ -121,10 +123,11 @@ public class DiagnosisControllerV2 extends BasicController {
      * Get diagnosis information for job
      */
 
-    @RequestMapping(value = "/job/{jobId}/download", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/job/{jobId}/download", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void dumpJobDiagnosisInfoV2(@RequestHeader("Accept-Language") String lang, @PathVariable String jobId, final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void dumpJobDiagnosisInfoV2(@PathVariable String jobId, final HttpServletRequest request,
+            final HttpServletResponse response) throws IOException {
 
         String filePath;
         filePath = dgService.dumpJobDiagnosisInfo(jobId);

@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.rest.controller.BasicController;
-import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.service.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -56,10 +54,11 @@ public class CacheControllerV2 extends BasicController {
      * Announce wipe cache to all cluster nodes
      */
 
-    @RequestMapping(value = "/announce/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/announce/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void announceWipeCacheV2(@RequestHeader("Accept-Language") String lang, @PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void announceWipeCacheV2(@PathVariable String entity, @PathVariable String event,
+            @PathVariable String cacheKey) throws IOException {
 
         cacheService.annouceWipeCache(entity, event, cacheKey);
     }
@@ -68,18 +67,19 @@ public class CacheControllerV2 extends BasicController {
      * Wipe cache on this node
      */
 
-    @RequestMapping(value = "/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void wipeCacheV2(@RequestHeader("Accept-Language") String lang, @PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void wipeCacheV2(@PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey)
+            throws IOException {
 
         cacheService.notifyMetadataChange(entity, Broadcaster.Event.getEvent(event), cacheKey);
     }
 
-    @RequestMapping(value = "/announce/config", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/announce/config", method = { RequestMethod.POST }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void hotLoadKylinConfigV2(@RequestHeader("Accept-Language") String lang) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void hotLoadKylinConfigV2() throws IOException {
 
         KylinConfig.getInstanceFromEnv().hotLoadKylinProperties();
         cacheService.notifyMetadataChange(Broadcaster.SYNC_ALL, Broadcaster.Event.UPDATE, Broadcaster.SYNC_ALL);

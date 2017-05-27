@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.controller.BasicController;
-import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
 import org.apache.kylin.rest.request.UpdateConfigRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -34,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -57,40 +55,41 @@ public class AdminControllerV2 extends BasicController {
     @Qualifier("cubeMgmtService")
     private CubeService cubeMgmtService;
 
-    @RequestMapping(value = "/env", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/env", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getEnvV2(@RequestHeader("Accept-Language") String lang) throws ConfigurationException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getEnvV2() throws ConfigurationException {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, adminService.getEnv(), "");
     }
 
-    @RequestMapping(value = "/config", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/config", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getConfigV2(@RequestHeader("Accept-Language") String lang) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getConfigV2() throws IOException {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, adminService.getConfigAsString(), "");
     }
 
-    @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse cubeMetricsV2(@RequestHeader("Accept-Language") String lang, MetricsRequest request) {
+    public EnvelopeResponse cubeMetricsV2(MetricsRequest request) {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeMgmtService.calculateMetrics(request), "");
     }
 
-    @RequestMapping(value = "/storage", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/storage", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void cleanupStorageV2(@RequestHeader("Accept-Language") String lang) {
-        MsgPicker.setMsg(lang);
+    public void cleanupStorageV2() {
 
         adminService.cleanupStorage();
     }
 
-    @RequestMapping(value = "/config", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/config", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void updateKylinConfigV2(@RequestHeader("Accept-Language") String lang, @RequestBody UpdateConfigRequest updateConfigRequest) {
-        MsgPicker.setMsg(lang);
+    public void updateKylinConfigV2(@RequestBody UpdateConfigRequest updateConfigRequest) {
 
         KylinConfig.getInstanceFromEnv().setProperty(updateConfigRequest.getKey(), updateConfigRequest.getValue());
     }

@@ -69,7 +69,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -87,7 +86,8 @@ import com.google.common.collect.Lists;
 public class CubeControllerV2 extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(CubeControllerV2.class);
 
-    public static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
+    public static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+            .toCharArray();
 
     @Autowired
     @Qualifier("cubeMgmtService")
@@ -107,8 +107,11 @@ public class CubeControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getCubesPaging(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getCubesPaging(@RequestParam(value = "cubeName", required = false) String cubeName,
+            @RequestParam(value = "modelName", required = false) String modelName,
+            @RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
         List<CubeInstanceResponse> cubeInstanceResponses = new ArrayList<CubeInstanceResponse>();
@@ -136,7 +139,8 @@ public class CubeControllerV2 extends BasicController {
             DataModelDesc getModel = modelService.getMetadataManager().getDataModelDesc(getModelName);
             cubeInstanceResponse.setPartitionDateColumn(getModel.getPartitionDesc().getPartitionDateColumn());
 
-            cubeInstanceResponse.setIs_streaming(getModel.getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
+            cubeInstanceResponse.setIs_streaming(
+                    getModel.getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
 
             if (projectName != null)
                 cubeInstanceResponse.setProject(projectName);
@@ -158,19 +162,19 @@ public class CubeControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
-    @RequestMapping(value = "validEncodings", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "validEncodings", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getValidEncodingsV2(@RequestHeader("Accept-Language") String lang) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getValidEncodingsV2() {
 
         Map<String, Integer> encodings = DimensionEncodingFactory.getValidEncodings();
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, encodings, "");
     }
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getCubeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getCubeV2(@PathVariable String cubeName) {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -187,7 +191,8 @@ public class CubeControllerV2 extends BasicController {
         DataModelDesc model = modelService.getMetadataManager().getDataModelDesc(modelName);
         cubeInstanceResponse.setPartitionDateColumn(model.getPartitionDesc().getPartitionDateColumn());
 
-        cubeInstanceResponse.setIs_streaming(model.getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
+        cubeInstanceResponse
+                .setIs_streaming(model.getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
 
         List<ProjectInstance> projectInstances = projectService.listProjects(null, null);
         for (ProjectInstance projectInstance : projectInstances) {
@@ -207,10 +212,10 @@ public class CubeControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}/sql", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/sql", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getSqlV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getSqlV2(@PathVariable String cubeName) {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -233,10 +238,11 @@ public class CubeControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}/notify_list", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/notify_list", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void updateNotifyListV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName, @RequestBody List<String> notifyList) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void updateNotifyListV2(@PathVariable String cubeName, @RequestBody List<String> notifyList)
+            throws IOException {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -249,10 +255,11 @@ public class CubeControllerV2 extends BasicController {
 
     }
 
-    @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse updateCubeCostV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName, @RequestBody Integer cost) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse updateCubeCostV2(@PathVariable String cubeName, @RequestBody Integer cost)
+            throws IOException {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -268,10 +275,11 @@ public class CubeControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = {
+            RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse rebuildLookupSnapshotV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName, @PathVariable String segmentName, @RequestBody String lookupTable) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse rebuildLookupSnapshotV2(@PathVariable String cubeName, @PathVariable String segmentName,
+            @RequestBody String lookupTable) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         final CubeManager cubeMgr = cubeService.getCubeManager();
@@ -279,7 +287,8 @@ public class CubeControllerV2 extends BasicController {
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS,
+                cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable), "");
     }
 
     /**
@@ -288,10 +297,11 @@ public class CubeControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse deleteSegmentV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName, @PathVariable String segmentName) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse deleteSegmentV2(@PathVariable String cubeName, @PathVariable String segmentName)
+            throws IOException {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -310,28 +320,35 @@ public class CubeControllerV2 extends BasicController {
     /** Build/Rebuild a cube segment */
 
     /** Build/Rebuild a cube segment */
-    @RequestMapping(value = "/{cubeName}/build", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/build", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse buildV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName, @RequestBody JobBuildRequest req) throws IOException {
-        return rebuildV2(lang, cubeName, req);
+    public EnvelopeResponse buildV2(@PathVariable String cubeName, @RequestBody JobBuildRequest req)
+            throws IOException {
+        return rebuildV2(cubeName, req);
     }
 
     /** Build/Rebuild a cube segment */
 
-    @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse rebuildV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName, @RequestBody JobBuildRequest req) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse rebuildV2(@PathVariable String cubeName, @RequestBody JobBuildRequest req)
+            throws IOException {
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, buildInternalV2(cubeName, req.getStartTime(), req.getEndTime(), 0, 0, null, null, req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment()), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS,
+                buildInternalV2(cubeName, req.getStartTime(), req.getEndTime(), 0, 0, null, null, req.getBuildType(),
+                        req.isForce() || req.isForceMergeEmptySegment()),
+                "");
     }
 
     /** Build/Rebuild a cube segment by source offset */
 
-    @RequestMapping(value = "/{cubeName}/build_streaming", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/build_streaming", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse build2V2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName, @RequestBody JobBuildRequest2 req) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse build2V2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req)
+            throws IOException {
         Message msg = MsgPicker.getMsg();
 
         boolean existKafkaClient = false;
@@ -346,20 +363,26 @@ public class CubeControllerV2 extends BasicController {
         if (!existKafkaClient) {
             throw new BadRequestException(msg.getKAFKA_DEP_NOT_FOUND());
         }
-        return rebuild2V2(lang, cubeName, req);
+        return rebuild2V2(cubeName, req);
     }
 
     /** Build/Rebuild a cube segment by source offset */
-    @RequestMapping(value = "/{cubeName}/rebuild_streaming", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/rebuild_streaming", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse rebuild2V2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName, @RequestBody JobBuildRequest2 req) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse rebuild2V2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req)
+            throws IOException {
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, buildInternalV2(cubeName, 0, 0, req.getSourceOffsetStart(), req.getSourceOffsetEnd(), req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(), req.getBuildType(), req.isForce()), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS,
+                buildInternalV2(cubeName, 0, 0, req.getSourceOffsetStart(), req.getSourceOffsetEnd(),
+                        req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(), req.getBuildType(),
+                        req.isForce()),
+                "");
     }
 
     private JobInstance buildInternalV2(String cubeName, long startTime, long endTime, //
-            long startOffset, long endOffset, Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd, String buildType, boolean force) throws IOException {
+            long startOffset, long endOffset, Map<Integer, Long> sourcePartitionOffsetStart,
+            Map<Integer, Long> sourcePartitionOffsetEnd, String buildType, boolean force) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -372,13 +395,14 @@ public class CubeControllerV2 extends BasicController {
             throw new BadRequestException(msg.getBUILD_DRAFT_CUBE());
         }
         return jobService.submitJob(cube, startTime, endTime, startOffset, endOffset, //
-                sourcePartitionOffsetStart, sourcePartitionOffsetEnd, CubeBuildTypeEnum.valueOf(buildType), force, submitter);
+                sourcePartitionOffsetStart, sourcePartitionOffsetEnd, CubeBuildTypeEnum.valueOf(buildType), force,
+                submitter);
     }
 
-    @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse disableCubeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse disableCubeV2(@PathVariable String cubeName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -391,10 +415,10 @@ public class CubeControllerV2 extends BasicController {
 
     }
 
-    @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse purgeCubeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse purgeCubeV2(@PathVariable String cubeName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -405,10 +429,11 @@ public class CubeControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.purgeCube(cube), "");
     }
 
-    @RequestMapping(value = "/{cubeName}/clone", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/clone", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse cloneCubeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName, @RequestBody CubeRequest cubeRequest) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse cloneCubeV2(@PathVariable String cubeName, @RequestBody CubeRequest cubeRequest)
+            throws IOException {
         Message msg = MsgPicker.getMsg();
 
         String newCubeName = cubeRequest.getCubeName();
@@ -440,10 +465,10 @@ public class CubeControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, newCube, "");
     }
 
-    @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse enableCubeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse enableCubeV2(@PathVariable String cubeName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -454,10 +479,10 @@ public class CubeControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.enableCube(cube), "");
     }
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void deleteCubeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void deleteCubeV2(@PathVariable String cubeName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -477,10 +502,10 @@ public class CubeControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}/hbase", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/hbase", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getHBaseInfoV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getHBaseInfoV2(@PathVariable String cubeName) {
         Message msg = MsgPicker.getMsg();
 
         List<HBaseResponse> hbase = new ArrayList<HBaseResponse>();
@@ -531,13 +556,14 @@ public class CubeControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getHolesV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getHolesV2(@PathVariable String cubeName) {
 
         checkCubeNameV2(cubeName);
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.getCubeManager().calculateHoles(cubeName), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.getCubeManager().calculateHoles(cubeName),
+                "");
     }
 
     /**
@@ -547,10 +573,10 @@ public class CubeControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse fillHolesV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse fillHolesV2(@PathVariable String cubeName) {
 
         checkCubeNameV2(cubeName);
 
@@ -572,7 +598,7 @@ public class CubeControllerV2 extends BasicController {
                 request.setSourceOffsetEnd(hole.getSourceOffsetEnd());
                 request.setSourcePartitionOffsetEnd(hole.getSourcePartitionOffsetEnd());
                 try {
-                    JobInstance job = (JobInstance) build2V2(lang, cubeName, request).data;
+                    JobInstance job = (JobInstance) build2V2(cubeName, request).data;
                     jobs.add(job);
                 } catch (Exception e) {
                     // it may exceed the max allowed job number
@@ -586,7 +612,7 @@ public class CubeControllerV2 extends BasicController {
                 request.setEndTime(hole.getDateRangeEnd());
 
                 try {
-                    JobInstance job = (JobInstance) buildV2(lang, cubeName, request).data;
+                    JobInstance job = (JobInstance) buildV2(cubeName, request).data;
                     jobs.add(job);
                 } catch (Exception e) {
                     // it may exceed the max allowed job number
@@ -606,10 +632,10 @@ public class CubeControllerV2 extends BasicController {
      * @return
      */
 
-    @RequestMapping(value = "/{cubeName}/init_start_offsets", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/init_start_offsets", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse initStartOffsetsV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse initStartOffsetsV2(@PathVariable String cubeName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         checkCubeNameV2(cubeName);
@@ -629,9 +655,10 @@ public class CubeControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, response, "");
     }
 
-    @RequestMapping(value = "/checkNameAvailability/{cubeName}", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/checkNameAvailability/{cubeName}", method = RequestMethod.GET, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse checkNameAvailabilityV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
+    public EnvelopeResponse checkNameAvailabilityV2(@PathVariable String cubeName) {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.checkNameAvailability(cubeName), "");
     }

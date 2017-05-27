@@ -56,7 +56,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -76,7 +75,8 @@ import com.google.common.collect.Sets;
 public class ModelControllerV2 extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(ModelControllerV2.class);
 
-    public static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
+    public static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+            .toCharArray();
 
     @Autowired
     @Qualifier("modelMgmtService")
@@ -92,9 +92,11 @@ public class ModelControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getModelsPaging(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) throws IOException {
-        MsgPicker.setMsg(lang);
-
+    public EnvelopeResponse getModelsPaging(@RequestParam(value = "modelName", required = false) String modelName,
+            @RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
+            throws IOException {
         HashMap<String, Object> data = new HashMap<String, Object>();
         List<DataModelDesc> models = modelService.listAllModels(modelName, projectName);
 
@@ -131,13 +133,13 @@ public class ModelControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse updateModelDescV2(@RequestHeader("Accept-Language") String lang, @RequestBody ModelRequest modelRequest) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse updateModelDescV2(@RequestBody ModelRequest modelRequest) throws IOException {
 
         DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
         modelService.validateModelDesc(modelDesc);
 
-        String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : modelRequest.getProject();
+        String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
+                : modelRequest.getProject();
 
         ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
         Checkpoint cp = store.checkpoint();
@@ -160,15 +162,16 @@ public class ModelControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
-    @RequestMapping(value = "/draft", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/draft", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse updateModelDescDraftV2(@RequestHeader("Accept-Language") String lang, @RequestBody ModelRequest modelRequest) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse updateModelDescDraftV2(@RequestBody ModelRequest modelRequest) throws IOException {
 
         DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
         modelService.validateModelDesc(modelDesc);
 
-        String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : modelRequest.getProject();
+        String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
+                : modelRequest.getProject();
 
         ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
         Checkpoint cp = store.checkpoint();
@@ -191,10 +194,10 @@ public class ModelControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
-    @RequestMapping(value = "/{modelName}", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{modelName}", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void deleteModelV2(@RequestHeader("Accept-Language") String lang, @PathVariable String modelName) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void deleteModelV2(@PathVariable String modelName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         DataModelDesc desc = modelService.getMetadataManager().getDataModelDesc(modelName);
@@ -204,10 +207,11 @@ public class ModelControllerV2 extends BasicController {
         modelService.dropModel(desc);
     }
 
-    @RequestMapping(value = "/{modelName}/clone", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{modelName}/clone", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse cloneModelV2(@RequestHeader("Accept-Language") String lang, @PathVariable String modelName, @RequestBody ModelRequest modelRequest) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse cloneModelV2(@PathVariable String modelName, @RequestBody ModelRequest modelRequest)
+            throws IOException {
         Message msg = MsgPicker.getMsg();
 
         String project = modelRequest.getProject();
@@ -266,19 +270,19 @@ public class ModelControllerV2 extends BasicController {
         return desc;
     }
 
-    @RequestMapping(value = "/checkNameAvailability/{modelName}", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/checkNameAvailability/{modelName}", method = RequestMethod.GET, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse checkNameAvailabilityV2(@RequestHeader("Accept-Language") String lang, @PathVariable String modelName) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse checkNameAvailabilityV2(@PathVariable String modelName) throws IOException {
 
         boolean ret = modelService.checkNameAvailability(modelName);
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, ret, "");
     }
 
-    @RequestMapping(value = "/{modelName}/usedCols", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{modelName}/usedCols", method = RequestMethod.GET, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getUsedColsV2(@RequestHeader("Accept-Language") String lang, @PathVariable String modelName) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getUsedColsV2(@PathVariable String modelName) {
 
         Map<String, Set<String>> data = new HashMap<>();
 
@@ -293,7 +297,8 @@ public class ModelControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
-    private void populateUsedColResponse(TblColRef tblColRef, Set<CubeInstance> cubeInstances, Map<String, Set<String>> ret) {
+    private void populateUsedColResponse(TblColRef tblColRef, Set<CubeInstance> cubeInstances,
+            Map<String, Set<String>> ret) {
         String columnIdentity = tblColRef.getIdentity();
         if (!ret.containsKey(columnIdentity)) {
             ret.put(columnIdentity, Sets.<String> newHashSet());

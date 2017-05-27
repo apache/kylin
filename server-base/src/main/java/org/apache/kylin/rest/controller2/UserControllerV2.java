@@ -35,7 +35,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -57,18 +56,19 @@ public class UserControllerV2 extends BasicController {
     @Qualifier("userService")
     UserService userService;
 
-    @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse authenticateV2(@RequestHeader("Accept-Language") String lang) {
-        EnvelopeResponse response = authenticatedUserV2(lang);
+    public EnvelopeResponse authenticateV2() {
+        EnvelopeResponse response = authenticatedUserV2();
         logger.debug("User login: {}", response.data);
         return response;
     }
 
-    @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse authenticatedUserV2(@RequestHeader("Accept-Language") String lang) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse authenticatedUserV2() {
         Message msg = MsgPicker.getMsg();
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -92,10 +92,10 @@ public class UserControllerV2 extends BasicController {
         throw new BadRequestException(msg.getAUTH_INFO_NOT_FOUND());
     }
 
-    @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getAuthoritiesV2(@RequestHeader("Accept-Language") String lang) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getAuthoritiesV2() throws IOException {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, userService.listUserAuthorities(), "");
     }

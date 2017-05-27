@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -60,10 +59,10 @@ public class CubeDescControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getCubeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getCubeV2(@PathVariable String cubeName) {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
@@ -88,10 +87,10 @@ public class CubeDescControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{cubeName}/desc", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{cubeName}/desc", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getDescV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getDescV2(@PathVariable String cubeName) {
         Message msg = MsgPicker.getMsg();
 
         HashMap<String, CubeDesc> data = new HashMap<String, CubeDesc>();

@@ -37,7 +37,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -65,10 +64,11 @@ public class TableControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getTableDescV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "ext", required = false) boolean withExt, @RequestParam(value = "project", required = true) String project) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getTableDescV2(@RequestParam(value = "ext", required = false) boolean withExt,
+            @RequestParam(value = "project", required = true) String project) throws IOException {
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.getTableDescByProject(project, withExt), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.getTableDescByProject(project, withExt),
+                "");
     }
 
     /**
@@ -78,10 +78,10 @@ public class TableControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{tableName:.+}", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{tableName:.+}", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getTableDescV2(@RequestHeader("Accept-Language") String lang, @PathVariable String tableName) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getTableDescV2(@PathVariable String tableName) {
         Message msg = MsgPicker.getMsg();
 
         TableDesc table = tableService.getTableDescByName(tableName, false);
@@ -90,20 +90,23 @@ public class TableControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, table, "");
     }
 
-    @RequestMapping(value = "/load", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/load", method = { RequestMethod.POST }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse loadHiveTablesV2(@RequestHeader("Accept-Language") String lang, @RequestBody HiveTableRequestV2 requestV2) throws Exception {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse loadHiveTablesV2(@RequestBody HiveTableRequestV2 requestV2) throws Exception {
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.loadHiveTables(requestV2.getTables(), requestV2.getProject(), requestV2.isNeedProfile()), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS,
+                tableService.loadHiveTables(requestV2.getTables(), requestV2.getProject(), requestV2.isNeedProfile()),
+                "");
     }
 
-    @RequestMapping(value = "/load", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/load", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse unLoadHiveTablesV2(@RequestHeader("Accept-Language") String lang, @RequestBody HiveTableRequestV2 requestV2) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse unLoadHiveTablesV2(@RequestBody HiveTableRequestV2 requestV2) throws IOException {
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.unloadHiveTables(requestV2.getTables(), requestV2.getProject()), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS,
+                tableService.unloadHiveTables(requestV2.getTables(), requestV2.getProject()), "");
     }
 
     /**
@@ -113,10 +116,10 @@ public class TableControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/cardinality", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/cardinality", method = { RequestMethod.POST }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void generateCardinalityV2(@RequestHeader("Accept-Language") String lang, @RequestBody HiveTableRequestV2 requestV2) throws Exception {
-        MsgPicker.setMsg(lang);
+    public void generateCardinalityV2(@RequestBody HiveTableRequestV2 requestV2) throws Exception {
 
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         String[] tables = requestV2.getTables();
@@ -133,10 +136,10 @@ public class TableControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/hive", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/hive", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    private EnvelopeResponse showHiveDatabasesV2(@RequestHeader("Accept-Language") String lang) throws Exception {
-        MsgPicker.setMsg(lang);
+    private EnvelopeResponse showHiveDatabasesV2() throws Exception {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.getHiveDbNames(), "");
     }
@@ -148,10 +151,10 @@ public class TableControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/hive/{database}", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/hive/{database}", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    private EnvelopeResponse showHiveTablesV2(@RequestHeader("Accept-Language") String lang, @PathVariable String database) throws Exception {
-        MsgPicker.setMsg(lang);
+    private EnvelopeResponse showHiveTablesV2(@PathVariable String database) throws Exception {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.getHiveTableNames(database), "");
     }

@@ -24,8 +24,6 @@ import java.util.Set;
 
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.rest.controller.BasicController;
-import org.apache.kylin.rest.msg.Message;
-import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.EncodingService;
@@ -34,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -58,11 +55,10 @@ public class EncodingControllerV2 extends BasicController {
      * @return suggestion map
      */
 
-    @RequestMapping(value = "valid_encodings", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "valid_encodings", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getValidEncodingsV2(@RequestHeader("Accept-Language") String lang) {
-        MsgPicker.setMsg(lang);
-        Message msg = MsgPicker.getMsg();
+    public EnvelopeResponse getValidEncodingsV2() {
 
         Set<String> allDatatypes = Sets.newHashSet();
         allDatatypes.addAll(DataType.DATETIME_FAMILY);

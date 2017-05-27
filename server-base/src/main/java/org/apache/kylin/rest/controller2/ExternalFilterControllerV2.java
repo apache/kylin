@@ -25,7 +25,6 @@ import java.util.UUID;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.rest.controller.BasicController;
-import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.ExternalFilterRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
@@ -37,7 +36,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -57,10 +55,10 @@ public class ExternalFilterControllerV2 extends BasicController {
     @Qualifier("extFilterService")
     private ExtFilterService extFilterService;
 
-    @RequestMapping(value = "/saveExtFilter", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/saveExtFilter", method = { RequestMethod.POST }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void saveExternalFilterV2(@RequestHeader("Accept-Language") String lang, @RequestBody ExternalFilterRequest request) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void saveExternalFilterV2(@RequestBody ExternalFilterRequest request) throws IOException {
 
         String filterProject = request.getProject();
         ExternalFilterDesc desc = JsonUtil.readValue(request.getExtFilter(), ExternalFilterDesc.class);
@@ -69,20 +67,20 @@ public class ExternalFilterControllerV2 extends BasicController {
         extFilterService.syncExtFilterToProject(new String[] { desc.getName() }, filterProject);
     }
 
-    @RequestMapping(value = "/updateExtFilter", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/updateExtFilter", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void updateExternalFilterV2(@RequestHeader("Accept-Language") String lang, @RequestBody ExternalFilterRequest request) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void updateExternalFilterV2(@RequestBody ExternalFilterRequest request) throws IOException {
 
         ExternalFilterDesc desc = JsonUtil.readValue(request.getExtFilter(), ExternalFilterDesc.class);
         extFilterService.updateExternalFilter(desc);
         extFilterService.syncExtFilterToProject(new String[] { desc.getName() }, request.getProject());
     }
 
-    @RequestMapping(value = "/{filter}/{project}", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{filter}/{project}", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void removeFilterV2(@RequestHeader("Accept-Language") String lang, @PathVariable String filter, @PathVariable String project) throws IOException {
-        MsgPicker.setMsg(lang);
+    public void removeFilterV2(@PathVariable String filter, @PathVariable String project) throws IOException {
 
         extFilterService.removeExtFilterFromProject(filter, project);
         extFilterService.removeExternalFilter(filter);
@@ -90,8 +88,8 @@ public class ExternalFilterControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getExternalFiltersV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "project", required = true) String project) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getExternalFiltersV2(@RequestParam(value = "project", required = true) String project)
+            throws IOException {
 
         List<ExternalFilterDesc> filterDescs = Lists.newArrayList();
         filterDescs.addAll(extFilterService.getProjectManager().listExternalFilterDescs(project).values());

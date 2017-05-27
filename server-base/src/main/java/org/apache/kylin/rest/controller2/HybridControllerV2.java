@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.controller2;
 
 import org.apache.kylin.rest.controller.BasicController;
-import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.HybridRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
@@ -29,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,34 +42,33 @@ public class HybridControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = RequestMethod.POST, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse createV2(@RequestHeader("Accept-Language") String lang, @RequestBody HybridRequest request) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse createV2(@RequestBody HybridRequest request) {
 
         checkRequiredArg("hybrid", request.getHybrid());
         checkRequiredArg("project", request.getProject());
         checkRequiredArg("model", request.getModel());
         checkRequiredArg("cubes", request.getCubes());
-        HybridInstance instance = hybridService.createHybridCube(request.getHybrid(), request.getProject(), request.getModel(), request.getCubes());
+        HybridInstance instance = hybridService.createHybridCube(request.getHybrid(), request.getProject(),
+                request.getModel(), request.getCubes());
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, instance, "");
     }
 
     @RequestMapping(value = "", method = RequestMethod.PUT, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse updateV2(@RequestHeader("Accept-Language") String lang, @RequestBody HybridRequest request) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse updateV2(@RequestBody HybridRequest request) {
 
         checkRequiredArg("hybrid", request.getHybrid());
         checkRequiredArg("project", request.getProject());
         checkRequiredArg("model", request.getModel());
         checkRequiredArg("cubes", request.getCubes());
-        HybridInstance instance = hybridService.updateHybridCube(request.getHybrid(), request.getProject(), request.getModel(), request.getCubes());
+        HybridInstance instance = hybridService.updateHybridCube(request.getHybrid(), request.getProject(),
+                request.getModel(), request.getCubes());
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, instance, "");
     }
 
     @RequestMapping(value = "", method = RequestMethod.DELETE, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void deleteV2(@RequestHeader("Accept-Language") String lang, @RequestBody HybridRequest request) {
-        MsgPicker.setMsg(lang);
+    public void deleteV2(@RequestBody HybridRequest request) {
 
         checkRequiredArg("hybrid", request.getHybrid());
         checkRequiredArg("project", request.getProject());
@@ -81,16 +78,16 @@ public class HybridControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse listV2(@RequestHeader("Accept-Language") String lang, @RequestParam(required = false) String project, @RequestParam(required = false) String model) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse listV2(@RequestParam(required = false) String project,
+            @RequestParam(required = false) String model) {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, hybridService.listHybrids(project, model), "");
     }
 
-    @RequestMapping(value = "{hybrid}", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "{hybrid}", method = RequestMethod.GET, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getV2(@RequestHeader("Accept-Language") String lang, @PathVariable String hybrid) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getV2(@PathVariable String hybrid) {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, hybridService.getHybridInstance(hybrid), "");
     }

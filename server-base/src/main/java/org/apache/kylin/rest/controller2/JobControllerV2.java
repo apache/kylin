@@ -31,7 +31,6 @@ import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.rest.controller.BasicController;
-import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.JobService;
@@ -41,7 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -107,15 +105,14 @@ public class JobControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse listV2(@RequestHeader("Accept-Language") String lang, //
-            @RequestParam(value = "status", required = false) Integer[] status, //
+    public EnvelopeResponse listV2(@RequestParam(value = "status", required = false) Integer[] status, //
             @RequestParam(value = "timeFilter", required = true) Integer timeFilter, //
             @RequestParam(value = "cubeName", required = false) String cubeName, //
             @RequestParam(value = "projectName", required = false) String projectName, //
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, //
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize, //
-            @RequestParam(value = "sortby", required = false, defaultValue = "last_modify") String sortby, @RequestParam(value = "reverse", required = false, defaultValue = "true") Boolean reverse) {
-        MsgPicker.setMsg(lang);
+            @RequestParam(value = "sortby", required = false, defaultValue = "last_modify") String sortby,
+            @RequestParam(value = "reverse", required = false, defaultValue = "true") Boolean reverse) {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
         List<JobStatusEnum> statusList = new ArrayList<JobStatusEnum>();
@@ -126,7 +123,8 @@ public class JobControllerV2 extends BasicController {
             }
         }
 
-        List<JobInstance> jobInstanceList = jobService.searchJobs(cubeName, projectName, statusList, JobTimeFilterEnum.getByCode(timeFilter));
+        List<JobInstance> jobInstanceList = jobService.searchJobs(cubeName, projectName, statusList,
+                JobTimeFilterEnum.getByCode(timeFilter));
 
         if (sortby.equals("last_modify")) {
             if (reverse) {
@@ -174,10 +172,10 @@ public class JobControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{jobId}", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{jobId}", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getV2(@RequestHeader("Accept-Language") String lang, @PathVariable String jobId) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getV2(@PathVariable String jobId) {
 
         JobInstance jobInstance = jobService.getJobInstance(jobId);
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, jobInstance, "");
@@ -190,10 +188,10 @@ public class JobControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getStepOutputV2(@RequestHeader("Accept-Language") String lang, @PathVariable String jobId, @PathVariable String stepId) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse getStepOutputV2(@PathVariable String jobId, @PathVariable String stepId) {
 
         Map<String, String> result = new HashMap<String, String>();
         result.put("jobId", jobId);
@@ -209,10 +207,10 @@ public class JobControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{jobId}/resume", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{jobId}/resume", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse resumeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String jobId) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse resumeV2(@PathVariable String jobId) {
 
         final JobInstance jobInstance = jobService.getJobInstance(jobId);
         jobService.resumeJob(jobInstance);
@@ -226,10 +224,10 @@ public class JobControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{jobId}/cancel", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{jobId}/cancel", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse cancelV2(@RequestHeader("Accept-Language") String lang, @PathVariable String jobId) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse cancelV2(@PathVariable String jobId) throws IOException {
 
         final JobInstance jobInstance = jobService.getJobInstance(jobId);
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, jobService.cancelJob(jobInstance), "");
@@ -242,10 +240,10 @@ public class JobControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{jobId}/pause", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{jobId}/pause", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse pauseV2(@RequestHeader("Accept-Language") String lang, @PathVariable String jobId) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse pauseV2(@PathVariable String jobId) {
 
         final JobInstance jobInstance = jobService.getJobInstance(jobId);
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, jobService.pauseJob(jobInstance), "");
@@ -258,10 +256,10 @@ public class JobControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{jobId}/steps/{stepId}/rollback", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{jobId}/steps/{stepId}/rollback", method = { RequestMethod.PUT }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse rollbackV2(@RequestHeader("Accept-Language") String lang, @PathVariable String jobId, @PathVariable String stepId) {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse rollbackV2(@PathVariable String jobId, @PathVariable String stepId) {
 
         final JobInstance jobInstance = jobService.getJobInstance(jobId);
         jobService.rollbackJob(jobInstance, stepId);
@@ -275,10 +273,10 @@ public class JobControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{jobId}/drop", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{jobId}/drop", method = { RequestMethod.DELETE }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse dropJobV2(@RequestHeader("Accept-Language") String lang, @PathVariable String jobId) throws IOException {
-        MsgPicker.setMsg(lang);
+    public EnvelopeResponse dropJobV2(@PathVariable String jobId) throws IOException {
 
         JobInstance jobInstance = jobService.getJobInstance(jobId);
         jobService.dropJob(jobInstance);
