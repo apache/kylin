@@ -33,7 +33,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -119,19 +118,16 @@ public class RestClient {
     }
 
     public void wipeCache(String entity, String event, String cacheKey) throws IOException {
-        wipeCache(client, baseUrl, entity, event, cacheKey);
-    }
-
-    public static void wipeCache(HttpClient client, String baseUrl, String entity, String event, String cacheKey) throws IOException {
         String url = baseUrl + "/cache/" + entity + "/" + cacheKey + "/" + event;
         HttpPut request = new HttpPut(url);
 
         try {
             HttpResponse response = client.execute(request);
-            String msg = EntityUtils.toString(response.getEntity());
 
-            if (response.getStatusLine().getStatusCode() != 200)
+            if (response.getStatusLine().getStatusCode() != 200) {
+                String msg = EntityUtils.toString(response.getEntity());
                 throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with cache wipe url " + url + "\n" + msg);
+            }
         } catch (Exception ex) {
             throw new IOException(ex);
         } finally {
