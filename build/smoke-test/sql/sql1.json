@@ -3,7 +3,7 @@
   "partial": false,
   "affectedRowCount": 0,
   "isException": false,
-  "queryAdHoc": false,
+  "adHoc": false,
   "results": [
     [
       "10000"
