@@ -1,8 +1,9 @@
 {
-  "cube": "kylin_sales_cube",
+  "cube": "CUBE[name=kylin_sales_cube]",
   "partial": false,
   "affectedRowCount": 0,
   "isException": false,
+  "queryAdHoc": false,
   "results": [
     [
       "10000"
