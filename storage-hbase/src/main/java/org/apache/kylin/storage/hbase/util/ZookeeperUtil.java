@@ -18,35 +18,17 @@
 
 package org.apache.kylin.storage.hbase.util;
 
-import java.util.Arrays;
-
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HConstants;
-import org.apache.kylin.storage.hbase.HBaseConnection;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
+import org.apache.kylin.common.KylinConfig;
 
 public class ZookeeperUtil {
 
+    public static String ZOOKEEPER_UTIL_HBASE_CLASSNAME = "org.apache.kylin.storage.hbase.util.ZooKeeperUtilHbase";
+
     /**
-     * Get zookeeper connection string from HBase Configuration
-     *
-     * @return Zookeeper Connection string
+     * Get zookeeper connection string from HBase Configuration or from kylin.properties
      */
     public static String getZKConnectString() {
-        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        final String serverList = conf.get(HConstants.ZOOKEEPER_QUORUM);
-        final String port = conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-        return StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
-            @Nullable
-            @Override
-            public String apply(String input) {
-                return input + ":" + port;
-            }
-        }), ",");
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        return config.getZookeeperConnectString();
     }
 }

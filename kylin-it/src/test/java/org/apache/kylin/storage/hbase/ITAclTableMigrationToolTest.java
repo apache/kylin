@@ -41,10 +41,9 @@ import org.apache.kylin.common.persistence.ResourceStoreTest;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.rest.security.AclHBaseStorage;
+import org.apache.kylin.rest.security.AclConstant;
 import org.apache.kylin.rest.service.AclService;
 import org.apache.kylin.rest.service.AclTableMigrationTool;
-import org.apache.kylin.rest.service.LegacyUserService;
 import org.apache.kylin.rest.service.UserGrantedAuthority;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.Serializer;
@@ -67,9 +66,9 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
 
     private Logger logger = LoggerFactory.getLogger(ITAclTableMigrationToolTest.class);
 
-    private TableName aclTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclHBaseStorage.ACL_TABLE_NAME);
+    private TableName aclTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclConstant.ACL_TABLE_NAME);
 
-    private TableName userTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclHBaseStorage.USER_TABLE_NAME);
+    private TableName userTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclConstant.USER_TABLE_NAME);
 
     private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
 
@@ -127,15 +126,15 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
     private void createTestHTables() throws IOException {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         Admin hbaseAdmin = new HBaseAdmin(conf);
-        creatTable(hbaseAdmin, conf, aclTable, new String[] { AclHBaseStorage.ACL_INFO_FAMILY, AclHBaseStorage.ACL_ACES_FAMILY });
-        creatTable(hbaseAdmin, conf, userTable, new String[] { AclHBaseStorage.USER_AUTHORITY_FAMILY });
+        creatTable(hbaseAdmin, conf, aclTable, new String[] { AclConstant.ACL_INFO_FAMILY, AclConstant.ACL_ACES_FAMILY });
+        creatTable(hbaseAdmin, conf, userTable, new String[] { AclConstant.USER_AUTHORITY_FAMILY });
     }
 
     private void addRecordsToTable() throws Exception {
         Table htable = HBaseConnection.get(kylinConfig.getStorageUrl()).getTable(userTable);
         Pair<byte[], byte[]> pair = getRandomUserRecord();
         Put put = new Put(pair.getKey());
-        put.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), pair.getSecond());
+        put.addColumn(Bytes.toBytes(AclConstant.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclConstant.USER_AUTHORITY_COLUMN), pair.getSecond());
         htable.put(put);
     }
 
@@ -196,7 +195,7 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
         UserGrantedAuthority[] serializing = new UserGrantedAuthority[authorities.size() + 1];
 
         // password is stored as the [0] authority
-        serializing[0] = new UserGrantedAuthority(LegacyUserService.PWD_PREFIX + "password");
+        serializing[0] = new UserGrantedAuthority(AclConstant.PWD_PREFIX + "password");
         int i = 1;
         for (GrantedAuthority a : authorities) {
             serializing[i++] = new UserGrantedAuthority(a.getAuthority());

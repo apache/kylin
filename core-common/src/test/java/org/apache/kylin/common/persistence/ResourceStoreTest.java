@@ -55,7 +55,8 @@ public class ResourceStoreTest {
     }
 
     public static String mockUrl(String tag, KylinConfig kylinConfig) {
-        return kylinConfig.getMetadataUrlPrefix() + "@" + tag;
+        String str = kylinConfig.getMetadataUrlPrefix() + "@" + tag;
+        return str;
     }
 
     private static void testAStore(ResourceStore store) throws IOException {

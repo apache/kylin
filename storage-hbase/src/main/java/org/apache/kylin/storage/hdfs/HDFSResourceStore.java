@@ -40,6 +40,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class HDFSResourceStore extends ResourceStore {
@@ -50,13 +51,13 @@ public class HDFSResourceStore extends ResourceStore {
 
     private FileSystem fs;
 
+    private static final String HDFS_SCHEME = "hdfs";
+
     public HDFSResourceStore(KylinConfig kylinConfig) throws Exception {
         super(kylinConfig);
         StorageURL metadataUrl = kylinConfig.getMetadataUrl();
+        Preconditions.checkState(HDFS_SCHEME.equals(metadataUrl.getScheme()));
         
-        if (!metadataUrl.getScheme().equals("hdfs"))
-            throw new IOException("kylin.metadata.url not recognized for HDFSResourceStore:" + metadataUrl);
-
         String path = metadataUrl.getIdentifier();
         fs = HadoopUtil.getFileSystem(path);
         Path metadataPath = new Path(path);

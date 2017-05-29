@@ -67,10 +67,15 @@ public class HBaseResourceStore extends ResourceStore {
     private static final Logger logger = LoggerFactory.getLogger(HBaseResourceStore.class);
 
     private static final String FAMILY = "f";
+
     private static final byte[] B_FAMILY = Bytes.toBytes(FAMILY);
+
     private static final String COLUMN = "c";
+
     private static final byte[] B_COLUMN = Bytes.toBytes(COLUMN);
+
     private static final String COLUMN_TS = "t";
+
     private static final byte[] B_COLUMN_TS = Bytes.toBytes(COLUMN_TS);
 
     final String tableName;
@@ -82,10 +87,9 @@ public class HBaseResourceStore extends ResourceStore {
 
     public HBaseResourceStore(KylinConfig kylinConfig) throws IOException {
         super(kylinConfig);
-
         metadataUrl = buildMetadataUrl(kylinConfig);
         tableName = metadataUrl.getIdentifier();
-        createHTableIfNeeded(getAllInOneTableName());
+        createHTableIfNeeded(tableName);
     }
 
     private StorageURL buildMetadataUrl(KylinConfig kylinConfig) throws IOException {
@@ -105,10 +109,6 @@ public class HBaseResourceStore extends ResourceStore {
 
     private void createHTableIfNeeded(String tableName) throws IOException {
         HBaseConnection.createHTableIfNeeded(getConnection(), tableName, FAMILY);
-    }
-
-    private String getAllInOneTableName() {
-        return tableName;
     }
 
     @Override
@@ -164,7 +164,7 @@ public class HBaseResourceStore extends ResourceStore {
         byte[] endRow = Bytes.toBytes(lookForPrefix);
         endRow[endRow.length - 1]++;
 
-        Table table = getConnection().getTable(TableName.valueOf(getAllInOneTableName()));
+        Table table = getConnection().getTable(TableName.valueOf(tableName));
         Scan scan = new Scan(startRow, endRow);
         if ((filter != null && filter instanceof KeyOnlyFilter) == false) {
             scan.addColumn(B_FAMILY, B_COLUMN_TS);
@@ -288,7 +288,7 @@ public class HBaseResourceStore extends ResourceStore {
         IOUtils.copy(content, bout);
         bout.close();
 
-        Table table = getConnection().getTable(TableName.valueOf(getAllInOneTableName()));
+        Table table = getConnection().getTable(TableName.valueOf(tableName));
         try {
             byte[] row = Bytes.toBytes(resPath);
             Put put = buildPut(resPath, ts, row, bout.toByteArray(), table);
@@ -302,7 +302,7 @@ public class HBaseResourceStore extends ResourceStore {
     @Override
     protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
             throws IOException, IllegalStateException {
-        Table table = getConnection().getTable(TableName.valueOf(getAllInOneTableName()));
+        Table table = getConnection().getTable(TableName.valueOf(tableName));
         try {
             byte[] row = Bytes.toBytes(resPath);
             byte[] bOldTS = oldTS == 0 ? null : Bytes.toBytes(oldTS);
@@ -325,7 +325,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected void deleteResourceImpl(String resPath) throws IOException {
-        Table table = getConnection().getTable(TableName.valueOf(getAllInOneTableName()));
+        Table table = getConnection().getTable(TableName.valueOf(tableName));
         try {
             boolean hdfsResourceExist = false;
             Result result = internalGetFromHTable(table, resPath, true, false);
@@ -354,11 +354,11 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected String getReadableResourcePathImpl(String resPath) {
-        return getAllInOneTableName() + "(key='" + resPath + "')@" + kylinConfig.getMetadataUrl();
+        return tableName + "(key='" + resPath + "')@" + kylinConfig.getMetadataUrl();
     }
 
     private Result getFromHTable(String path, boolean fetchContent, boolean fetchTimestamp) throws IOException {
-        Table table = getConnection().getTable(TableName.valueOf(getAllInOneTableName()));
+        Table table = getConnection().getTable(TableName.valueOf(tableName));
         try {
             return internalGetFromHTable(table, path, fetchContent, fetchTimestamp);
         } finally {
@@ -429,6 +429,6 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     public String toString() {
-        return getAllInOneTableName() + "@hbase";
+        return tableName + "@hbase";
     }
 }

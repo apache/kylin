@@ -35,6 +35,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.ZooKeeperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -188,16 +189,16 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     private String cachedHdfsWorkingDirectory;
-    
+
     public String getHdfsWorkingDirectory() {
         if (cachedHdfsWorkingDirectory != null)
             return cachedHdfsWorkingDirectory;
-        
+
         String root = getRequired("kylin.env.hdfs-working-dir");
         Path path = new Path(root);
         if (!path.isAbsolute())
             throw new IllegalArgumentException("kylin.env.hdfs-working-dir must be absolute, but got " + root);
-        
+
         // make sure path is qualified
         try {
             FileSystem fs = path.getFileSystem(new Configuration());
@@ -205,18 +206,33 @@ abstract public class KylinConfigBase implements Serializable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        
+
         // append metadata-url prefix
         root = new Path(path, StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).toString();
-        
+
         if (!root.endsWith("/"))
             root += "/";
-        
+
         cachedHdfsWorkingDirectory = root;
         if (cachedHdfsWorkingDirectory.startsWith("file:")) {
             cachedHdfsWorkingDirectory = cachedHdfsWorkingDirectory.replace("file:", "file://");
         }
         return cachedHdfsWorkingDirectory;
+    }
+    
+    /**
+     * A comma separated list of host:port pairs, each corresponding to a ZooKeeper server
+     */
+    public String getZookeeperConnectString() {
+        String str = getOptional("kylin.env.zookeeper-connect-string");
+        if (str != null)
+            return str;
+        
+        str = ZooKeeperUtil.getZKConnectStringFromHBase();
+        if (str != null)
+            return str;
+        
+        throw new RuntimeException("Please set 'kylin.env.zookeeper-connect-string' in kylin.properties");
     }
 
     // ============================================================================
@@ -962,13 +978,13 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isAdhocEnabled() {
-        return StringUtils.isNotEmpty(getAdHocRunnerClassName()); 
+        return StringUtils.isNotEmpty(getAdHocRunnerClassName());
     }
 
     public String getAdHocRunnerClassName() {
         return getOptional("kylin.query.ad-hoc.runner.class-name", "");
     }
-    
+
     public String getAdHocConverterClassName() {
         return getOptional("kylin.query.ad-hoc.converter.class-name", "org.apache.kylin.storage.adhoc.HiveAdhocConverter");
     }

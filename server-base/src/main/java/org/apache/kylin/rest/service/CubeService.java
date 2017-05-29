@@ -26,12 +26,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.WeakHashMap;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -61,8 +59,6 @@ import org.apache.kylin.rest.request.MetricsRequest;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.security.AclPermission;
-import org.apache.kylin.storage.hbase.HBaseConnection;
-import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -405,33 +401,27 @@ public class CubeService extends BasicService {
      *
      * @param tableName The table name.
      * @return The HBaseResponse object contains table size, region count. null
-     * if error happens.
+     * if error happens
      * @throws IOException Exception when HTable resource is not closed correctly.
      */
     public HBaseResponse getHTableInfo(String tableName) throws IOException {
         if (htableInfoCache.containsKey(tableName)) {
             return htableInfoCache.get(tableName);
         }
-        Connection conn = HBaseConnection.get(this.getConfig().getStorageUrl());
-        HBaseResponse hr = null;
-        long tableSize = 0;
-        int regionCount = 0;
 
-        HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(tableName, conn);
-        Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
-
-        for (long s : sizeMap.values()) {
-            tableSize += s;
+        HBaseResponse hr = new HBaseResponse();
+        if ("hbase".equals(getConfig().getMetadataUrl().getScheme())) {
+            try {
+                // use reflection to isolate NoClassDef errors when HBase is not available
+                hr = (HBaseResponse) Class.forName("org.apache.kylin.rest.service.HBaseInfoUtil")//
+                        .getMethod("getHBaseInfo", new Class[] { String.class, String.class })//
+                        .invoke(null, new Object[] { tableName, this.getConfig().getStorageUrl() });
+            } catch (Throwable e) {
+                throw new IOException(e);
+            }
         }
 
-        regionCount = sizeMap.size();
-
-        // Set response.
-        hr = new HBaseResponse();
-        hr.setTableSize(tableSize);
-        hr.setRegionCount(regionCount);
         htableInfoCache.put(tableName, hr);
-
         return hr;
     }
 

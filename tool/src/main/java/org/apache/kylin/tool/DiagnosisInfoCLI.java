@@ -20,6 +20,7 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -31,6 +32,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -159,11 +161,13 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                 public void run() {
                     logger.info("Start to extract HBase usage.");
                     try {
+                        // use reflection to isolate NoClassDef errors when HBase is not available
                         String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-submodule", "true" };
-                        HBaseUsageExtractor hBaseUsageExtractor = new HBaseUsageExtractor();
                         logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
-                        hBaseUsageExtractor.execute(hbaseArgs);
-                    } catch (Exception e) {
+                        Object extractor = ClassUtil.newInstance("org.apache.kylin.tool.HBaseUsageExtractor");
+                        Method execute = extractor.getClass().getDeclaredMethod("execute", String[].class);
+                        execute.invoke(extractor, (Object) hbaseArgs);
+                    } catch (Throwable e) {
                         logger.error("Error in export HBase usage.", e);
                     }
                 }

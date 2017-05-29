@@ -30,7 +30,7 @@ import org.apache.kylin.job.lock.JobLock;
 public class ZookeeperJobLock implements DistributedLock, JobLock {
 
     private ZookeeperDistributedLock lock = (ZookeeperDistributedLock) new ZookeeperDistributedLock.Factory().lockForCurrentProcess();
-    
+
     @Override
     public String getClient() {
         return lock.getClient();
@@ -60,7 +60,7 @@ public class ZookeeperJobLock implements DistributedLock, JobLock {
     public boolean isLockedByMe(String lockPath) {
         return lock.isLockedByMe(lockPath);
     }
-    
+
     @Override
     public void unlock(String lockPath) {
         lock.unlock(lockPath);
@@ -70,6 +70,7 @@ public class ZookeeperJobLock implements DistributedLock, JobLock {
     public void purgeLocks(String lockPathRoot) {
         lock.purgeLocks(lockPathRoot);
     }
+
     @Override
     public Closeable watchLocks(String lockPathRoot, Executor executor, Watcher watcher) {
         return lock.watchLocks(lockPathRoot, executor, watcher);

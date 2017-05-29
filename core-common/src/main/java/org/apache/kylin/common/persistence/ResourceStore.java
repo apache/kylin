@@ -119,6 +119,9 @@ abstract public class ResourceStore {
         return listResourcesImpl(path);
     }
 
+    /**
+     * return null if given path is not a folder or not exists
+     */
     abstract protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException;
 
     public String createMetaStoreUUID() throws IOException {
@@ -201,6 +204,9 @@ abstract public class ResourceStore {
         }
     }
 
+    /**
+     * return empty list if given path is not a folder or not exists
+     */
     abstract protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException;
 
     /**
@@ -452,5 +458,4 @@ abstract public class ResourceStore {
 
         return metaDirURI;
     }
-
 }

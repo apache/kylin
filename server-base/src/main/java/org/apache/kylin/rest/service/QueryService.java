@@ -20,6 +20,8 @@ package org.apache.kylin.rest.service;
 
 import static org.apache.kylin.common.util.CheckUtil.checkCondition;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -31,7 +33,6 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,21 +47,17 @@ import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
-import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -92,9 +89,7 @@ import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.rest.util.AdHocUtil;
-import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.rest.util.TableauInterceptor;
-import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,6 +100,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -123,18 +119,12 @@ public class QueryService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-    public static final String USER_QUERY_FAMILY = "q";
-    private static final String USER_TABLE_NAME = "_user";
-    private static final String USER_QUERY_COLUMN = "c";
-
     public static final String SUCCESS_QUERY_CACHE = "StorageCache";
     public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";
+    public static final String QUERY_STORE_PATH_PREFIX = "/query/";
 
-    private final Serializer<Query[]> querySerializer = new Serializer<Query[]>(Query[].class);
-    protected final BadQueryDetector badQueryDetector = new BadQueryDetector();
-
-    private final StorageURL hbaseUrl;
-    private final String userTableName;
+    final BadQueryDetector badQueryDetector = new BadQueryDetector();
+    final ResourceStore queryStore;
 
     @Autowired
     protected CacheManager cacheManager;
@@ -156,10 +146,7 @@ public class QueryService extends BasicService {
     }
 
     public QueryService() {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        hbaseUrl = kylinConfig.getMetadataUrl();
-        userTableName = hbaseUrl.getIdentifier() + USER_TABLE_NAME;
-
+        queryStore = ResourceStore.getStore(getConfig());
         badQueryDetector.start();
     }
 
@@ -183,18 +170,10 @@ public class QueryService extends BasicService {
         List<Query> queries = getQueries(creator);
         queries.add(query);
         Query[] queryArray = new Query[queries.size()];
-
-        byte[] bytes = querySerializer.serialize(queries.toArray(queryArray));
-        Table htable = null;
-        try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(TableName.valueOf(userTableName));
-            Put put = new Put(Bytes.toBytes(creator));
-            put.addColumn(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN), bytes);
-
-            htable.put(put);
-        } finally {
-            IOUtils.closeQuietly(htable);
-        }
+        QueryRecord record = new QueryRecord(queries.toArray(queryArray));
+        queryStore.deleteResource(getQueryKeyById(creator));
+        queryStore.putResource(getQueryKeyById(creator), record, 0, QueryRecordSerializer.getInstance());
+        return;
     }
 
     public void removeQuery(final String creator, final String id) throws IOException {
@@ -214,45 +193,24 @@ public class QueryService extends BasicService {
         if (!changed) {
             return;
         }
-
         Query[] queryArray = new Query[queries.size()];
-        byte[] bytes = querySerializer.serialize(queries.toArray(queryArray));
-        Table htable = null;
-        try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(TableName.valueOf(userTableName));
-            Put put = new Put(Bytes.toBytes(creator));
-            put.addColumn(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN), bytes);
-
-            htable.put(put);
-        } finally {
-            IOUtils.closeQuietly(htable);
-        }
+        QueryRecord record = new QueryRecord(queries.toArray(queryArray));
+        queryStore.deleteResource(getQueryKeyById(creator));
+        queryStore.putResource(getQueryKeyById(creator), record, 0, QueryRecordSerializer.getInstance());
+        return;
     }
 
     public List<Query> getQueries(final String creator) throws IOException {
         if (null == creator) {
             return null;
         }
-
         List<Query> queries = new ArrayList<Query>();
-        Table htable = null;
-        try {
-            org.apache.hadoop.hbase.client.Connection conn = HBaseConnection.get(hbaseUrl);
-            HBaseConnection.createHTableIfNeeded(conn, userTableName, USER_QUERY_FAMILY);
-
-            htable = HBaseConnection.get(hbaseUrl).getTable(TableName.valueOf(userTableName));
-            Get get = new Get(Bytes.toBytes(creator));
-            get.addFamily(Bytes.toBytes(USER_QUERY_FAMILY));
-            Result result = htable.get(get);
-            Query[] query = querySerializer.deserialize(result.getValue(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN)));
-
-            if (null != query) {
-                queries.addAll(Arrays.asList(query));
+        QueryRecord record = queryStore.getResource(getQueryKeyById(creator), QueryRecord.class, QueryRecordSerializer.getInstance());
+        if (record != null) {
+            for (Query query : record.getQueries()) {
+                queries.add(query);
             }
-        } finally {
-            IOUtils.closeQuietly(htable);
         }
-
         return queries;
     }
 
@@ -892,4 +850,58 @@ public class QueryService extends BasicService {
     public void setCacheManager(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
     }
+
+    private static String getQueryKeyById(String creator) {
+        return QUERY_STORE_PATH_PREFIX + creator;
+    }
+
+    private static class QueryRecordSerializer implements Serializer<QueryRecord> {
+
+        private static final QueryRecordSerializer serializer = new QueryRecordSerializer();
+
+        QueryRecordSerializer() {
+
+        }
+
+        public static QueryRecordSerializer getInstance() {
+            return serializer;
+        }
+
+        @Override
+        public void serialize(QueryRecord record, DataOutputStream out) throws IOException {
+            String jsonStr = JsonUtil.writeValueAsString(record);
+            out.writeUTF(jsonStr);
+        }
+
+        @Override
+        public QueryRecord deserialize(DataInputStream in) throws IOException {
+            String jsonStr = in.readUTF();
+            return JsonUtil.readValue(jsonStr, QueryRecord.class);
+        }
+    }
+
+}
+
+@SuppressWarnings("serial")
+class QueryRecord extends RootPersistentEntity {
+
+    @JsonProperty()
+    private Query[] queries;
+
+    public QueryRecord() {
+
+    }
+
+    public QueryRecord(Query[] queries) {
+        this.queries = queries;
+    }
+
+    public Query[] getQueries() {
+        return queries;
+    }
+
+    public void setQueries(Query[] queries) {
+        this.queries = queries;
+    }
+
 }

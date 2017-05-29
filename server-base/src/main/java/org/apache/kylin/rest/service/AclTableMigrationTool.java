@@ -28,19 +28,18 @@ import java.util.Map;
 import java.util.NavigableMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.rest.security.AclHBaseStorage;
+import org.apache.kylin.rest.security.AclConstant;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.HBaseResourceStore;
@@ -74,16 +73,16 @@ public class AclTableMigrationTool {
             }
             logger.info("Start to migrate acl table data");
             ResourceStore store = ResourceStore.getStore(kylinConfig);
-            String userTableName = kylinConfig.getMetadataUrlPrefix() + AclHBaseStorage.USER_TABLE_NAME;
+            String userTableName = kylinConfig.getMetadataUrlPrefix() + AclConstant.USER_TABLE_NAME;
             //System.out.println("user table name : " + userTableName);
-            String aclTableName = kylinConfig.getMetadataUrlPrefix() + AclHBaseStorage.ACL_TABLE_NAME;
+            String aclTableName = kylinConfig.getMetadataUrlPrefix() + AclConstant.ACL_TABLE_NAME;
             if (needMigrateTable(aclTableName, store)) {
                 logger.info("Migrate table : {}", aclTableName);
-                migrate(store, AclHBaseStorage.ACL_TABLE_NAME, kylinConfig);
+                migrate(store, AclConstant.ACL_TABLE_NAME, kylinConfig);
             }
             if (needMigrateTable(userTableName, store)) {
                 logger.info("Migrate table : {}", userTableName);
-                migrate(store, AclHBaseStorage.USER_TABLE_NAME, kylinConfig);
+                migrate(store, AclConstant.USER_TABLE_NAME, kylinConfig);
             }
         }
     }
@@ -95,8 +94,8 @@ public class AclTableMigrationTool {
             return false;
         }
 
-        String userTableName = kylinConfig.getMetadataUrlPrefix() + AclHBaseStorage.USER_TABLE_NAME;
-        String aclTableName = kylinConfig.getMetadataUrlPrefix() + AclHBaseStorage.ACL_TABLE_NAME;
+        String userTableName = kylinConfig.getMetadataUrlPrefix() + AclConstant.USER_TABLE_NAME;
+        String aclTableName = kylinConfig.getMetadataUrlPrefix() + AclConstant.ACL_TABLE_NAME;
         if (needMigrateTable(aclTableName, store) || needMigrateTable(userTableName, store))
             return true;
         return false;
@@ -112,8 +111,8 @@ public class AclTableMigrationTool {
     private void migrate(ResourceStore store, String tableType, KylinConfig kylinConfig) throws IOException {
 
         switch (tableType) {
-        case AclHBaseStorage.ACL_TABLE_NAME:
-            String aclTableName = kylinConfig.getMetadataUrlPrefix() + AclHBaseStorage.ACL_TABLE_NAME;
+        case AclConstant.ACL_TABLE_NAME:
+            String aclTableName = kylinConfig.getMetadataUrlPrefix() + AclConstant.ACL_TABLE_NAME;
             convertToResourceStore(kylinConfig, aclTableName, store, new ResultConverter() {
                 @Override
                 public void convertResult(ResultScanner rs, ResourceStore store) throws IOException {
@@ -135,8 +134,8 @@ public class AclTableMigrationTool {
                 }
             });
             break;
-        case AclHBaseStorage.USER_TABLE_NAME:
-            String userTableName = kylinConfig.getMetadataUrlPrefix() + AclHBaseStorage.USER_TABLE_NAME;
+        case AclConstant.USER_TABLE_NAME:
+            String userTableName = kylinConfig.getMetadataUrlPrefix() + AclConstant.USER_TABLE_NAME;
 
             convertToResourceStore(kylinConfig, userTableName, store, new ResultConverter() {
                 @Override
@@ -162,9 +161,10 @@ public class AclTableMigrationTool {
     }
 
     private boolean checkTableExist(String tableName) throws IOException {
-        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        Admin hbaseAdmin = new HBaseAdmin(conf);
-        return hbaseAdmin.tableExists(TableName.valueOf(tableName));
+        StorageURL metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        try (Admin admin = HBaseConnection.get(metadataUrl).getAdmin()) {
+            return admin.tableExists(TableName.valueOf(tableName));
+        }
     }
 
     private boolean isTableAlreadyMigrate(ResourceStore store, String tableName) throws IOException {
@@ -189,7 +189,7 @@ public class AclTableMigrationTool {
     }
 
     private DomainObjectInfo getDomainObjectInfoFromRs(Result result) {
-        String type = String.valueOf(result.getValue(Bytes.toBytes(AclHBaseStorage.ACL_INFO_FAMILY), Bytes.toBytes(LegacyAclService.ACL_INFO_FAMILY_TYPE_COLUMN)));
+        String type = String.valueOf(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_TYPE_COLUMN)));
         String id = String.valueOf(result.getRow());
         DomainObjectInfo newInfo = new DomainObjectInfo();
         newInfo.setId(id);
@@ -198,23 +198,23 @@ public class AclTableMigrationTool {
     }
 
     private DomainObjectInfo getParentDomainObjectInfoFromRs(Result result) throws IOException {
-        DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(Bytes.toBytes(AclHBaseStorage.ACL_INFO_FAMILY), Bytes.toBytes(LegacyAclService.ACL_INFO_FAMILY_PARENT_COLUMN)));
+        DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_PARENT_COLUMN)));
         return parentInfo;
     }
 
     private boolean getInheriting(Result result) {
-        boolean entriesInheriting = Bytes.toBoolean(result.getValue(Bytes.toBytes(AclHBaseStorage.ACL_INFO_FAMILY), Bytes.toBytes(LegacyAclService.ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN)));
+        boolean entriesInheriting = Bytes.toBoolean(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN)));
         return entriesInheriting;
     }
 
     private SidInfo getOwnerSidInfo(Result result) throws IOException {
-        SidInfo owner = sidSerializer.deserialize(result.getValue(Bytes.toBytes(AclHBaseStorage.ACL_INFO_FAMILY), Bytes.toBytes(LegacyAclService.ACL_INFO_FAMILY_OWNER_COLUMN)));
+        SidInfo owner = sidSerializer.deserialize(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_OWNER_COLUMN)));
         return owner;
     }
 
     private Map<String, AceInfo> getAllAceInfo(Result result) throws IOException {
         Map<String, AceInfo> allAceInfoMap = new HashMap<>();
-        NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(Bytes.toBytes(AclHBaseStorage.ACL_ACES_FAMILY));
+        NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(Bytes.toBytes(AclConstant.ACL_ACES_FAMILY));
         for (Map.Entry<byte[], byte[]> entry : familyMap.entrySet()) {
             String sid = String.valueOf(entry.getKey());
             AceInfo aceInfo = aceSerializer.deserialize(familyMap.get(entry.getValue()));
@@ -245,7 +245,7 @@ public class AclTableMigrationTool {
 
         String username = Bytes.toString(result.getRow());
 
-        byte[] valueBytes = result.getValue(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
+        byte[] valueBytes = result.getValue(Bytes.toBytes(AclConstant.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclConstant.USER_AUTHORITY_COLUMN));
         UserGrantedAuthority[] deserialized = ugaSerializer.deserialize(valueBytes);
 
         String password = "";
@@ -253,8 +253,8 @@ public class AclTableMigrationTool {
 
         // password is stored at [0] of authorities for backward compatibility
         if (deserialized != null) {
-            if (deserialized.length > 0 && deserialized[0].getAuthority().startsWith(LegacyUserService.PWD_PREFIX)) {
-                password = deserialized[0].getAuthority().substring(LegacyUserService.PWD_PREFIX.length());
+            if (deserialized.length > 0 && deserialized[0].getAuthority().startsWith(AclConstant.PWD_PREFIX)) {
+                password = deserialized[0].getAuthority().substring(AclConstant.PWD_PREFIX.length());
                 authorities = Arrays.asList(deserialized).subList(1, deserialized.length);
             } else {
                 authorities = Arrays.asList(deserialized);

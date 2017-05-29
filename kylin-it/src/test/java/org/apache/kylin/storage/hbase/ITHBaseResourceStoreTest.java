@@ -18,6 +18,9 @@
 
 package org.apache.kylin.storage.hbase;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -28,11 +31,10 @@ import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+@Ignore
 public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
 
     private KylinConfig kylinConfig;

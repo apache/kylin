@@ -112,11 +112,4 @@
               p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
     </beans>
 
-    <!-- hbase storage/global lock Config -->
-    <beans profile="ldap,saml">
-        <bean id="aclHBaseStorage" class="org.apache.kylin.rest.security.RealAclHBaseStorage"/>
-    </beans>
-    <beans profile="testing">
-        <bean id="aclHBaseStorage" class="org.apache.kylin.rest.security.MockAclHBaseStorage"/>
-    </beans>
 </beans>

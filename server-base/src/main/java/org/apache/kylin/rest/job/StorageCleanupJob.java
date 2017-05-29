@@ -19,15 +19,10 @@
 package org.apache.kylin.rest.job;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -39,9 +34,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -56,9 +48,8 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.metadata.realization.IRealizationConstants;
-import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.ISourceMetadataExplorer;
+import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,55 +70,16 @@ public class StorageCleanupJob extends AbstractApplication {
     protected boolean force = false;
     protected static ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-    private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
-        CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        // get all kylin hbase tables
-        try (HBaseAdmin hbaseAdmin = new HBaseAdmin(conf)) {
-            String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;
-            HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
-            List<String> allTablesNeedToBeDropped = new ArrayList<String>();
-            for (HTableDescriptor desc : tableDescriptors) {
-                String host = desc.getValue(IRealizationConstants.HTableTag);
-                if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
-                    //only take care htables that belongs to self, and created more than 2 days
-                    allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
-                }
-            }
-
-            // remove every segment htable from drop list
-            for (CubeInstance cube : cubeMgr.listAllCubes()) {
-                for (CubeSegment seg : cube.getSegments()) {
-                    String tablename = seg.getStorageLocationIdentifier();
-                    if (allTablesNeedToBeDropped.contains(tablename)) {
-                        allTablesNeedToBeDropped.remove(tablename);
-                        logger.info("Exclude table " + tablename + " from drop list, as the table belongs to cube " + cube.getName() + " with status " + cube.getStatus());
-                    }
-                }
-            }
-
-            if (delete == true) {
-                // drop tables
-                ExecutorService executorService = Executors.newSingleThreadExecutor();
-                for (String htableName : allTablesNeedToBeDropped) {
-                    FutureTask futureTask = new FutureTask(new DeleteHTableRunnable(hbaseAdmin, htableName));
-                    executorService.execute(futureTask);
-                    try {
-                        futureTask.get(deleteTimeout, TimeUnit.MINUTES);
-                    } catch (TimeoutException e) {
-                        logger.warn("It fails to delete htable " + htableName + ", for it cost more than " + deleteTimeout + " minutes!");
-                        futureTask.cancel(true);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        futureTask.cancel(true);
-                    }
-                }
-                executorService.shutdown();
-            } else {
-                System.out.println("--------------- Tables To Be Dropped ---------------");
-                for (String htableName : allTablesNeedToBeDropped) {
-                    System.out.println(htableName);
-                }
-                System.out.println("----------------------------------------------------");
+    protected void cleanUnusedHBaseTables() throws IOException {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        if ("hbase".equals(config.getMetadataUrl().getScheme())) {
+            try {
+                // use reflection to isolate NoClassDef errors when HBase is not available
+                Class hbaseCleanUpUtil = Class.forName("org.apache.kylin.rest.job.StorageCleanJobHbaseUtil");
+                Method cleanUnusedHBaseTables = hbaseCleanUpUtil.getDeclaredMethod("cleanUnusedHBaseTables", boolean.class, int.class);
+                cleanUnusedHBaseTables.invoke(hbaseCleanUpUtil, delete, deleteTimeout);
+            } catch (Throwable e) {
+                throw new IOException(e);
             }
         }
     }
@@ -147,41 +99,13 @@ public class StorageCleanupJob extends AbstractApplication {
         logger.info("force option value: '" + optionsHelper.getOptionValue(OPTION_FORCE) + "'");
         delete = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_DELETE));
         force = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_FORCE));
-
-        Configuration conf = HBaseConfiguration.create();
-
-        cleanUnusedIntermediateHiveTable(conf);
-        cleanUnusedHdfsFiles(conf);
-        cleanUnusedHBaseTables(conf);
-
+        cleanUnusedIntermediateHiveTable();
+        cleanUnusedHdfsFiles();
+        cleanUnusedHBaseTables();
     }
 
-    class DeleteHTableRunnable implements Callable {
-        HBaseAdmin hbaseAdmin;
-        String htableName;
-
-        DeleteHTableRunnable(HBaseAdmin hbaseAdmin, String htableName) {
-            this.hbaseAdmin = hbaseAdmin;
-            this.htableName = htableName;
-        }
-
-        public Object call() throws Exception {
-            logger.info("Deleting HBase table " + htableName);
-            if (hbaseAdmin.tableExists(htableName)) {
-                if (hbaseAdmin.isTableEnabled(htableName)) {
-                    hbaseAdmin.disableTable(htableName);
-                }
-
-                hbaseAdmin.deleteTable(htableName);
-                logger.info("Deleted HBase table " + htableName);
-            } else {
-                logger.info("HBase table" + htableName + " does not exist");
-            }
-            return null;
-        }
-    }
-
-    private void cleanUnusedHdfsFiles(Configuration conf) throws IOException {
+    private void cleanUnusedHdfsFiles() throws IOException {
+        Configuration conf = HadoopUtil.getCurrentConfiguration();
         JobEngineConfig engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
@@ -245,7 +169,8 @@ public class StorageCleanupJob extends AbstractApplication {
         }
     }
 
-    private void cleanUnusedIntermediateHiveTable(Configuration conf) throws Exception {
+    private void cleanUnusedIntermediateHiveTable() throws Exception {
+        Configuration conf = HadoopUtil.getCurrentConfiguration();
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
         JobEngineConfig engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         final CliCommandExecutor cmdExec = config.getCliCommandExecutor();

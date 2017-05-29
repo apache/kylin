@@ -14,29 +14,34 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
 package org.apache.kylin.rest.security;
 
-import java.io.IOException;
-
-import org.apache.hadoop.hbase.client.Table;
-
 /**
+ * Created by xiefan on 17-5-3.
  */
-@Deprecated  //use ResourceStore interface instead.
-public interface AclHBaseStorage {
+public interface AclConstant {
 
-    String ACL_INFO_FAMILY = "i";
-    String ACL_ACES_FAMILY = "a";
-    String ACL_TABLE_NAME = "_acl";
+    static final String ACL_INFO_FAMILY = "i";
 
-    String USER_AUTHORITY_FAMILY = "a";
-    String USER_TABLE_NAME = "_user";
-    String USER_AUTHORITY_COLUMN = "c";
+    static final String ACL_ACES_FAMILY = "a";
 
-    String prepareHBaseTable(Class<?> clazz) throws IOException;
+    static final String ACL_TABLE_NAME = "_acl";
 
-    Table getTable(String tableName) throws IOException;
+    static final String USER_AUTHORITY_FAMILY = "a";
 
+    static final String USER_TABLE_NAME = "_user";
+
+    static final String USER_AUTHORITY_COLUMN = "c";
+
+    static String ACL_INFO_FAMILY_TYPE_COLUMN = "t";
+
+    static String ACL_INFO_FAMILY_OWNER_COLUMN = "o";
+
+    static String ACL_INFO_FAMILY_PARENT_COLUMN = "p";
+
+    static String ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN = "i";
+
+    static final String PWD_PREFIX = "PWD:";
 }
