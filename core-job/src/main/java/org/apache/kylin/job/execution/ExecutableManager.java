@@ -18,6 +18,10 @@
 
 package org.apache.kylin.job.execution;
 
+import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
+import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
+import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
+
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
@@ -41,10 +45,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
-import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
-import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
 
 /**
  */
@@ -249,6 +249,15 @@ public class ExecutableManager {
             return ret;
         } catch (PersistentException e) {
             logger.error("error get All Jobs", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public AbstractExecutable getAbstractExecutable(String uuid, Class<? extends AbstractExecutable> expectedClass) {
+        try {
+            return parseToAbstract(executableDao.getJob(uuid), expectedClass);
+        } catch (PersistentException e) {
+            logger.error("fail to get job:" + uuid, e);
             throw new RuntimeException(e);
         }
     }
