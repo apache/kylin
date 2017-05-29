@@ -18,8 +18,10 @@
 #
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/find-hadoop-conf-dir.sh
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/load-hive-conf.sh
+
+## ${dir} assigned to $KYLIN_HOME/bin in header.sh
+source ${dir}/find-hadoop-conf-dir.sh
+source ${dir}/load-hive-conf.sh
 
 source ${dir}/check-env.sh "if-not-yet"
 job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
