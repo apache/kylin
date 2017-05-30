@@ -261,7 +261,7 @@
   "auto_merge_time_ranges" : null,
   "retention_range" : 0,
   "engine_type" : %default_engine_type%,
-  "storage_type" : %default_engine_type%,
+  "storage_type" : %default_storage_type%,
   "override_kylin_properties" : {
     "kylin.cube.aggrgroup.is-mandatory-only-valid" : "true"
   }
