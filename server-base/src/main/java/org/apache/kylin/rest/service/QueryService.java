@@ -729,7 +729,7 @@ public class QueryService extends BasicService {
                 results.add(oneRow);
             }
         } catch (SQLException sqlException) {
-            isAdHoc = AdHocUtil.doAdHocQuery(correctedSql, results, columnMetas, sqlException);
+            isAdHoc = AdHocUtil.doAdHocQuery(sqlRequest.getProject(), correctedSql, results, columnMetas, sqlException);
         } finally {
             close(resultSet, stat, conn);
         }

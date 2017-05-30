@@ -476,13 +476,13 @@ public class DataModelDesc extends RootPersistentEntity {
             }
 
             CCInfo other = ccInfoMap.get(computedColumnDesc.getFullName());
-            if (other == null || (other.dataModelDescs.size() == 1 && other.dataModelDescs.contains(this))) {
+            if (other == null || (other.getDataModelDescs().size() == 1 && other.getDataModelDescs().contains(this))) {
                 ccInfoMap.put(computedColumnDesc.getFullName(), new CCInfo(computedColumnDesc, Sets.<DataModelDesc> newHashSet(this)));
-            } else if (other.computedColumnDesc.equals(computedColumnDesc)) {
-                other.dataModelDescs.add(this);
+            } else if (other.getComputedColumnDesc().equals(computedColumnDesc)) {
+                other.getDataModelDescs().add(this);
             } else {
                 throw new IllegalStateException(String.format("Computed column named %s is already defined in other models: %s. Please change another name, or try to keep consistent definition", //
-                        computedColumnDesc.getFullName(), other.dataModelDescs));
+                        computedColumnDesc.getFullName(), other.getDataModelDescs()));
             }
         }
     }

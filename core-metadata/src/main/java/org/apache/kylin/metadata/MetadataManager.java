@@ -116,12 +116,20 @@ public class MetadataManager {
     private CaseInsensitiveStringCache<ExternalFilterDesc> extFilterMap;
 
     public static class CCInfo {
-        public ComputedColumnDesc computedColumnDesc;
-        public Set<DataModelDesc> dataModelDescs;
+        private ComputedColumnDesc computedColumnDesc;
+        private Set<DataModelDesc> dataModelDescs;
 
         public CCInfo(ComputedColumnDesc computedColumnDesc, Set<DataModelDesc> dataModelDescs) {
             this.computedColumnDesc = computedColumnDesc;
             this.dataModelDescs = dataModelDescs;
+        }
+
+        public ComputedColumnDesc getComputedColumnDesc() {
+            return computedColumnDesc;
+        }
+
+        public Set<DataModelDesc> getDataModelDescs() {
+            return dataModelDescs;
         }
     }
 

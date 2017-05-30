@@ -93,6 +93,8 @@
         <h2.version>1.4.192</h2.version>
         <jetty.version>9.2.20.v20161216</jetty.version>
         <jamm.version>0.3.1</jamm.version>
+        <mockito.version>2.7.14</mockito.version>
+
 
         <!-- Commons -->
         <commons-lang3.version>3.4</commons-lang3.version>
@@ -730,6 +732,8 @@
                 <artifactId>opensaml</artifactId>
                 <version>${opensaml.version}</version>
             </dependency>
+
+
             <!-- Spring Core -->
             <dependency>
                 <groupId>org.springframework</groupId>
