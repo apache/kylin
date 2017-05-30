@@ -55,13 +55,13 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.SourcePartition;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
-import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -181,8 +181,10 @@ public class BuildCubeWithEngine {
     public void build() throws Exception {
         DeployUtil.prepareTestDataForNormalCubes("ci_left_join_model");
         System.setProperty("kylin.storage.hbase.hfile-size-gb", "1.0f");
-        testInner();
-        testLeft();
+        testCase("testInnerJoinCube");
+        testCase("testLeftJoinCube");
+        testCase("testTableExt");
+        testCase("testModel");
         System.setProperty("kylin.storage.hbase.hfile-size-gb", "0.0f");
     }
 
@@ -201,13 +203,7 @@ public class BuildCubeWithEngine {
         }
     }
 
-    private void testInner() throws Exception {
-        String[] testCase = new String[] { "testInnerJoinCube" };
-        runTestAndAssertSucceed(testCase);
-    }
-
-    private void testLeft() throws Exception {
-        String[] testCase = new String[] { "testLeftJoinCube" };
+    private void testCase(String... testCase) throws Exception {
         runTestAndAssertSucceed(testCase);
     }
 
@@ -260,11 +256,20 @@ public class BuildCubeWithEngine {
     }
 
     @SuppressWarnings("unused")
+    protected boolean testTableExt() throws Exception {
+        return true;
+    }
+
+    @SuppressWarnings("unused")
+    protected boolean testModel() throws Exception {
+        return true;
+    }
+
+    @SuppressWarnings("unused")
     // called by reflection
     private boolean testLeftJoinCube() throws Exception {
         String cubeName = "ci_left_join_cube";
         clearSegment(cubeName);
-
         // ci_left_join_cube has percentile which isn't supported by Spark engine now
         // updateCubeEngineType(cubeName);
 
