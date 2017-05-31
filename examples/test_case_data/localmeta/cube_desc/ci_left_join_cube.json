@@ -548,7 +548,7 @@
             "TEST_KYLIN_FACT.DEAL_YEAR"
           ]
         ],
-        "dim_cap" : 3
+        "dim_cap" : 5
       }
     },
     {

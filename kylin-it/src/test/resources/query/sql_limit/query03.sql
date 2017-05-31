@@ -17,7 +17,7 @@
 --
 
 SELECT 
- test_kylin_fact.lstg_format_name ,test_kylin_fact.cal_dt , sum(test_kylin_fact.price) as GMV, count(*) as TRANS_CNT 
+ test_kylin_fact.cal_dt , sum(test_kylin_fact.price) as GMV, count(*) as TRANS_CNT 
  FROM test_kylin_fact 
  inner JOIN edw.test_cal_dt as test_cal_dt 
  ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt 
@@ -27,5 +27,5 @@ SELECT
  ON test_kylin_fact.lstg_site_id = test_sites.site_id 
  where test_kylin_fact.seller_id = 10000002 + 4 
  
- group by  seller_id,test_kylin_fact.cal_dt,lstg_format_name
+ group by  seller_id,test_kylin_fact.cal_dt
  limit 10
