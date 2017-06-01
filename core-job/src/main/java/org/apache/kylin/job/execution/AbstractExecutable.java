@@ -48,6 +48,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String NOTIFY_LIST = "notify_list";
     protected static final String START_TIME = "startTime";
     protected static final String END_TIME = "endTime";
+    protected static final String INTERRUPT_TIME = "interruptTime";
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
     protected int retry = 0;
@@ -322,15 +323,19 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     public static long getEndTime(Output output) {
         return getExtraInfoAsLong(output, END_TIME, 0L);
     }
+    
+    public static long getInterruptTime(Output output) {
+        return getExtraInfoAsLong(output, INTERRUPT_TIME, 0L);
+    }
 
-    public static long getDuration(long startTime, long endTime) {
+    public static long getDuration(long startTime, long endTime, long interruptTime) {
         if (startTime == 0) {
             return 0;
         }
         if (endTime == 0) {
-            return System.currentTimeMillis() - startTime;
+            return System.currentTimeMillis() - startTime - interruptTime;
         } else {
-            return endTime - startTime;
+            return endTime - startTime - interruptTime;
         }
     }
 
@@ -359,6 +364,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         addExtraInfo(END_TIME, time + "");
     }
 
+    public final void setInterruptTime(long time) {
+        addExtraInfo(INTERRUPT_TIME, time + "");
+    }
+
     public final long getStartTime() {
         return getExtraInfoAsLong(START_TIME, 0L);
     }
@@ -367,8 +376,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return getExtraInfoAsLong(END_TIME, 0L);
     }
 
+    public final long getInterruptTime() {
+        return getExtraInfoAsLong(INTERRUPT_TIME, 0L);
+    }
+
     public final long getDuration() {
-        return getDuration(getStartTime(), getEndTime());
+        return getDuration(getStartTime(), getEndTime(), getInterruptTime());
     }
 
     /*

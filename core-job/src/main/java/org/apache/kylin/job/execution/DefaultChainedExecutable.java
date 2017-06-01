@@ -70,11 +70,19 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     @Override
     protected void onExecuteStart(ExecutableContext executableContext) {
         Map<String, String> info = Maps.newHashMap();
-        info.put(START_TIME, Long.toString(System.currentTimeMillis()));
         final long startTime = getStartTime();
         if (startTime > 0) {
-            getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+            final long endTime = getEndTime();
+            if (endTime > 0) {
+                long interruptTime = System.currentTimeMillis() - endTime + getInterruptTime();
+                info.put(START_TIME, Long.toString(startTime));
+                info.put(INTERRUPT_TIME, Long.toString(interruptTime));
+                getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
+            } else {
+                getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+            }
         } else {
+            info.put(START_TIME, Long.toString(System.currentTimeMillis()));
             getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
         }
     }

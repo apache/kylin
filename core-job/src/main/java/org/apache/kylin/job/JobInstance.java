@@ -58,6 +58,8 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     private long execStartTime;
     @JsonProperty("exec_end_time")
     private long execEndTime;
+    @JsonProperty("exec_interrupt_time")
+    private long execInterruptTime;
     @JsonProperty("mr_waiting")
     private long mrWaiting = 0;
     @JsonManagedReference
@@ -200,6 +202,20 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
      */
     public long getExecEndTime() {
         return execEndTime;
+    }
+
+    /**
+     * @return the execInterruptTime
+     */
+    public long getExecInterruptTime() {
+        return execInterruptTime;
+    }
+
+    /**
+     * @param execInterruptTime the execInterruptTime to set
+     */
+    public void setExecInterruptTime(long execInterruptTime) {
+        this.execInterruptTime = execInterruptTime;
     }
 
     /**
