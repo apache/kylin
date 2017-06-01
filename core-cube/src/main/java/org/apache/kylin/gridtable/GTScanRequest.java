@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
@@ -347,9 +348,14 @@ public class GTScanRequest {
         return Arrays.copyOf(byteBuffer.array(), byteBuffer.position());
     }
 
+    private static final int SERIAL_0_BASE = 0;
+    private static final int SERIAL_1_HAVING_FILTER = 1;
+    
     public static final BytesSerializer<GTScanRequest> serializer = new BytesSerializer<GTScanRequest>() {
         @Override
         public void serialize(GTScanRequest value, ByteBuffer out) {
+            final int serialLevel = KylinConfig.getInstanceFromEnv().getGTScanRequestSerializationLevel();
+            
             GTInfo.serializer.serialize(value.info, out);
 
             BytesUtil.writeVInt(value.ranges.size(), out);
@@ -364,7 +370,10 @@ public class GTScanRequest {
 
             ImmutableBitSet.serializer.serialize(value.columns, out);
             BytesUtil.writeByteArray(GTUtil.serializeGTFilter(value.filterPushDown, value.info), out);
-            BytesUtil.writeByteArray(TupleFilterSerializer.serialize(value.havingFilterPushDown, StringCodeSystem.INSTANCE), out);
+            
+            if (serialLevel >= SERIAL_1_HAVING_FILTER) {
+                BytesUtil.writeByteArray(TupleFilterSerializer.serialize(value.havingFilterPushDown, StringCodeSystem.INSTANCE), out);
+            }
 
             ImmutableBitSet.serializer.serialize(value.aggrGroupBy, out);
             ImmutableBitSet.serializer.serialize(value.aggrMetrics, out);
@@ -380,6 +389,8 @@ public class GTScanRequest {
 
         @Override
         public GTScanRequest deserialize(ByteBuffer in) {
+            final int serialLevel = KylinConfig.getInstanceFromEnv().getGTScanRequestSerializationLevel();
+            
             GTInfo sInfo = GTInfo.serializer.deserialize(in);
 
             List<GTScanRange> sRanges = Lists.newArrayList();
@@ -398,7 +409,11 @@ public class GTScanRequest {
 
             ImmutableBitSet sColumns = ImmutableBitSet.serializer.deserialize(in);
             TupleFilter sGTFilter = GTUtil.deserializeGTFilter(BytesUtil.readByteArray(in), sInfo);
-            TupleFilter sGTHavingFilter = TupleFilterSerializer.deserialize(BytesUtil.readByteArray(in), StringCodeSystem.INSTANCE);
+            
+            TupleFilter sGTHavingFilter = null;
+            if (serialLevel >= SERIAL_1_HAVING_FILTER) {
+                sGTHavingFilter = TupleFilterSerializer.deserialize(BytesUtil.readByteArray(in), StringCodeSystem.INSTANCE);
+            }
 
             ImmutableBitSet sAggGroupBy = ImmutableBitSet.serializer.deserialize(in);
             ImmutableBitSet sAggrMetrics = ImmutableBitSet.serializer.deserialize(in);

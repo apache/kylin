@@ -372,6 +372,10 @@ abstract public class KylinConfigBase implements Serializable {
     public boolean allowCubeAppearInMultipleProjects() {
         return Boolean.parseBoolean(getOptional("kylin.cube.allow-appear-in-multiple-projects", "false"));
     }
+    
+    public int getGTScanRequestSerializationLevel() {
+        return Integer.parseInt(getOptional("kylin.cube.gtscanrequest-serialization-level", "1"));
+    }
 
     // ============================================================================
     // JOB
