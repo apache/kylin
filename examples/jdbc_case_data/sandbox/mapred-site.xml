@@ -1,0 +1,278 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<configuration>
+
+    <property>
+        <name>io.sort.mb</name>
+        <value>64</value>
+    </property>
+
+    <property>
+        <name>mapred.child.java.opts</name>
+        <value>-Xmx200m</value>
+    </property>
+
+    <property>
+        <name>mapred.job.map.memory.mb</name>
+        <value>250</value>
+    </property>
+
+    <property>
+        <name>mapred.job.reduce.memory.mb</name>
+        <value>250</value>
+    </property>
+
+    <property>
+        <name>mapreduce.admin.map.child.java.opts</name>
+        <value>-server -XX:NewRatio=8 -Djava.net.preferIPv4Stack=true -Dhdp.version=${hdp.version}</value>
+    </property>
+
+    <property>
+        <name>mapreduce.admin.reduce.child.java.opts</name>
+        <value>-server -XX:NewRatio=8 -Djava.net.preferIPv4Stack=true -Dhdp.version=${hdp.version}</value>
+    </property>
+
+    <property>
+        <name>mapreduce.admin.user.env</name>
+        <value>
+            LD_LIBRARY_PATH=/usr/hdp/${hdp.version}/hadoop/lib/native:/usr/hdp/${hdp.version}/hadoop/lib/native/Linux-amd64-64
+        </value>
+    </property>
+
+    <property>
+        <name>mapreduce.am.max-attempts</name>
+        <value>2</value>
+    </property>
+
+    <property>
+        <name>mapreduce.application.classpath</name>
+        <value>
+            $PWD/mr-framework/hadoop/share/hadoop/mapreduce/*:$PWD/mr-framework/hadoop/share/hadoop/mapreduce/lib/*:$PWD/mr-framework/hadoop/share/hadoop/common/*:$PWD/mr-framework/hadoop/share/hadoop/common/lib/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/lib/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/lib/*:$PWD/mr-framework/hadoop/share/hadoop/tools/lib/*:/usr/hdp/${hdp.version}/hadoop/lib/hadoop-lzo-0.6.0.${hdp.version}.jar:/etc/hadoop/conf/secure
+        </value>
+    </property>
+
+    <property>
+        <name>mapreduce.application.framework.path</name>
+        <value>/hdp/apps/${hdp.version}/mapreduce/mapreduce.tar.gz#mr-framework</value>
+    </property>
+
+    <property>
+        <name>mapreduce.cluster.administrators</name>
+        <value>hadoop</value>
+    </property>
+
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
+
+    <property>
+        <name>mapreduce.job.counters.max</name>
+        <value>130</value>
+    </property>
+
+    <property>
+        <name>mapreduce.job.emit-timeline-data</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>mapreduce.job.reduce.slowstart.completedmaps</name>
+        <value>0.05</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.address</name>
+        <value>sandbox.hortonworks.com:10020</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.bind-host</name>
+        <value>0.0.0.0</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.done-dir</name>
+        <value>/mr-history/done</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.intermediate-done-dir</name>
+        <value>/mr-history/tmp</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.recovery.enable</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.recovery.store.class</name>
+        <value>org.apache.hadoop.mapreduce.v2.hs.HistoryServerLeveldbStateStoreService</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.recovery.store.leveldb.path</name>
+        <value>/hadoop/mapreduce/jhs</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.webapp.address</name>
+        <value>sandbox.hortonworks.com:19888</value>
+    </property>
+
+    <property>
+        <name>mapreduce.map.java.opts</name>
+        <value>-Xmx1228m</value>
+    </property>
+
+    <property>
+        <name>mapreduce.map.log.level</name>
+        <value>INFO</value>
+    </property>
+
+    <property>
+        <name>mapreduce.map.memory.mb</name>
+        <value>1536</value>
+    </property>
+
+    <property>
+        <name>mapreduce.map.output.compress</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>mapreduce.map.sort.spill.percent</name>
+        <value>0.7</value>
+    </property>
+
+    <property>
+        <name>mapreduce.map.speculative</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>mapreduce.output.fileoutputformat.compress</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>mapreduce.output.fileoutputformat.compress.type</name>
+        <value>BLOCK</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.input.buffer.percent</name>
+        <value>0.0</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.java.opts</name>
+        <value>-Xmx1638m</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.log.level</name>
+        <value>INFO</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.memory.mb</name>
+        <value>2048</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.shuffle.fetch.retry.enabled</name>
+        <value>1</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.shuffle.fetch.retry.interval-ms</name>
+        <value>1000</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.shuffle.fetch.retry.timeout-ms</name>
+        <value>30000</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.shuffle.input.buffer.percent</name>
+        <value>0.7</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.shuffle.merge.percent</name>
+        <value>0.66</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.shuffle.parallelcopies</name>
+        <value>30</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.speculative</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>mapreduce.shuffle.port</name>
+        <value>13562</value>
+    </property>
+
+    <property>
+        <name>mapreduce.task.io.sort.factor</name>
+        <value>100</value>
+    </property>
+
+    <property>
+        <name>mapreduce.task.io.sort.mb</name>
+        <value>859</value>
+    </property>
+
+    <property>
+        <name>mapreduce.task.timeout</name>
+        <value>300000</value>
+    </property>
+
+    <property>
+        <name>yarn.app.mapreduce.am.admin-command-opts</name>
+        <value>-Dhdp.version=${hdp.version}</value>
+    </property>
+
+    <property>
+        <name>yarn.app.mapreduce.am.command-opts</name>
+        <value>-Xmx819m -Dhdp.version=${hdp.version}</value>
+    </property>
+
+    <property>
+        <name>yarn.app.mapreduce.am.log.level</name>
+        <value>INFO</value>
+    </property>
+
+    <property>
+        <name>yarn.app.mapreduce.am.resource.mb</name>
+        <value>1024</value>
+    </property>
+
+    <property>
+        <name>yarn.app.mapreduce.am.staging-dir</name>
+        <value>/user</value>
+    </property>
+
+</configuration>

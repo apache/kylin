@@ -52,6 +52,7 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
@@ -61,6 +62,8 @@ import com.google.common.collect.Sets;
 
 public class HiveMRInput implements IMRInput {
 
+    private static final Logger logger = LoggerFactory.getLogger(HiveMRInput.class);
+    
     public static String getTableNameForHCat(TableDesc table) {
         String tableName = (table.isView()) ? table.getMaterializedName() : table.getName();
         return String.format("%s.%s", table.getDatabase(), tableName).toUpperCase();
@@ -144,7 +147,12 @@ public class HiveMRInput implements IMRInput {
             final String jobWorkingDir = getJobWorkingDir(jobFlow);
 
             // create flat table first, then count and redistribute
-            jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName));
+            if (flatDesc.getDataModel().getRootFactTable().getTableDesc().getSourceType()==ISourceAware.ID_JDBC){
+                jobFlow.addTask(createSqoopToFlatHiveStep(jobWorkingDir, cubeName));
+                jobFlow.addTask(createFlatHiveTableFromFiles(hiveInitStatements, jobWorkingDir));
+            }else{
+                jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName));
+            }
             if (cubeConfig.isHiveRedistributeEnabled() == true) {
                 jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName));
             }
@@ -209,7 +217,38 @@ public class HiveMRInput implements IMRInput {
             return step;
         }
 
+        private AbstractExecutable createSqoopToFlatHiveStep(String jobWorkingDir, String cubeName) {
+            KylinConfig config = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName).getConfig();
+            String partCol = flatDesc.getDataModel().getPartitionDesc().getPartitionDateColumn();//tablename.colname
+            //using sqoop to extract data from jdbc source and dump them to hive
+            String selectSql = JoinedFlatTable.generateSelectDataStatement(flatDesc, true, new String[]{partCol});
+            String hiveTable = flatDesc.getTableName();
+            String connectionUrl = config.getJdbcConnectionUrl();
+            String driverClass = config.getJdbcDriver();
+            String jdbcUser = config.getJdbcUser();
+            String jdbcPass = config.getJdbcPass();
+            String cmd= String.format(String.format("/usr/hdp/current/sqoop-client/bin/sqoop import "
+                    + "--connect %s --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
+                    + "--target-dir %s/%s --split-by %s", connectionUrl, driverClass, jdbcUser, 
+                    jdbcPass, selectSql, jobWorkingDir, hiveTable, partCol));
+            logger.info(String.format("sqoop cmd:%s", cmd));
+            CmdStep step = new CmdStep();
+            step.setCmd(cmd);
+            step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
+            return step;
+        }
+        
+        private AbstractExecutable createFlatHiveTableFromFiles(String hiveInitStatements, String jobWorkingDir) {
+            final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
+            final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, jobWorkingDir, "TEXTFILE");
+            
+            HiveCmdStep step = new HiveCmdStep();
+            step.setCmd(hiveInitStatements + dropTableHql + createTableHql);
+            return step;
+        }
+        
         private AbstractExecutable createFlatHiveTableStep(String hiveInitStatements, String jobWorkingDir, String cubeName) {
+            //from hive to hive
             final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
             final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, jobWorkingDir);
             String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatDesc);

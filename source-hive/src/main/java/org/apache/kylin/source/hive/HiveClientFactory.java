@@ -19,8 +19,22 @@
 package org.apache.kylin.source.hive;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.ISourceAware;
 
 public class HiveClientFactory {
+    
+    public static IJDBCExecutor getJDBCExector(String modelName) {
+        MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelDesc model = mgr.getDataModelDesc(modelName);
+        if (model.getRootFactTable().getTableDesc().getSourceType()==ISourceAware.ID_JDBC){
+            return new JdbcExplorer();
+        }else{
+            return getHiveClient();
+        }
+    }
+    
     public static IHiveClient getHiveClient() {
         if ("cli".equals(KylinConfig.getInstanceFromEnv().getHiveClientMode())) {
             return new CLIHiveClient();
