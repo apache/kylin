@@ -160,7 +160,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         File jarFile = new File(jarPath);
         if (jarFile.exists()) {
             job.setJar(jarPath);
-            logger.info("append job jar: " + jarPath);
+            logger.trace("append job jar: " + jarPath);
         } else {
             job.setJarByClass(this.getClass());
         }
@@ -168,7 +168,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         String kylinHiveDependency = System.getProperty("kylin.hive.dependency");
         String kylinHBaseDependency = System.getProperty("kylin.hbase.dependency");
         String kylinKafkaDependency = System.getProperty("kylin.kafka.dependency");
-        logger.info("append kylin.hbase.dependency: " + kylinHBaseDependency + " to " + MAP_REDUCE_CLASSPATH);
+        logger.trace("append kylin.hbase.dependency: " + kylinHBaseDependency + " to " + MAP_REDUCE_CLASSPATH);
 
         Configuration jobConf = job.getConfiguration();
         String classpath = jobConf.get(MAP_REDUCE_CLASSPATH);
@@ -185,7 +185,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
 
         jobConf.set(MAP_REDUCE_CLASSPATH, classpath);
-        logger.info("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
+        logger.trace("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
 
         /*
          *  set extra dependencies as tmpjars & tmpfiles if configured
@@ -197,28 +197,28 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             // yarn classpath is comma separated
             kylinHiveDependency = kylinHiveDependency.replace(":", ",");
 
-            logger.info("Hive Dependencies Before Filtered: " + kylinHiveDependency);
+            logger.trace("Hive Dependencies Before Filtered: " + kylinHiveDependency);
             String filteredHive = filterKylinHiveDependency(kylinHiveDependency, kylinConf);
-            logger.info("Hive Dependencies After Filtered: " + filteredHive);
+            logger.trace("Hive Dependencies After Filtered: " + filteredHive);
 
             StringUtil.appendWithSeparator(kylinDependency, filteredHive);
         } else {
 
-            logger.info("No hive dependency jars set in the environment, will find them from classpath:");
+            logger.debug("No hive dependency jars set in the environment, will find them from classpath:");
 
             try {
                 String hiveExecJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hadoop.hive.ql.Driver"));
 
                 StringUtil.appendWithSeparator(kylinDependency, hiveExecJarPath);
-                logger.info("hive-exec jar file: " + hiveExecJarPath);
+                logger.debug("hive-exec jar file: " + hiveExecJarPath);
 
                 String hiveHCatJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hive.hcatalog.mapreduce.HCatInputFormat"));
                 StringUtil.appendWithSeparator(kylinDependency, hiveHCatJarPath);
-                logger.info("hive-catalog jar file: " + hiveHCatJarPath);
+                logger.debug("hive-catalog jar file: " + hiveHCatJarPath);
 
                 String hiveMetaStoreJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hadoop.hive.metastore.api.Table"));
                 StringUtil.appendWithSeparator(kylinDependency, hiveMetaStoreJarPath);
-                logger.info("hive-metastore jar file: " + hiveMetaStoreJarPath);
+                logger.debug("hive-metastore jar file: " + hiveMetaStoreJarPath);
             } catch (ClassNotFoundException e) {
                 logger.error("Cannot found hive dependency jars: " + e);
             }
@@ -227,14 +227,14 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         // for kafka dependencies
         if (kylinKafkaDependency != null) {
             kylinKafkaDependency = kylinKafkaDependency.replace(":", ",");
-            logger.info("Kafka Dependencies: " + kylinKafkaDependency);
+            logger.trace("Kafka Dependencies: " + kylinKafkaDependency);
             StringUtil.appendWithSeparator(kylinDependency, kylinKafkaDependency);
         } else {
-            logger.info("No Kafka dependency jar set in the environment, will find them from classpath:");
+            logger.debug("No Kafka dependency jar set in the environment, will find them from classpath:");
             try {
                 String kafkaClientJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.kafka.clients.consumer.KafkaConsumer"));
                 StringUtil.appendWithSeparator(kylinDependency, kafkaClientJarPath);
-                logger.info("kafka jar file: " + kafkaClientJarPath);
+                logger.debug("kafka jar file: " + kafkaClientJarPath);
 
             } catch (ClassNotFoundException e) {
                 logger.debug("Not found kafka client jar from classpath, it is optional for normal build: " + e);
@@ -303,7 +303,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                     logger.warn("The directory of kylin dependency '" + fileName + "' does not exist, skip");
                     continue;
                 }
-                
+
                 if (fs.getFileStatus(p).isDirectory()) {
                     appendTmpDir(job, fs, p, jarList, fileList);
                     continue;
@@ -355,7 +355,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             tmpJars += "," + jarList;
         }
         conf.set("tmpjars", tmpJars);
-        logger.info("Job 'tmpjars' updated -- " + tmpJars);
+        logger.trace("Job 'tmpjars' updated -- " + tmpJars);
     }
 
     private void appendTmpFiles(String fileList, Configuration conf) {
@@ -369,7 +369,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             tmpFiles += "," + fileList;
         }
         conf.set("tmpfiles", tmpFiles);
-        logger.info("Job 'tmpfiles' updated -- " + tmpFiles);
+        logger.trace("Job 'tmpfiles' updated -- " + tmpFiles);
     }
 
     private String getDefaultMapRedClasspath() {
@@ -427,7 +427,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                     ret += addInputDirs(new String[] { path.toString() }, job);
                 }
             } else {
-                logger.debug("Add input " + inp);
+                logger.trace("Add input " + inp);
                 FileInputFormat.addInputPath(job, new Path(inp));
                 ret++;
             }
@@ -517,7 +517,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected void cleanupTempConfFile(Configuration conf) {
         String tempMetaFileString = conf.get("tmpfiles");
-        logger.info("tempMetaFileString is : " + tempMetaFileString);
+        logger.trace("tempMetaFileString is : " + tempMetaFileString);
         if (tempMetaFileString != null) {
             if (tempMetaFileString.startsWith("file://")) {
                 tempMetaFileString = tempMetaFileString.substring("file://".length());

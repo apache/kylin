@@ -192,7 +192,7 @@ public class Broadcaster {
         if (list == null)
             return;
 
-        logger.debug("Broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey + ", listeners=" + list);
+        logger.trace("Broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey + ", listeners=" + list);
 
         // prevents concurrent modification exception
         list = Lists.newArrayList(list);

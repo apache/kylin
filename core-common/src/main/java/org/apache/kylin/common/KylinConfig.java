@@ -131,7 +131,6 @@ public class KylinConfig extends KylinConfigBase {
          * LOCAL_FOLDER: path to resource folder
          */
         UriType uriType = decideUriType(uri);
-        logger.info("The URI " + uri + " is recognized as " + uriType);
 
         if (uriType == UriType.LOCAL_FOLDER) {
             KylinConfig config = new KylinConfig();
