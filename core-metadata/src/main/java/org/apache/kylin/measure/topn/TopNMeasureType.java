@@ -40,6 +40,7 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -371,7 +372,8 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         if (numericCol != null) {
             numericTupleIdx = tupleInfo.hasColumn(numericCol) ? tupleInfo.getColumnIndex(numericCol) : -1;
         } else {
-            numericTupleIdx = tupleInfo.getFieldIndex("COUNT__");
+            FunctionDesc countFunction = FunctionDesc.newInstance(FunctionDesc.FUNC_COUNT, ParameterDesc.newInstance("1"), "bigint");
+            numericTupleIdx = tupleInfo.getFieldIndex(countFunction.getRewriteFieldName());
         }
         return new IAdvMeasureFiller() {
             private TopNCounter<ByteArray> topNCounter;
