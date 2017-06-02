@@ -21,7 +21,6 @@ package org.apache.kylin.rest.controller2;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +50,6 @@ import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.request.JobBuildRequest2;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
-import org.apache.kylin.rest.response.CubeInstanceResponse.CubeComparator;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
@@ -117,20 +115,19 @@ public class CubeControllerV2 extends BasicController {
         List<CubeInstanceResponse> cubeInstanceResponses = new ArrayList<CubeInstanceResponse>();
         List<CubeInstance> cubes = cubeService.listAllCubes(cubeName, projectName, modelName);
 
-        int offset = pageOffset * pageSize;
-        int limit = pageSize;
-
-        if (cubes.size() <= offset) {
-            offset = cubes.size();
-            limit = 0;
-        }
-
-        if ((cubes.size() - offset) < limit) {
-            limit = cubes.size() - offset;
-        }
-
-        for (CubeInstance cube : cubes.subList(offset, offset + limit)) {
+        for (CubeInstance cube : cubes) {
             CubeInstanceResponse cubeInstanceResponse = new CubeInstanceResponse(cube);
+
+            if (cube.getDescriptor().isDraft()) {
+                String parentName = cube.getName().substring(0, cube.getName().lastIndexOf("_draft"));
+                CubeInstance official = cubeService.getCubeManager().getCube(parentName);
+                if (official == null) {
+                    cubeInstanceResponse.setName(parentName);
+                } else {
+                    continue;
+                }
+            }
+
             cubeInstanceResponse.setPartitionDateStart(cube.getDescriptor().getPartitionDateStart());
 
             String getModelName = modelName == null ? cube.getDescriptor().getModelName() : modelName;
@@ -154,10 +151,22 @@ public class CubeControllerV2 extends BasicController {
 
             cubeInstanceResponses.add(cubeInstanceResponse);
         }
-        CubeComparator cubeComparator = new CubeComparator();
-        Collections.sort(cubeInstanceResponses, cubeComparator);
-        data.put("cubes", cubeInstanceResponses);
-        data.put("size", cubes.size());
+
+        int offset = pageOffset * pageSize;
+        int limit = pageSize;
+        int size = cubeInstanceResponses.size();
+
+        if (size <= offset) {
+            offset = size;
+            limit = 0;
+        }
+
+        if ((size - offset) < limit) {
+            limit = size - offset;
+        }
+
+        data.put("cubes", cubeInstanceResponses.subList(offset, offset + limit));
+        data.put("size", size);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
@@ -391,7 +400,7 @@ public class CubeControllerV2 extends BasicController {
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
-        if (cube.getStatus() != null && cube.getStatus().equals("DRAFT")) {
+        if (cube.getDescriptor().isDraft()) {
             throw new BadRequestException(msg.getBUILD_DRAFT_CUBE());
         }
         return jobService.submitJob(cube, startTime, endTime, startOffset, endOffset, //

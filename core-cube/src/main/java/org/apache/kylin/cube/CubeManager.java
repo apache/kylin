@@ -326,7 +326,9 @@ public class CubeManager implements IRealizationProvider {
         cube.setOwner(owner);
 
         updateCubeWithRetry(new CubeUpdate(cube), 0);
-        ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
+        if (!desc.isDraft()) {
+            ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
+        }
 
         if (listener != null)
             listener.afterCubeCreate(cube);

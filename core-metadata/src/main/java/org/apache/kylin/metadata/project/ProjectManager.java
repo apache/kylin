@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -52,7 +53,8 @@ import com.google.common.collect.Sets;
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
     private static final ConcurrentMap<KylinConfig, ProjectManager> CACHE = new ConcurrentHashMap<KylinConfig, ProjectManager>();
-    public static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
+    public static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(
+            ProjectInstance.class);
 
     public static ProjectManager getInstance(KylinConfig config) {
         ProjectManager r = CACHE.get(config);
@@ -108,7 +110,8 @@ public class ProjectManager {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                throws IOException {
             String project = cacheKey;
 
             if (event == Event.DROP)
@@ -129,7 +132,8 @@ public class ProjectManager {
         ResourceStore store = getStore();
         List<String> paths = store.collectResourceRecursively(ResourceStore.PROJECT_RESOURCE_ROOT, ".json");
 
-        logger.debug("Loading Project from folder " + store.getReadableResourcePath(ResourceStore.PROJECT_RESOURCE_ROOT));
+        logger.debug(
+                "Loading Project from folder " + store.getReadableResourcePath(ResourceStore.PROJECT_RESOURCE_ROOT));
 
         for (String path : paths) {
             reloadProjectLocalAt(path);
@@ -165,7 +169,8 @@ public class ProjectManager {
         return projectMap.get(projectName);
     }
 
-    public ProjectInstance createProject(String projectName, String owner, String description, LinkedHashMap<String, String> overrideProps) throws IOException {
+    public ProjectInstance createProject(String projectName, String owner, String description,
+            LinkedHashMap<String, String> overrideProps) throws IOException {
         logger.info("Creating project " + projectName);
 
         ProjectInstance currentProject = getProject(projectName);
@@ -191,7 +196,8 @@ public class ProjectManager {
         }
 
         if (projectInstance.getRealizationCount(null) != 0) {
-            throw new IllegalStateException("The project named " + projectName + " can not be deleted because there's still realizations in it. Delete them first.");
+            throw new IllegalStateException("The project named " + projectName
+                    + " can not be deleted because there's still realizations in it. Delete them first.");
         }
 
         logger.info("Dropping project '" + projectInstance.getName() + "'");
@@ -210,7 +216,8 @@ public class ProjectManager {
     }
 
     //update project itself
-    public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc, LinkedHashMap<String, String> overrideProps) throws IOException {
+    public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc,
+            LinkedHashMap<String, String> overrideProps) throws IOException {
         if (!project.getName().equals(newName)) {
             ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc, overrideProps);
 
@@ -286,16 +293,24 @@ public class ProjectManager {
         return newProject;
     }
 
-    public ProjectInstance moveRealizationToProject(RealizationType type, String realizationName, String newProjectName, String owner) throws IOException {
+    public ProjectInstance moveRealizationToProject(RealizationType type, String realizationName, String newProjectName,
+            String owner) throws IOException {
         removeRealizationsFromProjects(type, realizationName);
         return addRealizationToProject(type, realizationName, newProjectName, owner);
     }
 
-    private ProjectInstance addRealizationToProject(RealizationType type, String realizationName, String project, String user) throws IOException {
+    private ProjectInstance addRealizationToProject(RealizationType type, String realizationName, String project,
+            String user) throws IOException {
         String newProjectName = norm(project);
+        if (StringUtils.isEmpty(newProjectName)) {
+            throw new IllegalArgumentException("Project name should not be empty.");
+        }
         ProjectInstance newProject = getProject(newProjectName);
         if (newProject == null) {
-            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding realization " + realizationName + "(" + type + ")", null);
+            newProject = this.createProject(newProjectName, user,
+                    "This is a project automatically added when adding realization " + realizationName + "(" + type
+                            + ")",
+                    null);
         }
         newProject.addRealizationEntry(type, realizationName);
         updateProject(newProject);
@@ -436,7 +451,8 @@ public class ProjectManager {
 
     public boolean isExposedColumn(String project, String table, String col) {
         return config.isAdhocEnabled() ? //
-                l2Cache.isDefinedColumn(norm(project), table, col) || l2Cache.isExposedColumn(norm(project), table, col) : //
+                l2Cache.isDefinedColumn(norm(project), table, col) || l2Cache.isExposedColumn(norm(project), table, col)
+                : //
                 l2Cache.isExposedColumn(norm(project), table, col);
     }
 

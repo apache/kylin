@@ -299,9 +299,6 @@ public class CubeController extends BasicController {
             if (cube == null) {
                 throw new InternalErrorException("Cannot find cube " + cubeName);
             }
-            if (cube.getStatus() != null && cube.getStatus().equals("DRAFT")) {
-                throw new BadRequestException("Cannot build draft cube");
-            }
             return jobService.submitJob(cube, startTime, endTime, startOffset, endOffset, //
                     sourcePartitionOffsetStart, sourcePartitionOffsetEnd, CubeBuildTypeEnum.valueOf(buildType), force, submitter);
         } catch (Throwable e) {

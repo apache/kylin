@@ -182,10 +182,13 @@ public class CubeService extends BasicService {
         }
 
         createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
-        accessService.init(createdCube, AclPermission.ADMINISTRATION);
 
-        ProjectInstance project = getProjectManager().getProject(projectName);
-        accessService.inherit(createdCube, project);
+        if (!desc.isDraft()) {
+            accessService.init(createdCube, AclPermission.ADMINISTRATION);
+
+            ProjectInstance project = getProjectManager().getProject(projectName);
+            accessService.inherit(createdCube, project);
+        }
 
         return createdCube;
     }
@@ -248,13 +251,13 @@ public class CubeService extends BasicService {
         if (!desc.isDraft()) {
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc, false);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
-        }
 
-        ProjectManager projectManager = getProjectManager();
-        if (!isCubeInProject(newProjectName, cube)) {
-            String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-            ProjectInstance newProject = projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(), newProjectName, owner);
-            accessService.inherit(cube, newProject);
+            ProjectManager projectManager = getProjectManager();
+            if (!isCubeInProject(newProjectName, cube)) {
+                String owner = SecurityContextHolder.getContext().getAuthentication().getName();
+                ProjectInstance newProject = projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(), newProjectName, owner);
+                accessService.inherit(cube, newProject);
+            }
         }
 
         return updatedCubeDesc;

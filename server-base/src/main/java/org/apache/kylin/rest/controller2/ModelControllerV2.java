@@ -20,7 +20,6 @@ package org.apache.kylin.rest.controller2;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,6 @@ import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.response.DataModelDescResponse;
-import org.apache.kylin.rest.response.DataModelDescResponse.ModelComparator;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.ResponseCode;
@@ -100,33 +98,39 @@ public class ModelControllerV2 extends BasicController {
         HashMap<String, Object> data = new HashMap<String, Object>();
         List<DataModelDesc> models = modelService.listAllModels(modelName, projectName);
 
-        int offset = pageOffset * pageSize;
-        int limit = pageSize;
-
-        if (models.size() <= offset) {
-            offset = models.size();
-            limit = 0;
-        }
-
-        if ((models.size() - offset) < limit) {
-            limit = models.size() - offset;
-        }
-
         List<DataModelDescResponse> dataModelDescResponses = new ArrayList<DataModelDescResponse>();
-        for (DataModelDesc model : modelService.getModels(modelName, projectName, limit, offset)) {
+        for (DataModelDesc model : models) {
             DataModelDescResponse dataModelDescResponse = new DataModelDescResponse(model);
-
+            if (model.isDraft()) {
+                String parentName = model.getName().substring(0, model.getName().lastIndexOf("_draft"));
+                DataModelDesc official = modelService.getMetadataManager().getDataModelDesc(parentName);
+                if (official == null) {
+                    dataModelDescResponse.setName(parentName);
+                } else {
+                    continue;
+                }
+            }
             if (projectName != null)
                 dataModelDescResponse.setProject(projectName);
             else
                 dataModelDescResponse.setProject(projectService.getProjectOfModel(model.getName()));
-
             dataModelDescResponses.add(dataModelDescResponse);
         }
-        ModelComparator modelComparator = new ModelComparator();
-        Collections.sort(dataModelDescResponses, modelComparator);
-        data.put("models", dataModelDescResponses);
-        data.put("size", models.size());
+
+        int offset = pageOffset * pageSize;
+        int limit = pageSize;
+        int size = dataModelDescResponses.size();
+
+        if (size <= offset) {
+            offset = size;
+            limit = 0;
+        }
+
+        if ((size - offset) < limit) {
+            limit = size - offset;
+        }
+        data.put("models", dataModelDescResponses.subList(offset, offset + limit));
+        data.put("size", size);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
