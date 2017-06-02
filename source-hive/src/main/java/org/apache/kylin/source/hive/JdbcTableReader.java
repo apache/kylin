@@ -61,12 +61,13 @@ public class JdbcTableReader implements TableReader {
         dbconf = new DBConnConf(driverClass, connectionUrl, jdbcUser, jdbcPass);
         this.dialect = config.getJdbcDialect();
         jdbcCon = SqlUtil.getConnection(dbconf);
+        String sql = String.format("select * from %s.%s", dbName, tableName);
         try {
             statement = jdbcCon.createStatement();
-            rs = statement.executeQuery(String.format("select * from %s.%s", dbName, tableName));
+            rs = statement.executeQuery(sql);
             colCount = rs.getMetaData().getColumnCount();
         }catch(SQLException e){
-            throw new IOException(e);
+            throw new IOException(String.format("error while exec %s", sql), e);
         }
         
     }

@@ -39,7 +39,6 @@ public class JdbcTable implements IReadableTable {
     public JdbcTable(TableDesc tableDesc) {
         this.database = tableDesc.getDatabase();
         this.tableName = tableDesc.getName();
-        
     }
 
     @Override
