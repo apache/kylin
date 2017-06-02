@@ -112,6 +112,7 @@ public class DictionaryGeneratorCLI {
         } else {
             MetadataManager metadataManager = MetadataManager.getInstance(config);
             TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
+            logger.info(String.format("create readable table for %s", tableDesc));
             if (tableDesc.getSourceType()==ISourceAware.ID_JDBC){
                 inpTable = SourceFactory.createReadableTable(tableDesc);
             }else{
