@@ -2,6 +2,7 @@
  
   "uuid" : "338a3325-a947-46d1-9ece-e079b3b8d4a6",
   "name" : "TEST_SITES",
+  "source_type" : "8",
   "columns" : [ {
     "id" : "1",
     "name" : "SITE_ID",

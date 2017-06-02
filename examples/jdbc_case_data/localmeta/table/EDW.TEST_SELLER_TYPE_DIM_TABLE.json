@@ -1,6 +1,7 @@
 {
   "uuid" : "addc20c4-55df-436f-8602-2fbd4bca2910",
   "name" : "TEST_SELLER_TYPE_DIM_TABLE",
+  "source_type" : "8",
   "columns" : [ {
     "id" : "1",
     "name" : "SELLER_TYPE_CD",

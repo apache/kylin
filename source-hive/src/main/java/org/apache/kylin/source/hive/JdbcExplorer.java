@@ -50,7 +50,6 @@ public class JdbcExplorer implements ISourceMetadataExplorer, IJDBCExecutor{
     public static final String TABLE_TYPE_VIEW="VIEW";
     
     private KylinConfig config;
-    
     private DBConnConf dbconf;
     private String dialect;
 

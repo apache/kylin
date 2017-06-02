@@ -1,7 +1,7 @@
 {
   "uuid" : "f386e39e-40d7-44c2-9eb3-41b365632231",
- 
   "name" : "TEST_ACCOUNT",
+  "source_type" : "8",
   "data_gen" : "2000",
   
   "columns" : [ {

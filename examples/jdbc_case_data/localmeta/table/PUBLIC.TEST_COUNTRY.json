@@ -1,7 +1,7 @@
 {
   "uuid" : "e286e39e-40d7-44c2-8fa2-41b365632882",
- 
   "name" : "TEST_COUNTRY",
+  "source_type" : "8",
   "columns" : [ {
     "id" : "1",
     "name" : "COUNTRY",

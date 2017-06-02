@@ -32,6 +32,7 @@ import org.apache.kylin.dict.DictionaryProvider;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
@@ -111,16 +112,19 @@ public class DictionaryGeneratorCLI {
         } else {
             MetadataManager metadataManager = MetadataManager.getInstance(config);
             TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
-            if (tableDesc.isView()) {
-                TableDesc materializedTbl = new TableDesc();
-                materializedTbl.setDatabase(config.getHiveDatabaseForIntermediateTable());
-                materializedTbl.setName(tableDesc.getMaterializedName());
-                inpTable = SourceFactory.createReadableTable(materializedTbl);
-            } else {
+            if (tableDesc.getSourceType()==ISourceAware.ID_JDBC){
                 inpTable = SourceFactory.createReadableTable(tableDesc);
+            }else{
+                if (tableDesc.isView()) {
+                    TableDesc materializedTbl = new TableDesc();
+                    materializedTbl.setDatabase(config.getHiveDatabaseForIntermediateTable());
+                    materializedTbl.setName(tableDesc.getMaterializedName());
+                    inpTable = SourceFactory.createReadableTable(materializedTbl);
+                } else {
+                    inpTable = SourceFactory.createReadableTable(tableDesc);
+                }
             }
         }
-
         return inpTable;
     }
 }

@@ -1,6 +1,7 @@
 {
   "uuid" : "f216e39e-40d7-44c2-8fa2-41b3656398ae",
   "name" : "TEST_ORDER",
+  "source_type" : "8",
   "data_gen" : "0.5",
   "columns" : [ {
     "id" : "1",

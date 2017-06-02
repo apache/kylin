@@ -36,47 +36,26 @@ public class JdbcTable implements IReadableTable {
     private static final Logger logger = LoggerFactory.getLogger(JdbcTable.class);
 
     final private String database;
-    final private String hiveTable;
+    final private String tableName;
 
-    private IHiveClient hiveClient;
-    private HiveTableMeta hiveTableMeta;
 
     public JdbcTable(TableDesc tableDesc) {
         this.database = tableDesc.getDatabase();
-        this.hiveTable = tableDesc.getName();
-        try {
-            this.hiveTableMeta = getHiveClient().getHiveTableMeta(database, hiveTable);
-        } catch (Exception e) {
-            throw new RuntimeException("cannot get HiveTableMeta", e);
-        }
+        this.tableName = tableDesc.getName();
+        
     }
 
     @Override
     public TableReader getReader() throws IOException {
-        return new HiveTableReader(database, hiveTable);
+        return new JdbcTableReader(database, tableName);
     }
 
     @Override
     public TableSignature getSignature() throws IOException {
-        try {
-            String path = computeHDFSLocation();
-            Pair<Long, Long> sizeAndLastModified = DFSFileTable.getSizeAndLastModified(path);
-            long size = sizeAndLastModified.getFirst();
-            long lastModified = sizeAndLastModified.getSecond();
-
-            // for non-native hive table, cannot rely on size & last modified on HDFS
-            if (this.hiveTableMeta.isNative == false) {
-                lastModified = System.currentTimeMillis(); // assume table is ever changing
-            }
-
-            return new TableSignature(path, size, lastModified);
-
-        } catch (Exception e) {
-            if (e instanceof IOException)
-                throw (IOException) e;
-            else
-                throw new IOException(e);
-        }
+        String path = String.format("%s.%s", database, tableName);
+        long lastModified = System.currentTimeMillis(); // assume table is ever changing
+        int size=0;
+        return new TableSignature(path, size, lastModified);
     }
     
     @Override
@@ -84,28 +63,9 @@ public class JdbcTable implements IReadableTable {
         return true;
     }
 
-    private String computeHDFSLocation() throws Exception {
-
-        String override = KylinConfig.getInstanceFromEnv().getOverrideHiveTableLocation(hiveTable);
-        if (override != null) {
-            logger.debug("Override hive table location " + hiveTable + " -- " + override);
-            return override;
-        }
-
-        return this.hiveTableMeta.sdLocation;
-    }
-
-    public IHiveClient getHiveClient() {
-
-        if (hiveClient == null) {
-            hiveClient = HiveClientFactory.getHiveClient();
-        }
-        return hiveClient;
-    }
-
     @Override
     public String toString() {
-        return "hive: database=[" + database + "], table=[" + hiveTable + "]";
+        return "database=[" + database + "], table=[" + tableName + "]";
     }
 
 }
