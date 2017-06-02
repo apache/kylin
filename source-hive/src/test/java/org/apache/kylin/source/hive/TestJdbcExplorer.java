@@ -57,7 +57,7 @@ public class TestJdbcExplorer {
         System.setProperty(KylinConfig.KYLIN_CONF, TEST_DATA);
         
         JdbcExplorer jdbcClient = new JdbcExplorer();
-        Pair<TableDesc, TableExtDesc> tableDescs = jdbcClient.loadTableMetadata("kylin","KYLIN_SALES");
+        Pair<TableDesc, TableExtDesc> tableDescs = jdbcClient.loadTableMetadata("kylin", "KYLIN_SALES");
         logger.info(tableDescs.toString());
     }
 }
