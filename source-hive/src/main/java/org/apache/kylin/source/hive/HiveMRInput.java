@@ -156,9 +156,13 @@ public class HiveMRInput implements IMRInput {
             if (cubeConfig.isHiveRedistributeEnabled() == true) {
                 jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName));
             }
-            AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir);
-            if (task != null) {
-                jobFlow.addTask(task);
+            if (flatDesc.getDataModel().getRootFactTable().getTableDesc().getSourceType()==ISourceAware.ID_JDBC){
+                //skip it ?
+            }else{
+                AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir);
+                if (task != null) {
+                    jobFlow.addTask(task);
+                }
             }
         }
 
