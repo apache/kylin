@@ -574,6 +574,10 @@ abstract public class KylinConfigBase implements Serializable {
     public String getJdbcPass() {
         return getOptional("kylin.source.jdbc.pass");
     }
+    
+    public String getSqoopHome() {
+        return getOptional("kylin.source.sqoop.home");
+    }
 
     // ============================================================================
     // STORAGE.HBASE

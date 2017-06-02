@@ -227,9 +227,10 @@ public class HiveMRInput implements IMRInput {
             String driverClass = config.getJdbcDriver();
             String jdbcUser = config.getJdbcUser();
             String jdbcPass = config.getJdbcPass();
-            String cmd= String.format(String.format("/usr/hdp/current/sqoop-client/bin/sqoop import "
+            String sqoopHome = config.getSqoopHome();
+            String cmd= String.format(String.format("%s/sqoop import "
                     + "--connect %s --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
-                    + "--target-dir %s/%s --split-by %s", connectionUrl, driverClass, jdbcUser, 
+                    + "--target-dir %s/%s --split-by %s", sqoopHome, connectionUrl, driverClass, jdbcUser, 
                     jdbcPass, selectSql, jobWorkingDir, hiveTable, partCol));
             logger.info(String.format("sqoop cmd:%s", cmd));
             CmdStep step = new CmdStep();
