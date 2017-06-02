@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -200,7 +201,7 @@ public class DeployUtil {
         IJDBCExecutor jdbcClient = HiveClientFactory.getJDBCExector(modelName);
         
         Set<TableRef> tables = model.getAllTables();
-        List<String> TABLE_NAMES = new ArrayList<String>();
+        Set<String> TABLE_NAMES = new HashSet<String>();
         for (TableRef tr:tables){
             if (!tr.getTableDesc().isView()){
                 String tableName = tr.getTableName();
