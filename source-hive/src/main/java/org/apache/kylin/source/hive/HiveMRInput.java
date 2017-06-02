@@ -156,8 +156,9 @@ public class HiveMRInput implements IMRInput {
             if (cubeConfig.isHiveRedistributeEnabled() == true) {
                 jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName));
             }
+            logger.info(String.format("source aware:%d", flatDesc.getDataModel().getRootFactTable().getTableDesc().getSourceType()));
             if (flatDesc.getDataModel().getRootFactTable().getTableDesc().getSourceType()==ISourceAware.ID_JDBC){
-                //skip it ?
+                logger.info(String.format("skip createLookupHiveViewMaterializationStep"));
             }else{
                 AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir);
                 if (task != null) {
