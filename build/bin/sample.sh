@@ -24,7 +24,6 @@ source ${dir}/find-hadoop-conf-dir.sh
 source ${dir}/load-hive-conf.sh
 
 source ${dir}/check-env.sh "if-not-yet"
-job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
 
 cd ${KYLIN_HOME}/sample_cube/data
 
@@ -98,6 +97,6 @@ cd ${KYLIN_HOME}/sample_cube/metadata/table
 ls -1 DEFAULT.KYLIN_*.json|sed "s/\(DEFAULT\)\(.*\)\.json/mv & $sample_database\2.json/"|sh -v
 
 cd ${KYLIN_HOME}
-hbase org.apache.hadoop.util.RunJar ${job_jar} org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }
+${dir}/kylin.sh org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }
 echo "Sample cube is created successfully in project 'learn_kylin'."
 echo "Restart Kylin server or reload the metadata from web UI to see the change."
