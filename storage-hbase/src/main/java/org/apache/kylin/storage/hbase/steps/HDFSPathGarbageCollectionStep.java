@@ -81,19 +81,20 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
                 if (path.endsWith("*"))
                     path = path.substring(0, path.length() - 1);
 
-                Path oldPath = new Path(path);
+                Path oldPath = Path.getPathWithoutSchemeAndAuthority(new Path(path));
                 if (fileSystem.exists(oldPath)) {
                     fileSystem.delete(oldPath, true);
-                    logger.debug("HDFS path " + path + " is dropped.");
-                    output.append("HDFS path " + path + " is dropped.\n");
+                    logger.debug("HDFS path " + oldPath + " is dropped.");
+                    output.append("HDFS path " + oldPath + " is dropped.\n");
                 } else {
-                    logger.debug("HDFS path " + path + " not exists.");
-                    output.append("HDFS path " + path + " not exists.\n");
+                    logger.debug("HDFS path " + oldPath + " not exists.");
+                    output.append("HDFS path " + oldPath + " not exists.\n");
                 }
                 // If hbase was deployed on another cluster, the job dir is empty and should be dropped,
                 // because of rowkey_stats and hfile dirs are both dropped.
                 if (fileSystem.listStatus(oldPath.getParent()).length == 0) {
                     Path emptyJobPath = new Path(JobBuilderSupport.getJobWorkingDir(config, getJobId()));
+                    emptyJobPath = Path.getPathWithoutSchemeAndAuthority(emptyJobPath);
                     if (fileSystem.exists(emptyJobPath)) {
                         fileSystem.delete(emptyJobPath, true);
                         logger.debug("HDFS path " + emptyJobPath + " is empty and dropped.");
