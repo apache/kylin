@@ -1,0 +1,10 @@
+{
+  "uuid" : "8372c3b7-a33e-4b69-83dd-0bb8b1f8117e",
+  "last_modified" : 0,
+  "name" : "ci_inner_join_cube",
+  "owner" : null,
+  "descriptor" : "ci_inner_join_cube",
+  "segments" : [ ],
+  "status" : "DISABLED",
+  "create_time" : null
+}
