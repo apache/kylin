@@ -45,10 +45,10 @@ then
     then
         quit "kafka client lib not found"
     else
-        verbose "kafka dependency: $kafka_dependency"
+        verbose "kafka dependency is $kafka_dependency"
         export kafka_dependency
     fi
 else
-    verbose "kafka dependency: $kafka_dependency"
+    verbose "kafka dependency is $kafka_dependency"
     export kafka_dependency
 fi

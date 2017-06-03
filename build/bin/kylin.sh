@@ -95,7 +95,7 @@ then
         quit "Port ${kylin_rest_address} is not available, could not start Kylin."
     fi
 
-    ${KYLIN_HOME}/bin/check_acl_migration.sh || { exit 1; }
+    ${KYLIN_HOME}/bin/check-acl-migration.sh || { exit 1; }
     #debug if encounter NoClassDefError
     verbose "kylin classpath is: $(hbase classpath)"
 

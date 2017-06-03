@@ -40,8 +40,8 @@ public class AclTableMigrationCLI {
         case CHECK:
             boolean needMigrate = tool.checkIfNeedMigrate(KylinConfig.getInstanceFromEnv());
             if (needMigrate) {
-                System.out.println("Found acl tables that need to migrate. Please execute command : ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE");
-                System.exit(1);
+                System.out.println("Found ACL metadata in legacy format. Please execute command : ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE");
+                System.exit(2);
             }
             break;
         default:

@@ -34,7 +34,7 @@ export KYLIN_EXTRA_START_OPTS=""
 
 if [ ! -z "${KYLIN_JVM_SETTINGS}" ]
 then
-    echo "KYLIN_JVM_SETTINGS is ${KYLIN_JVM_SETTINGS}"
+    verbose "KYLIN_JVM_SETTINGS is ${KYLIN_JVM_SETTINGS}"
     KYLIN_EXTRA_START_OPTS="${KYLIN_JVM_SETTINGS} ${KYLIN_EXTRA_START_OPTS}"
 else
     verbose "KYLIN_JVM_SETTINGS is not set, using default jvm settings: ${KYLIN_JVM_SETTINGS}"

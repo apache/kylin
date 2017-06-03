@@ -28,7 +28,7 @@ fi
 echo "version ${version}"
 export version
 
-sh build/script/prepare_libs.sh || { exit 1; }
+sh build/script/prepare-libs.sh || { exit 1; }
 
 cp server/target/kylin-server-${version}.war build/tomcat/webapps/kylin.war
 chmod 644 build/tomcat/webapps/kylin.war

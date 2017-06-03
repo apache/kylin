@@ -24,7 +24,7 @@ echo Retrieving hadoop conf dir...
 override_hadoop_conf_dir=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.env.hadoop-conf-dir`
 
 if [ -n "$override_hadoop_conf_dir" ]; then
-    echo "$override_hadoop_conf_dir is override as the kylin_hadoop_conf_dir"
+    verbose "kylin_hadoop_conf_dir is override as $override_hadoop_conf_dir"
     export kylin_hadoop_conf_dir=${override_hadoop_conf_dir}
     return
 fi
@@ -69,7 +69,7 @@ do
             continue
         fi
         
-        verbose "$result is chosen as the kylin_hadoop_conf_dir"
+        verbose "kylin_hadoop_conf_dir is $result"
         export kylin_hadoop_conf_dir=$result
         return
     fi

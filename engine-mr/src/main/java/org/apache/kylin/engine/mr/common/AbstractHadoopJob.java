@@ -166,9 +166,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
 
         String kylinHiveDependency = System.getProperty("kylin.hive.dependency");
-        String kylinHBaseDependency = System.getProperty("kylin.hbase.dependency");
         String kylinKafkaDependency = System.getProperty("kylin.kafka.dependency");
-        logger.trace("append kylin.hbase.dependency: " + kylinHBaseDependency + " to " + MAP_REDUCE_CLASSPATH);
 
         Configuration jobConf = job.getConfiguration();
         String classpath = jobConf.get(MAP_REDUCE_CLASSPATH);
@@ -176,12 +174,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             logger.info("Didn't find " + MAP_REDUCE_CLASSPATH + " in job configuration, will run 'mapred classpath' to get the default value.");
             classpath = getDefaultMapRedClasspath();
             logger.info("The default mapred classpath is: " + classpath);
-        }
-
-        if (kylinHBaseDependency != null) {
-            // yarn classpath is comma separated
-            kylinHBaseDependency = kylinHBaseDependency.replace(":", ",");
-            classpath = classpath + "," + kylinHBaseDependency;
         }
 
         jobConf.set(MAP_REDUCE_CLASSPATH, classpath);

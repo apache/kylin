@@ -25,7 +25,7 @@ hbase_classpath=`hbase classpath`
 
 # special handling for Amazon EMR, to prevent re-init of hbase-setenv
 is_aws=`uname -r | grep amzn`
-if [ -n is_aws ] && [ -d "/usr/lib/oozie/lib" ]; then
+if [ -n "$is_aws" ] && [ -d "/usr/lib/oozie/lib" ]; then
     export HBASE_ENV_INIT="true"
 fi
 
