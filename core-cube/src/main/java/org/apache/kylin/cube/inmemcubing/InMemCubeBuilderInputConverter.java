@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
-import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
 import org.apache.kylin.gridtable.GTInfo;
