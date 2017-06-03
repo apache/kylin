@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
 import org.apache.kylin.gridtable.GTInfo;
@@ -32,6 +33,8 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -39,6 +42,8 @@ import com.google.common.collect.Lists;
  */
 public class InMemCubeBuilderInputConverter {
 
+    private static final Logger logger = LoggerFactory.getLogger(InMemCubeBuilderInputConverter.class);
+    
     public static final byte[] HIVE_NULL = Bytes.toBytes("\\N");
 
     private final CubeJoinedFlatTableEnrich flatDesc;
@@ -66,6 +71,7 @@ public class InMemCubeBuilderInputConverter {
     }
 
     public final void convert(List<String> row, GTRecord record) {
+        logger.info(String.format("convert row:%s", row));
         Object[] dimensions = buildKey(row);
         Object[] metricsValues = buildValue(row);
         Object[] recordValues = new Object[dimensions.length + metricsValues.length];
