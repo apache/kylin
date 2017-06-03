@@ -55,7 +55,7 @@ public class ClasspathScanner {
             private void check(String base, String relativePath) {
                 boolean hit = false;
                 for (int i = 0; i < args.length && !hit; i++) {
-                    hit = relativePath.endsWith(args[i]) || match(args[i], relativePath);
+                    hit = relativePath.contains(args[i]) || match(args[i], relativePath);
                 }
 
                 if (hit) {
