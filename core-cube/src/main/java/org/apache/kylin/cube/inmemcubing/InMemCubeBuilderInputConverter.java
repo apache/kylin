@@ -70,7 +70,6 @@ public class InMemCubeBuilderInputConverter {
     }
 
     public final void convert(List<String> row, GTRecord record) {
-        logger.info(String.format("convert row:%s", row));
         Object[] dimensions = buildKey(row);
         Object[] metricsValues = buildValue(row);
         Object[] recordValues = new Object[dimensions.length + metricsValues.length];
