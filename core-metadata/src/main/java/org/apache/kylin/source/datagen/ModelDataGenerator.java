@@ -87,14 +87,7 @@ public class ModelDataGenerator {
 
         JoinTableDesc[] allTables = model.getJoinTables();
         for (int i = allTables.length - 1; i >= -1; i--) {//reverse order needed for FK generation
-            //TableDesc table = (i == -1) ? model.getRootFactTable().getTableDesc() : allTables[i].getTableRef().getTableDesc();
-            TableDesc table = null;
-            if (i>=0){
-                table = mdMgr.getTableDesc(allTables[i].getTableRef().getTableIdentity());
-            }else{
-                table = mdMgr.getTableDesc(model.getRootFactTable().getTableIdentity());
-            }
-            
+            TableDesc table = (i == -1) ? model.getRootFactTable().getTableDesc() : allTables[i].getTableRef().getTableDesc();
             allTableDesc.add(table);
             
             if (generated.contains(table))

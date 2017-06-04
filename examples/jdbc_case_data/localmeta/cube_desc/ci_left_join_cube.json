@@ -465,7 +465,7 @@
   },
   "signature": null,
   "last_modified": 1448959801311,
-  "null_string": null,
+  "null_string": ["null"],
   "hbase_mapping": {
     "column_family": [
       {
