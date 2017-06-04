@@ -986,11 +986,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getAdHocRunnerClassName() {
-        return getOptional("kylin.query.ad-hoc.runner.class-name", "");
+        return getOptional("kylin.query.ad-hoc.runner-class-name", "");
     }
 
     public String getAdHocConverterClassName() {
-        return getOptional("kylin.query.ad-hoc.converter.class-name", "org.apache.kylin.storage.adhoc.HiveAdhocConverter");
+        return getOptional("kylin.query.ad-hoc.converter-class-name", "org.apache.kylin.source.adhocquery.HiveAdhocConverter");
     }
 
     public String getJdbcUrl() {
@@ -1010,15 +1010,15 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getPoolMaxTotal() {
-        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.pool.max-total", "8"));
+        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.jdbc.pool-max-total", "8"));
     }
 
     public int getPoolMaxIdle() {
-        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.pool.max-idle", "8"));
+        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.jdbc.pool-max-idle", "8"));
     }
 
     public int getPoolMinIdle() {
-        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.pool.min-idle", "0"));
+        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.jdbc.pool-min-idle", "0"));
     }
 
     // ============================================================================

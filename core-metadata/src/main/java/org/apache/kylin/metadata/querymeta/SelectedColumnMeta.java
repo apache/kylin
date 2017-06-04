@@ -22,6 +22,7 @@ import java.io.Serializable;
 
 /**
  */
+@SuppressWarnings("serial")
 public class SelectedColumnMeta implements Serializable {
     public SelectedColumnMeta(boolean isAutoIncrement, boolean isCaseSensitive, boolean isSearchable, boolean isCurrency, int isNullalbe, boolean isSigned, int displaySize, String label, String name, String schemaName, String catelogName, String tableName, int precision, int scale, int columnType, String columnTypeName, boolean isReadOnly, boolean isWritable, boolean isDefinitelyWritable) {
         super();

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.storage.adhoc;
+package org.apache.kylin.source.adhocquery;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,8 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 //TODO: Some workaround ways to make sql readable by hive parser, should replaced it with a more well-designed way
-public class HiveAdhocConverter implements IAdhocConverter {
+public class HiveAdhocConverter implements IAdHocConverter {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HiveAdhocConverter.class);
 
     private static final Pattern EXTRACT_PATTERN = Pattern.compile("\\s+extract\\s*(\\()\\s*(.*?)\\s*from(\\s+)", Pattern.CASE_INSENSITIVE);

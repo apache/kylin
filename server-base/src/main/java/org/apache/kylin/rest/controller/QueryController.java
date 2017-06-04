@@ -26,10 +26,10 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMeta;
+import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.request.MetaRequest;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
@@ -59,6 +59,7 @@ import org.supercsv.prefs.CsvPreference;
 @Controller
 public class QueryController extends BasicController {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(QueryController.class);
 
     @Autowired

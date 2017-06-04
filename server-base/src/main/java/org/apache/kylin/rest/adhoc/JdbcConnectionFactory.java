@@ -19,12 +19,13 @@
 package org.apache.kylin.rest.adhoc;
 
 
-import org.apache.commons.pool.PoolableObjectFactory;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import org.apache.commons.pool.PoolableObjectFactory;
+
+@SuppressWarnings("unused")
 class JdbcConnectionFactory implements PoolableObjectFactory {
 
     private final String jdbcUrl;

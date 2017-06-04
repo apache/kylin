@@ -16,33 +16,24 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.storage.adhoc;
+package org.apache.kylin.source.adhocquery;
 
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public abstract class AdHocRunnerBase {
+public interface IAdHocRunner {
 
-    private static final Logger logger = LoggerFactory.getLogger(AdHocRunnerBase.class);
+    void init(KylinConfig config);
 
-    protected KylinConfig config = null;
-
-    public AdHocRunnerBase() {
-    }
-
-    public AdHocRunnerBase(KylinConfig config) {
-        this.config = config;
-    }
-
-    public void setConfig(KylinConfig config) {
-        this.config = config;
-    }
-
-    public abstract void init();
-
-    public abstract void executeQuery(String query, List<List<String>> results, List<SelectedColumnMeta> columnMetas) throws Exception;
+    /**
+     * Run an ad-hoc query in the source database in case Kylin cannot serve using cube.
+     * 
+     * @param query                 the query statement
+     * @param returnRows            an empty list to collect returning rows
+     * @param returnColumnMeta      an empty list to collect metadata of returning columns
+     * @throws Exception if running ad-hoc query fails
+     */
+    void executeQuery(String query, List<List<String>> returnRows, List<SelectedColumnMeta> returnColumnMeta) throws Exception;
 }

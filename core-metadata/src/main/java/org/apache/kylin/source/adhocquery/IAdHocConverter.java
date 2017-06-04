@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.storage.adhoc;
+package org.apache.kylin.source.adhocquery;
 
 /**
  * convert the query to satisfy the parser of adhoc query engine
  */
-public interface IAdhocConverter {
+public interface IAdHocConverter {
     String convert(String originSql);
 }

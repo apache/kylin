@@ -28,34 +28,26 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.pool.impl.GenericObjectPool;
-import org.apache.kylin.storage.adhoc.AdHocRunnerBase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.source.adhocquery.IAdHocRunner;
 
-public class AdHocRunnerJdbcImpl extends AdHocRunnerBase {
+public class AdHocRunnerJdbcImpl implements IAdHocRunner {
 
     private static JdbcConnectionPool pool = null;
 
-    public AdHocRunnerJdbcImpl() {
-        super();
-    }
-
-    public AdHocRunnerJdbcImpl(KylinConfig config) {
-        super(config);
-    }
-
     @Override
-    public void init() {
-        if (this.pool == null) {
-            this.pool = new JdbcConnectionPool();
-            JdbcConnectionFactory factory = new JdbcConnectionFactory(this.config.getJdbcUrl(), this.config.getJdbcDriverClass(), this.config.getJdbcUsername(), this.config.getJdbcPassword());
+    public void init(KylinConfig config) {
+        if (pool == null) {
+            pool = new JdbcConnectionPool();
+            JdbcConnectionFactory factory = new JdbcConnectionFactory(config.getJdbcUrl(), config.getJdbcDriverClass(), config.getJdbcUsername(), config.getJdbcPassword());
             GenericObjectPool.Config poolConfig = new GenericObjectPool.Config();
-            poolConfig.maxActive = this.config.getPoolMaxTotal();
-            poolConfig.maxIdle = this.config.getPoolMaxIdle();
-            poolConfig.minIdle = this.config.getPoolMinIdle();
+            poolConfig.maxActive = config.getPoolMaxTotal();
+            poolConfig.maxIdle = config.getPoolMaxIdle();
+            poolConfig.minIdle = config.getPoolMinIdle();
 
             try {
-                this.pool.createPool(factory, poolConfig);
+                pool.createPool(factory, poolConfig);
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
@@ -96,11 +88,11 @@ public class AdHocRunnerJdbcImpl extends AdHocRunnerBase {
     }
 
     private Connection getConnection() {
-        return this.pool.getConnection();
+        return pool.getConnection();
     }
 
     private void closeConnection(Connection connection) {
-        this.pool.returnConnection(connection);
+        pool.returnConnection(connection);
     }
 
 

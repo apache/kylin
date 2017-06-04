@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.util;
 
-import static org.apache.kylin.metadata.MetadataManager.CCInfo;
-
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -33,15 +31,16 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.MetadataManager.CCInfo;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
-import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.storage.adhoc.AdHocRunnerBase;
-import org.apache.kylin.storage.adhoc.IAdhocConverter;
+import org.apache.kylin.source.adhocquery.IAdHocRunner;
+import org.apache.kylin.source.adhocquery.IAdHocConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,47 +58,27 @@ public class AdHocUtil {
         boolean isExpectedCause = (ExceptionUtils.getRootCause(sqlException).getClass()
                 .equals(NoRealizationFoundException.class));
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        Boolean isAdHoc = false;
 
         if (isExpectedCause && kylinConfig.isAdhocEnabled()) {
-            Class runnerClass = Class.forName(kylinConfig.getAdHocRunnerClassName());
-            Class converterClass = Class.forName(kylinConfig.getAdHocConverterClassName());
-            Object runnerObj = runnerClass.newInstance();
-            Object converterObj = converterClass.newInstance();
+            IAdHocRunner runner = (IAdHocRunner) ClassUtil.newInstance(kylinConfig.getAdHocRunnerClassName());
+            IAdHocConverter converter = (IAdHocConverter) ClassUtil.newInstance(kylinConfig.getAdHocConverterClassName());
 
-            if (!(runnerObj instanceof AdHocRunnerBase)) {
-                throw new InternalErrorException("Ad-hoc runner class should be sub-class of AdHocRunnerBase");
+            runner.init(kylinConfig);
+
+            logger.debug("Ad-hoc query runner {}", runner);
+
+            String expandCC = restoreComputedColumnToExpr(sql, project);
+            String adhocSql = converter.convert(expandCC);
+            if (!adhocSql.equals(sql)) {
+                logger.info("before delegating to adhoc, the query is converted to {} ", adhocSql);
             }
 
-            if (!(converterObj instanceof IAdhocConverter)) {
-                throw new InternalErrorException("Ad-hoc converter class should implement of IAdhocConverter");
-            }
-
-            AdHocRunnerBase runner = (AdHocRunnerBase) runnerObj;
-            IAdhocConverter converter = (IAdhocConverter) converterObj;
-            runner.setConfig(kylinConfig);
-
-            logger.debug("Ad-hoc query enabled for Kylin");
-
-            runner.init();
-
-            try {
-                String expandCC = restoreComputedColumnToExpr(sql, project);
-                String adhocSql = converter.convert(expandCC);
-                if (!adhocSql.equals(adhocSql)) {
-                    logger.info("before delegating to adhoc, the query is converted to {} ", adhocSql);
-                }
-
-                runner.executeQuery(adhocSql, results, columnMetas);
-                isAdHoc = true;
-            } catch (Exception exception) {
-                throw exception;
-            }
+            runner.executeQuery(adhocSql, results, columnMetas);
+            
+            return true;
         } else {
             throw sqlException;
         }
-
-        return isAdHoc;
     }
 
     private final static Pattern identifierInSqlPattern = Pattern.compile(

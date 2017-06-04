@@ -16,10 +16,11 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.storage.adhoc;
+package org.apache.kylin.source.adhocquery;
+
+import org.junit.Test;
 
 import junit.framework.TestCase;
-import org.junit.Test;
 
 
 public class HiveAdhocConverterTest extends TestCase {

@@ -24,6 +24,7 @@ import java.util.HashSet;
 /**
  * Created by luwei on 17-4-26.
  */
+@SuppressWarnings("serial")
 public class ColumnMetaWithType extends ColumnMeta {
     public static enum columnTypeEnum implements Serializable {
 
