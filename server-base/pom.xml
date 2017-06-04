@@ -63,6 +63,16 @@
             <artifactId>kylin-source-kafka</artifactId>
         </dependency>
 
+        <!--
+            The Hadoop provided guava could disappoint calcite's demand. 
+            E.g. the provided could be: /usr/hdp/2.4.0.0-169/hadoop/lib/guava-11.0.2.jar - com/google/common/collect/ImmutableSortedMap.class
+            While calcite requires guava 14.0 now.
+         -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <scope>compile</scope>
+        </dependency>
 
         <dependency>
             <groupId>net.sf.ehcache</groupId>
