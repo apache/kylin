@@ -18,15 +18,9 @@
 
 package org.apache.kylin.source.hive;
 
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
-
-import java.io.IOException;
 import java.util.List;
 
-public interface IHiveClient {
-    void executeHQL(String hql) throws CommandNeedRetryException, IOException;
-
-    void executeHQL(String[] hqls) throws CommandNeedRetryException, IOException;
+public interface IHiveClient extends IJDBCExecutor{
 
     HiveTableMeta getHiveTableMeta(String database, String tableName) throws Exception;
 

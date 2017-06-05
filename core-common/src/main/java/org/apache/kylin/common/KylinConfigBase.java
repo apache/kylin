@@ -588,6 +588,34 @@ abstract public class KylinConfigBase implements Serializable {
     public Map<String, String> getKafkaConfigOverride() {
         return getPropertiesByPrefix("kylin.source.kafka.config-override.");
     }
+    
+    // ============================================================================
+    // SOURCE.JDBC
+    // ============================================================================
+
+    public String getJdbcConnectionUrl() {
+        return getOptional("kylin.source.jdbc.connectionUrl");
+    }
+    
+    public String getJdbcDriver() {
+        return getOptional("kylin.source.jdbc.driver");
+    }
+    
+    public String getJdbcDialect() {
+        return getOptional("kylin.source.jdbc.dialect");
+    }
+    
+    public String getJdbcUser() {
+        return getOptional("kylin.source.jdbc.user");
+    }
+    
+    public String getJdbcPass() {
+        return getOptional("kylin.source.jdbc.pass");
+    }
+    
+    public String getSqoopHome() {
+        return getOptional("kylin.source.sqoop.home");
+    }
 
     // ============================================================================
     // STORAGE.HBASE
