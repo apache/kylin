@@ -1,0 +1,33 @@
+{
+  "uuid": "1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b",
+  "name": "default",
+  "realizations": [
+    {
+      "name": "ci_left_join_cube",
+      "type": "CUBE",
+      "realization": "ci_left_join_cube"
+    },
+    {
+      "name": "ci_inner_join_cube",
+      "type": "CUBE",
+      "realization": "ci_inner_join_cube"
+    }
+  ],
+  "tables": [
+    "public.TEST_KYLIN_FACT",
+    "public.TEST_ORDER",
+    "public.TEST_ACCOUNT",
+    "public.TEST_COUNTRY",
+    "EDW.TEST_CAL_DT",
+    "public.TEST_CATEGORY_GROUPINGS",
+    "EDW.TEST_SITES",
+    "EDW.TEST_SELLER_TYPE_DIM"
+  ],
+  "models": [
+    "ci_left_join_model",
+    "ci_inner_join_model"
+  ],
+  "override_kylin_properties" :{
+    "kylin.storage.hbase.owner-tag": "kylin@kylin.apache.org"
+  }
+}

@@ -18,12 +18,10 @@
 
 package org.apache.kylin.provision;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -31,21 +29,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.DeployUtil;
@@ -55,36 +44,33 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
-import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.SourcePartition;
-import org.apache.kylin.storage.hbase.HBaseConnection;
-import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-public class BuildCubeWithEngine {
+public class JdbcBuildCubeWithEngine {
 
     private CubeManager cubeManager;
-    private CubeDescManager cubeDescManager;
     private DefaultScheduler scheduler;
     protected ExecutableManager jobService;
     private static boolean fastBuildMode = false;
-    private static int engineType;
 
-    private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithEngine.class);
+    private static final Logger logger = LoggerFactory.getLogger(JdbcBuildCubeWithEngine.class);
+    public static final String JDBC_TEST_DATA="../examples/jdbc_case_data/sandbox";
+    public static final String JDBC_LOCALMETA_TEST_DATA = "../examples/jdbc_case_data/localmeta";
 
     public static void main(String[] args) throws Exception {
         long start = System.currentTimeMillis();
         int exitCode = 0;
         try {
-            beforeClass();
+            BuildCubeWithEngine.beforeClass("../examples/jdbc_case_data/sandbox");
 
-            BuildCubeWithEngine buildCubeWithEngine = new BuildCubeWithEngine();
+            JdbcBuildCubeWithEngine buildCubeWithEngine = new JdbcBuildCubeWithEngine();
             buildCubeWithEngine.before();
             buildCubeWithEngine.build();
             buildCubeWithEngine.after();
@@ -97,59 +83,14 @@ public class BuildCubeWithEngine {
         }
 
         long millis = System.currentTimeMillis() - start;
-        System.out.println("Time elapsed: " + (millis / 1000) + " sec - in " + BuildCubeWithEngine.class.getName());
+        System.out.println("Time elapsed: " + (millis / 1000) + " sec - in " + JdbcBuildCubeWithEngine.class.getName());
 
         System.exit(exitCode);
     }
 
-    public static void beforeClass() throws Exception {
-        beforeClass(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
-    }
-    public static void beforeClass(String confDir) throws Exception {
-        logger.info("Adding to classpath: " + new File(confDir).getAbsolutePath());
-        ClassUtil.addClasspath(new File(confDir).getAbsolutePath());
-
-        String fastModeStr = System.getProperty("fastBuildMode");
-        if (fastModeStr != null && fastModeStr.equalsIgnoreCase("true")) {
-            fastBuildMode = true;
-            logger.info("Will use fast build mode");
-        } else {
-            logger.info("Will not use fast build mode");
-        }
-
-        String specifiedEngineType = System.getProperty("engineType");
-        if (StringUtils.isNotEmpty(specifiedEngineType)) {
-            engineType = Integer.parseInt(specifiedEngineType);
-        } else {
-            engineType = 2;
-        }
-
-        System.setProperty(KylinConfig.KYLIN_CONF, confDir);
-        System.setProperty("SPARK_HOME", "/usr/local/spark"); // need manually create and put spark to this folder on Jenkins
-        System.setProperty("kylin.hadoop.conf.dir", confDir);
-        if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
-            throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
-        }
-
-        HBaseMetadataTestCase.staticCreateTestMetadata(confDir);
-
-        try {
-            //check hdfs permission
-            FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
-            String hdfsWorkingDirectory = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
-            Path coprocessorDir = new Path(hdfsWorkingDirectory);
-            boolean success = fileSystem.mkdirs(coprocessorDir);
-            if (!success) {
-                throw new IOException("mkdir fails");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("failed to create kylin.env.hdfs-working-dir, Please make sure the user has right to access " + KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory(), e);
-        }
-    }
-
     protected void deployEnv() throws IOException {
         DeployUtil.initCliWorkDir();
-        DeployUtil.deployMetadata();
+        DeployUtil.deployMetadata(JDBC_LOCALMETA_TEST_DATA);
         DeployUtil.overrideJobJarLocations();
     }
 
@@ -169,8 +110,6 @@ public class BuildCubeWithEngine {
                 jobService.deleteJob(jobId);
             }
         }
-
-        cubeDescManager = CubeDescManager.getInstance(kylinConfig);
     }
 
     public void after() {
@@ -182,12 +121,10 @@ public class BuildCubeWithEngine {
     }
 
     public void build() throws Exception {
-        DeployUtil.prepareTestDataForNormalCubes("ci_left_join_model");
+        //DeployUtil.prepareTestDataForNormalCubes("ci_left_join_model");
         System.setProperty("kylin.storage.hbase.hfile-size-gb", "1.0f");
-        testCase("testInnerJoinCube");
-        testCase("testLeftJoinCube");
-        testCase("testTableExt");
-        testCase("testModel");
+        //testInner();
+        testLeft();
         System.setProperty("kylin.storage.hbase.hfile-size-gb", "0.0f");
     }
 
@@ -206,7 +143,9 @@ public class BuildCubeWithEngine {
         }
     }
 
-    private void testCase(String... testCase) throws Exception {
+
+    private void testLeft() throws Exception {
+        String[] testCase = new String[] { "testLeftJoinCube" };
         runTestAndAssertSucceed(testCase);
     }
 
@@ -246,9 +185,9 @@ public class BuildCubeWithEngine {
         @Override
         public Boolean call() throws Exception {
             try {
-                final Method method = BuildCubeWithEngine.class.getDeclaredMethod(methodName);
+                final Method method = JdbcBuildCubeWithEngine.class.getDeclaredMethod(methodName);
                 method.setAccessible(true);
-                return (Boolean) method.invoke(BuildCubeWithEngine.this);
+                return (Boolean) method.invoke(JdbcBuildCubeWithEngine.this);
             } catch (Exception e) {
                 logger.error(e.getMessage());
                 throw e;
@@ -259,20 +198,11 @@ public class BuildCubeWithEngine {
     }
 
     @SuppressWarnings("unused")
-    protected boolean testTableExt() throws Exception {
-        return true;
-    }
-
-    @SuppressWarnings("unused")
-    protected boolean testModel() throws Exception {
-        return true;
-    }
-
-    @SuppressWarnings("unused")
     // called by reflection
     private boolean testLeftJoinCube() throws Exception {
         String cubeName = "ci_left_join_cube";
         clearSegment(cubeName);
+
         // ci_left_join_cube has percentile which isn't supported by Spark engine now
         // updateCubeEngineType(cubeName);
 
@@ -295,38 +225,6 @@ public class BuildCubeWithEngine {
             }
         }
         return false;
-    }
-
-    @SuppressWarnings("unused")
-    // called by reflection
-    private boolean testInnerJoinCube() throws Exception {
-
-        String cubeName = "ci_inner_join_cube";
-        clearSegment(cubeName);
-        //updateCubeEngineType(cubeName);
-
-        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
-        f.setTimeZone(TimeZone.getTimeZone("GMT"));
-        long date1 = 0;
-        long date2 = f.parse("2022-07-01").getTime();
-        long date3 = f.parse("2023-01-01").getTime();
-
-        if (fastBuildMode) {
-            return buildSegment(cubeName, date1, date3);
-        } else {
-            if (buildSegment(cubeName, date1, date2) == true) { // all-in-one build
-                return buildSegment(cubeName, date2, date3); // empty segment
-            }
-        }
-        return false;
-    }
-
-    private void updateCubeEngineType(String cubeName) throws IOException {
-        CubeDesc cubeDesc = cubeDescManager.getCubeDesc(cubeName);
-        if (cubeDesc.getEngineType() != engineType) {
-            cubeDesc.setEngineType(engineType);
-            cubeDescManager.updateCubeDesc(cubeDesc);
-        }
     }
 
     private void clearSegment(String cubeName) throws Exception {
@@ -355,46 +253,4 @@ public class BuildCubeWithEngine {
         ExecutableState state = waitForJob(job.getId());
         return Boolean.valueOf(ExecutableState.SUCCEED == state);
     }
-
-    @SuppressWarnings("unused")
-    private int cleanupOldStorage() throws Exception {
-        String[] args = { "--delete", "true" };
-
-        StorageCleanupJob cli = new StorageCleanupJob();
-        cli.execute(args);
-        return 0;
-    }
-
-    @SuppressWarnings("unused")
-    private void checkHFilesInHBase(CubeSegment segment) throws IOException {
-        try (Connection conn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl())) {
-            String tableName = segment.getStorageLocationIdentifier();
-
-            HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(tableName, conn);
-            Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
-            long totalSize = 0;
-            for (Long size : sizeMap.values()) {
-                totalSize += size;
-            }
-            if (totalSize == 0) {
-                return;
-            }
-            Map<byte[], Pair<Integer, Integer>> countMap = cal.getRegionHFileCountMap();
-            // check if there's region contains more than one hfile, which means the hfile config take effects
-            boolean hasMultiHFileRegions = false;
-            for (Pair<Integer, Integer> count : countMap.values()) {
-                // check if hfile count is greater than store count
-                if (count.getSecond() > count.getFirst()) {
-                    hasMultiHFileRegions = true;
-                    break;
-                }
-            }
-            if (KylinConfig.getInstanceFromEnv().getHBaseHFileSizeGB() == 0 && hasMultiHFileRegions) {
-                throw new IOException("hfile size set to 0, but found region contains more than one hfiles");
-            } else if (KylinConfig.getInstanceFromEnv().getHBaseHFileSizeGB() > 0 && !hasMultiHFileRegions) {
-                throw new IOException("hfile size set greater than 0, but all regions still has only one hfile");
-            }
-        }
-    }
-
 }

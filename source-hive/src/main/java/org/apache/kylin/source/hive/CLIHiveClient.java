@@ -33,6 +33,8 @@ import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 
 import com.google.common.collect.Lists;
 
@@ -50,6 +52,59 @@ public class CLIHiveClient implements IHiveClient {
         hiveConf = new HiveConf(CLIHiveClient.class);
     }
 
+    private static String getHiveDataType(String javaDataType) {
+        String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
+        hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;
+
+        return hiveDataType.toLowerCase();
+    }
+    
+    @Override
+    public String generateCreateSchemaSql(String schemaName){
+        return String.format("CREATE DATABASE IF NOT EXISTS %s", schemaName);
+    }
+    
+    @Override
+    public String generateLoadDataSql(String tableName, String tableFileDir) {
+        return "LOAD DATA LOCAL INPATH '" + tableFileDir + "/" + tableName + ".csv' OVERWRITE INTO TABLE " + tableName;
+    }
+
+    @Override
+    public String[] generateCreateTableSql(TableDesc tableDesc) {
+
+        String dropsql = "DROP TABLE IF EXISTS " + tableDesc.getIdentity();
+        String dropsql2 = "DROP VIEW IF EXISTS " + tableDesc.getIdentity();
+
+        StringBuilder ddl = new StringBuilder();
+        ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
+        ddl.append("(" + "\n");
+
+        for (int i = 0; i < tableDesc.getColumns().length; i++) {
+            ColumnDesc col = tableDesc.getColumns()[i];
+            if (i > 0) {
+                ddl.append(",");
+            }
+            ddl.append(col.getName() + " " + getHiveDataType((col.getDatatype())) + "\n");
+        }
+
+        ddl.append(")" + "\n");
+        ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
+        ddl.append("STORED AS TEXTFILE");
+
+        return new String[] { dropsql, dropsql2, ddl.toString() };
+    }
+
+    @Override
+    public String[] generateCreateViewSql(String viewName, String tableName) {
+
+        String dropView = "DROP VIEW IF EXISTS " + viewName;
+        String dropTable = "DROP TABLE IF EXISTS " + viewName;
+
+        String createSql = ("CREATE VIEW " + viewName + " AS SELECT * FROM " + tableName);
+
+        return new String[] { dropView, dropTable, createSql };
+    }
+    
     /**
      * only used by Deploy Util
      */
