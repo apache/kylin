@@ -26,8 +26,6 @@
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
-source ${dir}/check-env.sh "if-not-yet"
-
 if [ "$1" == "backup" ]
 then
 

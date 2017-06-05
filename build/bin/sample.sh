@@ -23,8 +23,6 @@ source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 source ${dir}/find-hadoop-conf-dir.sh
 source ${dir}/load-hive-conf.sh
 
-source ${dir}/check-env.sh "if-not-yet"
-
 cd ${KYLIN_HOME}/sample_cube/data
 
 if [ -z "${kylin_hadoop_conf_dir}" ]; then
