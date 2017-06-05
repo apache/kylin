@@ -488,22 +488,6 @@ public class CubeControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.enableCube(cube), "");
     }
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public void deleteCubeV2(@PathVariable String cubeName) throws IOException {
-        Message msg = MsgPicker.getMsg();
-
-        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        if (null == cube) {
-            throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
-        }
-
-        //drop Cube
-        cubeService.deleteCube(cube);
-
-    }
-
     /**
      * get Hbase Info
      *
