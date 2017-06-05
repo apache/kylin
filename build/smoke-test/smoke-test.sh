@@ -59,6 +59,9 @@ ${KYLIN_HOME}/bin/metastore.sh reset
 
 # Test stage
 ${KYLIN_HOME}/bin/sample.sh
+
+${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE
+
 ${KYLIN_HOME}/bin/kylin.sh start
 
 echo "Wait 3 minutes for service start."
