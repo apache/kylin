@@ -59,7 +59,7 @@ public class AclTableMigrationTool {
 
     private static final Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
 
-    public static final String MIGRATE_OK_PREFIX = AclService.DIR_PREFIX + "MIGRATE_OK_";
+    public static final String MIGRATE_OK_PREFIX = "MIGRATE_OK_";
 
     private static final Logger logger = LoggerFactory.getLogger(AclTableMigrationTool.class);
 
