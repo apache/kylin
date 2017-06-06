@@ -135,9 +135,9 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
                     continue;
                 }
 
+                oldDicts.put(col, sourceCubeSegment.getDictionary(col));
+                newDicts.put(col, mergedCubeSegment.getDictionary(col));
                 if (!sourceCubeSegment.getDictionary(col).equals(mergedCubeSegment.getDictionary(col))) {
-                    oldDicts.put(col, sourceCubeSegment.getDictionary(col));
-                    newDicts.put(col, mergedCubeSegment.getDictionary(col));
                     needReEncode = true;
                 }
             }
