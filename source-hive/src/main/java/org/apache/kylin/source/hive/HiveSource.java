@@ -18,10 +18,12 @@
 
 package org.apache.kylin.source.hive;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
+import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
@@ -46,6 +48,16 @@ public class HiveSource implements ISource {
 
     @Override
     public IReadableTable createReadableTable(TableDesc tableDesc) {
+        // hive view must have been materialized already
+        // ref HiveMRInput.createLookupHiveViewMaterializationStep()
+        if (tableDesc.isView()) {
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            String tableName = tableDesc.getMaterializedName();
+            
+            tableDesc = new TableDesc();
+            tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
+            tableDesc.setName(tableName);
+        }
         return new HiveTable(tableDesc);
     }
 
@@ -55,6 +67,11 @@ public class HiveSource implements ISource {
         result.setStartOffset(0);
         result.setEndOffset(0);
         return result;
+    }
+
+    @Override
+    public ISampleDataDeployer getSampleDataDeployer() {
+        return new HiveMetadataExplorer();
     }
 
 }

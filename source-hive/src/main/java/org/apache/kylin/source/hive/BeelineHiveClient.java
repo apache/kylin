@@ -30,7 +30,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.kylin.common.util.DBUtils;
-import org.apache.kylin.metadata.model.TableDesc;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -220,25 +219,5 @@ public class BeelineHiveClient implements IHiveClient {
         HiveTableMeta hiveTableMeta = loader.getHiveTableMeta("default", "test_kylin_fact_part");
         System.out.println(hiveTableMeta);
         loader.close();
-    }
-
-    @Override
-    public String generateCreateSchemaSql(String schemaName) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String generateLoadDataSql(String tableName, String tableFileDir) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String[] generateCreateTableSql(TableDesc tableDesc) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String[] generateCreateViewSql(String viewName, String tableName) {
-        throw new UnsupportedOperationException();
     }
 }

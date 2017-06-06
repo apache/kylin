@@ -594,7 +594,7 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public String getJdbcConnectionUrl() {
-        return getOptional("kylin.source.jdbc.connectionUrl");
+        return getOptional("kylin.source.jdbc.connection-url");
     }
     
     public String getJdbcDriver() {
@@ -614,7 +614,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
     
     public String getSqoopHome() {
-        return getOptional("kylin.source.sqoop.home");
+        return getOptional("kylin.source.jdbc.sqoop-home");
     }
 
     // ============================================================================

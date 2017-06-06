@@ -41,6 +41,7 @@ import com.google.common.collect.Lists;
  */
 public class InMemCubeBuilderInputConverter {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(InMemCubeBuilderInputConverter.class);
     
     public static final byte[] HIVE_NULL = Bytes.toBytes("\\N");

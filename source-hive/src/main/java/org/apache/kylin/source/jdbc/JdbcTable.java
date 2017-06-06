@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.source.hive;
+package org.apache.kylin.source.jdbc;
 
 import java.io.IOException;
 

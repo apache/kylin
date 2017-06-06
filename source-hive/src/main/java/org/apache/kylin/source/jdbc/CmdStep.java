@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.source.hive;
+package org.apache.kylin.source.jdbc;
 
 import java.io.IOException;
 
@@ -40,12 +40,12 @@ public class CmdStep extends AbstractExecutable {
         setParam("cmd", cmd);
     }
 
-    public CmdStep(){
+    public CmdStep() {
     }
-    
+
     protected void sqoopFlatHiveTable(KylinConfig config) throws IOException {
         String cmd = getParam("cmd");
-        logger.info(String.format("exe cmd:%s", cmd));
+        stepLogger.log(String.format("exe cmd:%s", cmd));
         Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
         getManager().addJobInfo(getId(), stepLogger.getInfo());
         if (response.getFirst() != 0) {

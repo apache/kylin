@@ -112,20 +112,12 @@ public class JoinedFlatTable {
     }
 
     public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc) {
-        return generateSelectDataStatement(flatDesc, false);
-    }
-    
-    public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc, boolean singleLine) {
-        return generateSelectDataStatement(flatDesc, singleLine, null);
+        return generateSelectDataStatement(flatDesc, false, null);
     }
     
     public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc, boolean singleLine, String[] skipAs) {
-        String sep = "\n";
-        if (singleLine) sep=" ";
-        List<String> skipAsList = new ArrayList<String>();
-        if (skipAs!=null){
-            skipAsList = Arrays.asList(skipAs);
-        }
+        final String sep = singleLine ? " " : "\n";
+        final List<String> skipAsList = (skipAs == null) ? new ArrayList<String>() : Arrays.asList(skipAs);
         
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT" + sep);
@@ -136,9 +128,9 @@ public class JoinedFlatTable {
                 sql.append(",");
             }
             String colTotalName = String.format("%s.%s", col.getTableRef().getTableName(), col.getName());
-            if (skipAsList.contains(colTotalName)){
+            if (skipAsList.contains(colTotalName)) {
                 sql.append(col.getExpressionInSourceDB() + sep);
-            }else{
+            } else {
                 sql.append(col.getExpressionInSourceDB() + " as " + colName(col) + sep);
             }
         }
@@ -157,8 +149,7 @@ public class JoinedFlatTable {
     }
     
     private static void appendJoinStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine) {
-        String sep="\n";
-        if (singleLine) sep=" ";
+        final String sep = singleLine ? " " : "\n";
         Set<TableRef> dimTableCache = new HashSet<>();
 
         DataModelDesc model = flatDesc.getDataModel();
@@ -207,9 +198,9 @@ public class JoinedFlatTable {
     private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql) {
         appendWhereStatement(flatDesc, sql, false);
     }
+    
     private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine) {
-        String sep="\n";
-        if (singleLine) sep=" ";
+        final String sep = singleLine ? " " : "\n";
         
         boolean hasCondition = false;
         StringBuilder whereBuilder = new StringBuilder();

@@ -26,14 +26,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
-import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -41,14 +42,12 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.streaming.StreamDataLoader;
 import org.apache.kylin.job.streaming.StreamingTableDataGenerator;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.source.ISampleDataDeployer;
+import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.datagen.ModelDataGenerator;
-import org.apache.kylin.source.hive.HiveClientFactory;
-import org.apache.kylin.source.hive.IHiveClient;
 import org.apache.kylin.source.kafka.TimedJsonStreamParser;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -66,15 +65,19 @@ public class DeployUtil {
         execCliCommand("mkdir -p " + config().getKylinJobLogDir());
     }
 
-    public static void deployMetadata() throws IOException {
+    public static void deployMetadata(String localMetaData) throws IOException {
         // install metadata to hbase
         ResourceTool.reset(config());
-        ResourceTool.copy(KylinConfig.createInstanceFromUri(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA), config());
+        ResourceTool.copy(KylinConfig.createInstanceFromUri(localMetaData), config());
 
         // update cube desc signature.
         for (CubeInstance cube : CubeManager.getInstance(config()).listAllCubes()) {
             CubeDescManager.getInstance(config()).updateCubeDesc(cube.getDescriptor());//enforce signature updating
         }
+    }
+    
+    public static void deployMetadata() throws IOException {
+        deployMetadata(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
     }
 
     public static void overrideJobJarLocations() {
@@ -121,20 +124,6 @@ public class DeployUtil {
 
     // ============================================================================
 
-    static final String TABLE_CAL_DT = "edw.test_cal_dt";
-    static final String TABLE_CATEGORY_GROUPINGS = "default.test_category_groupings";
-    static final String TABLE_KYLIN_FACT = "default.test_kylin_fact";
-    static final String TABLE_ORDER = "default.test_order";
-    static final String TABLE_ACCOUNT = "default.test_account";
-    static final String TABLE_COUNTRY = "default.test_country";
-    static final String VIEW_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
-    static final String TABLE_SELLER_TYPE_DIM_TABLE = "edw.test_seller_type_dim_table";
-    static final String TABLE_SITES = "edw.test_sites";
-
-    static final String[] TABLE_NAMES = new String[] { //
-            TABLE_CAL_DT, TABLE_ORDER, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, //
-            TABLE_SELLER_TYPE_DIM_TABLE, TABLE_SITES, TABLE_ACCOUNT, TABLE_COUNTRY };
-
     public static void prepareTestDataForNormalCubes(String modelName) throws Exception {
 
         boolean buildCubeUsingProvidedData = Boolean.parseBoolean(System.getProperty("buildCubeUsingProvidedData"));
@@ -143,14 +132,13 @@ public class DeployUtil {
 
             // data is generated according to cube descriptor and saved in resource store
             MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-            DataModelDesc model = mgr.getDataModelDesc(modelName);
-            ModelDataGenerator gen = new ModelDataGenerator(model, 10000);
+            ModelDataGenerator gen = new ModelDataGenerator(mgr.getDataModelDesc(modelName), 10000);
             gen.generate();
         } else {
             System.out.println("build normal cubes with provided dataset");
         }
 
-        deployHiveTables();
+        deployTables(modelName);
     }
 
     public static void prepareTestDataForStreamingCube(long startTime, long endTime, int numberOfRecords, String cubeName, StreamDataLoader streamDataLoader) throws IOException {
@@ -204,10 +192,21 @@ public class DeployUtil {
 
     }
 
-    private static void deployHiveTables() throws Exception {
+    private static void deployTables(String modelName) throws Exception {
 
         MetadataManager metaMgr = MetadataManager.getInstance(config());
+        DataModelDesc model = metaMgr.getDataModelDesc(modelName);
 
+        Set<TableRef> tables = model.getAllTables();
+        Set<String> TABLE_NAMES = new HashSet<String>();
+        for (TableRef tr:tables){
+            if (!tr.getTableDesc().isView()){
+                String tableName = tr.getTableName();
+                String schema = tr.getTableDesc().getDatabase();
+                String identity = String.format("%s.%s", schema, tableName);
+                TABLE_NAMES.add(identity);
+            }
+        }
         // scp data files, use the data from hbase, instead of local files
         File tempDir = Files.createTempDir();
         String tempDirAbsPath = tempDir.getAbsolutePath();
@@ -217,6 +216,7 @@ public class DeployUtil {
             File localBufferFile = new File(tempDirAbsPath + "/" + tablename + ".csv");
             localBufferFile.createNewFile();
 
+            logger.info(String.format("get resource from hbase:/data/%s.csv", tablename));
             InputStream hbaseDataStream = metaMgr.getStore().getResource("/data/" + tablename + ".csv").inputStream;
             FileOutputStream localFileStream = new FileOutputStream(localBufferFile);
             IOUtils.copy(hbaseDataStream, localFileStream);
@@ -228,67 +228,25 @@ public class DeployUtil {
         }
         tempDir.deleteOnExit();
 
-        IHiveClient hiveClient = HiveClientFactory.getHiveClient();
+        ISampleDataDeployer sampleDataDeployer = SourceFactory.getSource(model.getRootFactTable().getTableDesc())
+                .getSampleDataDeployer();
+        
         // create hive tables
-        hiveClient.executeHQL("CREATE DATABASE IF NOT EXISTS EDW");
+        sampleDataDeployer.createSampleDatabase("EDW");
         for (String tablename : TABLE_NAMES) {
-            hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(tablename.toUpperCase())));
+            logger.info(String.format("get table desc %s", tablename));
+            sampleDataDeployer.createSampleTable(metaMgr.getTableDesc(tablename));
         }
 
         // load data to hive tables
         // LOAD DATA LOCAL INPATH 'filepath' [OVERWRITE] INTO TABLE tablename
         for (String tablename : TABLE_NAMES) {
-            hiveClient.executeHQL(generateLoadDataHql(tablename.toUpperCase(), tempDirAbsPath));
+            sampleDataDeployer.loadSampleData(tablename, tempDirAbsPath);
         }
-
-        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-        hiveCmdBuilder.addStatements(generateCreateViewHql(VIEW_SELLER_TYPE_DIM, TABLE_SELLER_TYPE_DIM_TABLE));
-
-        config().getCliCommandExecutor().execute(hiveCmdBuilder.build());
-    }
-
-    private static String generateLoadDataHql(String tableName, String tableFileDir) {
-        return "LOAD DATA LOCAL INPATH '" + tableFileDir + "/" + tableName + ".csv' OVERWRITE INTO TABLE " + tableName;
-    }
-
-    private static String[] generateCreateTableHql(TableDesc tableDesc) {
-
-        String dropsql = "DROP TABLE IF EXISTS " + tableDesc.getIdentity();
-        String dropsql2 = "DROP VIEW IF EXISTS " + tableDesc.getIdentity();
-
-        StringBuilder ddl = new StringBuilder();
-        ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
-        ddl.append("(" + "\n");
-
-        for (int i = 0; i < tableDesc.getColumns().length; i++) {
-            ColumnDesc col = tableDesc.getColumns()[i];
-            if (i > 0) {
-                ddl.append(",");
-            }
-            ddl.append(col.getName() + " " + getHiveDataType((col.getDatatype())) + "\n");
-        }
-
-        ddl.append(")" + "\n");
-        ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
-        ddl.append("STORED AS TEXTFILE");
-
-        return new String[] { dropsql, dropsql2, ddl.toString() };
-    }
-
-    private static String[] generateCreateViewHql(String viewName, String tableName) {
-
-        String dropView = "DROP VIEW IF EXISTS " + viewName + ";\n";
-        String dropTable = "DROP TABLE IF EXISTS " + viewName + ";\n";
-
-        String createSql = ("CREATE VIEW " + viewName + " AS SELECT * FROM " + tableName + ";\n");
-
-        return new String[] { dropView, dropTable, createSql };
-    }
-
-    private static String getHiveDataType(String javaDataType) {
-        String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
-        hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;
-
-        return hiveDataType.toLowerCase();
+        
+        //TODO create the view automatically here
+        final String VIEW_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
+        final String TABLE_SELLER_TYPE_DIM_TABLE = "edw.test_seller_type_dim_table";
+        sampleDataDeployer.createWrapperView(TABLE_SELLER_TYPE_DIM_TABLE, VIEW_SELLER_TYPE_DIM);
     }
 }

@@ -43,7 +43,6 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -52,7 +51,6 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
-import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
@@ -62,6 +60,7 @@ import com.google.common.collect.Sets;
 
 public class HiveMRInput implements IMRInput {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HiveMRInput.class);
     
     public static String getTableNameForHCat(TableDesc table) {
@@ -124,9 +123,9 @@ public class HiveMRInput implements IMRInput {
 
     public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
 
-        final IJoinedFlatTableDesc flatDesc;
-        final String flatTableDatabase;
-        final String hdfsWorkingDir;
+        final protected IJoinedFlatTableDesc flatDesc;
+        final protected String flatTableDatabase;
+        final protected String hdfsWorkingDir;
 
         String hiveViewIntermediateTables = "";
 
@@ -141,33 +140,39 @@ public class HiveMRInput implements IMRInput {
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
             final KylinConfig cubeConfig = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName).getConfig();
-            JobEngineConfig conf = new JobEngineConfig(cubeConfig);
-
             final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
-            final String jobWorkingDir = getJobWorkingDir(jobFlow);
 
-            // create flat table first, then count and redistribute
-            if (flatDesc.getDataModel().getRootFactTable().getTableDesc().getSourceType()==ISourceAware.ID_JDBC){
-                jobFlow.addTask(createSqoopToFlatHiveStep(jobWorkingDir, cubeName));
-                jobFlow.addTask(createFlatHiveTableFromFiles(hiveInitStatements, jobWorkingDir));
-            }else{
-                jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName));
-            }
-            if (cubeConfig.isHiveRedistributeEnabled() == true) {
+            // create flat table first
+            addStepPhase1_DoCreateFlatTable(jobFlow);
+            
+            // then count and redistribute
+            if (cubeConfig.isHiveRedistributeEnabled()) {
                 jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName));
             }
-            logger.info(String.format("source aware:%d", flatDesc.getDataModel().getRootFactTable().getTableDesc().getSourceType()));
-            if (flatDesc.getDataModel().getRootFactTable().getTableDesc().getSourceType()==ISourceAware.ID_JDBC){
-                logger.info(String.format("skip createLookupHiveViewMaterializationStep"));
-            }else{
-                AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir);
-                if (task != null) {
-                    jobFlow.addTask(task);
-                }
+            
+            // special for hive
+            addStepPhase1_DoMaterializeLookupTable(jobFlow);
+        }
+
+        protected void addStepPhase1_DoCreateFlatTable(DefaultChainedExecutable jobFlow) {
+            final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
+            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
+            final String jobWorkingDir = getJobWorkingDir(jobFlow);
+            
+            jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName));
+        }
+
+        protected void addStepPhase1_DoMaterializeLookupTable(DefaultChainedExecutable jobFlow) {
+            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
+            final String jobWorkingDir = getJobWorkingDir(jobFlow);
+            
+            AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir);
+            if (task != null) {
+                jobFlow.addTask(task);
             }
         }
 
-        private String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
+        protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
             return JobBuilderSupport.getJobWorkingDir(hdfsWorkingDir, jobFlow.getId());
         }
 
@@ -222,37 +227,6 @@ public class HiveMRInput implements IMRInput {
             return step;
         }
 
-        private AbstractExecutable createSqoopToFlatHiveStep(String jobWorkingDir, String cubeName) {
-            KylinConfig config = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName).getConfig();
-            String partCol = flatDesc.getDataModel().getPartitionDesc().getPartitionDateColumn();//tablename.colname
-            //using sqoop to extract data from jdbc source and dump them to hive
-            String selectSql = JoinedFlatTable.generateSelectDataStatement(flatDesc, true, new String[]{partCol});
-            String hiveTable = flatDesc.getTableName();
-            String connectionUrl = config.getJdbcConnectionUrl();
-            String driverClass = config.getJdbcDriver();
-            String jdbcUser = config.getJdbcUser();
-            String jdbcPass = config.getJdbcPass();
-            String sqoopHome = config.getSqoopHome();
-            String cmd= String.format(String.format("%s/sqoop import "
-                    + "--connect %s --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
-                    + "--target-dir %s/%s --split-by %s", sqoopHome, connectionUrl, driverClass, jdbcUser, 
-                    jdbcPass, selectSql, jobWorkingDir, hiveTable, partCol));
-            logger.info(String.format("sqoop cmd:%s", cmd));
-            CmdStep step = new CmdStep();
-            step.setCmd(cmd);
-            step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
-            return step;
-        }
-        
-        private AbstractExecutable createFlatHiveTableFromFiles(String hiveInitStatements, String jobWorkingDir) {
-            final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
-            final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, jobWorkingDir, "TEXTFILE");
-            
-            HiveCmdStep step = new HiveCmdStep();
-            step.setCmd(hiveInitStatements + dropTableHql + createTableHql);
-            return step;
-        }
-        
         private AbstractExecutable createFlatHiveTableStep(String hiveInitStatements, String jobWorkingDir, String cubeName) {
             //from hive to hive
             final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);

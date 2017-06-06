@@ -6,34 +6,42 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *  
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *  
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
-package org.apache.kylin.source.hive;
+package org.apache.kylin.source;
 
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.kylin.metadata.model.TableDesc;
 
-import java.io.IOException;
-
-public interface IJDBCExecutor {
+/**
+ * Responsible for deploying sample (CSV) data to the source database.
+ */
+public interface ISampleDataDeployer {
     
-    void executeHQL(String hql) throws CommandNeedRetryException, IOException;
-
-    void executeHQL(String[] hqls) throws CommandNeedRetryException, IOException;
+    /**
+     * Create a new database (or schema) if not exists.
+     */
+    void createSampleDatabase(String database) throws Exception;
     
-    public String generateCreateSchemaSql(String schemaName);
+    /**
+     * Create a new table if not exists.
+     */
+    void createSampleTable(TableDesc table) throws Exception;
     
-    public String generateLoadDataSql(String tableName, String tableFileDir);
+    /**
+     * Overwrite sample CSV data into a table.
+     */
+    void loadSampleData(String tableName, String tmpDataDir) throws Exception;
     
-    public String[] generateCreateTableSql(TableDesc tableDesc);
-    
-    public String[] generateCreateViewSql(String viewName, String tableName);
+    /**
+     * Create a view that wraps over a table, like "create view VIEW_NAME as select * from TABLE_NAME"
+     */
+    void createWrapperView(String origTableName, String viewName) throws Exception;
 }

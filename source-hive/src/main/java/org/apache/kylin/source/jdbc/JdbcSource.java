@@ -16,12 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.source.hive;
+package org.apache.kylin.source.jdbc;
 
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
+import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
@@ -38,7 +39,7 @@ public class JdbcSource implements ISource {
     @Override
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
         if (engineInterface == IMRInput.class) {
-            return (I) new HiveMRInput();
+            return (I) new JdbcHiveMRInput();
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }
@@ -55,6 +56,11 @@ public class JdbcSource implements ISource {
         result.setStartOffset(0);
         result.setEndOffset(0);
         return result;
+    }
+
+    @Override
+    public ISampleDataDeployer getSampleDataDeployer() {
+        return new JdbcExplorer();
     }
 
 }

@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.source.hive;
+package org.apache.kylin.source.jdbc;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -33,12 +33,14 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISourceMetadataExplorer;
+import org.apache.kylin.source.hive.DBConnConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class JdbcExplorer implements ISourceMetadataExplorer, IJDBCExecutor{
+public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeployer {
     private static final Logger logger = LoggerFactory.getLogger(JdbcExplorer.class);
     
     public static final String DIALECT_VERTICA="vertica";
@@ -74,7 +76,11 @@ public class JdbcExplorer implements ISourceMetadataExplorer, IJDBCExecutor{
     }
     
     @Override
-    public String generateCreateSchemaSql(String schemaName){
+    public void createSampleDatabase(String database) throws Exception {
+        executeSQL(generateCreateSchemaSql(database));
+    }
+
+    private String generateCreateSchemaSql(String schemaName){
         if (DIALECT_VERTICA.equals(dialect)){
             return String.format("CREATE schema IF NOT EXISTS %s", schemaName);
         }else{
@@ -84,7 +90,11 @@ public class JdbcExplorer implements ISourceMetadataExplorer, IJDBCExecutor{
     }
     
     @Override
-    public String generateLoadDataSql(String tableName, String tableFileDir) {
+    public void loadSampleData(String tableName, String tmpDataDir) throws Exception {
+        executeSQL(generateLoadDataSql(tableName, tmpDataDir));
+    }
+
+    private String generateLoadDataSql(String tableName, String tableFileDir) {
         if (DIALECT_VERTICA.equals(dialect)){
             return String.format("copy %s from local '%s/%s.csv' delimiter as ',';", tableName, tableFileDir, tableName);
         }else{
@@ -94,7 +104,11 @@ public class JdbcExplorer implements ISourceMetadataExplorer, IJDBCExecutor{
     }
 
     @Override
-    public String[] generateCreateTableSql(TableDesc tableDesc) {
+    public void createSampleTable(TableDesc table) throws Exception {
+        executeSQL(generateCreateTableSql(table));
+    }
+
+    private String[] generateCreateTableSql(TableDesc tableDesc) {
         logger.info(String.format("gen create table sql:%s", tableDesc));
         String tableIdentity = String.format("%s.%s", tableDesc.getDatabase().toUpperCase(), tableDesc.getName()).toUpperCase();
         String dropsql = "DROP TABLE IF EXISTS " + tableIdentity;
@@ -118,7 +132,11 @@ public class JdbcExplorer implements ISourceMetadataExplorer, IJDBCExecutor{
     }
 
     @Override
-    public String[] generateCreateViewSql(String viewName, String tableName) {
+    public void createWrapperView(String origTableName, String viewName) throws Exception {
+        executeSQL(generateCreateViewSql(viewName, origTableName));
+    }
+
+    private String[] generateCreateViewSql(String viewName, String tableName) {
 
         String dropView = "DROP VIEW IF EXISTS " + viewName;
         String dropTable = "DROP TABLE IF EXISTS " + viewName;
@@ -128,16 +146,14 @@ public class JdbcExplorer implements ISourceMetadataExplorer, IJDBCExecutor{
         return new String[] { dropView, dropTable, createSql };
     }
 
-    @Override
-    public void executeHQL(String sql) throws CommandNeedRetryException, IOException {
+    private void executeSQL(String sql) throws CommandNeedRetryException, IOException {
         Connection con = SqlUtil.getConnection(dbconf);
         logger.info(String.format(sql));
         SqlUtil.execUpdateSQL(con, sql);
         SqlUtil.closeResources(con, null);
     }
 
-    @Override
-    public void executeHQL(String[] sqls) throws CommandNeedRetryException, IOException {
+    private void executeSQL(String[] sqls) throws CommandNeedRetryException, IOException {
         Connection con = SqlUtil.getConnection(dbconf);
         for (String sql : sqls){
             logger.info(String.format(sql));

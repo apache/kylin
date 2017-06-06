@@ -54,7 +54,6 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
-import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
@@ -283,13 +282,6 @@ public class CubeManager implements IRealizationProvider {
         SnapshotManager snapshotMgr = getSnapshotManager();
 
         TableDesc tableDesc = new TableDesc(metaMgr.getTableDesc(lookupTable));
-        if (tableDesc.isView() &&
-                tableDesc.getSourceType()!=ISourceAware.ID_JDBC) {
-            String tableName = tableDesc.getMaterializedName();
-            tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
-            tableDesc.setName(tableName);
-        }
-
         IReadableTable hiveTable = SourceFactory.createReadableTable(tableDesc);
         SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc);
 

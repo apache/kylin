@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.source.hive;
+package org.apache.kylin.source.jdbc;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.source.IReadableTable.TableReader;
+import org.apache.kylin.source.hive.DBConnConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

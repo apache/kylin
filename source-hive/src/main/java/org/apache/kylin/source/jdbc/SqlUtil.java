@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.source.hive;
+package org.apache.kylin.source.jdbc;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -26,6 +26,7 @@ import java.util.Random;
 import javax.sql.DataSource;
 
 import org.slf4j.LoggerFactory;
+import org.apache.kylin.source.hive.DBConnConf;
 import org.slf4j.Logger;
 
 public class SqlUtil {

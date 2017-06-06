@@ -53,7 +53,6 @@ import com.google.common.base.Preconditions;
 
 public class ModelDataGenerator {
     private static final Logger logger = LoggerFactory.getLogger(ModelDataGenerator.class);
-    private MetadataManager mdMgr;//
     final private DataModelDesc model;
     final private int targetRows;
     final private ResourceStore outputStore;
@@ -61,11 +60,6 @@ public class ModelDataGenerator {
 
     boolean outprint = false; // for debug
 
-    public ModelDataGenerator(MetadataManager mdMgr, String modelName, int nRows){
-        this(mdMgr.getDataModelDesc(modelName), nRows);
-        this.mdMgr = mdMgr;
-    }
-    
     public ModelDataGenerator(DataModelDesc model, int nRows) {
         this(model, nRows, ResourceStore.getStore(model.getConfig()));
     }
@@ -86,7 +80,7 @@ public class ModelDataGenerator {
         Set<TableDesc> allTableDesc = new LinkedHashSet<>();
 
         JoinTableDesc[] allTables = model.getJoinTables();
-        for (int i = allTables.length - 1; i >= -1; i--) {//reverse order needed for FK generation
+        for (int i = allTables.length - 1; i >= -1; i--) { // reverse order needed for FK generation
             TableDesc table = (i == -1) ? model.getRootFactTable().getTableDesc() : allTables[i].getTableRef().getTableDesc();
             allTableDesc.add(table);
             
