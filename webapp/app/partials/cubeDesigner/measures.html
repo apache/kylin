@@ -172,7 +172,7 @@
                           <div class="col-xs-12 col-sm-6">
                             <select class="form-control" chosen ng-if="nextPara.type !== 'constant'" required
                                     ng-model="nextPara.value"
-                                    ng-options="column as column for column in getAllModelDimColumns()" >
+                                    ng-options="column as column for column in getCommonMetricColumns()" >
                               <option value="">-- Select a Column --</option>
                             </select>
                           </div>
