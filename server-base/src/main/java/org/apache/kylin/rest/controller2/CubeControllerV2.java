@@ -122,6 +122,7 @@ public class CubeControllerV2 extends BasicController {
                 String parentName = cube.getName().substring(0, cube.getName().lastIndexOf("_draft"));
                 CubeInstance official = cubeService.getCubeManager().getCube(parentName);
                 if (official == null) {
+                    cubeInstanceResponse.setDraft(true);
                     cubeInstanceResponse.setName(parentName);
                 } else {
                     continue;

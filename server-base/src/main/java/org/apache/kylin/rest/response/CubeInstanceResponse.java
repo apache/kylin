@@ -39,6 +39,10 @@ public class CubeInstanceResponse extends CubeInstance {
         this.is_streaming = is_streaming;
     }
 
+    public void setDraft(boolean isDraft) {
+        this.isDraft = isDraft;
+    }
+
     public void setPartitionDateColumn(String partitionDateColumn) {
         this.partitionDateColumn = partitionDateColumn;
     }
@@ -53,6 +57,8 @@ public class CubeInstanceResponse extends CubeInstance {
     private String model;
     @JsonProperty("is_streaming")
     private boolean is_streaming;
+    @JsonProperty("is_draft")
+    private boolean isDraft;
     @JsonProperty("partitionDateColumn")
     private String partitionDateColumn;
     @JsonProperty("partitionDateStart")
