@@ -337,7 +337,6 @@ public class JobService extends BasicService implements InitializingBean {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void dropJob(JobInstance job) throws IOException {
-        cancelJob(job);
         getExecutableManager().deleteJob(job.getId());
     }
 

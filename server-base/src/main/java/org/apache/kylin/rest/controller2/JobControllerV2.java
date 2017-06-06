@@ -31,6 +31,7 @@ import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.rest.controller.BasicController;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.JobService;
@@ -279,6 +280,11 @@ public class JobControllerV2 extends BasicController {
     public EnvelopeResponse dropJobV2(@PathVariable String jobId) throws IOException {
 
         JobInstance jobInstance = jobService.getJobInstance(jobId);
+        JobStatusEnum status = jobInstance.getStatus();
+
+        if (status == JobStatusEnum.NEW || status == JobStatusEnum.PENDING || status == JobStatusEnum.RUNNING) {
+            throw new BadRequestException("Cannot drop running job " + jobInstance.getName());
+        }
         jobService.dropJob(jobInstance);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, jobInstance, "");
