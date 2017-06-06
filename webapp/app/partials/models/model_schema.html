@@ -52,8 +52,8 @@
                             Next
                             <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
                         </button>
-                        <button class="btn btn-primary"  ng-click="checkForm($index)?saveModel():''"
-                                ng-if="curStep.title=='Settings' && state.mode=='edit'">
+                        <button class="btn btn-primary"  ng-click="prepareModel();saveModel()"
+                                ng-if="curStep.title=='Settings' && state.mode=='edit' && checkForm($index)">
                             Save
                         </button>
                     </div>

@@ -1,0 +1,44 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<div ng-controller="ModelEditCtrl">
+    <div class="row">
+        <div class="col-xs-3">
+        </div>
+        <div class="col-xs-9">
+            <form role="form" name="model_form" novalidate>
+                <section style="padding-bottom: 20px">
+                    <div style="height: 620px; font-size: 14px;" ui-ace="{
+                                      useWrapMode : true,
+                                      showGutter: true,
+                                      theme:'chrome',
+                                      mode: 'json',
+                                      onLoad: aceLoaded,
+                                      onChange: aceChanged
+                                    }" ng-model="state.modelSchema">
+                    </div>
+                </section>
+                <button class="btn btn-primary" ng-disabled="model_form.$invalid" ng-click="state.project = projectModel.selectedProject;saveModel()">
+                    Save
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
