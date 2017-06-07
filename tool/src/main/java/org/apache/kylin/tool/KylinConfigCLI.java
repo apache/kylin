@@ -42,11 +42,11 @@ public class KylinConfigCLI {
             if (value == null) {
                 value = "";
             }
-            System.out.println(value);
+            System.out.println(value.trim());
         } else {
             Map<String, String> props = getPropertiesByPrefix(config, key);
             for (Map.Entry<String, String> prop : props.entrySet()) {
-                System.out.println(prop.getKey() + "=" + prop.getValue());
+                System.out.println(prop.getKey() + "=" + prop.getValue().trim());
             }
         }
     }
