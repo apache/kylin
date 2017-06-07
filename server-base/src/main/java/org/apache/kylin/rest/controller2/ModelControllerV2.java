@@ -274,15 +274,6 @@ public class ModelControllerV2 extends BasicController {
         return desc;
     }
 
-    @RequestMapping(value = "/checkNameAvailability/{modelName}", method = RequestMethod.GET, produces = {
-            "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public EnvelopeResponse checkNameAvailabilityV2(@PathVariable String modelName) throws IOException {
-
-        boolean ret = modelService.checkNameAvailability(modelName);
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, ret, "");
-    }
-
     @RequestMapping(value = "/{modelName}/usedCols", method = RequestMethod.GET, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody

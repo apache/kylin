@@ -172,12 +172,6 @@ public class ModelService extends BasicService {
         return getMetadataManager().getModelsUsingTable(tableName, projectName);
     }
 
-    public boolean checkNameAvailability(String modelName) throws IOException {
-        List<DataModelDesc> models = listAllModels(modelName, null);
-
-        return models.isEmpty();
-    }
-
     public Map<TblColRef, Set<CubeInstance>> getUsedDimCols(String modelName) {
         Map<TblColRef, Set<CubeInstance>> ret = Maps.newHashMap();
         List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, null, modelName);

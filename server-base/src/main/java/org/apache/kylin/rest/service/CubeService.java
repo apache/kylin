@@ -594,15 +594,6 @@ public class CubeService extends BasicService {
         }
     }
 
-    public boolean checkNameAvailability(String cubeName) {
-        List<CubeInstance> cubes = listAllCubes(cubeName, null, null);
-        for (CubeInstance cube : cubes) {
-            if (cube.getName().equals(cubeName))
-                return false;
-        }
-        return true;
-    }
-
     public void validateCubeDesc(CubeDesc desc, boolean isDraft) {
         Message msg = MsgPicker.getMsg();
 

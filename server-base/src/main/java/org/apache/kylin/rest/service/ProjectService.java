@@ -24,6 +24,9 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
+import org.apache.directory.api.util.Strings;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -42,6 +45,10 @@ import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 /**
  * @author xduo
@@ -157,6 +164,10 @@ public class ProjectService extends BasicService {
     }
 
     public List<ProjectInstance> getReadableProjects() {
+        return getReadableProjects(null);
+    }
+
+    public List<ProjectInstance> getReadableProjects(final String projectName) {
         List<ProjectInstance> readableProjects = new ArrayList<ProjectInstance>();
 
         //list all projects first
@@ -197,6 +208,17 @@ public class ProjectService extends BasicService {
             }
 
         }
+
+        if (!Strings.isEmpty(projectName)) {
+            readableProjects = Lists
+                    .newArrayList(Iterators.filter(readableProjects.iterator(), new Predicate<ProjectInstance>() {
+                        @Override
+                        public boolean apply(@Nullable ProjectInstance input) {
+                            return input.getName().equals(projectName);
+                        }
+                    }));
+        }
+
         return readableProjects;
-}
+    }
 }

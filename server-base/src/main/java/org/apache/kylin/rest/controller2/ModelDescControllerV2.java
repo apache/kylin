@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  * 
  */
 @Controller
-@RequestMapping(value = "/model")
+@RequestMapping(value = "/model_desc")
 public class ModelDescControllerV2 extends BasicController {
 
     @Autowired

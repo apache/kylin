@@ -649,14 +649,6 @@ public class CubeControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, response, "");
     }
 
-    @RequestMapping(value = "/checkNameAvailability/{cubeName}", method = RequestMethod.GET, produces = {
-            "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public EnvelopeResponse checkNameAvailabilityV2(@PathVariable String cubeName) {
-
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.checkNameAvailability(cubeName), "");
-    }
-
     private AggregationGroup deserializeAggregationGroupV2(String aggregationGroupStr) throws IOException {
         AggregationGroup aggreationGroup = null;
         try {

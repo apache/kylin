@@ -60,28 +60,17 @@ public class ProjectControllerV2 extends BasicController {
     @Qualifier("projectService")
     private ProjectService projectService;
 
-    @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public EnvelopeResponse getProjectsV2(
-            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
-
-        int offset = pageOffset * pageSize;
-        int limit = pageSize;
-
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, projectService.listProjects(limit, offset), "");
-    }
-
-    @RequestMapping(value = "/readable", method = { RequestMethod.GET }, produces = {
+    @RequestMapping(value = "/", method = { RequestMethod.GET }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getReadableProjectsV2(
+            @RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
 
-        List<ProjectInstance> readableProjects = projectService.getReadableProjects();
+        List<ProjectInstance> readableProjects = projectService.getReadableProjects(projectName);
         int offset = pageOffset * pageSize;
         int limit = pageSize;
 
