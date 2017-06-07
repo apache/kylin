@@ -60,7 +60,7 @@ public class ProjectControllerV2 extends BasicController {
     @Qualifier("projectService")
     private ProjectService projectService;
 
-    @RequestMapping(value = "/", method = { RequestMethod.GET }, produces = {
+    @RequestMapping(value = "", method = { RequestMethod.GET }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getReadableProjectsV2(
@@ -82,7 +82,7 @@ public class ProjectControllerV2 extends BasicController {
         if ((readableProjects.size() - offset) < limit) {
             limit = readableProjects.size() - offset;
         }
-        data.put("readableProjects", readableProjects.subList(offset, offset + limit));
+        data.put("projects", readableProjects.subList(offset, offset + limit));
         data.put("size", readableProjects.size());
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
