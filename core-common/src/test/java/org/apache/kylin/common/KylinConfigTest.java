@@ -34,6 +34,13 @@ import com.google.common.collect.Maps;
 
 public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     @Test
+    public void testDuplicateConfig() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String v = config.getJobControllerLock();
+        assertEquals("org.apache.kylin.job.lock.MockJobLock", v);
+    }
+
+    @Test
     public void testMRConfigOverride() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         Map<String, String> override = config.getMRConfigOverride();
@@ -124,7 +131,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
             }
         }).start();
     }
-    
+
     @Test
     public void testHdfsWorkingDir() {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();

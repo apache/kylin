@@ -194,7 +194,8 @@ abstract public class KylinConfigBase implements Serializable {
         if (cachedHdfsWorkingDirectory != null)
             return cachedHdfsWorkingDirectory;
 
-        String root = getRequired("kylin.env.hdfs-working-dir");
+        String root = getOptional("kylin.env.hdfs-working-dir", "/kylin");
+
         Path path = new Path(root);
         if (!path.isAbsolute())
             throw new IllegalArgumentException("kylin.env.hdfs-working-dir must be absolute, but got " + root);
@@ -219,7 +220,7 @@ abstract public class KylinConfigBase implements Serializable {
         }
         return cachedHdfsWorkingDirectory;
     }
-    
+
     /**
      * A comma separated list of host:port pairs, each corresponding to a ZooKeeper server
      */
@@ -227,11 +228,11 @@ abstract public class KylinConfigBase implements Serializable {
         String str = getOptional("kylin.env.zookeeper-connect-string");
         if (str != null)
             return str;
-        
+
         str = ZooKeeperUtil.getZKConnectStringFromHBase();
         if (str != null)
             return str;
-        
+
         throw new RuntimeException("Please set 'kylin.env.zookeeper-connect-string' in kylin.properties");
     }
 
@@ -240,7 +241,7 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public StorageURL getMetadataUrl() {
-        return StorageURL.valueOf(getOptional("kylin.metadata.url", ""));
+        return StorageURL.valueOf(getOptional("kylin.metadata.url", "kylin_metadata@hbase"));
     }
 
     // for test only
@@ -276,7 +277,8 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public DistributedLockFactory getDistributedLockFactory() {
-        String clsName = getOptional("kylin.metadata.distributed-lock-impl", "org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock$Factory");
+        String clsName = getOptional("kylin.metadata.distributed-lock-impl",
+                "org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock$Factory");
         return (DistributedLockFactory) ClassUtil.newInstance(clsName);
     }
 
@@ -372,7 +374,7 @@ abstract public class KylinConfigBase implements Serializable {
     public boolean allowCubeAppearInMultipleProjects() {
         return Boolean.parseBoolean(getOptional("kylin.cube.allow-appear-in-multiple-projects", "false"));
     }
-    
+
     public int getGTScanRequestSerializationLevel() {
         return Integer.parseInt(getOptional("kylin.cube.gtscanrequest-serialization-level", "1"));
     }
@@ -384,7 +386,8 @@ abstract public class KylinConfigBase implements Serializable {
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
         CliCommandExecutor exec = new CliCommandExecutor();
         if (getRunAsRemoteCommand()) {
-            exec.setRunAtRemote(getRemoteHadoopCliHostname(), getRemoteHadoopCliPort(), getRemoteHadoopCliUsername(), getRemoteHadoopCliPassword());
+            exec.setRunAtRemote(getRemoteHadoopCliHostname(), getRemoteHadoopCliPort(), getRemoteHadoopCliUsername(),
+                    getRemoteHadoopCliPassword());
         }
         return exec;
     }
@@ -433,7 +436,8 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getHiveDependencyFilterList() {
-        return this.getOptional("kylin.job.dependency-filter-list", "[^,]*hive-exec[^,]*?\\.jar" + "|" + "[^,]*hive-metastore[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[^,]*?\\.jar");
+        return this.getOptional("kylin.job.dependency-filter-list", "[^,]*hive-exec[^,]*?\\.jar" + "|"
+                + "[^,]*hive-metastore[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[^,]*?\\.jar");
     }
 
     public boolean isMailEnabled() {
@@ -691,7 +695,8 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public long getPartitionMaxScanBytes() {
-        long value = Long.parseLong(this.getOptional("kylin.storage.partition.max-scan-bytes", String.valueOf(3L * 1024 * 1024 * 1024)));
+        long value = Long.parseLong(
+                this.getOptional("kylin.storage.partition.max-scan-bytes", String.valueOf(3L * 1024 * 1024 * 1024)));
         return value > 0 ? value : Long.MAX_VALUE;
     }
 
@@ -708,7 +713,8 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getDefaultIGTStorage() {
-        return getOptional("kylin.storage.hbase.gtstorage", "org.apache.kylin.storage.hbase.cube.v2.CubeHBaseEndpointRPC");
+        return getOptional("kylin.storage.hbase.gtstorage",
+                "org.apache.kylin.storage.hbase.cube.v2.CubeHBaseEndpointRPC");
     }
 
     public int getHBaseScanCacheRows() {
@@ -990,7 +996,8 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getAdHocConverterClassName() {
-        return getOptional("kylin.query.ad-hoc.converter-class-name", "org.apache.kylin.source.adhocquery.HiveAdhocConverter");
+        return getOptional("kylin.query.ad-hoc.converter-class-name",
+                "org.apache.kylin.source.adhocquery.HiveAdhocConverter");
     }
 
     public String getJdbcUrl() {

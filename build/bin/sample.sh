@@ -97,4 +97,4 @@ ls -1 DEFAULT.KYLIN_*.json|sed "s/\(DEFAULT\)\(.*\)\.json/mv & $sample_database\
 cd ${KYLIN_HOME}
 ${dir}/kylin.sh org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }
 echo "Sample cube is created successfully in project 'learn_kylin'."
-echo "Restart Kylin server or reload the metadata from web UI to see the change."
+echo `setColor 33 "Restart Kylin Server or click Web UI => System Tab => Reload Metadata to take effect"`

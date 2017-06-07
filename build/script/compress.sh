@@ -36,6 +36,11 @@ rm -rf ${package_name}
 mkdir ${package_name}
 cp -r lib tool bin conf tomcat spark ../examples/sample_cube commit_SHA1 ${package_name}
 rm -rf lib tomcat spark commit_SHA1
+
+## comment all default properties, and append them to the user visible kylin.properties
+## first 16 lines are license, just skip them
+sed '1,16d' ../core-common/src/main/resources/kylin-defaults.properties | awk '{print "#"$0}' >> ${package_name}/conf/kylin.properties
+
 find ${package_name} -type d -exec chmod 755 {} \;
 find ${package_name} -type f -exec chmod 644 {} \;
 find ${package_name} -type f -name "*.sh" -exec chmod 755 {} \;

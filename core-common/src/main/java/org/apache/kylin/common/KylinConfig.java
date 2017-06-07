@@ -21,14 +21,13 @@ package org.apache.kylin.common;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.Map;
@@ -41,6 +40,8 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 /**
  */
@@ -70,7 +71,8 @@ public class KylinConfig extends KylinConfigBase {
                     config = new KylinConfig();
                     config.reloadKylinConfig(getKylinProperties());
 
-                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : " + System.identityHashCode(config));
+                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
+                            + System.identityHashCode(config));
                     SYS_ENV_INSTANCE = config;
                 } catch (IllegalArgumentException e) {
                     throw new IllegalStateException("Failed to find KylinConfig ", e);
@@ -108,10 +110,12 @@ public class KylinConfig extends KylinConfigBase {
                     if (file.getName().equalsIgnoreCase(KYLIN_CONF_PROPERTIES_FILE)) {
                         return UriType.PROPERTIES_FILE;
                     } else {
-                        throw new IllegalStateException("Metadata uri : " + metaUri + " is a local file but not kylin.properties");
+                        throw new IllegalStateException(
+                                "Metadata uri : " + metaUri + " is a local file but not kylin.properties");
                     }
                 } else {
-                    throw new IllegalStateException("Metadata uri : " + metaUri + " looks like a file but it's neither a file nor a directory");
+                    throw new IllegalStateException(
+                            "Metadata uri : " + metaUri + " looks like a file but it's neither a file nor a directory");
                 }
             } else {
                 if (RestClient.matchFullRestPattern(metaUri))
@@ -243,49 +247,73 @@ public class KylinConfig extends KylinConfigBase {
 
     public static Properties getKylinProperties() {
         Properties conf = new Properties();
-        try {
-            OrderedProperties orderedProperties = getKylinOrderedProperties();
-            for (Map.Entry<String, String> each : orderedProperties.entrySet()) {
-                conf.put(each.getKey(), each.getValue());
-            }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+
+        OrderedProperties orderedProperties = getKylinOrderedProperties();
+        for (Map.Entry<String, String> each : orderedProperties.entrySet()) {
+            conf.put(each.getKey(), each.getValue());
         }
 
         return conf;
     }
 
-    private static OrderedProperties getKylinOrderedProperties() throws FileNotFoundException, UnsupportedEncodingException {
-        File propFile = getKylinPropertiesFile();
-        if (propFile == null || !propFile.exists()) {
-            logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
-            throw new RuntimeException("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
-        }
-
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(propFile), "UTF-8"));
+    /**
+     * will close the passed in inputstream
+     */
+    private static void loadPropertiesFromInputStream(InputStream inputStream, OrderedProperties properties) {
+        Preconditions.checkNotNull(properties);
+        BufferedReader confReader = null;
         try {
-            OrderedProperties orderedProperties = new OrderedProperties();
-            orderedProperties.load(reader);
-            orderedProperties = BCC.check(orderedProperties);
+            confReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+            OrderedProperties temp = new OrderedProperties();
+            temp.load(confReader);
+            temp = BCC.check(temp);
 
+            properties.putAll(temp);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            IOUtils.closeQuietly(confReader);
+        }
+    }
+
+    private static OrderedProperties getKylinOrderedProperties() {
+
+        try {
+            // 1. load default configurations from classpath. 
+            // we have a kylin-defaults.properties in kylin/core-common/src/main/resources 
+            URL resource = Thread.currentThread().getContextClassLoader().getResource("kylin-defaults.properties");
+            Preconditions.checkNotNull(resource);
+            logger.info("Loading kylin-defaults.properties from {}", resource.getPath());
+            OrderedProperties orderedProperties = new OrderedProperties();
+            loadPropertiesFromInputStream(resource.openStream(), orderedProperties);
+
+            for (int i = 0; i < 10; i++) {
+                String fileName = "kylin-defaults" + (i) + ".properties";
+                URL additionalResource = Thread.currentThread().getContextClassLoader().getResource(fileName);
+                if (additionalResource != null) {
+                    logger.info("Loading {} from {} ", fileName, additionalResource.getPath());
+                    loadPropertiesFromInputStream(additionalResource.openStream(), orderedProperties);
+                }
+            }
+
+            // 2. load site conf, to keep backward compatibility it's still named kylin.properties
+            // actually it's better to be named kylin-site.properties
+            File propFile = getKylinPropertiesFile();
+            if (propFile == null || !propFile.exists()) {
+                logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
+                throw new RuntimeException("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
+            }
+            loadPropertiesFromInputStream(new FileInputStream(propFile), orderedProperties);
+
+            // 3. still support kylin.properties.override as secondary override
+            // not suggest to use it anymore
             File propOverrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
             if (propOverrideFile.exists()) {
-                FileInputStream ois = new FileInputStream(propOverrideFile);
-                try {
-                    OrderedProperties propOverride = new OrderedProperties();
-                    propOverride.load(ois);
-                    orderedProperties.putAll(BCC.check(propOverride));
-                } finally {
-                    IOUtils.closeQuietly(ois);
-                }
+                loadPropertiesFromInputStream(new FileInputStream(propOverrideFile), orderedProperties);
             }
             return orderedProperties;
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(reader);
         }
     }
 
