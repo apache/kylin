@@ -21,7 +21,7 @@ package org.apache.kylin.rest.controller2;
 import java.io.IOException;
 
 import org.apache.kylin.rest.controller.BasicController;
-import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.exception.UnauthorizedException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -76,7 +76,7 @@ public class UserControllerV2 extends BasicController {
 
         if (authentication == null) {
             logger.debug("authentication is null.");
-            throw new BadRequestException(msg.getAUTH_INFO_NOT_FOUND());
+            throw new UnauthorizedException(msg.getAUTH_INFO_NOT_FOUND());
         }
 
         if (authentication.getPrincipal() instanceof UserDetails) {
@@ -89,7 +89,7 @@ public class UserControllerV2 extends BasicController {
             return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
         }
 
-        throw new BadRequestException(msg.getAUTH_INFO_NOT_FOUND());
+        throw new UnauthorizedException(msg.getAUTH_INFO_NOT_FOUND());
     }
 
     @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = {
