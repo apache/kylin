@@ -48,13 +48,20 @@ tar -zxvf build/apache-tomcat-${tomcat_pkg_version}.tar.gz -C build/
 mv build/apache-tomcat-${tomcat_pkg_version} build/tomcat
 rm -rf build/tomcat/webapps/*
 
+
 mv build/tomcat/conf/server.xml build/tomcat/conf/server.xml.bak
-mv build/tomcat/conf/context.xml build/tomcat/conf/context.xml.bak
 cp build/deploy/server.xml build/tomcat/conf/server.xml
 cp build/deploy/server.xml build/tomcat/conf/server.xml.init
 echo "server.xml overwritten..."
+
+mv build/tomcat/conf/context.xml build/tomcat/conf/context.xml.bak
 cp build/deploy/context.xml build/tomcat/conf/context.xml
 echo "context.xml overwritten..."
+
+cp build/tomcat/conf/catalina.properties build/tomcat/conf/catalina.properties.bak
+sed -i "s/org\.apache\.catalina\.startup\.ContextConfig\.jarsToSkip=.*/org\.apache\.catalina\.startup\.ContextConfig\.jarsToSkip=*.jar/g" build/tomcat/conf/catalina.properties
+sed -i "s/org\.apache\.catalina\.startup\.TldConfig\.jarsToSkip=.*/org\.apache\.catalina\.startup\.TldConfig\.jarsToSkip=*.jar/g" build/tomcat/conf/catalina.properties
+echo "catalina.properties overwritten..."
 
 
 if [ -z "$version" ]
