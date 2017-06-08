@@ -93,7 +93,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         if (scanners.isEmpty())
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
 
-        return new SequentialCubeTupleIterator(scanners, request.getCuboid(), request.getDimensions(), request.getMetrics(), returnTupleInfo, request.getContext());
+        return new SequentialCubeTupleIterator(scanners, request.getCuboid(), request.getDimensions(),
+                request.getMetrics(), returnTupleInfo, request.getContext(), sqlDigest);
     }
 
     protected GTCubeStorageQueryRequest getStorageQueryRequest(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
