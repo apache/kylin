@@ -74,9 +74,12 @@ hadoop ${hadoop_conf_param} fs -rm -r ${hdfs_tmp_dir}/sample_cube
 
 # set engine type and storage type to cube desc
 default_engine_type=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.engine.default`
-default_storage_type=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.storage.default`
 if [ -z "$default_engine_type" ]; then
     default_engine_type=2
+fi
+
+default_storage_type=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.storage.default`
+if [ -z "$default_storage_type" ]; then
     default_storage_type=2
 fi
 
