@@ -172,7 +172,8 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         List<ColumnDesc> tableColumns = mgr.listExposedColumns(olapSchema.getProjectName(), sourceTable);
 
         List<ColumnDesc> metricColumns = Lists.newArrayList();
-        List<MeasureDesc> countMeasures = mgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getIdentity());
+        List<MeasureDesc> countMeasures = mgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(),
+                sourceTable.getIdentity());
         HashSet<String> metFields = new HashSet<String>();
         for (MeasureDesc m : countMeasures) {
 
@@ -202,11 +203,13 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         }
         //2. All integer measures in non-cube realizations
         for (IRealization realization : mgr.listAllRealizations(olapSchema.getProjectName())) {
-            if (realization.getType() == RealizationType.INVERTED_INDEX && realization.getModel().isFactTable(sourceTable.getIdentity())) {
+            if (realization.getType() == RealizationType.INVERTED_INDEX && realization.isReady()
+                    && realization.getModel().isFactTable(sourceTable.getIdentity())) {
                 DataModelDesc model = realization.getModel();
                 for (String metricColumn : model.getMetrics()) {
                     TblColRef col = model.findColumn(metricColumn);
-                    if (col.getTable().equals(sourceTable.getIdentity()) && col.getType().isIntegerFamily() && !col.getType().isBigInt())
+                    if (col.getTable().equals(sourceTable.getIdentity()) && col.getType().isIntegerFamily()
+                            && !col.getType().isBigInt())
                         upgradeCols.add(col.getColumnDesc());
                 }
             }
@@ -215,10 +218,12 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         for (ColumnDesc upgrade : upgradeCols) {
             int index = tableColumns.indexOf(upgrade);
             if (index < 0) {
-                throw new IllegalStateException("Metric column " + upgrade + " is not found in the the project's columns");
+                throw new IllegalStateException(
+                        "Metric column " + upgrade + " is not found in the the project's columns");
             }
             tableColumns.get(index).setUpgradedType("bigint");
-            logger.info("To avoid overflow, upgraded {}'s type from {} to {}", tableColumns.get(index), tableColumns.get(index).getType(), tableColumns.get(index).getUpgradedType());
+            logger.info("To avoid overflow, upgraded {}'s type from {} to {}", tableColumns.get(index),
+                    tableColumns.get(index).getType(), tableColumns.get(index).getUpgradedType());
         }
 
         Collections.sort(tableColumns, new Comparator<ColumnDesc>() {

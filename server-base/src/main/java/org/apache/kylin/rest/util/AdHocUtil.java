@@ -39,8 +39,8 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
-import org.apache.kylin.source.adhocquery.IAdHocRunner;
 import org.apache.kylin.source.adhocquery.IAdHocConverter;
+import org.apache.kylin.source.adhocquery.IAdHocRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,8 +60,11 @@ public class AdHocUtil {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
         if (isExpectedCause && kylinConfig.isAdhocEnabled()) {
+
+            logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
             IAdHocRunner runner = (IAdHocRunner) ClassUtil.newInstance(kylinConfig.getAdHocRunnerClassName());
-            IAdHocConverter converter = (IAdHocConverter) ClassUtil.newInstance(kylinConfig.getAdHocConverterClassName());
+            IAdHocConverter converter = (IAdHocConverter) ClassUtil
+                    .newInstance(kylinConfig.getAdHocConverterClassName());
 
             runner.init(kylinConfig);
 
@@ -74,7 +77,7 @@ public class AdHocUtil {
             }
 
             runner.executeQuery(adhocSql, results, columnMetas);
-            
+
             return true;
         } else {
             throw sqlException;
