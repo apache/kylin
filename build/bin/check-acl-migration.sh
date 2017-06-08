@@ -17,26 +17,11 @@
 # limitations under the License.
 #
 
-set -o pipefail  # trace ERR through pipes
-set -o errtrace  # trace ERR through 'time command' and other functions
-function error() {
-   SCRIPT="$0"           # script name
-   LASTLINE="$1"         # line of error occurrence
-   LASTERR="$2"          # error code
-   echo "ERROR exit from ${SCRIPT} : line ${LASTLINE} with exit code ${LASTERR}"
-   exit 1
-}
-trap 'error ${LINENO} ${?}' ERR
-
-
-#check kylin home
-if [ -z "$KYLIN_HOME" ]
-then
-    echo 'Please make sure KYLIN_HOME has been set'
-    exit 1
-else
-    echo "KYLIN_HOME is set to ${KYLIN_HOME}"
-fi
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
 echo "Start to check whether we need to migrate acl tables"
 ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI CHECK
+ec=$?
+
+[[ $ec == 2 ]] && quit "ERROR: Legacy ACL metadata detected. Please migrate ACL metadata first. Command: bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE"
+[[ $ec == 0 ]] || quit "ERROR: Unknown error. Please check full log."
