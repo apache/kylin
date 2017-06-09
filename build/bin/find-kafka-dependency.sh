@@ -26,29 +26,25 @@ echo Retrieving kafka dependency...
 if [ -z "$KAFKA_HOME" ]
 then
     verbose "Couldn't find kafka home. If you want to enable streaming processing, Please set KAFKA_HOME to the path which contains kafka dependencies."
-    return
-fi
-
-if [ -n "$KAFKA_HOME" ]
-then
+else
     verbose "KAFKA_HOME is set to: $KAFKA_HOME, use it to locate kafka dependencies."
     kafka_home=$KAFKA_HOME
-fi
 
-# works for kafka 9+
-kafka_dependency=`find -L $kafka_home -name 'kafka-clients-[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
-if [ -z "$kafka_dependency" ]
-then
-# works for kafka 8
-    kafka_dependency=`find -L $kafka_home -name 'kafka_[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
+    # works for kafka 9+
+    kafka_dependency=`find -L $kafka_home -name 'kafka-clients-[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
     if [ -z "$kafka_dependency" ]
     then
-        quit "kafka client lib not found"
+        # works for kafka 8
+        kafka_dependency=`find -L $kafka_home -name 'kafka_[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
+        if [ -z "$kafka_dependency" ]
+        then
+            quit "kafka client lib not found"
+        else
+            verbose "kafka dependency is $kafka_dependency"
+            export kafka_dependency
+        fi
     else
         verbose "kafka dependency is $kafka_dependency"
         export kafka_dependency
     fi
-else
-    verbose "kafka dependency is $kafka_dependency"
-    export kafka_dependency
 fi
