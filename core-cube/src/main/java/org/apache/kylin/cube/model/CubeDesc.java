@@ -557,7 +557,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         derivedToHostMap = Maps.newHashMap();
         hostToDerivedMap = Maps.newHashMap();
         extendedColumnToHosts = Maps.newHashMap();
-        cuboidBlackSet = null;
+        cuboidBlackSet = Sets.newHashSet();
+
         synchronized (cuboidTreeLock) {
             allCuboids = null;
             parent2Child = null;
