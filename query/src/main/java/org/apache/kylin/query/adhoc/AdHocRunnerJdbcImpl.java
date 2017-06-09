@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.adhoc;
+package org.apache.kylin.query.adhoc;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -34,13 +34,14 @@ import org.apache.kylin.source.adhocquery.IAdHocRunner;
 
 public class AdHocRunnerJdbcImpl implements IAdHocRunner {
 
-    private static JdbcConnectionPool pool = null;
+    private static org.apache.kylin.query.adhoc.JdbcConnectionPool pool = null;
 
     @Override
     public void init(KylinConfig config) {
         if (pool == null) {
             pool = new JdbcConnectionPool();
-            JdbcConnectionFactory factory = new JdbcConnectionFactory(config.getJdbcUrl(), config.getJdbcDriverClass(), config.getJdbcUsername(), config.getJdbcPassword());
+            JdbcConnectionFactory factory = new JdbcConnectionFactory(config.getJdbcUrl(), config.getJdbcDriverClass(),
+                    config.getJdbcUsername(), config.getJdbcPassword());
             GenericObjectPool.Config poolConfig = new GenericObjectPool.Config();
             poolConfig.maxActive = config.getPoolMaxTotal();
             poolConfig.maxIdle = config.getPoolMaxIdle();
@@ -55,7 +56,8 @@ public class AdHocRunnerJdbcImpl implements IAdHocRunner {
     }
 
     @Override
-    public void executeQuery(String query, List<List<String>> results, List<SelectedColumnMeta> columnMetas) throws Exception {
+    public void executeQuery(String query, List<List<String>> results, List<SelectedColumnMeta> columnMetas)
+            throws Exception {
         Statement statement = null;
         Connection connection = this.getConnection();
         ResultSet resultSet = null;
@@ -77,7 +79,11 @@ public class AdHocRunnerJdbcImpl implements IAdHocRunner {
 
             // fill in selected column meta
             for (int i = 1; i <= columnCount; ++i) {
-                columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), false, metaData.isCurrency(i), metaData.isNullable(i), false, metaData.getColumnDisplaySize(i), metaData.getColumnLabel(i), metaData.getColumnName(i), null, null, null, metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i), metaData.getColumnTypeName(i), metaData.isReadOnly(i), false, false));
+                columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), false,
+                        metaData.isCurrency(i), metaData.isNullable(i), false, metaData.getColumnDisplaySize(i),
+                        metaData.getColumnLabel(i), metaData.getColumnName(i), null, null, null,
+                        metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i),
+                        metaData.getColumnTypeName(i), metaData.isReadOnly(i), false, false));
             }
 
         } catch (SQLException sqlException) {
@@ -94,7 +100,6 @@ public class AdHocRunnerJdbcImpl implements IAdHocRunner {
     private void closeConnection(Connection connection) {
         pool.returnConnection(connection);
     }
-
 
     static void extractResults(ResultSet resultSet, List<List<String>> results) throws SQLException {
         List<String> oneRow = new LinkedList<String>();
@@ -113,6 +118,5 @@ public class AdHocRunnerJdbcImpl implements IAdHocRunner {
             throw sqlException;
         }
     }
-
 
 }

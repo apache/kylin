@@ -16,8 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.adhoc;
-
+package org.apache.kylin.query.adhoc;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -25,11 +24,9 @@ import java.sql.Connection;
 
 import org.apache.commons.pool.impl.GenericObjectPool;
 
-
 public class JdbcConnectionPool implements Closeable {
 
     private GenericObjectPool internalPool = null;
-
 
     public void createPool(JdbcConnectionFactory factory, GenericObjectPool.Config poolConfig) throws IOException {
         if (this.internalPool != null)
