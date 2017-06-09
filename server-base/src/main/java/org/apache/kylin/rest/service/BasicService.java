@@ -26,6 +26,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
+import org.apache.kylin.metadata.draft.DraftManager;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
@@ -77,6 +78,10 @@ public abstract class BasicService {
 
     public BadQueryHistoryManager getBadQueryHistoryManager() {
         return BadQueryHistoryManager.getInstance(getConfig());
+    }
+    
+    public DraftManager getDraftManager() {
+        return DraftManager.getInstance(getConfig());
     }
 
 }

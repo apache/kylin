@@ -27,11 +27,10 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.ResourceStore.Checkpoint;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.draft.DraftManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -61,6 +60,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
 /**
@@ -98,28 +98,34 @@ public class ModelControllerV2 extends BasicController {
         HashMap<String, Object> data = new HashMap<String, Object>();
         List<DataModelDesc> models = modelService.listAllModels(modelName, projectName);
 
-        List<DataModelDescResponse> dataModelDescResponses = new ArrayList<DataModelDescResponse>();
-        for (DataModelDesc model : models) {
-            DataModelDescResponse dataModelDescResponse = new DataModelDescResponse(model);
-            if (model.isDraft()) {
-                String parentName = model.getName().substring(0, model.getName().lastIndexOf("_draft"));
-                DataModelDesc official = modelService.getMetadataManager().getDataModelDesc(parentName);
-                if (official == null) {
-                    dataModelDescResponse.setName(parentName);
-                } else {
-                    continue;
-                }
-            }
+        List<DataModelDescResponse> response = new ArrayList<DataModelDescResponse>();
+
+        // official models
+        for (DataModelDesc m : models) {
+            Preconditions.checkState(!m.isDraft());
+            
+            response.add(new DataModelDescResponse(m));
+        }
+
+        // draft models
+        for (DataModelDesc m : modelService.listModelDrafts(projectName)) {
+            Preconditions.checkState(m.isDraft());
+
+            if (contains(response, m.getName()) == false)
+                response.add(new DataModelDescResponse(m));
+        }
+
+        // set project
+        for (DataModelDescResponse r : response) {
             if (projectName != null)
-                dataModelDescResponse.setProject(projectName);
+                r.setProject(projectName);
             else
-                dataModelDescResponse.setProject(projectService.getProjectOfModel(model.getName()));
-            dataModelDescResponses.add(dataModelDescResponse);
+                r.setProject(projectService.getProjectOfModel(r.getName()));
         }
 
         int offset = pageOffset * pageSize;
         int limit = pageSize;
-        int size = dataModelDescResponses.size();
+        int size = response.size();
 
         if (size <= offset) {
             offset = size;
@@ -129,34 +135,38 @@ public class ModelControllerV2 extends BasicController {
         if ((size - offset) < limit) {
             limit = size - offset;
         }
-        data.put("models", dataModelDescResponses.subList(offset, offset + limit));
+        data.put("models", response.subList(offset, offset + limit));
         data.put("size", size);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
+    private boolean contains(List<DataModelDescResponse> response, String name) {
+        for (DataModelDescResponse m : response) {
+            if (m.getName().equals(name))
+                return true;
+        }
+        return false;
+    }
+
     @RequestMapping(value = "", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse updateModelDescV2(@RequestBody ModelRequest modelRequest) throws IOException {
+        DraftManager draftMgr = modelService.getDraftManager();
 
         DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
         modelService.validateModelDesc(modelDesc);
 
-        String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
+        String project = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
                 : modelRequest.getProject();
 
-        ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-        Checkpoint cp = store.checkpoint();
-        try {
-            boolean createNew = modelService.unifyModelDesc(modelDesc, false);
-            modelDesc = modelService.updateModelToResourceStore(modelDesc, projectName, createNew, false);
-        } catch (Exception ex) {
-            cp.rollback();
-            cacheService.wipeAllCache();
-            throw ex;
-        } finally {
-            cp.close();
-        }
+        // don't use checkpoint/rollback, the following update is the only change that must succeed
+
+        // save/update model
+        modelDesc = modelService.updateModelToResourceStore(modelDesc, project);
+
+        // remove any previous draft
+        draftMgr.delete(modelDesc.getUuid());
 
         String descData = JsonUtil.writeValueAsIndentString(modelDesc);
         GeneralResponse data = new GeneralResponse();
@@ -170,25 +180,19 @@ public class ModelControllerV2 extends BasicController {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse updateModelDescDraftV2(@RequestBody ModelRequest modelRequest) throws IOException {
+        DraftManager draftMgr = modelService.getDraftManager();
 
         DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
         modelService.validateModelDesc(modelDesc);
 
-        String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
+        String project = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
                 : modelRequest.getProject();
+        
+        if (modelDesc.getUuid() == null)
+            modelDesc.updateRandomUuid();
+        modelDesc.setDraft(true);
 
-        ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-        Checkpoint cp = store.checkpoint();
-        try {
-            boolean createNew = modelService.unifyModelDesc(modelDesc, true);
-            modelDesc = modelService.updateModelToResourceStore(modelDesc, projectName, createNew, true);
-        } catch (Exception ex) {
-            cp.rollback();
-            cacheService.wipeAllCache();
-            throw ex;
-        } finally {
-            cp.close();
-        }
+        draftMgr.save(project, modelDesc.getUuid(), modelDesc);
 
         String descData = JsonUtil.writeValueAsIndentString(modelDesc);
         GeneralResponse data = new GeneralResponse();
@@ -204,11 +208,17 @@ public class ModelControllerV2 extends BasicController {
     public void deleteModelV2(@PathVariable String modelName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
-        DataModelDesc desc = modelService.getMetadataManager().getDataModelDesc(modelName);
-        if (null == desc) {
+        DataModelDesc model = modelService.getMetadataManager().getDataModelDesc(modelName);
+        DataModelDesc draft = modelService.getModelDraft(modelName);
+        
+        if (null == model && null == draft)
             throw new BadRequestException(String.format(msg.getMODEL_NOT_FOUND(), modelName));
-        }
-        modelService.dropModel(desc);
+        
+        if (model != null)
+            modelService.dropModel(model);
+        
+        if (draft != null)
+            modelService.getDraftManager().delete(draft.getUuid());
     }
 
     @RequestMapping(value = "/{modelName}/clone", method = { RequestMethod.PUT }, produces = {

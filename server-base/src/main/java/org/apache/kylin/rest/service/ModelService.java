@@ -25,12 +25,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
@@ -84,7 +85,8 @@ public class ModelService extends BasicService {
 
         List<DataModelDesc> filterModels = new ArrayList<DataModelDesc>();
         for (DataModelDesc modelDesc : models) {
-            boolean isModelMatch = (null == modelName) || modelName.length() == 0 || modelDesc.getName().toLowerCase().equals(modelName.toLowerCase());
+            boolean isModelMatch = (null == modelName) || modelName.length() == 0
+                    || modelDesc.getName().toLowerCase().equals(modelName.toLowerCase());
 
             if (isModelMatch) {
                 filterModels.add(modelDesc);
@@ -94,7 +96,8 @@ public class ModelService extends BasicService {
         return filterModels;
     }
 
-    public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit, final Integer offset) throws IOException {
+    public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit,
+            final Integer offset) throws IOException {
 
         List<DataModelDesc> modelDescs = listAllModels(modelName, projectName);
 
@@ -127,14 +130,16 @@ public class ModelService extends BasicService {
         return createdDesc;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public DataModelDesc updateModelAndDesc(DataModelDesc desc) throws IOException {
 
         getMetadataManager().updateDataModelDesc(desc);
         return desc;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public void dropModel(DataModelDesc desc) throws IOException {
         Message msg = MsgPicker.getMsg();
 
@@ -151,21 +156,24 @@ public class ModelService extends BasicService {
         accessService.clean(desc, true);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public boolean isTableInAnyModel(String tableName) {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
         return getMetadataManager().isTableInAnyModel(tableName);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public boolean isTableInModel(String tableName, String projectName) throws IOException {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
         return getMetadataManager().isTableInModel(tableName, projectName);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public List<String> getModelsUsingTable(String tableName, String projectName) throws IOException {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
@@ -208,7 +216,7 @@ public class ModelService extends BasicService {
         return ret;
     }
 
-    private boolean validate(DataModelDesc dataModelDesc) throws IOException {
+    private boolean validateUpdatingModel(DataModelDesc dataModelDesc) throws IOException {
 
         dataModelDesc.init(getConfig(), getMetadataManager().getAllTablesMap(), getMetadataManager().getCcInfoMap());
 
@@ -276,86 +284,52 @@ public class ModelService extends BasicService {
         }
     }
 
-    public boolean unifyModelDesc(DataModelDesc desc, boolean isDraft) throws IOException {
-        boolean createNew = false;
-        String name = desc.getName();
-        if (isDraft) {
-            name += "_draft";
-            desc.setName(name);
-            desc.setDraft(true);
-        } else {
-            desc.setDraft(false);
-        }
-
-        if (desc.getUuid() == null) {
-            desc.setLastModified(0);
-            desc.setUuid(UUID.randomUUID().toString());
-            return true;
-        }
-
-        DataModelDesc youngerSelf = killSameUuid(desc.getUuid(), name, isDraft);
-        if (youngerSelf != null) {
-            desc.setLastModified(youngerSelf.getLastModified());
-        } else {
-            createNew = true;
-            desc.setLastModified(0);
-        }
-
-        return createNew;
-    }
-
-    private DataModelDesc killSameUuid(String uuid, String name, boolean isDraft) throws IOException {
+    public DataModelDesc updateModelToResourceStore(DataModelDesc modelDesc, String projectName) throws IOException {
         Message msg = MsgPicker.getMsg();
+        
+        modelDesc.setDraft(false);
 
-        DataModelDesc youngerSelf = null, official = null;
-        boolean rename = false;
-        List<DataModelDesc> models = getMetadataManager().getModels();
-        for (DataModelDesc model : models) {
-            if (model.getUuid().equals(uuid)) {
-                boolean toDrop = true;
-                boolean sameStatus = model.isDraft() == isDraft;
-                if (sameStatus && !model.getName().equals(name)) {
-                    rename = true;
-                }
-                if (sameStatus && model.getName().equals(name)) {
-                    youngerSelf = model;
-                    toDrop = false;
-                }
-                if (!model.isDraft()) {
-                    official = model;
-                    toDrop = false;
-                }
-                if (toDrop) {
-                    dropModel(model);
-                }
-            }
-        }
-        if (official != null && rename) {
-            throw new BadRequestException(msg.getMODEL_RENAME());
-        }
-        return youngerSelf;
-    }
-
-    public DataModelDesc updateModelToResourceStore(DataModelDesc modelDesc, String projectName, boolean createNew, boolean isDraft) throws IOException {
-        Message msg = MsgPicker.getMsg();
-
-        if (createNew) {
-            createModelDesc(projectName, modelDesc);
-        } else {
-            try {
-                if (!isDraft && !validate(modelDesc)) {
+        try {
+            if (modelDesc.getLastModified() == 0) {
+                // new
+                modelDesc = createModelDesc(projectName, modelDesc);
+            } else {
+                // update
+                if (!validateUpdatingModel(modelDesc)) {
                     throw new BadRequestException(msg.getUPDATE_MODEL_KEY_FIELD());
                 }
                 modelDesc = updateModelAndDesc(modelDesc);
-            } catch (AccessDeniedException accessDeniedException) {
-                throw new ForbiddenException(msg.getUPDATE_MODEL_NO_RIGHT());
             }
-
-            if (!modelDesc.getError().isEmpty()) {
-                throw new BadRequestException(String.format(msg.getBROKEN_MODEL_DESC(), modelDesc.getName()));
-            }
+        } catch (AccessDeniedException accessDeniedException) {
+            throw new ForbiddenException(msg.getUPDATE_MODEL_NO_RIGHT());
         }
+
+        if (!modelDesc.getError().isEmpty()) {
+            throw new BadRequestException(String.format(msg.getBROKEN_MODEL_DESC(), modelDesc.getName()));
+        }
+        
         return modelDesc;
     }
 
+    public DataModelDesc getModelDraft(String modelName) throws IOException {
+        for (DataModelDesc m : listModelDrafts(null)) {
+            if (modelName.equals(m.getName()))
+                return m;
+        }
+        return null;
+    }
+    
+    public List<DataModelDesc> listModelDrafts(String project) throws IOException {
+        List<DataModelDesc> result = new ArrayList<>();
+        
+        for (Draft d : getDraftManager().list(project)) {
+            RootPersistentEntity e = d.getEntity();
+            if (e instanceof DataModelDesc) {
+                DataModelDesc m = (DataModelDesc) e;
+                result.add(m);
+            }
+        }
+        
+        return result;
+    }
 }

@@ -68,6 +68,7 @@ abstract public class ResourceStore {
     public static final String STREAMING_OUTPUT_RESOURCE_ROOT = "/streaming_output";
     public static final String CUBE_STATISTICS_ROOT = "/cube_statistics";
     public static final String BAD_QUERY_RESOURCE_ROOT = "/bad_query";
+    public static final String DRAFT_RESOURCE_ROOT = "/draft";
 
     public static final String METASTORE_UUID_TAG = "/UUID";
 

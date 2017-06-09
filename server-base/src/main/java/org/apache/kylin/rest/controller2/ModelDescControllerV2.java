@@ -23,6 +23,7 @@ import java.util.HashMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.draft.DraftManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -31,6 +32,7 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.DataModelDescResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
+import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -40,6 +42,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.google.common.base.Preconditions;
+
 /**
  * @author jiazhong
  * 
@@ -47,6 +51,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping(value = "/model_desc")
 public class ModelDescControllerV2 extends BasicController {
+
+    @Autowired
+    @Qualifier("modelMgmtService")
+    private ModelService modelService;
 
     @Autowired
     @Qualifier("projectService")
@@ -63,42 +71,43 @@ public class ModelDescControllerV2 extends BasicController {
     @RequestMapping(value = "/{modelName}", method = { RequestMethod.GET }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getModelV2(@PathVariable String modelName) {
+    public EnvelopeResponse getModelV2(@PathVariable String modelName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
-        HashMap<String, DataModelDescResponse> data = new HashMap<String, DataModelDescResponse>();
-
-        MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        DataModelDesc modelDesc = metaManager.getDataModelDesc(modelName);
-        if (modelDesc == null)
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        MetadataManager metaMgr = MetadataManager.getInstance(config);
+        DraftManager draftMgr = DraftManager.getInstance(config);
+        
+        DataModelDesc model = metaMgr.getDataModelDesc(modelName);
+        DataModelDesc draft = modelService.getModelDraft(modelName);
+        
+        if (model == null && draft == null)
             throw new BadRequestException(String.format(msg.getMODEL_NOT_FOUND(), modelName));
-
-        DataModelDescResponse dataModelDescResponse = new DataModelDescResponse(modelDesc);
-        dataModelDescResponse.setProject(projectService.getProjectOfModel(modelName));
-
-        if (!modelDesc.isDraft()) {
-            data.put("model", dataModelDescResponse);
-
-            String draftName = modelName + "_draft";
-            DataModelDesc draftDesc = metaManager.getDataModelDesc(draftName);
-            if (draftDesc != null && draftDesc.isDraft()) {
-                DataModelDescResponse draftModelDescResponse = new DataModelDescResponse(draftDesc);
-                draftModelDescResponse.setProject(projectService.getProjectOfModel(draftName));
-                data.put("draft", draftModelDescResponse);
-            }
+        
+        // figure out project
+        String project = null;
+        if (model != null) {
+            project = projectService.getProjectOfModel(modelName);
         } else {
-            data.put("draft", dataModelDescResponse);
-
-            String parentName = modelName.substring(0, modelName.lastIndexOf("_draft"));
-            DataModelDesc parentDesc = metaManager.getDataModelDesc(parentName);
-            if (parentDesc != null && !parentDesc.isDraft()) {
-                DataModelDescResponse parentModelDescResponse = new DataModelDescResponse(parentDesc);
-                parentModelDescResponse.setProject(projectService.getProjectOfModel(parentName));
-                data.put("model", parentModelDescResponse);
-            }
+            project = draftMgr.load(draft.getUuid()).getProject();
+        }
+        
+        // result
+        HashMap<String, DataModelDescResponse> result = new HashMap<String, DataModelDescResponse>();
+        if (model != null) {
+            Preconditions.checkState(!model.isDraft());
+            DataModelDescResponse r = new DataModelDescResponse(model);
+            r.setProject(project);
+            result.put("model", r);
+        }
+        if (draft != null) {
+            Preconditions.checkState(draft.isDraft());
+            DataModelDescResponse r = new DataModelDescResponse(draft);
+            r.setProject(project);
+            result.put("draft", r);
         }
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, result, "");
     }
 
 }
