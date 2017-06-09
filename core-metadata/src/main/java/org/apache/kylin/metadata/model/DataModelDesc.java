@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -395,6 +396,10 @@ public class DataModelDesc extends RootPersistentEntity {
         allTableRefs.clear();
         aliasMap.clear();
         tableNameMap.clear();
+
+        if (StringUtils.isEmpty(rootFactTable)) {
+            throw new IllegalStateException("root fact table should not be empty");
+        }
 
         rootFactTable = rootFactTable.toUpperCase();
         if (tables.containsKey(rootFactTable) == false)
