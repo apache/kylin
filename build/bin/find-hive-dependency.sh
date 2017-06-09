@@ -157,4 +157,4 @@ checkFileExist ${hcatalog}
 hive_dependency=${hive_conf_path}:${hive_lib}:${hcatalog}
 verbose "hive dependency is $hive_dependency"
 export hive_dependency
-
+export hive_conf_path
