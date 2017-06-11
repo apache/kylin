@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Created by luwei on 17-4-17.
  */
+@SuppressWarnings("serial")
 public class CubeInstanceResponse extends CubeInstance {
 
     public void setProject(String project) {

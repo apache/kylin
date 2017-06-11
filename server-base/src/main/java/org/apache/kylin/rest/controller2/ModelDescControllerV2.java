@@ -23,7 +23,7 @@ import java.util.HashMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.draft.DraftManager;
+import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -76,10 +76,9 @@ public class ModelDescControllerV2 extends BasicController {
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         MetadataManager metaMgr = MetadataManager.getInstance(config);
-        DraftManager draftMgr = DraftManager.getInstance(config);
         
         DataModelDesc model = metaMgr.getDataModelDesc(modelName);
-        DataModelDesc draft = modelService.getModelDraft(modelName);
+        Draft draft = modelService.getModelDraft(modelName);
         
         if (model == null && draft == null)
             throw new BadRequestException(String.format(msg.getMODEL_NOT_FOUND(), modelName));
@@ -89,7 +88,7 @@ public class ModelDescControllerV2 extends BasicController {
         if (model != null) {
             project = projectService.getProjectOfModel(modelName);
         } else {
-            project = draftMgr.load(draft.getUuid()).getProject();
+            project = draft.getProject();
         }
         
         // result
@@ -101,8 +100,9 @@ public class ModelDescControllerV2 extends BasicController {
             result.put("model", r);
         }
         if (draft != null) {
-            Preconditions.checkState(draft.isDraft());
-            DataModelDescResponse r = new DataModelDescResponse(draft);
+            DataModelDesc dm = (DataModelDesc) draft.getEntity();
+            Preconditions.checkState(dm.isDraft());
+            DataModelDescResponse r = new DataModelDescResponse(dm);
             r.setProject(project);
             result.put("draft", r);
         }

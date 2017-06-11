@@ -26,11 +26,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.UUID;
 import java.util.WeakHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -43,6 +43,7 @@ import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -170,28 +171,17 @@ public class CubeService extends BasicService {
         createdDesc = getCubeDescManager().createCubeDesc(desc);
 
         if (!createdDesc.getError().isEmpty()) {
-            getCubeDescManager().removeCubeDesc(createdDesc);
             throw new BadRequestException(String.format(msg.getBROKEN_CUBE_DESC(), cubeName));
         }
 
-        if (!desc.isDraft()) {
-            try {
-                int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc, false);
-                logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
-            } catch (Exception e) {
-                getCubeDescManager().removeCubeDesc(createdDesc);
-                throw e;
-            }
-        }
+        int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc, false);
+        logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
 
         createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
+        accessService.init(createdCube, AclPermission.ADMINISTRATION);
 
-        if (!desc.isDraft()) {
-            accessService.init(createdCube, AclPermission.ADMINISTRATION);
-
-            ProjectInstance project = getProjectManager().getProject(projectName);
-            accessService.inherit(createdCube, project);
-        }
+        ProjectInstance project = getProjectManager().getProject(projectName);
+        accessService.inherit(createdCube, project);
 
         return createdCube;
     }
@@ -255,10 +245,8 @@ public class CubeService extends BasicService {
         }
 
         CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
-        if (!desc.isDraft()) {
-            int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc, false);
-            logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
-        }
+        int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc, false);
+        logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
 
         ProjectManager projectManager = getProjectManager();
         if (!isCubeInProject(newProjectName, cube)) {
@@ -266,9 +254,7 @@ public class CubeService extends BasicService {
             ProjectInstance newProject = projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(),
                     newProjectName, owner);
 
-            if (!desc.isDraft()) {
-                accessService.inherit(cube, newProject);
-            }
+            accessService.inherit(cube, newProject);
         }
 
         return updatedCubeDesc;
@@ -624,75 +610,20 @@ public class CubeService extends BasicService {
         }
     }
 
-    public boolean unifyCubeDesc(CubeDesc desc, boolean isDraft) throws IOException {
-        boolean createNew = false;
-        String name = desc.getName();
-        if (isDraft) {
-            name += "_draft";
-            desc.setName(name);
-            desc.setDraft(true);
-        } else {
-            desc.setDraft(false);
-        }
-
-        if (desc.getUuid() == null) {
-            desc.setLastModified(0);
-            desc.setUuid(UUID.randomUUID().toString());
-            return true;
-        }
-
-        CubeDesc youngerSelf = killSameUuid(desc.getUuid(), name, isDraft);
-        if (youngerSelf != null) {
-            desc.setLastModified(youngerSelf.getLastModified());
-        } else {
-            createNew = true;
-            desc.setLastModified(0);
-        }
-
-        return createNew;
-    }
-
-    private CubeDesc killSameUuid(String uuid, String name, boolean isDraft) throws IOException {
+    public CubeDesc updateCubeToResourceStore(CubeDesc desc, String projectName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
-        CubeDesc youngerSelf = null, official = null;
-        boolean rename = false;
-        List<CubeInstance> cubes = getCubeManager().listAllCubes();
-        for (CubeInstance cube : cubes) {
-            CubeDesc cubeDesc = cube.getDescriptor();
-            if (cubeDesc.getUuid().equals(uuid)) {
-                boolean toDrop = true;
-                boolean sameStatus = cubeDesc.isDraft() == isDraft;
-                if (sameStatus && !cubeDesc.getName().equals(name)) {
-                    rename = true;
-                }
-                if (sameStatus && cubeDesc.getName().equals(name)) {
-                    youngerSelf = cubeDesc;
-                    toDrop = false;
-                }
-                if (!cubeDesc.isDraft()) {
-                    official = cubeDesc;
-                    toDrop = false;
-                }
-                if (toDrop) {
-                    deleteCube(cube);
-                }
-            }
-        }
-        if (official != null && rename) {
-            throw new BadRequestException(msg.getCUBE_RENAME());
-        }
-        return youngerSelf;
-    }
-
-    public CubeDesc updateCubeToResourceStore(CubeDesc desc, String projectName, boolean createNew) throws IOException {
-        Message msg = MsgPicker.getMsg();
-
+        desc.setDraft(false);
+        if (desc.getUuid() == null)
+            desc.updateRandomUuid();
+        
         String cubeName = desc.getName();
-        if (createNew) {
-            createCubeAndDesc(cubeName, projectName, desc);
-        } else {
-            try {
+        try {
+            if (desc.getLastModified() == 0) {
+                // new
+                createCubeAndDesc(cubeName, projectName, desc);
+            } else {
+                // update
                 CubeInstance cube = getCubeManager().getCube(desc.getName());
 
                 if (cube == null) {
@@ -704,15 +635,37 @@ public class CubeService extends BasicService {
                 }
 
                 desc = updateCubeAndDesc(cube, desc, projectName, true);
-            } catch (AccessDeniedException accessDeniedException) {
-                throw new ForbiddenException(msg.getUPDATE_CUBE_NO_RIGHT());
             }
-
-            if (!desc.getError().isEmpty()) {
-                throw new BadRequestException(String.format(msg.getBROKEN_CUBE_DESC(), cubeName));
-            }
+        } catch (AccessDeniedException accessDeniedException) {
+            throw new ForbiddenException(msg.getUPDATE_CUBE_NO_RIGHT());
         }
+        
+        if (!desc.getError().isEmpty()) {
+            throw new BadRequestException(String.format(msg.getBROKEN_CUBE_DESC(), cubeName));
+        }
+        
         return desc;
     }
 
+    public Draft getCubeDraft(String cubeName) throws IOException {
+        for (Draft d : listCubeDrafts(cubeName, null)) {
+            return d;
+        }
+        return null;
+    }
+    
+    public List<Draft> listCubeDrafts(String cubeName, String project) throws IOException {
+        List<Draft> result = new ArrayList<>();
+        
+        for (Draft d : getDraftManager().list(project)) {
+            RootPersistentEntity e = d.getEntity();
+            if (e instanceof CubeDesc) {
+                CubeDesc c = (CubeDesc) e;
+                if (cubeName == null || cubeName.equals(c.getName()))
+                    result.add(d);
+            }
+        }
+        
+        return result;
+    }
 }

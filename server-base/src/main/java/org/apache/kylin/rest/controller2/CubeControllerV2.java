@@ -26,21 +26,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
-import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -72,8 +69,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -109,53 +105,30 @@ public class CubeControllerV2 extends BasicController {
             @RequestParam(value = "modelName", required = false) String modelName,
             @RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) throws IOException {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
-        List<CubeInstanceResponse> cubeInstanceResponses = new ArrayList<CubeInstanceResponse>();
+        List<CubeInstanceResponse> response = new ArrayList<CubeInstanceResponse>();
         List<CubeInstance> cubes = cubeService.listAllCubes(cubeName, projectName, modelName);
 
+        // official cubes
         for (CubeInstance cube : cubes) {
-            CubeInstanceResponse cubeInstanceResponse = new CubeInstanceResponse(cube);
-
-            if (cube.getDescriptor().isDraft()) {
-                String parentName = cube.getName().substring(0, cube.getName().lastIndexOf("_draft"));
-                CubeInstance official = cubeService.getCubeManager().getCube(parentName);
-                if (official == null) {
-                    cubeInstanceResponse.setDraft(true);
-                    cubeInstanceResponse.setName(parentName);
-                } else {
-                    continue;
-                }
+            response.add(createCubeInstanceResponse(cube));
+        }
+        
+        // draft cubes
+        for (Draft d : cubeService.listCubeDrafts(cubeName, projectName)) {
+            CubeDesc c = (CubeDesc) d.getEntity();
+            if (contains(response, c.getName()) == false) {
+                CubeInstanceResponse r = createCubeInstanceResponseFromDraft(d);
+                r.setProject(d.getProject());
+                response.add(r);
             }
-
-            cubeInstanceResponse.setPartitionDateStart(cube.getDescriptor().getPartitionDateStart());
-
-            String getModelName = modelName == null ? cube.getDescriptor().getModelName() : modelName;
-            cubeInstanceResponse.setModel(getModelName);
-
-            DataModelDesc getModel = modelService.getMetadataManager().getDataModelDesc(getModelName);
-            cubeInstanceResponse.setPartitionDateColumn(getModel.getPartitionDesc().getPartitionDateColumn());
-
-            cubeInstanceResponse.setIs_streaming(
-                    getModel.getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
-
-            if (projectName != null)
-                cubeInstanceResponse.setProject(projectName);
-            else {
-                List<ProjectInstance> projectInstances = projectService.listProjects(null, null);
-                for (ProjectInstance projectInstance : projectInstances) {
-                    if (projectInstance.containsModel(getModelName))
-                        cubeInstanceResponse.setProject(projectInstance.getName());
-                }
-            }
-
-            cubeInstanceResponses.add(cubeInstanceResponse);
         }
 
         int offset = pageOffset * pageSize;
         int limit = pageSize;
-        int size = cubeInstanceResponses.size();
+        int size = response.size();
 
         if (size <= offset) {
             offset = size;
@@ -166,10 +139,50 @@ public class CubeControllerV2 extends BasicController {
             limit = size - offset;
         }
 
-        data.put("cubes", cubeInstanceResponses.subList(offset, offset + limit));
+        data.put("cubes", response.subList(offset, offset + limit));
         data.put("size", size);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
+    }
+    
+    private boolean contains(List<CubeInstanceResponse> response, String name) {
+        for (CubeInstanceResponse r : response) {
+            if (r.getName().equals(name))
+                return true;
+        }
+        return false;
+    }
+
+    private CubeInstanceResponse createCubeInstanceResponseFromDraft(Draft d) {
+        CubeDesc desc = (CubeDesc) d.getEntity();
+        Preconditions.checkState(desc.isDraft());
+        
+        CubeInstance mock = new CubeInstance();
+        mock.setName(desc.getName());
+        mock.setDescName(desc.getName());
+        mock.setStatus(RealizationStatusEnum.DISABLED);
+        
+        CubeInstanceResponse r = new CubeInstanceResponse(mock);
+        
+        r.setModel(desc.getModelName());
+        r.setProject(d.getProject());
+        
+        return r;
+    }
+
+    private CubeInstanceResponse createCubeInstanceResponse(CubeInstance cube) {
+        Preconditions.checkState(!cube.getDescriptor().isDraft());
+        
+        CubeInstanceResponse r = new CubeInstanceResponse(cube);
+
+        r.setModel(cube.getDescriptor().getModelName());
+        r.setPartitionDateStart(cube.getDescriptor().getPartitionDateStart());
+        r.setPartitionDateColumn(cube.getModel().getPartitionDesc().getPartitionDateColumn());
+        r.setIs_streaming(
+                cube.getModel().getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
+        r.setProject(projectService.getProjectOfCube(cube.getName()));
+        
+        return r;
     }
 
     @RequestMapping(value = "validEncodings", method = { RequestMethod.GET }, produces = {
@@ -192,25 +205,8 @@ public class CubeControllerV2 extends BasicController {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
 
-        CubeInstanceResponse cubeInstanceResponse = new CubeInstanceResponse(cube);
-        cubeInstanceResponse.setPartitionDateStart(cube.getDescriptor().getPartitionDateStart());
-
-        String modelName = cube.getDescriptor().getModelName();
-        cubeInstanceResponse.setModel(modelName);
-
-        DataModelDesc model = modelService.getMetadataManager().getDataModelDesc(modelName);
-        cubeInstanceResponse.setPartitionDateColumn(model.getPartitionDesc().getPartitionDateColumn());
-
-        cubeInstanceResponse
-                .setIs_streaming(model.getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
-
-        List<ProjectInstance> projectInstances = projectService.listProjects(null, null);
-        for (ProjectInstance projectInstance : projectInstances) {
-            if (projectInstance.containsModel(modelName))
-                cubeInstanceResponse.setProject(projectInstance.getName());
-        }
-
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeInstanceResponse, "");
+        CubeInstanceResponse r = createCubeInstanceResponse(cube);
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, r, "");
     }
 
     /**
@@ -647,19 +643,6 @@ public class CubeControllerV2 extends BasicController {
         response.setProperty("offsets", startOffsets.toString());
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, response, "");
-    }
-
-    private AggregationGroup deserializeAggregationGroupV2(String aggregationGroupStr) throws IOException {
-        AggregationGroup aggreationGroup = null;
-        try {
-            logger.debug("Parsing AggregationGroup " + aggregationGroupStr);
-            aggreationGroup = JsonUtil.readValue(aggregationGroupStr, AggregationGroup.class);
-        } catch (JsonParseException e) {
-            logger.error("The AggregationGroup definition is not valid.", e);
-        } catch (JsonMappingException e) {
-            logger.error("The AggregationGroup definition is not valid.", e);
-        }
-        return aggreationGroup;
     }
 
     private void checkCubeNameV2(String cubeName) {

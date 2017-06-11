@@ -30,6 +30,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.draft.DraftManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -95,32 +96,28 @@ public class ModelControllerV2 extends BasicController {
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
             throws IOException {
-        HashMap<String, Object> data = new HashMap<String, Object>();
-        List<DataModelDesc> models = modelService.listAllModels(modelName, projectName);
 
         List<DataModelDescResponse> response = new ArrayList<DataModelDescResponse>();
 
         // official models
-        for (DataModelDesc m : models) {
+        for (DataModelDesc m : modelService.listAllModels(modelName, projectName)) {
             Preconditions.checkState(!m.isDraft());
             
-            response.add(new DataModelDescResponse(m));
+            DataModelDescResponse r = new DataModelDescResponse(m);
+            r.setProject(projectService.getProjectOfModel(m.getName()));
+            response.add(r);
         }
 
         // draft models
-        for (DataModelDesc m : modelService.listModelDrafts(projectName)) {
+        for (Draft d : modelService.listModelDrafts(modelName, projectName)) {
+            DataModelDesc m = (DataModelDesc) d.getEntity();
             Preconditions.checkState(m.isDraft());
 
-            if (contains(response, m.getName()) == false)
-                response.add(new DataModelDescResponse(m));
-        }
-
-        // set project
-        for (DataModelDescResponse r : response) {
-            if (projectName != null)
-                r.setProject(projectName);
-            else
-                r.setProject(projectService.getProjectOfModel(r.getName()));
+            if (contains(response, m.getName()) == false) {
+                DataModelDescResponse r = new DataModelDescResponse(m);
+                r.setProject(d.getProject());
+                response.add(r);
+            }
         }
 
         int offset = pageOffset * pageSize;
@@ -135,6 +132,7 @@ public class ModelControllerV2 extends BasicController {
         if ((size - offset) < limit) {
             limit = size - offset;
         }
+        HashMap<String, Object> data = new HashMap<String, Object>();
         data.put("models", response.subList(offset, offset + limit));
         data.put("size", size);
 
@@ -209,7 +207,7 @@ public class ModelControllerV2 extends BasicController {
         Message msg = MsgPicker.getMsg();
 
         DataModelDesc model = modelService.getMetadataManager().getDataModelDesc(modelName);
-        DataModelDesc draft = modelService.getModelDraft(modelName);
+        Draft draft = modelService.getModelDraft(modelName);
         
         if (null == model && null == draft)
             throw new BadRequestException(String.format(msg.getMODEL_NOT_FOUND(), modelName));

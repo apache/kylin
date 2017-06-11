@@ -384,7 +384,7 @@ public class ProjectManager {
         List<ProjectInstance> result = Lists.newArrayList();
         for (ProjectInstance prj : projectMap.values()) {
             for (RealizationEntry entry : prj.getRealizationEntries()) {
-                if (entry.getType().equals(type) && entry.getRealization().equalsIgnoreCase(realizationName)) {
+                if (entry.getType().equals(type) && entry.getRealization().equals(realizationName)) {
                     result.add(prj);
                     break;
                 }

@@ -30,6 +30,7 @@ import org.apache.directory.api.util.Strings;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
@@ -154,11 +155,18 @@ public class ProjectService extends BasicService {
         return false;
     }
 
+    public String getProjectOfCube(String cubeName) {
+        for (ProjectInstance p : getProjectManager().listAllProjects()) {
+            if (p.containsRealization(RealizationType.CUBE, cubeName))
+                return p.getName();
+        }
+        return null;
+    }
+
     public String getProjectOfModel(String modelName) {
-        List<ProjectInstance> projectInstances = listProjects(null, null);
-        for (ProjectInstance projectInstance : projectInstances) {
-            if (projectInstance.containsModel(modelName))
-                return projectInstance.getName();
+        for (ProjectInstance p : getProjectManager().listAllProjects()) {
+            if (p.containsModel(modelName))
+                return p.getName();
         }
         return null;
     }

@@ -23,6 +23,7 @@ import java.util.HashMap;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
@@ -38,9 +39,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.google.common.base.Preconditions;
+
 /**
- * @author xduo
- * 
  */
 @Controller
 @RequestMapping(value = "/cube_desc")
@@ -50,85 +51,31 @@ public class CubeDescControllerV2 extends BasicController {
     @Qualifier("cubeMgmtService")
     private CubeService cubeService;
 
-    /**
-     * Get detail information of the "Cube ID"
-     * 
-     * @param cubeName
-     *            Cube Name
-     * @return
-     * @throws IOException
-     */
-
     @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getCubeV2(@PathVariable String cubeName) {
+    public EnvelopeResponse getDescV2(@PathVariable String cubeName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
-        if (cubeInstance == null) {
-            throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
-        }
-        CubeDesc cSchema = cubeInstance.getDescriptor();
-        if (cSchema != null) {
-            return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, new CubeDesc[] { cSchema }, "");
-        } else {
-            throw new BadRequestException(String.format(msg.getCUBE_DESC_NOT_FOUND(), cubeName));
-        }
-    }
-
-    /**
-     * Get detail information of the "Cube ID"
-     * return CubeDesc instead of CubeDesc[]
-     *
-     * @param cubeName
-     *            Cube Name
-     * @return
-     * @throws IOException
-     */
-
-    @RequestMapping(value = "/{cubeName}/desc", method = { RequestMethod.GET }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public EnvelopeResponse getDescV2(@PathVariable String cubeName) {
-        Message msg = MsgPicker.getMsg();
-
-        HashMap<String, CubeDesc> data = new HashMap<String, CubeDesc>();
-
-        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
-        if (cubeInstance == null) {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        Draft draft = cubeService.getCubeDraft(cubeName);
+        
+        if (cube == null && draft == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
 
-        CubeDesc desc = cubeInstance.getDescriptor();
-        if (desc == null)
-            throw new BadRequestException(String.format(msg.getCUBE_DESC_NOT_FOUND(), cubeName));
-
-        if (!desc.isDraft()) {
-            data.put("cube", desc);
-
-            String draftName = cubeName + "_draft";
-            CubeInstance draftCubeInstance = cubeService.getCubeManager().getCube(draftName);
-            if (draftCubeInstance != null) {
-                CubeDesc draftCubeDesc = draftCubeInstance.getDescriptor();
-                if (draftCubeDesc != null && draftCubeDesc.isDraft()) {
-                    data.put("draft", draftCubeDesc);
-                }
-            }
-        } else {
-            data.put("draft", desc);
-
-            String parentName = cubeName.substring(0, cubeName.lastIndexOf("_draft"));
-            CubeInstance parentCubeInstance = cubeService.getCubeManager().getCube(parentName);
-            if (parentCubeInstance != null) {
-                CubeDesc parentDesc = parentCubeInstance.getDescriptor();
-                if (parentDesc != null && !parentDesc.isDraft()) {
-                    data.put("cube", parentDesc);
-                }
-            }
+        HashMap<String, CubeDesc> result = new HashMap<>();
+        if (cube != null) {
+            Preconditions.checkState(!cube.getDescriptor().isDraft());
+            result.put("cube", cube.getDescriptor());
         }
-
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
+        if (draft != null) {
+            CubeDesc dc = (CubeDesc) draft.getEntity();
+            Preconditions.checkState(dc.isDraft());
+            result.put("draft", dc);
+        }
+        
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, result, "");
     }
 
     public void setCubeService(CubeService cubeService) {

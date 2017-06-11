@@ -288,6 +288,8 @@ public class ModelService extends BasicService {
         Message msg = MsgPicker.getMsg();
         
         modelDesc.setDraft(false);
+        if (modelDesc.getUuid() == null)
+            modelDesc.updateRandomUuid();
 
         try {
             if (modelDesc.getLastModified() == 0) {
@@ -311,22 +313,22 @@ public class ModelService extends BasicService {
         return modelDesc;
     }
 
-    public DataModelDesc getModelDraft(String modelName) throws IOException {
-        for (DataModelDesc m : listModelDrafts(null)) {
-            if (modelName.equals(m.getName()))
-                return m;
+    public Draft getModelDraft(String modelName) throws IOException {
+        for (Draft d : listModelDrafts(modelName, null)) {
+            return d;
         }
         return null;
     }
     
-    public List<DataModelDesc> listModelDrafts(String project) throws IOException {
-        List<DataModelDesc> result = new ArrayList<>();
+    public List<Draft> listModelDrafts(String modelName, String project) throws IOException {
+        List<Draft> result = new ArrayList<>();
         
         for (Draft d : getDraftManager().list(project)) {
             RootPersistentEntity e = d.getEntity();
             if (e instanceof DataModelDesc) {
                 DataModelDesc m = (DataModelDesc) e;
-                result.add(m);
+                if (modelName == null || modelName.equals(m.getName()))
+                    result.add(d);
             }
         }
         

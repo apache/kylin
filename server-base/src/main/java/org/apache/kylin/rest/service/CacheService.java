@@ -92,8 +92,11 @@ public class CacheService extends BasicService {
         this.cubeService = cubeService;
     }
 
-    public void wipeAllCache() {
-        annouceWipeCache("all", "update", "all");
+    public void wipeProjectCache(String project) {
+        if (project == null)
+            annouceWipeCache("all", "update", "all");
+        else
+            annouceWipeCache("project", "update", project);
     }
 
     public void annouceWipeCache(String entity, String event, String cacheKey) {
