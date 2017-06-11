@@ -166,6 +166,7 @@ public class CubeControllerV2 extends BasicController {
         
         r.setModel(desc.getModelName());
         r.setProject(d.getProject());
+        r.setDraft(true);
         
         return r;
     }
