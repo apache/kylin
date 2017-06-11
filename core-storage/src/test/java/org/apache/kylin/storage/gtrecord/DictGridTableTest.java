@@ -65,6 +65,7 @@ import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -335,6 +336,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
     
     @Test
+    @Ignore
     public void testFilterScannerPerf() throws IOException {
         GridTable table = newTestPerfTable();
         GTInfo info = table.getInfo();

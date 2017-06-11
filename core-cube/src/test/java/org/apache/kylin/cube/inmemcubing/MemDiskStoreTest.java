@@ -40,7 +40,8 @@ public class MemDiskStoreTest extends LocalFileMetadataTestCase {
 
     final MemoryBudgetController budgetCtrl = new MemoryBudgetController(20);
     final GTInfo info = UnitTestSupport.advancedInfo();
-    final List<GTRecord> data = UnitTestSupport.mockupData(info, 1000000); // converts to about 34 MB data
+    final List<GTRecord> data = UnitTestSupport.mockupData(info, 100000); // converts to about 3.4 MB data
+    // final List<GTRecord> data = UnitTestSupport.mockupData(info, 1000000); // converts to about 34 MB data
 
     @BeforeClass
     public static void setUp() throws Exception {

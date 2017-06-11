@@ -38,7 +38,8 @@ import org.junit.Test;
 public class ConcurrentDiskStoreTest extends LocalFileMetadataTestCase {
 
     final GTInfo info = UnitTestSupport.advancedInfo();
-    final List<GTRecord> data = UnitTestSupport.mockupData(info, 1000000); // converts to about 34 MB data
+    final List<GTRecord> data = UnitTestSupport.mockupData(info, 100000); // converts to about 3.4 MB data
+    // final List<GTRecord> data = UnitTestSupport.mockupData(info, 1000000); // converts to about 34 MB data
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -61,7 +62,7 @@ public class ConcurrentDiskStoreTest extends LocalFileMetadataTestCase {
     @Test
     public void testMultiThreadRead() throws IOException, InterruptedException {
         long start = System.currentTimeMillis();
-        verifyOneTableWriteAndRead(20);
+        verifyOneTableWriteAndRead(5);
         long end = System.currentTimeMillis();
         System.out.println("Cost " + (end - start) + " millis");
     }

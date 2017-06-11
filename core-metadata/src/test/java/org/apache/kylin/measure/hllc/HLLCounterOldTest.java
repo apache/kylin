@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -36,6 +37,7 @@ import org.junit.Test;
  * 
  */
 @SuppressWarnings("deprecation")
+@Ignore("HLLCounter takes over")
 public class HLLCounterOldTest {
 
     ByteBuffer buf = ByteBuffer.allocate(1024 * 1024);

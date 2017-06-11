@@ -147,7 +147,7 @@ public class TrieDictionaryForestTest {
     public void testBigDataSet() {
         //h=generate data
         ArrayList<String> strs = new ArrayList<>();
-        Iterator<String> it = new RandomStrings(100 * 10000).iterator();
+        Iterator<String> it = new RandomStrings(10 * 10000).iterator();
         int totalSize = 0;
         final StringBytesConverter converter = new StringBytesConverter();
         while (it.hasNext()) {
@@ -373,7 +373,7 @@ public class TrieDictionaryForestTest {
     @Test
     public void stringDictRoundFlagTest() {
         TreeSet<String> set = new TreeSet<>(new ByteComparator<>(new StringBytesConverter()));
-        Iterator<String> it = new RandomStrings(10 * 10000).iterator();
+        Iterator<String> it = new RandomStrings(10000).iterator();
         int size = 0;
         while (it.hasNext()) {
             BytesConverter converter = new StringBytesConverter();
@@ -387,7 +387,7 @@ public class TrieDictionaryForestTest {
         //dict.dump(System.out);
 
         //test roundingFlag > 0
-        Iterator<String> it2 = new RandomStrings(100 * 10000).iterator();
+        Iterator<String> it2 = new RandomStrings(10000).iterator();
         while (it2.hasNext()) {
             String query = it2.next();
             //System.out.println("query:"+query);
@@ -400,7 +400,7 @@ public class TrieDictionaryForestTest {
         }
 
         //test roundingFlag < 0
-        Iterator<String> it3 = new RandomStrings(100 * 10000).iterator();
+        Iterator<String> it3 = new RandomStrings(10000).iterator();
         while (it3.hasNext()) {
             String query = it3.next();
             try {
@@ -428,7 +428,7 @@ public class TrieDictionaryForestTest {
                 }
             }
         });
-        int num = 10 * 10000;
+        int num = 10000;
         int k = -48481;
         int size = 0;
         StringBytesConverter converter = new StringBytesConverter();
@@ -451,7 +451,7 @@ public class TrieDictionaryForestTest {
         TrieDictionaryForest<String> dict = builder.build();
         System.out.println(dict.getTrees().size());
 
-        int testTimes = 100 * 10000;
+        int testTimes = 10 * 10000;
         Random rand = new Random(System.currentTimeMillis());
         //test roundingFlag > 0
         for (int i = 0; i < testTimes; i++) {

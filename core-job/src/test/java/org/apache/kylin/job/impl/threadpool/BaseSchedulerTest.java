@@ -23,7 +23,6 @@ import java.lang.reflect.Modifier;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
@@ -46,21 +45,21 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
+        System.setProperty("kylin.job.scheduler.poll-interval-second", "1");
         createTestMetadata();
-        setFinalStatic(ExecutableConstants.class.getField("DEFAULT_SCHEDULER_INTERVAL_SECONDS"), 10);
         jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
         scheduler = DefaultScheduler.createInstance();
         scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()), new MockJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
-
     }
 
     @After
     public void after() throws Exception {
         DefaultScheduler.destroyInstance();
         cleanupTestMetadata();
+        System.clearProperty("kylin.job.scheduler.poll-interval-second");
     }
 
     static void setFinalStatic(Field field, Object newValue) throws Exception {

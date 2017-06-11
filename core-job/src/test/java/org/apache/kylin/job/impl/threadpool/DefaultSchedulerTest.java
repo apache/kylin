@@ -35,6 +35,7 @@ import org.apache.kylin.job.SucceedTestExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -109,6 +110,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
     }
 
     @SuppressWarnings("rawtypes")
+    @Ignore("why test JDK feature?")
     @Test
     public void testSchedulerPool() throws InterruptedException {
         ScheduledExecutorService fetchPool = Executors.newScheduledThreadPool(1);
@@ -118,8 +120,8 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
             public void run() {
                 countDownLatch.countDown();
             }
-        }, 5, 5, TimeUnit.SECONDS);
-        assertTrue("countDownLatch should reach zero in 15 secs", countDownLatch.await(20, TimeUnit.SECONDS));
+        }, 0, 1, TimeUnit.SECONDS);
+        assertTrue("countDownLatch should reach zero in 15 secs", countDownLatch.await(7, TimeUnit.SECONDS));
         assertTrue("future should still running", future.cancel(true));
 
         final CountDownLatch countDownLatch2 = new CountDownLatch(3);
@@ -129,22 +131,8 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
                 countDownLatch2.countDown();
                 throw new RuntimeException();
             }
-        }, 5, 5, TimeUnit.SECONDS);
-        assertFalse("countDownLatch2 should NOT reach zero in 15 secs", countDownLatch2.await(20, TimeUnit.SECONDS));
+        }, 0, 1, TimeUnit.SECONDS);
+        assertFalse("countDownLatch2 should NOT reach zero in 15 secs", countDownLatch2.await(7, TimeUnit.SECONDS));
         assertFalse("future2 should has been stopped", future2.cancel(true));
-
-        final CountDownLatch countDownLatch3 = new CountDownLatch(3);
-        ScheduledFuture future3 = fetchPool.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    countDownLatch3.countDown();
-                    throw new RuntimeException();
-                } catch (Exception e) {
-                }
-            }
-        }, 5, 5, TimeUnit.SECONDS);
-        assertTrue("countDownLatch3 should reach zero in 15 secs", countDownLatch3.await(20, TimeUnit.SECONDS));
-        assertTrue("future3 should still running", future3.cancel(true));
     }
 }

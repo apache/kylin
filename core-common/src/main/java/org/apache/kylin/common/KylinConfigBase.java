@@ -496,6 +496,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.job.scheduler.default", "0"));
     }
 
+    public Integer getSchedulerPollIntervalSecond() {
+        return Integer.parseInt(getOptional("kylin.job.scheduler.poll-interval-second", "30"));
+    }
+    
     public Integer getErrorRecordThreshold() {
         return Integer.parseInt(getOptional("kylin.job.error-record-threshold", "0"));
     }

@@ -136,6 +136,10 @@ public class JobEngineConfig {
     public int getAsyncJobCheckInterval() {
         return config.getYarnStatusCheckIntervalSeconds();
     }
+    
+    public int getPollIntervalSecond() {
+        return config.getSchedulerPollIntervalSecond();
+    }
 
     /*
      * (non-Javadoc)
