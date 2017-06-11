@@ -21,6 +21,11 @@ package org.apache.kylin.rest.request;
 import java.io.Serializable;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
+
+/**
+ * if you're adding/removing fields from SQLRequest, take a look at getCacheKey
+ */
 public class SQLRequest implements Serializable {
     protected static final long serialVersionUID = 1L;
 
@@ -32,6 +37,8 @@ public class SQLRequest implements Serializable {
     private boolean acceptPartial = false;
 
     private Map<String, String> backdoorToggles;
+
+    private volatile Object cacheKey = null;
 
     public SQLRequest() {
     }
@@ -82,6 +89,15 @@ public class SQLRequest implements Serializable {
 
     public void setAcceptPartial(boolean acceptPartial) {
         this.acceptPartial = acceptPartial;
+    }
+
+    public Object getCacheKey() {
+        if (cacheKey != null)
+            return cacheKey;
+
+        cacheKey = Lists.newArrayList(sql.replaceAll("\\s+", ""), project, offset, limit, acceptPartial,
+                backdoorToggles);
+        return cacheKey;
     }
 
     @Override

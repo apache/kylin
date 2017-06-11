@@ -377,7 +377,7 @@ public class QueryService extends BasicService {
                             && checkCondition(sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scanCountThreshold || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
                                     "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})", sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(), scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
                             && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(), "query response is too large: {} ({})", sqlResponse.getResults().size(), kylinConfig.getLargeQueryThreshold())) {
-                        cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
+                        cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest.getCacheKey(), sqlResponse));
                     }
 
                 } else {
@@ -398,7 +398,7 @@ public class QueryService extends BasicService {
 
                 if (queryCacheEnabled && e.getCause() != null && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
                     Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
-                    exceptionCache.put(new Element(sqlRequest, sqlResponse));
+                    exceptionCache.put(new Element(sqlRequest.getCacheKey(), sqlResponse));
                 }
             }
 
@@ -422,14 +422,13 @@ public class QueryService extends BasicService {
         Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
         Cache successCache = cacheManager.getCache(SUCCESS_QUERY_CACHE);
 
-        if (exceptionCache.get(sqlRequest) != null) {
+        Element element = null;
+        if ((element = exceptionCache.get(sqlRequest.getCacheKey())) != null) {
             logger.info("The sqlResponse is found in EXCEPTION_QUERY_CACHE");
-            Element element = exceptionCache.get(sqlRequest);
             response = (SQLResponse) element.getObjectValue();
             response.setHitExceptionCache(true);
-        } else if (successCache.get(sqlRequest) != null) {
+        } else if ((element = successCache.get(sqlRequest.getCacheKey())) != null) {
             logger.info("The sqlResponse is found in SUCCESS_QUERY_CACHE");
-            Element element = successCache.get(sqlRequest);
             response = (SQLResponse) element.getObjectValue();
             response.setStorageCacheUsed(true);
         }
