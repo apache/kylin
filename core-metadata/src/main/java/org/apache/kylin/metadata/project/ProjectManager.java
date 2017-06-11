@@ -114,11 +114,12 @@ public class ProjectManager {
                 throws IOException {
             String project = cacheKey;
 
-            if (event == Event.DROP)
+            if (event == Event.DROP) {
                 removeProjectLocal(project);
-            else
-                reloadProjectLocal(project);
+                return;
+            }
 
+            reloadProjectLocal(project);
             broadcaster.notifyProjectSchemaUpdate(project);
             broadcaster.notifyProjectDataUpdate(project);
         }
