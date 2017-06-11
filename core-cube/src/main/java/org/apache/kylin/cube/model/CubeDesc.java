@@ -618,29 +618,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         amendAllColumns();
     }
 
-    // initialize config only for draft cube desc
-    public void initConfig(KylinConfig config) {
-        this.errors.clear();
-
-        checkArgument(StringUtils.isNotBlank(name), "CubeDesc name is blank");
-        checkArgument(StringUtils.isNotBlank(modelName), "CubeDesc (%s) has blank model name", name);
-
-        // note CubeDesc.name == CubeInstance.name
-        List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, name);
-
-        // cube inherit the project override props
-        if (ownerPrj.size() == 1) {
-            Map<String, String> prjOverrideProps = ownerPrj.get(0).getOverrideKylinProps();
-            for (Entry<String, String> entry : prjOverrideProps.entrySet()) {
-                if (!overrideKylinProps.containsKey(entry.getKey())) {
-                    overrideKylinProps.put(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-
-        this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
-    }
-
     private void buildCuboidTree() {
         synchronized (cuboidTreeLock) {
             if (allCuboids == null || parent2Child == null) {

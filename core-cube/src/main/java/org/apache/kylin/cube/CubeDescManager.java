@@ -184,13 +184,11 @@ public class CubeDescManager {
         CubeDesc ndesc = store.getResource(path, CubeDesc.class, CUBE_DESC_SERIALIZER);
         if (ndesc == null)
             throw new IllegalArgumentException("No cube desc found at " + path);
+        if (ndesc.isDraft())
+            throw new IllegalArgumentException("CubeDesc '" + ndesc.getName() + "' must not be a draft");
 
         try {
-            if (!ndesc.isDraft()) {
-                ndesc.init(config);
-            } else {
-                ndesc.initConfig(config);
-            }
+            ndesc.init(config);
         } catch (Exception e) {
             logger.warn("Broken cube desc " + path, e);
             ndesc.addError(e.getMessage());
@@ -215,35 +213,28 @@ public class CubeDescManager {
             throw new IllegalArgumentException();
         if (cubeDescMap.containsKey(cubeDesc.getName()))
             throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' already exists");
+        if (cubeDesc.isDraft())
+            throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' must not be a draft");
 
-        if (!cubeDesc.isDraft()) {
-            try {
-                cubeDesc.init(config);
-            } catch (Exception e) {
-                logger.warn("Broken cube desc " + cubeDesc, e);
-                cubeDesc.addError(e.getMessage());
-            }
-            postProcessCubeDesc(cubeDesc);
-            // Check base validation
-            if (!cubeDesc.getError().isEmpty()) {
-                return cubeDesc;
-            }
-            // Semantic validation
-            CubeMetadataValidator validator = new CubeMetadataValidator();
-            ValidateContext context = validator.validate(cubeDesc);
-            if (!context.ifPass()) {
-                return cubeDesc;
-            }
-
-            cubeDesc.setSignature(cubeDesc.calculateSignature());
-        } else {
-            try {
-                cubeDesc.initConfig(config);
-            } catch (Exception e) {
-                logger.warn("Broken cube desc " + cubeDesc, e);
-                cubeDesc.addError(e.getMessage());
-            }
+        try {
+            cubeDesc.init(config);
+        } catch (Exception e) {
+            logger.warn("Broken cube desc " + cubeDesc, e);
+            cubeDesc.addError(e.getMessage());
         }
+        postProcessCubeDesc(cubeDesc);
+        // Check base validation
+        if (!cubeDesc.getError().isEmpty()) {
+            return cubeDesc;
+        }
+        // Semantic validation
+        CubeMetadataValidator validator = new CubeMetadataValidator();
+        ValidateContext context = validator.validate(cubeDesc);
+        if (!context.ifPass()) {
+            return cubeDesc;
+        }
+
+        cubeDesc.setSignature(cubeDesc.calculateSignature());
 
         String path = cubeDesc.getResourcePath();
         getStore().putResource(path, cubeDesc, CUBE_DESC_SERIALIZER);
@@ -347,41 +338,31 @@ public class CubeDescManager {
      */
     public CubeDesc updateCubeDesc(CubeDesc desc) throws IOException {
         // Validate CubeDesc
-        if (desc.getUuid() == null || desc.getName() == null) {
+        if (desc.getUuid() == null || desc.getName() == null)
             throw new IllegalArgumentException();
-        }
         String name = desc.getName();
-        if (!cubeDescMap.containsKey(name)) {
+        if (!cubeDescMap.containsKey(name))
             throw new IllegalArgumentException("CubeDesc '" + name + "' does not exist.");
+        if (desc.isDraft())
+            throw new IllegalArgumentException("CubeDesc '" + desc.getName() + "' must not be a draft");
+        
+        try {
+            desc.init(config);
+        } catch (Exception e) {
+            logger.warn("Broken cube desc " + desc, e);
+            desc.addError(e.getMessage());
+            return desc;
         }
 
-        if (!desc.isDraft()) {
-            try {
-                desc.init(config);
-            } catch (Exception e) {
-                logger.warn("Broken cube desc " + desc, e);
-                desc.addError(e.getMessage());
-                return desc;
-            }
-
-            postProcessCubeDesc(desc);
-            // Semantic validation
-            CubeMetadataValidator validator = new CubeMetadataValidator();
-            ValidateContext context = validator.validate(desc);
-            if (!context.ifPass()) {
-                return desc;
-            }
-
-            desc.setSignature(desc.calculateSignature());
-        } else {
-            try {
-                desc.initConfig(config);
-            } catch (Exception e) {
-                logger.warn("Broken cube desc " + desc, e);
-                desc.addError(e.getMessage());
-                return desc;
-            }
+        postProcessCubeDesc(desc);
+        // Semantic validation
+        CubeMetadataValidator validator = new CubeMetadataValidator();
+        ValidateContext context = validator.validate(desc);
+        if (!context.ifPass()) {
+            return desc;
         }
+
+        desc.setSignature(desc.calculateSignature());
 
         // Save Source
         String path = desc.getResourcePath();

@@ -67,6 +67,10 @@ public class KylinConfigExt extends KylinConfig {
         result.putAll(overrides);
         return result;
     }
+    
+    public Map<String, String> getExtendedOverrides() {
+        return overrides;
+    }
 
     @Override
     public KylinConfig base() {
