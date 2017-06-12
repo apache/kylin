@@ -193,6 +193,7 @@ http_request makeRequest ( const char* username, const char* passwd, const wchar
     request . set_method ( method );
     request . set_request_uri ( uri ( uri::encode_uri ( uriStr ) ) );
     request . headers () . add ( header_names::authorization, string2wstring ( "Basic " + b64 ) );
+	request . headers () . add ( header_names::accept, "application/json" );
     request . headers () . add ( header_names::content_type, "application/json" );
     return request;
 }
@@ -369,15 +370,46 @@ wstring getBodyString ( http_response& response )
     return ret;
 }
 
-std::unique_ptr <SQLResponse> restQuery ( wchar_t* rawSql, char* serverAddr, long port, char* username,
+std::unique_ptr <SQLResponse> convertToSQLResponse ( int statusFlag,
+										  wstring responseStr )
+{
+    if ( statusFlag == 1 )
+    {
+        //convert to json
+        web::json::value actualRes = web::json::value::parse ( responseStr );
+        std::unique_ptr <SQLResponse> r = SQLResponseFromJSON ( actualRes );
+
+        if ( r -> isException == true )
+        {
+            string expMsg = wstring2string ( r -> exceptionMessage );
+            throw exception ( expMsg . c_str () );
+        }
+
+        overwrite ( r . get () );
+        return r;
+    }
+
+    else if ( statusFlag == 0 )
+    {
+        std::unique_ptr <ErrorMessage> em = ErrorMessageFromJSON ( web::json::value::parse ( responseStr ) );
+        string expMsg = wstring2string ( em -> msg );
+        throw exception ( expMsg . c_str () );
+    }
+
+    return NULL;
+}
+
+wstring requestQuery ( wchar_t* rawSql, char* serverAddr, long port, char* username,
                                           char* passwd,
-                                          char* project )
+                                          char* project,
+										  int* statusFlag)
 {
     //using local cache to intercept probing queries
-    std::unique_ptr <SQLResponse> cachedQueryRes = loadCache ( rawSql );
+    const wchar_t* cachedQueryRes = loadCache ( rawSql );
 
     if ( cachedQueryRes != NULL )
     {
+		*statusFlag = 1;
         return cachedQueryRes;
     }
 
@@ -392,10 +424,10 @@ std::unique_ptr <SQLResponse> restQuery ( wchar_t* rawSql, char* serverAddr, lon
     wss << L"{ \"acceptPartial\": false, \"project\" : \"" << project << L"\", " << " \"sql\" : \"" << sql << L"\" }" ;
     request . set_body ( wss . str (), L"application/json" );
     request . headers () . add ( header_names::accept_encoding, "gzip,deflate" );
-    http::status_code status;
     http_response response;
+	http::status_code status;
 
-    try
+	try
     {
         response = session . request ( request ) . get ();
         status = response . status_code ();
@@ -408,29 +440,14 @@ std::unique_ptr <SQLResponse> restQuery ( wchar_t* rawSql, char* serverAddr, lon
         throw exception ( ss . str () . c_str () );
     }
 
-    wstring ret = getBodyString ( response );
-
-    if ( status == status_codes::OK )
+	if ( status == status_codes::OK )
     {
-        //convert to json
-        web::json::value actualRes = web::json::value::parse ( ret );
-        std::unique_ptr <SQLResponse> r = SQLResponseFromJSON ( actualRes );
-
-        if ( r -> isException == true )
-        {
-            string expMsg = wstring2string ( r -> exceptionMessage );
-            throw exception ( expMsg . c_str () );
-        }
-
-        overwrite ( r . get () );
-        return r;
+        *statusFlag = 1;
     }
 
     else if ( status == status_codes::InternalError )
     {
-        std::unique_ptr <ErrorMessage> em = ErrorMessageFromJSON ( web::json::value::parse ( ret ) );
-        string expMsg = wstring2string ( em -> msg );
-        throw exception ( expMsg . c_str () );
+        *statusFlag = 0;
     }
 
     else
@@ -438,6 +455,8 @@ std::unique_ptr <SQLResponse> restQuery ( wchar_t* rawSql, char* serverAddr, lon
         throw exception ( "Unknown exception in rest query with return code " + status );
     }
 
-    return NULL;
+	wstring ret = getBodyString ( response );
+
+	return ret;
 }
 

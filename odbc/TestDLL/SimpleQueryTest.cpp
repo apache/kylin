@@ -22,7 +22,9 @@ void simpleQueryTest ()
 {
     //Intercept query test
     {
-        std::unique_ptr <SQLResponse> y = restQuery ( L"SELECT 1", KServerAddr, KPort, KUserName, KPassword, KDefaultProject );
+		int status;
+		wstring s = requestQuery ( L"SELECT 1", KServerAddr, KPort, KUserName, KPassword, KDefaultProject, &status );
+		std::unique_ptr <SQLResponse> y = convertToSQLResponse(status, s);
 
         if ( ( int ) y -> results . size () != 1 )
         {
@@ -31,8 +33,9 @@ void simpleQueryTest ()
     }
     //Ungzipped Query Test
     {
-        std::unique_ptr <SQLResponse> y = restQuery ( L"select cal_dt from test_kylin_fact limit 1", KServerAddr, KPort,
-                                                      KUserName, KPassword, KDefaultProject );
+		int status;
+		wstring s = requestQuery ( L"select cal_dt from test_kylin_fact limit 1", KServerAddr, KPort, KUserName, KPassword, KDefaultProject, &status );
+		std::unique_ptr <SQLResponse> y = convertToSQLResponse(status, s);
 
         if ( ( int ) y -> results . size () != 1 )
         {
@@ -41,8 +44,9 @@ void simpleQueryTest ()
     }
     //zipped Query Test
     {
-        std::unique_ptr <SQLResponse> y = restQuery ( L"select * from test_kylin_fact limit 12", KServerAddr, KPort, KUserName,
-                                                      KPassword, KDefaultProject );
+		int status;
+		wstring s = requestQuery ( L"select * from test_kylin_fact limit 12", KServerAddr, KPort, KUserName, KPassword, KDefaultProject, &status );
+		std::unique_ptr <SQLResponse> y = convertToSQLResponse(status, s);
 
         if ( ( int ) y -> results . size () != 12 )
         {

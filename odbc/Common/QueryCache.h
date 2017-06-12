@@ -21,5 +21,5 @@
 
 #include "MsgTypes.h"
 
-unique_ptr <SQLResponse> loadCache ( const wchar_t* query );
+const wchar_t* loadCache ( const wchar_t* query );
 

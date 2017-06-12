@@ -75,7 +75,7 @@ int findInAlwaysFailQuery ( const wchar_t* sql )
     return findQuery ( sql, alwaysFailQueries, sizeof ( alwaysFailQueries ) / sizeof ( wchar_t*) );
 }
 
-unique_ptr <SQLResponse> loadCache ( const wchar_t* query )
+const wchar_t* loadCache ( const wchar_t* query )
 {
     int index = 0;
 
@@ -86,10 +86,7 @@ unique_ptr <SQLResponse> loadCache ( const wchar_t* query )
 
     else if ( ( index = findInAlwaysSuccessQuery ( query ) ) >= 0 )
     {
-        web::json::value v = web::json::value::parse ( alwaysSuccessResults[index] );
-        std::unique_ptr <SQLResponse> r = SQLResponseFromJSON ( v );
-        //overwrite(r.get());
-        return r;
+        return alwaysSuccessResults[index];
     }
 
     return NULL;
