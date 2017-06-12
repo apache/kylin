@@ -117,7 +117,7 @@ public class CubeControllerV2 extends BasicController {
         }
         
         // draft cubes
-        for (Draft d : cubeService.listCubeDrafts(cubeName, projectName)) {
+        for (Draft d : cubeService.listCubeDrafts(cubeName, modelName, projectName)) {
             CubeDesc c = (CubeDesc) d.getEntity();
             if (contains(response, c.getName()) == false) {
                 CubeInstanceResponse r = createCubeInstanceResponseFromDraft(d);

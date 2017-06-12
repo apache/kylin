@@ -648,24 +648,26 @@ public class CubeService extends BasicService {
     }
 
     public Draft getCubeDraft(String cubeName) throws IOException {
-        for (Draft d : listCubeDrafts(cubeName, null)) {
+        for (Draft d : listCubeDrafts(cubeName, null, null)) {
             return d;
         }
         return null;
     }
     
-    public List<Draft> listCubeDrafts(String cubeName, String project) throws IOException {
+    public List<Draft> listCubeDrafts(String cubeName, String modelName, String project) throws IOException {
         List<Draft> result = new ArrayList<>();
-        
+
         for (Draft d : getDraftManager().list(project)) {
             RootPersistentEntity e = d.getEntity();
             if (e instanceof CubeDesc) {
                 CubeDesc c = (CubeDesc) e;
-                if (cubeName == null || cubeName.equals(c.getName()))
+                if ((cubeName == null || cubeName.equals(c.getName()))
+                        && (modelName == null || modelName.equals(c.getModelName()))) {
                     result.add(d);
+                }
             }
         }
-        
+
         return result;
     }
 }
