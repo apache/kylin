@@ -20,8 +20,12 @@
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
 echo "Start to check whether we need to migrate acl tables"
+
+metadataUrl=`${dir}/get-properties.sh kylin.metadata.url`
+metadataUrl=${metadataUrl%%@*}
+
 ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI CHECK
 ec=$?
 
-[[ $ec == 2 ]] && quit "ERROR: Legacy ACL metadata detected. Please migrate ACL metadata first. Command: bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE"
+[[ $ec == 2 ]] && quit "ERROR: Legacy ACL metadata detected. Please migrate ACL metadata first. Step1: run command 'bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE', Step2: drop hbase tables: ${metadataUrl}_acl and ${metadataUrl}_user"
 [[ $ec == 0 ]] || quit "ERROR: Unknown error. Please check full log."

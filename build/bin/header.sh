@@ -52,4 +52,8 @@ then
 			echo "$@"
 		fi
 	}
+
+	function setColor() {
+        echo -e "\033[$1m$2\033[0m"
+    }
 fi
