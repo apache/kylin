@@ -320,6 +320,7 @@ public class AggregationGroup implements Serializable {
             normalDims.removeAll(jointDims);
 
             combination = combination * (1L << normalDims.size());
+            combination -= 1; // not include cuboid 0
         }
 
         return combination;
