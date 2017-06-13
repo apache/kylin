@@ -1,6 +1,7 @@
 {
   "uuid" : "0928468a-9fab-4185-9a14-6f2e7c74823f",
   "name" : "kylin_sales_model",
+  "fact_table" : "DEFAULT.KYLIN_SALES",
   "lookups" : [ {
     "table" : "DEFAULT.KYLIN_CAL_DT",
     "join" : {
@@ -53,13 +54,13 @@
     }
   }],
   "dimensions" : [ {
-    "table" : "DEFAULT.KYLIN_SALES",
+    "table" : "KYLIN_SALES",
     "columns" : [ "TRANS_ID", "SELLER_ID", "BUYER_ID", "PART_DT", "LEAF_CATEG_ID", "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "OPS_USER_ID", "OPS_REGION" ]
   }, {
-    "table" : "DEFAULT.KYLIN_CAL_DT",
+    "table" : "KYLIN_CAL_DT",
     "columns" : ["CAL_DT", "WEEK_BEG_DT"]
   }, {
-    "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+    "table" : "KYLIN_CATEGORY_GROUPINGS",
     "columns" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID", "SITE_ID" ]
   }, {
     "table" : "BUYER_ACCOUNT",
@@ -79,10 +80,9 @@
     "ITEM_COUNT"
   ],
   "last_modified" : 1422435345362,
-  "fact_table" : "DEFAULT.KYLIN_SALES",
   "filter_condition" : null,
   "partition_desc" : {
-    "partition_date_column" : "DEFAULT.KYLIN_SALES.PART_DT",
+    "partition_date_column" : "KYLIN_SALES.PART_DT",
     "partition_date_start" : 1325376000000,
     "partition_type" : "APPEND"
   }

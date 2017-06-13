@@ -7,47 +7,62 @@
   "null_string" : null,
   "dimensions" : [ {
     "name" : "TRANS_ID",
-    "table" : "DEFAULT.KYLIN_SALES",
+    "table" : "KYLIN_SALES",
     "column" : "TRANS_ID",
     "derived" : null
   }, {
-    "name" : "CAL_DT",
-    "table" : "DEFAULT.KYLIN_CAL_DT",
-    "column" : "{FK}",
-    "derived" : [ "WEEK_BEG_DT", "MONTH_BEG_DT", "YEAR_BEG_DT" ]
+    "name" : "YEAR_BEG_DT",
+    "table" : "KYLIN_CAL_DT",
+    "column" : null,
+    "derived" : [ "YEAR_BEG_DT" ]
   }, {
-    "name" : "CATEGORY",
-    "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
-    "column" : "{FK}",
-    "derived" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3" ]
+    "name" : "MONTH_BEG_DT",
+    "table" : "KYLIN_CAL_DT",
+    "column" : null,
+    "derived" : [ "MONTH_BEG_DT" ]
+  }, {
+    "name" : "WEEK_BEG_DT",
+    "table" : "DEFAULT.KYLIN_CAL_DT",
+    "column" : null,
+    "derived" : [ "WEEK_BEG_DT" ]
+  }, {
+    "name" : "USER_DEFINED_FIELD1",
+    "table" : "KYLIN_CATEGORY_GROUPINGS",
+    "column" : null,
+    "derived" : [ "USER_DEFINED_FIELD1" ]
+  }, {
+    "name" : "USER_DEFINED_FIELD3",
+    "table" : "KYLIN_CATEGORY_GROUPINGS",
+    "column" : null,
+    "derived" : [ "USER_DEFINED_FIELD3" ]
   }, {
     "name" : "META_CATEG_NAME",
-    "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+    "table" : "KYLIN_CATEGORY_GROUPINGS",
     "column" : "META_CATEG_NAME",
     "derived" : null
   }, {
     "name" : "CATEG_LVL2_NAME",
-    "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+    "table" : "KYLIN_CATEGORY_GROUPINGS",
     "column" : "CATEG_LVL2_NAME",
     "derived" : null
   }, {
     "name" : "CATEG_LVL3_NAME",
-    "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+    "table" : "KYLIN_CATEGORY_GROUPINGS",
     "column" : "CATEG_LVL3_NAME",
     "derived" : null
   }, {
     "name" : "LSTG_FORMAT_NAME",
-    "table" : "DEFAULT.KYLIN_SALES",
+    "table" : "KYLIN_SALES",
     "column" : "LSTG_FORMAT_NAME",
     "derived" : null
   }, {
     "name" : "SELLER_ID",
-    "table" : "DEFAULT.KYLIN_SALES",
+    "table" : "KYLIN_SALES",
     "column" : "SELLER_ID",
     "derived" : null
   }, {
     "name" : "BUYER_ID",
-    "table" : "DEFAULT.KYLIN_SALES",
+    "table" : "KYLIN_SALES",
     "column" : "BUYER_ID",
     "derived" : null
   }, {
@@ -82,12 +97,12 @@
     "derived" : null
   }, {
     "name" : "OPS_USER_ID",
-    "table" : "DEFAULT.KYLIN_SALES",
+    "table" : "KYLIN_SALES",
     "column" : "OPS_USER_ID",
     "derived" : null
   }, {
     "name" : "OPS_REGION",
-    "table" : "DEFAULT.KYLIN_SALES",
+    "table" : "KYLIN_SALES",
     "column" : "OPS_REGION",
     "derived" : null
   } ],
@@ -97,7 +112,7 @@
       "expression" : "SUM",
       "parameter" : {
         "type" : "column",
-        "value" : "PRICE",
+        "value" : "KYLIN_SALES.PRICE",
         "next_parameter" : null
       },
       "returntype" : "decimal(19,4)"
@@ -141,7 +156,7 @@
       "expression" : "COUNT_DISTINCT",
       "parameter" : {
         "type" : "column",
-        "value" : "SELLER_ID",
+        "value" : "KYLIN_SALES.SELLER_ID",
         "next_parameter" : null
       },
       "returntype" : "hllc(10)"
@@ -152,10 +167,10 @@
       "expression" : "TOP_N",
       "parameter" : {
         "type" : "column",
-        "value" : "PRICE",
+        "value" : "KYLIN_SALES.PRICE",
         "next_parameter" : {
           "type" : "column",
-          "value" : "SELLER_ID",
+          "value" : "KYLIN_SALES.SELLER_ID",
           "next_parameter" : null
         }
       },
@@ -242,17 +257,6 @@
       "mandatory_dims" : [ "PART_DT" ],
       "joint_dims" : [ [ "BUYER_ACCOUNT.ACCOUNT_COUNTRY", "BUYER_COUNTRY.NAME" ], [ "SELLER_ACCOUNT.ACCOUNT_COUNTRY", "SELLER_COUNTRY.NAME" ],
                        [ "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL", "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL" ], [ "LSTG_FORMAT_NAME", "LSTG_SITE_ID" ], [ "OPS_USER_ID", "OPS_REGION" ] ]
-    }
-  }, {
-    "includes" : [ "TRANS_ID", "BUYER_ID", "SELLER_ID", 
-                   "PART_DT", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID", "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "OPS_USER_ID", "OPS_REGION", 
-                   "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL", "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL", "BUYER_ACCOUNT.ACCOUNT_COUNTRY", "SELLER_ACCOUNT.ACCOUNT_COUNTRY", "BUYER_COUNTRY.NAME", "SELLER_COUNTRY.NAME" ],
-    "select_rule" : {
-      "hierarchy_dims" : [ ],
-      "mandatory_dims" : [ "TRANS_ID", "BUYER_ID", "SELLER_ID", 
-                   "PART_DT", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID", "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "OPS_USER_ID", "OPS_REGION", 
-                   "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL", "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL", "BUYER_ACCOUNT.ACCOUNT_COUNTRY", "SELLER_ACCOUNT.ACCOUNT_COUNTRY", "BUYER_COUNTRY.NAME", "SELLER_COUNTRY.NAME" ],
-      "joint_dims" : [ ]
     }
   } ],
   "notify_list" : null,
