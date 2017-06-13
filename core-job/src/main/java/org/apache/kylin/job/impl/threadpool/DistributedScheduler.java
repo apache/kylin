@@ -59,7 +59,7 @@ import com.google.common.collect.Maps;
  *
  * to enable the distributed job server, you need to set and update three configs in the kylin.properties:
  *  1. kylin.job.scheduler.default=2
- *  2. kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock
+ *  2. kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
  *  3. add all the job servers and query servers to the kylin.server.cluster-servers
  */
 public class DistributedScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
