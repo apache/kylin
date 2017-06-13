@@ -217,51 +217,53 @@ public class ModelService extends BasicService {
     }
 
     private boolean validateUpdatingModel(DataModelDesc dataModelDesc) throws IOException {
-
-        dataModelDesc.init(getConfig(), getMetadataManager().getAllTablesMap(), getMetadataManager().getCcInfoMap());
-
-        List<String> dimCols = new ArrayList<String>();
-        List<String> dimAndMCols = new ArrayList<String>();
-
-        List<ModelDimensionDesc> dimensions = dataModelDesc.getDimensions();
-        String[] measures = dataModelDesc.getMetrics();
-
-        for (ModelDimensionDesc dim : dimensions) {
-            String table = dim.getTable();
-            for (String c : dim.getColumns()) {
-                dimCols.add(table + "." + c);
-            }
-        }
-
-        dimAndMCols.addAll(dimCols);
-
-        for (String measure : measures) {
-            dimAndMCols.add(measure);
-        }
-
         String modelName = dataModelDesc.getName();
-        Set<TblColRef> usedDimCols = getUsedDimCols(modelName).keySet();
-        Set<TblColRef> usedNonDimCols = getUsedNonDimCols(modelName).keySet();
+        List<CubeInstance> cubes = cubeService.listAllCubes(null, null, modelName);
+        if (cubes != null && cubes.size() != 0) {
+            dataModelDesc.init(getConfig(), getMetadataManager().getAllTablesMap(),
+                    getMetadataManager().getCcInfoMap());
 
-        for (TblColRef tblColRef : usedDimCols) {
-            if (!dimCols.contains(tblColRef.getTableAlias() + "." + tblColRef.getName()))
+            List<String> dimCols = new ArrayList<String>();
+            List<String> dimAndMCols = new ArrayList<String>();
+
+            List<ModelDimensionDesc> dimensions = dataModelDesc.getDimensions();
+            String[] measures = dataModelDesc.getMetrics();
+
+            for (ModelDimensionDesc dim : dimensions) {
+                String table = dim.getTable();
+                for (String c : dim.getColumns()) {
+                    dimCols.add(table + "." + c);
+                }
+            }
+
+            dimAndMCols.addAll(dimCols);
+
+            for (String measure : measures) {
+                dimAndMCols.add(measure);
+            }
+
+            Set<TblColRef> usedDimCols = getUsedDimCols(modelName).keySet();
+            Set<TblColRef> usedNonDimCols = getUsedNonDimCols(modelName).keySet();
+
+            for (TblColRef tblColRef : usedDimCols) {
+                if (!dimCols.contains(tblColRef.getTableAlias() + "." + tblColRef.getName()))
+                    return false;
+            }
+
+            for (TblColRef tblColRef : usedNonDimCols) {
+                if (!dimAndMCols.contains(tblColRef.getTableAlias() + "." + tblColRef.getName()))
+                    return false;
+            }
+
+            DataModelDesc originDataModelDesc = listAllModels(modelName, null).get(0);
+
+            if (!dataModelDesc.getRootFactTable().equals(originDataModelDesc.getRootFactTable()))
+                return false;
+
+            JoinsTree joinsTree = dataModelDesc.getJoinsTree(), originJoinsTree = originDataModelDesc.getJoinsTree();
+            if (joinsTree.matchNum(originJoinsTree) != originDataModelDesc.getJoinTables().length + 1)
                 return false;
         }
-
-        for (TblColRef tblColRef : usedNonDimCols) {
-            if (!dimAndMCols.contains(tblColRef.getTableAlias() + "." + tblColRef.getName()))
-                return false;
-        }
-
-        DataModelDesc originDataModelDesc = listAllModels(modelName, null).get(0);
-
-        if (!dataModelDesc.getRootFactTable().equals(originDataModelDesc.getRootFactTable()))
-            return false;
-
-        JoinsTree joinsTree = dataModelDesc.getJoinsTree(), originJoinsTree = originDataModelDesc.getJoinsTree();
-        if (joinsTree.matchNum(originJoinsTree) != originDataModelDesc.getJoinTables().length + 1)
-            return false;
-
         return true;
     }
 
