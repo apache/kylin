@@ -1080,6 +1080,14 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return this.errors;
     }
 
+    public String getErrorMsg() {
+        StringBuffer sb = new StringBuffer();
+        for (String error : errors) {
+            sb.append(error + " ");
+        }
+        return sb.toString();
+    }
+
     public HBaseMappingDesc getHbaseMapping() {
         return hbaseMapping;
     }

@@ -171,7 +171,7 @@ public class CubeService extends BasicService {
         createdDesc = getCubeDescManager().createCubeDesc(desc);
 
         if (!createdDesc.getError().isEmpty()) {
-            throw new BadRequestException(String.format(msg.getBROKEN_CUBE_DESC(), cubeName));
+            throw new BadRequestException(createdDesc.getErrorMsg());
         }
 
         int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc, false);
@@ -616,7 +616,7 @@ public class CubeService extends BasicService {
         desc.setDraft(false);
         if (desc.getUuid() == null)
             desc.updateRandomUuid();
-        
+
         String cubeName = desc.getName();
         try {
             if (desc.getLastModified() == 0) {
@@ -639,11 +639,11 @@ public class CubeService extends BasicService {
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException(msg.getUPDATE_CUBE_NO_RIGHT());
         }
-        
+
         if (!desc.getError().isEmpty()) {
-            throw new BadRequestException(String.format(msg.getBROKEN_CUBE_DESC(), cubeName));
+            throw new BadRequestException(desc.getErrorMsg());
         }
-        
+
         return desc;
     }
 
@@ -653,7 +653,7 @@ public class CubeService extends BasicService {
         }
         return null;
     }
-    
+
     public List<Draft> listCubeDrafts(String cubeName, String modelName, String project) throws IOException {
         List<Draft> result = new ArrayList<>();
 
