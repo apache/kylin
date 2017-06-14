@@ -24,10 +24,14 @@ import org.apache.calcite.linq4j.Enumerable;
 import org.apache.calcite.linq4j.Enumerator;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerable<Object[]> {
+
+    private static final Logger logger = LoggerFactory.getLogger(OLAPQuery.class);
 
     public enum EnumeratorTypeEnum {
         OLAP, //finish query with Cube or II, or a combination of both
@@ -64,6 +68,10 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
     }
     
     private static class EmptyEnumerator implements Enumerator<Object[]> {
+        
+        EmptyEnumerator() {
+            logger.debug("Using empty enumerator");
+        }
 
         @Override
         public void close() {
