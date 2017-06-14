@@ -22,6 +22,7 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.AbstractEnumerable;
 import org.apache.calcite.linq4j.Enumerable;
 import org.apache.calcite.linq4j.Enumerator;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.query.relnode.OLAPContext;
 
 /**
@@ -52,13 +53,34 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
         OLAPContext olapContext = OLAPContext.getThreadLocalContextById(contextId);
         switch (type) {
         case OLAP:
-            return new OLAPEnumerator(olapContext, optiqContext);
+            return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new OLAPEnumerator(olapContext, optiqContext);
         case LOOKUP_TABLE:
-            return new LookupTableEnumerator(olapContext);
+            return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new LookupTableEnumerator(olapContext);
         case HIVE:
-            return new HiveEnumerator(olapContext);
+            return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new HiveEnumerator(olapContext);
         default:
             throw new IllegalArgumentException("Wrong type " + type + "!");
+        }
+    }
+    
+    private static class EmptyEnumerator implements Enumerator<Object[]> {
+
+        @Override
+        public void close() {
+        }
+
+        @Override
+        public Object[] current() {
+            return null;
+        }
+
+        @Override
+        public boolean moveNext() {
+            return false;
+        }
+
+        @Override
+        public void reset() {
         }
     }
 }
