@@ -200,6 +200,21 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testVerifyCountQueryWithPrepare() throws Exception {
+        try {
+            Map<String, String> toggles = Maps.newHashMap();
+            toggles.put(BackdoorToggles.DEBUG_TOGGLE_PREPARE_ONLY, "true");
+            BackdoorToggles.setToggles(toggles);
+            
+            verifyResultRowColCount(getQueryFolderPrefix() + "src/test/resources/query/sql_verifyCount");
+            
+        } finally {
+            BackdoorToggles.cleanToggles();
+            
+        }
+    }
+    
+    @Test
     public void testVerifyContentQuery() throws Exception {
         verifyResultContent(getQueryFolderPrefix() + "src/test/resources/query/sql_verifyContent");
     }

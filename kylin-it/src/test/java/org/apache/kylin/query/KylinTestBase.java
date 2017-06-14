@@ -44,6 +44,7 @@ import java.util.logging.LogManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -365,7 +366,9 @@ public class KylinTestBase {
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
 
             // compare the result
-            if (expectRowCount >= 0)
+            if (BackdoorToggles.getPrepareOnly())
+                Assert.assertEquals(queryName, 0, kylinTable.getRowCount());
+            else if (expectRowCount >= 0)
                 Assert.assertEquals(queryName, expectRowCount, kylinTable.getRowCount());
 
             if (expectColCount >= 0)

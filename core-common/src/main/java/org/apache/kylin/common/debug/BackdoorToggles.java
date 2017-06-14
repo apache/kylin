@@ -106,6 +106,10 @@ public class BackdoorToggles {
             return Integer.valueOf(v);
     }
 
+    public static boolean getPrepareOnly() {
+        return getBoolean(DEBUG_TOGGLE_PREPARE_ONLY);
+    }
+
     private static String getString(String key) {
         Map<String, String> toggles = _backdoorToggles.get();
         if (toggles == null) {
@@ -230,6 +234,16 @@ public class BackdoorToggles {
      */
     public final static String DEBUG_TOGGLE_DUMPED_PARTITION_DIR = "DEBUG_TOGGLE_DUMPED_PARTITION_DIR";
 
+    /**
+     * set DEBUG_TOGGLE_PREPARE_ONLY="true" to prepare the sql statement and get its result set metadata
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_PREPARE_ONLY": "true"
+     }
+     */
+    public final static String DEBUG_TOGGLE_PREPARE_ONLY = "DEBUG_TOGGLE_PREPARE_ONLY";
+    
     // properties on statement may go with this "channel" too
     /**
      * set ATTR_STATEMENT_MAX_ROWS="maxRows" to statement's max rows property
