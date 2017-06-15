@@ -444,7 +444,10 @@ wstring requestQuery ( wchar_t* rawSql, char* serverAddr, long port, char* usern
 
 	wstring ret = getBodyString ( response );
 
-    storeCache(rawSql, ret.c_str());
+    if (*statusFlag == 1) 
+    {
+        storeCache(rawSql, ret.c_str());
+    }
 	return ret;
 }
 

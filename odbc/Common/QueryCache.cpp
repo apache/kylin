@@ -42,7 +42,8 @@ const wchar_t* loadCache ( const wchar_t* query )
     wstring queryString = wstring(query);
     queryString.erase(remove_if(queryString.begin(), queryString.end(), ::isspace), queryString.end());
     map<wstring, wstring>::iterator it = queryMap.find(queryString);
-    if (it != queryMap.end()) {
+    if (it != queryMap.end()) 
+    {
         return it->second.c_str();
     }
     return NULL;
@@ -55,11 +56,13 @@ void storeCache (const wchar_t* query, const wchar_t* result)
     queryString.erase(remove_if(queryString.begin(), queryString.end(), ::isspace), queryString.end());
     
     map<wstring, wstring>::iterator it = queryMap.find(queryString);
-    if (it != queryMap.end()) {
+    if (it != queryMap.end()) 
+    {
         return;
     }
 
-    if (queryQueue.size() >= cacheSize) {
+    if (queryQueue.size() >= cacheSize) 
+    {
         wstring head = queryQueue.front();
         queryQueue.pop();
         queryMap.erase(head);
