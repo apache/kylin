@@ -22,4 +22,5 @@
 #include "MsgTypes.h"
 
 const wchar_t* loadCache ( const wchar_t* query );
+void storeCache (const wchar_t* query, const wchar_t* result);
 

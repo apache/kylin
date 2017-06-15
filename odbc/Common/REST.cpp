@@ -45,19 +45,6 @@ using namespace concurrency::streams;
 using namespace web;
 using namespace web::json;
 
-void printLog ( const char* msg )
-{
-    time_t now = time ( 0 );
-    struct tm tstruct;
-    char buffer[100];
-    tstruct = *localtime ( &now );
-    strftime ( buffer, 100, "%Y-%m-%d.%X", &tstruct );
-    printf ( buffer );
-    printf ( "\n" );
-    printf ( msg );
-    printf ( "\n" );
-}
-
 /// <summary>
 /// Find the longest length
 /// </summary>
@@ -457,6 +444,7 @@ wstring requestQuery ( wchar_t* rawSql, char* serverAddr, long port, char* usern
 
 	wstring ret = getBodyString ( response );
 
+    storeCache(rawSql, ret.c_str());
 	return ret;
 }
 
