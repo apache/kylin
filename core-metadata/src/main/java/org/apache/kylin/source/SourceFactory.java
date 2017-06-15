@@ -19,7 +19,6 @@
 package org.apache.kylin.source;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ImplementationSwitch;
@@ -28,19 +27,24 @@ import org.apache.kylin.metadata.model.TableDesc;
 
 public class SourceFactory {
 
-    private static ImplementationSwitch<ISource> sources;
-    static {
-        Map<Integer, String> impls = KylinConfig.getInstanceFromEnv().getSourceEngines();
-        sources = new ImplementationSwitch<>(impls, ISource.class);
+    // Use thread-local because KylinConfig can be thread-local and implementation might be different among multiple threads.
+    private static ThreadLocal<ImplementationSwitch<ISource>> sources = new ThreadLocal<>();
+
+    private static ISource getSource(int sourceType) {
+        ImplementationSwitch<ISource> current = sources.get();
+        if (current == null) {
+            current = new ImplementationSwitch<>(KylinConfig.getInstanceFromEnv().getSourceEngines(), ISource.class);
+            sources.set(current);
+        }
+        return current.get(sourceType);
     }
-    
+
     public static ISource getDefaultSource() {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        return sources.get(config.getDefaultSource());
+        return getSource(KylinConfig.getInstanceFromEnv().getDefaultSource());
     }
 
     public static ISource getSource(ISourceAware aware) {
-        return sources.get(aware.getSourceType());
+        return getSource(aware.getSourceType());
     }
 
     public static IReadableTable createReadableTable(TableDesc table) {

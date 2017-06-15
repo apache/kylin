@@ -17,27 +17,20 @@
 */
 package org.apache.kylin.job;
 
-import java.util.Map;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ImplementationSwitch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-/**
- */
 public class SchedulerFactory {
-
-    private static final Logger logger = LoggerFactory.getLogger(SchedulerFactory.class);
-    private static ImplementationSwitch<Scheduler> schedulers;
-
-    static {
-        Map<Integer, String> impls = KylinConfig.getInstanceFromEnv().getSchedulers();
-        schedulers = new ImplementationSwitch<Scheduler>(impls, Scheduler.class);
-    }
+    // Use thread-local because KylinConfig can be thread-local and implementation might be different among multiple threads.
+    private static ThreadLocal<ImplementationSwitch<Scheduler>> schedulers = new ThreadLocal<>();
 
     public static Scheduler scheduler(int schedulerType) {
-        return schedulers.get(schedulerType);
+        ImplementationSwitch<Scheduler> current = schedulers.get();
+        if (current == null) {
+            current = new ImplementationSwitch<>(KylinConfig.getInstanceFromEnv().getSchedulers(), Scheduler.class);
+            schedulers.set(current);
+        }
+        return current.get(schedulerType);
     }
 
 }

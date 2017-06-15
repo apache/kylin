@@ -18,8 +18,6 @@
 
 package org.apache.kylin.engine;
 
-import java.util.Map;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.cube.CubeSegment;
@@ -30,14 +28,17 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 
 public class EngineFactory {
 
-    private static ImplementationSwitch<IBatchCubingEngine> batchEngines;
-    static {
-        Map<Integer, String> impls = KylinConfig.getInstanceFromEnv().getJobEngines();
-        batchEngines = new ImplementationSwitch<>(impls, IBatchCubingEngine.class);
-    }
+    // Use thread-local because KylinConfig can be thread-local and implementation might be different among multiple threads.
+    private static ThreadLocal<ImplementationSwitch<IBatchCubingEngine>> engines = new ThreadLocal<>();
 
     public static IBatchCubingEngine batchEngine(IEngineAware aware) {
-        return batchEngines.get(aware.getEngineType());
+        ImplementationSwitch<IBatchCubingEngine> current = engines.get();
+        if (current == null) {
+            current = new ImplementationSwitch<>(KylinConfig.getInstanceFromEnv().getJobEngines(),
+                    IBatchCubingEngine.class);
+            engines.set(current);
+        }
+        return current.get(aware.getEngineType());
     }
 
     /** Mark deprecated to indicate for test purpose only */
@@ -45,11 +46,11 @@ public class EngineFactory {
     public static IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeDesc cubeDesc) {
         return batchEngine(cubeDesc).getJoinedFlatTableDesc(cubeDesc);
     }
-    
+
     public static IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeSegment newSegment) {
         return batchEngine(newSegment).getJoinedFlatTableDesc(newSegment);
     }
-    
+
     /** Build a new cube segment, typically its time range appends to the end of current cube. */
     public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
         return batchEngine(newSegment).createBatchCubingJob(newSegment, submitter);
