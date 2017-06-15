@@ -46,8 +46,15 @@ import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
+import org.apache.calcite.config.CalciteConnectionConfig;
+import org.apache.calcite.jdbc.CalcitePrepare;
+import org.apache.calcite.prepare.CalcitePrepareImpl;
+import org.apache.calcite.prepare.OnlyPrepareEarlyAbortException;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
@@ -546,20 +553,14 @@ public class QueryService extends BasicService {
         try {
             conn = cacheService.getOLAPDataSource(sqlRequest.getProject()).getConnection();
 
-            if (sqlRequest instanceof PrepareSqlRequest) {
-                PreparedStatement preparedState = conn.prepareStatement(correctedSql);
-                processStatementAttr(preparedState, sqlRequest);
+            // special case for prepare query. 
+            if (BackdoorToggles.getPrepareOnly()) {
+                return getPrepareOnlySqlResponse(correctedSql, conn, results, columnMetas);
+            }
 
-                for (int i = 0; i < ((PrepareSqlRequest) sqlRequest).getParams().length; i++) {
-                    setParam(preparedState, i + 1, ((PrepareSqlRequest) sqlRequest).getParams()[i]);
-                }
-
-                resultSet = preparedState.executeQuery();
-            } else {
-                stat = conn.createStatement();
+            stat = conn.createStatement();
                 processStatementAttr(stat, sqlRequest);
                 resultSet = stat.executeQuery(correctedSql);
-            }
 
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columnCount = metaData.getColumnCount();
@@ -582,6 +583,50 @@ public class QueryService extends BasicService {
             close(resultSet, stat, conn);
         }
 
+        return getSqlResponse(results, columnMetas);
+    }
+
+    private SQLResponse getPrepareOnlySqlResponse(String correctedSql, Connection conn,
+        List<List<String>> results, List<SelectedColumnMeta> columnMetas)
+        throws SQLException {
+
+        CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(true);
+
+        try {
+            conn.prepareStatement(correctedSql);
+            throw new IllegalStateException("Should have thrown OnlyPrepareEarlyAbortException");
+        } catch (Exception e) {
+            Throwable rootCause = ExceptionUtils.getRootCause(e);
+            if (rootCause != null && rootCause instanceof OnlyPrepareEarlyAbortException) {
+                OnlyPrepareEarlyAbortException abortException = (OnlyPrepareEarlyAbortException) rootCause;
+                CalcitePrepare.Context context = abortException.getContext();
+                CalcitePrepare.ParseResult preparedResult = abortException.getPreparedResult();
+                List<RelDataTypeField> fieldList = preparedResult.rowType.getFieldList();
+
+                CalciteConnectionConfig config = context.config();
+
+                // Fill in selected column meta
+                for (int i = 0; i < fieldList.size(); ++i) {
+
+                    RelDataTypeField field = fieldList.get(i);
+                    String columnName = field.getKey();
+                    BasicSqlType basicSqlType = (BasicSqlType) field.getValue();
+
+                    columnMetas.add(new SelectedColumnMeta(false, config.caseSensitive(), false, false, basicSqlType.isNullable() ? 1 : 0, true, basicSqlType.getPrecision(), columnName, columnName, null, null, null, basicSqlType.getPrecision(), basicSqlType.getScale(), basicSqlType.getSqlTypeName().getJdbcOrdinal(), basicSqlType.getSqlTypeName().getName(), true, false, false));
+                }
+
+            } else {
+                throw e;
+            }
+        } finally {
+            CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(false);
+        }
+
+        return getSqlResponse(results, columnMetas);
+    }
+
+    private SQLResponse getSqlResponse(List<List<String>> results,
+        List<SelectedColumnMeta> columnMetas) {
         boolean isPartialResult = false;
         String cube = "";
         StringBuilder sb = new StringBuilder("Processed rows for each storageContext: ");
