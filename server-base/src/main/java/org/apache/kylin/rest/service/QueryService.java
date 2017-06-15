@@ -47,6 +47,12 @@ import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
+import org.apache.calcite.config.CalciteConnectionConfig;
+import org.apache.calcite.jdbc.CalcitePrepare;
+import org.apache.calcite.prepare.CalcitePrepareImpl;
+import org.apache.calcite.prepare.OnlyPrepareEarlyAbortException;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -117,12 +123,10 @@ import net.sf.ehcache.Element;
 @Component("queryService")
 public class QueryService extends BasicService {
 
-    private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
-
     public static final String SUCCESS_QUERY_CACHE = "StorageCache";
     public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";
     public static final String QUERY_STORE_PATH_PREFIX = "/query/";
-
+    private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
     final BadQueryDetector badQueryDetector = new BadQueryDetector();
     final ResourceStore queryStore;
 
@@ -140,14 +144,25 @@ public class QueryService extends BasicService {
     @Autowired
     private AclUtil aclUtil;
 
-    @PostConstruct
-    public void init() throws IOException {
-        Preconditions.checkNotNull(cacheManager, "cacheManager is not injected yet");
-    }
-
     public QueryService() {
         queryStore = ResourceStore.getStore(getConfig());
         badQueryDetector.start();
+    }
+
+    protected static void close(ResultSet resultSet, Statement stat, Connection conn) {
+        OLAPContext.clearParameter();
+        DBUtils.closeQuietly(resultSet);
+        DBUtils.closeQuietly(stat);
+        DBUtils.closeQuietly(conn);
+    }
+
+    private static String getQueryKeyById(String creator) {
+        return QUERY_STORE_PATH_PREFIX + creator;
+    }
+
+    @PostConstruct
+    public void init() throws IOException {
+        Preconditions.checkNotNull(cacheManager, "cacheManager is not injected yet");
     }
 
     public List<TableMeta> getMetadata(String project) throws SQLException {
@@ -535,6 +550,7 @@ public class QueryService extends BasicService {
         return getMetadataV2(getCubeManager(), project, true);
     }
 
+    @SuppressWarnings("checkstyle:methodlength")
     protected List<TableMetaWithType> getMetadataV2(CubeManager cubeMgr, String project, boolean cubedOnly) throws SQLException, IOException {
         //Message msg = MsgPicker.getMsg();
 
@@ -695,20 +711,14 @@ public class QueryService extends BasicService {
         try {
             conn = cacheService.getOLAPDataSource(sqlRequest.getProject()).getConnection();
 
-            if (sqlRequest instanceof PrepareSqlRequest) {
-                PreparedStatement preparedState = conn.prepareStatement(correctedSql);
-                processStatementAttr(preparedState, sqlRequest);
-
-                for (int i = 0; i < ((PrepareSqlRequest) sqlRequest).getParams().length; i++) {
-                    setParam(preparedState, i + 1, ((PrepareSqlRequest) sqlRequest).getParams()[i]);
-                }
-
-                resultSet = preparedState.executeQuery();
-            } else {
-                stat = conn.createStatement();
-                processStatementAttr(stat, sqlRequest);
-                resultSet = stat.executeQuery(correctedSql);
+            // special case for prepare query. 
+            if (BackdoorToggles.getPrepareOnly()) {
+                return getPrepareOnlySqlResponse(correctedSql, conn, isAdHoc, results, columnMetas);
             }
+
+            stat = conn.createStatement();
+            processStatementAttr(stat, sqlRequest);
+            resultSet = stat.executeQuery(correctedSql);
 
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columnCount = metaData.getColumnCount();
@@ -733,6 +743,50 @@ public class QueryService extends BasicService {
             close(resultSet, stat, conn);
         }
 
+        return getSqlResponse(isAdHoc, results, columnMetas);
+    }
+
+    private SQLResponse getPrepareOnlySqlResponse(String correctedSql, Connection conn,
+        Boolean isAdHoc, List<List<String>> results, List<SelectedColumnMeta> columnMetas)
+        throws SQLException {
+
+        CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(true);
+
+        try {
+            conn.prepareStatement(correctedSql);
+            throw new IllegalStateException("Should have thrown OnlyPrepareEarlyAbortException");
+        } catch (Exception e) {
+            Throwable rootCause = ExceptionUtils.getRootCause(e);
+            if (rootCause != null && rootCause instanceof OnlyPrepareEarlyAbortException) {
+                OnlyPrepareEarlyAbortException abortException = (OnlyPrepareEarlyAbortException) rootCause;
+                CalcitePrepare.Context context = abortException.getContext();
+                CalcitePrepare.ParseResult preparedResult = abortException.getPreparedResult();
+                List<RelDataTypeField> fieldList = preparedResult.rowType.getFieldList();
+
+                CalciteConnectionConfig config = context.config();
+
+                // Fill in selected column meta
+                for (int i = 0; i < fieldList.size(); ++i) {
+
+                    RelDataTypeField field = fieldList.get(i);
+                    String columnName = field.getKey();
+                    BasicSqlType basicSqlType = (BasicSqlType) field.getValue();
+
+                    columnMetas.add(new SelectedColumnMeta(false, config.caseSensitive(), false, false, basicSqlType.isNullable() ? 1 : 0, true, basicSqlType.getPrecision(), columnName, columnName, null, null, null, basicSqlType.getPrecision(), basicSqlType.getScale(), basicSqlType.getSqlTypeName().getJdbcOrdinal(), basicSqlType.getSqlTypeName().getName(), true, false, false));
+                }
+
+            } else {
+                throw e;
+            }
+        } finally {
+            CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(false);
+        }
+
+        return getSqlResponse(isAdHoc, results, columnMetas);
+    }
+
+    private SQLResponse getSqlResponse(Boolean isAdHoc, List<List<String>> results, List<SelectedColumnMeta> columnMetas) {
+
         boolean isPartialResult = false;
         StringBuilder cubeSb = new StringBuilder();
         StringBuilder logSb = new StringBuilder("Processed rows for each storageContext: ");
@@ -753,7 +807,6 @@ public class QueryService extends BasicService {
         SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, false, null, isPartialResult, isAdHoc);
         response.setTotalScanCount(QueryContext.current().getScannedRows());
         response.setTotalScanBytes(QueryContext.current().getScannedBytes());
-
         return response;
     }
 
@@ -839,19 +892,8 @@ public class QueryService extends BasicService {
         }
     }
 
-    protected static void close(ResultSet resultSet, Statement stat, Connection conn) {
-        OLAPContext.clearParameter();
-        DBUtils.closeQuietly(resultSet);
-        DBUtils.closeQuietly(stat);
-        DBUtils.closeQuietly(conn);
-    }
-
     public void setCacheManager(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
-    }
-
-    private static String getQueryKeyById(String creator) {
-        return QUERY_STORE_PATH_PREFIX + creator;
     }
 
     private static class QueryRecordSerializer implements Serializer<QueryRecord> {

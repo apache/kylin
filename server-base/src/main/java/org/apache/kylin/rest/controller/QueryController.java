@@ -22,10 +22,13 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -76,6 +79,10 @@ public class QueryController extends BasicController {
     @RequestMapping(value = "/query/prestate", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
     public SQLResponse prepareQuery(@RequestBody PrepareSqlRequest sqlRequest) {
+        Map<String, String> toggles = Maps.newHashMap();
+        toggles.put(BackdoorToggles.DEBUG_TOGGLE_PREPARE_ONLY, "true");
+        BackdoorToggles.addToggles(toggles);
+        
         return queryService.doQueryWithCache(sqlRequest);
     }
 
@@ -106,7 +113,7 @@ public class QueryController extends BasicController {
     @ResponseBody
     public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
         SQLResponse result = queryService.doQueryWithCache(sqlRequest);
-        response.setContentType("text/" + format + ";charset=ansi");
+        response.setContentType("text/" + format + ";charset=utf-8");
         response.setHeader("Content-Disposition", "attachment; filename=\"result." + format + "\"");
         ICsvListWriter csvWriter = null;
 
