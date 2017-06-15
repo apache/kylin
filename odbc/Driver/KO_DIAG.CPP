@@ -644,7 +644,8 @@ RETCODE SQL_API SQLGetDiagRec ( SQLSMALLINT pHandleType,
 pODBCDiagRow _SQLPutDiagRow ( pODBCDiag pDiag, StrPtr pFunc, StrPtr pState, Long pNativeErrorCode,
                               StrPtr pMsgArgs, va_list pArgs )
 {
-    Char s[4096]; // arbitary and maximum length of message
+	// to avoid: TST1003: The message for sqlstate '01000' is longer than SQL_MAX_MESSAGE_LENGTH - 1.
+    Char s[SQL_MAX_MESSAGE_LENGTH - 1]; // arbitary and maximum length of message
     pODBCDiagRow l;
     pODBCDiagRow r;
 
@@ -660,7 +661,7 @@ pODBCDiagRow _SQLPutDiagRow ( pODBCDiag pDiag, StrPtr pFunc, StrPtr pState, Long
     // check if there is some message
     if ( pMsgArgs )
     {
-        vsprintf ( s + strlen ( s ), pMsgArgs, pArgs );
+		vsnprintf ( s  + strlen ( s ), SQL_MAX_MESSAGE_LENGTH - 2 - strlen(s), pMsgArgs, pArgs );
     }
 
     else
@@ -1110,13 +1111,13 @@ void _ODBCLogMsg ( LogLevel level, const char* pMsgArgs, ... )
                 break;
         }
 
-        time_t now = time ( 0 );
-        struct tm tstruct;
-        char buffer[100];
-        tstruct = *localtime ( &now );
-        strftime ( buffer, 100, "%Y-%m-%d.%X", &tstruct );
+        char ts[24];
+		SYSTEMTIME sys; 
+		GetLocalTime( &sys ); 
+		sprintf( ts, "%4d-%02d-%02d %02d:%02d:%02d.%03d", sys.wYear, sys.wMonth, sys.wDay, sys.wHour, sys.wMinute, sys.wSecond, sys.wMilliseconds); 
+
         _write ( gLogFile, "[", 1 );
-        _write ( gLogFile, buffer, strlen ( buffer ) );
+        _write ( gLogFile, ts, strlen ( ts ) );
         _write ( gLogFile, "]", 1 );
 
         // MSG PARSING

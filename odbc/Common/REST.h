@@ -38,4 +38,5 @@ std::unique_ptr <SQLResponse> convertToSQLResponse ( int status,
 wstring requestQuery ( wchar_t* rawSql, char* serverAddr, long port, char* username,
                                           char* passwd,
                                           char* project,
+										  bool isPrepare,
 										  int* statusFlag);
