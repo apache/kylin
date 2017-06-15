@@ -109,10 +109,10 @@ public class QueryControllerV2 extends BasicController {
         queryService.removeQuery(creator, id);
     }
 
-    @RequestMapping(value = "/saved_queries/{project}", method = RequestMethod.GET, produces = {
+    @RequestMapping(value = "/saved_queries", method = RequestMethod.GET, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getQueriesV2(@PathVariable String project,
+    public EnvelopeResponse getQueriesV2(@RequestParam(value = "project", required = false) String project,
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
             throws IOException {
@@ -121,7 +121,7 @@ public class QueryControllerV2 extends BasicController {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         List<Query> queries = new ArrayList<Query>();
         for (Query query : queryService.getQueries(creator)) {
-            if (query.getProject().equals(project))
+            if (project == null || query.getProject().equals(project))
                 queries.add(query);
         }
 
