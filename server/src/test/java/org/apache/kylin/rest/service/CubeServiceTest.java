@@ -51,7 +51,7 @@ public class CubeServiceTest extends ServiceTestBase {
         Assert.assertNotNull(cubeService.getMetadataManager());
         Assert.assertNotNull(cacheService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
 
-        List<CubeInstance> cubes = cubeService.listAllCubes(null, null, null);
+        List<CubeInstance> cubes = cubeService.listAllCubes(null, null, null, true);
         Assert.assertNotNull(cubes);
         CubeInstance cube = cubes.get(0);
     }

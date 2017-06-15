@@ -73,7 +73,7 @@ public class ModelService extends BasicService {
     private CubeService cubeService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
-    public List<DataModelDesc> listAllModels(final String modelName, final String projectName) throws IOException {
+    public List<DataModelDesc> listAllModels(final String modelName, final String projectName, boolean exactMatch) throws IOException {
         List<DataModelDesc> models;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
@@ -86,7 +86,8 @@ public class ModelService extends BasicService {
         List<DataModelDesc> filterModels = new ArrayList<DataModelDesc>();
         for (DataModelDesc modelDesc : models) {
             boolean isModelMatch = (null == modelName) || modelName.length() == 0
-                    || modelDesc.getName().toLowerCase().equals(modelName.toLowerCase());
+                    || (exactMatch && modelDesc.getName().toLowerCase().equals(modelName.toLowerCase()))
+                    || (!exactMatch && modelDesc.getName().toLowerCase().contains(modelName.toLowerCase()));
 
             if (isModelMatch) {
                 filterModels.add(modelDesc);
@@ -99,7 +100,7 @@ public class ModelService extends BasicService {
     public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit,
             final Integer offset) throws IOException {
 
-        List<DataModelDesc> modelDescs = listAllModels(modelName, projectName);
+        List<DataModelDesc> modelDescs = listAllModels(modelName, projectName, true);
 
         if (limit == null || offset == null) {
             return modelDescs;
@@ -182,7 +183,7 @@ public class ModelService extends BasicService {
 
     public Map<TblColRef, Set<CubeInstance>> getUsedDimCols(String modelName) {
         Map<TblColRef, Set<CubeInstance>> ret = Maps.newHashMap();
-        List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, null, modelName);
+        List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, null, modelName, true);
         for (CubeInstance cubeInstance : cubeInstances) {
             CubeDesc cubeDesc = cubeInstance.getDescriptor();
             for (TblColRef tblColRef : cubeDesc.listDimensionColumnsIncludingDerived()) {
@@ -199,7 +200,7 @@ public class ModelService extends BasicService {
 
     public Map<TblColRef, Set<CubeInstance>> getUsedNonDimCols(String modelName) {
         Map<TblColRef, Set<CubeInstance>> ret = Maps.newHashMap();
-        List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, null, modelName);
+        List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, null, modelName, true);
         for (CubeInstance cubeInstance : cubeInstances) {
             CubeDesc cubeDesc = cubeInstance.getDescriptor();
             Set<TblColRef> tblColRefs = Sets.newHashSet(cubeDesc.listAllColumns());//make a copy
@@ -218,7 +219,7 @@ public class ModelService extends BasicService {
 
     private boolean validateUpdatingModel(DataModelDesc dataModelDesc) throws IOException {
         String modelName = dataModelDesc.getName();
-        List<CubeInstance> cubes = cubeService.listAllCubes(null, null, modelName);
+        List<CubeInstance> cubes = cubeService.listAllCubes(null, null, modelName, true);
         if (cubes != null && cubes.size() != 0) {
             dataModelDesc.init(getConfig(), getMetadataManager().getAllTablesMap(),
                     getMetadataManager().getCcInfoMap());
@@ -255,7 +256,7 @@ public class ModelService extends BasicService {
                     return false;
             }
 
-            DataModelDesc originDataModelDesc = listAllModels(modelName, null).get(0);
+            DataModelDesc originDataModelDesc = listAllModels(modelName, null, true).get(0);
 
             if (!dataModelDesc.getRootFactTable().equals(originDataModelDesc.getRootFactTable()))
                 return false;

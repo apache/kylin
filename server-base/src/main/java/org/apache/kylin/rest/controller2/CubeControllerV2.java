@@ -102,6 +102,7 @@ public class CubeControllerV2 extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getCubesPaging(@RequestParam(value = "cubeName", required = false) String cubeName,
+            @RequestParam(value = "exactMatch", required = false, defaultValue = "true") boolean exactMatch,
             @RequestParam(value = "modelName", required = false) String modelName,
             @RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
@@ -109,7 +110,7 @@ public class CubeControllerV2 extends BasicController {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
         List<CubeInstanceResponse> response = new ArrayList<CubeInstanceResponse>();
-        List<CubeInstance> cubes = cubeService.listAllCubes(cubeName, projectName, modelName);
+        List<CubeInstance> cubes = cubeService.listAllCubes(cubeName, projectName, modelName, exactMatch);
 
         // official cubes
         for (CubeInstance cube : cubes) {

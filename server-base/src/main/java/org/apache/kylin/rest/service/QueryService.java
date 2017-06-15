@@ -610,7 +610,7 @@ public class QueryService extends BasicService {
 
         ProjectInstance projectInstance = getProjectManager().getProject(project);
         for (String modelName : projectInstance.getModels()) {
-            DataModelDesc dataModelDesc = modelService.listAllModels(modelName, project).get(0);
+            DataModelDesc dataModelDesc = modelService.listAllModels(modelName, project, true).get(0);
             if (!dataModelDesc.isDraft()) {
 
                 // update table type: FACT

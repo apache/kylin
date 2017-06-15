@@ -48,7 +48,7 @@ public class ModelServiceTest extends ServiceTestBase {
 
     @Test
     public void testSuccessModelUpdate() throws IOException, JobException {
-        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_inner_join_model", "default");
+        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_inner_join_model", "default", true);
         Assert.assertTrue(dataModelDescs.size() == 1);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -64,7 +64,7 @@ public class ModelServiceTest extends ServiceTestBase {
     @Test
     public void testSuccessModelUpdateOnComputedColumn() throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
 
-        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default");
+        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
         Assert.assertTrue(dataModelDescs.size() == 1);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -83,7 +83,7 @@ public class ModelServiceTest extends ServiceTestBase {
         expectedEx.expect(IllegalStateException.class);
         expectedEx.expectMessage("Computed column named DEFAULT.TEST_KYLIN_FACT.DEAL_AMOUNT is already defined in other models: [DataModelDesc [name=ci_left_join_model], DataModelDesc [name=ci_inner_join_model]]. Please change another name, or try to keep consistent definition");
 
-        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default");
+        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
         Assert.assertTrue(dataModelDescs.size() == 1);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

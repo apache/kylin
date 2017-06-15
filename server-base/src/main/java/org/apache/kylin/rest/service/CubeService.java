@@ -97,7 +97,7 @@ public class CubeService extends BasicService {
     private ModelService modelService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
-    public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName) {
+    public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName, boolean exactMatch) {
         List<CubeInstance> cubeInstances = null;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
@@ -124,7 +124,8 @@ public class CubeService extends BasicService {
         List<CubeInstance> filterCubes = new ArrayList<CubeInstance>();
         for (CubeInstance cubeInstance : filterModelCubes) {
             boolean isCubeMatch = (null == cubeName)
-                    || cubeInstance.getName().toLowerCase().contains(cubeName.toLowerCase());
+                    || (!exactMatch && cubeInstance.getName().toLowerCase().contains(cubeName.toLowerCase())) ||
+                    (exactMatch && cubeInstance.getName().toLowerCase().equals(cubeName.toLowerCase()));
 
             if (isCubeMatch) {
                 filterCubes.add(cubeInstance);

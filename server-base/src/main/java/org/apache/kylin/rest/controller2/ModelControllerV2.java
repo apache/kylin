@@ -92,6 +92,7 @@ public class ModelControllerV2 extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getModelsPaging(@RequestParam(value = "modelName", required = false) String modelName,
+            @RequestParam(value = "exactMatch", required = false, defaultValue = "true") boolean exactMatch,
             @RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
@@ -100,7 +101,7 @@ public class ModelControllerV2 extends BasicController {
         List<DataModelDescResponse> response = new ArrayList<DataModelDescResponse>();
 
         // official models
-        for (DataModelDesc m : modelService.listAllModels(modelName, projectName)) {
+        for (DataModelDesc m : modelService.listAllModels(modelName, projectName, exactMatch)) {
             Preconditions.checkState(!m.isDraft());
             
             DataModelDescResponse r = new DataModelDescResponse(m);

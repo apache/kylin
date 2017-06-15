@@ -101,7 +101,7 @@ public class CubeController extends BasicController {
     @ResponseBody
     public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         List<CubeInstance> cubes;
-        cubes = cubeService.listAllCubes(cubeName, projectName, modelName);
+        cubes = cubeService.listAllCubes(cubeName, projectName, modelName, true);
 
         int climit = (null == limit) ? cubes.size() : limit;
         int coffset = (null == offset) ? 0 : offset;
