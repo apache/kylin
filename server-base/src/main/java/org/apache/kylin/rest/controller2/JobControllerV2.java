@@ -107,8 +107,8 @@ public class JobControllerV2 extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse listV2(@RequestParam(value = "status", required = false) Integer[] status, //
-            @RequestParam(value = "timeFilter", required = true) Integer timeFilter, //
-            @RequestParam(value = "cubeName", required = false) String cubeName, //
+            @RequestParam(value = "timeFilter") Integer timeFilter, //
+            @RequestParam(value = "jobName", required = false) String jobName, //
             @RequestParam(value = "projectName", required = false) String projectName, //
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, //
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize, //
@@ -124,7 +124,7 @@ public class JobControllerV2 extends BasicController {
             }
         }
 
-        List<JobInstance> jobInstanceList = jobService.searchJobs(cubeName, projectName, statusList,
+        List<JobInstance> jobInstanceList = jobService.searchJobsByJobName(jobName, projectName, statusList,
                 JobTimeFilterEnum.getByCode(timeFilter));
 
         if (sortby.equals("last_modify")) {

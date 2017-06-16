@@ -234,7 +234,7 @@ public class CubeService extends BasicService {
             throws IOException {
         Message msg = MsgPicker.getMsg();
 
-        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null,
+        final List<CubingJob> cubingJobs = jobService.listJobsByRealizationName(cube.getName(), null,
                 EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
             throw new BadRequestException(String.format(msg.getDISCARD_JOB_FIRST(), cube.getName()));
@@ -266,7 +266,7 @@ public class CubeService extends BasicService {
     public void deleteCube(CubeInstance cube) throws IOException {
         Message msg = MsgPicker.getMsg();
 
-        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null,
+        final List<CubingJob> cubingJobs = jobService.listJobsByRealizationName(cube.getName(), null,
                 EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING, ExecutableState.ERROR));
         if (!cubingJobs.isEmpty()) {
             throw new BadRequestException(String.format(msg.getDISCARD_JOB_FIRST(), cube.getName()));
@@ -361,7 +361,7 @@ public class CubeService extends BasicService {
             throw new BadRequestException(String.format(msg.getNO_READY_SEGMENT(), cubeName));
         }
 
-        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null,
+        final List<CubingJob> cubingJobs = jobService.listJobsByRealizationName(cube.getName(), null,
                 EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
             throw new BadRequestException(msg.getENABLE_WITH_RUNNING_JOB());
@@ -482,7 +482,7 @@ public class CubeService extends BasicService {
     }
 
     protected void releaseAllJobs(CubeInstance cube) {
-        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null);
+        final List<CubingJob> cubingJobs = jobService.listJobsByRealizationName(cube.getName(), null);
         for (CubingJob cubingJob : cubingJobs) {
             final ExecutableState status = cubingJob.getStatus();
             if (status != ExecutableState.SUCCEED && status != ExecutableState.DISCARDED) {

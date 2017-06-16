@@ -72,7 +72,8 @@ public class JobController extends BasicController {
         JobTimeFilterEnum timeFilter = JobTimeFilterEnum.getByCode(jobRequest.getTimeFilter());
 
         try {
-            jobInstanceList = jobService.searchJobs(jobRequest.getCubeName(), jobRequest.getProjectName(), statusList, jobRequest.getLimit(), jobRequest.getOffset(), timeFilter);
+            jobInstanceList = jobService.searchJobs(jobRequest.getCubeName(), jobRequest.getProjectName(), statusList,
+                    jobRequest.getLimit(), jobRequest.getOffset(), timeFilter);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
@@ -106,7 +107,8 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET }, produces = { "application/json" })
+    @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET }, produces = {
+            "application/json" })
     @ResponseBody
     public Map<String, String> getStepOutput(@PathVariable String jobId, @PathVariable String stepId) {
         Map<String, String> result = new HashMap<String, String>();
@@ -180,7 +182,8 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/steps/{stepId}/rollback", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @RequestMapping(value = "/{jobId}/steps/{stepId}/rollback", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
     @ResponseBody
     public JobInstance rollback(@PathVariable String jobId, @PathVariable String stepId) {
         try {
