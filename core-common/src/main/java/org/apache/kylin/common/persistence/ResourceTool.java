@@ -37,6 +37,8 @@ public class ResourceTool {
     private static String[] excludes = null;
     private static final Logger logger = LoggerFactory.getLogger(ResourceTool.class);
 
+    private static final String[] IMMUTABLE_PREFIX = { "/UUID" };
+
     public static void main(String[] args) throws IOException {
         args = StringUtil.filterSystemArgs(args);
 
@@ -52,12 +54,14 @@ public class ResourceTool {
 
         String include = System.getProperty("include");
         if (include != null) {
-            setIncludes(include.split("\\s*,\\s*"));
+            addIncludes(include.split("\\s*,\\s*"));
         }
         String exclude = System.getProperty("exclude");
         if (exclude != null) {
-            setExcludes(exclude.split("\\s*,\\s*"));
+            addExcludes(exclude.split("\\s*,\\s*"));
         }
+
+        addExcludes(IMMUTABLE_PREFIX);
 
         String cmd = args[0];
         switch (cmd) {
@@ -91,16 +95,34 @@ public class ResourceTool {
         return includes;
     }
 
-    public static void setIncludes(String[] arg) {
-        includes = arg;
+    public static void addIncludes(String[] arg) {
+        if (arg != null) {
+            if (includes != null) {
+                String[] nIncludes = new String[includes.length + arg.length];
+                System.arraycopy(includes, 0, nIncludes, 0, includes.length);
+                System.arraycopy(arg, 0, nIncludes, includes.length, arg.length);
+                includes = nIncludes;
+            } else {
+                includes = arg;
+            }
+        }
     }
 
     public static String[] getExcludes() {
         return excludes;
     }
 
-    public static void setExcludes(String[] arg) {
-        excludes = arg;
+    public static void addExcludes(String[] arg) {
+        if (arg != null) {
+            if (excludes != null) {
+                String[] nExcludes = new String[excludes.length + arg.length];
+                System.arraycopy(excludes, 0, nExcludes, 0, excludes.length);
+                System.arraycopy(arg, 0, nExcludes, excludes.length, arg.length);
+                excludes = nExcludes;
+            } else {
+                excludes = arg;
+            }
+        }
     }
 
     public static String cat(KylinConfig config, String path) throws IOException {
@@ -134,16 +156,16 @@ public class ResourceTool {
         ResourceStore dst = ResourceStore.getStore(dstConfig);
 
         logger.info("Copy from {} to {}", src, dst);
-        
+
         copyR(src, dst, path);
     }
 
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws IOException {
         ResourceStore src = ResourceStore.getStore(srcConfig);
         ResourceStore dst = ResourceStore.getStore(dstConfig);
-        
+
         logger.info("Copy from {} to {}", src, dst);
-        
+
         for (String path : paths) {
             copyR(src, dst, path);
         }
