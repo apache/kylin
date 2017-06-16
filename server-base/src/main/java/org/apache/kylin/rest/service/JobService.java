@@ -205,8 +205,13 @@ public class JobService extends BasicService implements InitializingBean {
     public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, //
             Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
             CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
-        return submitJobInternal(cube, startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart,
+        JobInstance jobInstance = submitJobInternal(cube, startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart,
                 sourcePartitionOffsetEnd, buildType, force, submitter);
+
+        accessService.init(jobInstance, null);
+        accessService.inherit(jobInstance, cube);
+
+        return jobInstance;
     }
 
     public JobInstance submitJobInternal(CubeInstance cube, long startDate, long endDate, long startOffset,
@@ -261,9 +266,6 @@ public class JobService extends BasicService implements InitializingBean {
         }
 
         JobInstance jobInstance = getSingleJobInstance(job);
-
-        accessService.init(jobInstance, null);
-        accessService.inherit(jobInstance, cube);
 
         return jobInstance;
     }
