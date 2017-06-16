@@ -26,16 +26,48 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableSet;
+
 //TODO: Some workaround ways to make sql readable by hive parser, should replaced it with a more well-designed way
 public class HiveAdhocConverter implements IAdHocConverter {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HiveAdhocConverter.class);
 
-    private static final Pattern EXTRACT_PATTERN = Pattern.compile("\\s+extract\\s*(\\()\\s*(.*?)\\s*from(\\s+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern FROM_PATTERN = Pattern.compile("\\s+from\\s+(\\()\\s*select\\s", Pattern.CASE_INSENSITIVE);
-    private static final Pattern CAST_PATTERN = Pattern.compile("CAST\\((.*?) (?i)AS\\s*(.*?)\\s*\\)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern CONCAT_PATTERN = Pattern.compile("(['_a-z0-9A-Z]+)\\|\\|(['_a-z0-9A-Z]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern EXTRACT_PATTERN = Pattern.compile("extract\\s*(\\()\\s*(.*?)\\s*from(\\s+)",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern FROM_PATTERN = Pattern.compile("\\s+from\\s+(\\()\\s*select\\s",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern ALIAS_PATTERN = Pattern.compile("\\s+([`'_a-z0-9A-Z]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CAST_PATTERN = Pattern.compile("CAST\\((.*?) (?i)AS\\s*(.*?)\\s*\\)",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern CONCAT_PATTERN = Pattern.compile("(['_a-z0-9A-Z]+)\\|\\|(['_a-z0-9A-Z]+)",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern TIMESTAMPADD_PATTERN = Pattern.compile("timestampadd\\s*\\(\\s*(.*?)\\s*,",
+            Pattern.CASE_INSENSITIVE);
+    private static final ImmutableSet<String> sqlKeyWordsExceptAS = ImmutableSet.of("ABSOLUTE", "ACTION", "ADD", "ALL",
+            "ALLOCATE", "ALTER", "AND", "ANY", "ARE", "ASC", "ASSERTION", "AT", "AUTHORIZATION", "AVG", "BEGIN",
+            "BETWEEN", "BIT", "BIT_LENGTH", "BOTH", "BY", "CASCADE", "CASCADED", "CASE", "CAST", "CATALOG", "CHAR",
+            "CHARACTER", "CHARACTER_LENGTH", "CHAR_LENGTH", "CHECK", "CLOSE", "COALESCE", "COLLATE", "COLLATION",
+            "COLUMN", "COMMIT", "CONNECT", "CONNECTION", "CONSTRAINT", "CONSTRAINTS", "CONTINUE", "CONVERT",
+            "CORRESPONDING", "COUNT", "CREATE", "CROSS", "CURRENT", "CURRENT_DATE", "CURRENT_TIME", "CURRENT_TIMESTAMP",
+            "CURRENT_USER", "CURSOR", "DATE", "DAY", "DEALLOCATE", "DEC", "DECIMAL", "DECLARE", "DEFAULT", "DEFERRABLE",
+            "DEFERRED", "DELETE", "DESC", "DESCRIBE", "DESCRIPTOR", "DIAGNOSTICS", "DISCONNECT", "DISTINCT", "DOMAIN",
+            "DOUBLE", "DROP", "ELSE", "END", "END-EXEC", "ESCAPE", "EXCEPT", "EXCEPTION", "EXEC", "EXECUTE", "EXISTS",
+            "EXTERNAL", "EXTRACT", "FALSE", "FETCH", "FIRST", "FLOAT", "FOR", "FOREIGN", "FOUND", "FROM", "FULL", "GET",
+            "GLOBAL", "GO", "GOTO", "GRANT", "GROUP", "HAVING", "HOUR", "IDENTITY", "IMMEDIATE", "IN", "INDICATOR",
+            "INITIALLY", "INNER", "INADD", "INSENSITIVE", "INSERT", "INT", "INTEGER", "INTERSECT", "INTERVAL", "INTO",
+            "IS", "ISOLATION", "JOIN", "KEY", "LANGUAGE", "LAST", "LEADING", "LEFT", "LEVEL", "LIKE", "LOCAL", "LOWER",
+            "MATCH", "MAX", "MIN", "MINUTE", "MODULE", "MONTH", "NAMES", "NATIONAL", "NATURAL", "NCHAR", "NEXT", "NO",
+            "NOT", "NULL", "NULLIF", "NUMERIC", "OCTET_LENGTH", "OF", "ON", "ONLY", "OPEN", "OPTION", "OR", "ORDER",
+            "OUTER", "OUTADD", "OVERLAPS", "PAD", "PARTIAL", "POSITION", "PRECISION", "PREPARE", "PRESERVE", "PRIMARY",
+            "PRIOR", "PRIVILEGES", "PROCEDURE", "PUBLIC", "READ", "REAL", "REFERENCES", "RELATIVE", "RESTRICT",
+            "REVOKE", "RIGHT", "ROLLBACK", "ROWS", "SCHEMA", "SCROLL", "SECOND", "SECTION", "SELECT", "SESSION",
+            "SESSION_USER", "SET", "SIZE", "SMALLINT", "SOME", "SPACE", "SQL", "SQLCODE", "SQLERROR", "SQLSTATE",
+            "SUBSTRING", "SUM", "SYSTEM_USER", "TABLE", "TEMPORARY", "THEN", "TIME", "TIMESTAMP", "TIMEZONE_HOUR",
+            "TIMEZONE_MINUTE", "TO", "TRAILING", "TRANSACTION", "TRANSLATE", "TRANSLATION", "TRIM", "TRUE", "UNION",
+            "UNIQUE", "UNKNOWN", "UPDATE", "UPPER", "USAGE", "USER", "USING", "VALUE", "VALUES", "VARCHAR", "VARYING",
+            "VIEW", "WHEN", "WHENEVER", "WHERE", "WITH", "WORK", "WRITE", "YEAR", "ZONE");
 
     public static String replaceString(String originString, String fromString, String toString) {
         return originString.replace(fromString, toString);
@@ -55,16 +87,17 @@ public class HiveAdhocConverter implements IAdHocConverter {
             int startIdx = extractMatcher.end(3);
             int endIdx = parenthesesPairs.get(extractMatcher.start(1));
             String extractInner = originString.substring(startIdx, endIdx);
-            int originStart = extractMatcher.start(0) + 1;
+            int originStart = extractMatcher.start(0);
             int originEnd = endIdx + 1;
 
-            replacedString = replaceString(replacedString, originString.substring(originStart, originEnd), functionStr + "(" + extractInner + ")");
+            replacedString = replaceString(replacedString, originString.substring(originStart, originEnd),
+                    functionStr + "(" + extractInner + ")");
         }
 
         return replacedString;
     }
 
-    public static String castRepalce(String originString) {
+    public static String castReplace(String originString) {
         Matcher castMatcher = CAST_PATTERN.matcher(originString);
         String replacedString = originString;
 
@@ -95,7 +128,7 @@ public class HiveAdhocConverter implements IAdHocConverter {
         return replacedString;
     }
 
-    public static String subqueryRepalce(String originString) {
+    public static String subqueryReplace(String originString) {
         Matcher subqueryMatcher = FROM_PATTERN.matcher(originString);
         String replacedString = originString;
         Map<Integer, Integer> parenthesesPairs = null;
@@ -108,7 +141,30 @@ public class HiveAdhocConverter implements IAdHocConverter {
             int startIdx = subqueryMatcher.start(1);
             int endIdx = parenthesesPairs.get(startIdx) + 1;
 
-            replacedString = replaceString(replacedString, originString.substring(startIdx, endIdx), originString.substring(startIdx, endIdx) + " as alias");
+            Matcher aliasMatcher = ALIAS_PATTERN.matcher(originString.substring(endIdx));
+            if (aliasMatcher.find()) {
+                String aliasCandidate = aliasMatcher.group(1);
+
+                if (aliasCandidate != null && !sqlKeyWordsExceptAS.contains(aliasCandidate.toUpperCase())) {
+                    continue;
+                }
+
+                replacedString = replaceString(replacedString, originString.substring(startIdx, endIdx),
+                        originString.substring(startIdx, endIdx) + " as alias");
+            }
+        }
+
+        return replacedString;
+    }
+
+    public static String timestampaddReplace(String originString) {
+        Matcher timestampaddMatcher = TIMESTAMPADD_PATTERN.matcher(originString);
+        String replacedString = originString;
+
+        while (timestampaddMatcher.find()) {
+            String interval = timestampaddMatcher.group(1);
+            String timestampaddStr = replaceString(timestampaddMatcher.group(), interval, "'" + interval + "'");
+            replacedString = replaceString(replacedString, timestampaddMatcher.group(), timestampaddStr);
         }
 
         return replacedString;
@@ -121,7 +177,8 @@ public class HiveAdhocConverter implements IAdHocConverter {
         while (concatMatcher.find()) {
             String leftString = concatMatcher.group(1);
             String rightString = concatMatcher.group(2);
-            replacedString = replaceString(replacedString, leftString + "||" + rightString, "concat(" + leftString + "," + rightString + ")");
+            replacedString = replaceString(replacedString, leftString + "||" + rightString,
+                    "concat(" + leftString + "," + rightString + ")");
         }
 
         return replacedString;
@@ -135,16 +192,19 @@ public class HiveAdhocConverter implements IAdHocConverter {
         convertedSql = extractReplace(convertedSql);
 
         // Step3.Replace cast type string
-        convertedSql = castRepalce(convertedSql);
+        convertedSql = castReplace(convertedSql);
 
         // Step4.Replace sub query
-        convertedSql = subqueryRepalce(convertedSql);
+        convertedSql = subqueryReplace(convertedSql);
 
         // Step5.Replace char_length with length
         convertedSql = replaceString(convertedSql, "char_length", "length");
 
         // Step6.Replace "||" with concat
         convertedSql = concatReplace(convertedSql);
+
+        // Step7.Add quote for interval in timestampadd
+        convertedSql = timestampaddReplace(convertedSql);
 
         return convertedSql;
     }
