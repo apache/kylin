@@ -133,8 +133,15 @@ void overwrite ( SQLResponse* res )
             case ODBCTypes::ODBC_Type_Time :
             case ODBCTypes::ODBC_Type_Timestamp :
                 length = ScanForLength ( res -> results, i );
-                meta -> displaySize = length;
-                meta -> precision = length;
+				if (length > meta -> displaySize) 
+				{
+					meta -> displaySize = length;
+				}
+
+				if (length > meta -> precision)
+				{
+					meta -> precision = length;
+				}
                 break;
 
             default :
