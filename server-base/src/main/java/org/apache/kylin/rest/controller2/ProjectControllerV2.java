@@ -32,6 +32,8 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.ProjectRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
+import org.apache.kylin.rest.service.CubeService;
+import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +61,14 @@ public class ProjectControllerV2 extends BasicController {
     @Autowired
     @Qualifier("projectService")
     private ProjectService projectService;
+
+    @Autowired
+    @Qualifier("cubeMgmtService")
+    private CubeService cubeService;
+
+    @Autowired
+    @Qualifier("modelMgmtService")
+    private ModelService modelService;
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = {
             "application/vnd.apache.kylin-v2+json" })
@@ -123,21 +133,23 @@ public class ProjectControllerV2 extends BasicController {
 
         ProjectInstance projectDesc = deserializeProjectDescV2(projectRequest);
 
-        ProjectInstance updatedProj = null;
-
         ProjectInstance currentProject = projectService.getProjectManager().getProject(formerProjectName);
         if (currentProject == null) {
             throw new BadRequestException(String.format(msg.getPROJECT_NOT_FOUND(), formerProjectName));
         }
 
-        updatedProj = projectService.updateProject(projectDesc, currentProject);
+        // cannot modify project name if it's not empty
+        if (!currentProject.getName().equals(projectDesc.getName()) && !isProjectEmpty(currentProject.getName())) {
+            throw new BadRequestException(msg.getRENAME_PROJECT_NOT_EMPTY());
+        }
+
+        ProjectInstance updatedProj = projectService.updateProject(projectDesc, currentProject);
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, updatedProj, "");
     }
 
     private ProjectInstance deserializeProjectDescV2(ProjectRequest projectRequest) throws IOException {
-        ProjectInstance projectDesc = null;
         logger.debug("Saving project " + projectRequest.getProjectDescData());
-        projectDesc = JsonUtil.readValue(projectRequest.getProjectDescData(), ProjectInstance.class);
+        ProjectInstance projectDesc = JsonUtil.readValue(projectRequest.getProjectDescData(), ProjectInstance.class);
         return projectDesc;
     }
 
@@ -145,9 +157,20 @@ public class ProjectControllerV2 extends BasicController {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public void deleteProjectV2(@PathVariable String projectName) throws IOException {
-
+        Message msg = MsgPicker.getMsg();
         ProjectInstance project = projectService.getProjectManager().getProject(projectName);
+        if (!isProjectEmpty(projectName)) {
+            throw new BadRequestException(msg.getDELETE_PROJECT_NOT_EMPTY());
+        }
+
         projectService.deleteProject(projectName, project);
+    }
+
+    private boolean isProjectEmpty(String projectName) throws IOException {
+        return cubeService.listAllCubes(projectName).isEmpty()
+                && cubeService.listCubeDrafts(null, null, projectName).isEmpty()
+                && modelService.listAllModels(null, projectName, false).isEmpty()
+                && modelService.listModelDrafts(null, projectName).isEmpty();
     }
 
 }

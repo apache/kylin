@@ -245,6 +245,13 @@ public class CnMessage extends Message {
         return "找不到项目 '%s'";
     }
 
+    public String getDELETE_PROJECT_NOT_EMPTY() {
+        return "不能删除该项目，如需要删除请先清空其中的Cube和Model";
+    }
+
+    public String getRENAME_PROJECT_NOT_EMPTY() {
+        return "不能重命名该项目，如果要重命名请先清空其中的Cube和Model";
+    }
     // Table
     public String getHIVE_TABLE_NOT_FOUND() {
         return "找不到 Hive 表 '%s'";
