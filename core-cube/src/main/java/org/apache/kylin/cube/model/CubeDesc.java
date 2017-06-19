@@ -707,11 +707,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 throw new IllegalStateException("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions: " + ensureOrder(CollectionUtils.intersection(hierarchyDims, jointDims)));
             }
 
-            if (hasSingle(hierarchyDimsList)) {
+            if (hasSingleOrNone(hierarchyDimsList)) {
                 logger.error("Aggregation group " + index + " require at least 2 dimensions in a hierarchy");
                 throw new IllegalStateException("Aggregation group " + index + " require at least 2 dimensions in a hierarchy.");
             }
-            if (hasSingle(jointDimsList)) {
+            if (hasSingleOrNone(jointDimsList)) {
                 logger.error("Aggregation group " + index + " require at least 2 dimensions in a joint");
                 throw new IllegalStateException("Aggregation group " + index + " require at least 2 dimensions in a joint");
             }
@@ -753,15 +753,15 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
     }
 
-    private boolean hasSingle(ArrayList<Set<String>> dimsList) {
-        boolean hasSingle = false;
+    private boolean hasSingleOrNone(ArrayList<Set<String>> dimsList) {
+        boolean hasSingleOrNone = false;
         for (Set<String> dims : dimsList) {
-            if (dims.size() == 1) {
-                hasSingle = true;
+            if (dims.size() <= 1) {
+                hasSingleOrNone = true;
                 break;
             }
         }
-        return hasSingle;
+        return hasSingleOrNone;
     }
 
     private Pair<Boolean, Set<String>> hasOverlap(ArrayList<Set<String>> dimsList, Set<String> Dims) {
