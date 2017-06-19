@@ -20,13 +20,14 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -53,6 +54,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
 import org.supercsv.prefs.CsvPreference;
+
+import com.google.common.collect.Maps;
 
 /**
  * Handle query requests.
@@ -82,7 +85,7 @@ public class QueryController extends BasicController {
         Map<String, String> toggles = Maps.newHashMap();
         toggles.put(BackdoorToggles.DEBUG_TOGGLE_PREPARE_ONLY, "true");
         BackdoorToggles.addToggles(toggles);
-        
+
         return queryService.doQueryWithCache(sqlRequest);
     }
 
@@ -90,7 +93,8 @@ public class QueryController extends BasicController {
     @ResponseBody
     public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
-        Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
+        Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(),
+                sqlRequest.getDescription());
 
         queryService.saveQuery(creator, newQuery);
     }
@@ -114,7 +118,11 @@ public class QueryController extends BasicController {
     public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
         SQLResponse result = queryService.doQueryWithCache(sqlRequest);
         response.setContentType("text/" + format + ";charset=utf-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"result." + format + "\"");
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+        Date now = new Date();
+        String nowStr = sdf.format(now);
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + nowStr + ".result." + format + "\"");
         ICsvListWriter csvWriter = null;
 
         try {

@@ -772,7 +772,7 @@ public class QueryService extends BasicService {
                     String columnName = field.getKey();
                     BasicSqlType basicSqlType = (BasicSqlType) field.getValue();
 
-                    columnMetas.add(new SelectedColumnMeta(false, config.caseSensitive(), false, false, basicSqlType.isNullable() ? 1 : 0, true, basicSqlType.getPrecision(), columnName, columnName, null, null, null, basicSqlType.getPrecision(), basicSqlType.getScale(), basicSqlType.getSqlTypeName().getJdbcOrdinal(), basicSqlType.getSqlTypeName().getName(), true, false, false));
+                    columnMetas.add(new SelectedColumnMeta(false, config.caseSensitive(), false, false, basicSqlType.isNullable() ? 1 : 0, true, basicSqlType.getPrecision(), columnName, columnName, null, null, null, basicSqlType.getPrecision(), basicSqlType.getScale() < 0 ? 0 : basicSqlType.getScale(), basicSqlType.getSqlTypeName().getJdbcOrdinal(), basicSqlType.getSqlTypeName().getName(), true, false, false));
                 }
 
             } else {
