@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -43,7 +42,6 @@ import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
-import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.request.JobBuildRequest2;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
@@ -79,9 +77,6 @@ import com.google.common.collect.Lists;
 @RequestMapping(value = "/cubes")
 public class CubeControllerV2 extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(CubeControllerV2.class);
-
-    public static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
-            .toCharArray();
 
     @Autowired
     @Qualifier("cubeMgmtService")
@@ -435,42 +430,6 @@ public class CubeControllerV2 extends BasicController {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.purgeCube(cube), "");
-    }
-
-    @RequestMapping(value = "/{cubeName}/clone", method = { RequestMethod.PUT }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public EnvelopeResponse cloneCubeV2(@PathVariable String cubeName, @RequestBody CubeRequest cubeRequest)
-            throws IOException {
-        Message msg = MsgPicker.getMsg();
-
-        String newCubeName = cubeRequest.getCubeName();
-        String project = cubeRequest.getProject();
-
-        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        if (cube == null) {
-            throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
-        }
-        if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
-            throw new BadRequestException(String.format(msg.getCLONE_BROKEN_CUBE(), cubeName));
-        }
-        if (!StringUtils.containsOnly(newCubeName, VALID_CUBENAME)) {
-            logger.info("Invalid Cube name {}, only letters, numbers and underline supported.", newCubeName);
-            throw new BadRequestException(String.format(msg.getINVALID_CUBE_NAME(), cubeName));
-        }
-
-        CubeDesc cubeDesc = cube.getDescriptor();
-        CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
-
-        newCubeDesc.setName(newCubeName);
-
-        CubeInstance newCube;
-        newCube = cubeService.createCubeAndDesc(newCubeName, project, newCubeDesc);
-
-        //reload to avoid shallow clone
-        cubeService.getCubeDescManager().reloadCubeDescLocal(newCubeName);
-
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, newCube, "");
     }
 
     @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT }, produces = {

@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.rest.controller2.CubeControllerV2.VALID_CUBENAME;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,6 +79,8 @@ import com.google.common.collect.Lists;
 public class CubeService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
+
+    public static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
 
     private WeakHashMap<String, HBaseResponse> htableInfoCache = new WeakHashMap<>();
 

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.controller;
 
+import static org.apache.kylin.rest.service.CubeService.VALID_CUBENAME;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -82,8 +84,6 @@ import com.google.common.collect.Maps;
 @RequestMapping(value = "/cubes")
 public class CubeController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(CubeController.class);
-
-    private static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
 
     @Autowired
     @Qualifier("cubeMgmtService")
