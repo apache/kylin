@@ -58,7 +58,7 @@
     "columns" : [ "TRANS_ID", "SELLER_ID", "BUYER_ID", "PART_DT", "LEAF_CATEG_ID", "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "OPS_USER_ID", "OPS_REGION" ]
   }, {
     "table" : "KYLIN_CAL_DT",
-    "columns" : ["CAL_DT", "WEEK_BEG_DT"]
+    "columns" : [ "CAL_DT", "WEEK_BEG_DT", "MONTH_BEG_DT", "YEAR_BEG_DT" ]
   }, {
     "table" : "KYLIN_CATEGORY_GROUPINGS",
     "columns" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID", "SITE_ID" ]
