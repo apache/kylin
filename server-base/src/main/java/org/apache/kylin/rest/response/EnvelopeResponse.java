@@ -18,17 +18,17 @@
 
 package org.apache.kylin.rest.response;
 
-public class EnvelopeResponse {
+public class EnvelopeResponse<T> {
 
     public String code;
-    public Object data;
+    public T data;
     public String msg;
 
     //only for child
     protected EnvelopeResponse() {
     }
 
-    public EnvelopeResponse(String code, Object data, String msg) {
+    public EnvelopeResponse(String code, T data, String msg) {
         this.code = code;
         this.data = data;
         this.msg = msg;

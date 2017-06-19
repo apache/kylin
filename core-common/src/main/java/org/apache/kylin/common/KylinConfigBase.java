@@ -62,6 +62,9 @@ abstract public class KylinConfigBase implements Serializable {
     public static String getKylinHome() {
         String kylinHome = System.getenv("KYLIN_HOME");
         if (StringUtils.isEmpty(kylinHome)) {
+            kylinHome = System.getProperty("KYLIN_HOME");
+        }
+        if (StringUtils.isEmpty(kylinHome)) {
             logger.warn("KYLIN_HOME was not set");
         }
         return kylinHome;

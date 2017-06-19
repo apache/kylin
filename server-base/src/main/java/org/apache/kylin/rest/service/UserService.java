@@ -30,13 +30,11 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -61,13 +59,13 @@ public class UserService implements UserDetailsManager {
     }
 
     @Override
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    //@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN) --- DON'T DO THIS, CAUSES CIRCULAR DEPENDENCY BETWEEN UserService & AclService
     public void createUser(UserDetails user) {
         updateUser(user);
     }
 
     @Override
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    //@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN) --- DON'T DO THIS, CAUSES CIRCULAR DEPENDENCY BETWEEN UserService & AclService
     public void updateUser(UserDetails user) {
         try {
             deleteUser(user.getUsername());

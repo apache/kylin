@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.controller2;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.exception.UnauthorizedException;
@@ -59,7 +60,7 @@ public class UserControllerV2 extends BasicController {
     @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse authenticateV2() {
+    public EnvelopeResponse<UserDetails> authenticateV2() {
         EnvelopeResponse response = authenticatedUserV2();
         logger.debug("User login: {}", response.data);
         return response;
@@ -68,7 +69,7 @@ public class UserControllerV2 extends BasicController {
     @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse authenticatedUserV2() {
+    public EnvelopeResponse<UserDetails> authenticatedUserV2() {
         Message msg = MsgPicker.getMsg();
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -95,7 +96,7 @@ public class UserControllerV2 extends BasicController {
     @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getAuthoritiesV2() throws IOException {
+    public EnvelopeResponse<List<String>> getAuthoritiesV2() throws IOException {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, userService.listUserAuthorities(), "");
     }

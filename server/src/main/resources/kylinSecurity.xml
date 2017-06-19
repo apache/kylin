@@ -17,12 +17,13 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:util="http://www.springframework.org/schema/util" xsi:schemaLocation="http://www.springframework.org/schema/beans
-	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
 	http://www.springframework.org/schema/security
-	http://www.springframework.org/schema/security/spring-security-3.1.xsd
-	http://www.springframework.org/schema/util  http://www.springframework.org/schema/util/spring-util-3.1.xsd
-	
-     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	http://www.springframework.org/schema/security/spring-security-4.0.xsd
+	http://www.springframework.org/schema/util
+	http://www.springframework.org/schema/util/spring-util-4.2.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd">
 
     <scr:global-method-security pre-post-annotations="enabled">
         <scr:expression-handler ref="expressionHandler"/>
@@ -45,13 +46,13 @@
           class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl">
         <constructor-arg>
             <list>
-                <bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+				<bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
                     <constructor-arg value="ROLE_ADMIN"/>
                 </bean>
-                <bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+				<bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
                     <constructor-arg value="ROLE_ADMIN"/>
                 </bean>
-                <bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+				<bean class="org.springframework.security.core.authority.SimpleGrantedAuthority">
                     <constructor-arg value="ROLE_ADMIN"/>
                 </bean>
             </list>
