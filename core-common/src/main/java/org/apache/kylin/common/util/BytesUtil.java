@@ -177,6 +177,10 @@ public class BytesUtil {
         return r;
     }
 
+    public static boolean isPositiveShort(int i) {
+        return (i & 0xFFFF7000) == 0;
+    }
+
     // from WritableUtils
     // ============================================================================
 

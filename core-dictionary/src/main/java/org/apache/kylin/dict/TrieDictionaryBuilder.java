@@ -442,7 +442,9 @@ public class TrieDictionaryBuilder<T> {
             headOut.writeInt((int) stats.mbpn_footprint); // body size
             headOut.write(sizeChildOffset);
             headOut.write(sizeNoValuesBeneath);
+            positiveShortPreCheck(baseId, "baseId");
             headOut.writeShort(baseId);
+            positiveShortPreCheck(stats.maxValueLength, "stats.maxValueLength");
             headOut.writeShort(stats.maxValueLength);
             headOut.writeUTF(bytesConverter == null ? "" : bytesConverter.getClass().getName());
             headOut.close();
@@ -481,6 +483,12 @@ public class TrieDictionaryBuilder<T> {
         if (o != trieBytes.length)
             throw new RuntimeException();
         return trieBytes;
+    }
+
+    private void positiveShortPreCheck(int i, String fieldName) {
+        if (!BytesUtil.isPositiveShort(i)) {
+            throw new IllegalStateException(fieldName + " is not positive short, usually caused by too long dict value.");
+        }
     }
 
     private void build_overwriteChildOffset(int parentOffset, int childOffset, int sizeChildOffset, byte[] trieBytes) {

@@ -29,7 +29,6 @@ import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 
-
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
@@ -101,6 +100,10 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
             this.sizeNoValuesBeneath = headIn.read();
             this.baseId = headIn.readShort();
             this.maxValueLength = headIn.readShort();
+            if (maxValueLength < 0) {
+                throw new IllegalStateException("maxValueLength is negative (" + maxValueLength
+                        + "). Dict value is too long, whose length is larger than " + Short.MAX_VALUE);
+            }
 
             String converterName = headIn.readUTF();
             if (converterName.isEmpty() == false)
