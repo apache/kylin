@@ -29,7 +29,6 @@
         <scr:expression-handler ref="expressionHandler"/>
     </scr:global-method-security>
 
-    <scr:csrf disabled="true"/>
 
     <!-- acl config -->
     <bean id="aclPermissionFactory" class="org.apache.kylin.rest.security.AclPermissionFactory"/>
@@ -229,6 +228,7 @@
 
     <beans profile="testing,ldap">
         <scr:http auto-config="true" use-expressions="true">
+            <scr:csrf disabled="true"/>
             <scr:http-basic entry-point-ref="unauthorisedEntryPoint"/>
 
             <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
@@ -270,6 +270,7 @@
         <!-- Secured Rest API urls with LDAP basic authentication -->
         <scr:http pattern="/api/**" use-expressions="true"
                   authentication-manager-ref="apiAccessAuthenticationManager">
+            <scr:csrf disabled="true"/>
             <scr:http-basic entry-point-ref="unauthorisedEntryPoint"/>
 
             <scr:intercept-url pattern="/api/user/authentication*/**" access="permitAll"/>
@@ -294,6 +295,7 @@
         <!-- Secured non-api urls with SAML SSO -->
         <scr:http auto-config="true" entry-point-ref="samlEntryPoint" use-expressions="false"
                   authentication-manager-ref="webAccessAuthenticationManager">
+            <scr:csrf disabled="true"/>
             <scr:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
             <scr:custom-filter before="FIRST" ref="metadataGeneratorFilter"/>
             <scr:custom-filter after="BASIC_AUTH_FILTER" ref="samlFilter"/>
