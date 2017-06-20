@@ -29,6 +29,8 @@
         <scr:expression-handler ref="expressionHandler"/>
     </scr:global-method-security>
 
+    <scr:csrf disabled="true"/>
+
     <!-- acl config -->
     <bean id="aclPermissionFactory" class="org.apache.kylin.rest.security.AclPermissionFactory"/>
 
