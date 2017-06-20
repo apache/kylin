@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.persistence.AclEntity;
@@ -298,18 +297,16 @@ public class AccessService {
     }
 
     public List<AccessEntryResponse> generateAceResponses(Acl acl) {
-        if (null == acl) {
-            return Collections.emptyList();
-        }
-        List<AccessEntryResponse> accessControlEntities = new ArrayList<AccessEntryResponse>();
+        List<AccessEntryResponse> result = new ArrayList<AccessEntryResponse>();
 
-        // Cause there is a circle reference in AccessControlEntry, it needs to
-        // set acl to null as a workaround.
-        for (AccessControlEntry ace : acl.getEntries()) {
-            accessControlEntities.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
+        while (acl != null) {
+            for (AccessControlEntry ace : acl.getEntries()) {
+                result.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
+            }
+            acl = acl.getParentAcl();
         }
 
-        return accessControlEntities;
+        return result;
     }
 
     /**
@@ -322,7 +319,8 @@ public class AccessService {
         Message msg = MsgPicker.getMsg();
 
         // Can't revoke admin permission from domain object owner
-        if (acl.getOwner().equals(acl.getEntries().get(indexOfAce).getSid()) && BasePermission.ADMINISTRATION.equals(acl.getEntries().get(indexOfAce).getPermission())) {
+        if (acl.getOwner().equals(acl.getEntries().get(indexOfAce).getSid())
+                && BasePermission.ADMINISTRATION.equals(acl.getEntries().get(indexOfAce).getPermission())) {
             throw new ForbiddenException(msg.getREVOKE_ADMIN_PERMISSION());
         }
     }
