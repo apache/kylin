@@ -45,6 +45,8 @@ public interface BatchConstants {
     String CFG_REGION_NUMBER_MAX = "region.number.max";
     String CFG_REGION_SPLIT_SIZE = "region.split.size";
     String CFG_HFILE_SIZE_GB = "hfile.size.gb";
+    String CFG_STATS_JOB_ID = "stats.job.id";
+    String CFG_STATS_JOB_FREQUENCY = "stats.sample.frequency";
 
     String CFG_KYLIN_LOCAL_TEMP_DIR = "/tmp/kylin/";
     String CFG_KYLIN_HDFS_TEMP_DIR = "/tmp/kylin/";
@@ -61,7 +63,6 @@ public interface BatchConstants {
     String CFG_OUTPUT_DICT = "dict";
     String CFG_OUTPUT_STATISTICS = "statistics";
     String CFG_OUTPUT_PARTITION = "partition";
-
 
     /**
      * command line ARGuments
