@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -29,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
-import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
@@ -79,6 +77,8 @@ public class AclService implements MutableAclService {
 
     public static final String DIR_PREFIX = "/acl/";
 
+    public static final Serializer<AclRecord> SERIALIZER = new JsonSerializer<>(AclRecord.class);
+
     @Autowired
     protected PermissionGrantingStrategy permissionGrantingStrategy;
 
@@ -107,7 +107,8 @@ public class AclService implements MutableAclService {
     public List<ObjectIdentity> findChildren(ObjectIdentity parentIdentity) {
         List<ObjectIdentity> oids = new ArrayList<ObjectIdentity>();
         try {
-            List<AclRecord> allAclRecords = aclStore.getAllResources(String.valueOf(DIR_PREFIX), AclRecord.class, AclRecordSerializer.getInstance());
+            List<AclRecord> allAclRecords = aclStore.getAllResources(String.valueOf(DIR_PREFIX), AclRecord.class,
+                    SERIALIZER);
             for (AclRecord record : allAclRecords) {
                 DomainObjectInfo parent = record.getParentDomainObjectInfo();
                 if (parent != null && parent.getId().equals(String.valueOf(parentIdentity.getIdentifier()))) {
@@ -148,7 +149,8 @@ public class AclService implements MutableAclService {
         Map<ObjectIdentity, Acl> aclMaps = new HashMap<ObjectIdentity, Acl>();
         try {
             for (ObjectIdentity oid : oids) {
-                AclRecord record = aclStore.getResource(getQueryKeyById(String.valueOf(oid.getIdentifier())), AclRecord.class, AclRecordSerializer.getInstance());
+                AclRecord record = aclStore.getResource(getQueryKeyById(String.valueOf(oid.getIdentifier())),
+                        AclRecord.class, SERIALIZER);
                 if (record != null) {
                     SidInfo owner = record.getOwnerInfo();
                     Sid ownerSid = (null == owner) ? null : (owner.isPrincipal() ? new PrincipalSid(owner.getSid()) : new GrantedAuthoritySid(owner.getSid()));
@@ -191,7 +193,8 @@ public class AclService implements MutableAclService {
         PrincipalSid sid = new PrincipalSid(auth);
         try {
             AclRecord record = new AclRecord(new DomainObjectInfo(objectIdentity), null, new SidInfo(sid), true, null);
-            aclStore.putResource(getQueryKeyById(String.valueOf(objectIdentity.getIdentifier())), record, 0, AclRecordSerializer.getInstance());
+            aclStore.putResource(getQueryKeyById(String.valueOf(objectIdentity.getIdentifier())), record, 0,
+                    SERIALIZER);
             logger.debug("ACL of " + objectIdentity + " created successfully.");
         } catch (IOException e) {
             throw new InternalErrorException(e);
@@ -228,7 +231,7 @@ public class AclService implements MutableAclService {
 
         try {
             String id = getQueryKeyById(String.valueOf(mutableAcl.getObjectIdentity().getIdentifier()));
-            AclRecord record = aclStore.getResource(id, AclRecord.class, AclRecordSerializer.getInstance());
+            AclRecord record = aclStore.getResource(id, AclRecord.class, SERIALIZER);
             aclStore.deleteResource(id);
             if (mutableAcl.getParentAcl() != null) {
                 record.setParentDomainObjectInfo(new DomainObjectInfo(mutableAcl.getParentAcl().getObjectIdentity()));
@@ -249,7 +252,7 @@ public class AclService implements MutableAclService {
                 AceInfo aceInfo = new AceInfo(ace);
                 allAceInfo.put(String.valueOf(aceInfo.getSidInfo().getSid()), aceInfo);
             }
-            aclStore.putResource(id, record, 0, AclRecordSerializer.getInstance());
+            aclStore.putResource(id, record, 0, SERIALIZER);
             logger.debug("ACL of " + mutableAcl.getObjectIdentity() + " updated successfully.");
         } catch (IOException e) {
             throw new InternalErrorException(e);
@@ -307,32 +310,6 @@ public class AclService implements MutableAclService {
     public static String getQueryKeyById(String id) {
         return DIR_PREFIX + id;
     }
-
-    protected static class AclRecordSerializer implements Serializer<AclRecord> {
-
-        private static final AclRecordSerializer serializer = new AclRecordSerializer();
-
-        AclRecordSerializer() {
-
-        }
-
-        public static AclRecordSerializer getInstance() {
-            return serializer;
-        }
-
-        @Override
-        public void serialize(AclRecord obj, DataOutputStream out) throws IOException {
-            String jsonStr = JsonUtil.writeValueAsString(obj);
-            out.writeUTF(jsonStr);
-        }
-
-        @Override
-        public AclRecord deserialize(DataInputStream in) throws IOException {
-            String jsonStr = in.readUTF();
-            return JsonUtil.readValue(jsonStr, AclRecord.class);
-        }
-    }
-
 }
 
 @SuppressWarnings("serial")

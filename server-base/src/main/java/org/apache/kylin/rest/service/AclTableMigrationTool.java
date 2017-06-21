@@ -128,7 +128,7 @@ public class AclTableMigrationTool {
                         record.setEntriesInheriting(getInheriting(result));
                         record.setAllAceInfo(getAllAceInfo(result));
                         store.deleteResource(AclService.getQueryKeyById(object.getId()));
-                        store.putResource(AclService.getQueryKeyById(object.getId()), record, 0, AclService.AclRecordSerializer.getInstance());
+                        store.putResource(AclService.getQueryKeyById(object.getId()), record, 0, AclService.SERIALIZER);
                         result = rs.next();
                     }
                 }
@@ -147,7 +147,8 @@ public class AclTableMigrationTool {
                         User user = hbaseRowToUser(result);
                         UserInfo userInfo = convert(user);
                         store.deleteResource(UserService.getId(userInfo.getUsername()));
-                        store.putResource(UserService.getId(userInfo.getUsername()), userInfo, 0, UserService.UserInfoSerializer.getInstance());
+                        store.putResource(UserService.getId(userInfo.getUsername()), userInfo, 0,
+                                UserService.SERIALIZER);
                         result = rs.next();
                     }
                 }
@@ -190,7 +191,7 @@ public class AclTableMigrationTool {
 
     private DomainObjectInfo getDomainObjectInfoFromRs(Result result) {
         String type = String.valueOf(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_TYPE_COLUMN)));
-        String id = String.valueOf(result.getRow());
+        String id = new String(result.getRow());
         DomainObjectInfo newInfo = new DomainObjectInfo();
         newInfo.setId(id);
         newInfo.setType(type);

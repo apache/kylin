@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +25,9 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
-import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
@@ -51,6 +49,8 @@ public class UserService implements UserDetailsManager {
 
     public static final String DIR_PREFIX = "/user/";
 
+    public static final Serializer<UserInfo> SERIALIZER = new JsonSerializer<>(UserInfo.class);
+
     protected ResourceStore aclStore;
 
     @PostConstruct
@@ -70,7 +70,7 @@ public class UserService implements UserDetailsManager {
         try {
             deleteUser(user.getUsername());
             String id = getId(user.getUsername());
-            aclStore.putResource(id, new UserInfo(user), 0, UserInfoSerializer.getInstance());
+            aclStore.putResource(id, new UserInfo(user), 0, SERIALIZER);
             logger.debug("update user : {}", user.getUsername());
         } catch (IOException e) {
             throw new InternalErrorException(e);
@@ -107,7 +107,7 @@ public class UserService implements UserDetailsManager {
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         Message msg = MsgPicker.getMsg();
         try {
-            UserInfo userInfo = aclStore.getResource(getId(userName), UserInfo.class, UserInfoSerializer.getInstance());
+            UserInfo userInfo = aclStore.getResource(getId(userName), UserInfo.class, SERIALIZER);
             if (userInfo == null) {
                 throw new UsernameNotFoundException(String.format(msg.getUSER_NOT_FOUND(), userName));
             }
@@ -132,7 +132,7 @@ public class UserService implements UserDetailsManager {
 
     public List<UserDetails> listUsers() throws IOException {
         List<UserDetails> all = new ArrayList<UserDetails>();
-        List<UserInfo> userInfos = aclStore.getAllResources(DIR_PREFIX, UserInfo.class, UserInfoSerializer.getInstance());
+        List<UserInfo> userInfos = aclStore.getAllResources(DIR_PREFIX, UserInfo.class, SERIALIZER);
         for (UserInfo info : userInfos) {
             all.add(wrap(info));
         }
@@ -152,31 +152,6 @@ public class UserService implements UserDetailsManager {
             authorities.add(new UserGrantedAuthority(str));
         }
         return new User(userInfo.getUsername(), userInfo.getPassword(), authorities);
-    }
-
-    public static class UserInfoSerializer implements Serializer<UserInfo> {
-
-        private static final UserInfoSerializer serializer = new UserInfoSerializer();
-
-        private UserInfoSerializer() {
-
-        }
-
-        public static UserInfoSerializer getInstance() {
-            return serializer;
-        }
-
-        @Override
-        public void serialize(UserInfo userInfo, DataOutputStream out) throws IOException {
-            String json = JsonUtil.writeValueAsString(userInfo);
-            out.writeUTF(json);
-        }
-
-        @Override
-        public UserInfo deserialize(DataInputStream in) throws IOException {
-            String json = in.readUTF();
-            return JsonUtil.readValue(json, UserInfo.class);
-        }
     }
 
 }
