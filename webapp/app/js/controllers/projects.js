@@ -61,7 +61,7 @@ KylinApp
             });
         }
 
-        $scope.delete = function(project){
+        $scope.delete = function(project) {
             SweetAlert.swal({
                 title: '',
                 text: 'Are you sure to delete ?',
@@ -72,24 +72,28 @@ KylinApp
                 closeOnConfirm: true
             }, function(isConfirm) {
                 if(isConfirm){
-                ProjectService.delete({projecId: project.name}, function(){
-                    var pIndex = $scope.projects.indexOf(project);
-                    if (pIndex > -1) {
-                        $scope.projects.splice(pIndex, 1);
-                    }
-                ProjectModel.removeProject(project.name);
-                SweetAlert.swal('Success!',"Project [" + project.name + "] has been deleted successfully!", 'success');
-                },function(e){
-                    if(e.data&& e.data.exception){
-                        var message =e.data.exception;
-                        var msg = !!(message) ? message : 'Failed to take action.';
-                        SweetAlert.swal('Oops...', msg, 'error');
-                    }else{
-                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-                    }
-                });
+                    ProjectService.delete({projecId: project.name}, function(){
+                        var pIndex = $scope.projects.indexOf(project);
+                        if (pIndex > -1) {
+                            $scope.projects.splice(pIndex, 1);
+                        }
+                        ProjectModel.removeProject(project.name);
+                        SweetAlert.swal('Success!',"Project [" + project.name + "] has been deleted successfully!", 'success');
+                    },function(e){
+                        if(e.data&& e.data.exception){
+                            var message =e.data.exception;
+                            var msg = !!(message) ? message : 'Failed to take action.';
+                            SweetAlert.swal('Oops...', msg, 'error');
+                        }else{
+                            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                        }
+                    });
                 }
             });
+        }
+        
+        $scope.getMapLength = function(map) {
+        	return Object.keys(map).length;
         }
     }
 );
