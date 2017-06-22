@@ -41,7 +41,12 @@ function retrieveDependency() {
 
     #retrive $KYLIN_EXTRA_START_OPTS
     if [ -f "${dir}/setenv.sh" ]; then
+        echo "WARNING: ${dir}/setenv.sh is deprecated and ignored, please remove it and use ${KYLIN_HOME}/conf/setenv.sh instead"
         source ${dir}/setenv.sh
+    fi
+    
+    if [ -f "${KYLIN_HOME}/conf/setenv.sh" ]; then
+        source ${KYLIN_HOME}/conf/setenv.sh
     fi
 
     export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
