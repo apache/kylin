@@ -168,7 +168,7 @@ public class ProjectControllerV2 extends BasicController {
 
     private boolean isProjectEmpty(String projectName) throws IOException {
         return cubeService.listAllCubes(projectName).isEmpty()
-                && cubeService.listCubeDrafts(null, null, projectName).isEmpty()
+                && cubeService.listCubeDrafts(null, null, projectName, true).isEmpty()
                 && modelService.listAllModels(null, projectName, false).isEmpty()
                 && modelService.listModelDrafts(null, projectName).isEmpty();
     }
