@@ -72,10 +72,10 @@ public class ResourceTool {
             list(KylinConfig.getInstanceFromEnv(), args[1]);
             break;
         case "download":
-            copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]));
+            copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]), true);
             break;
         case "fetch":
-            copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]), args[2]);
+            copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]), args[2], true);
             break;
         case "upload":
             copy(KylinConfig.createInstanceFromUri(args[1]), KylinConfig.getInstanceFromEnv());
@@ -150,37 +150,54 @@ public class ResourceTool {
         System.out.println("" + result);
         return result;
     }
+    
+    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, String path) throws IOException {        
+        copy(srcConfig, dstConfig, path, false);        
+    }
 
-    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, String path) throws IOException {
+    //Do NOT invoke this method directly, unless you want to copy and possibly overwrite immutable resources such as UUID. 
+    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, String path, boolean copyImmutableResource) throws IOException {
         ResourceStore src = ResourceStore.getStore(srcConfig);
         ResourceStore dst = ResourceStore.getStore(dstConfig);
 
         logger.info("Copy from {} to {}", src, dst);
 
-        copyR(src, dst, path);
+        copyR(src, dst, path, copyImmutableResource);
     }
 
-    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws IOException {
+    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws IOException {        
+        copy(srcConfig, dstConfig, paths, false);        
+    }
+    
+    //Do NOT invoke this method directly, unless you want to copy and possibly overwrite immutable resources such as UUID. 
+    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths, boolean copyImmutableResource) throws IOException {
         ResourceStore src = ResourceStore.getStore(srcConfig);
         ResourceStore dst = ResourceStore.getStore(dstConfig);
 
         logger.info("Copy from {} to {}", src, dst);
 
         for (String path : paths) {
-            copyR(src, dst, path);
+            copyR(src, dst, path, copyImmutableResource);
         }
     }
 
+    
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
-        copy(srcConfig, dstConfig, "/");
+        copy(srcConfig, dstConfig, false);
     }
-
-    public static void copyR(ResourceStore src, ResourceStore dst, String path) throws IOException {
+    
+    //Do NOT invoke this method directly, unless you want to copy and possibly overwrite immutable resources such as UUID. 
+    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, boolean copyImmutableResource) throws IOException {
+        copy(srcConfig, dstConfig, "/", copyImmutableResource);
+    }    
+    
+    public static void copyR(ResourceStore src, ResourceStore dst, String path, boolean copyImmutableResource) throws IOException {
+        
         NavigableSet<String> children = src.listResources(path);
 
         if (children == null) {
             // case of resource (not a folder)
-            if (matchFilter(path)) {
+            if (copyImmutableResource || matchFilter(path)) {
                 try {
                     RawResource res = src.getResource(path);
                     if (res != null) {
@@ -197,8 +214,9 @@ public class ResourceTool {
         } else {
             // case of folder
             for (String child : children)
-                copyR(src, dst, child);
+                copyR(src, dst, child, copyImmutableResource);
         }
+        
     }
 
     private static boolean matchFilter(String path) {
