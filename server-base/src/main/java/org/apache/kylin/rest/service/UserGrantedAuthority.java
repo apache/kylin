@@ -20,10 +20,15 @@ package org.apache.kylin.rest.service;
 
 import org.springframework.security.core.GrantedAuthority;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+@SuppressWarnings("serial")
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class UserGrantedAuthority implements GrantedAuthority {
     private static final long serialVersionUID = -5128905636841891058L;
 
+    @JsonProperty
     private String authority;
 
     public UserGrantedAuthority() {

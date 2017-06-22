@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,6 +39,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.rest.security.AclConstant;
+import org.apache.kylin.rest.security.ManagedUser;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.HBaseResourceStore;
@@ -53,11 +53,13 @@ public class AclTableMigrationTool {
 
     private static final Serializer<SidInfo> sidSerializer = new Serializer<SidInfo>(SidInfo.class);
 
-    private static final Serializer<DomainObjectInfo> domainObjSerializer = new Serializer<DomainObjectInfo>(DomainObjectInfo.class);
+    private static final Serializer<DomainObjectInfo> domainObjSerializer = new Serializer<DomainObjectInfo>(
+            DomainObjectInfo.class);
 
     private static final Serializer<AceInfo> aceSerializer = new Serializer<AceInfo>(AceInfo.class);
 
-    private static final Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
+    private static final Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(
+            UserGrantedAuthority[].class);
 
     public static final String MIGRATE_OK_PREFIX = "MIGRATE_OK_";
 
@@ -69,7 +71,8 @@ public class AclTableMigrationTool {
             return;
         } else {
             if (!kylinConfig.getServerMode().equals("all")) {
-                throw new IllegalStateException("Please make sure that you have config kylin.server.mode=all before migrating data");
+                throw new IllegalStateException(
+                        "Please make sure that you have config kylin.server.mode=all before migrating data");
             }
             logger.info("Start to migrate acl table data");
             ResourceStore store = ResourceStore.getStore(kylinConfig);
@@ -144,11 +147,9 @@ public class AclTableMigrationTool {
                         return;
                     Result result = rs.next();
                     while (result != null) {
-                        User user = hbaseRowToUser(result);
-                        UserInfo userInfo = convert(user);
-                        store.deleteResource(UserService.getId(userInfo.getUsername()));
-                        store.putResource(UserService.getId(userInfo.getUsername()), userInfo, 0,
-                                UserService.SERIALIZER);
+                        ManagedUser user = hbaseRowToUser(result);
+                        store.deleteResource(UserService.getId(user.getUsername()));
+                        store.putResource(UserService.getId(user.getUsername()), user, 0, UserService.SERIALIZER);
                         result = rs.next();
                     }
                 }
@@ -172,7 +173,8 @@ public class AclTableMigrationTool {
         return store.exists(MIGRATE_OK_PREFIX + tableName);
     }
 
-    private void convertToResourceStore(KylinConfig kylinConfig, String tableName, ResourceStore store, ResultConverter converter) throws IOException {
+    private void convertToResourceStore(KylinConfig kylinConfig, String tableName, ResourceStore store,
+            ResultConverter converter) throws IOException {
 
         Table table = null;
         ResultScanner rs = null;
@@ -181,7 +183,8 @@ public class AclTableMigrationTool {
             table = HBaseConnection.get(kylinConfig.getStorageUrl()).getTable(TableName.valueOf(tableName));
             rs = table.getScanner(scan);
             converter.convertResult(rs, store);
-            store.putResource(MIGRATE_OK_PREFIX + tableName, new StringEntity(tableName + " migrated"), StringEntity.serializer);
+            store.putResource(MIGRATE_OK_PREFIX + tableName, new StringEntity(tableName + " migrated"),
+                    StringEntity.serializer);
         } finally {
             IOUtils.closeQuietly(rs);
             IOUtils.closeQuietly(table);
@@ -190,7 +193,8 @@ public class AclTableMigrationTool {
     }
 
     private DomainObjectInfo getDomainObjectInfoFromRs(Result result) {
-        String type = String.valueOf(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_TYPE_COLUMN)));
+        String type = String.valueOf(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY),
+                Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_TYPE_COLUMN)));
         String id = new String(result.getRow());
         DomainObjectInfo newInfo = new DomainObjectInfo();
         newInfo.setId(id);
@@ -199,17 +203,20 @@ public class AclTableMigrationTool {
     }
 
     private DomainObjectInfo getParentDomainObjectInfoFromRs(Result result) throws IOException {
-        DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_PARENT_COLUMN)));
+        DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(
+                Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_PARENT_COLUMN)));
         return parentInfo;
     }
 
     private boolean getInheriting(Result result) {
-        boolean entriesInheriting = Bytes.toBoolean(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN)));
+        boolean entriesInheriting = Bytes.toBoolean(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY),
+                Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN)));
         return entriesInheriting;
     }
 
     private SidInfo getOwnerSidInfo(Result result) throws IOException {
-        SidInfo owner = sidSerializer.deserialize(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_OWNER_COLUMN)));
+        SidInfo owner = sidSerializer.deserialize(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY),
+                Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_OWNER_COLUMN)));
         return owner;
     }
 
@@ -226,27 +233,14 @@ public class AclTableMigrationTool {
         return allAceInfoMap;
     }
 
-    private UserInfo convert(User user) {
-        if (user == null)
-            return null;
-        UserInfo newInfo = new UserInfo();
-        newInfo.setUsername(user.getUserName());
-        newInfo.setPassword(user.getPassword());
-        List<String> authorities = new ArrayList<>();
-        for (String auth : user.getAuthorities()) {
-            authorities.add(auth);
-        }
-        newInfo.setAuthorities(authorities);
-        return newInfo;
-    }
-
-    private User hbaseRowToUser(Result result) throws JsonParseException, JsonMappingException, IOException {
+    private ManagedUser hbaseRowToUser(Result result) throws JsonParseException, JsonMappingException, IOException {
         if (null == result || result.isEmpty())
             return null;
 
         String username = Bytes.toString(result.getRow());
 
-        byte[] valueBytes = result.getValue(Bytes.toBytes(AclConstant.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclConstant.USER_AUTHORITY_COLUMN));
+        byte[] valueBytes = result.getValue(Bytes.toBytes(AclConstant.USER_AUTHORITY_FAMILY),
+                Bytes.toBytes(AclConstant.USER_AUTHORITY_COLUMN));
         UserGrantedAuthority[] deserialized = ugaSerializer.deserialize(valueBytes);
 
         String password = "";
@@ -261,13 +255,7 @@ public class AclTableMigrationTool {
                 authorities = Arrays.asList(deserialized);
             }
         }
-        List<String> authoritiesStr = new ArrayList<>();
-        for (UserGrantedAuthority auth : authorities) {
-            if (auth != null) {
-                authoritiesStr.add(auth.getAuthority());
-            }
-        }
-        return new User(username, password, authoritiesStr);
+        return new ManagedUser(username, password, false, authorities);
     }
 
     interface ResultConverter {

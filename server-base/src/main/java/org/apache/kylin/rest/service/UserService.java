@@ -31,14 +31,16 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
+import org.apache.kylin.rest.security.ManagedUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Component;
+
+import com.google.common.base.Preconditions;
 
 /**
  */
@@ -49,7 +51,7 @@ public class UserService implements UserDetailsManager {
 
     public static final String DIR_PREFIX = "/user/";
 
-    public static final Serializer<UserInfo> SERIALIZER = new JsonSerializer<>(UserInfo.class);
+    public static final Serializer<ManagedUser> SERIALIZER = new JsonSerializer<>(ManagedUser.class);
 
     protected ResourceStore aclStore;
 
@@ -67,11 +69,13 @@ public class UserService implements UserDetailsManager {
     @Override
     //@PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN) --- DON'T DO THIS, CAUSES CIRCULAR DEPENDENCY BETWEEN UserService & AclService
     public void updateUser(UserDetails user) {
+        Preconditions.checkState(user instanceof ManagedUser, "User {} is not ManagedUser", user);
+        ManagedUser managedUser = (ManagedUser) user;
         try {
             deleteUser(user.getUsername());
             String id = getId(user.getUsername());
-            aclStore.putResource(id, new UserInfo(user), 0, SERIALIZER);
-            logger.debug("update user : {}", user.getUsername());
+            aclStore.putResource(id, managedUser, 0, SERIALIZER);
+            logger.trace("update user : {}", user.getUsername());
         } catch (IOException e) {
             throw new InternalErrorException(e);
         }
@@ -82,7 +86,7 @@ public class UserService implements UserDetailsManager {
         try {
             String id = getId(userName);
             aclStore.deleteResource(id);
-            logger.debug("delete user : {}", userName);
+            logger.trace("delete user : {}", userName);
         } catch (IOException e) {
             throw new InternalErrorException(e);
         }
@@ -96,23 +100,27 @@ public class UserService implements UserDetailsManager {
     @Override
     public boolean userExists(String userName) {
         try {
-            logger.debug("judge user exist: {}", userName);
+            logger.trace("judge user exist: {}", userName);
             return aclStore.exists(getId(userName));
         } catch (IOException e) {
             throw new InternalErrorException(e);
         }
     }
 
+    /**
+     * 
+     * @return a ManagedUser
+     */
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         Message msg = MsgPicker.getMsg();
         try {
-            UserInfo userInfo = aclStore.getResource(getId(userName), UserInfo.class, SERIALIZER);
-            if (userInfo == null) {
+            ManagedUser managedUser = aclStore.getResource(getId(userName), ManagedUser.class, SERIALIZER);
+            if (managedUser == null) {
                 throw new UsernameNotFoundException(String.format(msg.getUSER_NOT_FOUND(), userName));
             }
-            logger.debug("load user : {}", userName);
-            return wrap(userInfo);
+            logger.trace("load user : {}", userName);
+            return managedUser;
         } catch (IOException e) {
             throw new InternalErrorException(e);
         }
@@ -130,28 +138,12 @@ public class UserService implements UserDetailsManager {
         return all;
     }
 
-    public List<UserDetails> listUsers() throws IOException {
-        List<UserDetails> all = new ArrayList<UserDetails>();
-        List<UserInfo> userInfos = aclStore.getAllResources(DIR_PREFIX, UserInfo.class, SERIALIZER);
-        for (UserInfo info : userInfos) {
-            all.add(wrap(info));
-        }
-        return all;
+    public List<ManagedUser> listUsers() throws IOException {
+        return aclStore.getAllResources(DIR_PREFIX, ManagedUser.class, SERIALIZER);
     }
 
     public static String getId(String userName) {
         return DIR_PREFIX + userName;
-    }
-
-    protected User wrap(UserInfo userInfo) {
-        if (userInfo == null)
-            return null;
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        List<String> auths = userInfo.getAuthorities();
-        for (String str : auths) {
-            authorities.add(new UserGrantedAuthority(str));
-        }
-        return new User(userInfo.getUsername(), userInfo.getPassword(), authorities);
     }
 
 }

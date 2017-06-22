@@ -24,6 +24,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.security.ManagedUser;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -35,7 +36,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -71,18 +71,19 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
         Broadcaster.getInstance(config).notifyClearAll();
 
         if (!userService.userExists("ADMIN")) {
-            userService.createUser(new User("ADMIN", "KYLIN", Arrays.asList(//
-                new UserGrantedAuthority(Constant.ROLE_ADMIN), new UserGrantedAuthority(Constant.ROLE_ANALYST), new UserGrantedAuthority(Constant.ROLE_MODELER))));
+            userService.createUser(new ManagedUser("ADMIN", "KYLIN", false, Arrays.asList(//
+                    new UserGrantedAuthority(Constant.ROLE_ADMIN), new UserGrantedAuthority(Constant.ROLE_ANALYST),
+                    new UserGrantedAuthority(Constant.ROLE_MODELER))));
         }
 
         if (!userService.userExists("MODELER")) {
-            userService.createUser(new User("MODELER", "MODELER", Arrays.asList(//
-                new UserGrantedAuthority(Constant.ROLE_ANALYST), new UserGrantedAuthority(Constant.ROLE_MODELER))));
+            userService.createUser(new ManagedUser("MODELER", "MODELER", false, Arrays.asList(//
+                    new UserGrantedAuthority(Constant.ROLE_ANALYST), new UserGrantedAuthority(Constant.ROLE_MODELER))));
         }
 
         if (!userService.userExists("ANALYST")) {
-            userService.createUser(new User("ANALYST", "ANALYST", Arrays.asList(//
-                new UserGrantedAuthority(Constant.ROLE_ANALYST))));
+            userService.createUser(new ManagedUser("ANALYST", "ANALYST", false, Arrays.asList(//
+                    new UserGrantedAuthority(Constant.ROLE_ANALYST))));
         }
     }
 

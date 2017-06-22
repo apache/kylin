@@ -23,10 +23,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -84,6 +87,9 @@ public class QueryControllerV2 extends BasicController {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse prepareQueryV2(@RequestBody PrepareSqlRequest sqlRequest) {
+        Map<String, String> toggles = Maps.newHashMap();
+        toggles.put(BackdoorToggles.DEBUG_TOGGLE_PREPARE_ONLY, "true");
+        BackdoorToggles.addToggles(toggles);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, queryService.doQueryWithCache(sqlRequest), "");
     }

@@ -246,7 +246,7 @@
             <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
 
-            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID"/>
+            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout" logout-success-url="/." />
             <scr:session-management session-fixation-protection="newSession"/>
         </scr:http>
     </beans>
@@ -288,7 +288,7 @@
             <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>
 
-            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID"/>
+            <scr:logout invalidate-session="true" delete-cookies="JSESSIONID" logout-url="/j_spring_security_logout" logout-success-url="/." />
             <scr:session-management session-fixation-protection="newSession"/>
         </scr:http>
 

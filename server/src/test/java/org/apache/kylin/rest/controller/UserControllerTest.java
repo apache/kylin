@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.security.ManagedUser;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,7 +33,6 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
@@ -46,7 +46,7 @@ public class UserControllerTest extends ServiceTestBase {
     public static void setupResource() {
         staticCreateTestMetadata();
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-        User user = new User("ADMIN", "ADMIN", authorities);
+        ManagedUser user = new ManagedUser("ADMIN", "ADMIN", false, authorities);
         Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", Constant.ROLE_ADMIN);
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
