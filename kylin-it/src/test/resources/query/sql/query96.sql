@@ -18,5 +18,5 @@
 
 select upper(lstg_format_name) as lstg_format_name, count(*) as cnt from test_kylin_fact
 where lower(lstg_format_name)='abin' and substring(lstg_format_name,1,3) in ('ABI') and upper(lstg_format_name) > 'AAAA' and
-lower(lstg_format_name) like '%b%' and char_length(lstg_format_name) < 10 and char_length(lstg_format_name) > 3 and lstg_format_name||'a'='ABINa'
+lower(lstg_format_name) like '%b%' and char_length(lstg_format_name) < 10 and char_length(lstg_format_name) > 3 and 'abc'||lstg_format_name||'a'||'b'||'c'='abcABINabc'
 group by lstg_format_name
