@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.filter.function.BuiltInMethod;
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.primitives.Primitives;
 
 public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
@@ -49,12 +51,18 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     protected boolean isValidFunc = false;
     protected boolean isReversed = false;
 
+    final static Map<String, String> converters = Maps.newHashMap();
+    static {
+        converters.put("||", "CONCAT");
+    }
+
     public BuiltInFunctionTupleFilter(String name) {
         this(name, null);
     }
 
     public BuiltInFunctionTupleFilter(String name, FilterOperatorEnum filterOperatorEnum) {
-        super(Lists.<TupleFilter> newArrayList(), filterOperatorEnum == null ? FilterOperatorEnum.FUNCTION : filterOperatorEnum);
+        super(Lists.<TupleFilter> newArrayList(),
+                filterOperatorEnum == null ? FilterOperatorEnum.FUNCTION : filterOperatorEnum);
         this.methodParams = Lists.newArrayList();
 
         if (name != null) {
@@ -91,7 +99,8 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
         if (columnContainerFilter instanceof ColumnTupleFilter)
             methodParams.set(colPosition, (Serializable) input);
         else if (columnContainerFilter instanceof BuiltInFunctionTupleFilter)
-            methodParams.set(colPosition, (Serializable) ((BuiltInFunctionTupleFilter) columnContainerFilter).invokeFunction(input));
+            methodParams.set(colPosition,
+                    (Serializable) ((BuiltInFunctionTupleFilter) columnContainerFilter).invokeFunction(input));
         return method.invoke(null, (Object[]) (methodParams.toArray()));
     }
 
@@ -128,7 +137,8 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
                 if (!Primitives.isWrapperType(clazz))
                     methodParams.add(constVal);
                 else
-                    methodParams.add((Serializable) clazz.cast(clazz.getDeclaredMethod("valueOf", String.class).invoke(null, constVal)));
+                    methodParams.add((Serializable) clazz
+                            .cast(clazz.getDeclaredMethod("valueOf", String.class).invoke(null, constVal)));
             } catch (Exception e) {
                 logger.warn("Reflection failed for methodParams. ", e);
                 isValidFunc = false;
@@ -186,8 +196,9 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     }
 
     protected void initMethod() {
-        if (BuiltInMethod.MAP.containsKey(name)) {
-            this.method = BuiltInMethod.MAP.get(name).method;
+        String operator = BuiltInMethod.MAP.containsKey(name) ? name : converters.get(name);
+        if (operator != null) {
+            this.method = BuiltInMethod.MAP.get(operator).method;
             isValidFunc = true;
         }
     }
