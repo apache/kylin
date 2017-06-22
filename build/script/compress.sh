@@ -34,8 +34,8 @@ package_name=apache-kylin-${version}-bin
 cd build/
 rm -rf ${package_name}
 mkdir ${package_name}
-cp -r lib tool bin conf tomcat spark ../examples/sample_cube commit_SHA1 ${package_name}
-rm -rf lib tomcat spark commit_SHA1
+cp -r ext lib tool bin conf tomcat spark ../examples/sample_cube commit_SHA1 ${package_name}
+rm -rf ext lib tomcat spark commit_SHA1
 
 ## comment all default properties, and append them to the user visible kylin.properties
 ## first 16 lines are license, just skip them
