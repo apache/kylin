@@ -68,7 +68,7 @@ public class SQLRequest implements Serializable {
     }
 
     public Integer getOffset() {
-        return offset;
+        return offset == null ? 0 : offset;
     }
 
     public void setOffset(Integer offset) {
@@ -76,7 +76,7 @@ public class SQLRequest implements Serializable {
     }
 
     public Integer getLimit() {
-        return limit;
+        return limit == null ? 0 : limit;
     }
 
     public void setLimit(Integer limit) {
