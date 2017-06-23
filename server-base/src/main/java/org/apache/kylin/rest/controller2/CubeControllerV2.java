@@ -402,22 +402,6 @@ public class CubeControllerV2 extends BasicController {
                 submitter);
     }
 
-    @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public EnvelopeResponse disableCubeV2(@PathVariable String cubeName) throws IOException {
-        Message msg = MsgPicker.getMsg();
-
-        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-
-        if (cube == null) {
-            throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
-        }
-
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.disableCube(cube), "");
-
-    }
-
     @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
@@ -430,20 +414,6 @@ public class CubeControllerV2 extends BasicController {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.purgeCube(cube), "");
-    }
-
-    @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public EnvelopeResponse enableCubeV2(@PathVariable String cubeName) throws IOException {
-        Message msg = MsgPicker.getMsg();
-
-        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        if (cube == null) {
-            throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
-        }
-
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.enableCube(cube), "");
     }
 
     /**
