@@ -164,6 +164,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         executableDao = ExecutableDao.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
         badQueryHistoryManager = BadQueryHistoryManager.getInstance(kylinConfig);
+        
+        addRequired(ResourceStore.METASTORE_UUID_TAG);
 
         if (optionsHelper.hasOption(OPTION_All_PROJECT)) {
             for (ProjectInstance projectInstance : projectManager.listAllProjects()) {
