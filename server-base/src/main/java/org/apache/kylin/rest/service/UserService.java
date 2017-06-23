@@ -54,6 +54,16 @@ public class UserService implements UserDetailsManager {
     public static final Serializer<ManagedUser> SERIALIZER = new JsonSerializer<>(ManagedUser.class);
 
     protected ResourceStore aclStore;
+    
+    private boolean evictCacheFlag = false;
+
+    public boolean isEvictCacheFlag() {
+        return evictCacheFlag;
+    }
+
+    public void setEvictCacheFlag(boolean evictCacheFlag) {
+        this.evictCacheFlag = evictCacheFlag;
+    }
 
     @PostConstruct
     public void init() throws IOException {

@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.rest.service.UserGrantedAuthority;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,8 +29,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 
 @SuppressWarnings("serial")
@@ -44,7 +40,7 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
     @JsonProperty
     private String password;
     @JsonProperty
-    private List<String> authorities = Lists.newArrayList();
+    private List<UserGrantedAuthority> authorities = Lists.newArrayList();
     @JsonProperty
     private boolean disabled = false;
     @JsonProperty
@@ -56,24 +52,40 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
     @JsonProperty
     private int wrongTime = 0;
 
-    private Boolean legacyCatered = false;
     //DISABLED_ROLE is a ancient way to represent disabled user
     //now we no longer support such way, however legacy metadata may still contain it
     private static final String DISABLED_ROLE = "--disabled--";
 
-    //this is computed
-    private List<UserGrantedAuthority> grantedAuthorities = null;
-
     public ManagedUser() {
     }
 
-    public ManagedUser(String username, String password, Boolean defaultPassword, String... authorities) {
+    public ManagedUser(@JsonProperty String username, @JsonProperty String password,
+            @JsonProperty List<UserGrantedAuthority> authorities, @JsonProperty boolean disabled,
+            @JsonProperty boolean defaultPassword, @JsonProperty boolean locked, @JsonProperty long lockedTime,
+            @JsonProperty int wrongTime) {
+        this.username = username;
+        this.password = password;
+        this.authorities = authorities;
+        this.disabled = disabled;
+        this.defaultPassword = defaultPassword;
+        this.locked = locked;
+        this.lockedTime = lockedTime;
+        this.wrongTime = wrongTime;
+
+        caterLegacy();
+    }
+
+    public ManagedUser(String username, String password, Boolean defaultPassword, String... authoritiesStr) {
         this.username = username;
         this.password = password;
         this.setDefaultPassword(defaultPassword);
 
-        this.authorities = Lists.newArrayList(authorities);
-        this.grantedAuthorities = null;
+        this.authorities = Lists.newArrayList();
+        for (String a : authoritiesStr) {
+            authorities.add(new UserGrantedAuthority(a));
+        }
+
+        caterLegacy();
     }
 
     public ManagedUser(String username, String password, Boolean defaultPassword,
@@ -83,6 +95,8 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
         this.setDefaultPassword(defaultPassword);
 
         this.setGrantedAuthorities(grantedAuthorities);
+
+        caterLegacy();
     }
 
     public String getUsername() {
@@ -102,45 +116,27 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
     }
 
     private void caterLegacy() {
-        if (!legacyCatered) {
-            synchronized (legacyCatered) {
-                Iterator<String> iterator = authorities.iterator();
-                while (iterator.hasNext()) {
-                    if (DISABLED_ROLE.equals(iterator.next())) {
-                        iterator.remove();
-                        this.disabled = true;
-                    }
-                }
-                legacyCatered = true;
+        Iterator<UserGrantedAuthority> iterator = authorities.iterator();
+        while (iterator.hasNext()) {
+            if (DISABLED_ROLE.equals(iterator.next().getAuthority())) {
+                iterator.remove();
+                this.disabled = true;
             }
         }
     }
 
     public List<UserGrantedAuthority> getAuthorities() {
-        caterLegacy();
-        if (grantedAuthorities == null) {
-            grantedAuthorities = Lists.newArrayList();
-            for (String a : authorities) {
-                this.grantedAuthorities.add(new UserGrantedAuthority(a));
-            }
-        }
-        return grantedAuthorities;
+        return this.authorities;
     }
 
     public void setGrantedAuthorities(Collection<? extends GrantedAuthority> grantedAuthorities) {
-        this.authorities = Lists
-                .newArrayList(Collections2.transform(grantedAuthorities, new Function<GrantedAuthority, String>() {
-                    @Nullable
-                    @Override
-                    public String apply(@Nullable GrantedAuthority input) {
-                        return input.getAuthority();
-                    }
-                }));
-        this.grantedAuthorities = null;
+        this.authorities = Lists.newArrayList();
+        for (GrantedAuthority grantedAuthority : grantedAuthorities) {
+            this.authorities.add(new UserGrantedAuthority(grantedAuthority.getAuthority()));
+        }
     }
 
     public boolean isDisabled() {
-        caterLegacy();
         return disabled;
     }
 
@@ -230,6 +226,6 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
 
     @Override
     public String toString() {
-        return "KapManagedUser [username=" + username + ", authorities=" + grantedAuthorities + "]";
+        return "ManagedUser [username=" + username + ", authorities=" + authorities + "]";
     }
 }

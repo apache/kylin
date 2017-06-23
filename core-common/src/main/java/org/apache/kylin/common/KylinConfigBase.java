@@ -502,7 +502,7 @@ abstract public class KylinConfigBase implements Serializable {
     public Integer getSchedulerPollIntervalSecond() {
         return Integer.parseInt(getOptional("kylin.job.scheduler.poll-interval-second", "30"));
     }
-    
+
     public Integer getErrorRecordThreshold() {
         return Integer.parseInt(getOptional("kylin.job.error-record-threshold", "0"));
     }
@@ -1071,6 +1071,14 @@ abstract public class KylinConfigBase implements Serializable {
     public int[] getQueryMetricsPercentilesIntervals() {
         String[] dft = { "60", "300", "3600" };
         return getOptionalIntArray("kylin.server.query-metrics-percentiles-intervals", dft);
+    }
+
+    public int getServerUserCacheExpireSeconds() {
+        return Integer.valueOf(this.getOptional("kylin.server.auth-user-cache.expire-seconds", "300"));
+    }
+
+    public int getServerUserCacheMaxEntries() {
+        return Integer.valueOf(this.getOptional("kylin.server.auth-user-cache.max-entries", "100"));
     }
 
     // ============================================================================
