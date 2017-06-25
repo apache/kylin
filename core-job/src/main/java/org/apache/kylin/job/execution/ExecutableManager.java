@@ -83,6 +83,11 @@ public class ExecutableManager {
         CACHE.clear();
     }
 
+    public static void clearCache(KylinConfig kylinConfig) {
+        if (kylinConfig != null)
+            CACHE.remove(kylinConfig);
+    }
+
     private static ExecutablePO parse(AbstractExecutable executable) {
         ExecutablePO result = new ExecutablePO();
         result.setName(executable.getName());

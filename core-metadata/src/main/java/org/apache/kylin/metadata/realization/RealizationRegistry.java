@@ -68,6 +68,10 @@ public class RealizationRegistry {
         CACHE.clear();
     }
 
+    public static void clearCache(KylinConfig kylinConfig) {
+        CACHE.remove(kylinConfig);
+    }
+
     // ============================================================================
 
     private Map<RealizationType, IRealizationProvider> providers;

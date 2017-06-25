@@ -93,6 +93,14 @@ public class Broadcaster {
         }
     }
 
+    public static void clearCache(KylinConfig kylinConfig) {
+        if (kylinConfig != null) {
+            synchronized (CACHE) {
+                CACHE.remove(kylinConfig);
+            }
+        }
+    }
+
     // ============================================================================
 
     private KylinConfig config;
