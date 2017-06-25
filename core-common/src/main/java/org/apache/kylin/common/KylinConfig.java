@@ -57,7 +57,7 @@ public class KylinConfig extends KylinConfigBase {
     private static KylinConfig SYS_ENV_INSTANCE = null;
 
     // thread-local instances, will override SYS_ENV_INSTANCE
-    private static final transient ThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new ThreadLocal<>();
+    private static transient ThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new ThreadLocal<>();
 
     public static KylinConfig getInstanceFromEnv() {
         synchronized (KylinConfig.class) {
@@ -88,7 +88,7 @@ public class KylinConfig extends KylinConfigBase {
             logger.info("Destroy KylinConfig");
             dumpStackTrace();
             SYS_ENV_INSTANCE = null;
-            THREAD_ENV_INSTANCE.remove();
+            THREAD_ENV_INSTANCE = new ThreadLocal<>();
         }
     }
 
@@ -196,6 +196,10 @@ public class KylinConfig extends KylinConfigBase {
 
     public static void setKylinConfigThreadLocal(KylinConfig config) {
         THREAD_ENV_INSTANCE.set(config);
+    }
+    
+    public static void removeKylinConfigThreadLocal() {
+        THREAD_ENV_INSTANCE.remove();
     }
 
     public static KylinConfig createKylinConfig(String propsInStr) throws IOException {
