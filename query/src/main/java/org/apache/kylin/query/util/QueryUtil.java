@@ -38,14 +38,15 @@ public class QueryUtil {
     private static List<IQueryTransformer> queryTransformers;
 
     public interface IQueryTransformer {
-        String transform(String sql);
+        String transform(String sql, String project);
     }
 
+    // for mockup test
     public static String massageSql(String sql) {
-        return massageSql(sql, 0, 0);
+        return massageSql(sql, null, 0, 0);
     }
 
-    public static String massageSql(String sql, int limit, int offset) {
+    public static String massageSql(String sql, String project, int limit, int offset) {
         sql = sql.trim();
         sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
 
@@ -65,7 +66,7 @@ public class QueryUtil {
             initQueryTransformers();
         }
         for (IQueryTransformer t : queryTransformers) {
-            sql = t.transform(sql);
+            sql = t.transform(sql, project);
         }
         return sql;
     }
@@ -100,7 +101,7 @@ public class QueryUtil {
         private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}", Pattern.CASE_INSENSITIVE);
 
         @Override
-        public String transform(String sql) {
+        public String transform(String sql, String project) {
             Matcher m;
 
             // Case fn{ EXTRACT(...) }

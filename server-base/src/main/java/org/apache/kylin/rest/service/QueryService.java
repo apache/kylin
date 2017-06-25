@@ -471,7 +471,7 @@ public class QueryService extends BasicService {
             return fakeResponse;
         }
 
-        String correctedSql = QueryUtil.massageSql(sqlRequest.getSql(), sqlRequest.getLimit(), sqlRequest.getOffset());
+        String correctedSql = QueryUtil.massageSql(sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(), sqlRequest.getOffset());
         if (!correctedSql.equals(sqlRequest.getSql())) {
             logger.info("The corrected query: " + correctedSql);
 

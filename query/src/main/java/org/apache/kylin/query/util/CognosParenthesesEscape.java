@@ -32,7 +32,7 @@ public class CognosParenthesesEscape implements QueryUtil.IQueryTransformer {
     private static final Pattern FROM_PATTERN = Pattern.compile("\\s+from\\s+(\\s*\\(\\s*)+(?!\\s*select\\s)", Pattern.CASE_INSENSITIVE);
 
     @Override
-    public String transform(String sql) {
+    public String transform(String sql, String project) {
         if (sql == null || sql.isEmpty()) {
             return sql;
         }
