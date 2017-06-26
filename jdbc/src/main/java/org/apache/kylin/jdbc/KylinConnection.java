@@ -51,7 +51,7 @@ public class KylinConnection extends AvaticaConnection {
         super(driver, factory, url, info);
 
         String odbcUrl = url;
-        odbcUrl = odbcUrl.replace(Driver.CONNECT_STRING_PREFIX + "//", "");
+        odbcUrl = odbcUrl.replaceAll((Driver.CONNECT_STRING_PREFIX + "[[A-Za-z0-9]*=[A-Za-z0-9]*;]*//").toString(), "");
         String[] temps = odbcUrl.split("/");
 
         assert temps.length == 2;
