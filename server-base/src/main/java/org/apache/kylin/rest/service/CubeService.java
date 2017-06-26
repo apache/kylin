@@ -153,7 +153,7 @@ public class CubeService extends BasicService {
         return getCubeManager().updateCube(cubeBuilder);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or " + Constant.ACCESS_HAS_ROLE_MODELER)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public CubeInstance createCubeAndDesc(String cubeName, String projectName, CubeDesc desc) throws IOException {
         Message msg = MsgPicker.getMsg();
 

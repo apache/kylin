@@ -353,7 +353,7 @@ public class TableService extends BasicService {
         return descs;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws Exception {
         MetadataManager metaMgr = getMetadataManager();
         ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
@@ -372,7 +372,7 @@ public class TableService extends BasicService {
      *
      * @param tableName
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void calculateCardinality(String tableName, String submitter) throws Exception {
         Message msg = MsgPicker.getMsg();
 

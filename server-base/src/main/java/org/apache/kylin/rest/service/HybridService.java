@@ -41,7 +41,7 @@ public class HybridService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(HybridService.class);
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or " + Constant.ACCESS_HAS_ROLE_MODELER)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public HybridInstance createHybridCube(String hybridName, String projectName, String modelName, String[] cubeNames) {
         List<String> args = new ArrayList<String>();
         args.add("-name");
