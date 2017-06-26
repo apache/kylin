@@ -16,9 +16,8 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.source.hive;
+package org.apache.kylin.source.jdbc;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -29,18 +28,18 @@ import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
 
 //used by reflection
-public class HiveSource implements ISource {
+public class JdbcSource implements ISource {
 
     @Override
     public ISourceMetadataExplorer getSourceMetadataExplorer() {
-        return new HiveMetadataExplorer();
+        return new JdbcExplorer();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
         if (engineInterface == IMRInput.class) {
-            return (I) new HiveMRInput();
+            return (I) new JdbcHiveMRInput();
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }
@@ -48,17 +47,7 @@ public class HiveSource implements ISource {
 
     @Override
     public IReadableTable createReadableTable(TableDesc tableDesc) {
-        // hive view must have been materialized already
-        // ref HiveMRInput.createLookupHiveViewMaterializationStep()
-        if (tableDesc.isView()) {
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            String tableName = tableDesc.getMaterializedName();
-            
-            tableDesc = new TableDesc();
-            tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
-            tableDesc.setName(tableName);
-        }
-        return new HiveTable(tableDesc);
+        return new JdbcTable(tableDesc);
     }
 
     @Override
@@ -71,7 +60,7 @@ public class HiveSource implements ISource {
 
     @Override
     public ISampleDataDeployer getSampleDataDeployer() {
-        return new HiveMetadataExplorer();
+        return new JdbcExplorer();
     }
 
 }

@@ -29,26 +29,26 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 
-public class HiveMetadataExplorer implements ISourceMetadataExplorer {
+public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDataDeployer {
 
+    IHiveClient hiveClient = HiveClientFactory.getHiveClient();
+    
     @Override
     public List<String> listDatabases() throws Exception {
-        IHiveClient hiveClient = HiveClientFactory.getHiveClient();
         return hiveClient.getHiveDbNames();
     }
 
     @Override
     public List<String> listTables(String database) throws Exception {
-        IHiveClient hiveClient = HiveClientFactory.getHiveClient();
         return hiveClient.getHiveTableNames(database);
     }
 
     @Override
     public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String tableName) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        IHiveClient hiveClient = HiveClientFactory.getHiveClient();
         MetadataManager metaMgr = MetadataManager.getInstance(config);
 
         HiveTableMeta hiveTableMeta;
@@ -113,4 +113,74 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer {
     public List<String> getRelatedKylinResources(TableDesc table) {
         return Collections.emptyList();
     }
+
+    @Override
+    public void createSampleDatabase(String database) throws Exception {
+        hiveClient.executeHQL(generateCreateSchemaSql(database));
+    }
+
+    private String generateCreateSchemaSql(String schemaName){
+        return String.format("CREATE DATABASE IF NOT EXISTS %s", schemaName);
+    }
+    
+    @Override
+    public void createSampleTable(TableDesc table) throws Exception {
+        hiveClient.executeHQL(generateCreateTableSql(table));
+    }
+
+    private String[] generateCreateTableSql(TableDesc tableDesc) {
+
+        String dropsql = "DROP TABLE IF EXISTS " + tableDesc.getIdentity();
+        String dropsql2 = "DROP VIEW IF EXISTS " + tableDesc.getIdentity();
+
+        StringBuilder ddl = new StringBuilder();
+        ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
+        ddl.append("(" + "\n");
+
+        for (int i = 0; i < tableDesc.getColumns().length; i++) {
+            ColumnDesc col = tableDesc.getColumns()[i];
+            if (i > 0) {
+                ddl.append(",");
+            }
+            ddl.append(col.getName() + " " + getHiveDataType((col.getDatatype())) + "\n");
+        }
+
+        ddl.append(")" + "\n");
+        ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
+        ddl.append("STORED AS TEXTFILE");
+
+        return new String[] { dropsql, dropsql2, ddl.toString() };
+    }
+    
+    @Override
+    public void loadSampleData(String tableName, String tmpDataDir) throws Exception {
+        hiveClient.executeHQL(generateLoadDataSql(tableName, tmpDataDir));
+    }
+
+    private String generateLoadDataSql(String tableName, String tableFileDir) {
+        return "LOAD DATA LOCAL INPATH '" + tableFileDir + "/" + tableName + ".csv' OVERWRITE INTO TABLE " + tableName;
+    }
+    
+    @Override
+    public void createWrapperView(String origTableName, String viewName) throws Exception {
+        hiveClient.executeHQL(generateCreateViewSql(viewName, origTableName));
+    }
+    
+    private String[] generateCreateViewSql(String viewName, String tableName) {
+
+        String dropView = "DROP VIEW IF EXISTS " + viewName;
+        String dropTable = "DROP TABLE IF EXISTS " + viewName;
+
+        String createSql = ("CREATE VIEW " + viewName + " AS SELECT * FROM " + tableName);
+
+        return new String[] { dropView, dropTable, createSql };
+    }
+    
+    private static String getHiveDataType(String javaDataType) {
+        String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
+        hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;
+
+        return hiveDataType.toLowerCase();
+    }
+
 }

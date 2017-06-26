@@ -101,17 +101,17 @@
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="cloneCube(cube)">Clone</a></li>
 
                     </ul>
+                    <ul ng-if="!(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))" class="dropdown-menu" role="menu">
+                        <li><a>N/A</a></li>
+                    </ul>
                 </div>
-                <span ng-if="!(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">
-                    N/A
-                </span>
             </td>
-            <td>
+            <td ng-if="userService.hasRole('ROLE_ADMIN')">
                 <div ng-click="$event.stopPropagation();" class="btn-group">
                     <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" ng-click="listAccess(cube, 'CubeInstance')">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
-                    <ul class="dropdown-menu" role="menu" ng-if="userService.hasRole('ROLE_ADMIN')">
+                    <ul class="dropdown-menu" role="menu">
                         <li ng-if="cube.status!='READY'"><a href="cubes/edit/{{cube.name}}/descriptionjson">Edit CubeDesc</a></li>
                         <li><a href="cubes/view/{{cube.name}}/instancejson">View Cube</a></li>
                     </ul>

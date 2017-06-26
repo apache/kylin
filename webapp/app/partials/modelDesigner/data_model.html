@@ -29,7 +29,7 @@
               <select chosen ng-model="FactTable.root" ng-if="state.mode=='edit'"
                       ng-options="table.name as table.name for table in tableModel.selectProjectTables"
                       style="width:100%;" ng-change="changeFactTable()"
-                      name="table_name"   ng-disabled="cubesLength>0"
+                      name="table_name"
                       ng-required="true"
                       data-placeholder="Fact Table Name"
                       class="chosen-select">

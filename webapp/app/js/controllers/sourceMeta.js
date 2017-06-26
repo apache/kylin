@@ -252,6 +252,15 @@ KylinApp
           }
           $scope.hiveLoaded = true;
           $scope.showMoreDatabases();
+        }, function (e) {
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            var msg = !!(message) ? message : 'Failed to take action.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          } else {
+            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+          }
+          $scope.hiveLoaded = true;
         });
       }
 

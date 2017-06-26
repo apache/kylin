@@ -24,6 +24,7 @@ public interface ISourceAware {
     public static final int ID_STREAMING = 1;
     public static final int ID_SPARKSQL = 5;
     public static final int ID_EXTERNAL = 7;
+    public static final int ID_JDBC = 8;
 
     int getSourceType();
 }

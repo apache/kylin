@@ -21,6 +21,7 @@ package org.apache.kylin.source.hive;
 import org.apache.kylin.common.KylinConfig;
 
 public class HiveClientFactory {
+    
     public static IHiveClient getHiveClient() {
         if ("cli".equals(KylinConfig.getInstanceFromEnv().getHiveClientMode())) {
             return new CLIHiveClient();

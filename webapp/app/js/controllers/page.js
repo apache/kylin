@@ -197,11 +197,13 @@ var projCtrl = function ($scope, $location, $modalInstance, ProjectService, Mess
   $scope.isEdit = false;
   $scope.proj = {name: '', description: '', override_kylin_properties: {}};
   $scope.convertedProperties = [];
+  $scope.originOverrideKylinProperties = {};
 
   if (project) {
     $scope.state.isEdit = true;
     $scope.state.oldProjName = project.name;
     $scope.proj = project;
+    angular.copy(project.override_kylin_properties, $scope.originOverrideKylinProperties);
 
     for (var key in $scope.proj.override_kylin_properties) {
       $scope.convertedProperties.push({
@@ -219,6 +221,7 @@ var projCtrl = function ($scope, $location, $modalInstance, ProjectService, Mess
   }
 
   $scope.createOrUpdate = function () {
+	delete $scope.proj.override_kylin_properties[""];
     if ($scope.state.isEdit) {
       ProjectService.update({}, {formerProjectName: $scope.state.oldProjName, projectDescData: angular.toJson($scope.proj)}, function (newProj) {
         SweetAlert.swal('Success!', 'Project update successfully!', 'success');
@@ -269,7 +272,9 @@ var projCtrl = function ($scope, $location, $modalInstance, ProjectService, Mess
   $scope.cancel = function () {
     if ($scope.state.isEdit) {
       projects[$scope.state.projectIdx].name = $scope.state.oldProjName;
+      project.override_kylin_properties = $scope.originOverrideKylinProperties;
     }
+    delete $scope.proj.override_kylin_properties[""];
     $modalInstance.dismiss('cancel');
   };
 

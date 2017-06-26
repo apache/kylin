@@ -37,12 +37,13 @@ public class KylinConfigCLITest extends LocalFileMetadataTestCase {
     public void testGetProperty() throws IOException {
         PrintStream o = System.out;
         File f = File.createTempFile("cfg", ".tmp");
-        System.setOut(new PrintStream(new FileOutputStream(f)));
+        PrintStream tmpOut = new PrintStream(new FileOutputStream(f));
+        System.setOut(tmpOut);
         KylinConfigCLI.main(new String[] { "kylin.storage.url" });
 
         String val = FileUtils.readFileToString(f, Charset.defaultCharset()).trim();
         assertEquals("hbase", val);
-
+        tmpOut.close();
         FileUtils.forceDelete(f);
         System.setOut(o);
     }
@@ -51,12 +52,15 @@ public class KylinConfigCLITest extends LocalFileMetadataTestCase {
     public void testGetPrefix() throws IOException {
         PrintStream o = System.out;
         File f = File.createTempFile("cfg", ".tmp");
-        System.setOut(new PrintStream(new FileOutputStream(f)));
+        PrintStream tmpOut = new PrintStream(new FileOutputStream(f));
+        System.setOut(tmpOut);
         KylinConfigCLI.main(new String[] { "kylin.cube.engine." });
 
         String val = FileUtils.readFileToString(f, Charset.defaultCharset()).trim();
-        assertEquals("2=org.apache.kylin.engine.mr.MRBatchCubingEngine2\n0=org.apache.kylin.engine.mr.MRBatchCubingEngine", val);
+        assertEquals("2=org.apache.kylin.engine.mr.MRBatchCubingEngine2"
+                + System.lineSeparator() + "0=org.apache.kylin.engine.mr.MRBatchCubingEngine", val);
 
+        tmpOut.close();
         FileUtils.forceDelete(f);
         System.setOut(o);
     }
