@@ -172,7 +172,11 @@ public class ProjectController extends BasicController {
                 throw new InternalErrorException("The project named " + formerProjectName + " does not exists");
             }
 
-            updatedProj = projectService.updateProject(projectDesc, currentProject);
+            if (projectDesc.getName().equals(currentProject.getName())) {
+                updatedProj = projectService.updateProject(projectDesc, currentProject);
+            } else {
+                updatedProj = projectService.renameProject(projectDesc, currentProject);
+            }
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());

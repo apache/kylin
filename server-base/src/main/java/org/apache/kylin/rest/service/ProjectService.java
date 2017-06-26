@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -94,6 +95,10 @@ public class ProjectService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION') or hasPermission(#currentProject, 'MANAGEMENT')")
     public ProjectInstance updateProject(ProjectInstance newProject, ProjectInstance currentProject) throws IOException {
+        if (!newProject.getName().equals(currentProject.getName())) {
+            return renameProject(newProject, currentProject);
+        }
+
         String newProjectName = newProject.getName();
         String newDescription = newProject.getDescription();
         LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
@@ -101,8 +106,25 @@ public class ProjectService extends BasicService {
         ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName, newDescription, overrideProps);
 
         logger.debug("Project updated.");
-
         return updatedProject;
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION')")
+    public ProjectInstance renameProject(ProjectInstance newProject, ProjectInstance currentProject) throws IOException {
+        String newProjectName = newProject.getName();
+        String newDescription = newProject.getDescription();
+        LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
+
+        // rename project but keep UUID, acl keeps the same
+        ProjectInstance renamedProject = getProjectManager().renameProject(currentProject, newProjectName, newDescription, overrideProps);
+
+        // rebind draft and project
+        for (Draft draft : getDraftManager().list(currentProject.getName())) {
+            draft.setProject(newProjectName);
+        }
+
+        logger.debug("Project rename.");
+        return renamedProject;
     }
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)

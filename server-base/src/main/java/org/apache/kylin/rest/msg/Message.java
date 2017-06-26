@@ -249,10 +249,6 @@ public class Message {
         return "Cannot delete non-empty project";
     }
 
-    public String getRENAME_PROJECT_NOT_EMPTY() {
-        return "Cannot rename non-empty project";
-    }
-
     // Table
     public String getHIVE_TABLE_NOT_FOUND() {
         return "Cannot find Hive table '%s'.";

@@ -138,12 +138,12 @@ public class ProjectControllerV2 extends BasicController {
             throw new BadRequestException(String.format(msg.getPROJECT_NOT_FOUND(), formerProjectName));
         }
 
-        // cannot modify project name if it's not empty
-        if (!currentProject.getName().equals(projectDesc.getName()) && !isProjectEmpty(currentProject.getName())) {
-            throw new BadRequestException(msg.getRENAME_PROJECT_NOT_EMPTY());
+        ProjectInstance updatedProj;
+        if (projectDesc.getName().equals(currentProject.getName())) {
+            updatedProj = projectService.updateProject(projectDesc, currentProject);
+        } else {
+            updatedProj = projectService.renameProject(projectDesc, currentProject);
         }
-
-        ProjectInstance updatedProj = projectService.updateProject(projectDesc, currentProject);
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, updatedProj, "");
     }
 

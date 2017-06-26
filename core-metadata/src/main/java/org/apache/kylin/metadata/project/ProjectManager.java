@@ -47,6 +47,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -216,35 +217,40 @@ public class ProjectManager {
         }
     }
 
+    // rename project
+    public ProjectInstance renameProject(ProjectInstance project, String newName, String newDesc,
+            LinkedHashMap<String, String> overrideProps) throws IOException {
+        Preconditions.checkArgument(!project.getName().equals(newName));
+        ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc, overrideProps);
+
+        newProject.setUuid(project.getUuid());
+        newProject.setCreateTimeUTC(project.getCreateTimeUTC());
+        newProject.recordUpdateTime(System.currentTimeMillis());
+        newProject.setRealizationEntries(project.getRealizationEntries());
+        newProject.setTables(project.getTables());
+        newProject.setModels(project.getModels());
+        newProject.setExtFilters(project.getExtFilters());
+
+        removeProject(project);
+        updateProject(newProject);
+
+        return newProject;
+    }
+
     //update project itself
     public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc,
             LinkedHashMap<String, String> overrideProps) throws IOException {
-        if (!project.getName().equals(newName)) {
-            ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc, overrideProps);
+        Preconditions.checkArgument(project.getName().equals(newName));
+        project.setName(newName);
+        project.setDescription(newDesc);
+        project.setOverrideKylinProps(overrideProps);
 
-            newProject.setCreateTimeUTC(project.getCreateTimeUTC());
-            newProject.recordUpdateTime(System.currentTimeMillis());
-            newProject.setRealizationEntries(project.getRealizationEntries());
-            newProject.setTables(project.getTables());
-            newProject.setModels(project.getModels());
-            newProject.setExtFilters(project.getExtFilters());
+        if (project.getUuid() == null)
+            project.updateRandomUuid();
 
-            removeProject(project);
-            updateProject(newProject);
+        updateProject(project);
 
-            return newProject;
-        } else {
-            project.setName(newName);
-            project.setDescription(newDesc);
-            project.setOverrideKylinProps(overrideProps);
-
-            if (project.getUuid() == null)
-                project.updateRandomUuid();
-
-            updateProject(project);
-
-            return project;
-        }
+        return project;
     }
 
     private void updateProject(ProjectInstance prj) throws IOException {
