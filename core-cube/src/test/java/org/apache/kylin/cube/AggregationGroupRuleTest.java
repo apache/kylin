@@ -58,6 +58,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
                 continue;
             }
             CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
+            desc.init(getTestConfig());
             ValidateContext vContext = new ValidateContext();
             rule.validate(desc, vContext);
             vContext.print(System.out);
@@ -101,7 +102,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
         IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
         rule.validate(desc, vContext);
         vContext.print(System.out);
-        assertEquals(0, vContext.getResults().length);
+        assertEquals(1, vContext.getResults().length);
     }
 
     @Test
@@ -130,7 +131,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
         IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
         rule.validate(desc, vContext);
         vContext.print(System.out);
-        assertEquals(1, vContext.getResults().length);
+        assertEquals(2, vContext.getResults().length);
         assertEquals("Aggregation group 0 joint dimensions has overlap with more than 1 dimensions in same hierarchy: [CATEG_LVL2_NAME, META_CATEG_NAME]", (vContext.getResults()[0].getMessage()));
     }
 
