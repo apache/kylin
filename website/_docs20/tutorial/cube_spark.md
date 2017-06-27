@@ -24,12 +24,13 @@ export KYLIN_HOME=/usr/local/apache-kylin-2.0.0-SNAPSHOT-bin
 
 ## Prepare "kylin.env.hadoop-conf-dir"
 
-To run Spark on Yarn, need specify **HADOOP_CONF_DIR** environment variable, which is the directory that contains the (client side) configuration files for Hadoop. In many Hadoop distributions the directory is "/etc/hadoop/conf"; But Kylin not only need access HDFS, Yarn and Hive, but also HBase, so the default directory might not have all necessary files. In this case, you need create a new directory and then copying or linking those client files (core-site.xml, yarn-site.xml, hive-site.xml and hbase-site.xml) there. In HDP 2.4, there is a conflict between hive-tez and Spark, so need change the default engine from "tez" to "mr" when copy for Kylin.
+To run Spark on Yarn, need specify **HADOOP_CONF_DIR** environment variable, which is the directory that contains the (client side) configuration files for Hadoop. In many Hadoop distributions the directory is "/etc/hadoop/conf"; But Kylin not only need access HDFS, Yarn and Hive, but also HBase, so the default directory might not have all necessary files. In this case, you need create a new directory and then copying or linking those client files (core-site.xml, hdfs-site.xml, yarn-site.xml, hive-site.xml and hbase-site.xml) there. In HDP 2.4, there is a conflict between hive-tez and Spark, so need change the default engine from "tez" to "mr" when copy for Kylin.
 
 {% highlight Groff markup %}
 
 mkdir $KYLIN_HOME/hadoop-conf
 ln -s /etc/hadoop/conf/core-site.xml $KYLIN_HOME/hadoop-conf/core-site.xml 
+ln -s /etc/hadoop/conf/hdfs-site.xml $KYLIN_HOME/hadoop-conf/hdfs-site.xml 
 ln -s /etc/hadoop/conf/yarn-site.xml $KYLIN_HOME/hadoop-conf/yarn-site.xml 
 ln -s /etc/hbase/2.4.0.0-169/0/hbase-site.xml $KYLIN_HOME/hadoop-conf/hbase-site.xml 
 cp /etc/hive/2.4.0.0-169/0/hive-site.xml $KYLIN_HOME/hadoop-conf/hive-site.xml 
@@ -106,7 +107,7 @@ After Kylin is started, access Kylin web, edit the "kylin_sales" cube, in the "A
 
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/1_cube_engine.png)
 
-Click "Next" to the "Configuration Overwrites" page, click "+Property" to add property "kylin.engine.spark.rdd-partition-cut-mb" with value "100" (reasons below):
+Click "Next" to the "Configuration Overwrites" page, click "+Property" to add property "kylin.engine.spark.rdd-partition-cut-mb" with value "500" (reasons below):
 
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/2_overwrite_partition.png)
 
