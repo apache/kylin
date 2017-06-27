@@ -127,7 +127,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     });
   };
 
-  $scope.editModel = function(model){
+  $scope.editModel = function(model, isEditJson){
     var cubename = [];
     var modelstate=false;
     var i=0;
@@ -145,10 +145,13 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         })
       }
 
-      if(modelstate==false){
-        $location.path("/models/edit/"+model.name);
-      }
-      else{
+      if (modelstate==false){
+    	  if (isEditJson) {
+    		  $location.path("/models/edit/" + model.name + "/descriptionjson");
+    	  } else {
+    		  $location.path("/models/edit/" + model.name);
+    	  }
+      } else {
         SweetAlert.swal('Sorry','This model is still used by '+ cubename.join(','));
       }
     })
