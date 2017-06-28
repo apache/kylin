@@ -70,9 +70,6 @@
                     <artifactId>avatica-core</artifactId>
                 </exclusion>
             </exclusions>
-            <!--set to provided on purpose, so that dependant on metadata module will not depend on calcite unnecessarily-->
-            <!--https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html-->
-            <scope>provided</scope>
         </dependency>
 
         <!-- Compiled -->
