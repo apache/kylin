@@ -189,6 +189,14 @@ public class DriverTest {
         conn.close();
     }
 
+     @Test
+    public void testSSLFromURL() throws SQLException{
+        Driver driver = new DummyDriver();
+        Connection conn = driver.connect("jdbc:kylin:ssl=True;//test_url/test_db", null);
+        assertEquals("test_url", ((KylinConnection)conn).getBaseUrl());
+        assertEquals("test_db", ((KylinConnection)conn).getProject());
+    }        
+
     private void printResultSet(ResultSet rs) throws SQLException {
         ResultSetMetaData meta = rs.getMetaData();
         System.out.println("Data:");
