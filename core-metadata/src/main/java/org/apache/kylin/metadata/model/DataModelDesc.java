@@ -471,31 +471,50 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     private void initComputedColumns(Map<String, CCInfo> ccInfoMap) {
+        if (ccInfoMap == null) {
+            logger.error("cc info map is null");
+        }
+
         Set<String> ccSet = Sets.newHashSet();//make sure cc name does not duplicate within this model
 
-        for (ComputedColumnDesc computedColumnDesc : this.computedColumnDescs) {
-            computedColumnDesc.init();
+        for (ComputedColumnDesc thisCCDesc : this.computedColumnDescs) {
+            thisCCDesc.init();
+            String thisCCName = thisCCDesc.getFullName();
 
-            if (ccSet.contains(computedColumnDesc.getFullName())) {
-                throw new IllegalArgumentException(
-                        String.format("More than one computed column named %s exist in model %s",
-                                computedColumnDesc.getFullName(), this.getName()));
+            if (ccSet.contains(thisCCName)) {
+                throw new IllegalArgumentException(String.format(
+                        "More than one computed column named %s exist in model %s", thisCCName, this.getName()));
             } else {
-                ccSet.add(computedColumnDesc.getFullName());
+                ccSet.add(thisCCName);
             }
 
-            CCInfo other = ccInfoMap.get(computedColumnDesc.getFullName());
+            CCInfo other = ccInfoMap.get(thisCCName);
             if (other == null || (other.getDataModelDescs().size() == 1 && other.getDataModelDescs().contains(this))) {
-                ccInfoMap.put(computedColumnDesc.getFullName(),
-                        new CCInfo(computedColumnDesc, Sets.<DataModelDesc> newHashSet(this)));
-            } else if (other.getComputedColumnDesc().equals(computedColumnDesc)) {
+                //check whether two computer columns's definition is the same.
+                for (CCInfo sysCCInfo : ccInfoMap.values()) {
+                    String definition0 = thisCCDesc.getExpression();
+                    String definition1 = sysCCInfo.getComputedColumnDesc().getExpression();
+                    if (isTwoCCDefinitionEquals(definition0, definition1)) {
+                        throw new IllegalStateException(String.format(
+                                "Computed column %s'definition: %s is already defined in other models: %s. Please change another definition, or try to keep consistent definition",
+                                thisCCName, definition0, sysCCInfo.getDataModelDescs()));
+                    }
+                }
+                ccInfoMap.put(thisCCName, new CCInfo(thisCCDesc, Sets.<DataModelDesc> newHashSet(this)));
+            } else if (other.getComputedColumnDesc().equals(thisCCDesc)) {
                 other.getDataModelDescs().add(this);
             } else {
                 throw new IllegalStateException(String.format(
                         "Computed column named %s is already defined in other models: %s. Please change another name, or try to keep consistent definition", //
-                        computedColumnDesc.getFullName(), other.getDataModelDescs()));
+                        thisCCName, other.getDataModelDescs()));
             }
         }
+    }
+
+    private boolean isTwoCCDefinitionEquals(String definition0, String definition1) {
+        definition0 = definition0.replaceAll("\\s*", "");
+        definition1 = definition1.replaceAll("\\s*", "");
+        return definition0.equalsIgnoreCase(definition1);
     }
 
     private void initJoinColumns() {
