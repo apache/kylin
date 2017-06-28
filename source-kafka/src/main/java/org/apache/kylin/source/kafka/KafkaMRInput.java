@@ -103,7 +103,7 @@ public class KafkaMRInput implements IMRInput {
             this.cubeSegment = cubeSegment;
             this.conf = conf;
             try {
-                streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getParserProperties(), columns);
+                streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getAllParserProperties(), columns);
             } catch (ReflectiveOperationException e) {
                 throw new IllegalArgumentException(e);
             }

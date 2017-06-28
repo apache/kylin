@@ -58,6 +58,9 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("parserName")
     private String parserName;
 
+    @JsonProperty("parserTimeStampField")
+    private String parserTimeStampField;
+
     @Deprecated
     @JsonProperty("margin")
     private long margin;
@@ -120,12 +123,31 @@ public class KafkaConfig extends RootPersistentEntity {
         this.margin = margin;
     }
 
+    public void setParserTimeStampField(String parserTimeStampField) {
+        this.parserTimeStampField = parserTimeStampField;
+    }
+
+    public String getParserTimeStampField() {
+        return this.parserTimeStampField;
+    }
+
     public String getParserProperties() {
         return parserProperties;
     }
 
     public void setParserProperties(String parserProperties) {
         this.parserProperties = parserProperties;
+    }
+
+    public String getAllParserProperties() {
+        StringBuilder sb = new StringBuilder();
+        if (parserProperties != null)
+            sb.append(parserProperties);
+        if (parserTimeStampField != null) {
+            sb.append(";");
+            sb.append(parserTimeStampField);
+        }
+        return sb.toString();
     }
 
     @Override
