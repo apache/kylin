@@ -23,6 +23,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -70,7 +72,10 @@ public class SparkExecutable extends AbstractExecutable {
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        final KylinConfig config = context.getConfig();
+        String cubeName = this.getParam(SparkCubingByLayer.OPTION_CUBE_NAME.getOpt());
+        CubeInstance cube = CubeManager.getInstance(context.getConfig()).getCube(cubeName);
+        final KylinConfig config = cube.getConfig();
+
         if (KylinConfig.getSparkHome() == null) {
             throw new NullPointerException();
         }
