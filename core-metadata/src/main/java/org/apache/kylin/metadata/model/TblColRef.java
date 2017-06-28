@@ -158,7 +158,7 @@ public class TblColRef implements Serializable {
         if (!column.isComputedColumnn()) {
             return getIdentity();
         } else {
-            return column.getComputedColumnExpr(getTableAlias(), table.getTableIdentity());
+            return column.getComputedColumnExpr(getTableAlias());
         }
     }
 

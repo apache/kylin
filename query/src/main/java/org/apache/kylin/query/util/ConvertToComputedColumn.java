@@ -23,7 +23,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -35,15 +34,14 @@ import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlVisitor;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
@@ -65,7 +63,11 @@ public class ConvertToComputedColumn implements QueryUtil.IQueryTransformer {
             return sql;
         }
         ImmutableSortedMap<String, String> computedColumns = getSortedComputedColumnWithProject(project);
-        return replaceComputedColumn(sql, computedColumns);
+        String s = replaceComputedColumn(sql, computedColumns);
+        if (!StringUtils.equals(sql, s)) {
+            logger.debug("change sql to " + s);
+        }
+        return s;
     }
 
     static String replaceComputedColumn(String inputSql, ImmutableSortedMap<String, String> computedColumn) {
@@ -88,7 +90,7 @@ public class ConvertToComputedColumn implements QueryUtil.IQueryTransformer {
                 logger.error("Convert to computedColumn Fail,parse sql fail ", e.getMessage());
             }
             for (SqlNode node : matchedNodes) {
-                Pair<Integer, Integer> startEndPos = getReplacePos(lines, node);
+                Pair<Integer, Integer> startEndPos = CalciteParser.getReplacePos(node, lines);
                 int start = startEndPos.getLeft();
                 int end = startEndPos.getRight();
                 //add table alias like t1.column,if exists alias
@@ -104,32 +106,18 @@ public class ConvertToComputedColumn implements QueryUtil.IQueryTransformer {
         return result;
     }
 
-    private static Pair<Integer, Integer> getReplacePos(String[] lines, SqlNode node) {
-        SqlParserPos pos = node.getParserPosition();
-        int lineStart = pos.getLineNum();
-        int columnStart = pos.getColumnNum() - 1;
-        int columnEnd = pos.getEndColumnNum();
-        //for the case that sql is multi lines
-        for (int i = 0; i < lineStart - 1; i++) {
-            int offset = lines[i].length();
-            columnStart += offset + 1;
-            columnEnd += offset + 1;
-        }
-        return Pair.of(columnStart, columnEnd);
-    }
-
     //Return matched node's position and its alias(if exists).If can not find matches, return an empty capacity list
     private static List<SqlNode> getMatchedNodes(String inputSql, String ccExp) throws SqlParseException {
         if (ccExp == null || ccExp.equals("")) {
             return new ArrayList<>();
         }
         ArrayList<SqlNode> toBeReplacedNodes = new ArrayList<>();
-        SqlNode ccNode = getCCExpNode(ccExp);
+        SqlNode ccNode = CalciteParser.getExpNode(ccExp);
         List<SqlNode> inputNodes = getInputTreeNodes(inputSql);
 
         // find whether user input sql's tree node equals computed columns's define expression
         for (SqlNode inputNode : inputNodes) {
-            if (isNodeEqual(inputNode, ccNode)) {
+            if (CalciteParser.isNodeEqual(inputNode, ccNode)) {
                 toBeReplacedNodes.add(inputNode);
             }
         }
@@ -138,83 +126,8 @@ public class ConvertToComputedColumn implements QueryUtil.IQueryTransformer {
 
     private static List<SqlNode> getInputTreeNodes(String inputSql) throws SqlParseException {
         SqlTreeVisitor stv = new SqlTreeVisitor();
-        parse(inputSql).accept(stv);
+        CalciteParser.parse(inputSql).accept(stv);
         return stv.getSqlNodes();
-    }
-
-    private static SqlNode getCCExpNode(String ccExp) throws SqlParseException {
-        ccExp = "select " + ccExp + " from t";
-        return ((SqlSelect) parse(ccExp)).getSelectList().get(0);
-    }
-
-    static SqlNode parse(String sql) throws SqlParseException {
-        SqlParser.ConfigBuilder parserBuilder = SqlParser.configBuilder();
-        SqlParser sqlParser = SqlParser.create(sql, parserBuilder.build());
-        return sqlParser.parseQuery();
-    }
-
-    static boolean isNodeEqual(SqlNode node0, SqlNode node1) {
-        if (node0 == null) {
-            return node1 == null;
-        } else if (node1 == null) {
-            return false;
-        }
-
-        if (!Objects.equals(node0.getClass().getSimpleName(), node1.getClass().getSimpleName())) {
-            return false;
-        }
-
-        if (node0 instanceof SqlCall) {
-            SqlCall thisNode = (SqlCall) node0;
-            SqlCall thatNode = (SqlCall) node1;
-            if (!thisNode.getOperator().getName().equalsIgnoreCase(thatNode.getOperator().getName())) {
-                return false;
-            }
-            return isNodeEqual(thisNode.getOperandList(), thatNode.getOperandList());
-        }
-        if (node0 instanceof SqlLiteral) {
-            SqlLiteral thisNode = (SqlLiteral) node0;
-            SqlLiteral thatNode = (SqlLiteral) node1;
-            return Objects.equals(thisNode.getValue(), thatNode.getValue());
-        }
-        if (node0 instanceof SqlNodeList) {
-            SqlNodeList thisNode = (SqlNodeList) node0;
-            SqlNodeList thatNode = (SqlNodeList) node1;
-            if (thisNode.getList().size() != thatNode.getList().size()) {
-                return false;
-            }
-            for (int i = 0; i < thisNode.getList().size(); i++) {
-                SqlNode thisChild = thisNode.getList().get(i);
-                final SqlNode thatChild = thatNode.getList().get(i);
-                if (!isNodeEqual(thisChild, thatChild)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        if (node0 instanceof SqlIdentifier) {
-            SqlIdentifier thisNode = (SqlIdentifier) node0;
-            SqlIdentifier thatNode = (SqlIdentifier) node1;
-            // compare ignore table alias.eg: expression like "a.b + a.c + a.d" ,alias a will be ignored when compared
-            String name0 = thisNode.names.get(thisNode.names.size() - 1).replace("\"", "");
-            String name1 = thatNode.names.get(thatNode.names.size() - 1).replace("\"", "");
-            return name0.equalsIgnoreCase(name1);
-        }
-
-        logger.error("Convert to computed column fail,failed to compare two nodes,unknown instance type");
-        return false;
-    }
-
-    private static boolean isNodeEqual(List<SqlNode> operands0, List<SqlNode> operands1) {
-        if (operands0.size() != operands1.size()) {
-            return false;
-        }
-        for (int i = 0; i < operands0.size(); i++) {
-            if (!isNodeEqual(operands0.get(i), operands1.get(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static String getTableAlias(SqlNode node) {

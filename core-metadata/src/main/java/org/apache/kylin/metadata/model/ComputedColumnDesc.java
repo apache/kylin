@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class ComputedColumnDesc {
@@ -42,6 +43,8 @@ public class ComputedColumnDesc {
 
         tableIdentity = tableIdentity.toUpperCase();
         columnName = columnName.toUpperCase();
+
+        CalciteParser.ensureNoTableNameExists(expression);
     }
 
     public String getFullName() {

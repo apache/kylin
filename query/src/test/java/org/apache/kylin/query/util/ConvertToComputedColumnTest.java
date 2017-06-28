@@ -21,8 +21,6 @@ package org.apache.kylin.query.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,22 +28,6 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableSortedMap;
 
 public class ConvertToComputedColumnTest {
-    @Test
-    public void testEqual() throws SqlParseException {
-        String sql0 = "select a.a + a.b + a.c from t as a";
-        String sql1 = "select (((a . a +    a.b +    a.c))) from t as a";
-        String sql2 = "select (a + b) + c  from t";
-        String sql3 = "select a.a + (a.b + a.c) from t as a";
-
-        SqlNode sn0 = getSelectNode(sql0);
-        SqlNode sn1 = getSelectNode(sql1);
-        SqlNode sn2 = getSelectNode(sql2);
-        SqlNode sn3 = getSelectNode(sql3);
-
-        Assert.assertEquals(true, ConvertToComputedColumn.isNodeEqual(sn0, sn1));
-        Assert.assertEquals(true, ConvertToComputedColumn.isNodeEqual(sn0, sn2));
-        Assert.assertEquals(false, ConvertToComputedColumn.isNodeEqual(sn0, sn3));
-    }
 
     @Test
     public void testErrorCase() {
@@ -99,10 +81,6 @@ public class ConvertToComputedColumnTest {
                 ConvertToComputedColumn.replaceComputedColumn(sql2, computedColumns));
         Assert.assertEquals("select cc from a", ConvertToComputedColumn.replaceComputedColumn(sql3, computedColumns));
 
-    }
-
-    private static SqlNode getSelectNode(String sql) throws SqlParseException {
-        return ((SqlSelect) ConvertToComputedColumn.parse(sql)).getSelectList().get(0);
     }
 
     @Test

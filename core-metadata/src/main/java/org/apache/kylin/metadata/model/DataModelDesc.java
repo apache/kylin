@@ -489,17 +489,11 @@ public class DataModelDesc extends RootPersistentEntity {
             }
 
             CCInfo other = ccInfoMap.get(thisCCName);
-            if (other == null || (other.getDataModelDescs().size() == 1 && other.getDataModelDescs().contains(this))) {
-                //check whether two computer columns's definition is the same.
-                for (CCInfo sysCCInfo : ccInfoMap.values()) {
-                    String definition0 = thisCCDesc.getExpression();
-                    String definition1 = sysCCInfo.getComputedColumnDesc().getExpression();
-                    if (isTwoCCDefinitionEquals(definition0, definition1)) {
-                        throw new IllegalStateException(String.format(
-                                "Computed column %s'definition: %s is already defined in other models: %s. Please change another definition, or try to keep consistent definition",
-                                thisCCName, definition0, sysCCInfo.getDataModelDescs()));
-                    }
-                }
+
+            if (other == null) {
+                checkSameCCDefinition(ccInfoMap, thisCCDesc, thisCCName);
+                ccInfoMap.put(thisCCName, new CCInfo(thisCCDesc, Sets.<DataModelDesc> newHashSet(this)));
+            } else if (other.getDataModelDescs().size() == 1 && other.getDataModelDescs().contains(this)) {
                 ccInfoMap.put(thisCCName, new CCInfo(thisCCDesc, Sets.<DataModelDesc> newHashSet(this)));
             } else if (other.getComputedColumnDesc().equals(thisCCDesc)) {
                 other.getDataModelDescs().add(this);
@@ -507,6 +501,20 @@ public class DataModelDesc extends RootPersistentEntity {
                 throw new IllegalStateException(String.format(
                         "Computed column named %s is already defined in other models: %s. Please change another name, or try to keep consistent definition", //
                         thisCCName, other.getDataModelDescs()));
+            }
+        }
+    }
+
+    private void checkSameCCDefinition(Map<String, CCInfo> ccInfoMap, ComputedColumnDesc thisCCDesc,
+            String thisCCName) {
+        //check whether two computer columns's definition is the same.
+        for (CCInfo sysCCInfo : ccInfoMap.values()) {
+            String definition0 = thisCCDesc.getExpression();
+            String definition1 = sysCCInfo.getComputedColumnDesc().getExpression();
+            if (isTwoCCDefinitionEquals(definition0, definition1)) {
+                throw new IllegalStateException(String.format(
+                        "Computed column %s's definition: %s is already defined in other models: %s. Please change another definition, or try to keep consistent definition",
+                        thisCCName, definition0, sysCCInfo.getDataModelDescs()));
             }
         }
     }

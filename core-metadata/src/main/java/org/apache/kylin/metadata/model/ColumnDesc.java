@@ -19,9 +19,9 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
-import java.util.regex.Pattern;
 
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -82,7 +82,8 @@ public class ColumnDesc implements Serializable {
         this.index = other.index;
     }
 
-    public ColumnDesc(String id, String name, String datatype, String comment, String dataGen, String index, String computedColumnExpr) {
+    public ColumnDesc(String id, String name, String datatype, String comment, String dataGen, String index,
+            String computedColumnExpr) {
         this.id = id;
         this.name = name;
         this.datatype = datatype;
@@ -193,11 +194,12 @@ public class ColumnDesc implements Serializable {
         return index;
     }
 
-    public String getComputedColumnExpr(String tableAlias, String tableIdentity) {
+    public String getComputedColumnExpr(String tableAlias) {
         Preconditions.checkState(computedColumnExpr != null);
+        Preconditions.checkState(tableAlias != null);
 
-        //http://stackoverflow.com/questions/5054995/how-to-replace-case-insensitive-literal-substrings-in-java
-        return computedColumnExpr.replaceAll("(?i)" + Pattern.quote(tableIdentity), tableAlias);
+        String s = CalciteParser.insertAliasInExpr(computedColumnExpr, tableAlias);
+        return s;
     }
 
     public boolean isComputedColumnn() {
@@ -257,6 +259,7 @@ public class ColumnDesc implements Serializable {
 
     @Override
     public String toString() {
-        return "ColumnDesc{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", datatype='" + datatype + '\'' + ", comment='" + comment + '\'' + '}';
+        return "ColumnDesc{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", datatype='" + datatype + '\''
+                + ", comment='" + comment + '\'' + '}';
     }
 }

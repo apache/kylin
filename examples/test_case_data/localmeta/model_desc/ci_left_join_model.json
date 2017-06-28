@@ -125,21 +125,21 @@
     {
       "tableIdentity": "DEFAULT.TEST_KYLIN_FACT",
       "columnName": "DEAL_AMOUNT",
-      "expression": "DEFAULT.TEST_KYLIN_FACT.PRICE * DEFAULT.TEST_KYLIN_FACT.ITEM_COUNT", 
+      "expression": "PRICE * ITEM_COUNT", 
       "datatype": "decimal",
       "comment": "deal amount of left join model"
     },
     {
       "tableIdentity": "DEFAULT.TEST_KYLIN_FACT",
       "columnName": "DEAL_YEAR",
-      "expression": "year(DEFAULT.TEST_KYLIN_FACT.CAL_DT)",
+      "expression": "year(CAL_DT)",
       "datatype": "integer",
       "comment": "the year of the deal of the left join model"
     },
     {
       "tableIdentity": "DEFAULT.TEST_ACCOUNT",
       "columnName": "COUNTRY_ABBR",
-      "expression": "SUBSTR(DEFAULT.TEST_ACCOUNT.ACCOUNT_COUNTRY,0,1)",
+      "expression": "SUBSTR(ACCOUNT_COUNTRY,0,1)",
       "datatype": "string",
       "comment": "first char of country of the left join model"
     }
