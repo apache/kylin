@@ -282,8 +282,10 @@ public class JobControllerV2 extends BasicController {
         JobInstance jobInstance = jobService.getJobInstance(jobId);
         JobStatusEnum status = jobInstance.getStatus();
 
-        if (status == JobStatusEnum.NEW || status == JobStatusEnum.PENDING || status == JobStatusEnum.RUNNING) {
-            throw new BadRequestException("Cannot drop running job " + jobInstance.getName());
+        if (status == JobStatusEnum.NEW || status == JobStatusEnum.PENDING || status == JobStatusEnum.RUNNING
+                || status == JobStatusEnum.STOPPED) {
+            throw new BadRequestException(
+                    "Cannot drop running job " + jobInstance.getName() + ", please discard it first.");
         }
         jobService.dropJob(jobInstance);
 
