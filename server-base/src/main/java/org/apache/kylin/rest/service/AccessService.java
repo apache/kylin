@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.persistence.AclEntity;
@@ -297,8 +298,11 @@ public class AccessService {
     }
 
     public List<AccessEntryResponse> generateAceResponses(Acl acl) {
-        List<AccessEntryResponse> result = new ArrayList<AccessEntryResponse>();
+        if (null == acl) {
+            return Collections.emptyList();
+        }
 
+        List<AccessEntryResponse> result = new ArrayList<AccessEntryResponse>();
         for (AccessControlEntry ace : acl.getEntries()) {
             result.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
         }
