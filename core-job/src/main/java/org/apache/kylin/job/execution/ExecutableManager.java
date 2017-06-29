@@ -389,6 +389,15 @@ public class ExecutableManager {
         updateJobOutput(jobId, ExecutableState.STOPPED, null, null);
     }
 
+    public ExecutableOutputPO getJobOutput(String jobId) {
+        try {
+            return executableDao.getJobOutput(jobId);
+        } catch (PersistentException e) {
+            logger.error("Can't get output of Job " + jobId);
+            throw new RuntimeException(e);
+        }
+    }
+
     public void updateJobOutput(String jobId, ExecutableState newStatus, Map<String, String> info, String output) {
         try {
             final ExecutableOutputPO jobOutput = executableDao.getJobOutput(jobId);

@@ -75,6 +75,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             final long endTime = getEndTime();
             if (endTime > 0) {
                 long interruptTime = System.currentTimeMillis() - endTime + getInterruptTime();
+                info.putAll(getManager().getJobOutput(getId()).getInfo());
                 info.put(START_TIME, Long.toString(startTime));
                 info.put(INTERRUPT_TIME, Long.toString(interruptTime));
                 getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
