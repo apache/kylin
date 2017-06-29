@@ -41,11 +41,6 @@ public class QueryUtil {
         String transform(String sql, String project);
     }
 
-    // for mockup test
-    public static String massageSql(String sql) {
-        return massageSql(sql, null, 0, 0);
-    }
-
     public static String massageSql(String sql, String project, int limit, int offset) {
         sql = sql.trim();
         sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
