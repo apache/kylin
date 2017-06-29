@@ -115,7 +115,7 @@ public class BeelineHiveClient implements IHiveClient {
         }
         return count;
     }
-
+    
     @Override
     public void executeHQL(String hql) throws CommandNeedRetryException, IOException {
         throw new UnsupportedOperationException();

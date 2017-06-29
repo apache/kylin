@@ -46,11 +46,13 @@ import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
 public class ModelDataGenerator {
-
+    private static final Logger logger = LoggerFactory.getLogger(ModelDataGenerator.class);
     final private DataModelDesc model;
     final private int targetRows;
     final private ResourceStore outputStore;
@@ -78,13 +80,14 @@ public class ModelDataGenerator {
         Set<TableDesc> allTableDesc = new LinkedHashSet<>();
 
         JoinTableDesc[] allTables = model.getJoinTables();
-        for (int i = allTables.length - 1; i >= -1; i--) {
+        for (int i = allTables.length - 1; i >= -1; i--) { // reverse order needed for FK generation
             TableDesc table = (i == -1) ? model.getRootFactTable().getTableDesc() : allTables[i].getTableRef().getTableDesc();
             allTableDesc.add(table);
             
             if (generated.contains(table))
                 continue;
 
+            logger.info(String.format("generating data for %s", table));
             boolean gen = generateTable(table);
 
             if (gen)

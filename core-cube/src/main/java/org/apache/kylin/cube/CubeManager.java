@@ -73,9 +73,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 
 /**
  * @author yangli9
@@ -138,7 +136,7 @@ public class CubeManager implements IRealizationProvider {
     //    private SingleValueCache<String, LookupStringTable> lookupTables = new SingleValueCache<String, LookupStringTable>(Broadcaster.TYPE.METADATA);
 
     // for generation hbase table name of a new segment
-    private Multimap<String, String> usedStorageLocation = HashMultimap.create();
+    private ConcurrentMap<String, String> usedStorageLocation = new ConcurrentHashMap<>();
 
     private CubeManager(KylinConfig config) throws IOException {
         logger.info("Initializing CubeManager with config " + config);
@@ -287,12 +285,6 @@ public class CubeManager implements IRealizationProvider {
         SnapshotManager snapshotMgr = getSnapshotManager();
 
         TableDesc tableDesc = new TableDesc(metaMgr.getTableDesc(lookupTable));
-        if (tableDesc.isView()) {
-            String tableName = tableDesc.getMaterializedName();
-            tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
-            tableDesc.setName(tableName);
-        }
-
         IReadableTable hiveTable = SourceFactory.createReadableTable(tableDesc);
         SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc);
 
@@ -670,7 +662,12 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public void removeCubeLocal(String cubeName) {
-        usedStorageLocation.removeAll(cubeName.toUpperCase());
+        CubeInstance cube = cubeMap.get(cubeName);
+        if (cube != null) {
+            for (CubeSegment segment : cube.getSegments()) {
+                usedStorageLocation.remove(segment.getUuid());
+            }
+        }
         cubeMap.removeLocal(cubeName);
     }
 
@@ -798,7 +795,7 @@ public class CubeManager implements IRealizationProvider {
         logger.info("Loaded " + succeed + " cubes, fail on " + fail + " cubes");
     }
 
-    private synchronized CubeInstance reloadCubeLocalAt(String path) {
+    private CubeInstance reloadCubeLocalAt(String path) {
         ResourceStore store = getStore();
         CubeInstance cube;
 
@@ -831,7 +828,7 @@ public class CubeManager implements IRealizationProvider {
             cubeMap.putLocal(cubeName, cube);
 
             for (CubeSegment segment : cube.getSegments()) {
-                usedStorageLocation.put(cubeName.toUpperCase(), segment.getStorageLocationIdentifier());
+                usedStorageLocation.put(segment.getUuid(), segment.getStorageLocationIdentifier());
             }
 
             logger.info("Reloaded cube {} being {} having {} segments", cubeName, cube, cube.getSegments().size());

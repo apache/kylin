@@ -96,6 +96,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
 
         addClassQuitely(kyroClasses, "com.google.common.collect.EmptyImmutableList");
         addClassQuitely(kyroClasses, "java.nio.HeapShortBuffer");
+        addClassQuitely(kyroClasses, "java.nio.HeapLongBuffer");
         addClassQuitely(kyroClasses, "scala.collection.immutable.Map$EmptyMap$");
         addClassQuitely(kyroClasses, "org.apache.spark.sql.catalyst.expressions.GenericInternalRow");
         addClassQuitely(kyroClasses, "org.apache.spark.unsafe.types.UTF8String");

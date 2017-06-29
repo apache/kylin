@@ -47,4 +47,10 @@ public interface ISource {
      * Particularly, Kafka source use this chance to define start/end offsets within each partition.
      */
     SourcePartition enrichSourcePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition);
+    
+    /**
+     * Return an object that is responsible for deploying sample (CSV) data to the source database.
+     * For testing purpose.
+     */
+    ISampleDataDeployer getSampleDataDeployer();
 }

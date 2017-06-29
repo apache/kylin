@@ -22,7 +22,7 @@
 
 'use strict';
 
-KylinApp.controller('ModelMeasuresCtrl', function ($scope, $modal,MetaModel,modelsManager,VdmUtil) {
+KylinApp.controller('ModelMeasuresCtrl', function ($scope, $modal,MetaModel,modelsManager,VdmUtil,$filter) {
     $scope.modelsManager = modelsManager;
     $scope.availableFactTables = [];
     $scope.selectedFactTables = {};
@@ -33,20 +33,25 @@ KylinApp.controller('ModelMeasuresCtrl', function ($scope, $modal,MetaModel,mode
           $scope.availableFactTables.push(joinTable[j].alias);
         }
     }
-    angular.forEach($scope.modelsManager.selectedModel.metrics,function(metric){
-       $scope.selectedFactTables[VdmUtil.getNameSpaceAliasName(metric)]=$scope.selectedFactTables[VdmUtil.getNameSpaceAliasName(metric)]||[];
-       $scope.selectedFactTables[VdmUtil.getNameSpaceAliasName(metric)].push(metric);
-    });
     $scope.changeColumns = function (table){
-       angular.forEach($scope.selectedFactTables[table],function(column){
-          if($scope.modelsManager.selectedModel.metrics.indexOf(column)==-1){
-             $scope.modelsManager.selectedModel.metrics.push(column);
-          }
-       });
-       angular.forEach($scope.modelsManager.selectedModel.metrics,function(metric){
-          if($scope.selectedFactTables[VdmUtil.getNameSpaceAliasName(metric)].indexOf(metric)==-1){
-            $scope.modelsManager.selectedModel.metrics.splice($scope.modelsManager.selectedModel.metrics.indexOf(metric),1);
-          }
-       });
+      angular.forEach($scope.selectedFactTables[table],function(column){
+        if($scope.modelsManager.selectedModel.metrics.indexOf(column)==-1){
+          $scope.modelsManager.selectedModel.metrics.push(column);
+        }
+      });
+      angular.forEach($scope.modelsManager.selectedModel.metrics,function(metric){
+        if($scope.selectedFactTables[VdmUtil.getNameSpaceAliasName(metric)].indexOf(metric)==-1){
+          $scope.modelsManager.selectedModel.metrics.splice($scope.modelsManager.selectedModel.metrics.indexOf(metric),1);
+        }
+      });
+    }
+    angular.forEach($scope.modelsManager.selectedModel.metrics,function(metric){
+       var aliasName = VdmUtil.getNameSpaceAliasName(metric)
+       $scope.selectedFactTables[aliasName]=$scope.selectedFactTables[aliasName]||[];
+       $scope.selectedFactTables[aliasName].push(metric);
+    });
+    for (var i in $scope.selectedFactTables) {
+      $scope.selectedFactTables[i] = $filter('notInJoin')($scope.selectedFactTables[i], i, $scope.modelsManager.selectedModel.lookups)
+      $scope.changeColumns(i)
     }
 });

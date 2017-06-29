@@ -103,8 +103,12 @@ public class BuildCubeWithEngine {
     }
 
     public static void beforeClass() throws Exception {
-        logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
-        ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
+        beforeClass(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
+    }
+    
+    public static void beforeClass(String confDir) throws Exception {
+        logger.info("Adding to classpath: " + new File(confDir).getAbsolutePath());
+        ClassUtil.addClasspath(new File(confDir).getAbsolutePath());
 
         String fastModeStr = System.getProperty("fastBuildMode");
         if (fastModeStr != null && fastModeStr.equalsIgnoreCase("true")) {
@@ -121,14 +125,14 @@ public class BuildCubeWithEngine {
             engineType = 2;
         }
 
-        System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);
+        System.setProperty(KylinConfig.KYLIN_CONF, confDir);
         System.setProperty("SPARK_HOME", "/usr/local/spark"); // need manually create and put spark to this folder on Jenkins
-        System.setProperty("kylin.hadoop.conf.dir", HBaseMetadataTestCase.SANDBOX_TEST_DATA);
+        System.setProperty("kylin.hadoop.conf.dir", confDir);
         if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
             throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
         }
 
-        HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
+        HBaseMetadataTestCase.staticCreateTestMetadata(confDir);
 
         try {
             //check hdfs permission

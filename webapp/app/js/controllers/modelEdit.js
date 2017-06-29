@@ -81,6 +81,8 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
       ModelDescService.query({model_name: modelName}, function (model) {
         if (model) {
           modelsManager.selectedModel = model;
+          $scope.state.modelSchema = angular.toJson(model, true);
+
           $scope.FactTable={root:$scope.modelsManager.selectedModel.fact_table};
           $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)]=$scope.modelsManager.selectedModel.fact_table;
           $scope.tableAliasMap[$scope.modelsManager.selectedModel.fact_table]=VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table);
@@ -132,9 +134,6 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     };
 
     $scope.saveModel = function () {
-
-        $scope.prepareModel();
-
         try {
             angular.fromJson($scope.state.modelSchema);
         } catch (e) {

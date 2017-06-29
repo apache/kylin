@@ -221,7 +221,7 @@
                     <td>
                       <!--Column Name -->
                       <input type="text" class="form-control" placeholder="Column Name.." ng-if="state.mode=='edit'"
-                             ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column)"  ng-disabled="instance.status=='READY'"
+                             ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column)"  ng-disabled="true"
                              tooltip="rowkey column name.." tooltip-trigger="focus"
                              ng-model="rowkey_column.column" class="form-control">
 

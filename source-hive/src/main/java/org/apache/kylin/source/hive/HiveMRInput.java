@@ -43,7 +43,6 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -61,6 +60,9 @@ import com.google.common.collect.Sets;
 
 public class HiveMRInput implements IMRInput {
 
+    @SuppressWarnings("unused")
+    private static final Logger logger = LoggerFactory.getLogger(HiveMRInput.class);
+    
     public static String getTableNameForHCat(TableDesc table) {
         String tableName = (table.isView()) ? table.getMaterializedName() : table.getName();
         return String.format("%s.%s", table.getDatabase(), tableName).toUpperCase();
@@ -121,9 +123,9 @@ public class HiveMRInput implements IMRInput {
 
     public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
 
-        final IJoinedFlatTableDesc flatDesc;
-        final String flatTableDatabase;
-        final String hdfsWorkingDir;
+        final protected IJoinedFlatTableDesc flatDesc;
+        final protected String flatTableDatabase;
+        final protected String hdfsWorkingDir;
 
         String hiveViewIntermediateTables = "";
 
@@ -138,23 +140,39 @@ public class HiveMRInput implements IMRInput {
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
             final KylinConfig cubeConfig = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName).getConfig();
-            JobEngineConfig conf = new JobEngineConfig(cubeConfig);
-
             final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
-            final String jobWorkingDir = getJobWorkingDir(jobFlow);
 
-            // create flat table first, then count and redistribute
-            jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName));
-            if (cubeConfig.isHiveRedistributeEnabled() == true) {
+            // create flat table first
+            addStepPhase1_DoCreateFlatTable(jobFlow);
+            
+            // then count and redistribute
+            if (cubeConfig.isHiveRedistributeEnabled()) {
                 jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName));
             }
+            
+            // special for hive
+            addStepPhase1_DoMaterializeLookupTable(jobFlow);
+        }
+
+        protected void addStepPhase1_DoCreateFlatTable(DefaultChainedExecutable jobFlow) {
+            final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
+            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
+            final String jobWorkingDir = getJobWorkingDir(jobFlow);
+            
+            jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName));
+        }
+
+        protected void addStepPhase1_DoMaterializeLookupTable(DefaultChainedExecutable jobFlow) {
+            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
+            final String jobWorkingDir = getJobWorkingDir(jobFlow);
+            
             AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir);
             if (task != null) {
                 jobFlow.addTask(task);
             }
         }
 
-        private String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
+        protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
             return JobBuilderSupport.getJobWorkingDir(hdfsWorkingDir, jobFlow.getId());
         }
 
@@ -210,6 +228,7 @@ public class HiveMRInput implements IMRInput {
         }
 
         private AbstractExecutable createFlatHiveTableStep(String hiveInitStatements, String jobWorkingDir, String cubeName) {
+            //from hive to hive
             final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
             final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, jobWorkingDir);
             String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatDesc);

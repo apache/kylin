@@ -204,6 +204,23 @@ KylinApp
       });
       return out;
     }
+  }).filter('notInJoin', function ($filter) {
+    return function (inputArr, table, arr) {
+      var out=[];
+      angular.forEach(inputArr, function (inputItem) {
+        var isInJoin = false
+         angular.forEach(arr,function(item) {
+            var checkColumn = inputItem.name ? table + '.' + inputItem.name : inputItem;
+            if (item.join.foreign_key.indexOf(checkColumn) !== -1 || item.join.primary_key.indexOf(checkColumn) !== -1) {
+              isInJoin = true;
+            }
+          });
+         if (!isInJoin) {
+           out.push(inputItem);
+         }
+      });
+      return out;
+    }
   }).filter('inMeaNotInDim', function ($filter) {
         return function (inputArr, table, arr) {
           var out=[];

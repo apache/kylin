@@ -191,7 +191,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     // allCuboids and parent2Child lazy built
     private Set<Long> allCuboids;
     private Map<Long, List<Long>> parent2Child;
-    private Object cuboidTreeLock = new Object();
+    private byte[] cuboidTreeLock = new byte[0];
 
     public boolean isEnableSharding() {
         //in the future may extend to other storage that is shard-able

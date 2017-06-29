@@ -34,6 +34,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author yangli9
@@ -41,6 +43,7 @@ import com.google.common.base.Preconditions;
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class RowKeyColDesc implements java.io.Serializable {
+    private static final Logger logger = LoggerFactory.getLogger(RowKeyColDesc.class);
 
     @JsonProperty("column")
     private String column;
@@ -88,9 +91,9 @@ public class RowKeyColDesc implements java.io.Serializable {
         }
 
         encodingArgs = DateDimEnc.replaceEncodingArgs(encoding, encodingArgs, encodingName, type);
-        
-        if (encodingName.startsWith(FixedLenDimEnc.ENCODING_NAME) && (type.isIntegerFamily() || type.isNumberFamily()))
-            throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply fixed_length encoding");
+        if (encodingName.startsWith(FixedLenDimEnc.ENCODING_NAME) && (type.isIntegerFamily() || type.isNumberFamily())) {
+            logger.warn(colRef + " type is " + type + " and cannot apply fixed_length encoding");
+        }
     }
 
     public String getEncoding() {

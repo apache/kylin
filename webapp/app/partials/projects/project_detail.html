@@ -24,6 +24,9 @@
         <li class="{{project.visiblePage=='access'? 'active':''}}">
             <a href="" ng-click="project.visiblePage='access';listAccess(project, 'ProjectInstance');">Access</a>
         </li>
+        <li class="{{project.visiblePage=='config'? 'active':''}}">
+            <a href="" ng-click="project.visiblePage='config';">Configuration Overwrites</a>
+        </li>
     </ul>
 
     <div class="cube-detail" ng-if="project.visiblePage=='cubes'">
@@ -48,6 +51,32 @@
                 </table>
             </div>
             <div no-result ng-if="project.realizations.length == 0"></div>
+            <div class="col-xs-1"></div>
+        </div>
+    </div>
+
+    <div class="cube-detail" ng-if="project.visiblePage=='config'">
+        <div class="row">
+            <div class="col-xs-1"></div>
+
+            <div class="col-xs-10">
+                <div class="space-8"></div>
+                <table ng-if="getMapLength(project.override_kylin_properties) > 0" class="table table-striped table-hover" >
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="(key,value) in project.override_kylin_properties">
+                            <td>{{key}}</td>
+                            <td>{{value}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div no-result ng-if="getMapLength(project.override_kylin_properties) == 0"></div>
             <div class="col-xs-1"></div>
         </div>
     </div>

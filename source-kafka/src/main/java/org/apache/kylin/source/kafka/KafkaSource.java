@@ -32,8 +32,9 @@ import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
-import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.IReadableTable;
+import org.apache.kylin.source.ISampleDataDeployer;
+import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
@@ -207,6 +208,11 @@ public class KafkaSource implements ISource {
                 return dependentResources;
             }
         };
+    }
+
+    @Override
+    public ISampleDataDeployer getSampleDataDeployer() {
+        throw new UnsupportedOperationException();
     }
 
 }

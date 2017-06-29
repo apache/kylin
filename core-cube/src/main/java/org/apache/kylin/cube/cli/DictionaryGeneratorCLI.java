@@ -111,16 +111,8 @@ public class DictionaryGeneratorCLI {
         } else {
             MetadataManager metadataManager = MetadataManager.getInstance(config);
             TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
-            if (tableDesc.isView()) {
-                TableDesc materializedTbl = new TableDesc();
-                materializedTbl.setDatabase(config.getHiveDatabaseForIntermediateTable());
-                materializedTbl.setName(tableDesc.getMaterializedName());
-                inpTable = SourceFactory.createReadableTable(materializedTbl);
-            } else {
-                inpTable = SourceFactory.createReadableTable(tableDesc);
-            }
+            inpTable = SourceFactory.createReadableTable(tableDesc);
         }
-
         return inpTable;
     }
 }

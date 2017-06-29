@@ -19,6 +19,7 @@
 package org.apache.kylin.jdbc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -187,6 +188,15 @@ public class DriverTest {
         resultSet.close();
         state.close();
         conn.close();
+    }
+    
+    @Test
+    public void testSSLFromURL() throws SQLException{
+        Driver driver = new DummyDriver();
+        Connection conn = driver.connect("jdbc:kylin:ssl=True;//test_url/test_db", null);
+        assertEquals("test_url", ((KylinConnection)conn).getBaseUrl());
+        assertEquals("test_db", ((KylinConnection)conn).getProject());
+        assertTrue(Boolean.parseBoolean( (String)((KylinConnection)conn).getConnectionProperties().get("ssl")));
     }
 
     private void printResultSet(ResultSet rs) throws SQLException {

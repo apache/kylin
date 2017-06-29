@@ -32,6 +32,8 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -39,6 +41,9 @@ import com.google.common.collect.Lists;
  */
 public class InMemCubeBuilderInputConverter {
 
+    @SuppressWarnings("unused")
+    private static final Logger logger = LoggerFactory.getLogger(InMemCubeBuilderInputConverter.class);
+    
     public static final byte[] HIVE_NULL = Bytes.toBytes("\\N");
 
     private final CubeJoinedFlatTableEnrich flatDesc;

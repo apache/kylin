@@ -56,6 +56,8 @@
                   <li><a ng-click="editModel(model)"  title="Edit Model" style="cursor:pointer;margin-right: 8px;" >Edit</a></li>
                   <li><a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" >Clone </a></li>
                   <li><a ng-click="dropModel(model)" title="Drop Model"  style="cursor:pointer;margin-right: 8px;">Drop</a></li>
+                  <li ng-if="userService.hasRole('ROLE_ADMIN')">
+                    <a href="models/edit/{{model.name}}/descriptionjson">Edit(JSON)</a></li>
                 </ul>
               </div>
             </div>
