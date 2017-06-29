@@ -322,7 +322,7 @@ public class AccessService {
         }
     }
 
-    public Object generateListAceResponses(Acl acl) {
+    public Object generateAllAceResponses(Acl acl) {
         List<AccessEntryResponse> result = new ArrayList<AccessEntryResponse>();
 
         while (acl != null) {

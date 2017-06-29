@@ -80,7 +80,7 @@ public class AccessControllerV2 extends BasicController {
     public EnvelopeResponse listAccessEntitiesV2(@PathVariable String type, @PathVariable String uuid) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.getAcl(ae);
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, accessService.generateListAceResponses(acl), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, accessService.generateAllAceResponses(acl), "");
     }
 
     /**
