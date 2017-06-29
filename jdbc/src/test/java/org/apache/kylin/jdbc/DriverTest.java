@@ -196,7 +196,7 @@ public class DriverTest {
         Connection conn = driver.connect("jdbc:kylin:ssl=True;//test_url/test_db", null);
         assertEquals("test_url", ((KylinConnection)conn).getBaseUrl());
         assertEquals("test_db", ((KylinConnection)conn).getProject());
-        assertTrue(Boolean.parseBoolean( (String)((KylinConnection)conn).getConnectionProperties().get("ssl")));
+        assertTrue(Boolean.parseBoolean((String)((KylinConnection)conn).getConnectionProperties().get("ssl")));
     }
 
     private void printResultSet(ResultSet rs) throws SQLException {
