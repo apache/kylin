@@ -35,6 +35,7 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.MetadataManager.CCInfo;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -185,23 +186,11 @@ public class AdHocUtil {
         return sql;
     }
 
-    // identifier in expr must be DB.TABLE.COLUMN, all TABLE in expr should be guaranteed to be same
     static String replaceIdentifierInExpr(String expr, String tableAlias, boolean quoted) {
-        List<Triple<Integer, Integer, String>> replacements = Lists.newArrayList();
-        Matcher matcher = identifierInExprPattern.matcher(expr);
-        while (matcher.find()) {
-
-            String t = tableAlias == null ? StringUtils.strip(matcher.group(3), ".") : tableAlias;
-            String c = matcher.group(4);
-
-            String replacement = quoted ? "\"" + t.toUpperCase() + "\".\"" + c.toUpperCase() + "\"" : t + "." + c;
-            replacements.add(Triple.of(matcher.start(1), matcher.end(1), replacement));
+        if (tableAlias == null) {
+            return expr;
         }
 
-        Collections.reverse(replacements);
-        for (Triple<Integer, Integer, String> triple : replacements) {
-            expr = expr.substring(0, triple.getLeft()) + triple.getRight() + expr.substring(triple.getMiddle());
-        }
-        return expr;
+        return CalciteParser.insertAliasInExpr(expr, tableAlias);
     }
 }
