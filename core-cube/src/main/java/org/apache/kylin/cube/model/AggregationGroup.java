@@ -320,7 +320,7 @@ public class AggregationGroup implements Serializable {
             normalDims.removeAll(jointDims);
 
             combination = combination * (1L << normalDims.size());
-            if (cubeDesc.getConfig().getCubeAggrGroupIsMandatoryOnlyValid()) {
+            if (cubeDesc.getConfig().getCubeAggrGroupIsMandatoryOnlyValid() && !mandatoryDims.isEmpty()) {
                 combination += 1;
             }
             combination -= 1; // not include cuboid 0
