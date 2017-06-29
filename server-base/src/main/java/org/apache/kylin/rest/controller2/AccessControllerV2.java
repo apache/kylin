@@ -21,12 +21,15 @@ package org.apache.kylin.rest.controller2;
 import java.io.IOException;
 
 import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
+import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermissionFactory;
 import org.apache.kylin.rest.service.AccessService;
+import org.apache.kylin.rest.service.CubeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.model.Acl;
@@ -50,6 +53,10 @@ public class AccessControllerV2 extends BasicController {
     @Autowired
     @Qualifier("accessService")
     private AccessService accessService;
+
+    @Autowired
+    @Qualifier("cubeMgmtService")
+    private CubeService cubeService;
 
     /**
      * Get access entry list of a domain object
@@ -99,6 +106,15 @@ public class AccessControllerV2 extends BasicController {
         Sid sid = accessService.getSid(accessRequest.getSid(), accessRequest.isPrincipal());
         Permission permission = AclPermissionFactory.getPermission(accessRequest.getPermission());
         Acl acl = accessService.grant(ae, permission, sid);
+
+        if (AclEntityType.CUBE_INSTANCE.equals(type)) {
+            CubeInstance instance = cubeService.getCubeManager().getCubeByUuid(uuid);
+            if (instance != null) {
+                AclEntity model = accessService.getAclEntity(AclEntityType.DATA_MODEL_DESC, instance.getModel().getUuid());
+                // FIXME: should not always grant
+                accessService.grant(model, permission, sid);
+            }
+        }
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, accessService.generateAceResponses(acl), "");
     }
