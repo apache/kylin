@@ -63,11 +63,16 @@ public class JobInfoConverter {
     }
 
     public static JobInstance.JobStep parseToJobStep(AbstractExecutable task, int i, Output stepOutput) {
-        Preconditions.checkNotNull(stepOutput);
         JobInstance.JobStep result = new JobInstance.JobStep();
         result.setId(task.getId());
         result.setName(task.getName());
         result.setSequenceID(i);
+
+        if (stepOutput == null) {
+            result.setStatus(JobStepStatusEnum.ERROR);
+            return result;
+        }
+
         result.setStatus(parseToJobStepStatus(stepOutput.getState()));
         for (Map.Entry<String, String> entry : stepOutput.getExtra().entrySet()) {
             if (entry.getKey() != null && entry.getValue() != null) {
