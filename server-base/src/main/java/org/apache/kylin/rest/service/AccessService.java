@@ -20,9 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.rest.constant.Constant;
@@ -300,16 +298,9 @@ public class AccessService {
 
     public List<AccessEntryResponse> generateAceResponses(Acl acl) {
         List<AccessEntryResponse> result = new ArrayList<AccessEntryResponse>();
-        Set<Sid> sidSet = Sets.newHashSet();
 
-        while (acl != null) {
-            for (AccessControlEntry ace : acl.getEntries()) {
-                if (!sidSet.contains(ace.getSid())) {
-                    result.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
-                    sidSet.add(ace.getSid());
-                }
-            }
-            acl = acl.getParentAcl();
+        for (AccessControlEntry ace : acl.getEntries()) {
+            result.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
         }
 
         return result;
@@ -329,5 +320,18 @@ public class AccessService {
                 && BasePermission.ADMINISTRATION.equals(acl.getEntries().get(indexOfAce).getPermission())) {
             throw new ForbiddenException(msg.getREVOKE_ADMIN_PERMISSION());
         }
+    }
+
+    public Object generateListAceResponses(Acl acl) {
+        List<AccessEntryResponse> result = new ArrayList<AccessEntryResponse>();
+
+        while (acl != null) {
+            for (AccessControlEntry ace : acl.getEntries()) {
+                result.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
+            }
+            acl = acl.getParentAcl();
+        }
+
+        return result;
     }
 }

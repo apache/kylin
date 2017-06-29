@@ -58,6 +58,7 @@ import org.apache.kylin.rest.request.MetricsRequest;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.util.AclUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,6 +96,9 @@ public class CubeService extends BasicService {
     @Autowired
     @Qualifier("modelMgmtService")
     private ModelService modelService;
+
+    @Autowired
+    private AclUtil aclUtil;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName, boolean exactMatch) {
@@ -153,9 +157,11 @@ public class CubeService extends BasicService {
         return getCubeManager().updateCube(cubeBuilder);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public CubeInstance createCubeAndDesc(String cubeName, String projectName, CubeDesc desc) throws IOException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
+    public CubeInstance createCubeAndDesc(ProjectInstance project, CubeDesc desc) throws IOException {
         Message msg = MsgPicker.getMsg();
+        String cubeName = desc.getName();
 
         if (getCubeManager().getCube(cubeName) != null) {
             throw new BadRequestException(String.format(msg.getCUBE_ALREADY_EXIST(), cubeName));
@@ -178,10 +184,9 @@ public class CubeService extends BasicService {
         int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc, false);
         logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
 
-        createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
+        createdCube = getCubeManager().createCube(cubeName, project.getName(), createdDesc, owner);
         accessService.init(createdCube, AclPermission.ADMINISTRATION);
 
-        ProjectInstance project = getProjectManager().getProject(projectName);
         accessService.inherit(createdCube, project);
 
         return createdCube;
@@ -611,32 +616,69 @@ public class CubeService extends BasicService {
         }
     }
 
-    public CubeDesc updateCubeToResourceStore(CubeDesc desc, String projectName) throws IOException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
+    public CubeDesc saveCube(CubeDesc desc, ProjectInstance project) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         desc.setDraft(false);
         if (desc.getUuid() == null)
             desc.updateRandomUuid();
 
-        String cubeName = desc.getName();
         try {
-            if (desc.getLastModified() == 0) {
-                // new
-                createCubeAndDesc(cubeName, projectName, desc);
-            } else {
-                // update
-                CubeInstance cube = getCubeManager().getCube(desc.getName());
+            createCubeAndDesc(project, desc);
+        } catch (AccessDeniedException accessDeniedException) {
+            throw new ForbiddenException(msg.getUPDATE_CUBE_NO_RIGHT());
+        }
 
-                if (cube == null) {
-                    throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), desc.getName()));
-                }
+        if (!desc.getError().isEmpty()) {
+            throw new BadRequestException(desc.getErrorMsg());
+        }
 
-                if (cube.getSegments().size() != 0 && !cube.getDescriptor().consistentWith(desc)) {
-                    throw new BadRequestException(String.format(msg.getINCONSISTENT_CUBE_DESC(), desc.getName()));
-                }
+        return desc;
+    }
 
-                desc = updateCubeAndDesc(cube, desc, projectName, true);
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public void saveDraft(ProjectInstance project, CubeInstance cube, String uuid, RootPersistentEntity... entities)
+            throws IOException {
+        Draft draft = new Draft();
+        draft.setProject(project.getName());
+        draft.setUuid(uuid);
+        draft.setEntities(entities);
+        getDraftManager().save(draft);
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
+    public void saveDraft(ProjectInstance project, String uuid, RootPersistentEntity... entities) throws IOException {
+        Draft draft = new Draft();
+        draft.setProject(project.getName());
+        draft.setUuid(uuid);
+        draft.setEntities(entities);
+        getDraftManager().save(draft);
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#draft, 'ADMINISTRATION') or hasPermission(#draft, 'MANAGEMENT')")
+    public void deleteDraft(Draft draft) throws IOException {
+        getDraftManager().delete(draft.getUuid());
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public CubeDesc updateCube(CubeInstance cube, CubeDesc desc, ProjectInstance project) throws IOException {
+        Message msg = MsgPicker.getMsg();
+        String projectName = project.getName();
+
+        desc.setDraft(false);
+
+        try {
+            if (cube.getSegments().size() != 0 && !cube.getDescriptor().consistentWith(desc)) {
+                throw new BadRequestException(String.format(msg.getINCONSISTENT_CUBE_DESC(), desc.getName()));
             }
+
+            desc = updateCubeAndDesc(cube, desc, projectName, true);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException(msg.getUPDATE_CUBE_NO_RIGHT());
         }
@@ -671,6 +713,33 @@ public class CubeService extends BasicService {
             }
         }
 
-        return result;
+        List<Draft> filtered = new ArrayList<>();
+
+        // if cube's there, follow cube permission. otherwise follow project permission
+        for (Draft d : result) {
+            CubeDesc desc = (CubeDesc) d.getEntity();
+            CubeInstance cube = getCubeManager().getCube(desc.getName());
+
+            if (cube == null) {
+                try {
+                    project = project == null ? d.getProject() : project;
+                    if (aclUtil.hasProjectReadPermission(getProjectManager().getProject(project))) {
+                        filtered.add(d);
+                    }
+                } catch (Exception e) {
+                    // do nothing
+                }
+            } else {
+                try {
+                    if (aclUtil.hasCubeReadPermission(cube)) {
+                        filtered.add(d);
+                    }
+                } catch (Exception e) {
+                    // do nothing
+                }
+            }
+        }
+
+        return filtered;
     }
 }

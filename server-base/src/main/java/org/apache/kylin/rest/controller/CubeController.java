@@ -352,7 +352,7 @@ public class CubeController extends BasicController {
     @ResponseBody
     public CubeInstance cloneCube(@PathVariable String cubeName, @RequestBody CubeRequest cubeRequest) {
         String newCubeName = cubeRequest.getCubeName();
-        String project = cubeRequest.getProject();
+        String projectName = cubeRequest.getProject();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (cube == null) {
@@ -366,6 +366,11 @@ public class CubeController extends BasicController {
             throw new BadRequestException("Invalid Cube name, only letters, numbers and underline supported.");
         }
 
+        ProjectInstance project = cubeService.getProjectManager().getProject(projectName);
+        if (project == null) {
+            throw new BadRequestException("Project " + projectName + " doesn't exist");
+        }
+
         CubeDesc cubeDesc = cube.getDescriptor();
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
 
@@ -373,7 +378,7 @@ public class CubeController extends BasicController {
 
         CubeInstance newCube;
         try {
-            newCube = cubeService.createCubeAndDesc(newCubeName, project, newCubeDesc);
+            newCube = cubeService.createCubeAndDesc(project, newCubeDesc);
 
             //reload to avoid shallow clone
             cubeService.getCubeDescManager().reloadCubeDescLocal(newCubeName);
@@ -449,7 +454,11 @@ public class CubeController extends BasicController {
         try {
             desc.setUuid(UUID.randomUUID().toString());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
-            cubeService.createCubeAndDesc(name, projectName, desc);
+            ProjectInstance project = cubeService.getProjectManager().getProject(projectName);
+            if (project == null) {
+                throw new BadRequestException("Project " + projectName + " doesn't exist");
+            }
+            cubeService.createCubeAndDesc(project, desc);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);

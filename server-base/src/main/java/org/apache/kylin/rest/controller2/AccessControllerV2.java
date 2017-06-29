@@ -58,7 +58,6 @@ public class AccessControllerV2 extends BasicController {
      * @return
      * @throws IOException
      */
-
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
@@ -67,6 +66,21 @@ public class AccessControllerV2 extends BasicController {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.getAcl(ae);
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, accessService.generateAceResponses(acl), "");
+    }
+
+    /**
+     * List access entry list of a domain object including its parent
+     * @param type
+     * @param uuid
+     * @return
+     */
+    @RequestMapping(value = "all/{type}/{uuid}", method = { RequestMethod.GET }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
+    @ResponseBody
+    public EnvelopeResponse listAccessEntitiesV2(@PathVariable String type, @PathVariable String uuid) {
+        AclEntity ae = accessService.getAclEntity(type, uuid);
+        Acl acl = accessService.getAcl(ae);
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, accessService.generateListAceResponses(acl), "");
     }
 
     /**
