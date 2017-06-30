@@ -31,7 +31,6 @@ import java.util.Map.Entry;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaFactory;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.util.ConversionUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -49,24 +48,6 @@ import com.google.common.collect.Maps;
  */
 public class OLAPSchemaFactory implements SchemaFactory {
     public static final Logger logger = LoggerFactory.getLogger(OLAPSchemaFactory.class);
-
-    static {
-        /*
-         * Tricks Optiq to work with Unicode.
-         * 
-         * Sets default char set for string literals in SQL and row types of
-         * RelNode. This is more a label used to compare row type equality. For
-         * both SQL string and row record, they are passed to Optiq in String
-         * object and does not require additional codec.
-         * 
-         * Ref SaffronProperties.defaultCharset
-         * Ref SqlUtil.translateCharacterSetName() 
-         * Ref NlsString constructor()
-         */
-        System.setProperty("saffron.default.charset", ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
-        System.setProperty("saffron.default.nationalcharset", ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
-        System.setProperty("saffron.default.collation.name", ConversionUtil.NATIVE_UTF16_CHARSET_NAME + "$en_US");
-    }
 
     private final static String SCHEMA_PROJECT = "project";
 

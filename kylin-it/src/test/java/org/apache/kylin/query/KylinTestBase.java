@@ -21,9 +21,9 @@ package org.apache.kylin.query;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -166,7 +166,7 @@ public class KylinTestBase {
     }
 
     public static String getTextFromFile(File file) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(file));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
         String line = null;
         StringBuilder stringBuilder = new StringBuilder();
         String ls = System.getProperty("line.separator");

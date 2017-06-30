@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query;
 
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -43,7 +42,7 @@ public class ITCombinationTest extends ITKylinQueryTest {
     private static final Logger logger = LoggerFactory.getLogger(ITCombinationTest.class);
 
     @BeforeClass
-    public static void setUp() throws SQLException {
+    public static void setUp() {
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.HYBRID, 0);
         priorities.put(RealizationType.CUBE, 0);

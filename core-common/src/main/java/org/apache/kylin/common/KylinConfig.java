@@ -28,6 +28,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.net.URL;
+import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.Map;
@@ -58,6 +59,26 @@ public class KylinConfig extends KylinConfigBase {
 
     // thread-local instances, will override SYS_ENV_INSTANCE
     private static transient ThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new ThreadLocal<>();
+    
+    static {
+        /*
+         * Make Calcite to work with Unicode.
+         * 
+         * Sets default char set for string literals in SQL and row types of
+         * RelNode. This is more a label used to compare row type equality. For
+         * both SQL string and row record, they are passed to Calcite in String
+         * object and does not require additional codec.
+         * 
+         * Ref SaffronProperties.defaultCharset
+         * Ref SqlUtil.translateCharacterSetName() 
+         * Ref NlsString constructor()
+         */
+        // copied from org.apache.calcite.util.ConversionUtil.NATIVE_UTF16_CHARSET_NAME
+        String NATIVE_UTF16_CHARSET_NAME = (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN) ? "UTF-16BE" : "UTF-16LE";
+        System.setProperty("saffron.default.charset", NATIVE_UTF16_CHARSET_NAME);
+        System.setProperty("saffron.default.nationalcharset", NATIVE_UTF16_CHARSET_NAME);
+        System.setProperty("saffron.default.collation.name", NATIVE_UTF16_CHARSET_NAME + "$en_US");
+    }
 
     public static KylinConfig getInstanceFromEnv() {
         synchronized (KylinConfig.class) {
