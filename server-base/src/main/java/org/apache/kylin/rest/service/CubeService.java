@@ -659,8 +659,6 @@ public class CubeService extends BasicService {
         getDraftManager().save(draft);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#draft, 'ADMINISTRATION') or hasPermission(#draft, 'MANAGEMENT')")
     public void deleteDraft(Draft draft) throws IOException {
         getDraftManager().delete(draft.getUuid());
     }

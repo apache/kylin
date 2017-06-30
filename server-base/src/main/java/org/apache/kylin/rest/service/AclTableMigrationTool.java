@@ -224,8 +224,8 @@ public class AclTableMigrationTool {
         Map<String, AceInfo> allAceInfoMap = new HashMap<>();
         NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(Bytes.toBytes(AclConstant.ACL_ACES_FAMILY));
         for (Map.Entry<byte[], byte[]> entry : familyMap.entrySet()) {
-            String sid = String.valueOf(entry.getKey());
-            AceInfo aceInfo = aceSerializer.deserialize(familyMap.get(entry.getValue()));
+            String sid = new String(entry.getKey());
+            AceInfo aceInfo = aceSerializer.deserialize(entry.getValue());
             if (null != aceInfo) {
                 allAceInfoMap.put(sid, aceInfo);
             }
