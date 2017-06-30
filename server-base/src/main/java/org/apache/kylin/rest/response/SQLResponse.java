@@ -61,12 +61,13 @@ public class SQLResponse implements Serializable {
 
     protected boolean storageCacheUsed = false;
 
-    protected boolean queryAdHoc = false;
+    protected boolean queryPushDown = false;
 
     public SQLResponse() {
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, int affectedRowCount, boolean isException, String exceptionMessage) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, int affectedRowCount,
+            boolean isException, String exceptionMessage) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.affectedRowCount = affectedRowCount;
@@ -74,7 +75,8 @@ public class SQLResponse implements Serializable {
         this.exceptionMessage = exceptionMessage;
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube, int affectedRowCount, boolean isException, String exceptionMessage) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
+            int affectedRowCount, boolean isException, String exceptionMessage) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;
@@ -83,7 +85,8 @@ public class SQLResponse implements Serializable {
         this.exceptionMessage = exceptionMessage;
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube, int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial, boolean isAdhoc) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
+            int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial, boolean isPushDown) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;
@@ -91,7 +94,7 @@ public class SQLResponse implements Serializable {
         this.isException = isException;
         this.exceptionMessage = exceptionMessage;
         this.isPartial = isPartial;
-        this.queryAdHoc = isAdhoc;
+        this.queryPushDown = isPushDown;
     }
 
     public List<SelectedColumnMeta> getColumnMetas() {
@@ -147,8 +150,8 @@ public class SQLResponse implements Serializable {
         return isPartial;
     }
 
-    public boolean isAdHoc() {
-        return queryAdHoc;
+    public boolean isPushDown() {
+        return queryPushDown;
     }
 
     public long getTotalScanCount() {

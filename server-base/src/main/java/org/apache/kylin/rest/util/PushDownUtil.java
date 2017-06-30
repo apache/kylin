@@ -35,34 +35,34 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
-import org.apache.kylin.source.adhocquery.IAdHocConverter;
-import org.apache.kylin.source.adhocquery.IAdHocRunner;
+import org.apache.kylin.source.adhocquery.IPushDownConverter;
+import org.apache.kylin.source.adhocquery.IPushDownRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class AdHocUtil {
-    private static final Logger logger = LoggerFactory.getLogger(AdHocUtil.class);
+public class PushDownUtil {
+    private static final Logger logger = LoggerFactory.getLogger(PushDownUtil.class);
 
-    public static boolean doAdHocQuery(String project, String sql, List<List<String>> results,
+    public static boolean doPushDownQuery(String project, String sql, List<List<String>> results,
             List<SelectedColumnMeta> columnMetas, SQLException sqlException) throws Exception {
 
         boolean isExpectedCause = (ExceptionUtils.getRootCause(sqlException).getClass()
                 .equals(NoRealizationFoundException.class));
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
-        if (isExpectedCause && kylinConfig.isAdhocEnabled()) {
+        if (isExpectedCause && kylinConfig.isPushDownEnabled()) {
 
             logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
-            IAdHocRunner runner = (IAdHocRunner) ClassUtil.newInstance(kylinConfig.getAdHocRunnerClassName());
-            IAdHocConverter converter = (IAdHocConverter) ClassUtil
-                    .newInstance(kylinConfig.getAdHocConverterClassName());
+            IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
+            IPushDownConverter converter = (IPushDownConverter) ClassUtil
+                    .newInstance(kylinConfig.getPushDownConverterClassName());
 
             runner.init(kylinConfig);
 
-            logger.debug("Ad-hoc query runner {}", runner);
+            logger.debug("Query pushdown runner {}", runner);
 
             String expandCC = restoreComputedColumnToExpr(sql, project);
             if (!StringUtils.equals(expandCC, sql)) {
@@ -70,7 +70,7 @@ public class AdHocUtil {
             }
             String adhocSql = converter.convert(expandCC);
             if (!adhocSql.equals(expandCC)) {
-                logger.info("the query is converted to {} according to kylin.query.ad-hoc.converter-class-name",
+                logger.info("the query is converted to {} according to kylin.query.pushdown.converter-class-name",
                         adhocSql);
             }
 
@@ -104,7 +104,6 @@ public class AdHocUtil {
                 afterSql = restoreComputedColumnToExpr(afterSql, computedColumnDesc);
             }
         }
-
         return afterSql;
     }
 

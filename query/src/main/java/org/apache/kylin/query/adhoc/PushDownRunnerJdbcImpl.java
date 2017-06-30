@@ -30,9 +30,9 @@ import java.util.List;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.source.adhocquery.IAdHocRunner;
+import org.apache.kylin.source.adhocquery.IPushDownRunner;
 
-public class AdHocRunnerJdbcImpl implements IAdHocRunner {
+public class PushDownRunnerJdbcImpl implements IPushDownRunner {
 
     private static org.apache.kylin.query.adhoc.JdbcConnectionPool pool = null;
 

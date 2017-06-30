@@ -1022,45 +1022,45 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.query.timeout-seconds", "0"));
     }
 
-    public boolean isAdhocEnabled() {
-        return StringUtils.isNotEmpty(getAdHocRunnerClassName());
+    public boolean isPushDownEnabled() {
+        return StringUtils.isNotEmpty(getPushDownRunnerClassName());
     }
 
-    public String getAdHocRunnerClassName() {
-        return getOptional("kylin.query.ad-hoc.runner-class-name", "");
+    public String getPushDownRunnerClassName() {
+        return getOptional("kylin.query.pushdown.runner-class-name", "");
     }
 
-    public String getAdHocConverterClassName() {
-        return getOptional("kylin.query.ad-hoc.converter-class-name",
-                "org.apache.kylin.source.adhocquery.HiveAdhocConverter");
+    public String getPushDownConverterClassName() {
+        return getOptional("kylin.query.pushdown.converter-class-name",
+                "org.apache.kylin.source.adhocquery.HivePushDownConverter");
     }
 
     public String getJdbcUrl() {
-        return getOptional("kylin.query.ad-hoc.jdbc.url", "");
+        return getOptional("kylin.query.pushdown.jdbc.url", "");
     }
 
     public String getJdbcDriverClass() {
-        return getOptional("kylin.query.ad-hoc.jdbc.driver", "");
+        return getOptional("kylin.query.pushdown.jdbc.driver", "");
     }
 
     public String getJdbcUsername() {
-        return getOptional("kylin.query.ad-hoc.jdbc.username", "");
+        return getOptional("kylin.query.pushdown.jdbc.username", "");
     }
 
     public String getJdbcPassword() {
-        return getOptional("kylin.query.ad-hoc.jdbc.password", "");
+        return getOptional("kylin.query.pushdown.jdbc.password", "");
     }
 
     public int getPoolMaxTotal() {
-        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.jdbc.pool-max-total", "8"));
+        return Integer.parseInt(this.getOptional("kylin.query.pushdown.jdbc.pool-max-total", "8"));
     }
 
     public int getPoolMaxIdle() {
-        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.jdbc.pool-max-idle", "8"));
+        return Integer.parseInt(this.getOptional("kylin.query.pushdown.jdbc.pool-max-idle", "8"));
     }
 
     public int getPoolMinIdle() {
-        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.jdbc.pool-min-idle", "0"));
+        return Integer.parseInt(this.getOptional("kylin.query.pushdown.jdbc.pool-min-idle", "0"));
     }
 
     // ============================================================================

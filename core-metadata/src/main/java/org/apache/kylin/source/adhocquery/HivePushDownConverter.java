@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableSet;
 
 //TODO: Some workaround ways to make sql readable by hive parser, should replaced it with a more well-designed way
-public class HiveAdhocConverter implements IAdHocConverter {
+public class HivePushDownConverter implements IPushDownConverter {
 
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(HiveAdhocConverter.class);
+    private static final Logger logger = LoggerFactory.getLogger(HivePushDownConverter.class);
 
     private static final Pattern EXTRACT_PATTERN = Pattern.compile("extract\\s*(\\()\\s*(.*?)\\s*from(\\s+)",
             Pattern.CASE_INSENSITIVE);

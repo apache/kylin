@@ -437,7 +437,7 @@ public class ProjectManager {
     }
 
     public Collection<TableDesc> listExposedTables(String project) {
-        return config.isAdhocEnabled() ? //
+        return config.isPushDownEnabled() ? //
                 this.listDefinedTables(project) : //
                 l2Cache.listExposedTables(norm(project));
     }
@@ -445,7 +445,7 @@ public class ProjectManager {
     public List<ColumnDesc> listExposedColumns(String project, TableDesc tableDesc) {
         Set<ColumnDesc> exposedColumns = l2Cache.listExposedColumns(norm(project), tableDesc.getIdentity());
 
-        if (config.isAdhocEnabled()) {
+        if (config.isPushDownEnabled()) {
             // take care of computed columns
             Set<ColumnDesc> dedup = Sets.newHashSet(tableDesc.getColumns());
             dedup.addAll(exposedColumns);
@@ -456,13 +456,13 @@ public class ProjectManager {
     }
 
     public boolean isExposedTable(String project, String table) {
-        return config.isAdhocEnabled() ? //
+        return config.isPushDownEnabled() ? //
                 l2Cache.isDefinedTable(norm(project), table) : //
                 l2Cache.isExposedTable(norm(project), table);
     }
 
     public boolean isExposedColumn(String project, String table, String col) {
-        return config.isAdhocEnabled() ? //
+        return config.isPushDownEnabled() ? //
                 l2Cache.isDefinedColumn(norm(project), table, col) || l2Cache.isExposedColumn(norm(project), table, col)
                 : //
                 l2Cache.isExposedColumn(norm(project), table, col);

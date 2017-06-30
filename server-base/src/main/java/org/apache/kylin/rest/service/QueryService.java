@@ -94,7 +94,7 @@ import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclUtil;
-import org.apache.kylin.rest.util.AdHocUtil;
+import org.apache.kylin.rest.util.PushDownUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
@@ -220,7 +220,8 @@ public class QueryService extends BasicService {
             return null;
         }
         List<Query> queries = new ArrayList<Query>();
-        QueryRecord record = queryStore.getResource(getQueryKeyById(creator), QueryRecord.class, QueryRecordSerializer.getInstance());
+        QueryRecord record = queryStore.getResource(getQueryKeyById(creator), QueryRecord.class,
+                QueryRecordSerializer.getInstance());
         if (record != null) {
             for (Query query : record.getQueries()) {
                 queries.add(query);
@@ -235,7 +236,7 @@ public class QueryService extends BasicService {
         final Set<Long> cuboidIds = new HashSet<Long>();
         float duration = response.getDuration() / (float) 1000;
         boolean storageCacheUsed = response.isStorageCacheUsed();
-        boolean isAdHoc = response.isAdHoc();
+        boolean isPushDown = response.isPushDown();
 
         if (!response.isHitExceptionCache() && null != OLAPContext.getThreadLocalContexts()) {
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
@@ -276,7 +277,7 @@ public class QueryService extends BasicService {
         stringBuilder.append("Is Partial Result: ").append(response.isPartial()).append(newLine);
         stringBuilder.append("Hit Exception Cache: ").append(response.isHitExceptionCache()).append(newLine);
         stringBuilder.append("Storage cache used: ").append(storageCacheUsed).append(newLine);
-        stringBuilder.append("Is Ad-hoc Query: ").append(isAdHoc).append(newLine);
+        stringBuilder.append("Is Query Push-Down: ").append(isPushDown).append(newLine);
         stringBuilder.append("Message: ").append(response.getExceptionMessage()).append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
 
@@ -292,14 +293,16 @@ public class QueryService extends BasicService {
                 return;
             }
         } catch (AccessDeniedException e) {
-            logger.warn("Current user {} has no READ permission on current project {}, please ask Administrator for permission granting.");
+            logger.warn(
+                    "Current user {} has no READ permission on current project {}, please ask Administrator for permission granting.");
             //just continue
         }
 
         String realizationsStr = sqlResponse.getCube();//CUBE[name=abc],HYBRID[name=xyz]
 
         if (StringUtils.isEmpty(realizationsStr)) {
-            throw new AccessDeniedException("Ad-hoc query requires having READ permission on project, please ask Administrator to grant you permissions");
+            throw new AccessDeniedException(
+                    "Query pushdown requires having READ permission on project, please ask Administrator to grant you permissions");
         }
 
         String[] splits = StringUtils.split(realizationsStr, ",");
@@ -344,7 +347,8 @@ public class QueryService extends BasicService {
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String serverMode = kylinConfig.getServerMode();
-        if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
+        if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase())
+                || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
             throw new BadRequestException(String.format(msg.getQUERY_NOT_ALLOWED(), serverMode));
         }
         if (StringUtils.isBlank(sqlRequest.getProject())) {
@@ -370,7 +374,8 @@ public class QueryService extends BasicService {
             long startTime = System.currentTimeMillis();
 
             SQLResponse sqlResponse = null;
-            boolean queryCacheEnabled = checkCondition(kylinConfig.isQueryCacheEnabled(), "query cache disabled in KylinConfig") && //
+            boolean queryCacheEnabled = checkCondition(kylinConfig.isQueryCacheEnabled(),
+                    "query cache disabled in KylinConfig") && //
                     checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
 
             if (queryCacheEnabled) {
@@ -386,13 +391,22 @@ public class QueryService extends BasicService {
                     long scanBytesThreshold = kylinConfig.getQueryScanBytesCacheThreshold();
                     sqlResponse.setDuration(System.currentTimeMillis() - startTime);
                     logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
-                            String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()), String.valueOf(sqlResponse.getTotalScanCount()));
+                            String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()),
+                            String.valueOf(sqlResponse.getTotalScanCount()));
                     if (checkCondition(queryCacheEnabled, "query cache is disabled") //
                             && checkCondition(!sqlResponse.getIsException(), "query has exception") //
-                            && checkCondition(sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scanCountThreshold || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
-                                    "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})", sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(), scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
-                            && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(), "query response is too large: {} ({})", sqlResponse.getResults().size(), kylinConfig.getLargeQueryThreshold())) {
-                        cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest.getCacheKey(), sqlResponse));
+                            && checkCondition(
+                                    sqlResponse.getDuration() > durationThreshold
+                                            || sqlResponse.getTotalScanCount() > scanCountThreshold
+                                            || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
+                                    "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})",
+                                    sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(),
+                                    scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
+                            && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(),
+                                    "query response is too large: {} ({})", sqlResponse.getResults().size(),
+                                    kylinConfig.getLargeQueryThreshold())) {
+                        cacheManager.getCache(SUCCESS_QUERY_CACHE)
+                                .put(new Element(sqlRequest.getCacheKey(), sqlResponse));
                     }
 
                 } else {
@@ -411,7 +425,8 @@ public class QueryService extends BasicService {
                 sqlResponse.setTotalScanCount(queryContext.getScannedRows());
                 sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
 
-                if (queryCacheEnabled && e.getCause() != null && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
+                if (queryCacheEnabled && e.getCause() != null
+                        && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
                     Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
                     exceptionCache.put(new Element(sqlRequest.getCacheKey(), sqlResponse));
                 }
@@ -459,7 +474,8 @@ public class QueryService extends BasicService {
 
     private SQLResponse queryWithSqlMassage(SQLRequest sqlRequest) throws Exception {
         String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
-        final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+        final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext()
+                .getAuthentication().getAuthorities();
         for (GrantedAuthority grantedAuthority : grantedAuthorities) {
             userInfo += ",";
             userInfo += grantedAuthority.getAuthority();
@@ -514,9 +530,12 @@ public class QueryService extends BasicService {
                 String schemaName = JDBCTableMeta.getString(2);
 
                 // Not every JDBC data provider offers full 10 columns, e.g., PostgreSQL has only 5
-                TableMeta tblMeta = new TableMeta(catalogName == null ? Constant.FakeCatalogName : catalogName, schemaName == null ? Constant.FakeSchemaName : schemaName, JDBCTableMeta.getString(3), JDBCTableMeta.getString(4), JDBCTableMeta.getString(5), null, null, null, null, null);
+                TableMeta tblMeta = new TableMeta(catalogName == null ? Constant.FakeCatalogName : catalogName,
+                        schemaName == null ? Constant.FakeSchemaName : schemaName, JDBCTableMeta.getString(3),
+                        JDBCTableMeta.getString(4), JDBCTableMeta.getString(5), null, null, null, null, null);
 
-                if (!cubedOnly || getProjectManager().isExposedTable(project, schemaName + "." + tblMeta.getTABLE_NAME())) {
+                if (!cubedOnly
+                        || getProjectManager().isExposedTable(project, schemaName + "." + tblMeta.getTABLE_NAME())) {
                     tableMetas.add(tblMeta);
                     tableMap.put(tblMeta.getTABLE_SCHEM() + "#" + tblMeta.getTABLE_NAME(), tblMeta);
                 }
@@ -529,9 +548,18 @@ public class QueryService extends BasicService {
                 String schemaName = columnMeta.getString(2);
 
                 // kylin(optiq) is not strictly following JDBC specification
-                ColumnMeta colmnMeta = new ColumnMeta(catalogName == null ? Constant.FakeCatalogName : catalogName, schemaName == null ? Constant.FakeSchemaName : schemaName, columnMeta.getString(3), columnMeta.getString(4), columnMeta.getInt(5), columnMeta.getString(6), columnMeta.getInt(7), getInt(columnMeta.getString(8)), columnMeta.getInt(9), columnMeta.getInt(10), columnMeta.getInt(11), columnMeta.getString(12), columnMeta.getString(13), getInt(columnMeta.getString(14)), getInt(columnMeta.getString(15)), columnMeta.getInt(16), columnMeta.getInt(17), columnMeta.getString(18), columnMeta.getString(19), columnMeta.getString(20), columnMeta.getString(21), getShort(columnMeta.getString(22)), columnMeta.getString(23));
+                ColumnMeta colmnMeta = new ColumnMeta(catalogName == null ? Constant.FakeCatalogName : catalogName,
+                        schemaName == null ? Constant.FakeSchemaName : schemaName, columnMeta.getString(3),
+                        columnMeta.getString(4), columnMeta.getInt(5), columnMeta.getString(6), columnMeta.getInt(7),
+                        getInt(columnMeta.getString(8)), columnMeta.getInt(9), columnMeta.getInt(10),
+                        columnMeta.getInt(11), columnMeta.getString(12), columnMeta.getString(13),
+                        getInt(columnMeta.getString(14)), getInt(columnMeta.getString(15)), columnMeta.getInt(16),
+                        columnMeta.getInt(17), columnMeta.getString(18), columnMeta.getString(19),
+                        columnMeta.getString(20), columnMeta.getString(21), getShort(columnMeta.getString(22)),
+                        columnMeta.getString(23));
 
-                if (!cubedOnly || getProjectManager().isExposedColumn(project, schemaName + "." + colmnMeta.getTABLE_NAME(), colmnMeta.getCOLUMN_NAME())) {
+                if (!cubedOnly || getProjectManager().isExposedColumn(project,
+                        schemaName + "." + colmnMeta.getTABLE_NAME(), colmnMeta.getCOLUMN_NAME())) {
                     tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(colmnMeta);
                 }
             }
@@ -551,7 +579,8 @@ public class QueryService extends BasicService {
     }
 
     @SuppressWarnings("checkstyle:methodlength")
-    protected List<TableMetaWithType> getMetadataV2(CubeManager cubeMgr, String project, boolean cubedOnly) throws SQLException, IOException {
+    protected List<TableMetaWithType> getMetadataV2(CubeManager cubeMgr, String project, boolean cubedOnly)
+            throws SQLException, IOException {
         //Message msg = MsgPicker.getMsg();
 
         Connection conn = null;
@@ -578,9 +607,13 @@ public class QueryService extends BasicService {
                 String schemaName = JDBCTableMeta.getString(2);
 
                 // Not every JDBC data provider offers full 10 columns, e.g., PostgreSQL has only 5
-                TableMetaWithType tblMeta = new TableMetaWithType(catalogName == null ? Constant.FakeCatalogName : catalogName, schemaName == null ? Constant.FakeSchemaName : schemaName, JDBCTableMeta.getString(3), JDBCTableMeta.getString(4), JDBCTableMeta.getString(5), null, null, null, null, null);
+                TableMetaWithType tblMeta = new TableMetaWithType(
+                        catalogName == null ? Constant.FakeCatalogName : catalogName,
+                        schemaName == null ? Constant.FakeSchemaName : schemaName, JDBCTableMeta.getString(3),
+                        JDBCTableMeta.getString(4), JDBCTableMeta.getString(5), null, null, null, null, null);
 
-                if (!cubedOnly || getProjectManager().isExposedTable(project, schemaName + "." + tblMeta.getTABLE_NAME())) {
+                if (!cubedOnly
+                        || getProjectManager().isExposedTable(project, schemaName + "." + tblMeta.getTABLE_NAME())) {
                     tableMetas.add(tblMeta);
                     tableMap.put(tblMeta.getTABLE_SCHEM() + "#" + tblMeta.getTABLE_NAME(), tblMeta);
                 }
@@ -593,11 +626,22 @@ public class QueryService extends BasicService {
                 String schemaName = columnMeta.getString(2);
 
                 // kylin(optiq) is not strictly following JDBC specification
-                ColumnMetaWithType colmnMeta = new ColumnMetaWithType(catalogName == null ? Constant.FakeCatalogName : catalogName, schemaName == null ? Constant.FakeSchemaName : schemaName, columnMeta.getString(3), columnMeta.getString(4), columnMeta.getInt(5), columnMeta.getString(6), columnMeta.getInt(7), getInt(columnMeta.getString(8)), columnMeta.getInt(9), columnMeta.getInt(10), columnMeta.getInt(11), columnMeta.getString(12), columnMeta.getString(13), getInt(columnMeta.getString(14)), getInt(columnMeta.getString(15)), columnMeta.getInt(16), columnMeta.getInt(17), columnMeta.getString(18), columnMeta.getString(19), columnMeta.getString(20), columnMeta.getString(21), getShort(columnMeta.getString(22)), columnMeta.getString(23));
+                ColumnMetaWithType colmnMeta = new ColumnMetaWithType(
+                        catalogName == null ? Constant.FakeCatalogName : catalogName,
+                        schemaName == null ? Constant.FakeSchemaName : schemaName, columnMeta.getString(3),
+                        columnMeta.getString(4), columnMeta.getInt(5), columnMeta.getString(6), columnMeta.getInt(7),
+                        getInt(columnMeta.getString(8)), columnMeta.getInt(9), columnMeta.getInt(10),
+                        columnMeta.getInt(11), columnMeta.getString(12), columnMeta.getString(13),
+                        getInt(columnMeta.getString(14)), getInt(columnMeta.getString(15)), columnMeta.getInt(16),
+                        columnMeta.getInt(17), columnMeta.getString(18), columnMeta.getString(19),
+                        columnMeta.getString(20), columnMeta.getString(21), getShort(columnMeta.getString(22)),
+                        columnMeta.getString(23));
 
-                if (!cubedOnly || getProjectManager().isExposedColumn(project, schemaName + "." + colmnMeta.getTABLE_NAME(), colmnMeta.getCOLUMN_NAME())) {
+                if (!cubedOnly || getProjectManager().isExposedColumn(project,
+                        schemaName + "." + colmnMeta.getTABLE_NAME(), colmnMeta.getCOLUMN_NAME())) {
                     tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(colmnMeta);
-                    columnMap.put(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME() + "#" + colmnMeta.getCOLUMN_NAME(), colmnMeta);
+                    columnMap.put(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME() + "#"
+                            + colmnMeta.getCOLUMN_NAME(), colmnMeta);
                 }
             }
 
@@ -638,7 +682,8 @@ public class QueryService extends BasicService {
                 for (JoinTableDesc joinTableDesc : dataModelDesc.getJoinTables()) {
                     JoinDesc joinDesc = joinTableDesc.getJoin();
                     for (String pk : joinDesc.getPrimaryKey()) {
-                        String columnIdentity = (dataModelDesc.findTable(pk.substring(0, pk.indexOf("."))).getTableIdentity() + pk.substring(pk.indexOf("."))).replace('.', '#');
+                        String columnIdentity = (dataModelDesc.findTable(pk.substring(0, pk.indexOf(".")))
+                                .getTableIdentity() + pk.substring(pk.indexOf("."))).replace('.', '#');
                         if (columnMap.containsKey(columnIdentity)) {
                             columnMap.get(columnIdentity).getTYPE().add(ColumnMetaWithType.columnTypeEnum.PK);
                         } else {
@@ -647,7 +692,8 @@ public class QueryService extends BasicService {
                     }
 
                     for (String fk : joinDesc.getForeignKey()) {
-                        String columnIdentity = (dataModelDesc.findTable(fk.substring(0, fk.indexOf("."))).getTableIdentity() + fk.substring(fk.indexOf("."))).replace('.', '#');
+                        String columnIdentity = (dataModelDesc.findTable(fk.substring(0, fk.indexOf(".")))
+                                .getTableIdentity() + fk.substring(fk.indexOf("."))).replace('.', '#');
                         if (columnMap.containsKey(columnIdentity)) {
                             columnMap.get(columnIdentity).getTYPE().add(ColumnMetaWithType.columnTypeEnum.FK);
                         } else {
@@ -660,7 +706,8 @@ public class QueryService extends BasicService {
                 List<ModelDimensionDesc> dimensions = dataModelDesc.getDimensions();
                 for (ModelDimensionDesc dimension : dimensions) {
                     for (String column : dimension.getColumns()) {
-                        String columnIdentity = (dataModelDesc.findTable(dimension.getTable()).getTableIdentity() + "." + column).replace('.', '#');
+                        String columnIdentity = (dataModelDesc.findTable(dimension.getTable()).getTableIdentity() + "."
+                                + column).replace('.', '#');
                         if (columnMap.containsKey(columnIdentity)) {
                             columnMap.get(columnIdentity).getTYPE().add(ColumnMetaWithType.columnTypeEnum.DIMENSION);
                         } else {
@@ -672,7 +719,8 @@ public class QueryService extends BasicService {
 
                 String[] measures = dataModelDesc.getMetrics();
                 for (String measure : measures) {
-                    String columnIdentity = (dataModelDesc.findTable(measure.substring(0, measure.indexOf("."))).getTableIdentity() + measure.substring(measure.indexOf("."))).replace('.', '#');
+                    String columnIdentity = (dataModelDesc.findTable(measure.substring(0, measure.indexOf(".")))
+                            .getTableIdentity() + measure.substring(measure.indexOf("."))).replace('.', '#');
                     if (columnMap.containsKey(columnIdentity)) {
                         columnMap.get(columnIdentity).getTYPE().add(ColumnMetaWithType.columnTypeEnum.MEASURE);
                     } else {
@@ -703,7 +751,7 @@ public class QueryService extends BasicService {
         Connection conn = null;
         Statement stat = null;
         ResultSet resultSet = null;
-        Boolean isAdHoc = false;
+        Boolean isPushDown = false;
 
         List<List<String>> results = Lists.newArrayList();
         List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
@@ -713,7 +761,7 @@ public class QueryService extends BasicService {
 
             // special case for prepare query. 
             if (BackdoorToggles.getPrepareOnly()) {
-                return getPrepareOnlySqlResponse(correctedSql, conn, isAdHoc, results, columnMetas);
+                return getPrepareOnlySqlResponse(correctedSql, conn, isPushDown, results, columnMetas);
             }
 
             stat = conn.createStatement();
@@ -725,7 +773,13 @@ public class QueryService extends BasicService {
 
             // Fill in selected column meta
             for (int i = 1; i <= columnCount; ++i) {
-                columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), metaData.isSearchable(i), metaData.isCurrency(i), metaData.isNullable(i), metaData.isSigned(i), metaData.getColumnDisplaySize(i), metaData.getColumnLabel(i), metaData.getColumnName(i), metaData.getSchemaName(i), metaData.getCatalogName(i), metaData.getTableName(i), metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i), metaData.getColumnTypeName(i), metaData.isReadOnly(i), metaData.isWritable(i), metaData.isDefinitelyWritable(i)));
+                columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i),
+                        metaData.isSearchable(i), metaData.isCurrency(i), metaData.isNullable(i), metaData.isSigned(i),
+                        metaData.getColumnDisplaySize(i), metaData.getColumnLabel(i), metaData.getColumnName(i),
+                        metaData.getSchemaName(i), metaData.getCatalogName(i), metaData.getTableName(i),
+                        metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i),
+                        metaData.getColumnTypeName(i), metaData.isReadOnly(i), metaData.isWritable(i),
+                        metaData.isDefinitelyWritable(i)));
             }
 
             // fill in results
@@ -738,17 +792,17 @@ public class QueryService extends BasicService {
                 results.add(oneRow);
             }
         } catch (SQLException sqlException) {
-            isAdHoc = AdHocUtil.doAdHocQuery(sqlRequest.getProject(), correctedSql, results, columnMetas, sqlException);
+            isPushDown = PushDownUtil.doPushDownQuery(sqlRequest.getProject(), correctedSql, results, columnMetas,
+                    sqlException);
         } finally {
             close(resultSet, stat, conn);
         }
 
-        return getSqlResponse(isAdHoc, results, columnMetas);
+        return getSqlResponse(isPushDown, results, columnMetas);
     }
 
-    private SQLResponse getPrepareOnlySqlResponse(String correctedSql, Connection conn,
-        Boolean isAdHoc, List<List<String>> results, List<SelectedColumnMeta> columnMetas)
-        throws SQLException {
+    private SQLResponse getPrepareOnlySqlResponse(String correctedSql, Connection conn, Boolean isPushDown,
+            List<List<String>> results, List<SelectedColumnMeta> columnMetas) throws SQLException {
 
         CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(true);
 
@@ -772,7 +826,12 @@ public class QueryService extends BasicService {
                     String columnName = field.getKey();
                     BasicSqlType basicSqlType = (BasicSqlType) field.getValue();
 
-                    columnMetas.add(new SelectedColumnMeta(false, config.caseSensitive(), false, false, basicSqlType.isNullable() ? 1 : 0, true, basicSqlType.getPrecision(), columnName, columnName, null, null, null, basicSqlType.getPrecision(), basicSqlType.getScale() < 0 ? 0 : basicSqlType.getScale(), basicSqlType.getSqlTypeName().getJdbcOrdinal(), basicSqlType.getSqlTypeName().getName(), true, false, false));
+                    columnMetas.add(new SelectedColumnMeta(false, config.caseSensitive(), false, false,
+                            basicSqlType.isNullable() ? 1 : 0, true, basicSqlType.getPrecision(), columnName,
+                            columnName, null, null, null, basicSqlType.getPrecision(),
+                            basicSqlType.getScale() < 0 ? 0 : basicSqlType.getScale(),
+                            basicSqlType.getSqlTypeName().getJdbcOrdinal(), basicSqlType.getSqlTypeName().getName(),
+                            true, false, false));
                 }
 
             } else {
@@ -782,10 +841,11 @@ public class QueryService extends BasicService {
             CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(false);
         }
 
-        return getSqlResponse(isAdHoc, results, columnMetas);
+        return getSqlResponse(isPushDown, results, columnMetas);
     }
 
-    private SQLResponse getSqlResponse(Boolean isAdHoc, List<List<String>> results, List<SelectedColumnMeta> columnMetas) {
+    private SQLResponse getSqlResponse(Boolean isPushDown, List<List<String>> results,
+            List<SelectedColumnMeta> columnMetas) {
 
         boolean isPartialResult = false;
         StringBuilder cubeSb = new StringBuilder();
@@ -804,7 +864,8 @@ public class QueryService extends BasicService {
         }
         logger.info(logSb.toString());
 
-        SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, false, null, isPartialResult, isAdHoc);
+        SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, false, null, isPartialResult,
+                isPushDown);
         response.setTotalScanCount(QueryContext.current().getScannedRows());
         response.setTotalScanBytes(QueryContext.current().getScannedBytes());
         return response;
@@ -815,7 +876,8 @@ public class QueryService extends BasicService {
      * @param param
      * @throws SQLException
      */
-    private void setParam(PreparedStatement preparedState, int index, PrepareSqlRequest.StateParam param) throws SQLException {
+    private void setParam(PreparedStatement preparedState, int index, PrepareSqlRequest.StateParam param)
+            throws SQLException {
         boolean isNull = (null == param.getValue());
 
         Class<?> clazz;
