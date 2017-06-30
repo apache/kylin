@@ -617,38 +617,7 @@ public class DataModelDesc extends RootPersistentEntity {
                             + fkCols[i].getDatatype());
                 }
             }
-
-            if (!isSpecialTestModel()) {
-                for (TblColRef t : fkCols) {
-                    if (!isJoinKeyDimension(t.getIdentity())) {
-                        throw new IllegalStateException(
-                                "Foreigner key: " + t.getIdentity() + " should be a dimension.");
-                    }
-                }
-
-                for (TblColRef t : pkCols) {
-                    if (!isJoinKeyDimension(t.getIdentity())) {
-                        throw new IllegalStateException("Primary key: " + t.getIdentity() + " should be a dimension.");
-                    }
-                }
-            }
         }
-    }
-
-    private boolean isJoinKeyDimension(String key) {
-        for (ModelDimensionDesc d : dimensions) {
-            for (String col : d.getColumns()) {
-                if (key.equals(d.getTable() + '.' + col))
-                    return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isSpecialTestModel() {
-        if (config.isDevEnv() && (name.startsWith("test_kylin_") || name.startsWith("test_streaming")))
-            return true;
-        return false;
     }
 
     private void initJoinsTree() {
