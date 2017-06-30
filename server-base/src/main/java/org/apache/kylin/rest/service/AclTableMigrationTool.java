@@ -193,7 +193,7 @@ public class AclTableMigrationTool {
     }
 
     private DomainObjectInfo getDomainObjectInfoFromRs(Result result) {
-        String type = String.valueOf(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY),
+        String type = new String(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY),
                 Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_TYPE_COLUMN)));
         String id = new String(result.getRow());
         DomainObjectInfo newInfo = new DomainObjectInfo();

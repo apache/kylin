@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.security;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -25,10 +26,20 @@ import java.util.List;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.rest.service.UserGrantedAuthority;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.Lists;
 
 @SuppressWarnings("serial")
@@ -40,7 +51,9 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
     @JsonProperty
     private String password;
     @JsonProperty
-    private List<UserGrantedAuthority> authorities = Lists.newArrayList();
+    @JsonSerialize(using = SimpleGrantedAuthoritySerializer.class)
+    @JsonDeserialize(using = SimpleGrantedAuthorityDeserializer.class)
+    private List<SimpleGrantedAuthority> authorities = Lists.newArrayList();
     @JsonProperty
     private boolean disabled = false;
     @JsonProperty
@@ -60,7 +73,7 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
     }
 
     public ManagedUser(@JsonProperty String username, @JsonProperty String password,
-            @JsonProperty List<UserGrantedAuthority> authorities, @JsonProperty boolean disabled,
+            @JsonProperty List<SimpleGrantedAuthority> authorities, @JsonProperty boolean disabled,
             @JsonProperty boolean defaultPassword, @JsonProperty boolean locked, @JsonProperty long lockedTime,
             @JsonProperty int wrongTime) {
         this.username = username;
@@ -82,7 +95,7 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
 
         this.authorities = Lists.newArrayList();
         for (String a : authoritiesStr) {
-            authorities.add(new UserGrantedAuthority(a));
+            authorities.add(new SimpleGrantedAuthority(a));
         }
 
         caterLegacy();
@@ -116,7 +129,7 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
     }
 
     private void caterLegacy() {
-        Iterator<UserGrantedAuthority> iterator = authorities.iterator();
+        Iterator<SimpleGrantedAuthority> iterator = authorities.iterator();
         while (iterator.hasNext()) {
             if (DISABLED_ROLE.equals(iterator.next().getAuthority())) {
                 iterator.remove();
@@ -125,14 +138,14 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
         }
     }
 
-    public List<UserGrantedAuthority> getAuthorities() {
+    public List<SimpleGrantedAuthority> getAuthorities() {
         return this.authorities;
     }
 
     public void setGrantedAuthorities(Collection<? extends GrantedAuthority> grantedAuthorities) {
         this.authorities = Lists.newArrayList();
         for (GrantedAuthority grantedAuthority : grantedAuthorities) {
-            this.authorities.add(new UserGrantedAuthority(grantedAuthority.getAuthority()));
+            this.authorities.add(new SimpleGrantedAuthority(grantedAuthority.getAuthority()));
         }
     }
 
@@ -227,5 +240,34 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
     @Override
     public String toString() {
         return "ManagedUser [username=" + username + ", authorities=" + authorities + "]";
+    }
+
+    private static class SimpleGrantedAuthoritySerializer extends JsonSerializer<List<SimpleGrantedAuthority>> {
+
+        @Override
+        public void serialize(List<SimpleGrantedAuthority> value, JsonGenerator gen, SerializerProvider serializers)
+                throws IOException, JsonProcessingException {
+            List<UserGrantedAuthority> ugaList = Lists.newArrayList();
+            for (SimpleGrantedAuthority sga : value) {
+                ugaList.add(new UserGrantedAuthority(sga.getAuthority()));
+            }
+
+            gen.writeObject(ugaList);
+        }
+    }
+
+    private static class SimpleGrantedAuthorityDeserializer extends JsonDeserializer<List<SimpleGrantedAuthority>> {
+
+        @Override
+        public List<SimpleGrantedAuthority> deserialize(JsonParser p, DeserializationContext ctxt)
+                throws IOException, JsonProcessingException {
+            UserGrantedAuthority[] ugaArray = p.readValueAs(UserGrantedAuthority[].class);
+            List<SimpleGrantedAuthority> sgaList = Lists.newArrayList();
+            for (UserGrantedAuthority uga : ugaArray) {
+                sgaList.add(new SimpleGrantedAuthority(uga.getAuthority()));
+            }
+
+            return sgaList;
+        }
     }
 }

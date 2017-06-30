@@ -246,7 +246,7 @@ public class Message {
     }
 
     public String getDELETE_PROJECT_NOT_EMPTY() {
-        return "Cannot delete non-empty project";
+        return "Cannot modify non-empty project";
     }
 
     // Table

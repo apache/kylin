@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -72,18 +73,19 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
 
         if (!userService.userExists("ADMIN")) {
             userService.createUser(new ManagedUser("ADMIN", "KYLIN", false, Arrays.asList(//
-                    new UserGrantedAuthority(Constant.ROLE_ADMIN), new UserGrantedAuthority(Constant.ROLE_ANALYST),
-                    new UserGrantedAuthority(Constant.ROLE_MODELER))));
+                    new SimpleGrantedAuthority(Constant.ROLE_ADMIN), new SimpleGrantedAuthority(Constant.ROLE_ANALYST),
+                    new SimpleGrantedAuthority(Constant.ROLE_MODELER))));
         }
 
         if (!userService.userExists("MODELER")) {
             userService.createUser(new ManagedUser("MODELER", "MODELER", false, Arrays.asList(//
-                    new UserGrantedAuthority(Constant.ROLE_ANALYST), new UserGrantedAuthority(Constant.ROLE_MODELER))));
+                            new SimpleGrantedAuthority(Constant.ROLE_ANALYST),
+                            new SimpleGrantedAuthority(Constant.ROLE_MODELER))));
         }
 
         if (!userService.userExists("ANALYST")) {
             userService.createUser(new ManagedUser("ANALYST", "ANALYST", false, Arrays.asList(//
-                    new UserGrantedAuthority(Constant.ROLE_ANALYST))));
+                    new SimpleGrantedAuthority(Constant.ROLE_ANALYST))));
         }
     }
 

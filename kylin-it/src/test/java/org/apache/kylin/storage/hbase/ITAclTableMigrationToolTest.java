@@ -44,7 +44,6 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.security.AclConstant;
 import org.apache.kylin.rest.service.AclService;
 import org.apache.kylin.rest.service.AclTableMigrationTool;
-import org.apache.kylin.rest.service.UserGrantedAuthority;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.Serializer;
 import org.junit.After;
@@ -53,6 +52,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -70,7 +70,7 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
 
     private TableName userTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclConstant.USER_TABLE_NAME);
 
-    private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
+    private Serializer<SimpleGrantedAuthority[]> ugaSerializer = new Serializer<>(SimpleGrantedAuthority[].class);
 
     private AclTableMigrationTool aclTableMigrationJob;
 
@@ -192,13 +192,13 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
         if (authorities == null)
             authorities = Collections.emptyList();
 
-        UserGrantedAuthority[] serializing = new UserGrantedAuthority[authorities.size() + 1];
+        SimpleGrantedAuthority[] serializing = new SimpleGrantedAuthority[authorities.size() + 1];
 
         // password is stored as the [0] authority
-        serializing[0] = new UserGrantedAuthority(AclConstant.PWD_PREFIX + "password");
+        serializing[0] = new SimpleGrantedAuthority(AclConstant.PWD_PREFIX + "password");
         int i = 1;
         for (GrantedAuthority a : authorities) {
-            serializing[i++] = new UserGrantedAuthority(a.getAuthority());
+            serializing[i++] = new SimpleGrantedAuthority(a.getAuthority());
         }
 
         byte[] value = ugaSerializer.serialize(serializing);

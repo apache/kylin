@@ -142,6 +142,10 @@ public class ProjectControllerV2 extends BasicController {
         if (projectDesc.getName().equals(currentProject.getName())) {
             updatedProj = projectService.updateProject(projectDesc, currentProject);
         } else {
+            if (!isProjectEmpty(formerProjectName)) {
+                throw new BadRequestException(msg.getDELETE_PROJECT_NOT_EMPTY());
+            }
+            // disable project rename
             updatedProj = projectService.renameProject(projectDesc, currentProject);
         }
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, updatedProj, "");
