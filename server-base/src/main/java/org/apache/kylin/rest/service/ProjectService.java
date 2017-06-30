@@ -121,6 +121,7 @@ public class ProjectService extends BasicService {
         // rebind draft and project
         for (Draft draft : getDraftManager().list(currentProject.getName())) {
             draft.setProject(newProjectName);
+            getDraftManager().save(draft);
         }
 
         logger.debug("Project rename.");
