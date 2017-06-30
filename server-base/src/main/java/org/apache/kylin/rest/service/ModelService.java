@@ -222,7 +222,7 @@ public class ModelService extends BasicService {
         List<CubeInstance> cubes = cubeService.listAllCubes(null, null, modelName, true);
         if (cubes != null && cubes.size() != 0) {
             dataModelDesc.init(getConfig(), getMetadataManager().getAllTablesMap(),
-                    getMetadataManager().getCcInfoMap());
+                    getMetadataManager().listDataModels());
 
             List<String> dimCols = new ArrayList<String>();
             List<String> dimAndMCols = new ArrayList<String>();

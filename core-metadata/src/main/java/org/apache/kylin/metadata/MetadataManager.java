@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -40,7 +39,6 @@ import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -120,26 +118,6 @@ public class MetadataManager {
     // name => External Filter Desc
     private CaseInsensitiveStringCache<ExternalFilterDesc> extFilterMap;
 
-    public static class CCInfo {
-        private ComputedColumnDesc computedColumnDesc;
-        private Set<DataModelDesc> dataModelDescs;
-
-        public CCInfo(ComputedColumnDesc computedColumnDesc, Set<DataModelDesc> dataModelDescs) {
-            this.computedColumnDesc = computedColumnDesc;
-            this.dataModelDescs = dataModelDescs;
-        }
-
-        public ComputedColumnDesc getComputedColumnDesc() {
-            return computedColumnDesc;
-        }
-
-        public Set<DataModelDesc> getDataModelDescs() {
-            return dataModelDescs;
-        }
-    }
-
-    private Map<String, CCInfo> ccInfoMap = Maps.newHashMap();// this is to check any two models won't conflict computed columns
-
     private MetadataManager(KylinConfig config) throws IOException {
         init(config);
     }
@@ -181,9 +159,6 @@ public class MetadataManager {
         return Collections.unmodifiableMap(srcTableMap.getMap());
     }
 
-    public Map<String, CCInfo> getCcInfoMap() {
-        return ccInfoMap;
-    }
 
     public Map<String, TableExtDesc> listAllTableExdMap() {
         return srcTableExdMap.getMap();
@@ -373,7 +348,6 @@ public class MetadataManager {
 
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
-            ccInfoMap.clear();
             for (String model : ProjectManager.getInstance(config).getProject(project).getModels()) {
                 reloadDataModelDescAt(DataModelDesc.concatResourcePath(model));
             }
@@ -546,7 +520,7 @@ public class MetadataManager {
         return new ArrayList<>(dataModelDescMap.values());
     }
 
-    public List<DataModelDesc> getModels(String projectName) throws IOException {
+    public List<DataModelDesc> getModels(String projectName) {
         ProjectInstance projectInstance = ProjectManager.getInstance(config).getProject(projectName);
         ArrayList<DataModelDesc> ret = new ArrayList<>();
 
@@ -618,7 +592,7 @@ public class MetadataManager {
             DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
             
             if (!dataModelDesc.isDraft())
-                dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
+                dataModelDesc.init(config, this.getAllTablesMap(), listDataModels());
 
             dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
             return dataModelDesc;
@@ -669,7 +643,7 @@ public class MetadataManager {
     private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
         
         if (!dataModelDesc.isDraft())
-            dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
+            dataModelDesc.init(config, this.getAllTablesMap(), listDataModels());
 
         String path = dataModelDesc.getResourcePath();
         getStore().putResource(path, dataModelDesc, MODELDESC_SERIALIZER);

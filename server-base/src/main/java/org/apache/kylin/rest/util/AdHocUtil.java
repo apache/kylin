@@ -21,11 +21,8 @@ package org.apache.kylin.rest.util;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -33,11 +30,9 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.MetadataManager.CCInfo;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
 import org.apache.kylin.source.adhocquery.IAdHocConverter;
@@ -46,8 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class AdHocUtil {
@@ -72,9 +65,13 @@ public class AdHocUtil {
             logger.debug("Ad-hoc query runner {}", runner);
 
             String expandCC = restoreComputedColumnToExpr(sql, project);
+            if (!StringUtils.equals(expandCC, sql)) {
+                logger.info("computed column in sql is expanded to:  " + expandCC);
+            }
             String adhocSql = converter.convert(expandCC);
-            if (!adhocSql.equals(sql)) {
-                logger.info("before delegating to adhoc, the query is converted to {} ", adhocSql);
+            if (!adhocSql.equals(expandCC)) {
+                logger.info("the query is converted to {} according to kylin.query.ad-hoc.converter-class-name",
+                        adhocSql);
             }
 
             runner.executeQuery(adhocSql, results, columnMetas);
@@ -98,37 +95,22 @@ public class AdHocUtil {
     private final static Pattern endWithAsPattern = Pattern.compile("\\s+as\\s+$", Pattern.CASE_INSENSITIVE);
 
     public static String restoreComputedColumnToExpr(String beforeSql, String project) {
-        MetadataManager metadataManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        Map<String, CCInfo> ccInfoMap = metadataManager.getCcInfoMap();
-        final ProjectInstance projectInstance = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(project);
-
-        Iterable<CCInfo> projectCCInfo = Iterables.filter(ccInfoMap.values(), new Predicate<CCInfo>() {
-            @Override
-            public boolean apply(@Nullable CCInfo ccInfo) {
-                return Iterables.any(ccInfo.getDataModelDescs(), new Predicate<DataModelDesc>() {
-                    @Override
-                    public boolean apply(@Nullable DataModelDesc model) {
-                        return projectInstance.containsModel(model.getName());
-                    }
-                });
-            }
-        });
+        final MetadataManager metadataManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        List<DataModelDesc> dataModelDescs = metadataManager.getModels(project);
 
         String afterSql = beforeSql;
-        for (CCInfo ccInfo : projectCCInfo) {
-            afterSql = restoreComputedColumnToExpr(afterSql, ccInfo);
+        for (DataModelDesc dataModelDesc : dataModelDescs) {
+            for (ComputedColumnDesc computedColumnDesc : dataModelDesc.getComputedColumnDescs()) {
+                afterSql = restoreComputedColumnToExpr(afterSql, computedColumnDesc);
+            }
         }
 
-        if (!StringUtils.equals(beforeSql, afterSql)) {
-            logger.info("computed column in sql is expanded before sending to adhoc engine: " + afterSql);
-        }
         return afterSql;
     }
 
-    static String restoreComputedColumnToExpr(String sql, CCInfo ccInfo) {
+    static String restoreComputedColumnToExpr(String sql, ComputedColumnDesc computedColumnDesc) {
 
-        String ccName = ccInfo.getComputedColumnDesc().getColumnName();
+        String ccName = computedColumnDesc.getColumnName();
         List<Triple<Integer, Integer, String>> replacements = Lists.newArrayList();
         Matcher matcher = identifierInSqlPattern.matcher(sql);
 
@@ -146,14 +128,14 @@ public class AdHocUtil {
                     String quotedTableAlias = StringUtils.strip(matcher.group(2), ".");
                     String tableAlias = StringUtils.strip(quotedTableAlias, "\"");
                     replacements.add(Triple.of(matcher.start(1), matcher.end(1),
-                            replaceIdentifierInExpr(ccInfo.getComputedColumnDesc().getExpression(), tableAlias, true)));
+                            replaceIdentifierInExpr(computedColumnDesc.getExpression(), tableAlias, true)));
                 } else { //only column
                     if (endWithAsPattern.matcher(sql.substring(0, matcher.start(1))).find()) {
                         //select DEAL_AMOUNT as "deal_amount" case
                         continue;
                     }
                     replacements.add(Triple.of(matcher.start(1), matcher.end(1),
-                            replaceIdentifierInExpr(ccInfo.getComputedColumnDesc().getExpression(), null, true)));
+                            replaceIdentifierInExpr(computedColumnDesc.getExpression(), null, true)));
                 }
             } else if (matcher.group(4) != null) { //without quote case: table.column or simply column
                 String columnName = matcher.group(6);
@@ -164,8 +146,8 @@ public class AdHocUtil {
 
                 if (matcher.group(5) != null) { //table name exist
                     String tableAlias = StringUtils.strip(matcher.group(5), ".");
-                    replacements.add(Triple.of(matcher.start(4), matcher.end(4), replaceIdentifierInExpr(
-                            ccInfo.getComputedColumnDesc().getExpression(), tableAlias, false)));
+                    replacements.add(Triple.of(matcher.start(4), matcher.end(4),
+                            replaceIdentifierInExpr(computedColumnDesc.getExpression(), tableAlias, false)));
 
                 } else { //only column 
                     if (endWithAsPattern.matcher(sql.substring(0, matcher.start(4))).find()) {
@@ -173,7 +155,7 @@ public class AdHocUtil {
                         continue;
                     }
                     replacements.add(Triple.of(matcher.start(4), matcher.end(4),
-                            replaceIdentifierInExpr(ccInfo.getComputedColumnDesc().getExpression(), null, false)));
+                            replaceIdentifierInExpr(computedColumnDesc.getExpression(), null, false)));
                 }
             }
         }

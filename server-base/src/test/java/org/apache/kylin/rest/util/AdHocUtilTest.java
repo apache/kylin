@@ -17,7 +17,6 @@
 */
 package org.apache.kylin.rest.util;
 
-import static org.apache.kylin.metadata.MetadataManager.CCInfo;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -62,36 +61,34 @@ public class AdHocUtilTest {
         when(computedColumnDesc.getColumnName()).thenReturn("DEAL_AMOUNT");
         when(computedColumnDesc.getExpression()).thenReturn("price * number");
 
-        CCInfo ccInfo = mock(CCInfo.class);
-        when(ccInfo.getComputedColumnDesc()).thenReturn(computedColumnDesc);
-
         {
             String ret = AdHocUtil.restoreComputedColumnToExpr(
-                    "select DEAL_AMOUNT from DB.TABLE group by date order by DEAL_AMOUNT", ccInfo);
-            Assert.assertEquals(
-                    "select (price * number) from DB.TABLE group by date order by (price * number)",
-                    ret);
+                    "select DEAL_AMOUNT from DB.TABLE group by date order by DEAL_AMOUNT", computedColumnDesc);
+            Assert.assertEquals("select (price * number) from DB.TABLE group by date order by (price * number)", ret);
         }
         {
             String ret = AdHocUtil.restoreComputedColumnToExpr(
-                    "select DEAL_AMOUNT as DEAL_AMOUNT from DB.TABLE group by date order by DEAL_AMOUNT", ccInfo);
+                    "select DEAL_AMOUNT as DEAL_AMOUNT from DB.TABLE group by date order by DEAL_AMOUNT",
+                    computedColumnDesc);
             Assert.assertEquals(
                     "select (price * number) as DEAL_AMOUNT from DB.TABLE group by date order by (price * number)",
                     ret);
         }
         {
             String ret = AdHocUtil.restoreComputedColumnToExpr(
-                    "select \"DEAL_AMOUNT\" AS deal_amount from DB.TABLE group by date order by DEAL_AMOUNT", ccInfo);
+                    "select \"DEAL_AMOUNT\" AS deal_amount from DB.TABLE group by date order by DEAL_AMOUNT",
+                    computedColumnDesc);
             Assert.assertEquals(
                     "select (price * number) AS deal_amount from DB.TABLE group by date order by (price * number)",
                     ret);
         }
         {
             String ret = AdHocUtil.restoreComputedColumnToExpr(
-                "select x.DEAL_AMOUNT AS deal_amount from DB.TABLE x group by date order by x.DEAL_AMOUNT", ccInfo);
+                    "select x.DEAL_AMOUNT AS deal_amount from DB.TABLE x group by date order by x.DEAL_AMOUNT",
+                    computedColumnDesc);
             Assert.assertEquals(
-                "select (x.price * x.number) AS deal_amount from DB.TABLE x group by date order by (x.price * x.number)",
-                ret);
+                    "select (x.price * x.number) AS deal_amount from DB.TABLE x group by date order by (x.price * x.number)",
+                    ret);
         }
     }
 }

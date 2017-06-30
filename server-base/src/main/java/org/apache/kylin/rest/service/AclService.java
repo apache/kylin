@@ -281,9 +281,7 @@ public class AclService implements MutableAclService {
             } else {
                 aceInfos.addAll(allAceInfos.values());
             }
-        } else {
-            logger.warn("Get null AllAceInfos from AclRecord");
-        }
+        } 
 
         List<AccessControlEntry> newAces = new ArrayList<AccessControlEntry>();
         for (int i = 0; i < aceInfos.size(); i++) {

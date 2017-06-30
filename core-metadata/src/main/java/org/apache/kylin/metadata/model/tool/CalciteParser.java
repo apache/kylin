@@ -22,7 +22,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -37,7 +39,7 @@ import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class CalciteParser {
     public static SqlNode parse(String sql) throws SqlParseException {
@@ -151,19 +153,20 @@ public class CalciteParser {
         String sql = prefix + expr + suffix;
         SqlNode sqlNode = getOnlySelectNode(sql);
 
-        final List<SqlIdentifier> sqlIdentifiers = Lists.newArrayList();
+        final Set<SqlIdentifier> s = Sets.newHashSet();
         SqlVisitor sqlVisitor = new SqlBasicVisitor() {
             @Override
             public Object visit(SqlIdentifier id) {
                 if (id.names.size() > 1) {
                     throw new IllegalArgumentException("SqlIdentifier " + id + " contains DB/Table name");
                 }
-                sqlIdentifiers.add(id);
+                s.add(id);
                 return null;
             }
         };
 
         sqlNode.accept(sqlVisitor);
+        List<SqlIdentifier> sqlIdentifiers = Lists.newArrayList(s);
 
         Collections.sort(sqlIdentifiers, new Comparator<SqlIdentifier>() {
             @Override

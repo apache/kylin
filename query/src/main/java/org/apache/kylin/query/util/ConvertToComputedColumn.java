@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlDynamicParam;
@@ -40,18 +38,15 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Functions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
 public class ConvertToComputedColumn implements QueryUtil.IQueryTransformer {
@@ -65,7 +60,7 @@ public class ConvertToComputedColumn implements QueryUtil.IQueryTransformer {
         ImmutableSortedMap<String, String> computedColumns = getSortedComputedColumnWithProject(project);
         String s = replaceComputedColumn(sql, computedColumns);
         if (!StringUtils.equals(sql, s)) {
-            logger.debug("change sql to " + s);
+            logger.debug("sql changed");
         }
         return s;
     }
@@ -162,28 +157,15 @@ public class ConvertToComputedColumn implements QueryUtil.IQueryTransformer {
     }
 
     private ImmutableSortedMap<String, String> getSortedComputedColumnWithProject(String project) {
-        MetadataManager metadataManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        Map<String, MetadataManager.CCInfo> ccInfoMap = metadataManager.getCcInfoMap();
-        final ProjectInstance projectInstance = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getProject(project);
-
-        Iterable<MetadataManager.CCInfo> projectCCInfo = Iterables.filter(ccInfoMap.values(),
-                new Predicate<MetadataManager.CCInfo>() {
-                    @Override
-                    public boolean apply(@Nullable MetadataManager.CCInfo ccInfo) {
-                        return Iterables.any(ccInfo.getDataModelDescs(), new Predicate<DataModelDesc>() {
-                            @Override
-                            public boolean apply(@Nullable DataModelDesc model) {
-                                return projectInstance.containsModel(model.getName());
-                            }
-                        });
-                    }
-                });
 
         Map<String, String> computedColumns = new HashMap<>();
-        for (MetadataManager.CCInfo ccInfo : projectCCInfo) {
-            computedColumns.put(ccInfo.getComputedColumnDesc().getColumnName(),
-                    ccInfo.getComputedColumnDesc().getExpression());
+
+        MetadataManager metadataManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        List<DataModelDesc> dataModelDescs = metadataManager.getModels(project);
+        for (DataModelDesc dataModelDesc : dataModelDescs) {
+            for (ComputedColumnDesc computedColumnDesc : dataModelDesc.getComputedColumnDescs()) {
+                computedColumns.put(computedColumnDesc.getColumnName(), computedColumnDesc.getExpression());
+            }
         }
 
         return getMapSortedByValue(computedColumns);

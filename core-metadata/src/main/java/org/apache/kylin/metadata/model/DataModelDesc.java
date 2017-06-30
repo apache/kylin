@@ -18,8 +18,6 @@
 
 package org.apache.kylin.metadata.model;
 
-import static org.apache.kylin.metadata.MetadataManager.CCInfo;
-
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -38,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.JoinsTree.Chain;
@@ -49,6 +48,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
@@ -234,6 +234,7 @@ public class DataModelDesc extends RootPersistentEntity {
             return factTableRefs.contains(t);
     }
 
+    //TODO: different from isFactTable(TableRef t) 
     public boolean isFactTable(String fullTableName) {
         for (TableRef t : factTableRefs) {
             if (t.getTableIdentity().equals(fullTableName))
@@ -332,7 +333,7 @@ public class DataModelDesc extends RootPersistentEntity {
         throw new IllegalArgumentException("Table not found by " + tableIdentity + " in model " + name);
     }
 
-    public void init(KylinConfig config, Map<String, TableDesc> originalTables, Map<String, CCInfo> ccInfoMap) {
+    public void init(KylinConfig config, Map<String, TableDesc> originalTables, List<DataModelDesc> dataModelDescs) {
         //tweak the tables according to Computed Columns defined in model
         Map<String, TableDesc> tables = Maps.newHashMap();
         for (Map.Entry<String, TableDesc> entry : originalTables.entrySet()) {
@@ -351,12 +352,12 @@ public class DataModelDesc extends RootPersistentEntity {
         initJoinsTree();
         initDimensionsAndMetrics();
         initPartitionDesc();
-        initComputedColumns(ccInfoMap);
+        initComputedColumns(dataModelDescs);
         initFilterCondition();
 
         boolean reinit = validate();
         if (reinit) { // model slightly changed by validate() and must init() again
-            init(config, tables, ccInfoMap);
+            init(config, tables, dataModelDescs);
         }
     }
 
@@ -471,38 +472,43 @@ public class DataModelDesc extends RootPersistentEntity {
             this.partitionDesc.init(this);
     }
 
-    private void initComputedColumns(Map<String, CCInfo> ccInfoMap) {
-        if (ccInfoMap == null) {
-            logger.error("cc info map is null");
+    private void initComputedColumns(List<DataModelDesc> allDataModelDescs) {
+        Preconditions.checkNotNull(allDataModelDescs);
+
+        List<Pair<ComputedColumnDesc, DataModelDesc>> existingCCs = Lists.newArrayList();
+
+        for (DataModelDesc dataModelDesc : allDataModelDescs) {
+            if (!StringUtils.equals(dataModelDesc.getName(), this.getName())) {
+                for (ComputedColumnDesc cc : dataModelDesc.getComputedColumnDescs()) {
+                    existingCCs.add(Pair.newPair(cc, dataModelDesc));
+                }
+            }
         }
 
-        Set<String> ccSet = Sets.newHashSet();//make sure cc name does not duplicate within this model
+        for (ComputedColumnDesc newCC : this.computedColumnDescs) {
 
-        for (ComputedColumnDesc thisCCDesc : this.computedColumnDescs) {
-            thisCCDesc.init();
-            String thisCCName = thisCCDesc.getFullName();
+            newCC.init();
+            final String newCCName = newCC.getFullName();
+            final String newCCColumnName = newCC.getColumnName();
 
-            if (ccSet.contains(thisCCName)) {
-                throw new IllegalArgumentException(String.format(
-                        "More than one computed column named %s exist in model %s", thisCCName, this.getName()));
-            } else {
-                ccSet.add(thisCCName);
+            for (Pair<ComputedColumnDesc, DataModelDesc> pair : existingCCs) {
+                DataModelDesc dataModelDesc = pair.getSecond();
+                ComputedColumnDesc cc = pair.getFirst();
+
+                if (StringUtils.equals(cc.getFullName(), newCCName) && !(cc.equals(newCC))) {
+                    throw new IllegalArgumentException(
+                            String.format("Computed column named %s is defined differently in model %s", newCCName,
+                                    dataModelDesc.getName()));
+                }
+
+                if (isTwoCCDefinitionEquals(cc.getExpression(), newCC.getExpression())
+                        && !StringUtils.equals(cc.getColumnName(), newCCColumnName)) {
+                    throw new IllegalArgumentException(String.format(
+                            "Duplicate expression of %s with computed column %s in model %s, keep same computed column name could suppress this",
+                            newCCColumnName, cc.getColumnName(), dataModelDesc.getName()));
+                }
             }
-
-            CCInfo other = ccInfoMap.get(thisCCName);
-
-            if (other == null) {
-                checkSameCCDefinition(ccInfoMap, thisCCDesc, thisCCName);
-                ccInfoMap.put(thisCCName, new CCInfo(thisCCDesc, Sets.<DataModelDesc> newHashSet(this)));
-            } else if (other.getDataModelDescs().size() == 1 && other.getDataModelDescs().contains(this)) {
-                ccInfoMap.put(thisCCName, new CCInfo(thisCCDesc, Sets.<DataModelDesc> newHashSet(this)));
-            } else if (other.getComputedColumnDesc().equals(thisCCDesc)) {
-                other.getDataModelDescs().add(this);
-            } else {
-                throw new IllegalStateException(String.format(
-                        "Computed column named %s is already defined in other models: %s. Please change another name, or try to keep consistent definition", //
-                        thisCCName, other.getDataModelDescs()));
-            }
+            existingCCs.add(Pair.newPair(newCC, this));
         }
     }
 
@@ -544,20 +550,6 @@ public class DataModelDesc extends RootPersistentEntity {
                         continue;
                     }
                 }
-            }
-        }
-    }
-
-    private void checkSameCCDefinition(Map<String, CCInfo> ccInfoMap, ComputedColumnDesc thisCCDesc,
-            String thisCCName) {
-        //check whether two computer columns's definition is the same.
-        for (CCInfo sysCCInfo : ccInfoMap.values()) {
-            String definition0 = thisCCDesc.getExpression();
-            String definition1 = sysCCInfo.getComputedColumnDesc().getExpression();
-            if (isTwoCCDefinitionEquals(definition0, definition1)) {
-                throw new IllegalStateException(String.format(
-                        "Computed column %s's definition: %s is already defined in other models: %s. Please change another definition, or try to keep consistent definition",
-                        thisCCName, definition0, sysCCInfo.getDataModelDescs()));
             }
         }
     }

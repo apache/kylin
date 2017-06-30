@@ -80,8 +80,8 @@ public class ModelServiceTest extends ServiceTestBase {
 
     @Test
     public void testFailureModelUpdateDueToComputedColumnConflict() throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
-        expectedEx.expect(IllegalStateException.class);
-        expectedEx.expectMessage("Computed column named DEFAULT.TEST_KYLIN_FACT.DEAL_AMOUNT is already defined in other models: [DataModelDesc [name=ci_left_join_model], DataModelDesc [name=ci_inner_join_model]]. Please change another name, or try to keep consistent definition");
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("Computed column named DEFAULT.TEST_KYLIN_FACT.DEAL_AMOUNT is defined differently in model ci_inner_join_model");
 
         List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
         Assert.assertTrue(dataModelDescs.size() == 1);

@@ -18,12 +18,13 @@
 
 package org.apache.kylin.model.tool;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -38,13 +39,13 @@ public class CalciteParserTest {
     @Test
     public void testNoTableNameExists() throws SqlParseException {
         String expr1 = "a + b";
-        Assert.assertEquals("x.a + x.b", CalciteParser.insertAliasInExpr(expr1, "x"));
+        assertEquals("x.a + x.b", CalciteParser.insertAliasInExpr(expr1, "x"));
 
         String expr2 = "a + year(b)";
-        Assert.assertEquals("x.a + year(x.b)", CalciteParser.insertAliasInExpr(expr2, "x"));
+        assertEquals("x.a + year(x.b)", CalciteParser.insertAliasInExpr(expr2, "x"));
 
         String expr3 = "a + hiveudf(b)";
-        Assert.assertEquals("x.a + hiveudf(x.b)", CalciteParser.insertAliasInExpr(expr3, "x"));
+        assertEquals("x.a + hiveudf(x.b)", CalciteParser.insertAliasInExpr(expr3, "x"));
     }
 
     @Test
@@ -72,6 +73,17 @@ public class CalciteParserTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("SqlIdentifier X.B contains DB/Table name");
         CalciteParser.insertAliasInExpr(expr1, "x");
+    }
+
+    @Test
+    public void testCasewhen() {
+        String expr = "(CASE LSTG_FORMAT_NAME  WHEN 'Auction' THEN 'x'  WHEN 'y' THEN '222' ELSE 'z' END)";
+        String alias = "TEST_KYLIN_FACT";
+        String s = CalciteParser.insertAliasInExpr(expr, alias);
+        System.out.println(s);
+        assertEquals(
+                "(CASE TEST_KYLIN_FACT.LSTG_FORMAT_NAME  WHEN 'Auction' THEN 'x'  WHEN 'y' THEN '222' ELSE 'z' END)",
+                s);
     }
 
     @Test
@@ -104,8 +116,8 @@ public class CalciteParserTest {
         SqlNode sn2 = CalciteParser.getOnlySelectNode(sql2);
         SqlNode sn3 = CalciteParser.getOnlySelectNode(sql3);
 
-        Assert.assertEquals(true, CalciteParser.isNodeEqual(sn0, sn1));
-        Assert.assertEquals(true, CalciteParser.isNodeEqual(sn0, sn2));
-        Assert.assertEquals(false, CalciteParser.isNodeEqual(sn0, sn3));
+        assertEquals(true, CalciteParser.isNodeEqual(sn0, sn1));
+        assertEquals(true, CalciteParser.isNodeEqual(sn0, sn2));
+        assertEquals(false, CalciteParser.isNodeEqual(sn0, sn3));
     }
 }
