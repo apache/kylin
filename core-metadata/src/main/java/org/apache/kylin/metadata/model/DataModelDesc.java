@@ -352,6 +352,7 @@ public class DataModelDesc extends RootPersistentEntity {
         initDimensionsAndMetrics();
         initPartitionDesc();
         initComputedColumns(ccInfoMap);
+        initFilterCondition();
 
         boolean reinit = validate();
         if (reinit) { // model slightly changed by validate() and must init() again
@@ -501,6 +502,48 @@ public class DataModelDesc extends RootPersistentEntity {
                 throw new IllegalStateException(String.format(
                         "Computed column named %s is already defined in other models: %s. Please change another name, or try to keep consistent definition", //
                         thisCCName, other.getDataModelDescs()));
+            }
+        }
+    }
+
+    //Check if the filter condition is illegal.  
+    private void initFilterCondition() {
+        if (null == this.filterCondition) {
+            return;
+        }
+        int quotationType = 0;
+        int len = this.filterCondition.length();
+        for (int i = 0; i < len; i++) {
+            //If a ';' which is not within a string is found, throw exception. 
+            if (';' == this.filterCondition.charAt(i) && 0 == quotationType) {
+                throw new IllegalStateException(
+                        "Filter Condition is Illegal. Please check it and make sure it's an appropriate expression for WHERE clause");
+            }
+            if ('\'' == this.filterCondition.charAt(i)) {
+                if (quotationType > 0) {
+                    if (1 == quotationType) {
+                        quotationType = 0;
+                        continue;
+                    }
+                } else {
+                    if (0 == quotationType) {
+                        quotationType = 1;
+                        continue;
+                    }
+                }
+            }
+            if ('"' == this.filterCondition.charAt(i)) {
+                if (quotationType > 0) {
+                    if (2 == quotationType) {
+                        quotationType = 0;
+                        continue;
+                    }
+                } else {
+                    if (0 == quotationType) {
+                        quotationType = 2;
+                        continue;
+                    }
+                }
             }
         }
     }
