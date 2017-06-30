@@ -33,20 +33,20 @@
     }
   } ],
   "dimensions" : [ {
-    "table" : "SSB.V_LINEORDER",
-    "columns" : [ "LO_DATE" ]
+    "table" : "V_LINEORDER",
+    "columns" : [ "LO_DATE", "LO_PARTKEY", "LO_CUSTKEY", "LO_ORDERDATE", "LO_SUPPKEY" ]
   }, {
-    "table" : "SSB.PART",
-    "columns" : [ "P_MFGR", "P_CATEGORY", "P_BRAND" ]
+    "table" : "PART",
+    "columns" : [ "P_MFGR", "P_CATEGORY", "P_BRAND", "P_PARTKEY" ]
   }, {
-    "table" : "SSB.CUSTOMER",
-    "columns" : [ "C_CITY", "C_NATION", "C_REGION" ]
+    "table" : "CUSTOMER",
+    "columns" : [ "C_CITY", "C_NATION", "C_REGION", "C_CUSTKEY" ]
   }, {
-    "table" : "SSB.SUPPLIER",
-    "columns" : [ "S_CITY", "S_NATION", "S_REGION" ]
+    "table" : "SUPPLIER",
+    "columns" : [ "S_CITY", "S_NATION", "S_REGION", "S_SUPPKEY" ]
   }, {
-    "table" : "SSB.DATES",
-    "columns" : [ "D_YEAR", "D_YEARMONTHNUM", "D_YEARMONTH", "D_WEEKNUMINYEAR" ]
+    "table" : "DATES",
+    "columns" : [ "D_YEAR", "D_YEARMONTHNUM", "D_YEARMONTH", "D_WEEKNUMINYEAR", "D_DATEKEY" ]
   } ],
   "metrics" : [ "LO_REVENUE", "LO_SUPPLYCOST", "V_REVENUE" ],
   "last_modified" : 1457444314662,
