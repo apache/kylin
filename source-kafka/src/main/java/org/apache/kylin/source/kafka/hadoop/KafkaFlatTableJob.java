@@ -104,7 +104,7 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
             job.getConfiguration().addResource(new Path(jobEngineConfig.getHadoopJobConfFilePath(null)));
             KafkaConsumerProperties kafkaConsumerProperties = KafkaConsumerProperties.getInstanceFromEnv();
             job.getConfiguration().addResource(new Path(kafkaConsumerProperties.getKafkaConsumerHadoopJobConf()));
-            appendKafkaOverrideProperties(KylinConfig.getInstanceFromEnv(), job.getConfiguration());
+            appendKafkaOverrideProperties(cube.getConfig(), job.getConfiguration());
             job.getConfiguration().set(CONFIG_KAFKA_BROKERS, brokers);
             job.getConfiguration().set(CONFIG_KAFKA_TOPIC, topic);
             job.getConfiguration().set(CONFIG_KAFKA_TIMEOUT, String.valueOf(kafkaConfig.getTimeout()));
