@@ -3,7 +3,7 @@
   "partial": false,
   "affectedRowCount": 0,
   "isException": false,
-  "adHoc": false,
+  "pushDown": false,
   "results": [
     [
       "10000"
