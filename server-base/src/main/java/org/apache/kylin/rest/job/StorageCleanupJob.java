@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.job;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -119,14 +120,18 @@ public class StorageCleanupJob extends AbstractApplication {
         // GlobFilter(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()
         // + "/kylin-.*");
         // TODO: when first use, /kylin/kylin_metadata does not exist.
-        FileStatus[] fStatus = fs.listStatus(new Path(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()));
-        for (FileStatus status : fStatus) {
-            String path = status.getPath().getName();
-            // System.out.println(path);
-            if (path.startsWith("kylin-")) {
-                String kylinJobPath = engineConfig.getHdfsWorkingDirectory() + path;
-                allHdfsPathsNeedToBeDeleted.add(kylinJobPath);
+        try {
+            FileStatus[] fStatus = fs.listStatus(new Path(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()));
+            for (FileStatus status : fStatus) {
+                String path = status.getPath().getName();
+                // System.out.println(path);
+                if (path.startsWith("kylin-")) {
+                    String kylinJobPath = engineConfig.getHdfsWorkingDirectory() + path;
+                    allHdfsPathsNeedToBeDeleted.add(kylinJobPath);
+                }
             }
+        } catch (FileNotFoundException e) {
+            logger.info("Working Directory does not exist on HDFS. ");
         }
 
         List<String> allJobs = executableManager.getAllJobIds();
