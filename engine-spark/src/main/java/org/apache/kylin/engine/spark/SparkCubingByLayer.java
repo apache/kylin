@@ -269,7 +269,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             saveToHDFS(allRDDs[level], vCubeDesc.getValue(), outputPath, level, confOverwrite);
             allRDDs[level - 1].unpersist();
         }
-        allRDDs[totalLevels - 1].unpersist();
+        allRDDs[totalLevels].unpersist();
         logger.info("Finished on calculating all level cuboids.");
     }
 

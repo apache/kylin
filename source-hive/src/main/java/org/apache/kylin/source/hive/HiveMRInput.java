@@ -206,6 +206,7 @@ public class HiveMRInput implements IMRInput {
             }
 
             HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+            hiveCmdBuilder.overwriteHiveProps(kylinConfig.getHiveConfigOverride());
             hiveCmdBuilder.addStatement(hiveInitStatements);
             for (TableDesc lookUpTableDesc : lookupViewsTables) {
                 String identity = lookUpTableDesc.getIdentity();
@@ -273,6 +274,7 @@ public class HiveMRInput implements IMRInput {
 
         private void redistributeTable(KylinConfig config, int numReducers) throws IOException {
             final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+            hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
             hiveCmdBuilder.addStatement(getInitStatement());
             hiveCmdBuilder.addStatement("set mapreduce.job.reduces=" + numReducers + ";\n");
             hiveCmdBuilder.addStatement("set hive.merge.mapredfiles=false;\n");

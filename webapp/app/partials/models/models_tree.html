@@ -53,11 +53,11 @@
                   Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                 </button>
                 <ul class="dropdown-menu" role="menu" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">
-                  <li><a ng-click="editModel(model)"  title="Edit Model" style="cursor:pointer;margin-right: 8px;" >Edit</a></li>
+                  <li><a ng-click="editModel(model, false)"  title="Edit Model" style="cursor:pointer;margin-right: 8px;" >Edit</a></li>
                   <li><a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" >Clone </a></li>
                   <li><a ng-click="dropModel(model)" title="Drop Model"  style="cursor:pointer;margin-right: 8px;">Drop</a></li>
                   <li ng-if="userService.hasRole('ROLE_ADMIN')">
-                    <a href="models/edit/{{model.name}}/descriptionjson">Edit(JSON)</a></li>
+                    <a ng-click="editModel(model, true)">Edit(JSON)</a></li>
                 </ul>
               </div>
             </div>

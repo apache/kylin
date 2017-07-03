@@ -238,9 +238,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             region.startRegionOperation();
 
             // if user change kylin.properties on kylin server, need to manually redeploy coprocessor jar to update KylinConfig of Env.
-            String serverPropString = request.getKylinProperties();
-            KylinConfig.setKylinConfigInEnvIfMissing(serverPropString);
-            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            KylinConfig kylinConfig = KylinConfig.createKylinConfig(request.getKylinProperties());
+            KylinConfig.setKylinConfigThreadLocal(kylinConfig);
 
             debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);
 
@@ -395,10 +394,6 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             logger.error(ioe.toString(), ioe);
             IOException wrapped = new IOException("Error in coprocessor " + debugGitTag, ioe);
             ResponseConverter.setControllerException(controller, wrapped);
-        } catch (OutOfMemoryError oom) {
-            logger.error(oom.toString(), oom);
-            IOException wrapped = new IOException("OOM in coprocessor " + debugGitTag, oom);
-            ResponseConverter.setControllerException(controller, wrapped);
         } finally {
             for (RegionScanner innerScanner : regionScanners) {
                 IOUtils.closeQuietly(innerScanner);
@@ -425,8 +420,6 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
     @Override
     public void stop(CoprocessorEnvironment env) throws IOException {
-        // destroy KylinConfig when coprocessor stop
-        KylinConfig.destroyInstance();
     }
 
     @Override
