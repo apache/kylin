@@ -47,7 +47,6 @@ KylinApp.service('CubeList',function(CubeService,$q,AccessService){
             defer.reject("Failed to load cubes");
         });
         return defer.promise;
-
     };
 
     this.removeCube = function(cube){
