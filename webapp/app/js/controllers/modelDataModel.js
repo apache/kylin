@@ -218,7 +218,6 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
             lookupList.splice(lookupList.indexOf(lookup), 1);
             $scope.aliasName.splice($scope.aliasName.indexOf(lookup.alias),1);
         }
-        console.log($scope.aliasName);
     };
 
     $scope.changeKey = function(index){
