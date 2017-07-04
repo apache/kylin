@@ -20,15 +20,10 @@ KylinApp.service('StreamingList', function (CubeService, $q, AccessService, Stre
   var _this = this;
   this.streamingConfigs = [];
   this.kafkaConfigs = [];
-
-
   this.list = function () {
     var defer = $q.defer();
-
     var streamingPromises = [];
     var kafkaPromises = [];
-
-
     kafkaPromises.push(StreamingService.getKfkConfig({}, function (kfkConfigs) {
       _this.kafkaConfigs = kfkConfigs;
     },function(){
@@ -47,7 +42,6 @@ KylinApp.service('StreamingList', function (CubeService, $q, AccessService, Stre
       defer.resolve("failed");
     })
     return defer.promise;
-
   };
 
   this.checkCubeExist = function(cubeName){
