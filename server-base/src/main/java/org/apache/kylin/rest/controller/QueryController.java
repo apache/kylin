@@ -82,9 +82,10 @@ public class QueryController extends BasicController {
     @RequestMapping(value = "/query/prestate", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
     public SQLResponse prepareQuery(@RequestBody PrepareSqlRequest sqlRequest) {
-        Map<String, String> toggles = Maps.newHashMap();
-        toggles.put(BackdoorToggles.DEBUG_TOGGLE_PREPARE_ONLY, "true");
-        BackdoorToggles.addToggles(toggles);
+        Map<String, String> newToggles = Maps.newHashMap();
+        newToggles.putAll(sqlRequest.getBackdoorToggles());
+        newToggles.put(BackdoorToggles.DEBUG_TOGGLE_PREPARE_ONLY, "true");
+        sqlRequest.setBackdoorToggles(newToggles);
 
         return queryService.doQueryWithCache(sqlRequest);
     }

@@ -27,7 +27,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -58,6 +57,8 @@ import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
 import org.supercsv.prefs.CsvPreference;
 
+import com.google.common.collect.Maps;
+
 /**
  * Handle query requests.
  * 
@@ -87,9 +88,10 @@ public class QueryControllerV2 extends BasicController {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse prepareQueryV2(@RequestBody PrepareSqlRequest sqlRequest) {
-        Map<String, String> toggles = Maps.newHashMap();
-        toggles.put(BackdoorToggles.DEBUG_TOGGLE_PREPARE_ONLY, "true");
-        BackdoorToggles.addToggles(toggles);
+        Map<String, String> newToggles = Maps.newHashMap();
+        newToggles.putAll(sqlRequest.getBackdoorToggles());
+        newToggles.put(BackdoorToggles.DEBUG_TOGGLE_PREPARE_ONLY, "true");
+        sqlRequest.setBackdoorToggles(newToggles);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, queryService.doQueryWithCache(sqlRequest), "");
     }
