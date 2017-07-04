@@ -114,7 +114,6 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       $scope.nextParameters[i].next_parameter=$scope.nextParameters[i+1];
     }
     $scope.newMeasure.function.parameter.next_parameter = $scope.nextParameters[0];
-    console.log($scope.newMeasure.function.parameter);
   }
 
   $scope.editNextParameter = function(parameter){
