@@ -81,7 +81,8 @@ public class CubeService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
 
-    public static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
+    public static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+            .toCharArray();
 
     private WeakHashMap<String, HBaseResponse> htableInfoCache = new WeakHashMap<>();
 
@@ -101,7 +102,8 @@ public class CubeService extends BasicService {
     private AclUtil aclUtil;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
-    public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName, boolean exactMatch) {
+    public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName,
+            boolean exactMatch) {
         List<CubeInstance> cubeInstances = null;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
@@ -128,8 +130,8 @@ public class CubeService extends BasicService {
         List<CubeInstance> filterCubes = new ArrayList<CubeInstance>();
         for (CubeInstance cubeInstance : filterModelCubes) {
             boolean isCubeMatch = (null == cubeName)
-                    || (!exactMatch && cubeInstance.getName().toLowerCase().contains(cubeName.toLowerCase())) ||
-                    (exactMatch && cubeInstance.getName().toLowerCase().equals(cubeName.toLowerCase()));
+                    || (!exactMatch && cubeInstance.getName().toLowerCase().contains(cubeName.toLowerCase()))
+                    || (exactMatch && cubeInstance.getName().toLowerCase().equals(cubeName.toLowerCase()));
 
             if (isCubeMatch) {
                 filterCubes.add(cubeInstance);
@@ -428,8 +430,8 @@ public class CubeService extends BasicService {
             try {
                 // use reflection to isolate NoClassDef errors when HBase is not available
                 hr = (HBaseResponse) Class.forName("org.apache.kylin.rest.service.HBaseInfoUtil")//
-                        .getMethod("getHBaseInfo", new Class[] { String.class, String.class })//
-                        .invoke(null, new Object[] { tableName, this.getConfig().getStorageUrl() });
+                        .getMethod("getHBaseInfo", new Class[] { String.class, KylinConfig.class })//
+                        .invoke(null, tableName, this.getConfig());
             } catch (Throwable e) {
                 throw new IOException(e);
             }

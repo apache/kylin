@@ -27,10 +27,9 @@ import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 
-/**
- * Created by xiefan on 17-5-5.
- */
 public class HBaseInfoUtil {
+    
+    @SuppressWarnings("unused") // used by reflection
     public static HBaseResponse getHBaseInfo(String tableName, KylinConfig config) throws IOException {
         if (!config.getStorageUrl().getScheme().equals("hbase"))
             return null;
