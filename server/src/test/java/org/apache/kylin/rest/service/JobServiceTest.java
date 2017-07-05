@@ -19,9 +19,14 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
+import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.JobException;
+import org.apache.kylin.job.execution.*;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.junit.Assert;
 import org.junit.Test;
@@ -46,5 +51,33 @@ public class JobServiceTest extends ServiceTestBase {
         Assert.assertNotNull(cacheService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
         Assert.assertNull(jobService.getJobInstance("job_not_exist"));
         Assert.assertNotNull(jobService.searchJobs(null, null, null, 0, 0, JobTimeFilterEnum.ALL));
+    }
+
+    @Test
+    public void testExceptionOnLostJobOutput() {
+        ExecutableManager manager = ExecutableManager.getInstance(jobService.getConfig());
+        AbstractExecutable executable = new TestJob();
+        manager.addJob(executable);
+        List<CubingJob> jobs = jobService.innerSearchCubingJobs("cube",
+                "jobName",
+                Collections.<ExecutableState>emptySet(),
+                0,
+                Long.MAX_VALUE,
+                Collections.<String, Output>emptyMap(),
+                true,
+                "project");
+        Assert.assertEquals(0, jobs.size());
+    }
+
+    public static class TestJob extends CubingJob {
+
+        public TestJob(){
+            super();
+        }
+
+        @Override
+        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+            return new ExecuteResult(ExecuteResult.State.SUCCEED, "");
+        }
     }
 }
