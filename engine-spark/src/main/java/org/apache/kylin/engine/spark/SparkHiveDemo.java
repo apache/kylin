@@ -22,7 +22,8 @@ import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.HiveContext;
 
 /**
@@ -45,7 +46,7 @@ public class SparkHiveDemo extends AbstractApplication {
         SparkConf conf = new SparkConf().setAppName("Simple Application");
         JavaSparkContext sc = new JavaSparkContext(conf);
         HiveContext sqlContext = new HiveContext(sc.sc());
-        final DataFrame dataFrame = sqlContext.sql("select * from test_kylin_fact");
+        final Dataset<Row> dataFrame = sqlContext.sql("select * from test_kylin_fact");
         System.out.println("count * of the table:" + dataFrame.count());
     }
 }
