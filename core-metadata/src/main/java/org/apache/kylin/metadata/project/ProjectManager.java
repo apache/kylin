@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.project;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -260,6 +261,20 @@ public class ProjectManager {
 
     private void updateProject(ProjectInstance prj) throws IOException {
         synchronized (prj) {
+            LinkedHashMap<String, String> overrideProps = prj.getOverrideKylinProps();
+
+            if (overrideProps != null) {
+                Iterator<Map.Entry<String, String>> iterator = overrideProps.entrySet().iterator();
+
+                while (iterator.hasNext()) {
+                    Map.Entry<String, String> entry = iterator.next();
+
+                    if (StringUtils.isAnyBlank(entry.getKey(), entry.getValue())) {
+                        throw new IllegalStateException("Property key/value must not be blank");
+                    }
+                }
+            }
+
             getStore().putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
             projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
             clearL2Cache();
