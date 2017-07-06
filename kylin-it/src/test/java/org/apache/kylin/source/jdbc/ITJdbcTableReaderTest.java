@@ -1,9 +1,26 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 package org.apache.kylin.source.jdbc;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -11,12 +28,6 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.query.H2Database;
 import org.apache.kylin.source.datagen.ModelDataGenerator;
-import org.dbunit.DatabaseUnitException;
-import org.dbunit.database.DatabaseConfig;
-import org.dbunit.dataset.datatype.DataType;
-import org.dbunit.dataset.datatype.DataTypeException;
-import org.dbunit.ext.h2.H2Connection;
-import org.dbunit.ext.h2.H2DataTypeFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,14 +43,14 @@ public class ITJdbcTableReaderTest extends LocalFileMetadataTestCase implements 
 
         super.createTestMetadata();
 
-        System.setProperty("kylin.source.jdbc.connection-url", "jdbc:h2:mem:db");
+        System.setProperty("kylin.source.jdbc.connection-url", "jdbc:h2:mem:db" + "_jdbc_table_reader");
         System.setProperty("kylin.source.jdbc.driver", "org.h2.Driver");
         System.setProperty("kylin.source.jdbc.user", "sa");
         System.setProperty("kylin.source.jdbc.pass", "");
 
         config = KylinConfig.getInstanceFromEnv();
 
-        h2Connection = DriverManager.getConnection("jdbc:h2:mem:db", "sa", "");
+        h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + "_jdbc_table_reader", "sa", "");
 
         H2Database h2DB = new H2Database(h2Connection, config);
 
@@ -91,26 +102,6 @@ public class ITJdbcTableReaderTest extends LocalFileMetadataTestCase implements 
     @Override
     public int getSourceType() {
         return ISourceAware.ID_JDBC;
-    }
-
-    @SuppressWarnings("deprecation")
-    protected static H2Connection newH2Connection() throws DatabaseUnitException {
-        H2Connection h2Conn = new H2Connection(h2Connection, null);
-        h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
-        h2Conn.getConfig().setFeature(DatabaseConfig.FEATURE_DATATYPE_WARNING, false);
-        return h2Conn;
-    }
-
-    public static class TestH2DataTypeFactory extends H2DataTypeFactory {
-        @Override
-        public DataType createDataType(int sqlType, String sqlTypeName, String tableName, String columnName)
-                throws DataTypeException {
-
-            if ((columnName.startsWith("COL") || columnName.startsWith("col")) && sqlType == Types.BIGINT) {
-                return DataType.INTEGER;
-            }
-            return super.createDataType(sqlType, sqlTypeName);
-        }
     }
 
 }
