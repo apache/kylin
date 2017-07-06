@@ -22,8 +22,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 
+import java.io.Serializable;
+
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class ComputedColumnDesc {
+public class ComputedColumnDesc implements Serializable{
     @JsonProperty
     private String tableIdentity;
     @JsonProperty
