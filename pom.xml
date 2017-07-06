@@ -61,7 +61,7 @@
         <kafka.version>0.10.1.0</kafka.version>
 
         <!-- Spark versions -->
-        <spark.version>1.6.3</spark.version>
+        <spark.version>2.1.1</spark.version>
         <kryo.version>4.0.0</kryo.version>
 
         <!-- <reflections.version>0.9.10</reflections.version> -->
@@ -577,19 +577,19 @@
             <!-- Spark dependency -->
             <dependency>
                 <groupId>org.apache.spark</groupId>
-                <artifactId>spark-core_2.10</artifactId>
+                <artifactId>spark-core_2.11</artifactId>
                 <version>${spark.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.spark</groupId>
-                <artifactId>spark-sql_2.10</artifactId>
+                <artifactId>spark-sql_2.11</artifactId>
                 <version>${spark.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.spark</groupId>
-                <artifactId>spark-hive_2.10</artifactId>
+                <artifactId>spark-hive_2.11</artifactId>
                 <version>${spark.version}</version>
                 <scope>provided</scope>
             </dependency>
@@ -602,7 +602,7 @@
             <!-- Kafka dependency -->
             <dependency>
                 <groupId>org.apache.kafka</groupId>
-                <artifactId>kafka_2.10</artifactId>
+                <artifactId>kafka_2.11</artifactId>
                 <version>${kafka.version}</version>
                 <scope>provided</scope>
             </dependency>

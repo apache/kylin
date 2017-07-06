@@ -27,8 +27,8 @@ if [[ `uname -a` =~ "Darwin" ]]; then
     alias md5cmd="md5 -q"
 fi
 
-spark_version="1.6.3"
-spark_pkg_md5="ce8a2e7529aac0f0175194061769dbd4"
+spark_version="2.1.1"
+spark_pkg_md5="195daab700e4332fcdaf7c66236de542"
 
 if [ ! -f "build/spark-${spark_version}-bin-hadoop2.6.tgz" ]
 then

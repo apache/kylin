@@ -98,7 +98,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
-import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.HiveContext;
 import org.slf4j.Logger;
@@ -179,7 +179,7 @@ public class SparkCubing extends AbstractApplication {
         }
     }
 
-    private void writeDictionary(DataFrame intermediateTable, String cubeName, String segmentId) throws Exception {
+    private void writeDictionary(Dataset<Row> intermediateTable, String cubeName, String segmentId) throws Exception {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         final CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
         final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
@@ -204,9 +204,9 @@ public class SparkCubing extends AbstractApplication {
         for (Map.Entry<Integer, TblColRef> entry : tblColRefMap.entrySet()) {
             final String column = columns[entry.getKey()];
             final TblColRef tblColRef = entry.getValue();
-            final DataFrame frame = intermediateTable.select(column).distinct();
+            final Dataset<Row> frame = intermediateTable.select(column).distinct();
 
-            final Row[] rows = frame.collect();
+            final List<Row> rows = frame.collectAsList();
             dictionaryMap.put(tblColRef, DictionaryGenerator.buildDictionary(tblColRef.getType(), new IterableDictionaryValueEnumerator(new Iterable<String>() {
                 @Override
                 public Iterator<String> iterator() {
@@ -215,13 +215,13 @@ public class SparkCubing extends AbstractApplication {
 
                         @Override
                         public boolean hasNext() {
-                            return i < rows.length;
+                            return i < rows.size();
                         }
 
                         @Override
                         public String next() {
                             if (hasNext()) {
-                                final Row row = rows[i++];
+                                final Row row = rows.get(i++);
                                 final Object o = row.get(0);
                                 return o != null ? o.toString() : null;
                             } else {
@@ -367,7 +367,7 @@ public class SparkCubing extends AbstractApplication {
         final JavaPairRDD<byte[], byte[]> javaPairRDD = javaRDD.glom().mapPartitionsToPair(new PairFlatMapFunction<Iterator<List<List<String>>>, byte[], byte[]>() {
 
             @Override
-            public Iterable<Tuple2<byte[], byte[]>> call(Iterator<List<List<String>>> listIterator) throws Exception {
+            public Iterator<Tuple2<byte[], byte[]>> call(Iterator<List<List<String>>> listIterator) throws Exception {
                 long t = System.currentTimeMillis();
                 prepare();
 
@@ -390,7 +390,7 @@ public class SparkCubing extends AbstractApplication {
                     throw new RuntimeException(e);
                 }
                 System.out.println("build partition cost: " + (System.currentTimeMillis() - t) + "ms");
-                return sparkCuboidWriter.getResult();
+                return sparkCuboidWriter.getResult().iterator();
             }
         });
 
@@ -430,7 +430,7 @@ public class SparkCubing extends AbstractApplication {
             }
         }, UnsignedBytes.lexicographicalComparator()).mapPartitions(new FlatMapFunction<Iterator<Tuple2<byte[], byte[]>>, Tuple2<byte[], byte[]>>() {
             @Override
-            public Iterable<Tuple2<byte[], byte[]>> call(final Iterator<Tuple2<byte[], byte[]>> tuple2Iterator) throws Exception {
+            public Iterator<Tuple2<byte[], byte[]>> call(final Iterator<Tuple2<byte[], byte[]>> tuple2Iterator) throws Exception {
                 return new Iterable<Tuple2<byte[], byte[]>>() {
                     final BufferedMeasureCodec codec = new BufferedMeasureCodec(dataTypes);
                     final Object[] input = new Object[measureSize];
@@ -458,7 +458,7 @@ public class SparkCubing extends AbstractApplication {
                             }
                         });
                     }
-                };
+                }.iterator();
             }
         }, true).mapToPair(new PairFunction<Tuple2<byte[], byte[]>, ImmutableBytesWritable, KeyValue>() {
             @Override
@@ -549,7 +549,7 @@ public class SparkCubing extends AbstractApplication {
 
         JavaSparkContext sc = new JavaSparkContext(conf);
         HiveContext sqlContext = new HiveContext(sc.sc());
-        final DataFrame intermediateTable = sqlContext.sql("select * from " + hiveTable);
+        final Dataset<Row> intermediateTable = sqlContext.sql("select * from " + hiveTable);
         final String cubeName = optionsHelper.getOptionValue(OPTION_CUBE_NAME);
         final String segmentId = optionsHelper.getOptionValue(OPTION_SEGMENT_ID);
         final String confPath = optionsHelper.getOptionValue(OPTION_CONF_PATH);

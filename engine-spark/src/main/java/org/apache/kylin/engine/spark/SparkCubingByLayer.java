@@ -59,7 +59,7 @@ import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.broadcast.Broadcast;
-import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.HiveContext;
 import org.apache.spark.storage.StorageLevel;
@@ -73,6 +73,7 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -155,7 +156,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         final KylinConfig envConfig = KylinConfig.getInstanceFromEnv();
 
         HiveContext sqlContext = new HiveContext(sc.sc());
-        final DataFrame intermediateTable = sqlContext.table(hiveTable);
+        final Dataset<Row> intermediateTable = sqlContext.table(hiveTable);
 
         final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
@@ -354,7 +355,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         }
 
         @Override
-        public Iterable<Tuple2<ByteArray, Object[]>> call(Tuple2<ByteArray, Object[]> tuple2) throws Exception {
+        public Iterator<Tuple2<ByteArray, Object[]>> call(Tuple2<ByteArray, Object[]> tuple2) throws Exception {
             if (initialized == false) {
                 prepare();
                 initialized = true;
@@ -368,7 +369,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
             // if still empty or null
             if (myChildren == null || myChildren.size() == 0) {
-                return EMTPY_ITERATOR;
+                return EMTPY_ITERATOR.iterator();
             }
 
             List<Tuple2<ByteArray, Object[]>> tuples = new ArrayList(myChildren.size());
@@ -382,7 +383,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                 tuples.add(new Tuple2<>(new ByteArray(newKey), tuple2._2()));
             }
 
-            return tuples;
+            return tuples.iterator();
         }
     }
 

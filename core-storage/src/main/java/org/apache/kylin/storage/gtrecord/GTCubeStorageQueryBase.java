@@ -83,7 +83,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             if (cubeDesc.getConfig().isSkippingEmptySegments() && cubeSeg.getInputRecords() == 0) {
                 logger.info("Skip cube segment {} because its input record is 0", cubeSeg);
                 continue;
-            }
+        }
 
             scanner = new CubeSegmentScanner(cubeSeg, request.getCuboid(), request.getDimensions(), request.getGroups(), request.getMetrics(), request.getFilter(), request.getHavingFilter(), request.getContext());
             if (!scanner.isSegmentSkipped())
