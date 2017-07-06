@@ -422,6 +422,13 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     }
   }
 
+  if ($scope.state.mode == 'edit') {
+    $scope.$on('$destroy', function () {
+      // emit measures edit event in order to re-generate advanced dict.
+      $scope.$emit('MeasuresEdited');
+    });
+  }
+
 });
 
 var NextParameterModalCtrl = function ($scope, scope,para,$modalInstance,cubeConfig, CubeService, MessageService, $location, SweetAlert,ProjectModel, loadingRequest,ModelService) {
