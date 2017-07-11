@@ -106,10 +106,6 @@ public class DeployUtil {
         return new File("../storage-hbase/target", "kylin-storage-hbase-" + getPomVersion() + "-coprocessor.jar");
     }
 
-    private static File getSparkJobJarFile() {
-        return new File("../engine-spark/target", "kylin-engine-spark-" + getPomVersion() + "-job.jar");
-    }
-
     private static void execCliCommand(String cmd) throws IOException {
         config().getCliCommandExecutor().execute(cmd);
     }
@@ -143,7 +139,7 @@ public class DeployUtil {
 
     public static void prepareTestDataForStreamingCube(long startTime, long endTime, int numberOfRecords, String cubeName, StreamDataLoader streamDataLoader) throws IOException {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-        List<String> data = StreamingTableDataGenerator.generate(numberOfRecords, startTime, endTime, cubeInstance.getRootFactTable());
+        List<String> data = StreamingTableDataGenerator.generate(numberOfRecords, startTime, endTime, cubeInstance.getRootFactTable(), cubeInstance.getProject());
         //load into kafka
         streamDataLoader.loadIntoKafka(data);
         logger.info("Write {} messages into {}", data.size(), streamDataLoader.toString());
@@ -235,7 +231,7 @@ public class DeployUtil {
         sampleDataDeployer.createSampleDatabase("EDW");
         for (String tablename : TABLE_NAMES) {
             logger.info(String.format("get table desc %s", tablename));
-            sampleDataDeployer.createSampleTable(metaMgr.getTableDesc(tablename));
+            sampleDataDeployer.createSampleTable(metaMgr.getTableDesc(tablename, model.getProject()));
         }
 
         // load data to hive tables

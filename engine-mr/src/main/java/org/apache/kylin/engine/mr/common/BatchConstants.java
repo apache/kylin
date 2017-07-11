@@ -38,6 +38,7 @@ public interface BatchConstants {
     String CFG_II_SEGMENT_NAME = "ii.segment.name";
 
     String CFG_OUTPUT_PATH = "output.path";
+    String CFG_PROJECT_NAME = "project.name";
     String CFG_TABLE_NAME = "table.name";
     String CFG_IS_MERGE = "is.merge";
     String CFG_CUBE_INTERMEDIATE_TABLE_ROW_DELIMITER = "cube.intermediate.table.row.delimiter";
@@ -69,6 +70,7 @@ public interface BatchConstants {
      */
     String ARG_INPUT = "input";
     String ARG_OUTPUT = "output";
+    String ARG_PROJECT = "project";
     String ARG_JOB_NAME = "jobname";
     String ARG_CUBING_JOB_ID = "cubingJobId";
     String ARG_CUBE_NAME = "cubename";

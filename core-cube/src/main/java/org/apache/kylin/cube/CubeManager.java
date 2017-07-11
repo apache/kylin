@@ -284,7 +284,7 @@ public class CubeManager implements IRealizationProvider {
         MetadataManager metaMgr = getMetadataManager();
         SnapshotManager snapshotMgr = getSnapshotManager();
 
-        TableDesc tableDesc = new TableDesc(metaMgr.getTableDesc(lookupTable));
+        TableDesc tableDesc = new TableDesc(metaMgr.getTableDesc(lookupTable, cubeSeg.getProject()));
         IReadableTable hiveTable = SourceFactory.createReadableTable(tableDesc);
         SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc);
 
@@ -682,7 +682,7 @@ public class CubeManager implements IRealizationProvider {
 
         try {
             SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
-            TableDesc tableDesc = getMetadataManager().getTableDesc(tableName);
+            TableDesc tableDesc = getMetadataManager().getTableDesc(tableName, cubeSegment.getProject());
             return new LookupStringTable(tableDesc, pkCols, snapshot);
         } catch (IOException e) {
             throw new IllegalStateException(

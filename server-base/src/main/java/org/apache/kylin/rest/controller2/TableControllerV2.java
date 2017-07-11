@@ -49,6 +49,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping(value = "/tables")
 public class TableControllerV2 extends BasicController {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(TableControllerV2.class);
 
     @Autowired
@@ -71,20 +72,20 @@ public class TableControllerV2 extends BasicController {
                 "");
     }
 
+    // FIXME prj-table
     /**
      * Get available table list of the input database
      *
      * @return Table metadata array
      * @throws IOException
      */
-
     @RequestMapping(value = "/{tableName:.+}", method = { RequestMethod.GET }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getTableDescV2(@PathVariable String tableName) {
+    public EnvelopeResponse getTableDescV2(@PathVariable String tableName, @PathVariable String project) {
         Message msg = MsgPicker.getMsg();
 
-        TableDesc table = tableService.getTableDescByName(tableName, false);
+        TableDesc table = tableService.getTableDescByName(tableName, false, project);
         if (table == null)
             throw new BadRequestException(String.format(msg.getHIVE_TABLE_NOT_FOUND(), tableName));
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, table, "");
@@ -109,13 +110,13 @@ public class TableControllerV2 extends BasicController {
                 tableService.unloadHiveTables(requestV2.getTables(), requestV2.getProject()), "");
     }
 
+    // FIXME prj-table
     /**
      * Regenerate table cardinality
      *
      * @return Table metadata array
      * @throws IOException
      */
-
     @RequestMapping(value = "/cardinality", method = { RequestMethod.POST }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
@@ -123,9 +124,10 @@ public class TableControllerV2 extends BasicController {
 
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         String[] tables = requestV2.getTables();
+        String project = requestV2.getProject();
 
         for (String table : tables) {
-            tableService.calculateCardinality(table.toUpperCase(), submitter);
+            tableService.calculateCardinality(table.toUpperCase(), submitter, project);
         }
     }
 

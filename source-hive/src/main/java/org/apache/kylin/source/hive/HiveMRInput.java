@@ -194,8 +194,9 @@ public class HiveMRInput implements IMRInput {
             MetadataManager metadataManager = MetadataManager.getInstance(kylinConfig);
             final Set<TableDesc> lookupViewsTables = Sets.newHashSet();
 
+            String prj = flatDesc.getDataModel().getProject();
             for (JoinTableDesc lookupDesc : flatDesc.getDataModel().getJoinTables()) {
-                TableDesc tableDesc = metadataManager.getTableDesc(lookupDesc.getTable());
+                TableDesc tableDesc = metadataManager.getTableDesc(lookupDesc.getTable(), prj);
                 if (tableDesc.isView()) {
                     lookupViewsTables.add(tableDesc);
                 }

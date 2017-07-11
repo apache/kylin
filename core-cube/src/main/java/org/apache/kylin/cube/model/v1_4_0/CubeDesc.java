@@ -710,15 +710,6 @@ public class CubeDesc extends RootPersistentEntity {
         if (measures == null) {
             measures = Lists.newArrayList();
         }
-
-        //        Collections.sort(measures, new Comparator<MeasureDesc>() {
-        //            @Override
-        //            public int compare(MeasureDesc m1, MeasureDesc m2) {
-        //                Integer id1 = m1.getId();
-        //                Integer id2 = m2.getId();
-        //                return id1.compareTo(id2);
-        //            }
-        //        });
     }
 
     private void sortHierarchiesByLevel(HierarchyDesc[] hierarchies) {
@@ -733,7 +724,11 @@ public class CubeDesc extends RootPersistentEntity {
             });
         }
     }
-
+    
+    public String getProject() {
+        return getModel().getProject();
+    }
+    
     public long getRetentionRange() {
         return retentionRange;
     }
@@ -842,4 +837,5 @@ public class CubeDesc extends RootPersistentEntity {
         newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }
+
 }

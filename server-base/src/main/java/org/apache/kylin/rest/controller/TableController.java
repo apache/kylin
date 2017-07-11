@@ -77,16 +77,17 @@ public class TableController extends BasicController {
         }
     }
 
+    // FIXME prj-table
     /**
      * Get available table list of the input database
      *
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableName:.+}", method = { RequestMethod.GET }, produces = { "application/json" })
+    @RequestMapping(value = "/{project}/{tableName:.+}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public TableDesc getTableDesc(@PathVariable String tableName) {
-        TableDesc table = tableService.getTableDescByName(tableName, false);
+    public TableDesc getTableDesc(@PathVariable String tableName, @PathVariable String project) {
+        TableDesc table = tableService.getTableDescByName(tableName, false, project);
         if (table == null)
             throw new NotFoundException("Could not find Hive table: " + tableName);
         return table;
@@ -112,7 +113,7 @@ public class TableController extends BasicController {
             allTables.toArray(unloaded);
             result.put("result.unloaded", unloaded);
             if (request.isCalculate()) {
-                tableService.calculateCardinalityIfNotPresent(loaded, submitter);
+                tableService.calculateCardinalityIfNotPresent(loaded, submitter, project);
             }
         } catch (Throwable e) {
             logger.error("Failed to load Hive Table", e);
@@ -144,20 +145,21 @@ public class TableController extends BasicController {
         return result;
     }
 
+    // FIXME prj-table
     /**
      * Regenerate table cardinality
      *
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @RequestMapping(value = "/{project}/{tableNames}/cardinality", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
-    public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) throws Exception {
+    public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request, @PathVariable String project) throws Exception {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         String[] tables = tableNames.split(",");
         try {
             for (String table : tables) {
-                tableService.calculateCardinality(table.trim().toUpperCase(), submitter);
+                tableService.calculateCardinality(table.trim().toUpperCase(), submitter, project);
             }
         } catch (IOException e) {
             logger.error("Failed to calculate cardinality", e);

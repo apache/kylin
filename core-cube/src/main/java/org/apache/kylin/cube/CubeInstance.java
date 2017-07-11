@@ -381,6 +381,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
+    public String getProject() {
+        return getDescriptor().getProject();
+    }
+
     @Override
     public int getSourceType() {
         return getModel().getRootFactTable().getTableDesc().getSourceType();

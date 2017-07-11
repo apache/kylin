@@ -47,7 +47,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
     }
 
     @Override
-    public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String tableName) {
+    public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String tableName, String prj) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         MetadataManager metaMgr = MetadataManager.getInstance(config);
 
@@ -58,7 +58,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
             throw new RuntimeException("cannot get HiveTableMeta", e);
         }
 
-        TableDesc tableDesc = metaMgr.getTableDesc(database + "." + tableName);
+        TableDesc tableDesc = metaMgr.getTableDesc(database + "." + tableName, prj);
         if (tableDesc == null) {
             tableDesc = new TableDesc();
             tableDesc.setDatabase(database.toUpperCase());
@@ -95,7 +95,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
             partitionColumnString.append(hiveTableMeta.partitionColumns.get(i).name.toUpperCase());
         }
 
-        TableExtDesc tableExtDesc = metaMgr.getTableExt(tableDesc.getIdentity());
+        TableExtDesc tableExtDesc = metaMgr.getTableExt(tableDesc.getIdentity(), prj);
         tableExtDesc.addDataSourceProp("location", hiveTableMeta.sdLocation);
         tableExtDesc.addDataSourceProp("owner", hiveTableMeta.owner);
         tableExtDesc.addDataSourceProp("last_access_time", String.valueOf(hiveTableMeta.lastAccessTime));

@@ -46,12 +46,12 @@ public class StreamingTableDataGenerator {
     private static final Logger logger = LoggerFactory.getLogger(StreamingTableDataGenerator.class);
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    public static List<String> generate(int recordCount, long startTime, long endTime, String tableName) {
+    public static List<String> generate(int recordCount, long startTime, long endTime, String tableName, String prj) {
         Preconditions.checkArgument(startTime < endTime);
         Preconditions.checkArgument(recordCount > 0);
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(tableName);
+        TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(tableName, prj);
 
         SortedMultiset<Long> times = TreeMultiset.create();
         Random r = new Random();

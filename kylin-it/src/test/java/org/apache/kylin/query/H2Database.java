@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
@@ -37,6 +36,8 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 public class H2Database {
     @SuppressWarnings("unused")
@@ -62,12 +63,13 @@ public class H2Database {
     }
 
     private final Connection h2Connection;
-
     private final KylinConfig config;
+    private final String project;
 
-    public H2Database(Connection h2Connection, KylinConfig config) {
+    public H2Database(Connection h2Connection, KylinConfig config, String prj) {
         this.h2Connection = h2Connection;
         this.config = config;
+        this.project = prj;
     }
 
     public void loadAllTables() throws SQLException {
@@ -78,7 +80,7 @@ public class H2Database {
 
     private void loadH2Table(String tableName) throws SQLException {
         MetadataManager metaMgr = MetadataManager.getInstance(config);
-        TableDesc tableDesc = metaMgr.getTableDesc(tableName.toUpperCase());
+        TableDesc tableDesc = metaMgr.getTableDesc(tableName.toUpperCase(), project);
         File tempFile = null;
 
         try {

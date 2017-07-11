@@ -199,7 +199,7 @@ class ProjectL2Cache {
         MetadataManager metaMgr = mgr.getMetadataManager();
 
         for (String tableName : pi.getTables()) {
-            TableDesc tableDesc = metaMgr.getTableDesc(tableName);
+            TableDesc tableDesc = metaMgr.getTableDesc(tableName, project);
             if (tableDesc != null) {
                 projectCache.tables.put(tableDesc.getIdentity(), new TableCache(tableDesc));
             } else {
@@ -257,7 +257,7 @@ class ProjectL2Cache {
         }
 
         for (TblColRef col : allColumns) {
-            TableDesc table = metaMgr.getTableDesc(col.getTable());
+            TableDesc table = metaMgr.getTableDesc(col.getTable(), prjCache.project);
             if (table == null) {
                 logger.error("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "', but its table is not found by MetadataManager");
                 return false;

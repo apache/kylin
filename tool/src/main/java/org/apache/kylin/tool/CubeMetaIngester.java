@@ -146,7 +146,7 @@ public class CubeMetaIngester extends AbstractApplication {
         //clear the cache
         metadataManager.reload();
 
-        for (TableDesc tableDesc : srcMetadataManager.listAllTables()) {
+        for (TableDesc tableDesc : srcMetadataManager.listAllTables(null)) {
             logger.info("add " + tableDesc + " to " + targetProjectName);
             projectManager.addTableDescToProject(Lists.newArrayList(tableDesc.getIdentity()).toArray(new String[0]), targetProjectName);
         }
@@ -169,8 +169,8 @@ public class CubeMetaIngester extends AbstractApplication {
             throw new IllegalStateException("Target project does not exist in target metadata: " + targetProjectName);
         }
 
-        for (TableDesc tableDesc : srcMetadataManager.listAllTables()) {
-            TableDesc existing = metadataManager.getTableDesc(tableDesc.getIdentity());
+        for (TableDesc tableDesc : srcMetadataManager.listAllTables(null)) {
+            TableDesc existing = metadataManager.getTableDesc(tableDesc.getIdentity(), targetProjectName);
             if (existing != null && !existing.equals(tableDesc)) {
                 logger.info("Table {} already has a different version in target metadata store", tableDesc.getIdentity());
                 logger.info("Existing version: " + existing);

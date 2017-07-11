@@ -301,14 +301,14 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         broadcaster.getCounterAndClear();
 
         TableDesc tableDesc = createTestTableDesc();
-        assertTrue(metadataManager.getTableDesc(tableDesc.getIdentity()) == null);
-        assertTrue(metadataManagerB.getTableDesc(tableDesc.getIdentity()) == null);
-        metadataManager.saveSourceTable(tableDesc);
+        assertTrue(metadataManager.getTableDesc(tableDesc.getIdentity(), "default") == null);
+        assertTrue(metadataManagerB.getTableDesc(tableDesc.getIdentity(), "default") == null);
+        metadataManager.saveSourceTable(tableDesc, "default");
         //only one for table insert
         assertEquals(1, broadcaster.getCounterAndClear());
         waitForCounterAndClear(1);
-        assertNotNull(metadataManager.getTableDesc(tableDesc.getIdentity()));
-        assertNotNull(metadataManagerB.getTableDesc(tableDesc.getIdentity()));
+        assertNotNull(metadataManager.getTableDesc(tableDesc.getIdentity(), "default"));
+        assertNotNull(metadataManagerB.getTableDesc(tableDesc.getIdentity(), "default"));
 
         final String dataModelName = "test_data_model";
         DataModelDesc dataModelDesc = metadataManager.getDataModelDesc("test_kylin_left_join_model_desc");

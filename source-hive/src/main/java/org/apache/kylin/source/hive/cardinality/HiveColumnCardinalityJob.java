@@ -60,6 +60,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
         Options options = new Options();
 
+        options.addOption(OPTION_PROJECT);
         options.addOption(OPTION_TABLE);
         options.addOption(OPTION_OUTPUT_PATH);
 
@@ -78,7 +79,9 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
         setJobClasspath(job, kylinConfig);
 
+        String project = getOptionValue(OPTION_PROJECT);
         String table = getOptionValue(OPTION_TABLE);
+        job.getConfiguration().set(BatchConstants.CFG_PROJECT_NAME, project);
         job.getConfiguration().set(BatchConstants.CFG_TABLE_NAME, table);
 
         Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
@@ -87,7 +90,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
         job.getConfiguration().set("mapreduce.output.fileoutputformat.compress", "false");
 
         // Mapper
-        IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table);
+        IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table, project);
         tableInputFormat.configureJob(job);
 
         job.setMapperClass(ColumnCardinalityMapper.class);
@@ -105,7 +108,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
         logger.info("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
 
-        TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(table);
+        TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(table, project);
         attachTableMetadata(tableDesc, job.getConfiguration());
         int result = waitForCompletion(job);
 

@@ -168,10 +168,10 @@ public class TableSchemaUpdateChecker {
         return true;
     }
 
-    public CheckResult allowReload(TableDesc newTableDesc) {
+    public CheckResult allowReload(TableDesc newTableDesc, String prj) {
         final String fullTableName = newTableDesc.getIdentity();
 
-        TableDesc existing = metadataManager.getTableDesc(fullTableName);
+        TableDesc existing = metadataManager.getTableDesc(fullTableName, prj);
         if (existing == null) {
             return CheckResult.validOnFirstLoad(fullTableName);
         }

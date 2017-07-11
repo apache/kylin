@@ -30,7 +30,7 @@ public interface ISourceMetadataExplorer {
     
     List<String> listTables(String database) throws Exception;
     
-    Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table) throws Exception;
+    Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table, String prj) throws Exception;
     
     List<String> getRelatedKylinResources(TableDesc table);
 }

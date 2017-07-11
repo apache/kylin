@@ -26,6 +26,31 @@
       "name": "ssb",
       "type": "CUBE",
       "realization": "ssb"
+    },
+    {
+      "name": "twenty_dim",
+      "type": "CUBE",
+      "realization": "twenty_dim"
+    },
+    {
+      "name": "fifty_dim",
+      "type": "CUBE",
+      "realization": "fifty_dim"
+    },
+    {
+      "name": "ut_large_dimension_number",
+      "type": "CUBE",
+      "realization": "ut_large_dimension_number"
+    },
+    {
+      "name": "ut_inner_join_cube_partial",
+      "type": "CUBE",
+      "realization": "ut_inner_join_cube_partial"
+    },
+    {
+      "name": "ut_cube_desc_combination_int_overflow",
+      "type": "CUBE",
+      "realization": "ut_cube_desc_combination_int_overflow"
     }
   ],
   "tables": [
@@ -50,7 +75,10 @@
     "ci_left_join_model",
     "test_kylin_inner_join_model_desc",
     "test_kylin_left_join_model_desc",
-    "test_streaming_table_model_desc"
+    "test_streaming_table_model_desc",
+    "fifty_dim",
+    "twenty_dim",
+    "ut_large_dimension_number"
   ],
   "override_kylin_properties" :{
     "kylin.storage.hbase.owner-tag": "kylin@kylin.apache.org"

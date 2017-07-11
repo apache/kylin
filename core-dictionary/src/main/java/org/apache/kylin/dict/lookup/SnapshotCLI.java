@@ -27,17 +27,18 @@ import org.apache.kylin.source.SourceFactory;
 
 public class SnapshotCLI {
 
+    // FIXME prj-table
     public static void main(String[] args) throws IOException {
         if ("rebuild".equals(args[0]))
-            rebuild(args[1], args[2]);
+            rebuild(args[1], args[2], args[3]);
     }
 
-    private static void rebuild(String table, String overwriteUUID) throws IOException {
+    private static void rebuild(String table, String overwriteUUID, String project) throws IOException {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
         MetadataManager metaMgr = MetadataManager.getInstance(conf);
         SnapshotManager snapshotMgr = SnapshotManager.getInstance(conf);
 
-        TableDesc tableDesc = metaMgr.getTableDesc(table);
+        TableDesc tableDesc = metaMgr.getTableDesc(table, project);
         if (tableDesc == null)
             throw new IllegalArgumentException("Not table found by " + table);
 

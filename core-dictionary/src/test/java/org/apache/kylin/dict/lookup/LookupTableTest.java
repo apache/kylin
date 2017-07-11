@@ -127,7 +127,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
         String[] pkCols = new String[] { "CAL_DT" };
         String snapshotResPath = "/table_snapshot/TEST_CAL_DT.csv/4af48c94-86de-4e22-a4fd-c49b06cbaa4f.snapshot";
         SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
-        TableDesc tableDesc = metaMgr.getTableDesc(tableName);
+        TableDesc tableDesc = metaMgr.getTableDesc(tableName, "default");
         LookupTable<String> lt = new LookupStringTable(tableDesc, pkCols, snapshot);
 
         System.out.println(lt);

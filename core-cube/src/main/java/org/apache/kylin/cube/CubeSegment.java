@@ -376,6 +376,10 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
                 throw new IllegalStateException("Invalid segment, sourceOffsetStart(" + sourceOffsetStart + ") must be smaller than sourceOffsetEnd(" + sourceOffsetEnd + ") in segment " + this);
         }
     }
+    
+    public String getProject() {
+        return getCubeDesc().getProject();
+    }
 
     @Override
     public int compareTo(CubeSegment other) {

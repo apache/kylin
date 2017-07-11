@@ -217,7 +217,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     }
 
     @Override
-    public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table) throws Exception {
+    public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table, String prj) throws Exception {
 
         TableDesc tableDesc = new TableDesc();
         tableDesc.setDatabase(database.toUpperCase());

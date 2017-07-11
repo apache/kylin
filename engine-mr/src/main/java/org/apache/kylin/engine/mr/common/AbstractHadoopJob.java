@@ -69,6 +69,7 @@ import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +78,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractHadoopJob extends Configured implements Tool {
     private static final Logger logger = LoggerFactory.getLogger(AbstractHadoopJob.class);
 
+    protected static final Option OPTION_PROJECT = OptionBuilder.withArgName(BatchConstants.ARG_PROJECT).hasArg().isRequired(true).withDescription("Project name.").create(BatchConstants.ARG_PROJECT);
     protected static final Option OPTION_JOB_NAME = OptionBuilder.withArgName(BatchConstants.ARG_JOB_NAME).hasArg().isRequired(true).withDescription("Job name. For example, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)").create(BatchConstants.ARG_JOB_NAME);
     protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_CUBE_NAME).hasArg().isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube").create(BatchConstants.ARG_CUBE_NAME);
     protected static final Option OPTION_CUBING_JOB_ID = OptionBuilder.withArgName(BatchConstants.ARG_CUBING_JOB_ID).hasArg().isRequired(false).withDescription("ID of cubing job executable").create(BatchConstants.ARG_CUBING_JOB_ID);
@@ -442,12 +444,13 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected void attachTableMetadata(TableDesc table, Configuration conf) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
+        // FIXME prj-table, attach project resource
         dumpList.add(table.getResourcePath());
-        dumpKylinPropsAndMetadata(dumpList, KylinConfig.getInstanceFromEnv(), conf);
+        dumpKylinPropsAndMetadata(null, dumpList, KylinConfig.getInstanceFromEnv(), conf);
     }
 
     protected void attachCubeMetadata(CubeInstance cube, Configuration conf) throws IOException {
-        dumpKylinPropsAndMetadata(collectCubeMetadata(cube), cube.getConfig(), conf);
+        dumpKylinPropsAndMetadata(cube.getProject(), collectCubeMetadata(cube), cube.getConfig(), conf);
     }
 
     protected void attachCubeMetadataWithDict(CubeInstance cube, Configuration conf) throws IOException {
@@ -456,14 +459,14 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         for (CubeSegment segment : cube.getSegments()) {
             dumpList.addAll(segment.getDictionaryPaths());
         }
-        dumpKylinPropsAndMetadata(dumpList, cube.getConfig(), conf);
+        dumpKylinPropsAndMetadata(cube.getProject(), dumpList, cube.getConfig(), conf);
     }
 
     protected void attachSegmentMetadataWithDict(CubeSegment segment, Configuration conf) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.addAll(collectCubeMetadata(segment.getCubeInstance()));
         dumpList.addAll(segment.getDictionaryPaths());
-        dumpKylinPropsAndMetadata(dumpList, segment.getConfig(), conf);
+        dumpKylinPropsAndMetadata(segment.getProject(), dumpList, segment.getConfig(), conf);
     }
 
     private Set<String> collectCubeMetadata(CubeInstance cube) {
@@ -478,11 +481,11 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             dumpList.add(table.getResourcePath());
             dumpList.addAll(SourceFactory.getMRDependentResources(table));
         }
-
+        
         return dumpList;
     }
 
-    protected void dumpKylinPropsAndMetadata(Set<String> dumpList, KylinConfig kylinConfig, Configuration conf) throws IOException {
+    protected void dumpKylinPropsAndMetadata(String prj, Set<String> dumpList, KylinConfig kylinConfig, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
         FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 
@@ -492,6 +495,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         // write kylin.properties
         File kylinPropsFile = new File(metaDir, "kylin.properties");
         kylinConfig.writeProperties(kylinPropsFile);
+        
+        if (prj != null) {
+            dumpList.add(ProjectManager.getInstance(kylinConfig).getProject(prj).getResourcePath());
+        }
 
         // write resources
         dumpResources(kylinConfig, metaDir, dumpList);

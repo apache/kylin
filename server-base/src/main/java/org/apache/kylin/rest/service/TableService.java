@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeManager;
@@ -51,6 +50,8 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob;
+import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityUpdateJob;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,15 +94,15 @@ public class TableService extends BasicService {
             return Collections.emptyList();
         }
         if (withExt) {
-            tables = cloneTableDesc(tables);
+            tables = cloneTableDesc(tables, project);
         }
         return tables;
     }
 
-    public TableDesc getTableDescByName(String tableName, boolean withExt) {
-        TableDesc table = getMetadataManager().getTableDesc(tableName);
+    public TableDesc getTableDescByName(String tableName, boolean withExt, String prj) {
+        TableDesc table = getMetadataManager().getTableDesc(tableName, prj);
         if (withExt) {
-            table = cloneTableDesc(table);
+            table = cloneTableDesc(table, prj);
         }
         return table;
     }
@@ -119,7 +120,7 @@ public class TableService extends BasicService {
         List<Pair<TableDesc, TableExtDesc>> allMeta = Lists.newArrayList();
         ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
         for (Map.Entry<String, String> entry : db2tables.entries()) {
-            Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue());
+            Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue(), project);
             TableDesc tableDesc = pair.getFirst();
             Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey()));
             Preconditions.checkState(tableDesc.getName().equals(entry.getValue()));
@@ -135,7 +136,7 @@ public class TableService extends BasicService {
         TableSchemaUpdateChecker checker = new TableSchemaUpdateChecker(metaMgr, cubeMgr);
         for (Pair<TableDesc, TableExtDesc> pair : allMeta) {
             TableDesc tableDesc = pair.getFirst();
-            TableSchemaUpdateChecker.CheckResult result = checker.allowReload(tableDesc);
+            TableSchemaUpdateChecker.CheckResult result = checker.allowReload(tableDesc, project);
             result.raiseExceptionWhenInvalid();
         }
 
@@ -145,7 +146,7 @@ public class TableService extends BasicService {
             TableDesc tableDesc = pair.getFirst();
             TableExtDesc extDesc = pair.getSecond();
             
-            TableDesc origTable = metaMgr.getTableDesc(tableDesc.getIdentity());
+            TableDesc origTable = metaMgr.getTableDesc(tableDesc.getIdentity(), project);
             if (origTable == null) {
                 tableDesc.setUuid(UUID.randomUUID().toString());
                 tableDesc.setLastModified(0);
@@ -154,7 +155,7 @@ public class TableService extends BasicService {
                 tableDesc.setLastModified(origTable.getLastModified());
             }
             
-            TableExtDesc origExt = metaMgr.getTableExt(tableDesc.getIdentity());
+            TableExtDesc origExt = metaMgr.getTableExt(tableDesc.getIdentity(), project);
             if (origExt == null) {
                 extDesc.setUuid(UUID.randomUUID().toString());
                 extDesc.setLastModified(0);
@@ -163,8 +164,8 @@ public class TableService extends BasicService {
                 extDesc.setLastModified(origExt.getLastModified());
             }
 
-            metaMgr.saveTableExt(extDesc);
-            metaMgr.saveSourceTable(tableDesc);
+            metaMgr.saveTableExt(extDesc, project);
+            metaMgr.saveSourceTable(tableDesc, project);
             saved.add(tableDesc.getIdentity());
         }
 
@@ -190,7 +191,7 @@ public class TableService extends BasicService {
         allTables.toArray(unloaded);
         result.put("result.unloaded", unloaded);
         if (isNeedProfile) {
-            calculateCardinalityIfNotPresent(loaded, submitter);
+            calculateCardinalityIfNotPresent(loaded, submitter, project);
         }
         return result;
     }
@@ -211,13 +212,6 @@ public class TableService extends BasicService {
         result.put("result.unload.success", (String[]) unLoadSuccess.toArray(new String[unLoadSuccess.size()]));
         result.put("result.unload.fail", (String[]) unLoadFail.toArray(new String[unLoadFail.size()]));
         return result;
-    }
-
-    protected void unLoadHiveTable(String tableName) throws IOException {
-        tableName = normalizeHiveTableName(tableName);
-        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        metaMgr.removeSourceTable(tableName);
-        metaMgr.removeTableExt(tableName);
     }
 
     private void syncTableToProject(String[] tables, String project) throws IOException {
@@ -245,7 +239,7 @@ public class TableService extends BasicService {
 
         //remove streaming info
         tableName = normalizeHiveTableName(tableName);
-        TableDesc desc = getMetadataManager().getTableDesc(tableName);
+        TableDesc desc = getMetadataManager().getTableDesc(tableName, project);
         if (desc == null)
             return false;
         tableType = desc.getSourceType();
@@ -259,7 +253,9 @@ public class TableService extends BasicService {
         }
 
         if (!projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)) {
-            unLoadHiveTable(tableName);
+            MetadataManager metaMgr = MetadataManager.getInstance(getConfig());
+            metaMgr.removeSourceTable(tableName, project);
+            metaMgr.removeTableExt(tableName, project);
             rtn = true;
         }
 
@@ -289,7 +285,7 @@ public class TableService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void addStreamingTable(TableDesc desc, String project) throws IOException {
         desc.setUuid(UUID.randomUUID().toString());
-        getMetadataManager().saveSourceTable(desc);
+        getMetadataManager().saveSourceTable(desc, project);
         syncTableToProject(new String[] { desc.getIdentity() }, project);
     }
 
@@ -314,8 +310,8 @@ public class TableService extends BasicService {
         return explr.listTables(database);
     }
 
-    private TableDescResponse cloneTableDesc(TableDesc table) {
-        TableExtDesc tableExtDesc = getMetadataManager().getTableExt(table.getIdentity());
+    private TableDescResponse cloneTableDesc(TableDesc table, String prj) {
+        TableExtDesc tableExtDesc = getMetadataManager().getTableExt(table.getIdentity(), prj);
 
         // Clone TableDesc
         TableDescResponse rtableDesc = new TableDescResponse(table);
@@ -341,12 +337,12 @@ public class TableService extends BasicService {
         return rtableDesc;
     }
 
-    private List<TableDesc> cloneTableDesc(List<TableDesc> tables) throws IOException {
+    private List<TableDesc> cloneTableDesc(List<TableDesc> tables, String prj) throws IOException {
         List<TableDesc> descs = new ArrayList<TableDesc>();
         Iterator<TableDesc> it = tables.iterator();
         while (it.hasNext()) {
             TableDesc table = it.next();
-            TableDescResponse rtableDesc = cloneTableDesc(table);
+            TableDescResponse rtableDesc = cloneTableDesc(table, prj);
             descs.add(rtableDesc);
         }
 
@@ -354,14 +350,14 @@ public class TableService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws Exception {
+    public void calculateCardinalityIfNotPresent(String[] tables, String submitter, String prj) throws Exception {
         MetadataManager metaMgr = getMetadataManager();
         ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
         for (String table : tables) {
-            TableExtDesc tableExtDesc = metaMgr.getTableExt(table);
+            TableExtDesc tableExtDesc = metaMgr.getTableExt(table, prj);
             String jobID = tableExtDesc.getJodID();
             if (null == jobID || ExecutableState.RUNNING != exeMgt.getOutput(jobID).getState()) {
-                calculateCardinality(table, submitter);
+                calculateCardinality(table, submitter, prj);
             }
         }
     }
@@ -373,12 +369,12 @@ public class TableService extends BasicService {
      * @param tableName
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void calculateCardinality(String tableName, String submitter) throws Exception {
+    public void calculateCardinality(String tableName, String submitter, String prj) throws Exception {
         Message msg = MsgPicker.getMsg();
 
         tableName = normalizeHiveTableName(tableName);
-        TableDesc table = getMetadataManager().getTableDesc(tableName);
-        final TableExtDesc tableExt = getMetadataManager().getTableExt(tableName);
+        TableDesc table = getMetadataManager().getTableDesc(tableName, prj);
+        final TableExtDesc tableExt = getMetadataManager().getTableExt(tableName, prj);
         if (table == null) {
             BadRequestException e = new BadRequestException(String.format(msg.getTABLE_DESC_NOT_FOUND(), tableName));
             logger.error("Cannot find table descriptor " + tableName, e);
@@ -392,11 +388,11 @@ public class TableService extends BasicService {
         job.setSubmitter(submitter);
 
         String outPath = getConfig().getHdfsWorkingDirectory() + "cardinality/" + job.getId() + "/" + tableName;
-        String param = "-table " + tableName + " -output " + outPath;
+        String param = "-table " + tableName + " -output " + outPath + " -project " + prj;
 
         MapReduceExecutable step1 = new MapReduceExecutable();
 
-        step1.setMapReduceJobClass(org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob.class);
+        step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
         step1.setMapReduceParams(param);
         step1.setParam("segmentId", tableName);
 
@@ -404,12 +400,12 @@ public class TableService extends BasicService {
 
         HadoopShellExecutable step2 = new HadoopShellExecutable();
 
-        step2.setJobClass(org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityUpdateJob.class);
+        step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
         step2.setJobParams(param);
         step2.setParam("segmentId", tableName);
         job.addTask(step2);
         tableExt.setJodID(job.getId());
-        getMetadataManager().saveTableExt(tableExt);
+        getMetadataManager().saveTableExt(tableExt, prj);
 
         getExecutableManager().addJob(job);
     }

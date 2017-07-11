@@ -110,7 +110,7 @@ public class DictionaryGeneratorCLI {
             inpTable = factTableValueProvider.getDistinctValuesFor(srcCol);
         } else {
             MetadataManager metadataManager = MetadataManager.getInstance(config);
-            TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
+            TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable, model.getProject()));
             inpTable = SourceFactory.createReadableTable(tableDesc);
         }
         return inpTable;

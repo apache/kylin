@@ -196,7 +196,7 @@ public class KafkaSource implements ISource {
             }
 
             @Override
-            public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table) throws Exception {
+            public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table, String prj) throws Exception {
                 throw new UnsupportedOperationException();
             }
 

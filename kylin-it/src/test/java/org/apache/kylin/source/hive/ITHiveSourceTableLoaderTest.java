@@ -25,8 +25,8 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.source.ISource;
-import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.ISourceMetadataExplorer;
+import org.apache.kylin.source.SourceFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,10 +49,10 @@ public class ITHiveSourceTableLoaderTest extends HBaseMetadataTestCase {
         ISourceMetadataExplorer explr = source.getSourceMetadataExplorer();
         Pair<TableDesc, TableExtDesc> pair;
         
-        pair = explr.loadTableMetadata("DEFAULT", "TEST_KYLIN_FACT");
+        pair = explr.loadTableMetadata("DEFAULT", "TEST_KYLIN_FACT", "default");
         assertTrue(pair.getFirst().getIdentity().equals("DEFAULT.TEST_KYLIN_FACT"));
         
-        pair = explr.loadTableMetadata("EDW", "TEST_CAL_DT");
+        pair = explr.loadTableMetadata("EDW", "TEST_CAL_DT", "default");
         assertTrue(pair.getFirst().getIdentity().equals("EDW.TEST_CAL_DT"));
         
     }

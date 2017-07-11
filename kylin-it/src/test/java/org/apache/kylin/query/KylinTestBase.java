@@ -689,13 +689,14 @@ public class KylinTestBase {
         config = KylinConfig.getInstanceFromEnv();
 
         //setup cube conn
-        cubeConnection = QueryDataSource.create(ProjectInstance.DEFAULT_PROJECT_NAME, config).getConnection();
+        String project = ProjectInstance.DEFAULT_PROJECT_NAME;
+        cubeConnection = QueryDataSource.create(project, config).getConnection();
 
         //setup h2
         h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++) + ";CACHE_SIZE=32072", "sa",
                 "");
         // Load H2 Tables (inner join)
-        H2Database h2DB = new H2Database(h2Connection, config);
+        H2Database h2DB = new H2Database(h2Connection, config, project);
         h2DB.loadAllTables();
     }
 

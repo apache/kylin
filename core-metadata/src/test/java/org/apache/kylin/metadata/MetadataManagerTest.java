@@ -109,14 +109,14 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testListAllTables() throws Exception {
-        List<TableDesc> tables = getInstance(getTestConfig()).listAllTables();
+        List<TableDesc> tables = getInstance(getTestConfig()).listAllTables(null);
         Assert.assertNotNull(tables);
         Assert.assertTrue(tables.size() > 0);
     }
 
     @Test
     public void testFindTableByName() throws Exception {
-        TableDesc table = getInstance(getTestConfig()).getTableDesc("EDW.TEST_CAL_DT");
+        TableDesc table = getInstance(getTestConfig()).getTableDesc("EDW.TEST_CAL_DT", "default");
         Assert.assertNotNull(table);
         Assert.assertEquals("EDW.TEST_CAL_DT", table.getIdentity());
     }
@@ -124,8 +124,8 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void testGetInstance() throws Exception {
         Assert.assertNotNull(getInstance(getTestConfig()));
-        Assert.assertNotNull(getInstance(getTestConfig()).listAllTables());
-        Assert.assertTrue(getInstance(getTestConfig()).listAllTables().size() > 0);
+        Assert.assertNotNull(getInstance(getTestConfig()).listAllTables(null));
+        Assert.assertTrue(getInstance(getTestConfig()).listAllTables(null).size() > 0);
     }
 
     @Test
@@ -136,7 +136,7 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testTableSample() throws IOException {
-        TableExtDesc tableExtDesc = getInstance(getTestConfig()).getTableExt("TEST.TEST_TABLE");
+        TableExtDesc tableExtDesc = getInstance(getTestConfig()).getTableExt("TEST.TEST_TABLE", "default");
         Assert.assertNotNull(tableExtDesc);
 
         List<TableExtDesc.ColumnStats> columnStatsList = new ArrayList<>();
@@ -144,15 +144,15 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
         columnStats.setColumnSamples("Max", "Min", "dfadsfdsfdsafds", "d");
         columnStatsList.add(columnStats);
         tableExtDesc.setColumnStats(columnStatsList);
-        getInstance(getTestConfig()).saveTableExt(tableExtDesc);
+        getInstance(getTestConfig()).saveTableExt(tableExtDesc, "default");
 
-        TableExtDesc tableExtDesc1 = getInstance(getTestConfig()).getTableExt("TEST.TEST_TABLE");
+        TableExtDesc tableExtDesc1 = getInstance(getTestConfig()).getTableExt("TEST.TEST_TABLE", "default");
         Assert.assertNotNull(tableExtDesc1);
 
         List<TableExtDesc.ColumnStats> columnStatsList1 = tableExtDesc1.getColumnStats();
         Assert.assertEquals(1, columnStatsList1.size());
 
-        getInstance(getTestConfig()).removeTableExt("TEST.TEST_TABLE");
+        getInstance(getTestConfig()).removeTableExt("TEST.TEST_TABLE", "default");
     }
 
     @Test
@@ -161,9 +161,9 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
         Map<String, String> oldTableExt = new HashMap<>();
         oldTableExt.put(MetadataConstants.TABLE_EXD_CARDINALITY, "1,2,3,4");
         mockUpOldTableExtJson(tableName, oldTableExt);
-        TableExtDesc tableExtDesc = getInstance(getTestConfig()).getTableExt(tableName);
+        TableExtDesc tableExtDesc = getInstance(getTestConfig()).getTableExt(tableName, "default");
         Assert.assertEquals("1,2,3,4,", tableExtDesc.getCardinality());
-        getInstance(getTestConfig()).removeTableExt(tableName);
+        getInstance(getTestConfig()).removeTableExt(tableName, "default");
     }
 
     private void mockUpOldTableExtJson(String tableId, Map<String, String> tableExdProperties) throws IOException {

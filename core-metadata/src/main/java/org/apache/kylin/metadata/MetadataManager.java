@@ -38,7 +38,6 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -147,7 +146,7 @@ public class MetadataManager {
         return Lists.newArrayList(this.dataModelDescMap.values());
     }
 
-    public List<TableDesc> listAllTables() {
+    public List<TableDesc> listAllTables(String prj) {
         return Lists.newArrayList(srcTableMap.values());
     }
 
@@ -155,37 +154,14 @@ public class MetadataManager {
         return Lists.newArrayList(extFilterMap.values());
     }
 
-    public Map<String, TableDesc> getAllTablesMap() {
+    public Map<String, TableDesc> getAllTablesMap(String prj) {
         return Collections.unmodifiableMap(srcTableMap.getMap());
-    }
-
-
-    public Map<String, TableExtDesc> listAllTableExdMap() {
-        return srcTableExdMap.getMap();
-    }
-
-    /**
-     * Get ColumnDesc by name, like "table.column"
-     */
-    public ColumnDesc getColumnDesc(String tableDotColumnName) {
-        int cut = tableDotColumnName.lastIndexOf('.');
-        if (cut < 0)
-            throw new IllegalArgumentException();
-
-        String tableName = tableDotColumnName.substring(0, cut);
-        String columnName = tableDotColumnName.substring(cut + 1);
-
-        TableDesc table = getTableDesc(tableName);
-        if (table == null)
-            return null;
-
-        return table.findColumnByName(columnName);
     }
 
     /**
      * Get TableDesc by name
      */
-    public TableDesc getTableDesc(String tableName) {
+    public TableDesc getTableDesc(String tableName, String prj) {
         if (tableName.indexOf(".") < 0)
             tableName = "DEFAULT." + tableName;
 
@@ -204,7 +180,7 @@ public class MetadataManager {
      * @param tableName
      * @return
      */
-    public TableExtDesc getTableExt(String tableName) {
+    public TableExtDesc getTableExt(String tableName, String prj) {
         if (tableName.indexOf(".") < 0)
             tableName = "DEFAULT." + tableName;
 
@@ -222,7 +198,7 @@ public class MetadataManager {
         return result;
     }
 
-    public void saveTableExt(TableExtDesc tableExt) throws IOException {
+    public void saveTableExt(TableExtDesc tableExt, String prj) throws IOException {
         if (tableExt.getUuid() == null || tableExt.getName() == null) {
             throw new IllegalArgumentException();
         }
@@ -240,13 +216,13 @@ public class MetadataManager {
         store.putResource(path, tableExt, TABLE_EXT_SERIALIZER);
     }
 
-    public void removeTableExt(String tableName) throws IOException {
+    public void removeTableExt(String tableName, String prj) throws IOException {
         String path = TableExtDesc.concatResourcePath(tableName);
         getStore().deleteResource(path);
         srcTableExdMap.remove(tableName);
     }
 
-    public void saveSourceTable(TableDesc srcTable) throws IOException {
+    public void saveSourceTable(TableDesc srcTable, String prj) throws IOException {
         if (srcTable.getUuid() == null || srcTable.getIdentity() == null) {
             throw new IllegalArgumentException();
         }
@@ -259,7 +235,7 @@ public class MetadataManager {
         srcTableMap.put(srcTable.getIdentity(), srcTable);
     }
 
-    public void removeSourceTable(String tableIdentity) throws IOException {
+    public void removeSourceTable(String tableIdentity, String prj) throws IOException {
         String path = TableDesc.concatResourcePath(tableIdentity);
         getStore().deleteResource(path);
         srcTableMap.remove(tableIdentity);
@@ -504,11 +480,11 @@ public class MetadataManager {
         reloadExternalFilterAt(ExternalFilterDesc.concatResourcePath(extFilterName));
     }
 
-    public void reloadSourceTableExt(String tableIdentity) throws IOException {
+    private void reloadSourceTableExt(String tableIdentity) throws IOException {
         reloadTableExtAt(TableExtDesc.concatResourcePath(tableIdentity));
     }
 
-    public void reloadSourceTable(String tableIdentity) throws IOException {
+    private void reloadSourceTable(String tableIdentity) throws IOException {
         reloadSourceTableAt(TableDesc.concatResourcePath(tableIdentity));
     }
 
@@ -590,9 +566,10 @@ public class MetadataManager {
         ResourceStore store = getStore();
         try {
             DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
+            String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
             
             if (!dataModelDesc.isDraft())
-                dataModelDesc.init(config, this.getAllTablesMap(), listDataModels());
+                dataModelDesc.init(config, this.getAllTablesMap(prj), listDataModels());
 
             dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
             return dataModelDesc;
@@ -625,9 +602,27 @@ public class MetadataManager {
         String name = desc.getName();
         if (dataModelDescMap.containsKey(name))
             throw new IllegalArgumentException("DataModelDesc '" + name + "' already exists");
-        desc.setOwner(owner);
-        desc = saveDataModelDesc(desc);
-        ProjectManager.getInstance(config).updateModelToProject(name, projectName);
+        
+        ProjectManager prjMgr = ProjectManager.getInstance(config);
+        ProjectInstance prj = prjMgr.getProject(projectName);
+        if (prj.containsModel(name))
+            throw new IllegalStateException();
+        
+        try {
+            // Temporarily register model under project, because we want to 
+            // update project formally after model is saved.
+            prj.getModels().add(name);
+            
+            desc.setOwner(owner);
+            desc = saveDataModelDesc(desc);
+            
+        } finally {
+            prj.getModels().remove(name);
+        }
+        
+        // now that model is saved, update project formally
+        prjMgr.updateModelToProject(name, projectName);
+        
         return desc;
     }
 
@@ -642,8 +637,10 @@ public class MetadataManager {
 
     private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
         
+        String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
+        
         if (!dataModelDesc.isDraft())
-            dataModelDesc.init(config, this.getAllTablesMap(), listDataModels());
+            dataModelDesc.init(config, this.getAllTablesMap(prj), listDataModels());
 
         String path = dataModelDesc.getResourcePath();
         getStore().putResource(path, dataModelDesc, MODELDESC_SERIALIZER);

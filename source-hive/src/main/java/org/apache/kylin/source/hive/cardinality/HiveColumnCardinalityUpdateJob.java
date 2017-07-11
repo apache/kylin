@@ -49,14 +49,12 @@ import org.slf4j.LoggerFactory;
  * @author shaoshi
  */
 public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
+    private static final Logger logger = LoggerFactory.getLogger(HiveColumnCardinalityUpdateJob.class);
+
     public static final String JOB_TITLE = "Kylin Hive Column Cardinality Update Job";
 
     @SuppressWarnings("static-access")
     protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
-
-    private String table;
-
-    private static final Logger logger = LoggerFactory.getLogger(HiveColumnCardinalityUpdateJob.class);
 
     public HiveColumnCardinalityUpdateJob() {
 
@@ -68,19 +66,22 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
         Options options = new Options();
 
         try {
+            options.addOption(OPTION_PROJECT);
             options.addOption(OPTION_TABLE);
             options.addOption(OPTION_OUTPUT_PATH);
 
             parseOptions(options, args);
 
-            this.table = getOptionValue(OPTION_TABLE).toUpperCase();
+            String project = getOptionValue(OPTION_PROJECT);
+            String table = getOptionValue(OPTION_TABLE).toUpperCase();
+            
             // start job
             String jobName = JOB_TITLE + getOptionsAsString();
             logger.info("Starting: " + jobName);
             Configuration conf = getConf();
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
-            updateKylinTableExd(table.toUpperCase(), output.toString(), conf);
+            updateKylinTableExd(table.toUpperCase(), output.toString(), conf, project);
             return 0;
         } catch (Exception e) {
             printUsage(options);
@@ -89,7 +90,7 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
 
     }
 
-    public void updateKylinTableExd(String tableName, String outPath, Configuration config) throws IOException {
+    public void updateKylinTableExd(String tableName, String outPath, Configuration config, String prj) throws IOException {
         List<String> columns = null;
         try {
             columns = readLines(new Path(outPath), config);
@@ -116,9 +117,9 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
         if (scardi.length() > 0) {
             scardi = scardi.substring(0, scardi.length() - 1);
             MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-            TableExtDesc tableExt = metaMgr.getTableExt(tableName);
+            TableExtDesc tableExt = metaMgr.getTableExt(tableName, prj);
             tableExt.setCardinality(scardi);
-            metaMgr.saveTableExt(tableExt);
+            metaMgr.saveTableExt(tableExt, prj);
         } else {
             throw new IllegalArgumentException("No cardinality data is collected for table " + tableName);
         }

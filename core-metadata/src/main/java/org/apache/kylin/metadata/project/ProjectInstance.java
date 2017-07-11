@@ -26,7 +26,6 @@ import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -34,6 +33,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -47,7 +47,7 @@ import com.google.common.collect.Lists;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ProjectInstance extends RootPersistentEntity {
 
-    public static final String DEFAULT_PROJECT_NAME = "DEFAULT";
+    public static final String DEFAULT_PROJECT_NAME = "default";
 
     @JsonProperty("name")
     private String name;

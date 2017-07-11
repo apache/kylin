@@ -43,16 +43,17 @@ public class MRUtil {
         return SourceFactory.createEngineAdapter(seg, IMRInput.class).getBatchCubingInputSide(flatDesc);
     }
 
-    public static IMRTableInputFormat getTableInputFormat(String tableName) {
-        return SourceFactory.createEngineAdapter(getTableDesc(tableName), IMRInput.class).getTableInputFormat(getTableDesc(tableName));
+    public static IMRTableInputFormat getTableInputFormat(String tableName, String prj) {
+        TableDesc t = getTableDesc(tableName, prj);
+        return SourceFactory.createEngineAdapter(t, IMRInput.class).getTableInputFormat(t);
     }
 
     public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc) {
         return SourceFactory.createEngineAdapter(tableDesc, IMRInput.class).getTableInputFormat(tableDesc);
     }
 
-    private static TableDesc getTableDesc(String tableName) {
-        return MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(tableName);
+    private static TableDesc getTableDesc(String tableName, String prj) {
+        return MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(tableName, prj);
     }
 
     public static IMRBatchCubingOutputSide getBatchCubingOutputSide(CubeSegment seg) {

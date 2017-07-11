@@ -277,7 +277,7 @@ public class CubeTupleConverter implements ITupleConverter {
 
         try {
             SnapshotTable snapshot = snapshotMgr.getSnapshotTable(snapshotResPath);
-            TableDesc tableDesc = metaMgr.getTableDesc(tableName);
+            TableDesc tableDesc = metaMgr.getTableDesc(tableName, cubeSegment.getProject());
             EnhancedStringLookupTable enhancedStringLookupTable = new EnhancedStringLookupTable(tableDesc, pkCols, snapshot);
             logger.info("Time to get lookup up table for {} is {} ", join.getPKSide().getTableName(), (System.currentTimeMillis() - ts));
             return enhancedStringLookupTable;

@@ -102,7 +102,9 @@ public class ColumnGenConfig {
         pkColName = pkColName.substring(cut + 1);
         
         KylinConfig kylinConfig = modelGen.getModle().getConfig();
-        ColumnDesc pkcol = MetadataManager.getInstance(kylinConfig).getTableDesc(pkTableName).findColumnByName(pkColName);
+        String project = modelGen.getModle().getProject();
+        ColumnDesc pkcol = MetadataManager.getInstance(kylinConfig)//
+                .getTableDesc(pkTableName, project).findColumnByName(pkColName);
         return modelGen.getPkValues(pkcol);
     }
 

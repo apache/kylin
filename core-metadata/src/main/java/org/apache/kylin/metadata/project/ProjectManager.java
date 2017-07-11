@@ -356,7 +356,7 @@ public class ProjectManager {
         MetadataManager metaMgr = getMetadataManager();
         ProjectInstance projectInstance = getProject(projectName);
         for (String tableId : tableIdentities) {
-            TableDesc table = metaMgr.getTableDesc(tableId);
+            TableDesc table = metaMgr.getTableDesc(tableId, projectName);
             if (table == null) {
                 throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
             }
@@ -370,7 +370,7 @@ public class ProjectManager {
     public void removeTableDescFromProject(String tableIdentities, String projectName) throws IOException {
         MetadataManager metaMgr = getMetadataManager();
         ProjectInstance projectInstance = getProject(projectName);
-        TableDesc table = metaMgr.getTableDesc(tableIdentities);
+        TableDesc table = metaMgr.getTableDesc(tableIdentities, projectName);
         if (table == null) {
             throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
         }
@@ -405,7 +405,15 @@ public class ProjectManager {
         projectInstance.removeExtFilter(filterName);
         updateProject(projectInstance);
     }
-
+    
+    public ProjectInstance getProjectOfModel(String model) {
+        for (ProjectInstance prj : projectMap.values()) {
+            if (prj.getModels().contains(model))
+                return prj;
+        }
+        throw new IllegalStateException("No project found for model " + model);
+    }
+    
     public List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
         List<ProjectInstance> result = Lists.newArrayList();
         for (ProjectInstance prj : projectMap.values()) {

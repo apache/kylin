@@ -91,7 +91,7 @@ public class CubeMetadataUpgrade_v_1_4_0 extends CubeMetadataUpgrade {
         for (String path : paths) {
             logger.info("CubeMetadataUpgrade_v_1_4_0 handling in dowork {}", path);
             CubeDesc cubeDesc = loadOldCubeDesc(path);
-            cubeDesc.init(config, MetadataManager.getInstance(config).getAllTablesMap());
+            cubeDesc.init(config, MetadataManager.getInstance(config).getAllTablesMap(cubeDesc.getProject()));
 
             upgradeDataModelDesc(cubeDesc);
             upgradeCubeDesc(cubeDesc);

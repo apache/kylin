@@ -40,6 +40,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.JoinsTree.Chain;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,6 +127,10 @@ public class DataModelDesc extends RootPersistentEntity {
      */
     private List<String> errors = new ArrayList<String>();
 
+    // don't use unless you're sure, for jackson only
+    public DataModelDesc() {
+    }
+    
     public KylinConfig getConfig() {
         return config;
     }
@@ -819,9 +824,14 @@ public class DataModelDesc extends RootPersistentEntity {
     public void setMetrics(String[] metrics) {
         this.metrics = metrics;
     }
+    
+    public String getProject() {
+        return ProjectManager.getInstance(getConfig()).getProjectOfModel(this.getName()).getName();
+    }
 
     public static DataModelDesc getCopyOf(DataModelDesc orig) {
         DataModelDesc copy = new DataModelDesc();
+        copy.config = orig.config;
         copy.name = orig.name;
         copy.isDraft = orig.isDraft;
         copy.owner = orig.owner;

@@ -1277,6 +1277,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return null;
     }
 
+    public String getProject() {
+        return getModel().getProject();
+    }
+
     public static CubeDesc getCopyOf(CubeDesc cubeDesc) {
         CubeDesc newCubeDesc = new CubeDesc();
         newCubeDesc.setName(cubeDesc.getName());
