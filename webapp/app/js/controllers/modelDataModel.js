@@ -43,7 +43,7 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
             joinTable:'',
             kind:'LOOKUP',
             join: {
-                type: '',
+                type: 'inner',
                 primary_key: [],
                 foreign_key: [],
                 isCompatible:[],
