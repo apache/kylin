@@ -142,8 +142,8 @@
                         <div class="row">
                           <div class="col-xs-6 form-group">
                               <!--Join Type-->
-                              <select class="chosen-select " style="width:100%;" chosen ng-init="newLookup.join.type='inner'"  ng-model="newLookup.join.type"
-                                            ng-options="joinType.value as joinType.name+'  Join' for joinType in cubeConfig.joinTypes">
+                              <select class="chosen-select " style="width:100%;" chosen  ng-model="newLookup.join.type"
+                                            ng-options="joinType.value as joinType.name+'  Join' for joinType in cubeConfig.joinTypes" >
                                 <option value=""></option>
                               </select>
                           </div>
