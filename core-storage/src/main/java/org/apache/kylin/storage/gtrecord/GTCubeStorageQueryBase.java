@@ -305,7 +305,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     }
 
     private TupleFilter translateDerivedInCompare(CompareTupleFilter compf, Set<TblColRef> collector) {
-        if (compf.getColumn() == null || compf.getValues().isEmpty())
+        if (compf.getColumn() == null)
             return compf;
 
         TblColRef derived = compf.getColumn();
