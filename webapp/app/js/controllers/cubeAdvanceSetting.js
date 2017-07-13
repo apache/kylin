@@ -101,6 +101,9 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.refreshRowKey($scope.convertedRowkeys,i,$scope.convertedRowkeys[i]);
     }
   }
+  $scope.sortableOptions = {
+    update:$scope.resortRowkey
+  };
 
   $scope.addNewHierarchy = function(grp){
     grp.select_rule.hierarchy_dims.push([]);
