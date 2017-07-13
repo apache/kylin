@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -39,6 +38,7 @@ import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class CalciteParser {
@@ -188,7 +188,11 @@ public class CalciteParser {
         return sql.substring(prefix.length(), sql.length() - suffix.length());
     }
 
-    public static Pair<Integer, Integer> getReplacePos(SqlNode node, String... lines) {
+    public static Pair<Integer, Integer> getReplacePos(SqlNode node, String inputSql) {
+        if (inputSql == null) {
+            return Pair.of(0, 0);
+        }
+        String[] lines = inputSql.split("\n");
         SqlParserPos pos = node.getParserPosition();
         int lineStart = pos.getLineNum();
         int lineEnd = pos.getEndLineNum();
@@ -201,6 +205,38 @@ public class CalciteParser {
         for (int i = 0; i < lineEnd - 1; i++) {
             columnEnd += lines[i].length() + 1;
         }
-        return Pair.of(columnStart, columnEnd);
+        //for calcite's bug CALCITE-1875
+        Pair<Integer, Integer> startEndPos = getPosWithBracketsCompletion(inputSql, columnStart, columnEnd);
+        return startEndPos;
+    }
+
+    private static Pair<Integer, Integer> getPosWithBracketsCompletion(String inputSql, int left, int right) {
+        int leftBracketNum = 0;
+        int rightBracketNum = 0;
+        String substring = inputSql.substring(left, right);
+        for (int i = 0; i < substring.length(); i++) {
+            char temp = substring.charAt(i);
+            if (temp == '(') {
+                leftBracketNum++;
+            }
+            if (temp == ')') {
+                rightBracketNum++;
+                if (leftBracketNum < rightBracketNum) {
+                    while ('(' != inputSql.charAt(left - 1)) {
+                        left--;
+                    }
+                    left--;
+                    leftBracketNum++;
+                }
+            }
+        }
+        while (rightBracketNum < leftBracketNum) {
+            while (')' != inputSql.charAt(right)) {
+                right++;
+            }
+            right++;
+            rightBracketNum++;
+        }
+        return Pair.of(left, right);
     }
 }

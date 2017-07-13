@@ -95,8 +95,7 @@ public class CalciteParserTest {
 
         for (String sql : sqls) {
             SqlNode parse = ((SqlSelect) CalciteParser.parse(sql)).getSelectList().get(0);
-            String[] lines = sql.split("\n");
-            Pair<Integer, Integer> replacePos = CalciteParser.getReplacePos(parse, lines);
+            Pair<Integer, Integer> replacePos = CalciteParser.getReplacePos(parse, sql);
             String substring = sql.substring(replacePos.getLeft(), replacePos.getRight());
             Preconditions.checkArgument(substring.startsWith("a"));
             Preconditions.checkArgument(substring.endsWith("b"));
@@ -119,5 +118,21 @@ public class CalciteParserTest {
         assertEquals(true, CalciteParser.isNodeEqual(sn0, sn1));
         assertEquals(true, CalciteParser.isNodeEqual(sn0, sn2));
         assertEquals(false, CalciteParser.isNodeEqual(sn0, sn3));
+    }
+
+    @Test
+    public void testPosWithBrackets() throws SqlParseException {
+        String[] sqls = new String[] {
+                "select (   a + b) * (c+ d     ) from t", "select (a+b) * (c+d) from t",
+                "select (a + b) * (c+ d) from t", "select (a+b) * (c+d) from t",
+        };
+
+        for (String sql : sqls) {
+            SqlNode parse = ((SqlSelect) CalciteParser.parse(sql)).getSelectList().get(0);
+            Pair<Integer, Integer> replacePos = CalciteParser.getReplacePos(parse, sql);
+            String substring = sql.substring(replacePos.getLeft(), replacePos.getRight());
+            Preconditions.checkArgument(substring.startsWith("("));
+            Preconditions.checkArgument(substring.endsWith(")"));
+        }
     }
 }

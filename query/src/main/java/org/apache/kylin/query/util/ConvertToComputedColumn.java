@@ -74,7 +74,6 @@ public class ConvertToComputedColumn implements QueryUtil.IQueryTransformer {
             return inputSql;
         }
         String result = inputSql;
-        String[] lines = inputSql.split("\n");
         List<Pair<String, String>> toBeReplacedExp = new ArrayList<>(); //{"alias":"expression"}, like {"t1":"t1.a+t1.b+t1.c"}
 
         for (String ccExp : computedColumn.keySet()) {
@@ -86,7 +85,7 @@ public class ConvertToComputedColumn implements QueryUtil.IQueryTransformer {
                 return inputSql;
             }
             for (SqlNode node : matchedNodes) {
-                Pair<Integer, Integer> startEndPos = CalciteParser.getReplacePos(node, lines);
+                Pair<Integer, Integer> startEndPos = CalciteParser.getReplacePos(node, inputSql);
                 int start = startEndPos.getLeft();
                 int end = startEndPos.getRight();
                 //add table alias like t1.column,if exists alias
