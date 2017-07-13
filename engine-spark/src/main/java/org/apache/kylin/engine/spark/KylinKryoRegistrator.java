@@ -269,6 +269,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity.class);
         kyroClasses.add(org.apache.kylin.metadata.model.DataModelDesc.TableKind.class);
         kyroClasses.add(org.apache.kylin.metadata.model.DatabaseDesc.class);
+        kyroClasses.add(org.apache.kylin.metadata.model.ComputedColumnDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.ExternalFilterDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.FunctionDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.JoinDesc.class);
