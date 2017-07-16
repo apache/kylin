@@ -241,13 +241,15 @@ public class CubeMigrationCLI {
     protected void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, Set<String> dictAndSnapshot) throws IOException {
 
         CubeDesc cubeDesc = cube.getDescriptor();
+        String prj = cubeDesc.getProject();
+        
         metaResource.add(cube.getResourcePath());
         metaResource.add(cubeDesc.getResourcePath());
         metaResource.add(DataModelDesc.concatResourcePath(cubeDesc.getModelName()));
 
         for (TableRef tableRef : cubeDesc.getModel().getAllTables()) {
-            metaResource.add(TableDesc.concatResourcePath(tableRef.getTableIdentity()));
-            metaResource.add(TableExtDesc.concatResourcePath(tableRef.getTableIdentity()));
+            metaResource.add(TableDesc.concatResourcePath(tableRef.getTableIdentity(), prj));
+            metaResource.add(TableExtDesc.concatResourcePath(tableRef.getTableIdentity(), prj));
         }
 
         for (CubeSegment segment : cube.getSegments()) {

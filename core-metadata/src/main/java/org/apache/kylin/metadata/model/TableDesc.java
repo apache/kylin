@@ -23,6 +23,7 @@ import java.util.Comparator;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringSplitter;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -52,9 +53,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     @JsonProperty("data_gen")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String dataGen;
-
+    
+    private String project;
     private DatabaseDesc database = new DatabaseDesc();
-
     private String identity = null;
 
     public TableDesc() {
@@ -115,7 +116,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     }
 
     public String getResourcePath() {
-        return concatResourcePath(getIdentity());
+        return concatResourcePath(getIdentity(), project);
     }
 
     /**
@@ -123,7 +124,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
      * @return
      */
     public String getResourcePathV1() {
-        return concatResourcePath(name);
+        return concatResourcePath(name, null);
     }
 
     public String getIdentity() {
@@ -136,17 +137,45 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public boolean isView() {
         return TABLE_TYPE_VIRTUAL_VIEW.equals(tableType);
     }
-
-    public static String concatResourcePath(String tableIdentity) {
-        return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + ".json";
+    
+    public static String concatRawResourcePath(String nameOnPath) {
+        return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";
     }
 
-    public static String concatExdResourcePath(String tableIdentity) {
-        return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableIdentity + ".json";
+    public static String concatResourcePath(String tableIdentity, String prj) {
+        if (prj == null || prj.isEmpty())
+            return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + ".json";
+        else
+            return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + "--" + prj + ".json";
+    }
+    
+    // returns <table, project>
+    public static Pair<String, String> parseResourcePath(String path) {
+        if (path.endsWith(".json"))
+            path = path.substring(0, path.length() - ".json".length());
+        
+        int cut = path.lastIndexOf("/");
+        if (cut >= 0)
+            path = path.substring(cut + 1);
+        
+        String table, prj;
+        int dash = path.indexOf("--");
+        if (dash >= 0) {
+            table = path.substring(0, dash);
+            prj = path.substring(dash + 2);
+        } else {
+            table = path;
+            prj = null;
+        }
+        return Pair.newPair(table, prj);
     }
 
     // ============================================================================
 
+    public String getProject() {
+        return project;
+    }
+    
     public String getName() {
         return this.name;
     }
@@ -205,7 +234,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return dataGen;
     }
 
-    public void init() {
+    public void init(String project) {
+        this.project = project;
+        
         if (name != null)
             name = name.toUpperCase();
 

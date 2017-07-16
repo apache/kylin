@@ -182,7 +182,7 @@ public class CubeMetaIngester extends AbstractApplication {
                     logger.warn("Overwriting the old table desc: " + tableDesc.getIdentity());
                 }
             }
-            requiredResources.add(TableDesc.concatResourcePath(tableDesc.getIdentity()));
+            requiredResources.add(tableDesc.getResourcePath());
         }
 
         for (DataModelDesc dataModelDesc : srcMetadataManager.listDataModels()) {

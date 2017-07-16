@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.Pair;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -59,17 +60,35 @@ public class TableExtDesc extends RootPersistentEntity {
     @JsonProperty("data_source_properties")
     private Map<String, String> dataSourceProps = new HashMap<>();
 
+    private String project;
+    
     public TableExtDesc() {
     }
 
     public String getResourcePath() {
-        return concatResourcePath(getName());
+        return concatResourcePath(getName(), project);
     }
 
-    public static String concatResourcePath(String tableIdentity) {
-        return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableIdentity + ".json";
+    public static String concatRawResourcePath(String nameOnPath) {
+        return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + nameOnPath + ".json";
+    }
+    
+    public static String concatResourcePath(String tableIdentity, String prj) {
+        if (prj == null)
+            return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableIdentity + ".json";
+        else
+            return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableIdentity + "--" + prj + ".json";
     }
 
+    // returns <table, project>
+    public static Pair<String, String> parseResourcePath(String path) {
+        return TableDesc.parseResourcePath(path);
+    }
+    
+    public String getProject() {
+        return project;
+    }
+    
     public int getFrequency() {
         return this.frequency;
     }
@@ -82,6 +101,10 @@ public class TableExtDesc extends RootPersistentEntity {
         return this.tableName;
     }
 
+    public String getIdentity() {
+        return this.tableName;
+    }
+    
     public String getJodID() {
         return this.jodID;
     }
@@ -167,7 +190,9 @@ public class TableExtDesc extends RootPersistentEntity {
         this.jodID = jobID;
     }
 
-    public void init() {
+    public void init(String project) {
+        this.project = project;
+        
         if (this.tableName != null)
             this.tableName = this.tableName.toUpperCase();
     }

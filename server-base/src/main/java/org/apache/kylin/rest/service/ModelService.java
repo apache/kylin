@@ -28,13 +28,13 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
@@ -157,28 +157,16 @@ public class ModelService extends BasicService {
         accessService.clean(desc, true);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
-    public boolean isTableInAnyModel(String tableName) {
-        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
-        tableName = dbTableName[0] + "." + dbTableName[1];
-        return getMetadataManager().isTableInAnyModel(tableName);
+    public boolean isTableInAnyModel(TableDesc table) {
+        return getMetadataManager().isTableInAnyModel(table);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
-    public boolean isTableInModel(String tableName, String projectName) throws IOException {
-        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
-        tableName = dbTableName[0] + "." + dbTableName[1];
-        return getMetadataManager().isTableInModel(tableName, projectName);
+    public boolean isTableInModel(TableDesc table, String project) throws IOException {
+        return getMetadataManager().getModelsUsingTable(table, project).size() > 0;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
-    public List<String> getModelsUsingTable(String tableName, String projectName) throws IOException {
-        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
-        tableName = dbTableName[0] + "." + dbTableName[1];
-        return getMetadataManager().getModelsUsingTable(tableName, projectName);
+    public List<String> getModelsUsingTable(TableDesc table, String project) throws IOException {
+        return getMetadataManager().getModelsUsingTable(table, project);
     }
 
     public Map<TblColRef, Set<CubeInstance>> getUsedDimCols(String modelName) {

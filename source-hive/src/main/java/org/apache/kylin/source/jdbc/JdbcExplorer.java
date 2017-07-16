@@ -292,7 +292,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         tableExtDesc.setName(table);
         tableExtDesc.setUuid(UUID.randomUUID().toString());
         tableExtDesc.setLastModified(0);
-        tableExtDesc.init();
+        tableExtDesc.init(prj);
 
         return Pair.newPair(tableDesc, tableExtDesc);
     }

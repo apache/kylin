@@ -248,9 +248,9 @@ public class DataModelDesc extends RootPersistentEntity {
         return false;
     }
 
-    public boolean containsTable(String fullTableName) {
+    public boolean containsTable(TableDesc table) {
         for (TableRef t : allTableRefs) {
-            if (t.getTableIdentity().equals(fullTableName))
+            if (t.getTableIdentity().equals(table.getIdentity()) && StringUtil.equals(t.getTableDesc().getProject(), table.getProject()))
                 return true;
         }
         return false;

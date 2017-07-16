@@ -86,7 +86,7 @@ public class TableSchemaUpdateChecker {
         this.cubeManager = checkNotNull(cubeManager, "cubeManager is null");
     }
 
-    private List<CubeInstance> findCubeByTable(final String fullTableName) {
+    private List<CubeInstance> findCubeByTable(final TableDesc table) {
         Iterable<CubeInstance> relatedCubes = Iterables.filter(cubeManager.listAllCubes(), new Predicate<CubeInstance>() {
             @Override
             public boolean apply(@Nullable CubeInstance cube) {
@@ -96,7 +96,7 @@ public class TableSchemaUpdateChecker {
                 DataModelDesc model = cube.getModel();
                 if (model == null)
                     return false;
-                return model.containsTable(fullTableName);
+                return model.containsTable(table);
             }
         });
 
@@ -177,7 +177,7 @@ public class TableSchemaUpdateChecker {
         }
 
         List<String> issues = Lists.newArrayList();
-        for (CubeInstance cube : findCubeByTable(fullTableName)) {
+        for (CubeInstance cube : findCubeByTable(newTableDesc)) {
             String modelName = cube.getModel().getName();
 
             // if user reloads a fact table used by cube, then all used columns must match current schema

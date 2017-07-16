@@ -61,7 +61,6 @@ import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
@@ -244,7 +243,7 @@ public class CubeMigrationCLI {
         metaResource.add(DataModelDesc.concatResourcePath(cubeDesc.getModelName()));
 
         for (TableRef table : cubeDesc.getModel().getAllTables()) {
-            metaResource.add(TableDesc.concatResourcePath(table.getTableIdentity()));
+            metaResource.add(table.getTableDesc().getResourcePath());
         }
 
         for (CubeSegment segment : cube.getSegments()) {

@@ -44,6 +44,7 @@ import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -321,7 +322,16 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
             dealWithStreaming(cube);
 
-            retrieveDataModelDesc(modelDesc);
+            if (modelDesc != null) {
+                String project = modelDesc.getProject();
+                for (TableRef table : modelDesc.getAllTables()) {
+                    String tableName = table.getTableIdentity();
+                    addRequired(TableDesc.concatResourcePath(tableName, project));
+                    addOptional(TableExtDesc.concatResourcePath(tableName, project));
+                }
+                addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
+            }
+            
             addRequired(CubeDesc.concatResourcePath(cubeDesc.getName()));
 
             if (includeSegments) {
@@ -381,19 +391,6 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         } else {
             logger.warn("Unknown realization type: " + realization.getType());
         }
-    }
-
-    private void retrieveDataModelDesc(DataModelDesc modelDesc) {
-        if (modelDesc == null) {
-            return;
-        }
-        for (TableRef table : modelDesc.getAllTables()) {
-            String tableName = table.getTableIdentity();
-            addRequired(TableDesc.concatResourcePath(tableName));
-            addOptional(TableDesc.concatExdResourcePath(tableName));
-        }
-
-        addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
     }
 
     private void addRequired(String record) {

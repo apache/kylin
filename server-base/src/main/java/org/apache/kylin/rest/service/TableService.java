@@ -147,25 +147,26 @@ public class TableService extends BasicService {
             TableExtDesc extDesc = pair.getSecond();
             
             TableDesc origTable = metaMgr.getTableDesc(tableDesc.getIdentity(), project);
-            if (origTable == null) {
+            if (origTable == null || origTable.getProject() == null) {
                 tableDesc.setUuid(UUID.randomUUID().toString());
                 tableDesc.setLastModified(0);
             } else {
                 tableDesc.setUuid(origTable.getUuid());
                 tableDesc.setLastModified(origTable.getLastModified());
             }
-            
+            metaMgr.saveSourceTable(tableDesc, project);
+
             TableExtDesc origExt = metaMgr.getTableExt(tableDesc.getIdentity(), project);
-            if (origExt == null) {
+            if (origExt == null || origExt.getProject() == null) {
                 extDesc.setUuid(UUID.randomUUID().toString());
                 extDesc.setLastModified(0);
             } else {
                 extDesc.setUuid(origExt.getUuid());
                 extDesc.setLastModified(origExt.getLastModified());
             }
-
+            extDesc.init(project);
             metaMgr.saveTableExt(extDesc, project);
-            metaMgr.saveSourceTable(tableDesc, project);
+            
             saved.add(tableDesc.getIdentity());
         }
 
@@ -237,29 +238,30 @@ public class TableService extends BasicService {
         boolean rtn = false;
         int tableType = 0;
 
-        //remove streaming info
         tableName = normalizeHiveTableName(tableName);
         TableDesc desc = getMetadataManager().getTableDesc(tableName, project);
-        if (desc == null)
+        
+        // unload of legacy global table is not supported for now
+        if (desc == null || desc.getProject() == null)
             return false;
+        
         tableType = desc.getSourceType();
 
-        if (!modelService.isTableInModel(tableName, project)) {
+        if (!modelService.isTableInModel(desc, project)) {
             removeTableFromProject(tableName, project);
             rtn = true;
         } else {
-            List<String> models = modelService.getModelsUsingTable(tableName, project);
+            List<String> models = modelService.getModelsUsingTable(desc, project);
             throw new BadRequestException(String.format(msg.getTABLE_IN_USE_BY_MODEL(), models));
         }
+        
+        // it is a project local table, ready to remove since no model is using it within the project
+        MetadataManager metaMgr = MetadataManager.getInstance(getConfig());
+        metaMgr.removeTableExt(tableName, project);
+        metaMgr.removeSourceTable(tableName, project);
 
-        if (!projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)) {
-            MetadataManager metaMgr = MetadataManager.getInstance(getConfig());
-            metaMgr.removeSourceTable(tableName, project);
-            metaMgr.removeTableExt(tableName, project);
-            rtn = true;
-        }
-
-        if (tableType == 1 && !projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)) {
+        // remove streaming info
+        if (tableType == 1) {
             StreamingConfig config = null;
             KafkaConfig kafkaConfig = null;
             try {

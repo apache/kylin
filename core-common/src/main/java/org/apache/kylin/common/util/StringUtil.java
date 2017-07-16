@@ -183,4 +183,8 @@ public class StringUtil {
         return count;
     }
 
+    public static boolean equals(String a, String b) {
+        return a == null ? b == null : a.equals(b);
+    }
+
 }

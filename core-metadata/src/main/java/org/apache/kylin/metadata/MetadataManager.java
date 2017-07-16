@@ -21,8 +21,8 @@ package org.apache.kylin.metadata;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,6 +35,7 @@ import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
@@ -42,7 +43,6 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
@@ -111,7 +111,7 @@ public class MetadataManager {
     // table name ==> SourceTable
     private CaseInsensitiveStringCache<TableDesc> srcTableMap;
     // name => value
-    private CaseInsensitiveStringCache<TableExtDesc> srcTableExdMap;
+    private CaseInsensitiveStringCache<TableExtDesc> srcTableExtMap;
     // name => DataModelDesc
     private CaseInsensitiveStringCache<DataModelDesc> dataModelDescMap;
     // name => External Filter Desc
@@ -147,7 +147,7 @@ public class MetadataManager {
     }
 
     public List<TableDesc> listAllTables(String prj) {
-        return Lists.newArrayList(srcTableMap.values());
+        return Lists.newArrayList(getAllTablesMap(prj).values());
     }
 
     public List<ExternalFilterDesc> listAllExternalFilters() {
@@ -155,7 +155,19 @@ public class MetadataManager {
     }
 
     public Map<String, TableDesc> getAllTablesMap(String prj) {
-        return Collections.unmodifiableMap(srcTableMap.getMap());
+        Map<String, TableDesc> globalTables = new LinkedHashMap<>();
+        Map<String, TableDesc> projectTables = new LinkedHashMap<>();
+        
+        for (TableDesc t : srcTableMap.values()) {
+            if (t.getProject() == null)
+                globalTables.put(t.getIdentity(), t);
+            else if (t.getProject().equals(prj))
+                projectTables.put(t.getIdentity(), t);
+        }
+        
+        Map<String, TableDesc> result = globalTables;
+        result.putAll(projectTables);
+        return result;
     }
 
     /**
@@ -164,8 +176,13 @@ public class MetadataManager {
     public TableDesc getTableDesc(String tableName, String prj) {
         if (tableName.indexOf(".") < 0)
             tableName = "DEFAULT." + tableName;
+        
+        tableName.toUpperCase();
 
-        TableDesc result = srcTableMap.get(tableName.toUpperCase());
+        TableDesc result = srcTableMap.get(mapKey(tableName, prj));
+        if (result == null)
+            result = srcTableMap.get(mapKey(tableName, null));
+        
         return result;
     }
 
@@ -181,19 +198,20 @@ public class MetadataManager {
      * @return
      */
     public TableExtDesc getTableExt(String tableName, String prj) {
-        if (tableName.indexOf(".") < 0)
-            tableName = "DEFAULT." + tableName;
+        TableDesc t = getTableDesc(tableName, prj);
+        if (t == null)
+            return null;
+        
+        TableExtDesc result = srcTableExtMap.get(mapKey(t.getIdentity(), t.getProject()));
 
-        TableExtDesc result = srcTableExdMap.get(tableName.toUpperCase());
-
-        // create new
+        // avoid returning null, since the TableDesc exists
         if (null == result) {
             result = new TableExtDesc();
-            result.setName(tableName);
+            result.setName(t.getIdentity());
             result.setUuid(UUID.randomUUID().toString());
             result.setLastModified(0);
-            result.init();
-            srcTableExdMap.put(result.getName(), result);
+            result.init(t.getProject());
+            srcTableExtMap.put(mapKey(t.getIdentity(), t.getProject()), result);
         }
         return result;
     }
@@ -202,10 +220,19 @@ public class MetadataManager {
         if (tableExt.getUuid() == null || tableExt.getName() == null) {
             throw new IllegalArgumentException();
         }
+        
+        // updating a legacy global table
+        if (tableExt.getProject() == null) {
+            if (getTableExt(tableExt.getIdentity(), prj).getProject() != null)
+                throw new IllegalStateException(
+                        "Updating a legacy global TableExtDesc while a project level version exists: "
+                                + tableExt.getIdentity() + ", " + prj);
+            prj = tableExt.getProject();
+        }
 
-        tableExt.init();
+        tableExt.init(prj);
 
-        String path = tableExt.getResourcePath();
+        String path = TableExtDesc.concatResourcePath(tableExt.getIdentity(), prj);
 
         ResourceStore store = getStore();
 
@@ -217,9 +244,14 @@ public class MetadataManager {
     }
 
     public void removeTableExt(String tableName, String prj) throws IOException {
-        String path = TableExtDesc.concatResourcePath(tableName);
+        // note, here assume always delete TableExtDesc first, then TableDesc
+        TableExtDesc t = getTableExt(tableName, prj);
+        if (t == null)
+            return;
+        
+        String path = TableExtDesc.concatResourcePath(t.getIdentity(), t.getProject());
         getStore().deleteResource(path);
-        srcTableExdMap.remove(tableName);
+        srcTableExtMap.remove(mapKey(t.getIdentity(), t.getProject()));
     }
 
     public void saveSourceTable(TableDesc srcTable, String prj) throws IOException {
@@ -227,18 +259,22 @@ public class MetadataManager {
             throw new IllegalArgumentException();
         }
 
-        srcTable.init();
+        srcTable.init(prj);
 
-        String path = srcTable.getResourcePath();
+        String path = TableDesc.concatResourcePath(srcTable.getIdentity(), prj);
         getStore().putResource(path, srcTable, TABLE_SERIALIZER);
 
-        srcTableMap.put(srcTable.getIdentity(), srcTable);
+        srcTableMap.put(mapKey(srcTable.getIdentity(), prj), srcTable);
     }
 
     public void removeSourceTable(String tableIdentity, String prj) throws IOException {
-        String path = TableDesc.concatResourcePath(tableIdentity);
+        TableDesc t = getTableDesc(tableIdentity, prj);
+        if (t == null)
+            return;
+        
+        String path = TableDesc.concatResourcePath(t.getIdentity(), t.getProject());
         getStore().deleteResource(path);
-        srcTableMap.remove(tableIdentity);
+        srcTableMap.remove(mapKey(t.getIdentity(), t.getProject()));
     }
 
     public void saveExternalFilter(ExternalFilterDesc desc) throws IOException {
@@ -262,7 +298,7 @@ public class MetadataManager {
     private void init(KylinConfig config) throws IOException {
         this.config = config;
         this.srcTableMap = new CaseInsensitiveStringCache<>(config, "table");
-        this.srcTableExdMap = new CaseInsensitiveStringCache<>(config, "table_ext");
+        this.srcTableExtMap = new CaseInsensitiveStringCache<>(config, "table_ext");
         this.dataModelDescMap = new CaseInsensitiveStringCache<>(config, "data_model");
         this.extFilterMap = new CaseInsensitiveStringCache<>(config, "external_filter");
 
@@ -289,10 +325,18 @@ public class MetadataManager {
             if (event == Event.DROP)
                 srcTableMap.removeLocal(cacheKey);
             else
-                reloadSourceTable(cacheKey);
+                reloadSourceTableAt(TableDesc.concatRawResourcePath(cacheKey));
 
-            for (ProjectInstance prj : ProjectManager.getInstance(config).findProjectsByTable(cacheKey)) {
-                broadcaster.notifyProjectSchemaUpdate(prj.getName());
+            Pair<String, String> pair = TableDesc.parseResourcePath(cacheKey);
+            String table = pair.getFirst();
+            String prj = pair.getSecond();
+
+            if (prj == null) {
+                for (ProjectInstance p : ProjectManager.getInstance(config).findProjectsByTable(table)) {
+                    broadcaster.notifyProjectSchemaUpdate(p.getName());
+                }
+            } else {
+                broadcaster.notifyProjectSchemaUpdate(prj);
             }
         }
     }
@@ -306,13 +350,9 @@ public class MetadataManager {
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             if (event == Event.DROP)
-                srcTableExdMap.removeLocal(cacheKey);
+                srcTableExtMap.removeLocal(cacheKey);
             else
-                reloadSourceTableExt(cacheKey);
-
-            for (ProjectInstance prj : ProjectManager.getInstance(config).findProjectsByTable(cacheKey)) {
-                broadcaster.notifyProjectSchemaUpdate(prj.getName());
-            }
+                reloadTableExtAt(TableExtDesc.concatRawResourcePath(cacheKey));
         }
     }
 
@@ -361,18 +401,20 @@ public class MetadataManager {
         ResourceStore store = getStore();
         logger.debug("Reloading Table_exd info from folder " + store.getReadableResourcePath(ResourceStore.TABLE_EXD_RESOURCE_ROOT));
 
-        srcTableExdMap.clear();
+        srcTableExtMap.clear();
 
         List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             reloadTableExtAt(path);
         }
 
-        logger.debug("Loaded " + srcTableExdMap.size() + " SourceTable EXD(s)");
+        logger.debug("Loaded " + srcTableExtMap.size() + " SourceTable EXD(s)");
     }
 
     private TableExtDesc reloadTableExtAt(String path) throws IOException {
         ResourceStore store = getStore();
+        String prj = TableExtDesc.parseResourcePath(path).getSecond();
+        
         TableExtDesc t = store.getResource(path, TableExtDesc.class, TABLE_EXT_SERIALIZER);
 
         if (t == null) {
@@ -384,10 +426,14 @@ public class MetadataManager {
             t = convertOldTableExtToNewer(path);
         }
 
-        t.init();
+        t.init(prj);
 
-        srcTableExdMap.putLocal(t.getName(), t);
+        srcTableExtMap.putLocal(mapKey(t.getIdentity(), prj), t);
         return t;
+    }
+
+    private String mapKey(String identity, String prj) {
+        return prj == null ? identity : identity + "--" + prj;
     }
 
     private TableExtDesc convertOldTableExtToNewer(String path) throws IOException {
@@ -417,7 +463,6 @@ public class MetadataManager {
         result.setName(tableIdentity);
         result.setUuid(UUID.randomUUID().toString());
         result.setLastModified(0);
-        result.init();
         result.setCardinality(cardinality);
         return result;
     }
@@ -452,15 +497,15 @@ public class MetadataManager {
 
     private TableDesc reloadSourceTableAt(String path) throws IOException {
         ResourceStore store = getStore();
+        String prj = TableDesc.parseResourcePath(path).getSecond();
+        
         TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
         if (t == null) {
             return null;
         }
-        t.init();
+        t.init(prj);
 
-        String tableIdentity = t.getIdentity();
-
-        srcTableMap.putLocal(tableIdentity, t);
+        srcTableMap.putLocal(mapKey(t.getIdentity(), prj), t);
 
         return t;
     }
@@ -478,14 +523,6 @@ public class MetadataManager {
 
     public void reloadExtFilter(String extFilterName) throws IOException {
         reloadExternalFilterAt(ExternalFilterDesc.concatResourcePath(extFilterName));
-    }
-
-    private void reloadSourceTableExt(String tableIdentity) throws IOException {
-        reloadTableExtAt(TableExtDesc.concatResourcePath(tableIdentity));
-    }
-
-    private void reloadSourceTable(String tableIdentity) throws IOException {
-        reloadSourceTableAt(TableDesc.concatResourcePath(tableIdentity));
     }
 
     public DataModelDesc getDataModelDesc(String name) {
@@ -514,29 +551,20 @@ public class MetadataManager {
         return ret;
     }
 
-    public boolean isTableInModel(String tableName, String projectName) throws IOException {
-        return getModelsUsingTable(tableName, projectName).size() > 0;
-    }
-
-    public List<String> getModelsUsingTable(String tableName, String projectName) throws IOException {
+    // within a project, find models that use the specified table
+    public List<String> getModelsUsingTable(TableDesc table, String project) throws IOException {
         List<String> models = new ArrayList<>();
-        for (DataModelDesc modelDesc : getModels(projectName)) {
-            for (TableRef tableRef : modelDesc.getAllTables()) {
-                if (tableRef.getTableIdentity().equalsIgnoreCase(tableName)) {
-                    models.add(modelDesc.getName());
-                }
-            }
+        for (DataModelDesc modelDesc : getModels(project)) {
+            if (modelDesc.containsTable(table))
+                models.add(modelDesc.getName());
         }
         return models;
     }
 
-    public boolean isTableInAnyModel(String tableName) {
+    public boolean isTableInAnyModel(TableDesc table) {
         for (DataModelDesc modelDesc : getModels()) {
-            for (TableRef tableRef : modelDesc.getAllTables()) {
-                if (tableRef.getTableIdentity().equalsIgnoreCase(tableName)) {
-                    return true;
-                }
-            }
+            if (modelDesc.containsTable(table))
+                return true;
         }
         return false;
     }
@@ -606,7 +634,7 @@ public class MetadataManager {
         ProjectManager prjMgr = ProjectManager.getInstance(config);
         ProjectInstance prj = prjMgr.getProject(projectName);
         if (prj.containsModel(name))
-            throw new IllegalStateException();
+            throw new IllegalStateException("project " + projectName + " already contains model " + name);
         
         try {
             // Temporarily register model under project, because we want to 
