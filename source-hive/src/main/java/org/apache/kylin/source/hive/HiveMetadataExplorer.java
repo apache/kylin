@@ -59,13 +59,18 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         }
 
         TableDesc tableDesc = metaMgr.getTableDesc(database + "." + tableName, prj);
+        
+        // make a new TableDesc instance, don't modify the one in use
         if (tableDesc == null) {
             tableDesc = new TableDesc();
             tableDesc.setDatabase(database.toUpperCase());
             tableDesc.setName(tableName.toUpperCase());
             tableDesc.setUuid(UUID.randomUUID().toString());
             tableDesc.setLastModified(0);
+        } else {
+            tableDesc = new TableDesc(tableDesc);
         }
+        
         if (hiveTableMeta.tableType != null) {
             tableDesc.setTableType(hiveTableMeta.tableType);
         }
@@ -95,7 +100,12 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
             partitionColumnString.append(hiveTableMeta.partitionColumns.get(i).name.toUpperCase());
         }
 
-        TableExtDesc tableExtDesc = metaMgr.getTableExt(tableDesc.getIdentity(), prj);
+        TableExtDesc tableExtDesc = new TableExtDesc();
+        tableExtDesc.setName(tableDesc.getIdentity());
+        tableExtDesc.setUuid(UUID.randomUUID().toString());
+        tableExtDesc.setLastModified(0);
+        tableExtDesc.init(prj);
+        
         tableExtDesc.addDataSourceProp("location", hiveTableMeta.sdLocation);
         tableExtDesc.addDataSourceProp("owner", hiveTableMeta.owner);
         tableExtDesc.addDataSourceProp("last_access_time", String.valueOf(hiveTableMeta.lastAccessTime));
