@@ -444,9 +444,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected void attachTableMetadata(TableDesc table, Configuration conf) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
-        // FIXME prj-table, attach project resource
         dumpList.add(table.getResourcePath());
-        dumpKylinPropsAndMetadata(null, dumpList, KylinConfig.getInstanceFromEnv(), conf);
+        dumpKylinPropsAndMetadata(table.getProject(), dumpList, KylinConfig.getInstanceFromEnv(), conf);
     }
 
     protected void attachCubeMetadata(CubeInstance cube, Configuration conf) throws IOException {
