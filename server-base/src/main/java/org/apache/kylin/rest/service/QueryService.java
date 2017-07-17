@@ -142,6 +142,10 @@ public class QueryService extends BasicService {
     private ModelService modelService;
 
     @Autowired
+    @Qualifier("cubeMgmtService")
+    private CubeService cubeService;
+
+    @Autowired
     private AclUtil aclUtil;
 
     public QueryService() {
@@ -509,6 +513,32 @@ public class QueryService extends BasicService {
     }
 
     protected List<TableMeta> getMetadata(CubeManager cubeMgr, String project, boolean cubedOnly) throws SQLException {
+        //list all tableMetas first
+        List<TableMeta> tableMetas = listAllMetadata(cubeMgr, project, cubedOnly);
+
+        //get cubes that current user can access to in this project, then get all tables of these cubes.
+        List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, project, null, true);
+        Set<TableRef> tableRefs = new HashSet<TableRef>();
+        for (CubeInstance cube : cubeInstances) {
+            tableRefs.addAll(cube.getDescriptor().getModel().getAllTables());
+        }
+
+        //filter out tableMetas that current user should not access to
+        List<TableMeta> filterTableMetas = new ArrayList<TableMeta>();
+        for (TableMeta tableMeta : tableMetas) {
+            String fullTableName = tableMeta.getTABLE_SCHEM() + "." + tableMeta.getTABLE_NAME();
+            for (TableRef t : tableRefs) {
+                if (t.getTableIdentity().equals(fullTableName)) {
+                    filterTableMetas.add(tableMeta);
+                    break;
+                }
+            }
+        }
+
+        return filterTableMetas;
+    }
+
+    protected List<TableMeta> listAllMetadata(CubeManager cubeMgr, String project, boolean cubedOnly) throws SQLException {
 
         Connection conn = null;
         ResultSet columnMeta = null;
@@ -575,11 +605,33 @@ public class QueryService extends BasicService {
     }
 
     public List<TableMetaWithType> getMetadataV2(String project) throws SQLException, IOException {
-        return getMetadataV2(getCubeManager(), project, true);
+        //list all tableMetas first
+        List<TableMetaWithType> tableMetas = listAllMetadataV2(getCubeManager(), project, true);
+
+        //get cubes that current user can access to in this project, then get all tables of these cubes.
+        List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, project, null, true);
+        Set<TableRef> tableRefs = new HashSet<TableRef>();
+        for (CubeInstance cube : cubeInstances) {
+            tableRefs.addAll(cube.getDescriptor().getModel().getAllTables());
+        }
+
+        //filter out tableMetas that current user should not access to
+        List<TableMetaWithType> filterTableMetas = new ArrayList<TableMetaWithType>();
+        for (TableMetaWithType tableMeta : tableMetas) {
+            String fullTableName = tableMeta.getTABLE_SCHEM() + "." + tableMeta.getTABLE_NAME();
+            for (TableRef t : tableRefs) {
+                if (t.getTableIdentity().equals(fullTableName)) {
+                    filterTableMetas.add(tableMeta);
+                    break;
+                }
+            }
+        }
+
+        return filterTableMetas;
     }
 
     @SuppressWarnings("checkstyle:methodlength")
-    protected List<TableMetaWithType> getMetadataV2(CubeManager cubeMgr, String project, boolean cubedOnly)
+    protected List<TableMetaWithType> listAllMetadataV2(CubeManager cubeMgr, String project, boolean cubedOnly)
             throws SQLException, IOException {
         //Message msg = MsgPicker.getMsg();
 
