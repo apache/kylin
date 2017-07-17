@@ -26,7 +26,12 @@ import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.JobException;
-import org.apache.kylin.job.execution.*;
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.ExecutableContext;
+import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,14 +63,13 @@ public class JobServiceTest extends ServiceTestBase {
         ExecutableManager manager = ExecutableManager.getInstance(jobService.getConfig());
         AbstractExecutable executable = new TestJob();
         manager.addJob(executable);
-        List<CubingJob> jobs = jobService.innerSearchCubingJobs("cube",
+        List<CubingJob> jobs = jobService.searchCubingJobs("cube",
                 "jobName",
                 Collections.<ExecutableState>emptySet(),
                 0,
                 Long.MAX_VALUE,
                 Collections.<String, Output>emptyMap(),
-                true,
-                "project");
+                true);
         Assert.assertEquals(0, jobs.size());
     }
 
