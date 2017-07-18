@@ -82,7 +82,8 @@ public class ConvertToComputedColumn implements QueryUtil.IQueryTransformer {
             try {
                 matchedNodes = getMatchedNodes(inputSql, computedColumn.get(ccExp));
             } catch (SqlParseException e) {
-                logger.error("Convert to computedColumn Fail,parse sql fail ", e.getMessage());
+                logger.error("Convert to computedColumn Fail,parse sql fail ", e);
+                return inputSql;
             }
             for (SqlNode node : matchedNodes) {
                 Pair<Integer, Integer> startEndPos = CalciteParser.getReplacePos(node, lines);
