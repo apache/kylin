@@ -89,7 +89,8 @@ public class QueryControllerV2 extends BasicController {
     @ResponseBody
     public EnvelopeResponse prepareQueryV2(@RequestBody PrepareSqlRequest sqlRequest) {
         Map<String, String> newToggles = Maps.newHashMap();
-        newToggles.putAll(sqlRequest.getBackdoorToggles());
+        if (sqlRequest.getBackdoorToggles() != null)
+            newToggles.putAll(sqlRequest.getBackdoorToggles());
         newToggles.put(BackdoorToggles.DEBUG_TOGGLE_PREPARE_ONLY, "true");
         sqlRequest.setBackdoorToggles(newToggles);
 
