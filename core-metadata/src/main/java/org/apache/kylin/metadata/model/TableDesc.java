@@ -75,7 +75,6 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
             this.columns[i].init(this);
         }
         
-        this.project = other.project;
         this.database.setName(other.getDatabase());
         this.identity = other.identity;
     }
