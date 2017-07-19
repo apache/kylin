@@ -233,7 +233,12 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
     $scope.calculate = function () {
       $modalInstance.dismiss();
       loadingRequest.show();
-      TableService.genCardinality({tableName: $scope.tableName}, {
+      var _project = ProjectModel.selectedProject;
+      if (_project == null){
+        SweetAlert.swal('', "No project selected.", 'info');
+        return;
+      }
+      TableService.genCardinality({tableName: $scope.tableName, pro: _project}, {
         delimiter: $scope.delimiter,
         format: $scope.format
       }, function (result) {

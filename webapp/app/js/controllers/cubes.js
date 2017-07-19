@@ -300,7 +300,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
           model:cube.model
         };
 
-        TableService.get({tableName:$scope.metaModel.model.fact_table},function(table){
+        TableService.get({pro:cube.model.project, tableName:$scope.metaModel.model.fact_table},function(table){
           if(table && table.source_type == 1){
             cube.streaming = true;
           }
