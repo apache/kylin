@@ -321,13 +321,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
             dealWithStreaming(cube);
 
-            for (TableRef table : modelDesc.getAllTables()) {
-                String tableName = table.getTableIdentity();
-                addRequired(TableDesc.concatResourcePath(tableName));
-                addOptional(TableDesc.concatExdResourcePath(tableName));
-            }
-
-            addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
+            retrieveDataModelDesc(modelDesc);
             addRequired(CubeDesc.concatResourcePath(cubeDesc.getName()));
 
             if (includeSegments) {
@@ -387,6 +381,19 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         } else {
             logger.warn("Unknown realization type: " + realization.getType());
         }
+    }
+
+    private void retrieveDataModelDesc(DataModelDesc modelDesc) {
+        if (modelDesc == null) {
+            return;
+        }
+        for (TableRef table : modelDesc.getAllTables()) {
+            String tableName = table.getTableIdentity();
+            addRequired(TableDesc.concatResourcePath(tableName));
+            addOptional(TableDesc.concatExdResourcePath(tableName));
+        }
+
+        addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
     }
 
     private void addRequired(String record) {
