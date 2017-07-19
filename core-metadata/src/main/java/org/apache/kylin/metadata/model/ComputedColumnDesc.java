@@ -17,15 +17,16 @@
 */
 package org.apache.kylin.metadata.model;
 
+import org.apache.kylin.metadata.model.tool.CalciteParser;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
 
 import java.io.Serializable;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class ComputedColumnDesc implements Serializable{
+public class ComputedColumnDesc implements Serializable {
     @JsonProperty
     private String tableIdentity;
     @JsonProperty
@@ -46,7 +47,8 @@ public class ComputedColumnDesc implements Serializable{
         tableIdentity = tableIdentity.toUpperCase();
         columnName = columnName.toUpperCase();
 
-        CalciteParser.ensureNoTableNameExists(expression);
+        if ("true".equals(System.getProperty("needCheckCC")))
+            CalciteParser.ensureNoTableNameExists(expression);
     }
 
     public String getFullName() {
