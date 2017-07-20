@@ -19,11 +19,13 @@
 package org.apache.kylin.rest.service;
 
 import java.net.UnknownHostException;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.query.QueryConnection;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,11 +47,11 @@ public class CubeServiceTest extends ServiceTestBase {
     private CacheService cacheService;
 
     @Test
-    public void testBasics() throws JsonProcessingException, JobException, UnknownHostException {
+    public void testBasics() throws JsonProcessingException, JobException, UnknownHostException, SQLException {
         Assert.assertNotNull(cubeService.getConfig());
         Assert.assertNotNull(cubeService.getConfig());
         Assert.assertNotNull(cubeService.getMetadataManager());
-        Assert.assertNotNull(cacheService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+        Assert.assertNotNull(QueryConnection.getConnection(ProjectInstance.DEFAULT_PROJECT_NAME));
 
         List<CubeInstance> cubes = cubeService.listAllCubes(null, null, null, true);
         Assert.assertNotNull(cubes);

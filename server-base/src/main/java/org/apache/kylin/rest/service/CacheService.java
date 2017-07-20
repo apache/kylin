@@ -147,6 +147,7 @@ public class CacheService extends BasicService {
         queryDataSource.clearCache();
     }
 
+    @Deprecated
     public DataSource getOLAPDataSource(String project) {
 
         project = ProjectInstance.getNormalizedProjectName(project);

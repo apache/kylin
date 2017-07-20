@@ -44,7 +44,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
 
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.calcite.config.CalciteConnectionConfig;
@@ -81,6 +80,7 @@ import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.constant.Constant;
@@ -517,8 +517,7 @@ public class QueryService extends BasicService {
         }
         ResultSet JDBCTableMeta = null;
         try {
-            DataSource dataSource = cacheService.getOLAPDataSource(project);
-            conn = dataSource.getConnection();
+            conn = QueryConnection.getConnection(project);
             DatabaseMetaData metaData = conn.getMetaData();
 
             JDBCTableMeta = metaData.getTables(null, null, null, null);
@@ -593,8 +592,7 @@ public class QueryService extends BasicService {
         }
         ResultSet JDBCTableMeta = null;
         try {
-            DataSource dataSource = cacheService.getOLAPDataSource(project);
-            conn = dataSource.getConnection();
+            conn = QueryConnection.getConnection(project);
             DatabaseMetaData metaData = conn.getMetaData();
 
             JDBCTableMeta = metaData.getTables(null, null, null, null);
@@ -757,7 +755,7 @@ public class QueryService extends BasicService {
         List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
 
         try {
-            conn = cacheService.getOLAPDataSource(sqlRequest.getProject()).getConnection();
+            conn = QueryConnection.getConnection(sqlRequest.getProject());
 
             // special case for prepare query. 
             if (BackdoorToggles.getPrepareOnly()) {
