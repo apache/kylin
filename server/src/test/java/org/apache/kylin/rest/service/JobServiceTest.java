@@ -19,10 +19,12 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.query.QueryConnection;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,11 +44,11 @@ public class JobServiceTest extends ServiceTestBase {
     private CacheService cacheService;
 
     @Test
-    public void testBasics() throws JobException, IOException {
+    public void testBasics() throws JobException, IOException, SQLException {
         Assert.assertNotNull(jobService.getConfig());
         Assert.assertNotNull(jobService.getConfig());
         Assert.assertNotNull(jobService.getMetadataManager());
-        Assert.assertNotNull(cacheService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+        Assert.assertNotNull(QueryConnection.getConnection(ProjectInstance.DEFAULT_PROJECT_NAME));
         Assert.assertNull(jobService.getJobInstance("job_not_exist"));
         Assert.assertNotNull(jobService.searchJobs(null, null, null, 0, 0, JobTimeFilterEnum.ALL));
     }
