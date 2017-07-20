@@ -430,7 +430,16 @@ wstring requestQuery ( wchar_t* rawSql, char* serverAddr, long port, char* usern
 
     wstring sql = cookQuery ( rawSql );
     std::wstringstream wss;
-    wss << L"{ \"acceptPartial\": false, \"project\" : \"" << project << L"\", " << " \"sql\" : \"" << sql << L"\" }" ;
+    wss << L"{ \"acceptPartial\": false, \"project\" : \"" << project << L"\", " << " \"sql\" : \"" << sql << L"\"";
+	
+	// backward compatible, Apache Kylin <=2.0
+	if (isPrepare)
+	{
+		wss << L", \"params\" : [] ";
+	}
+
+	wss << L"}" ;
+
     request . set_body ( wss . str (), L"application/json" );
     request . headers () . add ( header_names::accept_encoding, "gzip,deflate" );
     http_response response;
