@@ -33,6 +33,7 @@ public final class ExecutableConstants {
     public static final String SOURCE_RECORDS_SIZE = "source_records_size";
 
     public static final String STEP_NAME_BUILD_DICTIONARY = "Build Dimension Dictionary";
+    public static final String STEP_NAME_BUILD_UHC_DICTIONARY = "Build UHC Dictionary";
     public static final String STEP_NAME_CREATE_FLAT_HIVE_TABLE = "Create Intermediate Flat Hive Table";
     public static final String STEP_NAME_MATERIALIZE_HIVE_VIEW_IN_LOOKUP = "Materialize Hive View in Lookup Tables";
     public static final String STEP_NAME_FACT_DISTINCT_COLUMNS = "Extract Fact Table Distinct Columns";

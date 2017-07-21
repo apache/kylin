@@ -16,23 +16,15 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.dict;
+package org.apache.kylin.engine.mr.steps;
 
-import java.io.IOException;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapreduce.Partitioner;
+import org.apache.kylin.common.util.BytesUtil;
 
-import org.apache.kylin.common.util.Dictionary;
-
-/**
- * An once-only builder for dictionary.
- */
-public interface IDictionaryBuilder {
-
-    /** Sets the dictionary info for the dictionary being built. Mainly for GlobalDictionaryBuilder. */
-    void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException;
-    
-    /** Add a new value into dictionary, returns it is accepted (not null) or not. */
-    boolean addValue(String value);
-    
-    /** Build the dictionary */
-    Dictionary<String> build() throws IOException;
+public class UHCDictionaryPartitioner extends Partitioner<SelfDefineSortableKey, NullWritable> {
+    @Override
+    public int getPartition(SelfDefineSortableKey skey, NullWritable value, int numReduceTasks) {
+        return BytesUtil.readUnsigned(skey.getText().getBytes(), 0, 1);
+    }
 }

@@ -66,6 +66,7 @@ public interface BatchConstants {
     String CFG_OUTPUT_PARTITION = "partition";
     String CFG_MR_SPARK_JOB = "mr.spark.job";
     String CFG_SPARK_META_URL = "spark.meta.url";
+    String CFG_GLOBAL_DICT_BASE_DIR = "global.dict.base.dir";
 
     /**
      * command line ARGuments
@@ -87,6 +88,7 @@ public interface BatchConstants {
     String ARG_INPUT_FORMAT = "inputformat";
     String ARG_LEVEL = "level";
     String ARG_CONF = "conf";
+    String ARG_DICT_PATH = "dictPath";
 
     /**
      * logger and counter

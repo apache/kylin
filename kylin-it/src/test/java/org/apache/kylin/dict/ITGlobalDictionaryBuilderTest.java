@@ -72,7 +72,7 @@ public class ITGlobalDictionaryBuilderTest extends HBaseMetadataTestCase {
         finishLatch.await();
 
         GlobalDictionaryBuilder builder = new GlobalDictionaryBuilder();
-        builder.init(dictionaryInfo, 0);
+        builder.init(dictionaryInfo, 0, KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
         builder.addValue("success");
         Dictionary<String> dict = builder.build();
 
@@ -108,7 +108,7 @@ public class ITGlobalDictionaryBuilderTest extends HBaseMetadataTestCase {
                 GlobalDictionaryBuilder builder = new GlobalDictionaryBuilder();
                 startLatch.countDown();
 
-                builder.init(dictionaryInfo, 0);
+                builder.init(dictionaryInfo, 0, KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
                 for (int i = 0; i < count; i++) {
                     builder.addValue(prefix + i);
                 }

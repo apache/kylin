@@ -70,7 +70,7 @@ public class DictionaryGenerator {
         ArrayList<String> samples = new ArrayList<String>(nSamples);
 
         // init the builder
-        builder.init(dictInfo, baseId);
+        builder.init(dictInfo, baseId, null);
 
         // add values
         while (valueEnumerator.moveNext()) {
@@ -111,7 +111,7 @@ public class DictionaryGenerator {
         private String datePattern;
 
         @Override
-        public void init(DictionaryInfo info, int baseId) throws IOException {
+        public void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException {
             this.baseId = baseId;
         }
 
@@ -152,7 +152,7 @@ public class DictionaryGenerator {
     private static class TimeDictBuilder implements IDictionaryBuilder {
 
         @Override
-        public void init(DictionaryInfo info, int baseId) throws IOException {
+        public void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException {
         }
 
         @Override
@@ -176,7 +176,7 @@ public class DictionaryGenerator {
         TrieDictionaryBuilder builder;
         
         @Override
-        public void init(DictionaryInfo info, int baseId) throws IOException {
+        public void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException {
             this.baseId = baseId;
             this.builder = new TrieDictionaryBuilder(new StringBytesConverter());
         }
@@ -200,7 +200,7 @@ public class DictionaryGenerator {
         TrieDictionaryForestBuilder builder;
 
         @Override
-        public void init(DictionaryInfo info, int baseId) throws IOException {
+        public void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException {
             builder = new TrieDictionaryForestBuilder(new StringBytesConverter(), baseId);
         }
 
@@ -225,7 +225,7 @@ public class DictionaryGenerator {
         NumberDictionaryBuilder builder;
         
         @Override
-        public void init(DictionaryInfo info, int baseId) throws IOException {
+        public void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException {
             this.baseId = baseId;
             this.builder = new NumberDictionaryBuilder();
         }
@@ -249,7 +249,7 @@ public class DictionaryGenerator {
         NumberDictionaryForestBuilder builder;
 
         @Override
-        public void init(DictionaryInfo info, int baseId) throws IOException {
+        public void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException {
             builder = new NumberDictionaryForestBuilder(baseId);
         }
 

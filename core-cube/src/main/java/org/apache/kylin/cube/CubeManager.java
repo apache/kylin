@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -832,6 +831,74 @@ public class CubeManager implements IRealizationProvider {
         return getCube(name);
     }
 
+    // ============================================================================
+
+
+    /**
+     * Get the columns which need build the dictionary from fact table. (the column exists on fact and is not fk)
+     * @param cubeDesc
+     * @return
+     * @throws IOException
+     */
+    public List<TblColRef> getAllDictColumnsOnFact(CubeDesc cubeDesc) throws IOException {
+        List<TblColRef> factDictCols = new ArrayList<TblColRef>();
+        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
+        for (TblColRef col : cubeDesc.getAllColumnsNeedDictionaryBuilt()) {
+
+            String scanTable = dictMgr.decideSourceData(cubeDesc.getModel(), col).getTable();
+            if (cubeDesc.getModel().isFactTable(scanTable)) {
+                factDictCols.add(col);
+            }
+        }
+        return factDictCols;
+    }
+
+    public List<TblColRef> getAllGlobalDictColumns(CubeDesc cubeDesc) {
+        List<TblColRef> globalDictCols = new ArrayList<TblColRef>();
+        List<DictionaryDesc> dictionaryDescList = cubeDesc.getDictionaries();
+
+        if (dictionaryDescList == null) {
+            return globalDictCols;
+        }
+
+        for (DictionaryDesc dictionaryDesc : dictionaryDescList) {
+            if (dictionaryDesc.getBuilderClass() != null) {
+                globalDictCols.add(dictionaryDesc.getColumnRef());
+            }
+        }
+        return globalDictCols;
+    }
+
+    //UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
+    public List<TblColRef> getAllUHCColumns(CubeDesc cubeDesc) {
+        List<TblColRef> uhcColumns = new ArrayList<TblColRef>();
+        uhcColumns.addAll(getAllGlobalDictColumns(cubeDesc));
+        uhcColumns.addAll(cubeDesc.getShardByColumns());
+
+        //handle PK-FK, see getAllDictColumnsOnFact
+        try {
+            uhcColumns.retainAll(getAllDictColumnsOnFact(cubeDesc));
+        } catch (IOException e) {
+            throw new RuntimeException("Get all dict columns on fact failed");
+        }
+
+        return uhcColumns;
+    }
+
+    public int[] getUHCIndex(CubeDesc cubeDesc) throws IOException {
+        List<TblColRef> factDictCols = getAllDictColumnsOnFact(cubeDesc);
+        List<TblColRef> uhcColumns = getAllUHCColumns(cubeDesc);
+        int[] uhcIndex = new int[factDictCols.size()];
+
+        for (int i = 0; i < factDictCols.size(); i++) {
+            if (uhcColumns.contains(factDictCols.get(i))) {
+                uhcIndex[i] = 1;
+            }
+        }
+
+        return uhcIndex;
+    }
+
     /**
      * Calculate the holes (gaps) in segments.
      * @param cubeName
@@ -872,37 +939,4 @@ public class CubeManager implements IRealizationProvider {
         return holes;
     }
 
-    private final String GLOBAL_DICTIONNARY_CLASS = "org.apache.kylin.dict.GlobalDictionaryBuilder";
-
-    //UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
-    public int[] getUHCIndex(CubeDesc cubeDesc) throws IOException {
-        List<TblColRef> dictCols = Lists.newArrayList(cubeDesc.getAllColumnsNeedDictionaryBuilt());
-        int[] uhcIndex = new int[dictCols.size()];
-
-        //add GlobalDictionaryColumns
-        List<DictionaryDesc> dictionaryDescList = cubeDesc.getDictionaries();
-        if (dictionaryDescList != null) {
-            for (DictionaryDesc dictionaryDesc : dictionaryDescList) {
-                if (dictionaryDesc.getBuilderClass() != null
-                        && dictionaryDesc.getBuilderClass().equalsIgnoreCase(GLOBAL_DICTIONNARY_CLASS)) {
-                    for (int i = 0; i < dictCols.size(); i++) {
-                        if (dictCols.get(i).equals(dictionaryDesc.getColumnRef())) {
-                            uhcIndex[i] = 1;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        //add ShardByColumns
-        Set<TblColRef> shardByColumns = cubeDesc.getShardByColumns();
-        for (int i = 0; i < dictCols.size(); i++) {
-            if (shardByColumns.contains(dictCols.get(i))) {
-                uhcIndex[i] = 1;
-            }
-        }
-
-        return uhcIndex;
-    }
 }

@@ -141,7 +141,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             }
             if (buildDictInReducer) {
                 builder = DictionaryGenerator.newDictionaryBuilder(col.getType());
-                builder.init(null, 0);
+                builder.init(null, 0, null);
             }
             logger.info("Reducer " + taskId + " handling column " + col + ", buildDictInReducer=" + buildDictInReducer);
         }

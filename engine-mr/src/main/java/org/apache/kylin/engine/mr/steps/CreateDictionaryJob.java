@@ -21,6 +21,7 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.FileSystem;
@@ -35,6 +36,8 @@ import org.apache.kylin.common.util.ByteBufferBackedInputStream;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cli.DictionaryGeneratorCLI;
 import org.apache.kylin.dict.DictionaryProvider;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
@@ -55,11 +58,13 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
         options.addOption(OPTION_CUBE_NAME);
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_INPUT_PATH);
+        options.addOption(OPTION_DICT_PATH);
         parseOptions(options, args);
 
         final String cubeName = getOptionValue(OPTION_CUBE_NAME);
         final String segmentID = getOptionValue(OPTION_SEGMENT_ID);
         final String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
+        final String dictPath = getOptionValue(OPTION_DICT_PATH);
 
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
 
@@ -72,7 +77,16 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
 
             @Override
             public Dictionary<String> getDictionary(TblColRef col) throws IOException {
-                Path colDir = new Path(factColumnsInputPath, col.getIdentity());
+                CubeManager cubeManager = CubeManager.getInstance(config);
+                CubeInstance cube = cubeManager.getCube(cubeName);
+                List<TblColRef> uhcColumns = CubeManager.getInstance(config).getAllUHCColumns(cube.getDescriptor());
+
+                Path colDir;
+                if (uhcColumns.contains(col)) {
+                    colDir = new Path(dictPath, col.getIdentity());
+                } else {
+                    colDir = new Path(factColumnsInputPath, col.getIdentity());
+                }
                 FileSystem fs = HadoopUtil.getWorkingFileSystem();
 
                 Path dictFile = HadoopUtil.getFilterOnlyPath(fs, colDir, col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);

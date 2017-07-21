@@ -52,6 +52,10 @@ public class DictionaryInfo extends RootPersistentEntity {
     public DictionaryInfo() {
     }
 
+    public DictionaryInfo(ColumnDesc col, String dataType) {
+        this(col.getTable().getIdentity(), col.getName(), col.getZeroBasedIndex(), dataType, null);
+    }
+
     public DictionaryInfo(ColumnDesc col, String dataType, TableSignature input) {
         this(col.getTable().getIdentity(), col.getName(), col.getZeroBasedIndex(), dataType, input);
     }
