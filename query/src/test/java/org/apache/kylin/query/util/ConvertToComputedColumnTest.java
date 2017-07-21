@@ -110,4 +110,15 @@ public class ConvertToComputedColumnTest {
 
     }
 
+    @Test
+    public void testCCWithBrackets() {
+        String sql0 = "select (   a + b) + (c+d   \t\n) from t";
+        String expr1 = "a + b + (c + d)";
+
+        Map<String, String> map = new HashMap<>();
+        map.put("cc0", expr1);
+        ImmutableSortedMap<String, String> computedColumns = ConvertToComputedColumn.getMapSortedByValue(map);
+        Assert.assertEquals("select cc0 from t",
+                ConvertToComputedColumn.replaceComputedColumn(sql0, computedColumns));
+    }
 }
