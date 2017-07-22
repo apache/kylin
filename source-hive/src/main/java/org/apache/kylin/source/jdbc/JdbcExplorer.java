@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -232,6 +233,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         while (rs.next()){
             tableType = rs.getString(4);
         }
+        DBUtils.closeQuietly(rs);
         if (tableType!=null){
             tableDesc.setTableType(tableType);
         }else{
@@ -284,8 +286,8 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
             cdesc.setId(String.valueOf(pos));
             columns.add(cdesc);
         }
-        
-        
+        DBUtils.closeQuietly(rs);
+
         tableDesc.setColumns(columns.toArray(new ColumnDesc[columns.size()]));
 
         TableExtDesc tableExtDesc = new TableExtDesc();

@@ -857,9 +857,9 @@ public class QueryService extends BasicService {
             List<List<String>> results, List<SelectedColumnMeta> columnMetas) throws SQLException {
 
         CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(true);
-
+        PreparedStatement preparedStatement = null;
         try {
-            conn.prepareStatement(correctedSql);
+            preparedStatement = conn.prepareStatement(correctedSql);
             throw new IllegalStateException("Should have thrown OnlyPrepareEarlyAbortException");
         } catch (Exception e) {
             Throwable rootCause = ExceptionUtils.getRootCause(e);
@@ -891,6 +891,7 @@ public class QueryService extends BasicService {
             }
         } finally {
             CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(false);
+            DBUtils.closeQuietly(preparedStatement);
         }
 
         return getSqlResponse(isPushDown, results, columnMetas);
