@@ -1,7 +1,9 @@
-# Improving Spark Cubing in Kylin 2.0 
-
-Author: Kaisen Kang
-
+---
+layout: post-blog
+title:  Improving Spark Cubing in Kylin 2.0
+date:   2017-07-21 22:22:22
+author: Kaisen Kang
+categories: blog
 ---
 
 Apache Kylin is a OALP Engine that speeding up query by Cube precomputation. The Cube is multi-dimensional dataset which contain precomputed all measures in all dimension combinations. Before v2.0, Kylin uses MapReduce to build Cube. In order to get better performance, Kylin 2.0 introduced the Spark Cubing. About the principle of Spark Cubing, please refer to the article [By-layer Spark Cubing][1].
