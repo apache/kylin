@@ -84,8 +84,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         AGGR_FUNC_MAP.put("MIN", "MIN");
 
         Map<String, MeasureTypeFactory> udafFactories = MeasureTypeFactory.getUDAFFactories();
-        for (String udaf : udafFactories.keySet()) {
-            AGGR_FUNC_MAP.put(udaf, udafFactories.get(udaf).getAggrFunctionName());
+        for (Map.Entry<String, MeasureTypeFactory> entry : udafFactories.entrySet()) {
+            AGGR_FUNC_MAP.put(entry.getKey(), entry.getValue().getAggrFunctionName());
         }
 
         Map<String, Class<?>> udafs = MeasureTypeFactory.getUDAFs();

@@ -106,12 +106,10 @@ public class OLAPWindowRel extends Window implements OLAPRel {
 
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
-        ArrayList<RelNode> relInputs = new ArrayList<>(inputs.size());
         for (EnumerableRel input : inputs) {
             if (input instanceof OLAPRel) {
                 ((OLAPRel) input).replaceTraitSet(EnumerableConvention.INSTANCE);
             }
-            relInputs.add(input);
         }
         return EnumerableWindowBridge.createEnumerableWindow(getCluster(), traitSet, inputs.get(0), constants, rowType, groups);
     }
