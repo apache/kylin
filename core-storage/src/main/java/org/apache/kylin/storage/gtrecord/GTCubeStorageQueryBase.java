@@ -143,7 +143,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         TupleFilter.collectColumns(filter, filterColumnD);
 
         // set limit push down
-        enableStorageLimitIfPossible(cuboid, groups, otherDimsD, singleValuesD, derivedPostAggregation, groupsD, filter, loosenedColumnD, sqlDigest.aggregations, context);
+        enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filter, loosenedColumnD, sqlDigest.aggregations, context);
         // set whether to aggregate results from multiple partitions
         enableStreamAggregateIfBeneficial(cuboid, groupsD, context);
         // set query deadline
@@ -340,7 +340,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
     }
 
-    private void enableStorageLimitIfPossible(Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> othersD, Set<TblColRef> singleValuesD, Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter, Set<TblColRef> loosenedColumnD, Collection<FunctionDesc> functionDescs, StorageContext context) {
+    private void enableStorageLimitIfPossible(Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter, Set<TblColRef> loosenedColumnD, Collection<FunctionDesc> functionDescs, StorageContext context) {
         boolean possible = true;
 
         if (!TupleFilter.isEvaluableRecursively(filter)) {
@@ -356,13 +356,6 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         if (context.hasSort()) {
             possible = false;
             logger.debug("Storage limit push down is impossible because the query has order by");
-        }
-
-        // other columns (from filter) is bad, unless they are ensured to have single value
-        if (singleValuesD.containsAll(othersD) == false) {
-            possible = false;
-            logger.debug("Storage limit push down is impossible because some column not on group by: " + othersD //
-                    + " (single value column: " + singleValuesD + ")");
         }
 
         // derived aggregation is bad, unless expanded columns are already in group by
