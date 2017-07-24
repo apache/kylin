@@ -1,0 +1,7 @@
+eclipse.preferences.version=1
+formatter_profile=_Space Indent & Long Lines
+formatter_settings_version=12
+org.eclipse.jdt.ui.ignorelowercasenames=true
+org.eclipse.jdt.ui.importorder=java;javax;org;com;
+org.eclipse.jdt.ui.ondemandthreshold=99
+org.eclipse.jdt.ui.staticondemandthreshold=99
