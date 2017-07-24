@@ -9,17 +9,17 @@ Kylin v2.0 introduces the Spark cube engine, it uses Apache Spark to replace Map
 ## Preparation
 To finish this tutorial, you need a Hadoop environment which has Kylin v2.0.0 or above installed. Here we will use Hortonworks HDP 2.4 Sandbox VM, the Hadoop components as well as Hive/HBase has already been started. 
 
-## Install Kylin v2.0.0 beta
+## Install Kylin v2.0.0
 
-Download the Kylin v2.0.0 beta for HBase 1.x from Kylin's download page, and then uncompress the tar ball into */usr/local/* folder:
+Download the Kylin v2.0.0 for HBase 1.x from Kylin's download page, and then uncompress the tar ball into */usr/local/* folder:
 
 {% highlight Groff markup %}
 
-wget https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta/apache-kylin-2.0.0-beta-hbase1x.tar.gz -P /tmp
+wget http://www-us.apache.org/dist/kylin/apache-kylin-2.0.0/apache-kylin-2.0.0-bin-hbase1x.tar.gz -P /tmp
 
-tar -zxvf /tmp/apache-kylin-2.0.0-beta-hbase1x.tar.gz -C /usr/local/
+tar -zxvf /tmp/apache-kylin-2.0.0-bin-hbase1x.tar.gz -C /usr/local/
 
-export KYLIN_HOME=/usr/local/apache-kylin-2.0.0-SNAPSHOT-bin
+export KYLIN_HOME=/usr/local/apache-kylin-2.0.0-bin
 {% endhighlight %}
 
 ## Prepare "kylin.env.hadoop-conf-dir"
