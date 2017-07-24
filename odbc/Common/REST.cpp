@@ -197,6 +197,7 @@ bool restAuthenticate ( char* serverAddr, long port, char* username, char* passw
     wstring serverAddrW = completeServerStr ( serverAddr, port );
     http_client_config config;
     config . set_timeout ( utility::seconds ( 300 ) );
+	config . set_validate_certificates ( false );
     http_client session ( serverAddrW, config );
     //can get project list only when correct username/password is given
     http_request request = makeRequest ( username, passwd, L"/kylin/api/projects", methods::GET );
@@ -218,6 +219,7 @@ void restListProjects ( char* serverAddr, long port, char* username, char* passw
     wstring serverAddrW = completeServerStr ( serverAddr, port );
     http_client_config config;
     config . set_timeout ( utility::seconds ( 300 ) );
+	config . set_validate_certificates ( false );
     http_client session ( serverAddrW, config );
     http_request request = makeRequest ( username, passwd, L"/kylin/api/projects", methods::GET );
     http_response response = session . request ( request ) . get ();
@@ -256,6 +258,7 @@ std::unique_ptr <MetadataResponse> restGetMeta ( char* serverAddr, long port, ch
     wstring serverAddrW = completeServerStr ( serverAddr, port );
     http_client_config config;
     config . set_timeout ( utility::seconds ( 300 ) );
+	config . set_validate_certificates ( false );
     http_client session ( serverAddrW, config );
     std::wstringstream wss;
     wss << L"/kylin/api/tables_and_columns" << L"?project=" << project;
@@ -410,6 +413,7 @@ wstring requestQuery ( wchar_t* rawSql, char* serverAddr, long port, char* usern
     wstring serverAddrW = completeServerStr ( serverAddr, port );
     http_client_config config;
     config . set_timeout ( utility::seconds ( 36000 ) );
+	config . set_validate_certificates ( false );
 
 	//uncomment these lines for debug with proxy
 	//wstring p = L"http://127.0.0.1:8888";
