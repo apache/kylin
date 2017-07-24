@@ -152,10 +152,10 @@ public class QueryControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
-    @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET, produces = {
+    @RequestMapping(value = "/query/format/{format}", method = RequestMethod.POST, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void downloadQueryResultV2(@PathVariable String format, SQLRequest sqlRequest,
+    public void downloadQueryResultV2(@PathVariable String format, @RequestBody SQLRequest sqlRequest,
             HttpServletResponse response) {
 
         SQLResponse result = queryService.doQueryWithCache(sqlRequest);
@@ -169,7 +169,7 @@ public class QueryControllerV2 extends BasicController {
             List<String> headerList = new ArrayList<String>();
 
             for (SelectedColumnMeta column : result.getColumnMetas()) {
-                headerList.add(column.getName());
+                headerList.add(column.getLabel());
             }
 
             String[] headers = new String[headerList.size()];
