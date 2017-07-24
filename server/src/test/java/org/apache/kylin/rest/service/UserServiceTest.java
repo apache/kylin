@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.security.ManagedUser;
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,19 +44,19 @@ public class UserServiceTest extends ServiceTestBase {
 
     @Test
     public void testBasics() throws IOException {
-        userService.deleteUser("ADMIN");
+        userService.deleteUser("MODELER");
 
-        Assert.assertTrue(!userService.userExists("ADMIN"));
+        Assert.assertTrue(!userService.userExists("MODELER"));
 
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
         authorities.add(new SimpleGrantedAuthority(Constant.ROLE_ADMIN));
-        ManagedUser user = new ManagedUser("ADMIN", "PWD", false, authorities);
+        ManagedUser user = new ManagedUser("MODELER", "PWD", false, authorities);
         userService.createUser(user);
 
-        Assert.assertTrue(userService.userExists("ADMIN"));
+        Assert.assertTrue(userService.userExists("MODELER"));
 
-        UserDetails ud = userService.loadUserByUsername("ADMIN");
-        Assert.assertEquals("ADMIN", ud.getUsername());
+        UserDetails ud = userService.loadUserByUsername("MODELER");
+        Assert.assertEquals("MODELER", ud.getUsername());
         Assert.assertEquals("PWD", ud.getPassword());
         Assert.assertEquals(Constant.ROLE_ADMIN, ud.getAuthorities().iterator().next().getAuthority());
         Assert.assertEquals(1, ud.getAuthorities().size());
@@ -64,4 +65,15 @@ public class UserServiceTest extends ServiceTestBase {
         Assert.assertTrue(strings.contains(Constant.ROLE_ADMIN));
     }
 
+
+    @Test
+    public void testDeleteAdmin() throws IOException {
+        try {
+            userService.deleteUser("ADMIN");
+            throw new InternalErrorException();
+        } catch (InternalErrorException e) {
+            Assert.assertEquals(e.getMessage(), "User ADMIN is not allowed to be deleted.");
+        }
+
+    }
 }

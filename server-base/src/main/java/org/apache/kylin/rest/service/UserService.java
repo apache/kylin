@@ -51,10 +51,12 @@ public class UserService implements UserDetailsManager {
 
     public static final String DIR_PREFIX = "/user/";
 
+    public static final String SUPER_ADMIN = "ADMIN";
+
     public static final Serializer<ManagedUser> SERIALIZER = new JsonSerializer<>(ManagedUser.class);
 
     protected ResourceStore aclStore;
-    
+
     private boolean evictCacheFlag = false;
 
     public boolean isEvictCacheFlag() {
@@ -92,6 +94,9 @@ public class UserService implements UserDetailsManager {
 
     @Override
     public void deleteUser(String userName) {
+        if (userName.equals(SUPER_ADMIN))
+            throw new InternalErrorException("User " + userName + " is not allowed to be deleted.");
+
         try {
             String id = getId(userName);
             aclStore.deleteResource(id);
