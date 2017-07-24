@@ -35,10 +35,10 @@ then
     spark_home=$KYLIN_HOME/spark
 fi
 
-spark_dependency=`find -L $spark_home -name 'spark-assembly-[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
+spark_dependency=`find -L $spark_home/jars -name '*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
 if [ -z "$spark_dependency" ]
 then
-    quit "spark assembly lib not found"
+    quit "spark jars not found"
 else
     verbose "spark dependency: $spark_dependency"
     export spark_dependency
