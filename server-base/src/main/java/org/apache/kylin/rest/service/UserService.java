@@ -82,9 +82,8 @@ public class UserService implements UserDetailsManager {
         Preconditions.checkState(user instanceof ManagedUser, "User {} is not ManagedUser", user);
         ManagedUser managedUser = (ManagedUser) user;
         try {
-            deleteUser(user.getUsername());
             String id = getId(user.getUsername());
-            aclStore.putResource(id, managedUser, 0, SERIALIZER);
+            aclStore.putResourceWithoutCheck(id, managedUser, System.currentTimeMillis(), SERIALIZER);
             logger.trace("update user : {}", user.getUsername());
         } catch (IOException e) {
             throw new InternalErrorException(e);

@@ -232,7 +232,6 @@ public class AclService implements MutableAclService {
         try {
             String id = getQueryKeyById(String.valueOf(mutableAcl.getObjectIdentity().getIdentifier()));
             AclRecord record = aclStore.getResource(id, AclRecord.class, SERIALIZER);
-            aclStore.deleteResource(id);
             if (mutableAcl.getParentAcl() != null) {
                 record.setParentDomainObjectInfo(new DomainObjectInfo(mutableAcl.getParentAcl().getObjectIdentity()));
             }
@@ -252,7 +251,7 @@ public class AclService implements MutableAclService {
                 AceInfo aceInfo = new AceInfo(ace);
                 allAceInfo.put(String.valueOf(aceInfo.getSidInfo().getSid()), aceInfo);
             }
-            aclStore.putResource(id, record, 0, SERIALIZER);
+            aclStore.putResourceWithoutCheck(id, record, System.currentTimeMillis(), SERIALIZER);
             logger.debug("ACL of " + mutableAcl.getObjectIdentity() + " updated successfully.");
         } catch (IOException e) {
             throw new InternalErrorException(e);

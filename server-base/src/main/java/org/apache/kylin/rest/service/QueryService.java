@@ -186,8 +186,8 @@ public class QueryService extends BasicService {
         queries.add(query);
         Query[] queryArray = new Query[queries.size()];
         QueryRecord record = new QueryRecord(queries.toArray(queryArray));
-        queryStore.deleteResource(getQueryKeyById(creator));
-        queryStore.putResource(getQueryKeyById(creator), record, 0, QueryRecordSerializer.getInstance());
+        queryStore.putResourceWithoutCheck(getQueryKeyById(creator), record, System.currentTimeMillis(),
+                QueryRecordSerializer.getInstance());
         return;
     }
 
@@ -210,8 +210,8 @@ public class QueryService extends BasicService {
         }
         Query[] queryArray = new Query[queries.size()];
         QueryRecord record = new QueryRecord(queries.toArray(queryArray));
-        queryStore.deleteResource(getQueryKeyById(creator));
-        queryStore.putResource(getQueryKeyById(creator), record, 0, QueryRecordSerializer.getInstance());
+        queryStore.putResourceWithoutCheck(getQueryKeyById(creator), record, System.currentTimeMillis(),
+                QueryRecordSerializer.getInstance());
         return;
     }
 
