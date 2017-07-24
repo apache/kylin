@@ -223,6 +223,23 @@ abstract public class ResourceStore {
     /**
      * overwrite a resource without write conflict check
      */
+    final public <T extends RootPersistentEntity> void putResourceWithoutCheck(String resPath, T obj, long ts,
+            Serializer<T> serializer) throws IOException {
+        resPath = norm(resPath);
+        logger.trace("Directly saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        DataOutputStream dout = new DataOutputStream(buf);
+        serializer.serialize(obj, dout);
+        dout.close();
+        buf.close();
+        ByteArrayInputStream is = new ByteArrayInputStream(buf.toByteArray());
+        putResourceCheckpoint(resPath, is, ts);
+        is.close();
+    }
+
+    /**
+     * overwrite a resource without write conflict check
+     */
     final public void putResource(String resPath, InputStream content, long ts) throws IOException {
         resPath = norm(resPath);
         logger.trace("Directly saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");

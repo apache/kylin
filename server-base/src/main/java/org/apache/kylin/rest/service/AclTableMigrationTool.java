@@ -130,8 +130,8 @@ public class AclTableMigrationTool {
                         record.setOwnerInfo(getOwnerSidInfo(result));
                         record.setEntriesInheriting(getInheriting(result));
                         record.setAllAceInfo(getAllAceInfo(result));
-                        store.deleteResource(AclService.getQueryKeyById(object.getId()));
-                        store.putResource(AclService.getQueryKeyById(object.getId()), record, 0, AclService.SERIALIZER);
+                        store.putResourceWithoutCheck(AclService.getQueryKeyById(object.getId()), record,
+                                System.currentTimeMillis(), AclService.SERIALIZER);
                         result = rs.next();
                     }
                 }
@@ -148,8 +148,8 @@ public class AclTableMigrationTool {
                     Result result = rs.next();
                     while (result != null) {
                         ManagedUser user = hbaseRowToUser(result);
-                        store.deleteResource(UserService.getId(user.getUsername()));
-                        store.putResource(UserService.getId(user.getUsername()), user, 0, UserService.SERIALIZER);
+                        store.putResourceWithoutCheck(UserService.getId(user.getUsername()), user,
+                                System.currentTimeMillis(), UserService.SERIALIZER);
                         result = rs.next();
                     }
                 }
