@@ -487,7 +487,8 @@ public class QueryService extends BasicService {
             return fakeResponse;
         }
 
-        String correctedSql = QueryUtil.massageSql(sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(), sqlRequest.getOffset());
+        String correctedSql = QueryUtil.massageSql(sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(),
+                sqlRequest.getOffset());
         if (!correctedSql.equals(sqlRequest.getSql())) {
             logger.info("The corrected query: " + correctedSql);
 
@@ -792,6 +793,9 @@ public class QueryService extends BasicService {
         } catch (SQLException sqlException) {
             isPushDown = PushDownUtil.doPushDownQuery(sqlRequest.getProject(), correctedSql, results, columnMetas,
                     sqlException);
+            if (!isPushDown) {
+                throw sqlException;
+            }
         } finally {
             close(resultSet, stat, conn);
         }
