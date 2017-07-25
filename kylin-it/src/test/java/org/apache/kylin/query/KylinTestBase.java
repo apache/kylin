@@ -263,7 +263,11 @@ public class KylinTestBase {
         } catch (SQLException sqlException) {
             List<List<String>> results = Lists.newArrayList();
             List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
-            PushDownUtil.doPushDownQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, results, columnMetas, sqlException);
+            boolean b = PushDownUtil.doPushDownQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, results, columnMetas,
+                    sqlException);
+            if (!b) {
+                throw sqlException;
+            }
             return results.size();
         } finally {
             if (resultSet != null) {

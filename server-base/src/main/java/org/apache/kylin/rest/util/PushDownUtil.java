@@ -49,11 +49,15 @@ public class PushDownUtil {
     public static boolean doPushDownQuery(String project, String sql, List<List<String>> results,
             List<SelectedColumnMeta> columnMetas, SQLException sqlException) throws Exception {
 
-        boolean isExpectedCause = (ExceptionUtils.getRootCause(sqlException).getClass()
-                .equals(NoRealizationFoundException.class));
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        if (!kylinConfig.isPushDownEnabled()) {
+            return false;
+        }
 
-        if (isExpectedCause && kylinConfig.isPushDownEnabled()) {
+        Throwable rootCause = ExceptionUtils.getRootCause(sqlException);
+        boolean isExpectedCause = rootCause != null && (rootCause.getClass().equals(NoRealizationFoundException.class));
+
+        if (isExpectedCause) {
 
             logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
             IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
@@ -78,7 +82,7 @@ public class PushDownUtil {
 
             return true;
         } else {
-            throw sqlException;
+            return false;
         }
     }
 
