@@ -58,7 +58,6 @@ public class PushDownUtil {
         boolean isExpectedCause = rootCause != null && (rootCause.getClass().equals(NoRealizationFoundException.class));
 
         if (isExpectedCause) {
-
             logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
             IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
             IPushDownConverter converter = (IPushDownConverter) ClassUtil

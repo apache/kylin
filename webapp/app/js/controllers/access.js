@@ -28,7 +28,6 @@ KylinApp.controller('AccessCtrl', function ($scope, AccessService, MessageServic
   "<li>CUBE ADMIN: Full access to cube and jobs, including access management.</li></ul></div>";
 
   $scope.authorities = null;
-
   AuthenticationService.authorities({}, function (authorities) {
     $scope.authorities = authorities.stringList;
   });

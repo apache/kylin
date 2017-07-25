@@ -238,6 +238,7 @@ public class MetadataManager {
             store.deleteResource(path);
 
         store.putResource(path, tableExt, TABLE_EXT_SERIALIZER);
+        srcTableExdMap.put(tableExt.getName(), tableExt);
     }
 
     public void removeTableExt(String tableName) throws IOException {

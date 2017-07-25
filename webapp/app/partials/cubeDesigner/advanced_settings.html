@@ -193,10 +193,7 @@
 
           <div style="margin-left:42px">
               <div class="box-body">
-                <br/>
-
-
-                <table style="margin-left:width:92%"
+                <table style="margin-left:42px; width:92%;position:relative"
                        ng-if="cubeMetaFrame.rowkey.rowkey_columns.length > 0"
                        class="table table-hover table-bordered list">
                   <thead>
@@ -209,49 +206,74 @@
                   </tr>
                   </thead>
 
-                  <tbody ui-sortable="{update:resortRowkey()}" ng-model="convertedRowkeys">
+                  <tbody ng-if="state.mode!=='edit'" ng-model="convertedRowkeys">
+                <!--<tbody ng-if="state.mode!='edit'" ng-model="convertedRowkeys">-->
+
+                <tr ng-repeat="rowkey_column in convertedRowkeys track by $index">
+
+                  <td>
+                    <!-- ID -->
+                    <span class="ng-binding">{{($index + 1)}}</span>
+                  </td>
+                  <td>
+                    <!--Column Name -->
+                    <span>{{rowkey_column.column}}</span>
+                  </td>
+
+                  <td>
+                    <span>{{rowkey_column.encoding}}</span>
+
+                  </td>
+                  <td>
+                    <span>{{rowkey_column.valueLength}}</span>
+                  </td>
+
+                  <td>
+                   <span>{{rowkey_column.isShardBy}}</span>
+                  </td>
+                </tr>
+                </tbody>
+
+
+                  <tbody ng-show="state.mode=='edit'" ui-sortable="sortableOptions" ng-model="convertedRowkeys">
+                  <!--<tbody ng-if="state.mode!='edit'" ng-model="convertedRowkeys">-->
 
                   <tr ng-repeat="rowkey_column in convertedRowkeys track by $index"
-                      ng-class="state.mode=='edit'?'sort-item':''">
+                      class="sort-item">
 
                     <td>
                       <!-- ID -->
-                      <span class="ng-binding" ng-class="state.mode=='edit'?'badge':''">{{($index + 1)}}</span>
+                      <span class="ng-binding badge">{{($index + 1)}}</span>
                     </td>
                     <td>
                       <!--Column Name -->
-                      <input type="text" class="form-control" placeholder="Column Name.." ng-if="state.mode=='edit'"
+                      <input type="text" class="form-control" placeholder="Column Name.."
                              ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column)"  ng-disabled="true"
                              tooltip="rowkey column name.." tooltip-trigger="focus"
                              ng-model="rowkey_column.column" class="form-control">
-
-                      <span ng-if="state.mode=='view'">{{rowkey_column.column}}</span>
                     </td>
 
                     <td>
-                      <select ng-if="state.mode=='edit'" style="width:180px;"     ng-disabled="instance.status=='READY'"
+                      <select  style="width:180px;"     ng-disabled="instance.status=='READY'"
                               chosen ng-model="rowkey_column.encoding"
                               ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
                               ng-options="dt.value as dt.name for dt in getEncodings(rowkey_column.column)">
                         <option value=""></option>
                       </select>
-                      <span ng-if="state.mode=='view'">{{rowkey_column.encoding}}</span>
-
                     </td>
                     <td>
                       <!--Column Length -->
-                      <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
+                      <input type="text" class="form-control" placeholder="Column Length.."
                              tooltip="rowkey column length.." tooltip-trigger="focus"
                              ng-disabled="rowkey_column.encoding.indexOf('dict')>=0||rowkey_column.encoding.indexOf('date')>=0||rowkey_column.encoding.indexOf('time')>=0||instance.status=='READY'"
                              ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
                              ng-model="rowkey_column.valueLength" class="form-control">
 
                       <small class="help-block red" ng-show="state.mode=='edit' && rowkey_column.encoding.indexOf('integer')>=0 && (rowkey_column.valueLength>8 || rowkey_column.valueLength<1)">integer encoding column length should between 1 and 8</small>
-                      <span ng-if="state.mode=='view'">{{rowkey_column.valueLength}}</span>
                     </td>
 
                     <td>
-                      <select ng-if="state.mode=='edit'" style="width:180px;"
+                      <select  style="width:180px;"
                               chosen ng-model="rowkey_column.isShardBy"
                               tooltip="false by default"     ng-disabled="instance.status=='READY'"
                               data-placeholder="false by default"
@@ -260,7 +282,6 @@
                         <option value=""></option>
                       </select>
                       <small class="help-block red" ng-show="state.mode=='edit' && rule.shardColumnAvailable==false && rowkey_column.isShardBy == true">at most one 'shard by' column is allowed.</small>
-                      <span ng-if="state.mode=='view'">{{rowkey_column.isShardBy}}</span>
                     </td>
                   </tr>
                   </tbody>

@@ -462,6 +462,10 @@ public class JobService extends BasicService implements InitializingBean {
                     public boolean apply(CubingJob executable) {
                         try {
                             Output output = allOutputs.get(executable.getId());
+                            if (output == null){
+                                return false;
+                            }
+                            
                             ExecutableState state = output.getState();
                             boolean ret = statusList.contains(state);
                             return ret;

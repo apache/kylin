@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.source.adhocquery.IPushDownRunner;
 
@@ -62,18 +63,13 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
         Connection connection = this.getConnection();
         ResultSet resultSet = null;
 
-        try {
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(query);
-            extractResults(resultSet, results);
-        } catch (SQLException sqlException) {
-            throw sqlException;
-        }
-
         //extract column metadata
         ResultSetMetaData metaData = null;
         int columnCount = 0;
         try {
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(query);
+            extractResults(resultSet, results);
             metaData = resultSet.getMetaData();
             columnCount = metaData.getColumnCount();
 
@@ -88,9 +84,12 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
 
         } catch (SQLException sqlException) {
             throw sqlException;
+        } finally {
+            DBUtils.closeQuietly(resultSet);
+            DBUtils.closeQuietly(statement);
+            closeConnection(connection);
         }
 
-        closeConnection(connection);
     }
 
     private Connection getConnection() {

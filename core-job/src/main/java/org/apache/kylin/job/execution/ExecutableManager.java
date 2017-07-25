@@ -329,7 +329,7 @@ public class ExecutableManager {
         if (job == null) {
             return;
         }
-
+        Map<String, String> info = null;
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
@@ -338,8 +338,14 @@ public class ExecutableManager {
                     break;
                 }
             }
+            info = Maps.newHashMap();
+            final long endTime = job.getEndTime();
+            long interruptTime = System.currentTimeMillis() - endTime + job.getInterruptTime();
+            info.putAll(getJobOutput(jobId).getInfo());
+            info.put(AbstractExecutable.INTERRUPT_TIME, Long.toString(interruptTime));
+            info.remove(AbstractExecutable.END_TIME);
         }
-        updateJobOutput(jobId, ExecutableState.READY, null, null);
+        updateJobOutput(jobId, ExecutableState.READY, info, null);
     }
 
     public void discardJob(String jobId) {

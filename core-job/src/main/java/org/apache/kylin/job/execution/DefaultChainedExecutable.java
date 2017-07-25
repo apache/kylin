@@ -43,7 +43,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             sub.initConfig(config);
         }
     }
-    
+
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         List<? extends Executable> executables = getTasks();
@@ -58,7 +58,8 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 // the job is paused
                 break;
             } else if (state == ExecutableState.ERROR) {
-                throw new IllegalStateException("invalid subtask state, subtask:" + subTask.getName() + ", state:" + subTask.getStatus());
+                throw new IllegalStateException(
+                        "invalid subtask state, subtask:" + subTask.getName() + ", state:" + subTask.getStatus());
             }
             if (subTask.isRunnable()) {
                 return subTask.execute(context);
@@ -69,20 +70,11 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     @Override
     protected void onExecuteStart(ExecutableContext executableContext) {
-        Map<String, String> info = Maps.newHashMap();
         final long startTime = getStartTime();
         if (startTime > 0) {
-            final long endTime = getEndTime();
-            if (endTime > 0) {
-                long interruptTime = System.currentTimeMillis() - endTime + getInterruptTime();
-                info.putAll(getManager().getJobOutput(getId()).getInfo());
-                info.put(START_TIME, Long.toString(startTime));
-                info.put(INTERRUPT_TIME, Long.toString(interruptTime));
-                getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
-            } else {
-                getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
-            }
+            getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
         } else {
+            Map<String, String> info = Maps.newHashMap();
             info.put(START_TIME, Long.toString(System.currentTimeMillis()));
             getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
         }
@@ -97,7 +89,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         ExecutableManager mgr = getManager();
-        
+
         if (isDiscarded()) {
             setEndTime(System.currentTimeMillis());
             notifyUserStatusChange(executableContext, ExecutableState.DISCARDED);
