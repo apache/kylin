@@ -229,7 +229,7 @@ public class Message {
 
     // Acl
     public String getUSER_NOT_EXIST() {
-        return "User '%s' does not exist. Please make sure the user has logged in before";
+        return "User '%s' does not exist. Please make sure the user exists.";
     }
 
     // Project

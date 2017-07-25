@@ -229,7 +229,7 @@ public class CnMessage extends Message {
 
     // Acl
     public String getUSER_NOT_EXIST() {
-        return "用户 '%s' 不存在, 请确认用户是否曾经登陆";
+        return "用户 '%s' 不存在, 请确认用户是否存在。";
     }
 
     // Project
