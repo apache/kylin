@@ -20,7 +20,9 @@ package org.apache.kylin.rest.controller2;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -153,14 +156,17 @@ public class QueryControllerV2 extends BasicController {
     }
 
     @RequestMapping(value = "/query/format/{format}", method = RequestMethod.POST, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+            "application/vnd.apache.kylin-v2+json" }, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseBody
-    public void downloadQueryResultV2(@PathVariable String format, @RequestBody SQLRequest sqlRequest,
+    public void downloadQueryResultV2(@PathVariable String format, SQLRequest sqlRequest,
             HttpServletResponse response) {
 
         SQLResponse result = queryService.doQueryWithCache(sqlRequest);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+        String nowStr = sdf.format(new Date());
         response.setContentType("text/" + format + ";charset=utf-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"result." + format + "\"");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + nowStr + ".result." + format + "\"");
         ICsvListWriter csvWriter = null;
 
         try {
