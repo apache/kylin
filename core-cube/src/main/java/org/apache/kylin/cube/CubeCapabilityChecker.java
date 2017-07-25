@@ -97,6 +97,7 @@ public class CubeCapabilityChecker {
                 }
             } else {
                 logger.info("cube {} does not touch lookup table {} at all", cube.getName(), digest.factTable);
+                return result;
             }
         }
 
