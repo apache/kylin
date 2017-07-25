@@ -24,6 +24,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.apache.calcite.jdbc.Driver;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
@@ -31,8 +32,13 @@ import org.apache.log4j.Logger;
 
 public class QueryConnection {
     private static final Logger logger = Logger.getLogger(QueryConnection.class);
+    private static Boolean isRegister = false;
 
     public static Connection getConnection(String project) throws SQLException {
+        if (!isRegister) {
+            DriverManager.registerDriver(new Driver());
+            isRegister = true;
+        }
         File olapTmp = OLAPSchemaFactory.createTempOLAPJson(ProjectInstance.getNormalizedProjectName(project),
                 KylinConfig.getInstanceFromEnv());
         Properties info = new Properties();
