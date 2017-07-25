@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public class CreateFlatHiveTableStep extends AbstractExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(CreateFlatHiveTableStep.class);
-    private final PatternedLogger stepLogger = new PatternedLogger(logger);
+    protected final PatternedLogger stepLogger = new PatternedLogger(logger);
 
     protected void createFlatHiveTable(KylinConfig config) throws IOException {
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
