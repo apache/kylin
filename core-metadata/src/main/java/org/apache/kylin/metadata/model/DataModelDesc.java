@@ -130,7 +130,7 @@ public class DataModelDesc extends RootPersistentEntity {
     // don't use unless you're sure, for jackson only
     public DataModelDesc() {
     }
-    
+
     public KylinConfig getConfig() {
         return config;
     }
@@ -250,7 +250,8 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public boolean containsTable(TableDesc table) {
         for (TableRef t : allTableRefs) {
-            if (t.getTableIdentity().equals(table.getIdentity()) && StringUtil.equals(t.getTableDesc().getProject(), table.getProject()))
+            if (t.getTableIdentity().equals(table.getIdentity())
+                    && StringUtil.equals(t.getTableDesc().getProject(), table.getProject()))
                 return true;
         }
         return false;
@@ -500,17 +501,17 @@ public class DataModelDesc extends RootPersistentEntity {
                 DataModelDesc dataModelDesc = pair.getSecond();
                 ComputedColumnDesc cc = pair.getFirst();
 
-                if (StringUtils.equals(cc.getFullName(), newCCName) && !(cc.equals(newCC))) {
-                    throw new IllegalArgumentException(
-                            String.format("Computed column named %s is defined differently in model %s", newCCName,
-                                    dataModelDesc.getName()));
+                if (StringUtils.equalsIgnoreCase(cc.getFullName(), newCCName) && !(cc.equals(newCC))) {
+                    throw new IllegalArgumentException(String.format(
+                            "Column name for computed column %s is already used in model %s, you should apply the same expression ' %s ' here, or use a different column name.",
+                            newCCName, dataModelDesc.getName(), cc.getExpression()));
                 }
 
                 if (isTwoCCDefinitionEquals(cc.getExpression(), newCC.getExpression())
-                        && !StringUtils.equals(cc.getColumnName(), newCCColumnName)) {
+                        && !StringUtils.equalsIgnoreCase(cc.getColumnName(), newCCColumnName)) {
                     throw new IllegalArgumentException(String.format(
-                            "Duplicate expression of %s with computed column %s in model %s, keep same computed column name could suppress this",
-                            newCCColumnName, cc.getColumnName(), dataModelDesc.getName()));
+                            "Expression for computed column %s is already used in model %s, you should use the same column name with ' %s ' .",
+                            newCCName, dataModelDesc.getName(), cc.getColumnName()));
                 }
             }
             existingCCs.add(Pair.newPair(newCC, this));
@@ -824,7 +825,7 @@ public class DataModelDesc extends RootPersistentEntity {
     public void setMetrics(String[] metrics) {
         this.metrics = metrics;
     }
-    
+
     public String getProject() {
         return ProjectManager.getInstance(getConfig()).getProjectOfModel(this.getName()).getName();
     }
