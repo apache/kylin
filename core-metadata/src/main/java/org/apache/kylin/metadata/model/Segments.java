@@ -144,7 +144,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             if (sourceOffsetContains(mergedSegment, seg)) {
                 // make sure no holes
                 if (result.size() > 0 && result.getLast().getSourceOffsetEnd() != seg.getSourceOffsetStart())
-                    throw new IllegalStateException("Merging segments must not have holes between " + result.getLast() + " and " + seg);
+                    throw new IllegalStateException("Merging segments must not have gaps between " + result.getLast() + " and " + seg);
 
                 result.add(seg);
             }
