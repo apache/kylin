@@ -81,7 +81,7 @@ public class ModelServiceTest extends ServiceTestBase {
     @Test
     public void testFailureModelUpdateDueToComputedColumnConflict() throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Computed column named DEFAULT.TEST_KYLIN_FACT.DEAL_AMOUNT is defined differently in model ci_inner_join_model");
+        expectedEx.expectMessage("Column name for computed column DEFAULT.TEST_KYLIN_FACT.DEAL_AMOUNT is already used in model ci_inner_join_model, you should apply the same expression ' PRICE * ITEM_COUNT ' here, or use a different column name.");
 
         List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
         Assert.assertTrue(dataModelDescs.size() == 1);
