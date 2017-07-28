@@ -19,6 +19,7 @@
 package org.apache.kylin.cube.model.validation.rule;
 
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_DUPLICATE_DICTIONARY_COLUMN;
+import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE;
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_REUSE_BUILDER_BOTH_EMPTY;
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_REUSE_BUILDER_BOTH_SET;
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_TRANSITIVE_REUSE;
@@ -29,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -39,8 +41,6 @@ import org.apache.kylin.dict.GlobalDictionaryBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.Lists;
 
 public class DictionaryRuleTest extends LocalFileMetadataTestCase {
     private static KylinConfig config;
@@ -93,6 +93,12 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
         testDictionaryDesc(ERROR_TRANSITIVE_REUSE,
                 DictionaryDesc.create("lstg_site_id", "SELLER_ID", null),
                 DictionaryDesc.create("price", "lstg_site_id", null));
+    }
+
+    @Test
+    public void testBadDesc5() throws IOException {
+        testDictionaryDesc(ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE,
+                DictionaryDesc.create("CATEG_LVL2_NAME", null, GlobalDictionaryBuilder.class.getName()));
     }
 
     @Test
