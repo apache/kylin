@@ -16,16 +16,30 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.query.util;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.calcite.sql.SqlBasicCall;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlDataTypeSpec;
+import org.apache.calcite.sql.SqlDynamicParam;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlIntervalQualifier;
+import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.text.StrBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -46,7 +60,7 @@ import com.google.common.collect.Lists;
 public class PushDownUtil {
     private static final Logger logger = LoggerFactory.getLogger(PushDownUtil.class);
 
-    public static boolean doPushDownQuery(String project, String sql, List<List<String>> results,
+    public static boolean doPushDownQuery(String project, String sql, String schema, List<List<String>> results,
             List<SelectedColumnMeta> columnMetas, SQLException sqlException) throws Exception {
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -72,6 +86,9 @@ public class PushDownUtil {
             if (!StringUtils.equals(expandCC, sql)) {
                 logger.info("computed column in sql is expanded to:  " + expandCC);
             }
+            if (schema != null && !schema.equals("DEFAULT")) {
+                expandCC = schemaCompletion(expandCC, schema);
+            }
             String adhocSql = converter.convert(expandCC);
             if (!adhocSql.equals(expandCC)) {
                 logger.info("the query is converted to {} according to kylin.query.pushdown.converter-class-name",
@@ -79,11 +96,38 @@ public class PushDownUtil {
             }
 
             runner.executeQuery(adhocSql, results, columnMetas);
-
             return true;
         } else {
             return false;
         }
+    }
+
+    static String schemaCompletion(String inputSql, String schema) {
+        if (inputSql == null || inputSql.equals("")) {
+            return "";
+        }
+        SqlNode fromNode = CalciteParser.getFromNode(inputSql);
+
+        // get all table node that don't have schema by visitor pattern
+        FromTablesVisitor ftv = new FromTablesVisitor();
+        fromNode.accept(ftv);
+        List<SqlNode> tablesWithoutSchema = ftv.getTablesWithoutSchema();
+
+        List<Pair<Integer, Integer>> tablesPos = new ArrayList<>();
+        for (SqlNode tables : tablesWithoutSchema) {
+            tablesPos.add(CalciteParser.getReplacePos(tables, inputSql));
+        }
+
+        // make the behind position in the front of the list, so that the front position will not be affected when replaced
+        Collections.sort(tablesPos);
+        Collections.reverse(tablesPos);
+
+        StrBuilder afterConvert = new StrBuilder(inputSql);
+        for (Pair<Integer, Integer> pos : tablesPos) {
+            String tableWithSchema = schema + "." + inputSql.substring(pos.getLeft(), pos.getRight());
+            afterConvert.replace(pos.getLeft(), pos.getRight(), tableWithSchema);
+        }
+        return afterConvert.toString();
     }
 
     private final static Pattern identifierInSqlPattern = Pattern.compile(
@@ -177,5 +221,75 @@ public class PushDownUtil {
         }
 
         return CalciteParser.insertAliasInExpr(expr, tableAlias);
+    }
+}
+
+/**
+ * Created by jiatao.tao
+ * Get all the tables from "FROM" clause that without schema
+ */
+class FromTablesVisitor implements SqlVisitor<SqlNode> {
+    private List<SqlNode> tables;
+
+    FromTablesVisitor() {
+        this.tables = new ArrayList<>();
+    }
+
+    List<SqlNode> getTablesWithoutSchema() {
+        return tables;
+    }
+
+    @Override
+    public SqlNode visit(SqlNodeList nodeList) {
+        return null;
+    }
+
+    @Override
+    public SqlNode visit(SqlLiteral literal) {
+        return null;
+    }
+
+    @Override
+    public SqlNode visit(SqlCall call) {
+        if (call instanceof SqlBasicCall) {
+            SqlBasicCall node = (SqlBasicCall) call;
+            node.getOperands()[0].accept(this);
+            return null;
+        }
+        if (call instanceof SqlJoin) {
+            SqlJoin node = (SqlJoin) call;
+            node.getLeft().accept(this);
+            node.getRight().accept(this);
+            return null;
+        }
+        for (SqlNode operand : call.getOperandList()) {
+            if (operand != null) {
+                operand.accept(this);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public SqlNode visit(SqlIdentifier id) {
+        if (id.names.size() == 1) {
+            tables.add(id);
+        }
+        return null;
+    }
+
+    @Override
+    public SqlNode visit(SqlDataTypeSpec type) {
+        return null;
+    }
+
+    @Override
+    public SqlNode visit(SqlDynamicParam param) {
+        return null;
+    }
+
+    @Override
+    public SqlNode visit(SqlIntervalQualifier intervalQualifier) {
+        return null;
     }
 }
