@@ -94,7 +94,7 @@ import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclUtil;
-import org.apache.kylin.rest.util.PushDownUtil;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
@@ -791,7 +791,7 @@ public class QueryService extends BasicService {
                 results.add(oneRow);
             }
         } catch (SQLException sqlException) {
-            isPushDown = PushDownUtil.doPushDownQuery(sqlRequest.getProject(), correctedSql, results, columnMetas,
+            isPushDown = PushDownUtil.doPushDownQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(), results, columnMetas,
                     sqlException);
             if (!isPushDown) {
                 throw sqlException;

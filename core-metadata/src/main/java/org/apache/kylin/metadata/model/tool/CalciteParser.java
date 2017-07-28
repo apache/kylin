@@ -68,6 +68,19 @@ public class CalciteParser {
 
     }
 
+    public static SqlNode getFromNode(String sql) {
+        //When the sql have limit clause, calcite will parse it as a SqlOrder Object.
+        sql = sql.split("LIMIT")[0];
+        SqlNode fromNode = null;
+        try {
+            fromNode = ((SqlSelect) (CalciteParser.parse(sql))).getFrom();
+        } catch (SqlParseException e) {
+            throw new RuntimeException("Failed to parse expression \'" + sql
+                    + "\', please make sure the expression is valid");
+        }
+        return fromNode;
+    }
+
     public static boolean isNodeEqual(SqlNode node0, SqlNode node1) {
         if (node0 == null) {
             return node1 == null;
