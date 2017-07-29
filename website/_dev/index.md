@@ -4,7 +4,12 @@ title: Development Quick Guide
 permalink: /development/index.html
 ---
 
-### Source Code  
+Apache Kylin is always looking for contributions of not only code, but also usage document, performance report, Q&A etc. All kinds of contributions pave the way towards a Kylin Committer. There is opportunity for everyone, especially for those come from analysis and solution background, due to the lacking of content from user and solution perspective.
+
+### How to Contribute
+Check out the [How to Contribute](/development/howto_contribute.html) document.
+
+### Source Repository
 Apache Kylin™ source code is version controlled using Git version control:
 Commits [Summary](https://git-wip-us.apache.org/repos/asf?p=kylin.git;a=summary)  
 Source Repo: [git://git.apache.org/kylin.git](git://git.apache.org/kylin.git)  
@@ -17,9 +22,6 @@ Static Code Analysis: [SonarCube dashboard](https://builds.apache.org/analysis/o
 
 ### Issue Tracking  
 Track issues on the "Kylin" Project on the Apache JIRA ([browse](http://issues.apache.org/jira/browse/KYLIN)).
-
-### Setup Development Env  
-Refer to this link for how to setup dev env: [Setup Development Env](/development/dev_env.html)
 
 ### Roadmap
 - Hadoop 3.0 support (Erasure Coding)
