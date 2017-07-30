@@ -103,8 +103,8 @@
                 <h5><b>Segment:</b> {{table.segmentName}}</h5>
                 <ul>
                     <li ng-if="cube.streaming">Status: <span class="red">{{table.segmentStatus}}</span></li>
-                    <li>Start Time: <span class="red">{{table.dateRangeStart | reverseToGMT0}}</span></li>
-                    <li>End Time: <span class="red">{{table.dateRangeEnd | reverseToGMT0}}</span></li>
+                    <li ng-if="cube.model.partition_desc.partition_date_column">Start Time: <span class="red">{{table.dateRangeStart | reverseToGMT0}}</span></li>
+                    <li ng-if="cube.model.partition_desc.partition_date_column">End Time: <span class="red">{{table.dateRangeEnd | reverseToGMT0}}</span></li>
                     <li>Source Count: <span class="red">{{table.sourceCount}}</span></li>
                     <li>HBase Table: <span class="red">{{table.tableName}}</span></li>
                     <li>Region Count: <span class="red">{{table.regionCount}}</span></li>
