@@ -218,7 +218,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           $scope.newMeasure.function.configuration[versionKey]=version;
           });
     }
-    if ($scope.newMeasure.function.expression === 'COUNT_DISTINCT' ) {
+    if ($scope.newMeasure.function.expression === 'COUNT_DISTINCT' && $scope.newMeasure.function.returntype!=='bitmap') {
 
       var hasExisted = [];
 
@@ -344,16 +344,20 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   }
 
   //map right return type for param
-  $scope.measureReturnTypeUpdate = function(){
+  $scope.measureReturnTypeUpdate = function() {
 
-    if($scope.newMeasure.function.expression == 'TOP_N'){
-      if($scope.newMeasure.function.parameter.type==""||!$scope.newMeasure.function.parameter.type){
-        $scope.newMeasure.function.parameter.type= 'column';
+    if ($scope.newMeasure.function.expression == 'TOP_N') {
+      if ($scope.newMeasure.function.parameter.type == "" || !$scope.newMeasure.function.parameter.type) {
+        $scope.newMeasure.function.parameter.type = 'column';
       }
-      $scope.convertedColumns=[];
+      $scope.convertedColumns = [];
       $scope.newMeasure.function.returntype = "topn(100)";
       return;
-    }else if($scope.newMeasure.function.expression == 'EXTENDED_COLUMN'){
+    } else if ($scope.newMeasure.function.expression == 'COUNT_DISTINCT') {
+      $scope.newMeasure.function.parameter.type= 'column';
+      $scope.newMeasure.function.returntype = "hllc(10)";
+      $scope.convertedColumns = [];
+    } else if($scope.newMeasure.function.expression == 'EXTENDED_COLUMN'){
       $scope.newMeasure.function.parameter.type= 'column';
       $scope.newMeasure.function.returntype = "extendedcolumn(100)";
       return;
