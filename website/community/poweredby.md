@@ -49,6 +49,7 @@ __Companies & Organizations__
     * Strikingly adopted Kylin + AWS EMR solution. By adopting Kylin, the query performance was improved from 5 ~ 10 seconds to less than 1 second, and it can serve much more concurrent requests now. When workload and data increases, we just need add EMR nodes on demand then get capacity expanded. This architecture ensures we don't need worry about the data growth in next couple years.
 * [Yahoo! Japan](https://about.yahoo.co.jp/info/en/) 
     * Yahoo! JAPAN uses Apache Kylin to generate tailored report for Yahoo! Shopping. Apache Kylin contributes to minimize the latency for viewing the report. Consequently, the platform team has been released from ad hoc tasks to improve performance and it has become possible to focus on adding functions for users.
-
 * [Wuba (58.com)](https://www.58.com)  (_NYSE:WUBA_)
     * Apache Kylin is used as a OLAP engine at Wuba’s big data platform, powering data analysis for recommend engine, search engine, advertisement engine, BI, etc. More than 100 Cubes are daily built under crontab; the query statistics shows that more than 95% queries could get response in less than one second, which provides better user experience than traditional tools. And the resource bottleneck could be simply solved by adding machines, which is especial friendly to administrator.
+* [4399.com](http://www.4399.com/)
+    * Apache Kylin is used at 4399.com for Big Data Analytics on Hadoop, which let us query massive data set at sub-second latency.
