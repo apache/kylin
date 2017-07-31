@@ -44,6 +44,10 @@ public class ComputedColumnDesc implements Serializable {
         Preconditions.checkNotNull(expression, "expression is null");
         Preconditions.checkNotNull(datatype, "datatype is null");
 
+        Preconditions.checkState(tableIdentity.equals(tableIdentity.trim()), "tableIdentity of ComputedColumnDesc has heading/tailing whitespace");
+        Preconditions.checkState(columnName.equals(columnName.trim()), "columnName of ComputedColumnDesc has heading/tailing whitespace");
+        Preconditions.checkState(datatype.equals(datatype.trim()), "datatype of ComputedColumnDesc has heading/tailing whitespace");
+
         tableIdentity = tableIdentity.toUpperCase();
         columnName = columnName.toUpperCase();
 

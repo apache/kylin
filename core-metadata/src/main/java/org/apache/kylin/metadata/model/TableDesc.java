@@ -53,7 +53,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     @JsonProperty("data_gen")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String dataGen;
-    
+
     private String project;
     private DatabaseDesc database = new DatabaseDesc();
     private String identity = null;
@@ -64,18 +64,18 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public TableDesc(TableDesc other) {
         this.uuid = other.uuid;
         this.lastModified = other.lastModified;
-        
+
         this.name = other.name;
         this.sourceType = other.sourceType;
         this.tableType = other.tableType;
         this.dataGen = other.dataGen;
-        
+
         this.columns = new ColumnDesc[other.columns.length];
         for (int i = 0; i < other.columns.length; i++) {
             this.columns[i] = new ColumnDesc(other.columns[i]);
             this.columns[i].init(this);
         }
-        
+
         this.project = other.project;
         this.database.setName(other.getDatabase());
         this.identity = other.identity;
@@ -91,6 +91,15 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         ret.columns = new ColumnDesc[computedColumns.length + origin.length];
         for (int i = 0; i < origin.length; i++) {
             ret.columns[i] = origin[i];
+
+            //check name conflict
+            for (int j = 0; j < computedColumns.length; j++) {
+                if (origin[i].getName().equalsIgnoreCase(computedColumns[j].getName())) {
+                    throw new IllegalArgumentException(String.format(
+                            "There is already a column named %s on table %s, please change your computed column name",
+                            new Object[] { computedColumns[j].getName(), this.getIdentity() }));
+                }
+            }
         }
         for (int i = 0; i < computedColumns.length; i++) {
             computedColumns[i].init(ret);
@@ -137,7 +146,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public boolean isView() {
         return TABLE_TYPE_VIRTUAL_VIEW.equals(tableType);
     }
-    
+
     public static String concatRawResourcePath(String nameOnPath) {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";
     }
@@ -148,16 +157,16 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         else
             return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + "--" + prj + ".json";
     }
-    
+
     // returns <table, project>
     public static Pair<String, String> parseResourcePath(String path) {
         if (path.endsWith(".json"))
             path = path.substring(0, path.length() - ".json".length());
-        
+
         int cut = path.lastIndexOf("/");
         if (cut >= 0)
             path = path.substring(cut + 1);
-        
+
         String table, prj;
         int dash = path.indexOf("--");
         if (dash >= 0) {
@@ -175,7 +184,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public String getProject() {
         return project;
     }
-    
+
     public String getName() {
         return this.name;
     }
@@ -216,9 +225,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         if (columns == null) {
             return -1;
         }
-        
+
         int max = -1;
-        
+
         for (ColumnDesc col : columns) {
             int idx = col.getZeroBasedIndex();
             max = Math.max(max, idx);
@@ -236,7 +245,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     public void init(String project) {
         this.project = project;
-        
+
         if (name != null)
             name = name.toUpperCase();
 
@@ -302,7 +311,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     @Override
     public String toString() {
-        return "TableDesc{" + "name='" + name + '\'' + ", columns=" + Arrays.toString(columns) + ", sourceType=" + sourceType + ", tableType='" + tableType + '\'' + ", database=" + database + ", identity='" + getIdentity() + '\'' + '}';
+        return "TableDesc{" + "name='" + name + '\'' + ", columns=" + Arrays.toString(columns) + ", sourceType="
+                + sourceType + ", tableType='" + tableType + '\'' + ", database=" + database + ", identity='"
+                + getIdentity() + '\'' + '}';
     }
 
     /** create a mockup table for unit test */
