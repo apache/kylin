@@ -63,18 +63,18 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public TableDesc(TableDesc other) {
         this.uuid = other.uuid;
         this.lastModified = other.lastModified;
-        
+
         this.name = other.name;
         this.sourceType = other.sourceType;
         this.tableType = other.tableType;
         this.dataGen = other.dataGen;
-        
+
         this.columns = new ColumnDesc[other.columns.length];
         for (int i = 0; i < other.columns.length; i++) {
             this.columns[i] = new ColumnDesc(other.columns[i]);
             this.columns[i].init(this);
         }
-        
+
         this.database.setName(other.getDatabase());
         this.identity = other.identity;
     }
@@ -89,6 +89,15 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         ret.columns = new ColumnDesc[computedColumns.length + origin.length];
         for (int i = 0; i < origin.length; i++) {
             ret.columns[i] = origin[i];
+
+            //check name conflict
+            for (int j = 0; j < computedColumns.length; j++) {
+                if (origin[i].getName().equalsIgnoreCase(computedColumns[j].getName())) {
+                    throw new IllegalArgumentException(String.format(
+                            "There is already a column named %s on table %s, please change your computed column name",
+                            new Object[] { computedColumns[j].getName(), this.getIdentity() }));
+                }
+            }
         }
         for (int i = 0; i < computedColumns.length; i++) {
             computedColumns[i].init(ret);
@@ -186,9 +195,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         if (columns == null) {
             return -1;
         }
-        
+
         int max = -1;
-        
+
         for (ColumnDesc col : columns) {
             int idx = col.getZeroBasedIndex();
             max = Math.max(max, idx);
@@ -270,7 +279,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     @Override
     public String toString() {
-        return "TableDesc{" + "name='" + name + '\'' + ", columns=" + Arrays.toString(columns) + ", sourceType=" + sourceType + ", tableType='" + tableType + '\'' + ", database=" + database + ", identity='" + getIdentity() + '\'' + '}';
+        return "TableDesc{" + "name='" + name + '\'' + ", columns=" + Arrays.toString(columns) + ", sourceType="
+                + sourceType + ", tableType='" + tableType + '\'' + ", database=" + database + ", identity='"
+                + getIdentity() + '\'' + '}';
     }
 
     /** create a mockup table for unit test */

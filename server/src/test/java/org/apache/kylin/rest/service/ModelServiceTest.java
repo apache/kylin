@@ -96,4 +96,24 @@ public class ModelServiceTest extends ServiceTestBase {
         field.set(deserialize.getComputedColumnDescs().get(0), "another expression");
         DataModelDesc dataModelDesc = modelService.updateModelAndDesc(deserialize);
     }
+
+
+    @Test
+    public void testFailureModelUpdateDueToComputedColumnConflict2() throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("There is already a column named cal_dt on table DEFAULT.TEST_KYLIN_FACT, please change your computed column name");
+
+        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
+        Assert.assertTrue(dataModelDescs.size() == 1);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        MetadataManager.MODELDESC_SERIALIZER.serialize(dataModelDescs.get(0), new DataOutputStream(baos));
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        DataModelDesc deserialize = MetadataManager.MODELDESC_SERIALIZER.deserialize(new DataInputStream(bais));
+
+        Field field = ComputedColumnDesc.class.getDeclaredField("columnName");
+        field.setAccessible(true);
+        field.set(deserialize.getComputedColumnDescs().get(0), "cal_dt");
+        DataModelDesc dataModelDesc = modelService.updateModelAndDesc(deserialize);
+    }
 }
