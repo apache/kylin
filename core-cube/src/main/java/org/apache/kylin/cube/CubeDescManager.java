@@ -316,7 +316,13 @@ public class CubeDescManager {
         List<String> paths = store.collectResourceRecursively(ResourceStore.CUBE_DESC_RESOURCE_ROOT,
                 MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
-            CubeDesc desc = loadCubeDesc(path, true);
+            CubeDesc desc = null;
+            try {
+                desc = loadCubeDesc(path, true);
+            } catch (Exception e) {
+                logger.error("Error during load cube desc, skipping " + path, e);
+                continue;
+            }
 
             if (!path.equals(desc.getResourcePath())) {
                 logger.error(
@@ -350,7 +356,7 @@ public class CubeDescManager {
             throw new IllegalArgumentException("CubeDesc '" + name + "' does not exist.");
         if (desc.isDraft())
             throw new IllegalArgumentException("CubeDesc '" + desc.getName() + "' must not be a draft");
-        
+
         try {
             desc.init(config);
         } catch (Exception e) {
