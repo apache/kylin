@@ -199,10 +199,10 @@ then
         then source ${dir}/setenv-tool.sh
     fi
 
-    hbase_original=${HBASE_CLASSPATH}
-    export HBASE_CLASSPATH=${hbase_original}:${KYLIN_HOME}/tool/*
+    hbase_pre_original=${HBASE_CLASSPATH_PREFIX}
+    export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/tool/*:${HBASE_CLASSPATH_PREFIX}
     exec hbase ${KYLIN_EXTRA_START_OPTS} -Dkylin.hive.dependency=${hive_dependency} -Dkylin.hbase.dependency=${hbase_dependency} -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties "$@"
-    export HBASE_CLASSPATH=${hbase_original}
+    export HBASE_CLASSPATH_PREFIX=${hbase_pre_original}
 else
     quit "Usage: 'kylin.sh [-v] start' or 'kylin.sh [-v] stop'"
 fi
