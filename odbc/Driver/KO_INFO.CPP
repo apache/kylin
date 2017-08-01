@@ -602,27 +602,27 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC pConn,
             */
         case SQL_TIMEDATE_FUNCTIONS : // 52 called
             * ( ( Long* ) pInfoValuePtr ) =
-                //SQL_FN_TD_CURRENT_DATE |
-                //SQL_FN_TD_CURRENT_TIME |
+                SQL_FN_TD_CURRENT_DATE |
+                SQL_FN_TD_CURRENT_TIME |
                 SQL_FN_TD_CURRENT_TIMESTAMP |
                 SQL_FN_TD_CURDATE |
                 SQL_FN_TD_CURTIME |
-                //SQL_FN_TD_DAYNAME |
-                //SQL_FN_TD_DAYOFMONTH |
-                //SQL_FN_TD_DAYOFWEEK |
-                //SQL_FN_TD_DAYOFYEAR |
-                SQL_FN_TD_EXTRACT
-                //SQL_FN_TD_HOUR |
-                //SQL_FN_TD_MINUTE |
-                //SQL_FN_TD_MONTH |
-                //SQL_FN_TD_MONTHNAME |
-                //SQL_FN_TD_NOW |
-                //SQL_FN_TD_QUARTER |
-                //SQL_FN_TD_SECOND |
-                //SQL_FN_TD_TIMESTAMPADD |
-                //SQL_FN_TD_TIMESTAMPDIFF |
-                //SQL_FN_TD_WEEK |
-                //SQL_FN_TD_YEAR
+                SQL_FN_TD_DAYNAME |
+                SQL_FN_TD_DAYOFMONTH |
+                SQL_FN_TD_DAYOFWEEK |
+                SQL_FN_TD_DAYOFYEAR |
+                SQL_FN_TD_EXTRACT |
+                SQL_FN_TD_HOUR |
+                SQL_FN_TD_MINUTE |
+                SQL_FN_TD_MONTH |
+                SQL_FN_TD_MONTHNAME |
+                SQL_FN_TD_NOW |
+                SQL_FN_TD_QUARTER |
+                SQL_FN_TD_SECOND |
+                SQL_FN_TD_TIMESTAMPADD |
+                SQL_FN_TD_TIMESTAMPDIFF |
+                SQL_FN_TD_WEEK |
+                SQL_FN_TD_YEAR
                 ;
             break;
 
