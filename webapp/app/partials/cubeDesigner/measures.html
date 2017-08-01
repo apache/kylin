@@ -69,7 +69,6 @@
               </table>
       </div>
   </ng-form>
-
   <!--Add Measures Button-->
   <div class="form-group">
       <button class="btn btn-sm btn-info" ng-click="addNewMeasure()" ng-show="state.mode=='edit' && !newMeasure" ng-disabled="instance.status=='READY'">
@@ -218,10 +217,10 @@
                       </div>
 
                       <!--Group by Column-->
-                      <div class="form-group" ng-if="newMeasure.function.expression === 'TOP_N'||newMeasure.function.expression === 'COUNT_DISTINCT'" >
+                      <div class="form-group" ng-if="newMeasure.function.expression === 'TOP_N'||(newMeasure.function.expression === 'COUNT_DISTINCT' && newMeasure.function.returntype!=='bitmap')" >
                         <div class="row">
                           <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                            <b>Group by Column</b>
+                            <b ng-if="newMeasure.function.expression === 'TOP_N'">Group by Column</b>
                           </label>
                           <div class="form-group large-popover" >
                               <div class="box-body">
