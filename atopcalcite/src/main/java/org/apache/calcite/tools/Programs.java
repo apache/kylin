@@ -1,18 +1,25 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Copyright (C) 2016 Kyligence Inc. All rights reserved.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * http://kyligence.io
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This software is the confidential and proprietary information of
+ * Kyligence Inc. ("Confidential Information"). You shall not disclose
+ * such Confidential Information and shall use it only in accordance
+ * with the terms of the license agreement you entered into with
+ * Kyligence Inc.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.apache.calcite.tools;
 
@@ -74,15 +81,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
-/**
- * Utilities for creating {@link Program}s.
- */
 /*
  * The code has synced with calcite. Hope one day, we could remove the hardcode override point.
  * OVERRIDE POINT:
  * - add OLAPJoinPushThroughJoinRule OLAPJoinPushThroughJoinRule2 to org.apache.calcite.tools.Programs#subQuery
  */
 
+/**
+ * Utilities for creating {@link Program}s.
+ */
 public class Programs {
   private static final Function<RuleSet, Program> RULE_SET_TO_PROGRAM =
       new Function<RuleSet, Program>() {
@@ -189,7 +196,7 @@ public class Programs {
 
   /** Creates a program that executes a list of rules in a HEP planner. */
   public static Program hep(Iterable<? extends RelOptRule> rules,
-      boolean noDag, RelMetadataProvider metadataProvider) {
+                            boolean noDag, RelMetadataProvider metadataProvider) {
     final HepProgramBuilder builder = HepProgram.builder();
     for (RelOptRule rule : rules) {
       builder.addRuleInstance(rule);
@@ -199,12 +206,12 @@ public class Programs {
 
   /** Creates a program that executes a {@link HepProgram}. */
   public static Program of(final HepProgram hepProgram, final boolean noDag,
-      final RelMetadataProvider metadataProvider) {
+                           final RelMetadataProvider metadataProvider) {
     return new Program() {
       public RelNode run(RelOptPlanner planner, RelNode rel,
-          RelTraitSet requiredOutputTraits,
-          List<RelOptMaterialization> materializations,
-          List<RelOptLattice> lattices) {
+                         RelTraitSet requiredOutputTraits,
+                         List<RelOptMaterialization> materializations,
+                         List<RelOptLattice> lattices) {
         final HepPlanner hepPlanner = new HepPlanner(hepProgram,
             null, noDag, null, RelOptCostImpl.FACTORY);
 
@@ -233,9 +240,9 @@ public class Programs {
       final boolean bushy, final int minJoinCount) {
     return new Program() {
       public RelNode run(RelOptPlanner planner, RelNode rel,
-          RelTraitSet requiredOutputTraits,
-          List<RelOptMaterialization> materializations,
-          List<RelOptLattice> lattices) {
+                         RelTraitSet requiredOutputTraits,
+                         List<RelOptMaterialization> materializations,
+                         List<RelOptLattice> lattices) {
         final int joinCount = RelOptUtil.countJoins(rel);
         final Program program;
         if (joinCount < minJoinCount) {
@@ -284,19 +291,18 @@ public class Programs {
 
   public static Program subQuery(RelMetadataProvider metadataProvider) {
     return hep(
-        ImmutableList.of((RelOptRule) SubQueryRemoveRule.FILTER, 
+        ImmutableList.of((RelOptRule) SubQueryRemoveRule.FILTER,
             SubQueryRemoveRule.PROJECT,
             SubQueryRemoveRule.JOIN, OLAPJoinPushThroughJoinRule.INSTANCE,
-            OLAPJoinPushThroughJoinRule2.INSTANCE
-        ), true, metadataProvider);
+            OLAPJoinPushThroughJoinRule2.INSTANCE), true, metadataProvider);
   }
 
   public static Program getProgram() {
     return new Program() {
       public RelNode run(RelOptPlanner planner, RelNode rel,
-          RelTraitSet requiredOutputTraits,
-          List<RelOptMaterialization> materializations,
-          List<RelOptLattice> lattices) {
+                         RelTraitSet requiredOutputTraits,
+                         List<RelOptMaterialization> materializations,
+                         List<RelOptLattice> lattices) {
         return null;
       }
     };
@@ -313,9 +319,9 @@ public class Programs {
     final Program program1 =
         new Program() {
           public RelNode run(RelOptPlanner planner, RelNode rel,
-              RelTraitSet requiredOutputTraits,
-              List<RelOptMaterialization> materializations,
-              List<RelOptLattice> lattices) {
+                             RelTraitSet requiredOutputTraits,
+                             List<RelOptMaterialization> materializations,
+                             List<RelOptLattice> lattices) {
             planner.setRoot(rel);
 
             for (RelOptMaterialization materialization : materializations) {
@@ -358,9 +364,9 @@ public class Programs {
     }
 
     public RelNode run(RelOptPlanner planner, RelNode rel,
-        RelTraitSet requiredOutputTraits,
-        List<RelOptMaterialization> materializations,
-        List<RelOptLattice> lattices) {
+                       RelTraitSet requiredOutputTraits,
+                       List<RelOptMaterialization> materializations,
+                       List<RelOptLattice> lattices) {
       planner.clear();
       for (RelOptRule rule : ruleSet) {
         planner.addRule(rule);
@@ -390,9 +396,9 @@ public class Programs {
     }
 
     public RelNode run(RelOptPlanner planner, RelNode rel,
-        RelTraitSet requiredOutputTraits,
-        List<RelOptMaterialization> materializations,
-        List<RelOptLattice> lattices) {
+                       RelTraitSet requiredOutputTraits,
+                       List<RelOptMaterialization> materializations,
+                       List<RelOptLattice> lattices) {
       for (Program program : programs) {
         rel = program.run(
             planner, rel, requiredOutputTraits, materializations, lattices);
@@ -410,9 +416,9 @@ public class Programs {
    * {@link TrimFieldsProgram} after this program. */
   private static class DecorrelateProgram implements Program {
     public RelNode run(RelOptPlanner planner, RelNode rel,
-        RelTraitSet requiredOutputTraits,
-        List<RelOptMaterialization> materializations,
-        List<RelOptLattice> lattices) {
+                       RelTraitSet requiredOutputTraits,
+                       List<RelOptMaterialization> materializations,
+                       List<RelOptLattice> lattices) {
       final CalciteConnectionConfig config =
           planner.getContext().unwrap(CalciteConnectionConfig.class);
       if (config != null && config.forceDecorrelate()) {
@@ -425,9 +431,9 @@ public class Programs {
   /** Program that trims fields. */
   private static class TrimFieldsProgram implements Program {
     public RelNode run(RelOptPlanner planner, RelNode rel,
-        RelTraitSet requiredOutputTraits,
-        List<RelOptMaterialization> materializations,
-        List<RelOptLattice> lattices) {
+                       RelTraitSet requiredOutputTraits,
+                       List<RelOptMaterialization> materializations,
+                       List<RelOptLattice> lattices) {
       final RelBuilder relBuilder =
           RelFactories.LOGICAL_BUILDER.create(rel.getCluster(), null);
       return new RelFieldTrimmer(null, relBuilder).trim(rel);

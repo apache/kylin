@@ -23,13 +23,14 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.tools.RelBuilder;
+import org.apache.calcite.util.ReflectiveVisitor;
 
 /*
  * OVERRIDE POINT:
  * - disable the whole RelFieldTrimmer
  */
 
-public class RelFieldTrimmer {
+public class RelFieldTrimmer implements ReflectiveVisitor {
 
     public RelFieldTrimmer(SqlValidator validator, RelBuilder relBuilder) {
     }
