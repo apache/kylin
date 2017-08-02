@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
@@ -553,7 +554,7 @@ public class CubeController extends BasicController {
             // Get info of given table.
             try {
                 hr = cubeService.getHTableInfo(tableName);
-            } catch (IOException e) {
+            } catch (IOException | ExecutionException e) {
                 logger.error("Failed to calcuate size of HTable \"" + tableName + "\".", e);
             }
 

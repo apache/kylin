@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -445,7 +446,7 @@ public class CubeControllerV2 extends BasicController {
             // Get info of given table.
             try {
                 hr = cubeService.getHTableInfo(tableName);
-            } catch (IOException e) {
+            } catch (IOException | ExecutionException e) {
                 logger.error("Failed to calculate size of HTable \"" + tableName + "\".", e);
             }
 
