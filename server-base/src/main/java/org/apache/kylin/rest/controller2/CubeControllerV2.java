@@ -109,7 +109,11 @@ public class CubeControllerV2 extends BasicController {
 
         // official cubes
         for (CubeInstance cube : cubes) {
-            response.add(createCubeInstanceResponse(cube));
+            try {
+                response.add(createCubeInstanceResponse(cube));
+            } catch (Exception e) {
+                logger.error("Error creating cube instance response, skipping.", e);
+            }
         }
         
         // draft cubes
@@ -174,9 +178,14 @@ public class CubeControllerV2 extends BasicController {
 
         r.setModel(cube.getDescriptor().getModelName());
         r.setPartitionDateStart(cube.getDescriptor().getPartitionDateStart());
-        r.setPartitionDateColumn(cube.getModel().getPartitionDesc().getPartitionDateColumn());
-        r.setIs_streaming(
-                cube.getModel().getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
+        // cuz model doesn't have a state the label a model is broken,
+        // so in some case the model can not be loaded due to some check failed,
+        // but the cube in this model can still be loaded.
+        if (cube.getModel() != null) {
+            r.setPartitionDateColumn(cube.getModel().getPartitionDesc().getPartitionDateColumn());
+            r.setIs_streaming(
+                    cube.getModel().getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
+        }
         r.setProject(projectService.getProjectOfCube(cube.getName()));
         
         return r;
@@ -202,7 +211,12 @@ public class CubeControllerV2 extends BasicController {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
 
-        CubeInstanceResponse r = createCubeInstanceResponse(cube);
+        CubeInstanceResponse r;
+        try {
+            r = createCubeInstanceResponse(cube);
+        } catch (Exception e) {
+            throw new BadRequestException("Error getting cube instance response.", ResponseCode.CODE_UNDEFINED, e);
+        }
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, r, "");
     }
 
