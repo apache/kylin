@@ -120,7 +120,9 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         logger.warn(jobDesc + " fail to schedule", ex);
                     }
                 }
-                logger.info("Job Fetcher: " + nRunning + " should running, " + runningJobs.size() + " actual running, " + nStopped + " stopped, " + nReady + " ready, " + nSUCCEED + " already succeed, " + nError + " error, " + nDiscarded + " discarded, " + nOthers + " others");
+                logger.info("Job Fetcher: " + nRunning + " should running, " + runningJobs.size() + " actual running, "
+                        + nStopped + " stopped, " + nReady + " ready, " + nSUCCEED + " already succeed, " + nError
+                        + " error, " + nDiscarded + " discarded, " + nOthers + " others");
             } catch (Exception e) {
                 logger.warn("Job Fetcher caught a exception " + e);
             }
@@ -137,7 +139,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
         @Override
         public void run() {
-            try (SetThreadName ignored = new SetThreadName("Job %s", executable.getId())) {
+            try (SetThreadName ignored = new SetThreadName("Scheduler %s Job %s",
+                    System.identityHashCode(DefaultScheduler.this), executable.getId())) {
                 executable.execute(context);
                 // trigger the next step asap
                 fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
@@ -188,7 +191,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     @Override
     public synchronized void init(JobEngineConfig jobEngineConfig, JobLock lock) throws SchedulerException {
         jobLock = lock;
-        
+
         String serverMode = jobEngineConfig.getConfig().getServerMode();
         if (!("job".equals(serverMode.toLowerCase()) || "all".equals(serverMode.toLowerCase()))) {
             logger.info("server mode: " + serverMode + ", no need to run job scheduler");
@@ -212,7 +215,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         //load all executable, set them to a consistent status
         fetcherPool = Executors.newScheduledThreadPool(1);
         int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();
-        jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS, new SynchronousQueue<Runnable>());
+        jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS,
+                new SynchronousQueue<Runnable>());
         context = new DefaultContext(Maps.<String, Executable> newConcurrentMap(), jobEngineConfig.getConfig());
 
         executableManager.resumeAllRunningJobs();
@@ -226,10 +230,16 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
     @Override
     public void shutdown() throws SchedulerException {
-        logger.info("Shutingdown Job Engine ....");
+        logger.info("Shutting down DefaultScheduler ....");
         jobLock.unlockJobEngine();
-        fetcherPool.shutdown();
-        jobPool.shutdown();
+        try {
+            fetcherPool.shutdown();
+            fetcherPool.awaitTermination(1, TimeUnit.MINUTES);
+            jobPool.shutdown();
+            jobPool.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            //ignore it
+        }
     }
 
     @Override

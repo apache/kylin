@@ -19,6 +19,7 @@
 package org.apache.kylin.common.persistence;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -46,111 +47,146 @@ public class FileResourceStore extends ResourceStore {
         super(kylinConfig);
         root = new File(kylinConfig.getMetadataUrl().getIdentifier()).getAbsoluteFile();
         if (root.exists() == false)
-            throw new IllegalArgumentException("File not exist by '" + kylinConfig.getMetadataUrl() + "': " + root.getAbsolutePath());
+            throw new IllegalArgumentException(
+                    "File not exist by '" + kylinConfig.getMetadataUrl() + "': " + root.getAbsolutePath());
     }
 
     @Override
-    synchronized protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException {
-        String[] names = file(folderPath).list();
-        if (names == null) // not a directory
-            return null;
+    protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException {
+        synchronized (FileResourceStore.class) {
+            String[] names = file(folderPath).list();
+            if (names == null) // not a directory
+                return null;
 
-        TreeSet<String> r = new TreeSet<>();
-        String prefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
-        for (String n : names) {
-            r.add(prefix + n);
+            TreeSet<String> r = new TreeSet<>();
+            String prefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
+            for (String n : names) {
+                r.add(prefix + n);
+            }
+            return r;
         }
-        return r;
     }
 
     @Override
-    synchronized protected boolean existsImpl(String resPath) throws IOException {
-        File f = file(resPath);
-        return f.exists() && f.isFile(); // directory is not considered a resource
+    protected boolean existsImpl(String resPath) throws IOException {
+        synchronized (FileResourceStore.class) {
+            File f = file(resPath);
+            return f.exists() && f.isFile(); // directory is not considered a resource
+        }
     }
 
     @Override
-    synchronized protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException {
-        NavigableSet<String> resources = listResources(folderPath);
-        if (resources == null)
-            return Collections.emptyList();
+    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive)
+            throws IOException {
+        synchronized (FileResourceStore.class) {
 
-        List<RawResource> result = Lists.newArrayListWithCapacity(resources.size());
-        try {
-            for (String res : resources) {
-                long ts = getResourceTimestampImpl(res);
-                if (timeStart <= ts && ts < timeEndExclusive) {
-                    RawResource resource = getResourceImpl(res);
-                    if (resource != null) // can be null if is a sub-folder
-                        result.add(resource);
+            NavigableSet<String> resources = listResources(folderPath);
+            if (resources == null)
+                return Collections.emptyList();
+
+            List<RawResource> result = Lists.newArrayListWithCapacity(resources.size());
+            try {
+                for (String res : resources) {
+                    long ts = getResourceTimestampImpl(res);
+                    if (timeStart <= ts && ts < timeEndExclusive) {
+                        RawResource resource = getResourceImpl(res);
+                        if (resource != null) // can be null if is a sub-folder
+                            result.add(resource);
+                    }
                 }
+            } catch (IOException ex) {
+                for (RawResource rawResource : result) {
+                    IOUtils.closeQuietly(rawResource.inputStream);
+                }
+                throw ex;
             }
-        } catch (IOException ex) {
-            for (RawResource rawResource : result) {
-                IOUtils.closeQuietly(rawResource.inputStream);
-            }
-            throw ex;
-        }
-        return result;
-    }
-
-    @Override
-    synchronized protected RawResource getResourceImpl(String resPath) throws IOException {
-        File f = file(resPath);
-        if (f.exists() && f.isFile()) {
-            if (f.length() == 0) {
-                logger.warn("Zero length file: " + f.getAbsolutePath());
-            }
-            return new RawResource(new FileInputStream(f), f.lastModified());
-        } else {
-            return null;
+            return result;
         }
     }
 
     @Override
-    synchronized protected long getResourceTimestampImpl(String resPath) throws IOException {
-        File f = file(resPath);
-        if (f.exists() && f.isFile())
+    protected RawResource getResourceImpl(String resPath) throws IOException {
+        synchronized (FileResourceStore.class) {
+
+            File f = file(resPath);
+            if (f.exists() && f.isFile()) {
+                if (f.length() == 0) {
+                    logger.warn("Zero length file: " + f.getAbsolutePath());
+                }
+
+                FileInputStream resource = new FileInputStream(f);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream(1000);
+                IOUtils.copy(resource, baos);
+                IOUtils.closeQuietly(resource);
+                byte[] data = baos.toByteArray();
+
+                return new RawResource(new ByteArrayInputStream(data), f.lastModified());
+            } else {
+                return null;
+            }
+        }
+    }
+
+    @Override
+    protected long getResourceTimestampImpl(String resPath) throws IOException {
+        synchronized (FileResourceStore.class) {
+
+            File f = file(resPath);
+            if (f.exists() && f.isFile())
+                return f.lastModified();
+            else
+                return 0;
+        }
+    }
+
+    @Override
+    protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
+        synchronized (FileResourceStore.class) {
+
+            File f = file(resPath);
+            f.getParentFile().mkdirs();
+            FileOutputStream out = new FileOutputStream(f);
+            try {
+                IOUtils.copy(content, out);
+            } finally {
+                IOUtils.closeQuietly(out);
+            }
+
+            f.setLastModified(ts);
+        }
+    }
+
+    @Override
+    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
+            throws IOException, IllegalStateException {
+        synchronized (FileResourceStore.class) {
+
+            File f = file(resPath);
+            if ((f.exists() && f.lastModified() != oldTS) || (f.exists() == false && oldTS != 0))
+                throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS
+                        + ", but found " + f.lastModified());
+
+            putResourceImpl(resPath, new ByteArrayInputStream(content), newTS);
+
+            // some FS lose precision on given time stamp
             return f.lastModified();
-        else
-            return 0;
-    }
-
-    @Override
-    synchronized protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
-        File f = file(resPath);
-        f.getParentFile().mkdirs();
-        FileOutputStream out = new FileOutputStream(f);
-        try {
-            IOUtils.copy(content, out);
-        } finally {
-            IOUtils.closeQuietly(out);
         }
-
-        f.setLastModified(ts);
     }
 
     @Override
-    synchronized protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException {
-        File f = file(resPath);
-        if ((f.exists() && f.lastModified() != oldTS) || (f.exists() == false && oldTS != 0))
-            throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but found " + f.lastModified());
+    protected void deleteResourceImpl(String resPath) throws IOException {
+        synchronized (FileResourceStore.class) {
 
-        putResourceImpl(resPath, new ByteArrayInputStream(content), newTS);
-
-        // some FS lose precision on given time stamp
-        return f.lastModified();
+            File f = file(resPath);
+            f.delete();
+        }
     }
 
     @Override
-    synchronized protected void deleteResourceImpl(String resPath) throws IOException {
-        File f = file(resPath);
-        f.delete();
-    }
-
-    @Override
-    synchronized protected String getReadableResourcePathImpl(String resPath) {
-        return file(resPath).toString();
+    protected String getReadableResourcePathImpl(String resPath) {
+        synchronized (FileResourceStore.class) {
+            return file(resPath).toString();
+        }
     }
 
     private File file(String resPath) {

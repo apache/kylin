@@ -37,13 +37,17 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class DefaultSchedulerTest extends BaseSchedulerTest {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultSchedulerTest.class);
 
     @Test
     public void testSingleTaskJob() throws Exception {
+        logger.info("testSingleTaskJob");
         DefaultChainedExecutable job = new DefaultChainedExecutable();
         BaseTestExecutable task1 = new SucceedTestExecutable();
         job.addTask(task1);
@@ -55,6 +59,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
 
     @Test
     public void testSucceed() throws Exception {
+        logger.info("testSucceed");
         DefaultChainedExecutable job = new DefaultChainedExecutable();
         BaseTestExecutable task1 = new SucceedTestExecutable();
         BaseTestExecutable task2 = new SucceedTestExecutable();
@@ -69,6 +74,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
 
     @Test
     public void testSucceedAndFailed() throws Exception {
+        logger.info("testSucceedAndFailed");
         DefaultChainedExecutable job = new DefaultChainedExecutable();
         BaseTestExecutable task1 = new SucceedTestExecutable();
         BaseTestExecutable task2 = new FailedTestExecutable();
@@ -83,6 +89,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
 
     @Test
     public void testSucceedAndError() throws Exception {
+        logger.info("testSucceedAndError");
         DefaultChainedExecutable job = new DefaultChainedExecutable();
         BaseTestExecutable task1 = new ErrorTestExecutable();
         BaseTestExecutable task2 = new SucceedTestExecutable();
@@ -97,6 +104,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
 
     @Test
     public void testDiscard() throws Exception {
+        logger.info("testDiscard");
         DefaultChainedExecutable job = new DefaultChainedExecutable();
         SelfStopExecutable task1 = new SelfStopExecutable();
         job.addTask(task1);
@@ -113,6 +121,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
     @Ignore("why test JDK feature?")
     @Test
     public void testSchedulerPool() throws InterruptedException {
+        logger.info("testSchedulerPool");
         ScheduledExecutorService fetchPool = Executors.newScheduledThreadPool(1);
         final CountDownLatch countDownLatch = new CountDownLatch(3);
         ScheduledFuture future = fetchPool.scheduleAtFixedRate(new Runnable() {
