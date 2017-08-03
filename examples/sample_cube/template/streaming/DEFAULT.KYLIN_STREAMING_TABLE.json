@@ -1,0 +1,6 @@
+{
+  "uuid": "8b2b9dfe-777c-4d39-bf89-8472ec929193",
+  "name": "DEFAULT.KYLIN_STREAMING_TABLE",
+  "type": "kafka",
+  "last_modified": 0
+}

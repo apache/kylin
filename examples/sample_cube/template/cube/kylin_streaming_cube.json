@@ -1,0 +1,13 @@
+{
+  "uuid": "40a27d9d-c5f3-45c4-9b8b-513552219193",
+ 
+  "name": "kylin_streaming_cube",
+  "owner": null,
+  "status": "DISABLED",
+  "segments": [],
+  "last_modified": 0,
+  "descriptor": "kylin_streaming_cube",
+  "size_kb": 0,
+  "input_records_count": 0,
+  "input_records_size": 0
+}

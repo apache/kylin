@@ -1,0 +1,102 @@
+{
+  "uuid": "e286e39e-41d7-44c2-8fa2-41b365123987",
+  "name": "KYLIN_STREAMING_TABLE",
+  "columns": [
+    {
+      "id": "1",
+      "name": "amount",
+      "datatype": "decimal"
+    },
+    {
+      "id": "2",
+      "name": "category",
+      "datatype": "varchar(256)"
+    },
+    {
+      "id": "3",
+      "name": "order_time",
+      "datatype": "timestamp",
+      "index": "T"
+    },
+    {
+      "id": "4",
+      "name": "device",
+      "datatype": "varchar(256)"
+    },
+    {
+      "id": "5",
+      "name": "qty",
+      "datatype": "int"
+    },
+    {
+      "id": "6",
+      "name": "user_id",
+      "datatype": "varchar(256)"
+    },
+    {
+      "id": "7",
+      "name": "user_age",
+      "datatype": "int"
+    },
+    {
+      "id": "8",
+      "name": "user_gender",
+      "datatype": "varchar(256)"
+    },
+    {
+      "id": "9",
+      "name": "currency",
+      "datatype": "varchar(256)"
+    },
+    {
+      "id": "10",
+      "name": "country",
+      "datatype": "varchar(256)"
+    },
+    {
+      "id": "11",
+      "name": "minute_start",
+      "datatype": "timestamp",
+      "index": "T"
+    },
+    {
+      "id": "12",
+      "name": "hour_start",
+      "datatype": "timestamp",
+      "index": "T"
+    },
+    {
+      "id": "13",
+      "name": "day_start",
+      "datatype": "date",
+      "index": "T"
+    },
+    {
+      "id": "14",
+      "name": "week_start",
+      "datatype": "date",
+      "index": "T"
+    },
+    {
+      "id": "15",
+      "name": "month_start",
+      "datatype": "date",
+      "index": "T"
+    },
+    {
+      "id": "16",
+      "name": "quarter_start",
+      "datatype": "date",
+      "index": "T"
+    },
+    {
+      "id": "17",
+      "name": "year_start",
+      "datatype": "date",
+      "index": "T"
+    }
+  ],
+  "database": "DEFAULT",
+  "last_modified": 0,
+  "source_type" : 1
+}

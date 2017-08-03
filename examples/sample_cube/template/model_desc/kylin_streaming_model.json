@@ -1,0 +1,38 @@
+{
+  "uuid": "ff527b94-f861-44c3-8452-93b177888732",
+  "name": "kylin_streaming_model",
+  "dimensions": [
+    {
+      "table": "DEFAULT.KYLIN_STREAMING_TABLE",
+      "columns": [
+        "category",
+        "order_time",
+        "device",
+        "user_age",
+        "user_gender",
+        "currency",
+        "country",
+        "minute_start",
+        "hour_start",
+        "day_start",
+        "week_start",
+        "month_start",
+        "quarter_start",
+        "year_start"
+      ]
+    }
+  ],
+  "lookups": [],
+  "metrics": [
+    "amount",
+    "qty"
+  ],
+  "last_modified": 0,
+  "fact_table": "DEFAULT.KYLIN_STREAMING_TABLE",
+  "filter_condition": null,
+  "partition_desc": {
+    "partition_date_column": "DEFAULT.KYLIN_STREAMING_TABLE.MINUTE_START",
+    "partition_date_start": 0,
+    "partition_type": "APPEND"
+  }
+}

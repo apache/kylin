@@ -1,0 +1,150 @@
+{
+  "uuid" : "901ed15e-7769-4c66-b7ae-fbdc971cd092",
+  "name" : "kylin_streaming_cube",
+  "description" : "",
+  "dimensions" : [ {
+    "name" : "CATEGORY",
+    "table" : "DEFAULT.KYLIN_STREAMING_TABLE",
+    "column" : "CATEGORY",
+    "derived" : null
+  }, {
+    "name" : "DEVICE",
+    "table" : "DEFAULT.KYLIN_STREAMING_TABLE",
+    "column" : "DEVICE",
+    "derived" : null
+  }, {
+    "name" : "USER_AGE",
+    "table" : "DEFAULT.KYLIN_STREAMING_TABLE",
+    "column" : "USER_AGE",
+    "derived" : null
+  }, {
+    "name" : "USER_GENDER",
+    "table" : "DEFAULT.KYLIN_STREAMING_TABLE",
+    "column" : "USER_GENDER",
+    "derived" : null
+  }, {
+    "name" : "CURRENCY",
+    "table" : "DEFAULT.KYLIN_STREAMING_TABLE",
+    "column" : "CURRENCY",
+    "derived" : null
+  }, {
+    "name" : "COUNTRY",
+    "table" : "DEFAULT.KYLIN_STREAMING_TABLE",
+    "column" : "COUNTRY",
+    "derived" : null
+  }, {
+    "name" : "DAY_START",
+    "table" : "DEFAULT.KYLIN_STREAMING_TABLE",
+    "column" : "DAY_START",
+    "derived" : null
+  }, {
+    "name" : "HOUR_START",
+    "table" : "DEFAULT.KYLIN_STREAMING_TABLE",
+    "column" : "HOUR_START",
+    "derived" : null
+  }, {
+    "name" : "MINUTE_START",
+    "table" : "DEFAULT.KYLIN_STREAMING_TABLE",
+    "column" : "MINUTE_START",
+    "derived" : null
+  } ],
+  "measures" : [ {
+    "name" : "_COUNT_",
+    "function" : {
+      "expression" : "COUNT",
+      "parameter" : {
+        "type" : "constant",
+        "value" : "1",
+        "next_parameter" : null
+      },
+      "returntype" : "bigint"
+    },
+    "dependent_measure_ref" : null
+  }, {
+    "name" : "TOTAL_AMOUNT",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "AMOUNT",
+        "next_parameter" : null
+      },
+      "returntype" : "decimal(19,4)"
+    },
+    "dependent_measure_ref" : null
+  }, {
+    "name" : "TOTAL_QTY",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "QTY",
+        "next_parameter" : null
+      },
+      "returntype" : "bigint"
+    },
+    "dependent_measure_ref" : null
+  } ],
+  "rowkey" : {
+    "rowkey_columns" : [ {
+      "column" : "MINUTE_START",
+      "encoding" : "dict"
+    }, {
+      "column" : "HOUR_START",
+      "encoding" : "dict"
+    }, {
+      "column" : "DAY_START",
+      "encoding" : "dict"
+    }, {
+      "column" : "CATEGORY",
+      "encoding" : "dict"
+    }, {
+      "column" : "DEVICE",
+      "encoding" : "dict"
+    }, {
+      "column" : "USER_AGE",
+      "encoding" : "dict"
+    }, {
+      "column" : "USER_GENDER",
+      "encoding" : "dict"
+    }, {
+      "column" : "CURRENCY",
+      "encoding" : "dict"
+    }, {
+      "column" : "COUNTRY",
+      "encoding" : "dict"
+    } ]
+  },
+  "signature" : null,
+  "last_modified" : 1448959801314,
+  "model_name" : "kylin_streaming_model",
+  "null_string" : null,
+  "hbase_mapping" : {
+    "column_family" : [ {
+      "name" : "F1",
+      "columns" : [ {
+        "qualifier" : "M",
+        "measure_refs" : [ "_COUNT_", "TOTAL_AMOUNT", "TOTAL_QTY" ]
+      } ]
+    } ]
+  },
+  "aggregation_groups" : [ {
+    "includes" : [ "MINUTE_START", "HOUR_START", "DAY_START", "CATEGORY", "DEVICE", "USER_AGE", "USER_GENDER", "CURRENCY", "COUNTRY" ],
+    "select_rule" : {
+      "hierarchy_dims" : [ [ "DAY_START", "HOUR_START", "MINUTE_START" ] ],
+      "mandatory_dims" : [ ],
+      "joint_dims" : [ ]
+    }
+  } ],
+  "override_kylin_properties": {
+    "kylin.cube.algorithm": "inmem",
+    "kylin.cube.max-building-segments": "5"
+  },
+  "notify_list" : [ ],
+  "status_need_notify" : [ ],
+  "auto_merge_time_ranges" : null,
+  "retention_range" : 0,
+  "engine_type" : 2,
+  "storage_type" : 2,
+  "partition_date_start": 0
+}

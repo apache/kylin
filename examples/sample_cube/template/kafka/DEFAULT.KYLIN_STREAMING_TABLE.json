@@ -1,0 +1,22 @@
+{
+ 
+  "uuid": "8b2b9dfe-777c-4d39-bf89-8472ec919193",
+  "name": "DEFAULT.KYLIN_STREAMING_TABLE",
+  "topic": "kylin_streaming_topic",
+  "timeout": 60000,
+  "bufferSize": 65536,
+  "parserName": "org.apache.kylin.source.kafka.TimedJsonStreamParser",
+  "parserProperties": "tsColName=order_time",
+  "last_modified": 0,
+  "clusters": [
+    {
+      "brokers": [
+        {
+          "id": 0,
+          "host": "localhost",
+          "port": 9092
+        }
+      ]
+    }
+  ]
+}
