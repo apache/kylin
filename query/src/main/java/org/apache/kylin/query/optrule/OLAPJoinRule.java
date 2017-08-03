@@ -55,7 +55,7 @@ public class OLAPJoinRule extends ConverterRule {
         if (!info.isEqui() && join.getJoinType() != JoinRelType.INNER) {
             // EnumerableJoinRel only supports equi-join. We can put a filter on top
             // if it is an inner join.
-            return null;
+            throw new IllegalArgumentException("We only support equi left join, please check join conditions!");
         }
 
         RelOptCluster cluster = join.getCluster();
