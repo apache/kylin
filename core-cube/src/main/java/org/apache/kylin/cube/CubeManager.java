@@ -677,7 +677,7 @@ public class CubeManager implements IRealizationProvider {
         String[] pkCols = join.getPrimaryKey();
         String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
         if (snapshotResPath == null)
-            throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment"
+            throw new IllegalStateException("No snapshot for table '" + tableName + "' found on cube segment"
                     + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);
 
         try {

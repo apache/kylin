@@ -140,10 +140,10 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         Set<TblColRef> filterColumnD = Sets.newHashSet();
         TupleFilter filterD = translateDerived(filter, loosenedColumnD);
         groupsD.addAll(loosenedColumnD);
-        TupleFilter.collectColumns(filter, filterColumnD);
+        TupleFilter.collectColumns(filterD, filterColumnD);
 
         // set limit push down
-        enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filter, loosenedColumnD, sqlDigest.aggregations, context);
+        enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filterD, loosenedColumnD, sqlDigest.aggregations, context);
         // set whether to aggregate results from multiple partitions
         enableStreamAggregateIfBeneficial(cuboid, groupsD, context);
         // set query deadline
@@ -316,9 +316,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             return compf;
 
         DeriveInfo hostInfo = cubeDesc.getHostInfo(derived);
-        CubeManager cubeMgr = CubeManager.getInstance(this.cubeInstance.getConfig());
-        CubeSegment seg = cubeInstance.getLatestReadySegment();
-        LookupStringTable lookup = cubeMgr.getLookupTable(seg, hostInfo.join);
+        LookupStringTable lookup = getLookupStringTableForDerived(derived, hostInfo);
         Pair<TupleFilter, Boolean> translated = DerivedFilterTranslator.translate(lookup, hostInfo, compf);
         TupleFilter translatedFilter = translated.getFirst();
         boolean loosened = translated.getSecond();
@@ -326,6 +324,13 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             collectColumnsRecursively(translatedFilter, collector);
         }
         return translatedFilter;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected LookupStringTable getLookupStringTableForDerived(TblColRef derived, DeriveInfo hostInfo) {
+        CubeManager cubeMgr = CubeManager.getInstance(this.cubeInstance.getConfig());
+        CubeSegment seg = cubeInstance.getLatestReadySegment();
+        return cubeMgr.getLookupTable(seg, hostInfo.join);
     }
 
     private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
