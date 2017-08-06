@@ -20,8 +20,8 @@ package org.apache.kylin.cube;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.kylin.common.HotLoadKylinPropertiesTestCase;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HotLoadKylinPropertiesTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.junit.Test;
 
@@ -55,7 +55,7 @@ public class CubeSpecificConfigTest extends HotLoadKylinPropertiesTestCase {
 
         //hot load Properties
         updateProperty("kylin.job.max-concurrent-jobs", "20");
-        KylinConfig.getInstanceFromEnv().hotLoadKylinProperties();
+        KylinConfig.getInstanceFromEnv().reloadFromSiteProperties();
         CubeDescManager.getInstance(baseConfig).reloadCubeDescLocal("ssb");
 
         //test cubeDescConfig

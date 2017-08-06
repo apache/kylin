@@ -75,7 +75,7 @@ public class AdminController extends BasicController {
     @RequestMapping(value = "/config", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public GeneralResponse getConfig() throws IOException {
-        String config = adminService.getConfigAsString();
+        String config = adminService.exportToString();
 
         GeneralResponse configRes = new GeneralResponse();
         configRes.put("config", config);

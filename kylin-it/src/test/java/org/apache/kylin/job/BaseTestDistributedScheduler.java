@@ -79,8 +79,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         localMetaDir = Files.createTempDir();
         backup = srcConfig.getMetadataUrl().toString();
         srcConfig.setProperty("kylin.metadata.url", localMetaDir.getAbsolutePath());
-        srcConfig.writeProperties(new File(confDstPath1));
-        srcConfig.writeProperties(new File(confDstPath2));
+        srcConfig.exportToFile(new File(confDstPath1));
+        srcConfig.exportToFile(new File(confDstPath2));
 
         kylinConfig1 = KylinConfig.createInstanceFromUri(new File(confDstPath1).getAbsolutePath());
         kylinConfig2 = KylinConfig.createInstanceFromUri(new File(confDstPath2).getAbsolutePath());

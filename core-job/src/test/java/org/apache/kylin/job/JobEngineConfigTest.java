@@ -18,8 +18,8 @@
 
 package org.apache.kylin.job;
 
+import org.apache.kylin.common.HotLoadKylinPropertiesTestCase;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HotLoadKylinPropertiesTestCase;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.junit.Test;
 
@@ -40,7 +40,7 @@ public class JobEngineConfigTest extends HotLoadKylinPropertiesTestCase {
         assertEquals(10, jobEngineConfig.getMaxConcurrentJobLimit());
 
         updateProperty("kylin.job.max-concurrent-jobs", "20");
-        KylinConfig.getInstanceFromEnv().hotLoadKylinProperties();
+        KylinConfig.getInstanceFromEnv().reloadFromSiteProperties();
 
         assertEquals(20, jobEngineConfig.getMaxConcurrentJobLimit());
     }

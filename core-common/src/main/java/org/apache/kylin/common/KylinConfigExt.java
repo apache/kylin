@@ -27,7 +27,7 @@ import java.util.Properties;
 @SuppressWarnings("serial")
 public class KylinConfigExt extends KylinConfig {
 
-    final private Map<String, String> overrides;
+    final Map<String, String> overrides;
     final KylinConfig base;
 
     public static KylinConfigExt createInstance(KylinConfig kylinConfig, Map<String, String> overrides) {
@@ -61,7 +61,7 @@ public class KylinConfigExt extends KylinConfig {
             return super.getOptional(prop, dft);
     }
 
-    public Properties getAllProperties() {
+    protected Properties getAllProperties() {
         Properties result = new Properties();
         result.putAll(super.getAllProperties());
         result.putAll(overrides);
@@ -71,7 +71,7 @@ public class KylinConfigExt extends KylinConfig {
     public Map<String, String> getExtendedOverrides() {
         return overrides;
     }
-
+    
     @Override
     public KylinConfig base() {
         return this.base;

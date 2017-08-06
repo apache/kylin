@@ -81,10 +81,10 @@ public class AdminService extends BasicService {
      * Get Java config info as String
      */
     // @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)  // this is a critical security issue, see KYLIN-1664
-    public String getConfigAsString() throws IOException {
+    public String exportToString() throws IOException {
         logger.debug("Get Kylin Runtime Config");
 
-        return KylinConfig.getInstanceFromEnv().getConfigAsString();
+        return KylinConfig.getInstanceFromEnv().exportToString();
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)

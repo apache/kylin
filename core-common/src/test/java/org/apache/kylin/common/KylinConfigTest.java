@@ -27,7 +27,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.kylin.common.util.HotLoadKylinPropertiesTestCase;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -85,7 +84,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
         assertEquals("whoami@kylin.apache.org", config.getKylinOwner());
 
         updateProperty("kylin.storage.hbase.owner-tag", "kylin@kylin.apache.org");
-        KylinConfig.getInstanceFromEnv().hotLoadKylinProperties();
+        KylinConfig.getInstanceFromEnv().reloadFromSiteProperties();
 
         assertEquals("kylin@kylin.apache.org", config.getKylinOwner());
     }

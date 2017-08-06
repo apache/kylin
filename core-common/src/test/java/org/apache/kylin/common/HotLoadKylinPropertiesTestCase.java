@@ -16,16 +16,16 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.util;
-
-import org.apache.kylin.common.KylinConfig;
-import org.junit.After;
-import org.junit.Before;
+package org.apache.kylin.common;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Properties;
+
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  * @author kangkaisen
@@ -43,7 +43,7 @@ public class HotLoadKylinPropertiesTestCase extends LocalFileMetadataTestCase {
     }
 
     protected void updateProperty(String key, String value) {
-        File propFile = KylinConfig.getKylinPropertiesFile();
+        File propFile = KylinConfig.getSitePropertiesFile();
         Properties conf = new Properties();
 
         //load

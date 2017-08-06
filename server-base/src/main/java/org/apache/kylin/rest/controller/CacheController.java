@@ -69,7 +69,7 @@ public class CacheController extends BasicController {
 
     @RequestMapping(value = "/announce/config", method = { RequestMethod.POST }, produces = { "application/json" })
     public void hotLoadKylinConfig() throws IOException {
-        KylinConfig.getInstanceFromEnv().hotLoadKylinProperties();
+        KylinConfig.getInstanceFromEnv().reloadFromSiteProperties();
         cacheService.notifyMetadataChange(Broadcaster.SYNC_ALL, Broadcaster.Event.UPDATE, Broadcaster.SYNC_ALL);
     }
 

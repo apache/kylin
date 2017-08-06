@@ -147,7 +147,7 @@ abstract public class KylinConfigBase implements Serializable {
         return intArray;
     }
 
-    final public String getRequired(String prop) {
+    final protected String getRequired(String prop) {
         String r = getOptional(prop);
         if (StringUtils.isEmpty(r)) {
             throw new IllegalArgumentException("missing '" + prop + "' in conf/kylin.properties");
@@ -156,7 +156,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     /**
-     * Use with care, properties should be read-only. This is for testing mostly.
+     * Use with care, properties should be read-only. This is for testing only.
      */
     final public void setProperty(String key, String value) {
         logger.info("Kylin Config was updated with " + key + " : " + value);

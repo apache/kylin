@@ -18,6 +18,7 @@
 package org.apache.kylin.engine.spark;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -164,13 +165,15 @@ public class SparkExecutable extends AbstractExecutable {
         JobRelatedMetaUtil.dumpResources(kylinConfig, metaDir, dumpList);
 
         // write kylin.properties
-        File kylinPropsFile = new File(metaDir, "kylin.properties");
-        Properties properties = kylinConfig.getAllProperties();
+        Properties props = kylinConfig.exportToProperties();
         String metadataUrl = this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt());
-        properties.setProperty("kylin.metadata.url", metadataUrl);
-        kylinConfig.writeProperties(properties, kylinPropsFile);
+        props.setProperty("kylin.metadata.url", metadataUrl);
+        File kylinPropsFile = new File(metaDir, "kylin.properties");
+        try (FileOutputStream os = new FileOutputStream(kylinPropsFile)) {
+            props.store(os, kylinPropsFile.getAbsolutePath());
+        }
 
-        KylinConfig dstConfig = KylinConfig.createKylinConfig(properties);
+        KylinConfig dstConfig = KylinConfig.createKylinConfig(props);
         //upload metadata
         ResourceTool.copy(KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath()), dstConfig);
     }

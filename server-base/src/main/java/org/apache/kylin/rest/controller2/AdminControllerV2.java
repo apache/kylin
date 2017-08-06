@@ -68,7 +68,7 @@ public class AdminControllerV2 extends BasicController {
     @ResponseBody
     public EnvelopeResponse getConfigV2() throws IOException {
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, adminService.getConfigAsString(), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, adminService.exportToString(), "");
     }
 
     @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = {

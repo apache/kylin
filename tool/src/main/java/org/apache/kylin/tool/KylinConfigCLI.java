@@ -34,7 +34,8 @@ public class KylinConfigCLI {
             System.exit(1);
         }
 
-        Properties config = KylinConfig.getKylinProperties();
+        Properties config = KylinConfig.getInstanceFromEnv().exportToProperties();
+        
         BackwardCompatibilityConfig bcc = new BackwardCompatibilityConfig();
         String key = bcc.check(args[0].trim());
         if (!key.endsWith(".")) {

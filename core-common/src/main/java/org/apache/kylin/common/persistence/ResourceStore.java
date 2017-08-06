@@ -454,7 +454,7 @@ abstract public class ResourceStore {
 
         // write kylin.properties
         File kylinPropsFile = new File(metaDir, "kylin.properties");
-        kylinConfig.writeProperties(kylinPropsFile);
+        kylinConfig.exportToFile(kylinPropsFile);
 
         ResourceStore from = ResourceStore.getStore(kylinConfig);
         KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath());

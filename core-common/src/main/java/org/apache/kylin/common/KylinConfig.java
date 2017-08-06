@@ -34,12 +34,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.io.StringReader;
 import java.net.URL;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
-import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 
@@ -111,7 +109,7 @@ public class KylinConfig extends KylinConfigBase {
             if (SYS_ENV_INSTANCE == null) {
                 try {
                     config = new KylinConfig();
-                    config.reloadKylinConfig(getKylinProperties());
+                    config.reloadKylinConfig(buildSiteProperties());
 
                     logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
                             + System.identityHashCode(config));
@@ -124,7 +122,7 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
-    //Only used in test cases!!! 
+    // Only used in test cases!!!
     public static void destroyInstance() {
         synchronized (KylinConfig.class) {
             logger.info("Destroy KylinConfig");
@@ -132,6 +130,26 @@ public class KylinConfig extends KylinConfigBase {
             SYS_ENV_INSTANCE = null;
             THREAD_ENV_INSTANCE = new ThreadLocal<>();
         }
+    }
+
+    private static void dumpStackTrace() {
+
+        //uncomment below to start debugging
+
+        //        Thread t = Thread.currentThread();
+        //        int maxStackTraceDepth = 20;
+        //        int current = 0;
+        //
+        //        StackTraceElement[] stackTrace = t.getStackTrace();
+        //        StringBuilder buf = new StringBuilder("This is not a exception, just for diagnose purpose:");
+        //        buf.append("\n");
+        //        for (StackTraceElement e : stackTrace) {
+        //            if (++current > maxStackTraceDepth) {
+        //                break;
+        //            }
+        //            buf.append("\t").append("at ").append(e.toString()).append("\n");
+        //        }
+        //        logger.info(buf.toString());
     }
 
     public enum UriType {
@@ -260,25 +278,16 @@ public class KylinConfig extends KylinConfigBase {
         return kylinConfig;
     }
 
-    public static String getKylinConfPath() {
-        String kylinConfHome = System.getProperty(KYLIN_CONF);
-        if (!StringUtils.isEmpty(kylinConfHome)) {
-            logger.info("Use KYLIN_CONF=" + kylinConfHome);
-            return kylinConfHome;
-        }
-
-        String kylinHome = getKylinHome();
-        if (StringUtils.isEmpty(kylinHome))
-            throw new KylinConfigCannotInitException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
-
-        return kylinHome + File.separator + "conf";
+    public static File getKylinConfDir() {
+        return getSitePropertiesFile().getParentFile();
     }
 
-    public static File getKylinPropertiesFile() {
+    // should be private; package visible for test only
+    static File getSitePropertiesFile() {
         String kylinConfHome = System.getProperty(KYLIN_CONF);
         if (!StringUtils.isEmpty(kylinConfHome)) {
             logger.info("Use KYLIN_CONF=" + kylinConfHome);
-            return getKylinPropertiesFile(kylinConfHome);
+            return existFile(kylinConfHome);
         }
 
         logger.debug("KYLIN_CONF property was not set, will seek KYLIN_HOME env variable");
@@ -288,13 +297,25 @@ public class KylinConfig extends KylinConfigBase {
             throw new KylinConfigCannotInitException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
 
         String path = kylinHome + File.separator + "conf";
-        return getKylinPropertiesFile(path);
+        return existFile(path);
     }
 
-    public static Properties getKylinProperties() {
+    /**
+     * Return a File only if it exists
+     */
+    private static File existFile(String path) {
+        if (path == null) {
+            return null;
+        }
+
+        return new File(path, KYLIN_CONF_PROPERTIES_FILE);
+    }
+
+    // build kylin properties from site deployment, a.k.a KYLIN_HOME/conf/kylin.properties
+    private static Properties buildSiteProperties() {
         Properties conf = new Properties();
 
-        OrderedProperties orderedProperties = getKylinOrderedProperties();
+        OrderedProperties orderedProperties = buildSiteOrderedProps();
         for (Map.Entry<String, String> each : orderedProperties.entrySet()) {
             conf.put(each.getKey(), each.getValue());
         }
@@ -302,27 +323,8 @@ public class KylinConfig extends KylinConfigBase {
         return conf;
     }
 
-    /**
-     * will close the passed in inputstream
-     */
-    private static void loadPropertiesFromInputStream(InputStream inputStream, OrderedProperties properties) {
-        Preconditions.checkNotNull(properties);
-        BufferedReader confReader = null;
-        try {
-            confReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-            OrderedProperties temp = new OrderedProperties();
-            temp.load(confReader);
-            temp = BCC.check(temp);
-
-            properties.putAll(temp);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(confReader);
-        }
-    }
-
-    private static OrderedProperties getKylinOrderedProperties() {
+    // build kylin properties from site deployment, a.k.a KYLIN_HOME/conf/kylin.properties
+    private static OrderedProperties buildSiteOrderedProps() {
 
         try {
             // 1. load default configurations from classpath. 
@@ -344,7 +346,7 @@ public class KylinConfig extends KylinConfigBase {
 
             // 2. load site conf, to keep backward compatibility it's still named kylin.properties
             // actually it's better to be named kylin-site.properties
-            File propFile = getKylinPropertiesFile();
+            File propFile = getSitePropertiesFile();
             if (propFile == null || !propFile.exists()) {
                 logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
                 throw new RuntimeException("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
@@ -363,39 +365,24 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
-    public String getConfigAsString() throws IOException {
-        Properties allProps = getAllProperties();
-        OrderedProperties orderedProperties = KylinConfig.getKylinOrderedProperties();
-
-        final StringBuilder sb = new StringBuilder();
-
-        for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
-            String key = entry.getKey().toString();
-            String value = entry.getValue().toString();
-            if (!orderedProperties.containsProperty(key)) {
-                orderedProperties.setProperty(key, value);
-            } else if (!orderedProperties.getProperty(key).equalsIgnoreCase(value)) {
-                orderedProperties.setProperty(key, value);
-            }
-        }
-        for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
-            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
-        }
-        return sb.toString();
-    }
-
     /**
-     * Check if there is kylin.properties exist
-     *
-     * @param path
-     * @return the properties file
+     * will close the passed in inputstream
      */
-    private static File getKylinPropertiesFile(String path) {
-        if (path == null) {
-            return null;
-        }
+    private static void loadPropertiesFromInputStream(InputStream inputStream, OrderedProperties properties) {
+        Preconditions.checkNotNull(properties);
+        BufferedReader confReader = null;
+        try {
+            confReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+            OrderedProperties temp = new OrderedProperties();
+            temp.load(confReader);
+            temp = BCC.check(temp);
 
-        return new File(path, KYLIN_CONF_PROPERTIES_FILE);
+            properties.putAll(temp);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            IOUtils.closeQuietly(confReader);
+        }
     }
 
     public static void setSandboxEnvIfPossible() {
@@ -423,17 +410,35 @@ public class KylinConfig extends KylinConfigBase {
         super(props, force);
     }
 
-    public void writeProperties(Properties props, File file) throws IOException {
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(file);
-            props.store(fos, file.getAbsolutePath());
-        } finally {
-            IOUtils.closeQuietly(fos);
+    public Properties exportToProperties() {
+        Properties all = getAllProperties();
+        Properties copy = new Properties();
+        copy.putAll(all);
+        return copy;
+    }
+    
+    public String exportToString() throws IOException {
+        Properties allProps = getAllProperties();
+        OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
+
+        final StringBuilder sb = new StringBuilder();
+
+        for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
+            String key = entry.getKey().toString();
+            String value = entry.getValue().toString();
+            if (!orderedProperties.containsProperty(key)) {
+                orderedProperties.setProperty(key, value);
+            } else if (!orderedProperties.getProperty(key).equalsIgnoreCase(value)) {
+                orderedProperties.setProperty(key, value);
+            }
         }
+        for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
+            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+        }
+        return sb.toString();
     }
 
-    public void writeProperties(File file) throws IOException {
+    public void exportToFile(File file) throws IOException {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(file);
@@ -443,6 +448,10 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
+    public synchronized void reloadFromSiteProperties() {
+        reloadKylinConfig(buildSiteProperties());
+    }
+    
     public KylinConfig base() {
         return this;
     }
@@ -464,60 +473,4 @@ public class KylinConfig extends KylinConfigBase {
             return this.base() == ((KylinConfig) another).base();
     }
 
-    public static void writeOverrideProperties(Properties properties) throws IOException {
-        File propFile = getKylinPropertiesFile();
-        File overrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
-        overrideFile.createNewFile();
-        FileInputStream fis2 = null;
-        Properties override = new Properties();
-        try {
-            fis2 = new FileInputStream(overrideFile);
-            override.load(fis2);
-            for (Map.Entry<Object, Object> entries : properties.entrySet()) {
-                override.setProperty(entries.getKey().toString(), entries.getValue().toString());
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(fis2);
-        }
-
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(overrideFile);
-            Enumeration<?> e = override.propertyNames();
-            while (e.hasMoreElements()) {
-                String key = (String) e.nextElement();
-                pw.println(key + "=" + override.getProperty(key));
-            }
-            pw.close();
-        } finally {
-            IOUtils.closeQuietly(pw);
-        }
-
-    }
-
-    private static void dumpStackTrace() {
-
-        //uncomment below to start debugging
-
-        //        Thread t = Thread.currentThread();
-        //        int maxStackTraceDepth = 20;
-        //        int current = 0;
-        //
-        //        StackTraceElement[] stackTrace = t.getStackTrace();
-        //        StringBuilder buf = new StringBuilder("This is not a exception, just for diagnose purpose:");
-        //        buf.append("\n");
-        //        for (StackTraceElement e : stackTrace) {
-        //            if (++current > maxStackTraceDepth) {
-        //                break;
-        //            }
-        //            buf.append("\t").append("at ").append(e.toString()).append("\n");
-        //        }
-        //        logger.info(buf.toString());
-    }
-
-    public synchronized void hotLoadKylinProperties() {
-        reloadKylinConfig(getKylinProperties());
-    }
 }

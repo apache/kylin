@@ -501,7 +501,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         // write kylin.properties
         File kylinPropsFile = new File(metaDir, "kylin.properties");
-        kylinConfig.writeProperties(kylinPropsFile);
+        kylinConfig.exportToFile(kylinPropsFile);
 
         if (prj != null) {
             dumpList.add(ProjectManager.getInstance(kylinConfig).getProject(prj).getResourcePath());
