@@ -151,9 +151,9 @@ public class AclService implements MutableAclService {
             for (ObjectIdentity oid : oids) {
                 AclRecord record = aclStore.getResource(getQueryKeyById(String.valueOf(oid.getIdentifier())),
                         AclRecord.class, SERIALIZER);
-                if (record != null) {
+                if (record != null && record.getOwnerInfo() != null) {
                     SidInfo owner = record.getOwnerInfo();
-                    Sid ownerSid = (null == owner) ? null : (owner.isPrincipal() ? new PrincipalSid(owner.getSid()) : new GrantedAuthoritySid(owner.getSid()));
+                    Sid ownerSid = owner.isPrincipal() ? new PrincipalSid(owner.getSid()) : new GrantedAuthoritySid(owner.getSid());
                     boolean entriesInheriting = record.isEntriesInheriting();
 
                     Acl parentAcl = null;
