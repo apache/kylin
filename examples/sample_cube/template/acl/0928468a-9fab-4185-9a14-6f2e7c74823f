@@ -1,0 +1,27 @@
+{
+  "domainObjectInfo" : {
+    "id" : "0928468a-9fab-4185-9a14-6f2e7c74823f",
+    "type" : "org.apache.kylin.metadata.model.DataModelDesc"
+  },
+  "parentDomainObjectInfo" : {
+    "id" : "2fbca32a-a33e-4b69-83dd-0bb8b1f8c91b",
+    "type" : "org.apache.kylin.metadata.project.ProjectInstance"
+  },
+  "ownerInfo" : {
+    "sid" : "ADMIN",
+    "principal" : true
+  },
+  "entriesInheriting" : true,
+  "allAceInfo" : {
+    "ADMIN" : {
+      "sidInfo" : {
+        "sid" : "ADMIN",
+        "principal" : true
+      },
+      "permissionMask" : 16
+    }
+  },
+  "uuid" : null,
+  "last_modified" : 1502104533562,
+  "version" : "2.1.0"
+}
