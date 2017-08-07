@@ -76,7 +76,7 @@ public class QueryUtil {
                 IQueryTransformer t = (IQueryTransformer) ClassUtil.newInstance(clz);
                 transformers.add(t);
             } catch (Exception e) {
-                logger.error("Failed to init query transformer", e);
+                throw new RuntimeException("Failed to init query transformer", e);
             }
         }
         queryTransformers = transformers;
