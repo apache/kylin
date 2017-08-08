@@ -63,7 +63,7 @@ public class RealizationChooser {
         Map<DataModelDesc, Set<IRealization>> modelMap = makeOrderedModelMap(context);
 
         if (modelMap.size() == 0) {
-            throw new NoRealizationFoundException("No model found for" + toErrorMsg(context));
+            throw new NoRealizationFoundException("No model found for " + toErrorMsg(context));
         }
 
         for (DataModelDesc model : modelMap.keySet()) {
