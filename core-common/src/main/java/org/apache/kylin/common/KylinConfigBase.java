@@ -1315,8 +1315,17 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.metrics.perflogger-class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
     }
 
+    public boolean isMetricsMonitorEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.metrics.monitor-enabled", "false"));
+    }
+
     public String getMetricsActiveReservoirDefaultClass() {
         return getOptional("kylin.metrics.active-reservoir-default-class",
                 "org.apache.kylin.metrics.lib.impl.StubReservoir");
+    }
+
+    public String getSystemCubeSinkDefaultClass() {
+        return getOptional("kylin.metrics.system-cube-sink-default-class",
+                "org.apache.kylin.metrics.lib.impl.hive.HiveSink");
     }
 }

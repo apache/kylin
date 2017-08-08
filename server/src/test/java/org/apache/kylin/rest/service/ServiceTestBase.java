@@ -45,7 +45,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author xduo
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml" })
+@ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml",
+        "classpath:kylinMetrics.xml" })
 @ActiveProfiles("testing")
 public class ServiceTestBase extends LocalFileMetadataTestCase {
 

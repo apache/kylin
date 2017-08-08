@@ -43,6 +43,7 @@
         <param-value>
         	classpath:applicationContext.xml
 			classpath:kylinSecurity.xml
+            classpath:kylinMetrics.xml
 			classpath*:kylin-*-plugin.xml
 		</param-value>
     </context-param>
