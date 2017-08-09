@@ -187,6 +187,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   };
   $scope.initUpdateDictionariesStatus();
 
+
   $scope.addNewDictionaries = function (dictionaries, index) {
     if(dictionaries&&index>=0){
       $scope.updateDictionariesStatus.isEdit = true;
@@ -206,6 +207,10 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   };
 
   $scope.saveNewDictionaries = function (){
+    if(!$scope.cubeMetaFrame.dictionaries){
+      $scope.cubeMetaFrame.dictionaries=[];
+    }
+
     if($scope.updateDictionariesStatus.isEdit == true) {
       if ($scope.cubeMetaFrame.dictionaries[$scope.updateDictionariesStatus.editIndex].column != $scope.newDictionaries.column) {
         if(!$scope.checkColumn()){
