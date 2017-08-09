@@ -25,20 +25,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -46,7 +38,6 @@ import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.RestClient;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -92,10 +83,9 @@ public class CubeMigrationCLI {
     private ResourceStore dstStore;
     private FileSystem hdfsFS;
     private HBaseAdmin hbaseAdmin;
+    private boolean doAclCopy = false;
 
-    public static final String ACL_INFO_FAMILY = "i";
-    private static final String ACL_TABLE_NAME = "_acl";
-    private static final String ACL_INFO_FAMILY_PARENT_COLUMN = "p";
+    private static final String ACL_PREFIX = "/acl/";
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -108,12 +98,22 @@ public class CubeMigrationCLI {
     }
 
     protected void usage() {
-        System.out.println("Usage: CubeMigrationCLI srcKylinConfigUri dstKylinConfigUri cubeName projectName copyAclOrNot purgeOrNot overwriteIfExists realExecute");
-        System.out.println(" srcKylinConfigUri: The KylinConfig of the cube’s source \n" + "dstKylinConfigUri: The KylinConfig of the cube’s new home \n" + "cubeName: the name of cube to be migrated. \n" + "projectName: The target project in the target environment.(Make sure it exist) \n" + "copyAclOrNot: true or false: whether copy cube ACL to target environment. \n" + "purgeOrNot: true or false: whether purge the cube from src server after the migration. \n" + "overwriteIfExists: overwrite cube if it already exists in the target environment. \n" + "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
+        System.out.println(
+                "Usage: CubeMigrationCLI srcKylinConfigUri dstKylinConfigUri cubeName projectName copyAclOrNot purgeOrNot overwriteIfExists realExecute");
+        System.out.println(" srcKylinConfigUri: The KylinConfig of the cube’s source \n"
+                + "dstKylinConfigUri: The KylinConfig of the cube’s new home \n"
+                + "cubeName: the name of cube to be migrated. \n"
+                + "projectName: The target project in the target environment.(Make sure it exist) \n"
+                + "copyAclOrNot: true or false: whether copy cube ACL to target environment. \n"
+                + "purgeOrNot: true or false: whether purge the cube from src server after the migration. \n"
+                + "overwriteIfExists: overwrite cube if it already exists in the target environment. \n"
+                + "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
 
     }
 
-    public void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, String copyAcl, String purgeAndDisable, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {
+    public void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, String copyAcl,
+            String purgeAndDisable, String overwriteIfExists, String realExecute)
+            throws IOException, InterruptedException {
 
         srcConfig = srcCfg;
         srcStore = ResourceStore.getStore(srcConfig);
@@ -142,13 +142,14 @@ public class CubeMigrationCLI {
 
         operations = new ArrayList<Opt>();
 
-        copyFilesInMetaStore(cube, overwriteIfExists);
+        if (Boolean.parseBoolean(copyAcl) == true) {
+            doAclCopy = true;
+        }
+
+        copyFilesInMetaStore(cube, overwriteIfExists, doAclCopy);
         renameFoldersInHdfs(cube);
         changeHtableHost(cube);
         addCubeAndModelIntoProject(cube, cubeName, projectName);
-        if (Boolean.parseBoolean(copyAcl) == true) {
-            copyACL(cube, projectName);
-        }
 
         if (Boolean.parseBoolean(purgeAndDisable) == true) {
             purgeAndDisable(cubeName); // this should be the last action
@@ -163,9 +164,12 @@ public class CubeMigrationCLI {
         }
     }
 
-    public void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String copyAcl, String purgeAndDisable, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {
+    public void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String copyAcl,
+            String purgeAndDisable, String overwriteIfExists, String realExecute)
+            throws IOException, InterruptedException {
 
-        moveCube(KylinConfig.createInstanceFromUri(srcCfgUri), KylinConfig.createInstanceFromUri(dstCfgUri), cubeName, projectName, copyAcl, purgeAndDisable, overwriteIfExists, realExecute);
+        moveCube(KylinConfig.createInstanceFromUri(srcCfgUri), KylinConfig.createInstanceFromUri(dstCfgUri), cubeName,
+                projectName, copyAcl, purgeAndDisable, overwriteIfExists, realExecute);
     }
 
     public void checkMigrationSuccess(KylinConfig kylinConfig, String cubeName, Boolean ifFix) throws IOException {
@@ -200,22 +204,20 @@ public class CubeMigrationCLI {
         if (cube.getDescriptor().getEngineType() != IStorageAware.ID_SHARDED_HBASE)
             return;
         for (CubeSegment segment : cube.getSegments()) {
-            operations.add(new Opt(OptType.CHANGE_HTABLE_HOST, new Object[] { segment.getStorageLocationIdentifier() }));
+            operations
+                    .add(new Opt(OptType.CHANGE_HTABLE_HOST, new Object[] { segment.getStorageLocationIdentifier() }));
         }
     }
 
-    private void copyACL(CubeInstance cube, String projectName) {
-        operations.add(new Opt(OptType.COPY_ACL, new Object[] { cube.getUuid(), cube.getDescriptor().getModel().getUuid(), projectName }));
-    }
-
-    private void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists) throws IOException {
+    private void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists, boolean copyAcl) throws IOException {
 
         List<String> metaItems = new ArrayList<String>();
         Set<String> dictAndSnapshot = new HashSet<String>();
-        listCubeRelatedResources(cube, metaItems, dictAndSnapshot);
+        listCubeRelatedResources(cube, metaItems, dictAndSnapshot, copyAcl);
 
         if (dstStore.exists(cube.getResourcePath()) && !overwriteIfExists.equalsIgnoreCase("true"))
-            throw new IllegalStateException("The cube named " + cube.getName() + " already exists on target metadata store. Use overwriteIfExists to overwrite it");
+            throw new IllegalStateException("The cube named " + cube.getName()
+                    + " already exists on target metadata store. Use overwriteIfExists to overwrite it");
 
         for (String item : metaItems) {
             operations.add(new Opt(OptType.COPY_FILE_IN_META, new Object[] { item }));
@@ -226,7 +228,8 @@ public class CubeMigrationCLI {
         }
     }
 
-    private void addCubeAndModelIntoProject(CubeInstance srcCube, String cubeName, String projectName) throws IOException {
+    private void addCubeAndModelIntoProject(CubeInstance srcCube, String cubeName, String projectName)
+            throws IOException {
         String projectResPath = ProjectInstance.concatResourcePath(projectName);
         if (!dstStore.exists(projectResPath))
             throw new IllegalStateException("The target project " + projectName + " does not exist");
@@ -238,11 +241,12 @@ public class CubeMigrationCLI {
         operations.add(new Opt(OptType.PURGE_AND_DISABLE, new Object[] { cubeName }));
     }
 
-    protected void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, Set<String> dictAndSnapshot) throws IOException {
+    protected void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, Set<String> dictAndSnapshot,
+            boolean copyAcl) throws IOException {
 
         CubeDesc cubeDesc = cube.getDescriptor();
         String prj = cubeDesc.getProject();
-        
+
         metaResource.add(cube.getResourcePath());
         metaResource.add(cubeDesc.getResourcePath());
         metaResource.add(DataModelDesc.concatResourcePath(cubeDesc.getModelName()));
@@ -257,10 +261,15 @@ public class CubeMigrationCLI {
             dictAndSnapshot.addAll(segment.getSnapshotPaths());
             dictAndSnapshot.addAll(segment.getDictionaryPaths());
         }
+
+        if (copyAcl) {
+            metaResource.add(ACL_PREFIX + cube.getUuid());
+            metaResource.add(ACL_PREFIX + cube.getModel().getUuid());
+        }
     }
 
     protected enum OptType {
-        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT, CHANGE_HTABLE_HOST, COPY_ACL, PURGE_AND_DISABLE
+        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT, CHANGE_HTABLE_HOST, PURGE_AND_DISABLE
     }
 
     protected void addOpt(OptType type, Object[] params) {
@@ -446,44 +455,6 @@ public class CubeMigrationCLI {
             logger.info("Project instance for " + projectName + " is corrected");
             break;
         }
-        case COPY_ACL: {
-            String cubeId = (String) opt.params[0];
-            String modelId = (String) opt.params[1];
-            String projectName = (String) opt.params[2];
-            String projectResPath = ProjectInstance.concatResourcePath(projectName);
-            Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
-            ProjectInstance project = dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
-            String projUUID = project.getUuid();
-            Table srcAclHtable = null;
-            Table destAclHtable = null;
-            try {
-                srcAclHtable = HBaseConnection.get(srcConfig.getStorageUrl()).getTable(TableName.valueOf(srcConfig.getMetadataUrlPrefix() + ACL_TABLE_NAME));
-                destAclHtable = HBaseConnection.get(dstConfig.getStorageUrl()).getTable(TableName.valueOf(dstConfig.getMetadataUrlPrefix() + ACL_TABLE_NAME));
-
-                // cube acl
-                Result result = srcAclHtable.get(new Get(Bytes.toBytes(cubeId)));
-                if (result.listCells() != null) {
-                    for (Cell cell : result.listCells()) {
-                        byte[] family = CellUtil.cloneFamily(cell);
-                        byte[] column = CellUtil.cloneQualifier(cell);
-                        byte[] value = CellUtil.cloneValue(cell);
-
-                        // use the target project uuid as the parent
-                        if (Bytes.toString(family).equals(ACL_INFO_FAMILY) && Bytes.toString(column).equals(ACL_INFO_FAMILY_PARENT_COLUMN)) {
-                            String valueString = "{\"id\":\"" + projUUID + "\",\"type\":\"org.apache.kylin.metadata.project.ProjectInstance\"}";
-                            value = Bytes.toBytes(valueString);
-                        }
-                        Put put = new Put(Bytes.toBytes(cubeId));
-                        put.add(family, column, value);
-                        destAclHtable.put(put);
-                    }
-                }
-            } finally {
-                IOUtils.closeQuietly(srcAclHtable);
-                IOUtils.closeQuietly(destAclHtable);
-            }
-            break;
-        }
         case PURGE_AND_DISABLE: {
             String cubeName = (String) opt.params[0];
             String cubeResPath = CubeInstance.concatResourcePath(cubeName);
@@ -519,6 +490,12 @@ public class CubeMigrationCLI {
         case COPY_FILE_IN_META: {
             // no harm
             logger.info("Undo for COPY_FILE_IN_META is ignored");
+            String item = (String) opt.params[0];
+
+            if (item.startsWith(ACL_PREFIX) && doAclCopy) {
+                logger.info("Remove acl record");
+                dstStore.deleteResource(item);
+            }
             break;
         }
         case COPY_DICT_OR_SNAPSHOT: {
@@ -538,20 +515,6 @@ public class CubeMigrationCLI {
         }
         case ADD_INTO_PROJECT: {
             logger.info("Undo for ADD_INTO_PROJECT is ignored");
-            break;
-        }
-        case COPY_ACL: {
-            String cubeId = (String) opt.params[0];
-            String modelId = (String) opt.params[1];
-            Table destAclHtable = null;
-            try {
-                destAclHtable = HBaseConnection.get(dstConfig.getStorageUrl()).getTable(TableName.valueOf(dstConfig.getMetadataUrlPrefix() + ACL_TABLE_NAME));
-
-                destAclHtable.delete(new Delete(Bytes.toBytes(cubeId)));
-                destAclHtable.delete(new Delete(Bytes.toBytes(modelId)));
-            } finally {
-                IOUtils.closeQuietly(destAclHtable);
-            }
             break;
         }
         case PURGE_AND_DISABLE: {
