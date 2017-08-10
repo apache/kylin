@@ -92,17 +92,17 @@ public class MetricsManager {
         if (scSink == null) {
             logger.warn("SystemCubeSink is not set and the default one will be chosen");
             try {
-                Class clz = Class.forName(KylinConfig.getInstanceFromEnv().getSystemCubeSinkDefaultClass());
+                Class clz = Class.forName(KylinConfig.getInstanceFromEnv().getKylinSystemCubeSinkDefaultClass());
                 scSink = (Sink) clz.getConstructor().newInstance();
             } catch (Exception e) {
                 logger.warn(
-                        "Failed to initialize the " + KylinConfig.getInstanceFromEnv().getSystemCubeSinkDefaultClass()
+                        "Failed to initialize the " + KylinConfig.getInstanceFromEnv().getKylinSystemCubeSinkDefaultClass()
                                 + ". The StubSink will be used");
                 scSink = new StubSink();
             }
         }
 
-        if (KylinConfig.getInstanceFromEnv().isMetricsMonitorEnabled()) {
+        if (KylinConfig.getInstanceFromEnv().isKylinMetricsMonitorEnabled()) {
             logger.info("Kylin metrics monitor is enabled.");
             int nameIdx = 0;
             for (ActiveReservoir activeReservoir : sourceReporterBindProps.keySet()) {

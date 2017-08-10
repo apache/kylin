@@ -21,7 +21,11 @@ package org.apache.kylin.rest.response;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.commons.lang.SerializationUtils;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class SQLResponse implements Serializable {
     protected static final long serialVersionUID = 1L;
@@ -49,6 +53,9 @@ public class SQLResponse implements Serializable {
     // if isException, the detailed exception message
     protected String exceptionMessage;
 
+    // if isException, the related Exception
+    protected Throwable throwable;
+
     protected long duration;
 
     protected boolean isPartial = false;
@@ -62,6 +69,8 @@ public class SQLResponse implements Serializable {
     protected boolean storageCacheUsed = false;
 
     protected boolean queryPushDown = false;
+
+    protected byte[] queryStatistics;
 
     public SQLResponse() {
     }
@@ -137,6 +146,15 @@ public class SQLResponse implements Serializable {
         exceptionMessage = msg;
     }
 
+    @JsonIgnore
+    public Throwable getThrowable() {
+        return throwable;
+    }
+
+    public void setThrowable(Throwable throwable) {
+        this.throwable = throwable;
+    }
+
     public long getDuration() {
         return duration;
     }
@@ -184,5 +202,14 @@ public class SQLResponse implements Serializable {
 
     public void setStorageCacheUsed(boolean storageCacheUsed) {
         this.storageCacheUsed = storageCacheUsed;
+    }
+
+    @JsonIgnore
+    public QueryContext.QueryStatisticsResult getQueryStatistics() {
+        return (QueryContext.QueryStatisticsResult) SerializationUtils.deserialize(queryStatistics);
+    }
+
+    public void setQueryStatistics(QueryContext.QueryStatisticsResult queryStatisticsResult) {
+        this.queryStatistics = SerializationUtils.serialize(queryStatisticsResult);
     }
 }

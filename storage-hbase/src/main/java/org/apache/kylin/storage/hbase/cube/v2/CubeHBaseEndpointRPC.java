@@ -205,14 +205,26 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                         queryContext.addAndGetScannedRows(stats.getScannedRowCount());
                                         queryContext.addAndGetScannedBytes(stats.getScannedBytes());
 
+                                        RuntimeException rpcException = null;
+                                        if (result.getStats().getNormalComplete() != 1) {
+                                            rpcException = getCoprocessorException(result);
+                                        }
+                                        queryContext.addRPCStatistics(storageContext.ctxId, stats.getHostname(),
+                                                cubeSeg.getCubeDesc().getName(), cubeSeg.getName(), cuboid.getInputID(),
+                                                cuboid.getId(), storageContext.getFilterMask(), rpcException,
+                                                stats.getServiceEndTime() - stats.getServiceStartTime(), 0,
+                                                stats.getScannedRowCount(),
+                                                stats.getScannedRowCount() - stats.getAggregatedRowCount(),
+                                                stats.getAggregatedRowCount(), stats.getScannedBytes());
+
                                         // if any other region has responded with error, skip further processing
                                         if (regionErrorHolder.get() != null) {
                                             return;
                                         }
 
                                         // record coprocessor error if happened
-                                        if (result.getStats().getNormalComplete() != 1) {
-                                            regionErrorHolder.compareAndSet(null, getCoprocessorException(result));
+                                        if (rpcException != null) {
+                                            regionErrorHolder.compareAndSet(null, rpcException);
                                             return;
                                         }
 

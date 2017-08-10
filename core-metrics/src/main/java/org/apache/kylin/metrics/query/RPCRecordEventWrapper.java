@@ -29,24 +29,21 @@ public class RPCRecordEventWrapper extends RecordEventWrapper {
         super(metricsEvent);
     }
 
-    public void setRPCCallWrapper(String projectName, String realizationName, String rpcServer) {
-        this.metricsEvent.put(PropertyEnum.EXCEPTION.toString(), "NULL");
+    public void setWrapper(String projectName, String realizationName, String rpcServer, Throwable throwable) {
         this.metricsEvent.put(PropertyEnum.PROJECT.toString(), projectName);
         this.metricsEvent.put(PropertyEnum.REALIZATION.toString(), realizationName);
         this.metricsEvent.put(PropertyEnum.RPC_SERVER.toString(), rpcServer);
+        this.metricsEvent.put(PropertyEnum.EXCEPTION.toString(),
+                throwable == null ? "NULL" : throwable.getClass().getName());
     }
 
-    public void setRPCCallStats(long callTimeMs, long skipCount, long scanCount, long returnCount, long aggrCount) {
+    public void setStats(long callTimeMs, long skipCount, long scanCount, long returnCount, long aggrCount) {
         this.metricsEvent.put(PropertyEnum.CALL_TIME.toString(), callTimeMs);
         this.metricsEvent.put(PropertyEnum.SKIP_COUNT.toString(), skipCount); //Number of skips on region servers based on region meta or fuzzy filter
         this.metricsEvent.put(PropertyEnum.SCAN_COUNT.toString(), scanCount); //Count scanned by region server
         this.metricsEvent.put(PropertyEnum.RETURN_COUNT.toString(), returnCount);//Count returned by region server
         this.metricsEvent.put(PropertyEnum.AGGR_FILTER_COUNT.toString(), scanCount - returnCount); //Count filtered & aggregated by coprocessor
         this.metricsEvent.put(PropertyEnum.AGGR_COUNT.toString(), aggrCount); //Count aggregated by coprocessor
-    }
-
-    public <T extends Throwable> void setStats(Class<T> exceptionClassName) {
-        this.metricsEvent.put(PropertyEnum.EXCEPTION.toString(), exceptionClassName.getName());
     }
 
     public enum PropertyEnum {

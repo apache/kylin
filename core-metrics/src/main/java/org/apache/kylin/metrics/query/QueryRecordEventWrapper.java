@@ -20,53 +20,41 @@ package org.apache.kylin.metrics.query;
 
 import org.apache.kylin.metrics.lib.impl.RecordEvent;
 import org.apache.kylin.metrics.lib.impl.RecordEventWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 
 public class QueryRecordEventWrapper extends RecordEventWrapper {
 
+    private static final Logger logger = LoggerFactory.getLogger(QueryRecordEventWrapper.class);
+
     public QueryRecordEventWrapper(RecordEvent metricsEvent) {
         super(metricsEvent);
-        initStats();
-    }
-
-    private void initStats() {
-        this.metricsEvent.put(PropertyEnum.EXCEPTION.toString(), "NULL");
-        this.metricsEvent.put(PropertyEnum.TIME_COST.toString(), 0L);
-        this.metricsEvent.put(PropertyEnum.CALCITE_RETURN_COUNT.toString(), 0L);
-        this.metricsEvent.put(PropertyEnum.STORAGE_RETURN_COUNT.toString(), 0L);
-        setDependentStats();
     }
 
     public void setWrapper(long queryHashCode, String queryType, String projectName, String realizationName,
-            int realizationType) {
+            int realizationType, Throwable throwable) {
         this.metricsEvent.put(PropertyEnum.ID_CODE.toString(), queryHashCode);
         this.metricsEvent.put(PropertyEnum.TYPE.toString(), queryType);
         this.metricsEvent.put(PropertyEnum.PROJECT.toString(), projectName);
         this.metricsEvent.put(PropertyEnum.REALIZATION.toString(), realizationName);
         this.metricsEvent.put(PropertyEnum.REALIZATION_TYPE.toString(), realizationType);
+        this.metricsEvent.put(PropertyEnum.EXCEPTION.toString(),
+                throwable == null ? "NULL" : throwable.getClass().getName());
     }
 
-    public void addStorageStats(long addReturnCountByStorage) {
-        Long curReturnCountByStorage = (Long) this.metricsEvent.get(PropertyEnum.STORAGE_RETURN_COUNT.toString());
-        this.metricsEvent.put(PropertyEnum.STORAGE_RETURN_COUNT.toString(),
-                curReturnCountByStorage + addReturnCountByStorage);
-    }
-
-    public void setStats(long callTimeMs, long returnCountByCalcite) {
+    public void setStats(long callTimeMs, long returnCountByCalcite, long returnCountByStorage) {
         this.metricsEvent.put(PropertyEnum.TIME_COST.toString(), callTimeMs);
         this.metricsEvent.put(PropertyEnum.CALCITE_RETURN_COUNT.toString(), returnCountByCalcite);
-        setDependentStats();
-    }
-
-    private void setDependentStats() {
-        this.metricsEvent.put(PropertyEnum.AGGR_FILTER_COUNT.toString(),
-                Math.max(0L, (Long) this.metricsEvent.get(PropertyEnum.STORAGE_RETURN_COUNT.toString())
-                        - (Long) this.metricsEvent.get(PropertyEnum.CALCITE_RETURN_COUNT.toString())));
-    }
-
-    public <T extends Throwable> void setStats(Class<T> exceptionClassName) {
-        this.metricsEvent.put(PropertyEnum.EXCEPTION.toString(), exceptionClassName.getName());
+        this.metricsEvent.put(PropertyEnum.STORAGE_RETURN_COUNT.toString(), returnCountByStorage);
+        long countAggrAndFilter = returnCountByStorage - returnCountByCalcite;
+        if (countAggrAndFilter < 0) {
+            countAggrAndFilter = 0;
+            logger.warn(returnCountByStorage + " rows returned by storage less than " + returnCountByCalcite
+                    + " rows returned by calcite");
+        }
+        this.metricsEvent.put(PropertyEnum.AGGR_FILTER_COUNT.toString(), countAggrAndFilter);
     }
 
     public enum PropertyEnum {
