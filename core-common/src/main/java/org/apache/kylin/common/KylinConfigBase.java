@@ -220,6 +220,8 @@ abstract public class KylinConfigBase implements Serializable {
         cachedHdfsWorkingDirectory = root;
         if (cachedHdfsWorkingDirectory.startsWith("file:")) {
             cachedHdfsWorkingDirectory = cachedHdfsWorkingDirectory.replace("file:", "file://");
+        } else if (cachedHdfsWorkingDirectory.startsWith("maprfs:")) {
+            cachedHdfsWorkingDirectory = cachedHdfsWorkingDirectory.replace("maprfs:", "maprfs://");
         }
         return cachedHdfsWorkingDirectory;
     }
