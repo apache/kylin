@@ -78,7 +78,7 @@ public class DeprecatedGCStep extends AbstractExecutable {
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
             output.append("\n").append(e.getLocalizedMessage());
-            return new ExecuteResult(ExecuteResult.State.ERROR, output.toString());
+            return new ExecuteResult(e, output.toString());
         }
 
         return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());

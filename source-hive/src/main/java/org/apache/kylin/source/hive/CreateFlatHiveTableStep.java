@@ -73,7 +73,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
 
         } catch (Exception e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
-            return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
+            return new ExecuteResult(e, stepLogger.getBufferedLog());
         }
     }
 

@@ -30,6 +30,14 @@ public final class ExecuteResult {
 
     private final State state;
     private final String output;
+    private final Throwable throwable;
+
+    /**
+     * Default constructor to indicate a success ExecuteResult.
+     */
+    public ExecuteResult() {
+        this(State.SUCCEED, "succeed");
+    }
 
     public ExecuteResult(State state) {
         this(state, "");
@@ -38,6 +46,24 @@ public final class ExecuteResult {
     public ExecuteResult(State state, String output) {
         Preconditions.checkArgument(state != null, "state cannot be null");
         this.state = state;
+        this.output = output;
+        this.throwable = null;
+    }
+
+    public ExecuteResult(State state, Throwable throwable) {
+        Preconditions.checkArgument(state != null, "state cannot be null");
+        this.state = state;
+        this.throwable = throwable;
+        this.output = throwable.getMessage();
+    }
+
+    public ExecuteResult(Throwable throwable) {
+        this(throwable, throwable.getMessage());
+    }
+
+    public ExecuteResult(Throwable throwable, String output) {
+        this.state = State.ERROR;
+        this.throwable = throwable;
         this.output = output;
     }
 
@@ -51,5 +77,9 @@ public final class ExecuteResult {
 
     public String output() {
         return output;
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
     }
 }

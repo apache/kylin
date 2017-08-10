@@ -48,8 +48,14 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metrics.MetricsManager;
+import org.apache.kylin.metrics.job.ExceptionRecordEventWrapper;
+import org.apache.kylin.metrics.job.JobRecordEventWrapper;
+import org.apache.kylin.metrics.lib.impl.RecordEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
 
 /**
  */
@@ -61,6 +67,35 @@ public class CubingJob extends DefaultChainedExecutable {
         LAYER, INMEM
     }
 
+    public enum CubingJobTypeEnum {
+        BUILD("BUILD"), MERGE("MERGE");
+
+        private final String name;
+
+        CubingJobTypeEnum(String name) {
+            this.name = name;
+        }
+
+        public String toString() {
+            return name;
+        }
+
+        public static CubingJobTypeEnum getByName(String name) {
+            if (Strings.isNullOrEmpty(name)) {
+                return null;
+            }
+            for (CubingJobTypeEnum jobTypeEnum : CubingJobTypeEnum.values()) {
+                if (jobTypeEnum.name.equals(name.toUpperCase())) {
+                    return jobTypeEnum;
+                }
+            }
+            return null;
+        }
+    }
+
+    //32MB per block created by the first step
+    public static final long MIN_SOURCE_SIZE = 33554432L;
+
     // KEYS of Output.extraInfo map, info passed across job steps
     public static final String SOURCE_RECORD_COUNT = "sourceRecordCount";
     public static final String SOURCE_SIZE_BYTES = "sourceSizeBytes";
@@ -68,13 +103,14 @@ public class CubingJob extends DefaultChainedExecutable {
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
     private static final String DEPLOY_ENV_NAME = "envName";
     private static final String PROJECT_INSTANCE_NAME = "projectName";
+    private static final String JOB_TYPE = "jobType";
 
     public static CubingJob createBuildJob(CubeSegment seg, String submitter, JobEngineConfig config) {
-        return initCubingJob(seg, "BUILD", submitter, config);
+        return initCubingJob(seg, CubingJobTypeEnum.BUILD.toString(), submitter, config);
     }
 
     public static CubingJob createMergeJob(CubeSegment seg, String submitter, JobEngineConfig config) {
-        return initCubingJob(seg, "MERGE", submitter, config);
+        return initCubingJob(seg, CubingJobTypeEnum.MERGE.toString(), submitter, config);
     }
 
     private static CubingJob initCubingJob(CubeSegment seg, String jobType, String submitter, JobEngineConfig config) {
@@ -99,6 +135,7 @@ public class CubingJob extends DefaultChainedExecutable {
         format.setTimeZone(TimeZone.getTimeZone(config.getTimeZone()));
         result.setDeployEnvName(kylinConfig.getDeployEnv());
         result.setProjectName(projList.get(0).getName());
+        result.setJobType(jobType);
         CubingExecutableUtil.setCubeName(seg.getCubeInstance().getName(), result.getParams());
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
         result.setName(jobType + " CUBE - " + seg.getCubeInstance().getName() + " - " + seg.getName() + " - "
@@ -126,6 +163,14 @@ public class CubingJob extends DefaultChainedExecutable {
 
     public String getProjectName() {
         return getParam(PROJECT_INSTANCE_NAME);
+    }
+
+    public String getJobType() {
+        return getParam(JOB_TYPE);
+    }
+
+    void setJobType(String jobType) {
+        setParam(JOB_TYPE, jobType);
     }
 
     @Override
@@ -195,6 +240,53 @@ public class CubingJob extends DefaultChainedExecutable {
         }
         setMapReduceWaitTime(time);
         super.onExecuteFinished(result, executableContext);
+    }
+
+    protected void onStatusChange(ExecutableContext context, ExecuteResult result, ExecutableState state) {
+        super.onStatusChange(context, result, state);
+
+        /**
+         * report job related metrics
+         */
+        if (state == ExecutableState.SUCCEED) {
+            JobRecordEventWrapper jobRecordEventWrapper = new JobRecordEventWrapper(
+                    new RecordEvent(KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectJob()));
+            jobRecordEventWrapper.setWrapper(ProjectInstance.getNormalizedProjectName(getProjectName()),
+                    CubingExecutableUtil.getCubeName(getParams()), getId(), getJobType(),
+                    getAlgorithm() == null ? "NULL" : getAlgorithm().toString());
+            long tableSize = findSourceSizeBytes();
+            long buildDuration = getDuration();
+            long waitResourceTime = getMapReduceWaitTime();
+            jobRecordEventWrapper.setStats(tableSize, findCubeSizeBytes(), buildDuration, waitResourceTime,
+                    getPerBytesTimeCost(tableSize, buildDuration - waitResourceTime));
+            if (CubingJobTypeEnum.getByName(getJobType()) == CubingJobTypeEnum.BUILD) {
+                jobRecordEventWrapper.setStepStats(
+                        getTaskByName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS).getDuration(), //
+                        getTaskByName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY).getDuration(), //
+                        getTaskByName(ExecutableConstants.STEP_NAME_BUILD_IN_MEM_CUBE).getDuration(), //
+                        getTaskByName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE).getDuration());
+            }
+            MetricsManager.getInstance().update(jobRecordEventWrapper.getMetricsRecord());
+        } else if (state == ExecutableState.ERROR) {
+            ExceptionRecordEventWrapper exceptionRecordEventWrapper = new ExceptionRecordEventWrapper(
+                    new RecordEvent(KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectJobException()));
+            exceptionRecordEventWrapper.setWrapper(ProjectInstance.getNormalizedProjectName(getProjectName()),
+                    CubingExecutableUtil.getCubeName(getParams()), getId(), getJobType(),
+                    getAlgorithm() == null ? "NULL" : getAlgorithm().toString(),
+                    result.getThrowable() != null ? result.getThrowable().getClass() : Exception.class);
+            MetricsManager.getInstance().update(exceptionRecordEventWrapper.getMetricsRecord());
+        }
+
+    }
+
+    private double getPerBytesTimeCost(long size, long timeCost) {
+        if (size <= 0) {
+            return 0;
+        }
+        if (size < MIN_SOURCE_SIZE) {
+            size = MIN_SOURCE_SIZE;
+        }
+        return timeCost * 1.0 / size;
     }
 
     /**
