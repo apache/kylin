@@ -22,6 +22,7 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.AbstractEnumerable;
 import org.apache.calcite.linq4j.Enumerable;
 import org.apache.calcite.linq4j.Enumerator;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.slf4j.Logger;
@@ -47,6 +48,8 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
         this.optiqContext = optiqContext;
         this.type = type;
         this.contextId = ctxId;
+
+        QueryContext.current().addContext(ctxId, type.toString(), type == EnumeratorTypeEnum.OLAP);
     }
 
     public OLAPQuery(EnumeratorTypeEnum type, int ctxSeq) {

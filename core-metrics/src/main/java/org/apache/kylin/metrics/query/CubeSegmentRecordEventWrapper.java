@@ -27,20 +27,6 @@ public class CubeSegmentRecordEventWrapper extends RecordEventWrapper {
 
     public CubeSegmentRecordEventWrapper(RecordEvent metricsEvent) {
         super(metricsEvent);
-
-        initStats();
-    }
-
-    private void initStats() {
-        this.metricsEvent.put(PropertyEnum.CALL_COUNT.toString(), 0L);
-        this.metricsEvent.put(PropertyEnum.TIME_SUM.toString(), 0L);
-        this.metricsEvent.put(PropertyEnum.TIME_MAX.toString(), 0L);
-        this.metricsEvent.put(PropertyEnum.SKIP_COUNT.toString(), 0L);
-        this.metricsEvent.put(PropertyEnum.SCAN_COUNT.toString(), 0L);
-        this.metricsEvent.put(PropertyEnum.RETURN_COUNT.toString(), 0L);
-        this.metricsEvent.put(PropertyEnum.AGGR_FILTER_COUNT.toString(), 0L);
-        this.metricsEvent.put(PropertyEnum.AGGR_COUNT.toString(), 0L);
-        this.metricsEvent.put(PropertyEnum.IF_SUCCESS.toString(), true);
     }
 
     public void setWrapper(String projectName, String cubeName, String segmentName, long sourceCuboidId,
@@ -54,34 +40,18 @@ public class CubeSegmentRecordEventWrapper extends RecordEventWrapper {
         this.metricsEvent.put(PropertyEnum.FILTER_MASK.toString(), filterMask);
     }
 
-    public void setWeightPerHit(double weightPerHit) {
+    public void setStats(long callCount, long callTimeSum, long callTimeMax, long skipCount, long scanCount,
+            long returnCount, long aggrCount, boolean ifSuccess, double weightPerHit) {
+        this.metricsEvent.put(PropertyEnum.CALL_COUNT.toString(), callCount);
+        this.metricsEvent.put(PropertyEnum.TIME_SUM.toString(), callTimeSum);
+        this.metricsEvent.put(PropertyEnum.TIME_MAX.toString(), callTimeMax);
+        this.metricsEvent.put(PropertyEnum.SKIP_COUNT.toString(), skipCount);
+        this.metricsEvent.put(PropertyEnum.SCAN_COUNT.toString(), scanCount);
+        this.metricsEvent.put(PropertyEnum.RETURN_COUNT.toString(), returnCount);
+        this.metricsEvent.put(PropertyEnum.AGGR_FILTER_COUNT.toString(), scanCount - returnCount);
+        this.metricsEvent.put(PropertyEnum.AGGR_COUNT.toString(), aggrCount);
+        this.metricsEvent.put(PropertyEnum.IF_SUCCESS.toString(), ifSuccess);
         this.metricsEvent.put(PropertyEnum.WEIGHT_PER_HIT.toString(), weightPerHit);
-    }
-
-    public void addRPCStats(long callTimeMs, long skipCount, long scanCount, long returnCount, long aggrCount,
-            boolean ifSuccess) {
-        Long curCallCount = (Long) this.metricsEvent.get(PropertyEnum.CALL_COUNT.toString());
-        Long curTimeSum = (Long) this.metricsEvent.get(PropertyEnum.TIME_SUM.toString());
-        Long curTimeMax = (Long) this.metricsEvent.get(PropertyEnum.TIME_MAX.toString());
-        Long curSkipCount = (Long) this.metricsEvent.get(PropertyEnum.SKIP_COUNT.toString());
-        Long curScanCount = (Long) this.metricsEvent.get(PropertyEnum.SCAN_COUNT.toString());
-        Long curReturnCount = (Long) this.metricsEvent.get(PropertyEnum.RETURN_COUNT.toString());
-        Long curAggrAndFilterCount = (Long) this.metricsEvent.get(PropertyEnum.AGGR_FILTER_COUNT.toString());
-        Long curAggrCount = (Long) this.metricsEvent.get(PropertyEnum.AGGR_COUNT.toString());
-        Boolean curIfSuccess = (Boolean) this.metricsEvent.get(PropertyEnum.IF_SUCCESS.toString());
-
-        this.metricsEvent.put(PropertyEnum.CALL_COUNT.toString(), curCallCount + 1);
-        this.metricsEvent.put(PropertyEnum.TIME_SUM.toString(), curTimeSum + callTimeMs);
-        if (curTimeMax < callTimeMs) {
-            this.metricsEvent.put(PropertyEnum.TIME_MAX.toString(), callTimeMs);
-        }
-        this.metricsEvent.put(PropertyEnum.SKIP_COUNT.toString(), curSkipCount + skipCount);
-        this.metricsEvent.put(PropertyEnum.SCAN_COUNT.toString(), curScanCount + scanCount);
-        this.metricsEvent.put(PropertyEnum.RETURN_COUNT.toString(), curReturnCount + returnCount);
-        this.metricsEvent.put(PropertyEnum.AGGR_FILTER_COUNT.toString(),
-                curAggrAndFilterCount + scanCount - returnCount);
-        this.metricsEvent.put(PropertyEnum.AGGR_COUNT.toString(), curAggrCount + aggrCount);
-        this.metricsEvent.put(PropertyEnum.IF_SUCCESS.toString(), curIfSuccess && ifSuccess);
     }
 
     public Object getProperty(String key) {

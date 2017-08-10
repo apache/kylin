@@ -18,13 +18,24 @@
 
 package org.apache.kylin.common;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Holds per query information and statistics.
  */
 public class QueryContext {
+
+    private static final Logger logger = LoggerFactory.getLogger(QueryContext.class);
 
     private static final ThreadLocal<QueryContext> contexts = new ThreadLocal<QueryContext>() {
         @Override
@@ -37,6 +48,9 @@ public class QueryContext {
     private String username;
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong scannedBytes = new AtomicLong();
+
+    private List<RPCStatistics> rpcStatisticsList = Lists.newCopyOnWriteArrayList();
+    private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
 
     private QueryContext() {
         // use QueryContext.current() instead
@@ -82,5 +96,309 @@ public class QueryContext {
 
     public long addAndGetScannedBytes(long deltaBytes) {
         return scannedBytes.addAndGet(deltaBytes);
+    }
+
+    public void addContext(int ctxId, String type, boolean ifCube) {
+        Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = null;
+        if (ifCube) {
+            cubeSegmentStatisticsMap = Maps.newConcurrentMap();
+        }
+        cubeSegmentStatisticsResultMap.put(ctxId, new CubeSegmentStatisticsResult(type, cubeSegmentStatisticsMap));
+    }
+
+    public void setContextRealization(int ctxId, String realizationName, int realizationType) {
+        CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
+        if (cubeSegmentStatisticsResult == null) {
+            logger.warn("Cannot find CubeSegmentStatisticsResult for context " + ctxId);
+            return;
+        }
+        cubeSegmentStatisticsResult.setRealization(realizationName);
+        cubeSegmentStatisticsResult.setRealizationType(realizationType);
+    }
+
+    public QueryStatisticsResult getQueryStatisticsResult() {
+        return new QueryStatisticsResult(rpcStatisticsList,
+                Lists.newArrayList(cubeSegmentStatisticsResultMap.values()));
+    }
+
+    public void addRPCStatistics(int ctxId, String rpcServer, String cubeName, String segmentName, long sourceCuboidId,
+            long targetCuboidId, long filterMask, Exception e, long rpcCallTimeMs, long skippedRows, long scannedRows,
+            long returnedRows, long aggregatedRows, long scannedBytes) {
+        RPCStatistics rpcStatistics = new RPCStatistics();
+        rpcStatistics.setWrapper(cubeName, rpcServer);
+        rpcStatistics.setStats(rpcCallTimeMs, skippedRows, scannedRows, returnedRows, aggregatedRows, scannedBytes);
+        rpcStatistics.setException(e);
+        rpcStatisticsList.add(rpcStatistics);
+
+        CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
+        if (cubeSegmentStatisticsResult == null) {
+            logger.warn("CubeSegmentStatisticsResult should be initialized for context " + ctxId);
+            return;
+        }
+        Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = cubeSegmentStatisticsResult.cubeSegmentStatisticsMap;
+        if (cubeSegmentStatisticsMap == null) {
+            logger.warn(
+                    "cubeSegmentStatisticsMap should be initialized for CubeSegmentStatisticsResult with query type "
+                            + cubeSegmentStatisticsResult.queryType);
+            return;
+        }
+        Map<String, CubeSegmentStatistics> segmentStatisticsMap = cubeSegmentStatisticsMap.get(cubeName);
+        if (segmentStatisticsMap == null) {
+            segmentStatisticsMap = Maps.newConcurrentMap();
+            cubeSegmentStatisticsMap.put(cubeName, segmentStatisticsMap);
+        }
+        CubeSegmentStatistics segmentStatistics = segmentStatisticsMap.get(segmentName);
+        if (segmentStatistics == null) {
+            segmentStatistics = new CubeSegmentStatistics();
+            segmentStatisticsMap.put(segmentName, segmentStatistics);
+            segmentStatistics.setWrapper(cubeName, segmentName, sourceCuboidId, targetCuboidId, filterMask);
+        }
+        if (segmentStatistics.sourceCuboidId != sourceCuboidId || segmentStatistics.targetCuboidId != targetCuboidId
+                || segmentStatistics.filterMask != filterMask) {
+            StringBuilder inconsistency = new StringBuilder();
+            if (segmentStatistics.sourceCuboidId != sourceCuboidId) {
+                inconsistency.append(
+                        "sourceCuboidId exist " + segmentStatistics.sourceCuboidId + " input " + sourceCuboidId);
+            }
+            if (segmentStatistics.targetCuboidId != targetCuboidId) {
+                inconsistency.append(
+                        "targetCuboidId exist " + segmentStatistics.targetCuboidId + " input " + targetCuboidId);
+            }
+            if (segmentStatistics.filterMask != filterMask) {
+                inconsistency.append("filterMask exist " + segmentStatistics.filterMask + " input " + filterMask);
+            }
+            logger.error("cube segment statistics wrapper is not consistent due to " + inconsistency.toString());
+            return;
+        }
+        segmentStatistics.addRPCStats(rpcCallTimeMs, skippedRows, scannedRows, returnedRows, aggregatedRows,
+                scannedBytes, e == null);
+    }
+
+    public static class RPCStatistics implements Serializable {
+        private String realizationName;
+        private String rpcServer;
+
+        private Exception exception;
+
+        private long callTimeMs;
+        private long skippedRows;
+        private long scannedRows;
+        private long returnedRows;
+        private long aggregatedRows;
+
+        private long scannedBytes;
+
+        public void setWrapper(String realizationName, String rpcServer) {
+            this.realizationName = realizationName;
+            this.rpcServer = rpcServer;
+        }
+
+        public void setStats(long callTimeMs, long skipCount, long scanCount, long returnCount, long aggrCount,
+                long scanBytes) {
+            this.callTimeMs = callTimeMs;
+            this.skippedRows = skipCount;
+            this.scannedRows = scanCount;
+            this.returnedRows = returnCount;
+            this.aggregatedRows = aggrCount;
+
+            this.scannedBytes = scanBytes;
+        }
+
+        public void setException(Exception e) {
+            exception = e;
+        }
+
+        public String getRealizationName() {
+            return realizationName;
+        }
+
+        public String getRpcServer() {
+            return rpcServer;
+        }
+
+        public Exception getException() {
+            return exception;
+        }
+
+        public long getCallTimeMs() {
+            return callTimeMs;
+        }
+
+        public long getSkippedRows() {
+            return skippedRows;
+        }
+
+        public long getScannedRows() {
+            return scannedRows;
+        }
+
+        public long getReturnedRows() {
+            return returnedRows;
+        }
+
+        public long getAggregatedRows() {
+            return aggregatedRows;
+        }
+
+        public long getScannedBytes() {
+            return scannedBytes;
+        }
+    }
+
+    public static class CubeSegmentStatistics implements Serializable {
+        private String cubeName;
+        private String segmentName;
+        private long sourceCuboidId;
+        private long targetCuboidId;
+        private long filterMask;
+
+        private boolean ifSuccess = true;
+
+        private long callCount = 0L;
+        private long callTimeSum = 0L;
+        private long callTimeMax = 0L;
+        private long storageSkippedRows = 0L;
+        private long storageScannedRows = 0L;
+        private long storageReturnedRows = 0L;
+        private long storageAggregatedRows = 0L;
+
+        private long storageScannedBytes = 0L;
+
+        public void setWrapper(String cubeName, String segmentName, long sourceCuboidId, long targetCuboidId,
+                long filterMask) {
+            this.cubeName = cubeName;
+            this.segmentName = segmentName;
+            this.sourceCuboidId = sourceCuboidId;
+            this.targetCuboidId = targetCuboidId;
+            this.filterMask = filterMask;
+        }
+
+        public void addRPCStats(long callTimeMs, long skipCount, long scanCount, long returnCount, long aggrCount,
+                long scanBytes, boolean ifSuccess) {
+            this.callCount++;
+            this.callTimeSum += callTimeMs;
+            if (this.callTimeMax < callTimeMs) {
+                this.callTimeMax = callTimeMs;
+            }
+            this.storageSkippedRows += skipCount;
+            this.storageScannedRows += scanCount;
+            this.storageReturnedRows += returnCount;
+            this.storageAggregatedRows += aggrCount;
+            this.ifSuccess = this.ifSuccess && ifSuccess;
+
+            this.storageScannedBytes += scanBytes;
+        }
+
+        public String getCubeName() {
+            return cubeName;
+        }
+
+        public long getStorageScannedBytes() {
+            return storageScannedBytes;
+        }
+
+        public long getStorageAggregatedRows() {
+            return storageAggregatedRows;
+        }
+
+        public long getStorageReturnedRows() {
+            return storageReturnedRows;
+        }
+
+        public long getStorageSkippedRows() {
+            return storageSkippedRows;
+        }
+
+        public long getStorageScannedRows() {
+            return storageScannedRows;
+        }
+
+        public long getCallTimeMax() {
+            return callTimeMax;
+        }
+
+        public long getCallTimeSum() {
+            return callTimeSum;
+        }
+
+        public long getCallCount() {
+            return callCount;
+        }
+
+        public boolean isIfSuccess() {
+            return ifSuccess;
+        }
+
+        public long getFilterMask() {
+            return filterMask;
+        }
+
+        public long getTargetCuboidId() {
+            return targetCuboidId;
+        }
+
+        public long getSourceCuboidId() {
+            return sourceCuboidId;
+        }
+
+        public String getSegmentName() {
+            return segmentName;
+        }
+    }
+
+    public static class CubeSegmentStatisticsResult implements Serializable {
+        private final String queryType;
+        private final Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap;
+        private String realization;
+        private int realizationType;
+
+        public CubeSegmentStatisticsResult(String queryType,
+                Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap) {
+            this.queryType = queryType;
+            this.cubeSegmentStatisticsMap = cubeSegmentStatisticsMap;
+        }
+
+        public void setRealization(String realization) {
+            this.realization = realization;
+        }
+
+        public String getRealization() {
+            return realization;
+        }
+
+        public int getRealizationType() {
+            return realizationType;
+        }
+
+        public void setRealizationType(int realizationType) {
+            this.realizationType = realizationType;
+        }
+
+        public String getQueryType() {
+            return queryType;
+        }
+
+        public Map<String, Map<String, CubeSegmentStatistics>> getCubeSegmentStatisticsMap() {
+            return cubeSegmentStatisticsMap;
+        }
+    }
+
+    public static class QueryStatisticsResult implements Serializable {
+        private final List<RPCStatistics> rpcStatisticsList;
+        private final List<CubeSegmentStatisticsResult> cubeSegmentStatisticsResultList;
+
+        public QueryStatisticsResult(List<RPCStatistics> rpcStatisticsList,
+                List<CubeSegmentStatisticsResult> cubeSegmentStatisticsResultList) {
+            this.rpcStatisticsList = rpcStatisticsList;
+            this.cubeSegmentStatisticsResultList = cubeSegmentStatisticsResultList;
+        }
+
+        public List<RPCStatistics> getRpcStatisticsList() {
+            return rpcStatisticsList;
+        }
+
+        public List<CubeSegmentStatisticsResult> getCubeSegmentStatisticsResultList() {
+            return cubeSegmentStatisticsResultList;
+        }
     }
 }

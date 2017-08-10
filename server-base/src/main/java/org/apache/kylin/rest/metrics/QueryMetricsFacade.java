@@ -18,16 +18,28 @@
 
 package org.apache.kylin.rest.metrics;
 
+import java.nio.charset.Charset;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.concurrent.ThreadSafe;
+
 import org.apache.hadoop.metrics2.MetricsException;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.metrics.MetricsManager;
+import org.apache.kylin.metrics.lib.impl.RecordEvent;
+import org.apache.kylin.metrics.query.CubeSegmentRecordEventWrapper;
+import org.apache.kylin.metrics.query.QueryRecordEventWrapper;
+import org.apache.kylin.metrics.query.RPCRecordEventWrapper;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.concurrent.ThreadSafe;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 /**
  * The entrance of metrics features.
@@ -36,6 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class QueryMetricsFacade {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryMetricsFacade.class);
+    private static final HashFunction hashFunc = Hashing.murmur3_128();
 
     private static boolean enabled = false;
     private static ConcurrentHashMap<String, QueryMetrics> metricsMap = new ConcurrentHashMap<String, QueryMetrics>();
@@ -46,6 +59,10 @@ public class QueryMetricsFacade {
             return;
 
         DefaultMetricsSystem.initialize("Kylin");
+    }
+
+    public static long getSqlHashCode(String sql) {
+        return hashFunc.hashString(sql, Charset.forName("UTF-8")).asLong();
     }
 
     public static void updateMetrics(SQLRequest sqlRequest, SQLResponse sqlResponse) {
@@ -61,6 +78,57 @@ public class QueryMetricsFacade {
 
         String cubeMetricName = projectName + ",sub=" + cubeName;
         update(getQueryMetrics(cubeMetricName), sqlResponse);
+
+        /**
+         * report query related metrics
+         */
+        final QueryContext.QueryStatisticsResult queryStatisticsResult = sqlResponse.getQueryStatistics();
+        for (QueryContext.RPCStatistics entry : queryStatisticsResult.getRpcStatisticsList()) {
+            RPCRecordEventWrapper rpcMetricsEventWrapper = new RPCRecordEventWrapper(
+                    new RecordEvent(KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQueryRpcCall()));
+            rpcMetricsEventWrapper.setWrapper(sqlRequest.getProject(), entry.getRealizationName(), entry.getRpcServer(),
+                    entry.getException());
+            rpcMetricsEventWrapper.setStats(entry.getCallTimeMs(), entry.getSkippedRows(), entry.getScannedRows(),
+                    entry.getReturnedRows(), entry.getAggregatedRows());
+            //For update rpc level related metrics
+            MetricsManager.getInstance().update(rpcMetricsEventWrapper.getMetricsRecord());
+        }
+        long sqlHashCode = getSqlHashCode(sqlRequest.getSql());
+        for (QueryContext.CubeSegmentStatisticsResult contextEntry : queryStatisticsResult
+                .getCubeSegmentStatisticsResultList()) {
+            QueryRecordEventWrapper queryMetricsEventWrapper = new QueryRecordEventWrapper(
+                    new RecordEvent(KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQuery()));
+            queryMetricsEventWrapper.setWrapper(sqlHashCode,
+                    sqlResponse.isStorageCacheUsed() ? "CACHE" : contextEntry.getQueryType(), sqlRequest.getProject(),
+                    contextEntry.getRealization(), contextEntry.getRealizationType(), sqlResponse.getThrowable());
+
+            long totalStorageReturnCount = 0L;
+            for (Map<String, QueryContext.CubeSegmentStatistics> cubeEntry : contextEntry.getCubeSegmentStatisticsMap()
+                    .values()) {
+                for (QueryContext.CubeSegmentStatistics segmentEntry : cubeEntry.values()) {
+                    CubeSegmentRecordEventWrapper cubeSegmentMetricsEventWrapper = new CubeSegmentRecordEventWrapper(
+                            new RecordEvent(KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQueryCube()));
+
+                    cubeSegmentMetricsEventWrapper.setWrapper(sqlRequest.getProject(), segmentEntry.getCubeName(),
+                            segmentEntry.getSegmentName(), segmentEntry.getSourceCuboidId(),
+                            segmentEntry.getTargetCuboidId(), segmentEntry.getFilterMask());
+
+                    cubeSegmentMetricsEventWrapper.setStats(segmentEntry.getCallCount(), segmentEntry.getCallTimeSum(),
+                            segmentEntry.getCallTimeMax(), segmentEntry.getStorageSkippedRows(),
+                            segmentEntry.getStorageScannedRows(), segmentEntry.getStorageReturnedRows(),
+                            segmentEntry.getStorageAggregatedRows(), segmentEntry.isIfSuccess(),
+                            1.0 / cubeEntry.size());
+
+                    totalStorageReturnCount += segmentEntry.getStorageReturnedRows();
+                    //For update cube segment level related query metrics
+                    MetricsManager.getInstance().update(cubeSegmentMetricsEventWrapper.getMetricsRecord());
+                }
+            }
+            queryMetricsEventWrapper.setStats(sqlResponse.getDuration(), sqlResponse.getResults().size(),
+                    totalStorageReturnCount);
+            //For update query level metrics
+            MetricsManager.getInstance().update(queryMetricsEventWrapper.getMetricsRecord());
+        }
     }
 
     private static void update(QueryMetrics queryMetrics, SQLResponse sqlResponse) {

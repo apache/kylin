@@ -1315,17 +1315,39 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.metrics.perflogger-class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
     }
 
-    public boolean isMetricsMonitorEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.metrics.monitor-enabled", "false"));
+    public boolean isKylinMetricsMonitorEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.core.metrics.monitor-enabled", "false"));
     }
 
-    public String getMetricsActiveReservoirDefaultClass() {
-        return getOptional("kylin.metrics.active-reservoir-default-class",
+    public String getKylinMetricsActiveReservoirDefaultClass() {
+        return getOptional("kylin.core.metrics.active-reservoir-default-class",
                 "org.apache.kylin.metrics.lib.impl.StubReservoir");
     }
 
-    public String getSystemCubeSinkDefaultClass() {
-        return getOptional("kylin.metrics.system-cube-sink-default-class",
+    public String getKylinSystemCubeSinkDefaultClass() {
+        return getOptional("kylin.core.metrics.system-cube-sink-default-class",
                 "org.apache.kylin.metrics.lib.impl.hive.HiveSink");
+    }
+
+    public String getKylinMetricsSubjectSuffix() {
+        String suffix = getOptional("kylin.core.metric.subject-suffix", null);
+        if (suffix != null) {
+            return suffix;
+        }
+        return getDeployEnv();
+    }
+
+    public String getKylinMetricsSubjectQuery() {
+        return getOptional("kylin.core.metrics.subject-query", "METRICS_QUERY") + "_" + getKylinMetricsSubjectSuffix();
+    }
+
+    public String getKylinMetricsSubjectQueryCube() {
+        return getOptional("kylin.core.metrics.subject-query-cube", "METRICS_QUERY_CUBE") + "_"
+                + getKylinMetricsSubjectSuffix();
+    }
+
+    public String getKylinMetricsSubjectQueryRpcCall() {
+        return getOptional("kylin.core.metrics.subject-query-rpc", "METRICS_QUERY_RPC") + "_"
+                + getKylinMetricsSubjectSuffix();
     }
 }
