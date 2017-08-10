@@ -135,7 +135,7 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
             return onTreeCandi;
         }
 
-        return new CuboidScheduler(cubeDesc).getValidParent(onTreeCandi);
+        return cubeDesc.getCuboidScheduler().findBestMatchCuboid(onTreeCandi);
     }
 
     private static Long translateToOnTreeCuboid(AggregationGroup agg, long cuboidID) {

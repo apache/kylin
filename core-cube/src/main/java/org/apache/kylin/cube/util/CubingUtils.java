@@ -24,14 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
 import org.apache.kylin.dict.DictionaryGenerator;
@@ -45,9 +42,7 @@ import org.apache.kylin.source.IReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
@@ -62,28 +57,10 @@ public class CubingUtils {
     public static Map<Long, HLLCounter> sampling(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDescIn, Iterable<List<String>> streams) {
         final CubeJoinedFlatTableEnrich flatDesc = new CubeJoinedFlatTableEnrich(flatDescIn, cubeDesc);
         final int rowkeyLength = cubeDesc.getRowkey().getRowKeyColumns().length;
-        final List<Long> allCuboidIds = new CuboidScheduler(cubeDesc).getAllCuboidIds();
+        final Set<Long> allCuboidIds = cubeDesc.getCuboidScheduler().getAllCuboidIds();
         final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         final Map<Long, Integer[]> allCuboidsBitSet = Maps.newHashMap();
 
-        Lists.transform(allCuboidIds, new Function<Long, Integer[]>() {
-            @Nullable
-            @Override
-            public Integer[] apply(@Nullable Long cuboidId) {
-                Integer[] result = new Integer[Long.bitCount(cuboidId)];
-
-                long mask = Long.highestOneBit(baseCuboidId);
-                int position = 0;
-                for (int i = 0; i < rowkeyLength; i++) {
-                    if ((mask & cuboidId) > 0) {
-                        result[position] = i;
-                        position++;
-                    }
-                    mask = mask >> 1;
-                }
-                return result;
-            }
-        });
         final Map<Long, HLLCounter> result = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
         for (Long cuboidId : allCuboidIds) {
             result.put(cuboidId, new HLLCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision()));

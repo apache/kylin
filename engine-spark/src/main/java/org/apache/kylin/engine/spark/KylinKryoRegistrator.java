@@ -130,7 +130,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.cube.CubeSegment.class);
         kyroClasses.add(org.apache.kylin.cube.common.RowKeySplitter.class);
         kyroClasses.add(org.apache.kylin.cube.cuboid.Cuboid.class);
-        kyroClasses.add(org.apache.kylin.cube.cuboid.CuboidScheduler.class);
+        kyroClasses.add(org.apache.kylin.cube.cuboid.DefaultCuboidScheduler.class);
         kyroClasses.add(org.apache.kylin.cube.gridtable.TrimmedDimensionSerializer.class);
         kyroClasses.add(org.apache.kylin.cube.kv.AbstractRowKeyEncoder.class);
         kyroClasses.add(org.apache.kylin.cube.kv.CubeDimEncMap.class);

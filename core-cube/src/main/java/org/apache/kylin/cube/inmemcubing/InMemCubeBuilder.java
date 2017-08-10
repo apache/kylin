@@ -33,8 +33,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
@@ -92,7 +92,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     public InMemCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         super(cubeDesc, flatDesc, dictionaryMap);
-        this.cuboidScheduler = new CuboidScheduler(cubeDesc);
+        this.cuboidScheduler = cubeDesc.getCuboidScheduler();
         this.baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         this.totalCuboidCount = cuboidScheduler.getCuboidCount();
 
