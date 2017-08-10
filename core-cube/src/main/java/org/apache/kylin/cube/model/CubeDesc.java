@@ -188,10 +188,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private int parentForward = 3;
 
-    // allCuboids and parent2Child lazy built
-    private Set<Long> allCuboids;
-    private Map<Long, List<Long>> parent2Child;
-    private byte[] cuboidTreeLock = new byte[0];
+    // cuboid scheduler lazy built
+    transient private CuboidScheduler cuboidScheduler = null;
 
     public boolean isEnableSharding() {
         //in the future may extend to other storage that is shard-able
@@ -465,7 +463,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
      * @return
      */
     public int getBuildLevel() {
-        return new CuboidScheduler(this).getCuboidsByLayer().size() - 1;
+        return getCuboidScheduler().getCuboidsByLayer().size() - 1;
     }
 
     @Override
@@ -558,11 +556,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         hostToDerivedMap = Maps.newHashMap();
         extendedColumnToHosts = Maps.newHashMap();
         cuboidBlackSet = Sets.newHashSet();
-
-        synchronized (cuboidTreeLock) {
-            allCuboids = null;
-            parent2Child = null;
-        }
+        cuboidScheduler = null;
     }
 
     public void init(KylinConfig config) {
@@ -618,13 +612,15 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         amendAllColumns();
     }
 
-    private void buildCuboidTree() {
-        synchronized (cuboidTreeLock) {
-            if (allCuboids == null || parent2Child == null) {
-                Pair<Set<Long>, Map<Long, List<Long>>> ret = new CuboidScheduler(this).buildTreeBottomUp();
-                allCuboids = ret.getFirst();
-                parent2Child = ret.getSecond();
+    public CuboidScheduler getCuboidScheduler() {
+        if (cuboidScheduler != null)
+            return cuboidScheduler;
+        
+        synchronized (this) {
+            if (cuboidScheduler == null) {
+                cuboidScheduler = CuboidScheduler.getInstance(this);
             }
+            return cuboidScheduler;
         }
     }
 
@@ -1146,13 +1142,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public Set<Long> getAllCuboids() {
-        buildCuboidTree();
-        return allCuboids;
-    }
-
-    public Map<Long, List<Long>> getParent2Child() {
-        buildCuboidTree();
-        return parent2Child;
+        return getCuboidScheduler().getAllCuboidIds();
     }
 
     public int getParentForward() {

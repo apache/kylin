@@ -81,7 +81,7 @@ public class CubeStatsReader {
 
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
         ResourceStore store = ResourceStore.getStore(kylinConfig);
-        cuboidScheduler = new CuboidScheduler(cubeSegment.getCubeDesc());
+        cuboidScheduler = cubeSegment.getCubeDesc().getCuboidScheduler();
         String statsKey = cubeSegment.getStatisticsResourcePath();
         File tmpSeqFile = writeTmpSeqFile(store.getResource(statsKey).inputStream);
         Reader reader = null;

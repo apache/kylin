@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -252,8 +253,8 @@ public class SparkCubing extends AbstractApplication {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
         CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
         CubeDesc cubeDesc = cubeInstance.getDescriptor();
-        CuboidScheduler cuboidScheduler = new CuboidScheduler(cubeDesc);
-        List<Long> allCuboidIds = cuboidScheduler.getAllCuboidIds();
+        CuboidScheduler cuboidScheduler = cubeDesc.getCuboidScheduler();
+        Set<Long> allCuboidIds = cuboidScheduler.getAllCuboidIds();
         final HashMap<Long, HLLCounter> zeroValue = Maps.newHashMap();
         for (Long id : allCuboidIds) {
             zeroValue.put(id, new HLLCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision()));

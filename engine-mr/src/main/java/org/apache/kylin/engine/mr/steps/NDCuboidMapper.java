@@ -18,6 +18,9 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.IOException;
+import java.util.Collection;
+
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ByteArray;
@@ -35,9 +38,6 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.NDCuboidBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * @author George Song (ysong1)
@@ -75,7 +75,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         cubeDesc = cube.getDescriptor();
         ndCuboidBuilder = new NDCuboidBuilder(cubeSegment);
         // initialize CubiodScheduler
-        cuboidScheduler = new CuboidScheduler(cubeDesc);
+        cuboidScheduler = cubeDesc.getCuboidScheduler();
         rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
     }
 

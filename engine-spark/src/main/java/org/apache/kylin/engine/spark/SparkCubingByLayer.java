@@ -17,6 +17,15 @@
 */
 package org.apache.kylin.engine.spark;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -65,16 +74,8 @@ import org.apache.spark.sql.hive.HiveContext;
 import org.apache.spark.storage.StorageLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Tuple2;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import scala.Tuple2;
 
 
 /**
@@ -168,7 +169,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         final Broadcast<CubeSegment> vCubeSegment = sc.broadcast(cubeSegment);
         final NDCuboidBuilder ndCuboidBuilder = new NDCuboidBuilder(vCubeSegment.getValue(), new RowKeyEncoderProvider(vCubeSegment.getValue()));
 
-        final Broadcast<CuboidScheduler> vCuboidScheduler = sc.broadcast(new CuboidScheduler(vCubeDesc.getValue()));
+        final Broadcast<CuboidScheduler> vCuboidScheduler = sc.broadcast(vCubeDesc.getValue().getCuboidScheduler());
         final int measureNum = cubeDesc.getMeasures().size();
 
         int countMeasureIndex = 0;

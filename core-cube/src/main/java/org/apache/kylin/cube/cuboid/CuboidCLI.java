@@ -44,7 +44,7 @@ public class CuboidCLI {
     }
 
     public static int simulateCuboidGeneration(CubeDesc cubeDesc, boolean validate) {
-        CuboidScheduler scheduler = new CuboidScheduler(cubeDesc);
+        CuboidScheduler scheduler = cubeDesc.getCuboidScheduler();
         long baseCuboid = Cuboid.getBaseCuboidId(cubeDesc);
         Collection<Long> cuboidSet = new TreeSet<Long>();
         cuboidSet.add(baseCuboid);
@@ -136,7 +136,7 @@ public class CuboidCLI {
         int levels = cube.getBuildLevel();
         int[] allLevelCounts = new int[levels + 1];
 
-        CuboidScheduler scheduler = new CuboidScheduler(cube);
+        CuboidScheduler scheduler = cube.getCuboidScheduler();
         LinkedList<Long> nextQueue = new LinkedList<Long>();
         LinkedList<Long> currentQueue = new LinkedList<Long>();
         long baseCuboid = Cuboid.getBaseCuboidId(cube);

@@ -88,7 +88,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
             samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
-            cuboidScheduler = new CuboidScheduler(cubeDesc);
+            cuboidScheduler = cubeDesc.getCuboidScheduler();
             nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
 
             List<Long> cuboidIdList = Lists.newArrayList();
