@@ -136,7 +136,7 @@ public class MergeStatisticsStep extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to merge cuboid statistics", e);
-            return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+            return new ExecuteResult(e, e.getLocalizedMessage());
         }
     }
 

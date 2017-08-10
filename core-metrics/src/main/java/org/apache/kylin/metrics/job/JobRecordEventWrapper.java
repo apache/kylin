@@ -39,7 +39,7 @@ public class JobRecordEventWrapper extends RecordEventWrapper {
         this.metricsEvent.put(JobPropertyEnum.STEP_DURATION_DICTIONARY.toString(), 0L);
         this.metricsEvent.put(JobPropertyEnum.STEP_DURATION_INMEM_CUBING.toString(), 0L);
         this.metricsEvent.put(JobPropertyEnum.STEP_DURATION_HFILE_CONVERT.toString(), 0L);
-        setDependentStats();
+        this.metricsEvent.put(JobPropertyEnum.PER_BYTES_TIME_COST.toString(), 0L);
     }
 
     public void setWrapper(String projectName, String cubeName, String jobId, String jobType, String cubingType) {
@@ -50,12 +50,13 @@ public class JobRecordEventWrapper extends RecordEventWrapper {
         this.metricsEvent.put(JobPropertyEnum.ALGORITHM.toString(), cubingType);
     }
 
-    public void setStats(long tableSize, long cubeSize, long buildDuration, long waitResourceTime) {
+    public void setStats(long tableSize, long cubeSize, long buildDuration, long waitResourceTime,
+            double perBytesTimeCost) {
         this.metricsEvent.put(JobPropertyEnum.SOURCE_SIZE.toString(), tableSize);
         this.metricsEvent.put(JobPropertyEnum.CUBE_SIZE.toString(), cubeSize);
         this.metricsEvent.put(JobPropertyEnum.BUILD_DURATION.toString(), buildDuration);
         this.metricsEvent.put(JobPropertyEnum.WAIT_RESOURCE_TIME.toString(), waitResourceTime);
-        setDependentStats();
+        this.metricsEvent.put(JobPropertyEnum.PER_BYTES_TIME_COST.toString(), perBytesTimeCost);
     }
 
     public void setStepStats(long dColumnDistinct, long dDictBuilding, long dCubingInmem, long dHfileConvert) {
@@ -64,20 +65,4 @@ public class JobRecordEventWrapper extends RecordEventWrapper {
         this.metricsEvent.put(JobPropertyEnum.STEP_DURATION_INMEM_CUBING.toString(), dCubingInmem);
         this.metricsEvent.put(JobPropertyEnum.STEP_DURATION_HFILE_CONVERT.toString(), dHfileConvert);
     }
-
-    private void setDependentStats() {
-        Long sourceSize = (Long) this.metricsEvent.get(JobPropertyEnum.SOURCE_SIZE.toString());
-        if (sourceSize != null && sourceSize != 0) {
-            if (sourceSize < MIN_SOURCE_SIZE) {
-                sourceSize = MIN_SOURCE_SIZE;
-            }
-            this.metricsEvent.put(JobPropertyEnum.PER_BYTES_TIME_COST.toString(),
-                    ((Long) this.metricsEvent.get(JobPropertyEnum.BUILD_DURATION.toString())
-                            - (Long) this.metricsEvent.get(JobPropertyEnum.WAIT_RESOURCE_TIME.toString())) * 1.0
-                            / sourceSize);
-        } else {
-            this.metricsEvent.put(JobPropertyEnum.PER_BYTES_TIME_COST.toString(), 0.0);
-        }
-    }
-
 }

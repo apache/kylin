@@ -1350,6 +1350,15 @@ abstract public class KylinConfigBase implements Serializable {
         return getDeployEnv();
     }
 
+    public String getKylinMetricsSubjectJob() {
+        return getOptional("kylin.core.metrics.subject-job", "METRICS_JOB") + "_" + getKylinMetricsSubjectSuffix();
+    }
+
+    public String getKylinMetricsSubjectJobException() {
+        return getOptional("kylin.core.metrics.subject-job-exception", "METRICS_JOB_EXCEPTION") + "_"
+                + getKylinMetricsSubjectSuffix();
+    }
+
     public String getKylinMetricsSubjectQuery() {
         return getOptional("kylin.core.metrics.subject-query", "METRICS_QUERY") + "_" + getKylinMetricsSubjectSuffix();
     }

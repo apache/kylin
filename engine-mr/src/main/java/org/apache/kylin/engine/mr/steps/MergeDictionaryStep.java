@@ -72,7 +72,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to merge dictionary or lookup snapshots", e);
-            return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+            return new ExecuteResult(e, e.getLocalizedMessage());
         }
     }
 

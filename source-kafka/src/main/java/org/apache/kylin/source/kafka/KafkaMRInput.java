@@ -222,7 +222,7 @@ public class KafkaMRInput implements IMRInput {
                 rmdirOnHDFS(getDataPath());
             } catch (IOException e) {
                 logger.error("job:" + getId() + " execute finished with exception", e);
-                return new ExecuteResult(ExecuteResult.State.ERROR, e.getMessage());
+                return new ExecuteResult(e, e.getMessage());
             }
 
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "HDFS path " + getDataPath() + " is dropped.\n");
