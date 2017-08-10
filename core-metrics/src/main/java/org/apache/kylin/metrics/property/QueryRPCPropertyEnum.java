@@ -16,31 +16,26 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metrics.job;
+package org.apache.kylin.metrics.property;
 
 import com.google.common.base.Strings;
 
-public enum JobPropertyEnum {
-    ID_CODE("JOB_ID"), PROJECT("PROJECT"), CUBE("CUBE_NAME"), TYPE("JOB_TYPE"), ALGORITHM("CUBING_TYPE"), STATUS(
-            "JOB_STATUS"), EXCEPTION("EXCEPTION"), //
-    SOURCE_SIZE("TABLE_SIZE"), CUBE_SIZE("CUBE_SIZE"), BUILD_DURATION("DURATION"), WAIT_RESOURCE_TIME(
-            "WAIT_RESOURCE_TIME"), PER_BYTES_TIME_COST("PER_BYTES_TIME_COST"), STEP_DURATION_DISTINCT_COLUMNS(
-                    "STEP_DURATION_DISTINCT_COLUMNS"), STEP_DURATION_DICTIONARY(
-                            "STEP_DURATION_DICTIONARY"), STEP_DURATION_INMEM_CUBING(
-                                    "STEP_DURATION_INMEM_CUBING"), STEP_DURATION_HFILE_CONVERT(
-                                            "STEP_DURATION_HFILE_CONVERT");
+public enum QueryRPCPropertyEnum {
+    PROJECT("PROJECT"), REALIZATION("REALIZATION"), RPC_SERVER("RPC_SERVER"), EXCEPTION("EXCEPTION"), //
+    CALL_TIME("CALL_TIME"), SKIP_COUNT("COUNT_SKIP"), SCAN_COUNT("COUNT_SCAN"), RETURN_COUNT(
+            "COUNT_RETURN"), AGGR_FILTER_COUNT("COUNT_AGGREGATE_FILTER"), AGGR_COUNT("COUNT_AGGREGATE");
 
     private final String propertyName;
 
-    JobPropertyEnum(String name) {
+    QueryRPCPropertyEnum(String name) {
         this.propertyName = name;
     }
 
-    public static JobPropertyEnum getByName(String name) {
+    public static QueryRPCPropertyEnum getByName(String name) {
         if (Strings.isNullOrEmpty(name)) {
             return null;
         }
-        for (JobPropertyEnum property : JobPropertyEnum.values()) {
+        for (QueryRPCPropertyEnum property : QueryRPCPropertyEnum.values()) {
             if (property.propertyName.equals(name.toUpperCase())) {
                 return property;
             }

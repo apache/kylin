@@ -21,11 +21,12 @@ package org.apache.kylin.rest.response;
 import java.io.Serializable;
 import java.util.List;
 
-import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Lists;
 
 public class SQLResponse implements Serializable {
     protected static final long serialVersionUID = 1L;
@@ -205,11 +206,24 @@ public class SQLResponse implements Serializable {
     }
 
     @JsonIgnore
-    public QueryContext.QueryStatisticsResult getQueryStatistics() {
-        return (QueryContext.QueryStatisticsResult) SerializationUtils.deserialize(queryStatistics);
+    public List<QueryContext.CubeSegmentStatisticsResult> getCubeSegmentStatisticsList() {
+        try {
+            return queryStatistics == null ? Lists.<QueryContext.CubeSegmentStatisticsResult> newArrayList()
+                    : (List<QueryContext.CubeSegmentStatisticsResult>) SerializationUtils.deserialize(queryStatistics);
+        } catch (Exception e) { // deserialize exception should not block query
+            System.out.println("Error while deserialize queryStatistics due to " + e);
+            return Lists.newArrayList();
+        }
     }
 
-    public void setQueryStatistics(QueryContext.QueryStatisticsResult queryStatisticsResult) {
-        this.queryStatistics = SerializationUtils.serialize(queryStatisticsResult);
+    public void setCubeSegmentStatisticsList(
+            List<QueryContext.CubeSegmentStatisticsResult> cubeSegmentStatisticsList) {
+        try {
+            this.queryStatistics = cubeSegmentStatisticsList == null ? null
+                    : SerializationUtils.serialize((Serializable) cubeSegmentStatisticsList);
+        } catch (Exception e) { // serialize exception should not block query
+            System.out.println("Error while serialize queryStatistics due to " + e);
+            this.queryStatistics = null;
+        }
     }
 }

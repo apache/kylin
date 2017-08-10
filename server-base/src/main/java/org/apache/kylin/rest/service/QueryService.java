@@ -463,6 +463,7 @@ public class QueryService extends BasicService {
                 sqlResponse.setThrowable(e.getCause() == null ? e : ExceptionUtils.getRootCause(e));
                 sqlResponse.setTotalScanCount(queryContext.getScannedRows());
                 sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
+                sqlResponse.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
 
                 if (queryCacheEnabled && e.getCause() != null
                         && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
@@ -969,7 +970,7 @@ public class QueryService extends BasicService {
                 isPushDown);
         response.setTotalScanCount(QueryContext.current().getScannedRows());
         response.setTotalScanBytes(QueryContext.current().getScannedBytes());
-        response.setQueryStatistics(QueryContext.current().getQueryStatisticsResult());
+        response.setCubeSegmentStatisticsList(QueryContext.current().getCubeSegmentStatisticsResultList());
         return response;
     }
 
