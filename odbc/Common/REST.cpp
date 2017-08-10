@@ -189,6 +189,7 @@ http_request makeRequest ( const char* username, const char* passwd, const wchar
     request . headers () . add ( header_names::authorization, string2wstring ( "Basic " + b64 ) );
 	request . headers () . add ( header_names::accept, "application/json" );
     request . headers () . add ( header_names::content_type, "application/json" );
+    request . headers () . add ( header_names::user_agent, "KylinODBCDriver" );
     return request;
 }
 

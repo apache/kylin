@@ -211,6 +211,7 @@ public class KylinClient implements IRemoteClient {
     private void addHttpHeaders(HttpRequestBase method) {
         method.addHeader("Accept", "application/json, text/plain, */*");
         method.addHeader("Content-Type", "application/json");
+        method.addHeader("User-Agent", "KylinJDBCDriver");
 
         String username = connProps.getProperty("user");
         String password = connProps.getProperty("password");
