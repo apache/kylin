@@ -62,11 +62,30 @@ public class MetricsManager {
         return instance;
     }
 
-    public static void setSystemCubeSink(Sink systemCubeSink) {
+    public static void initMetricsManager(Sink systemCubeSink,
+            Map<ActiveReservoir, List<Pair<String, Properties>>> sourceReporterBindProperties) {
+        setSystemCubeSink(systemCubeSink);
+        setSourceReporterBindProps(sourceReporterBindProperties);
+        instance.init();
+    }
+
+    private static void setSystemCubeSink(Sink systemCubeSink) {
+        if (systemCubeSink == null) {
+            logger.warn("SystemCubeSink is not set and the default one will be chosen");
+            try {
+                Class clz = Class.forName(KylinConfig.getInstanceFromEnv().getKylinSystemCubeSinkDefaultClass());
+                systemCubeSink = (Sink) clz.getConstructor().newInstance();
+            } catch (Exception e) {
+                logger.warn("Failed to initialize the "
+                        + KylinConfig.getInstanceFromEnv().getKylinSystemCubeSinkDefaultClass()
+                        + ". The StubSink will be used");
+                systemCubeSink = new StubSink();
+            }
+        }
         scSink = systemCubeSink;
     }
 
-    public static void setSourceReporterBindProps(
+    private static void setSourceReporterBindProps(
             Map<ActiveReservoir, List<Pair<String, Properties>>> sourceReporterBindProperties) {
         sourceReporterBindProps = Maps.newHashMapWithExpectedSize(sourceReporterBindProperties.size());
         for (ActiveReservoir activeReservoir : sourceReporterBindProperties.keySet()) {
@@ -88,20 +107,7 @@ public class MetricsManager {
         }
     }
 
-    public void init() {
-        if (scSink == null) {
-            logger.warn("SystemCubeSink is not set and the default one will be chosen");
-            try {
-                Class clz = Class.forName(KylinConfig.getInstanceFromEnv().getKylinSystemCubeSinkDefaultClass());
-                scSink = (Sink) clz.getConstructor().newInstance();
-            } catch (Exception e) {
-                logger.warn(
-                        "Failed to initialize the " + KylinConfig.getInstanceFromEnv().getKylinSystemCubeSinkDefaultClass()
-                                + ". The StubSink will be used");
-                scSink = new StubSink();
-            }
-        }
-
+    private void init() {
         if (KylinConfig.getInstanceFromEnv().isKylinMetricsMonitorEnabled()) {
             logger.info("Kylin metrics monitor is enabled.");
             int nameIdx = 0;
@@ -136,7 +142,7 @@ public class MetricsManager {
         }
     }
 
-    public String getSystemTableFromSubject(String subject) {
+    public static String getSystemTableFromSubject(String subject) {
         return scSink.getTableFromSubject(subject);
     }
 }

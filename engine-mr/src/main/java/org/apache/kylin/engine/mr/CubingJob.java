@@ -46,12 +46,9 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.metrics.JobMetricsFacade;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.metrics.MetricsManager;
-import org.apache.kylin.metrics.job.ExceptionRecordEventWrapper;
-import org.apache.kylin.metrics.job.JobRecordEventWrapper;
-import org.apache.kylin.metrics.lib.impl.RecordEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -245,41 +242,32 @@ public class CubingJob extends DefaultChainedExecutable {
     protected void onStatusChange(ExecutableContext context, ExecuteResult result, ExecutableState state) {
         super.onStatusChange(context, result, state);
 
-        /**
-         * report job related metrics
-         */
-        if (state == ExecutableState.SUCCEED) {
-            JobRecordEventWrapper jobRecordEventWrapper = new JobRecordEventWrapper(
-                    new RecordEvent(KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectJob()));
-            jobRecordEventWrapper.setWrapper(ProjectInstance.getNormalizedProjectName(getProjectName()),
-                    CubingExecutableUtil.getCubeName(getParams()), getId(), getJobType(),
-                    getAlgorithm() == null ? "NULL" : getAlgorithm().toString());
-            long tableSize = findSourceSizeBytes();
-            long buildDuration = getDuration();
-            long waitResourceTime = getMapReduceWaitTime();
-            jobRecordEventWrapper.setStats(tableSize, findCubeSizeBytes(), buildDuration, waitResourceTime,
-                    getPerBytesTimeCost(tableSize, buildDuration - waitResourceTime));
-            if (CubingJobTypeEnum.getByName(getJobType()) == CubingJobTypeEnum.BUILD) {
-                jobRecordEventWrapper.setStepStats(
-                        getTaskByName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS).getDuration(), //
-                        getTaskByName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY).getDuration(), //
-                        getTaskByName(ExecutableConstants.STEP_NAME_BUILD_IN_MEM_CUBE).getDuration(), //
-                        getTaskByName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE).getDuration());
-            }
-            MetricsManager.getInstance().update(jobRecordEventWrapper.getMetricsRecord());
-        } else if (state == ExecutableState.ERROR) {
-            ExceptionRecordEventWrapper exceptionRecordEventWrapper = new ExceptionRecordEventWrapper(
-                    new RecordEvent(KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectJobException()));
-            exceptionRecordEventWrapper.setWrapper(ProjectInstance.getNormalizedProjectName(getProjectName()),
-                    CubingExecutableUtil.getCubeName(getParams()), getId(), getJobType(),
-                    getAlgorithm() == null ? "NULL" : getAlgorithm().toString(),
-                    result.getThrowable() != null ? result.getThrowable().getClass() : Exception.class);
-            MetricsManager.getInstance().update(exceptionRecordEventWrapper.getMetricsRecord());
-        }
-
+        updateMetrics(context, result, state);
     }
 
-    private double getPerBytesTimeCost(long size, long timeCost) {
+    protected void updateMetrics(ExecutableContext context, ExecuteResult result, ExecutableState state) {
+        JobMetricsFacade.JobStatisticsResult jobStats = new JobMetricsFacade.JobStatisticsResult();
+        jobStats.setWrapper(getSubmitter(), ProjectInstance.getNormalizedProjectName(getProjectName()),
+                CubingExecutableUtil.getCubeName(getParams()), getId(), getJobType(),
+                getAlgorithm() == null ? "NULL" : getAlgorithm().toString());
+
+        if (state == ExecutableState.SUCCEED) {
+            jobStats.setJobStats(findSourceSizeBytes(), findCubeSizeBytes(), getDuration(), getMapReduceWaitTime(),
+                    getPerBytesTimeCost(findSourceSizeBytes(), getDuration()));
+            if (CubingJobTypeEnum.getByName(getJobType()) == CubingJobTypeEnum.BUILD) {
+                jobStats.setJobStepStats(
+                        getTaskByName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS).getDuration(),
+                        getTaskByName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY).getDuration(),
+                        getTaskByName(ExecutableConstants.STEP_NAME_BUILD_IN_MEM_CUBE).getDuration(),
+                        getTaskByName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE).getDuration());
+            }
+        } else if (state == ExecutableState.ERROR) {
+            jobStats.setJobException(result.getThrowable() != null ? result.getThrowable() : new Exception());
+        }
+        JobMetricsFacade.updateMetrics(jobStats);
+    }
+
+    private static double getPerBytesTimeCost(long size, long timeCost) {
         if (size <= 0) {
             return 0;
         }
