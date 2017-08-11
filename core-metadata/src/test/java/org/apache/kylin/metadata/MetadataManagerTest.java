@@ -136,7 +136,7 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testTableSample() throws IOException {
-        TableExtDesc tableExtDesc = getInstance(getTestConfig()).getTableExt("TEST.TEST_TABLE");
+        TableExtDesc tableExtDesc = getInstance(getTestConfig()).getTableExt("DEFAULT.WIDE_TABLE");
         Assert.assertNotNull(tableExtDesc);
 
         List<TableExtDesc.ColumnStats> columnStatsList = new ArrayList<>();
@@ -146,18 +146,18 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
         tableExtDesc.setColumnStats(columnStatsList);
         getInstance(getTestConfig()).saveTableExt(tableExtDesc);
 
-        TableExtDesc tableExtDesc1 = getInstance(getTestConfig()).getTableExt("TEST.TEST_TABLE");
+        TableExtDesc tableExtDesc1 = getInstance(getTestConfig()).getTableExt("DEFAULT.WIDE_TABLE");
         Assert.assertNotNull(tableExtDesc1);
 
         List<TableExtDesc.ColumnStats> columnStatsList1 = tableExtDesc1.getColumnStats();
         Assert.assertEquals(1, columnStatsList1.size());
 
-        getInstance(getTestConfig()).removeTableExt("TEST.TEST_TABLE");
+        getInstance(getTestConfig()).removeTableExt("DEFAULT.WIDE_TABLE");
     }
 
     @Test
     public void testTableExtCompatibility() throws IOException {
-        String tableName = "TEST.TEST_TABLE";
+        String tableName = "DEFAULT.WIDE_TABLE";
         Map<String, String> oldTableExt = new HashMap<>();
         oldTableExt.put(MetadataConstants.TABLE_EXD_CARDINALITY, "1,2,3,4");
         mockUpOldTableExtJson(tableName, oldTableExt);
