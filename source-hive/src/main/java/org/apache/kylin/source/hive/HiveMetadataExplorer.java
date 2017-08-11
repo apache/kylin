@@ -101,7 +101,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         }
 
         TableExtDesc tableExtDesc = new TableExtDesc();
-        tableExtDesc.setName(tableDesc.getIdentity());
+        tableExtDesc.setIdentity(tableDesc.getIdentity());
         tableExtDesc.setUuid(UUID.randomUUID().toString());
         tableExtDesc.setLastModified(0);
         tableExtDesc.init(prj);

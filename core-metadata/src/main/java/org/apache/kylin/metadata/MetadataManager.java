@@ -222,7 +222,7 @@ public class MetadataManager {
         // avoid returning null, since the TableDesc exists
         if (null == result) {
             result = new TableExtDesc();
-            result.setName(t.getIdentity());
+            result.setIdentity(t.getIdentity());
             result.setUuid(UUID.randomUUID().toString());
             result.setLastModified(0);
             result.init(t.getProject());
@@ -232,7 +232,7 @@ public class MetadataManager {
     }
 
     public void saveTableExt(TableExtDesc tableExt, String prj) throws IOException {
-        if (tableExt.getUuid() == null || tableExt.getName() == null) {
+        if (tableExt.getUuid() == null || tableExt.getIdentity() == null) {
             throw new IllegalArgumentException();
         }
 
@@ -252,10 +252,11 @@ public class MetadataManager {
         ResourceStore store = getStore();
 
         TableExtDesc t = store.getResource(path, TableExtDesc.class, TABLE_EXT_SERIALIZER);
-        if (t != null && t.getName() == null)
+        if (t != null && t.getIdentity() == null)
             store.deleteResource(path);
 
         store.putResource(path, tableExt, TABLE_EXT_SERIALIZER);
+        srcTableExtMap.put(mapKey(tableExt.getIdentity(), tableExt.getProject()), tableExt);
     }
 
     public void removeTableExt(String tableName, String prj) throws IOException {
@@ -443,7 +444,7 @@ public class MetadataManager {
         }
 
         // convert old tableExt json to new one
-        if (t.getName() == null) {
+        if (t.getIdentity() == null) {
             t = convertOldTableExtToNewer(path);
         }
 
@@ -481,7 +482,7 @@ public class MetadataManager {
         }
         String tableIdentity = file.substring(0, file.length() - MetadataConstants.FILE_SURFIX.length()).toUpperCase();
         TableExtDesc result = new TableExtDesc();
-        result.setName(tableIdentity);
+        result.setIdentity(tableIdentity);
         result.setUuid(UUID.randomUUID().toString());
         result.setLastModified(0);
         result.setCardinality(cardinality);

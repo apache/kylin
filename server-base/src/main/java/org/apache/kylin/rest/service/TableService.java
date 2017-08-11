@@ -126,7 +126,7 @@ public class TableService extends BasicService {
             Preconditions.checkState(tableDesc.getName().equals(entry.getValue()));
             Preconditions.checkState(tableDesc.getIdentity().equals(entry.getKey() + "." + entry.getValue()));
             TableExtDesc extDesc = pair.getSecond();
-            Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getName()));
+            Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getIdentity()));
             allMeta.add(pair);
         }
 
