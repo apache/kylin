@@ -44,7 +44,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
 import org.apache.kylin.cube.kv.RowKeyEncoderProvider;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -169,7 +168,6 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         final Broadcast<CubeSegment> vCubeSegment = sc.broadcast(cubeSegment);
         final NDCuboidBuilder ndCuboidBuilder = new NDCuboidBuilder(vCubeSegment.getValue(), new RowKeyEncoderProvider(vCubeSegment.getValue()));
 
-        final Broadcast<CuboidScheduler> vCuboidScheduler = sc.broadcast(vCubeDesc.getValue().getCuboidScheduler());
         final int measureNum = cubeDesc.getMeasures().size();
 
         int countMeasureIndex = 0;
@@ -259,7 +257,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         saveToHDFS(allRDDs[0], vCubeDesc.getValue(), outputPath, 0, confOverwrite);
 
         // aggregate to ND cuboids
-        PairFlatMapFunction<Tuple2<ByteArray, Object[]>, ByteArray, Object[]> flatMapFunction = new CuboidFlatMap(vCubeSegment.getValue(), vCubeDesc.getValue(), vCuboidScheduler.getValue(), ndCuboidBuilder);
+        PairFlatMapFunction<Tuple2<ByteArray, Object[]>, ByteArray, Object[]> flatMapFunction = new CuboidFlatMap(vCubeSegment.getValue(), vCubeDesc.getValue(), ndCuboidBuilder);
 
         for (level = 1; level <= totalLevels; level++) {
             partition = estimateRDDPartitionNum(level, cubeStatsReader, kylinConfig);
@@ -342,15 +340,13 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         CubeSegment cubeSegment;
         CubeDesc cubeDesc;
-        CuboidScheduler cuboidScheduler;
         NDCuboidBuilder ndCuboidBuilder;
         RowKeySplitter rowKeySplitter;
         transient boolean initialized = false;
 
-        CuboidFlatMap(CubeSegment cubeSegment, CubeDesc cubeDesc, CuboidScheduler cuboidScheduler, NDCuboidBuilder ndCuboidBuilder) {
+        CuboidFlatMap(CubeSegment cubeSegment, CubeDesc cubeDesc, NDCuboidBuilder ndCuboidBuilder) {
             this.cubeSegment = cubeSegment;
             this.cubeDesc = cubeDesc;
-            this.cuboidScheduler = cuboidScheduler;
             this.ndCuboidBuilder = ndCuboidBuilder;
             this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
         }
@@ -366,7 +362,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             long cuboidId = rowKeySplitter.split(key);
             Cuboid parentCuboid = Cuboid.findById(cubeDesc, cuboidId);
 
-            Collection<Long> myChildren = cuboidScheduler.getSpanningCuboid(cuboidId);
+            Collection<Long> myChildren = cubeDesc.getCuboidScheduler().getSpanningCuboid(cuboidId);
 
             // if still empty or null
             if (myChildren == null || myChildren.size() == 0) {

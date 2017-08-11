@@ -18,8 +18,6 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import java.io.Serializable;
-
 /**
  */
 
@@ -45,8 +43,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-@SuppressWarnings("serial")
-public class DefaultCuboidScheduler extends CuboidScheduler implements Serializable {
+public class DefaultCuboidScheduler extends CuboidScheduler {
     private final long max;
     private final Set<Long> allCuboidIds;
     private final Map<Long, List<Long>> parent2child;
