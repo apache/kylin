@@ -58,7 +58,7 @@ public class KylinVersion implements Comparable {
 
         major = Integer.parseInt(splits[0]);
         minor = Integer.parseInt(splits[1]);
-        revision = Integer.parseInt(splits[2]);
+        revision = splits.length < 3 ? 0 : Integer.parseInt(splits[2]);
     }
 
     @Override
@@ -168,7 +168,9 @@ public class KylinVersion implements Comparable {
     public static String getKylinClientInformation() {
         StringBuilder buf = new StringBuilder();
 
-        buf.append("kylin.home: ").append(KylinConfig.getKylinHome() == null ? "UNKNOWN" : new File(KylinConfig.getKylinHome()).getAbsolutePath()).append("\n");
+        buf.append("kylin.home: ").append(
+                KylinConfig.getKylinHome() == null ? "UNKNOWN" : new File(KylinConfig.getKylinHome()).getAbsolutePath())
+                .append("\n");
         buf.append("kylin.version:").append(KylinVersion.getCurrentVersion()).append("\n");
         buf.append("commit:").append(getGitCommitInfo()).append("\n");
         buf.append("os.name:").append(System.getProperty("os.name")).append("\n");
