@@ -1,0 +1,27 @@
+{
+  "domainObjectInfo" : {
+    "id" : "2fbca32a-a33e-4b69-83dd-0bb8b1f8c53b",
+    "type" : "org.apache.kylin.cube.CubeInstance"
+  },
+  "parentDomainObjectInfo" : {
+    "id" : "2fbca32a-a33e-4b69-83dd-0bb8b1f8c91b",
+    "type" : "org.apache.kylin.metadata.project.ProjectInstance"
+  },
+  "ownerInfo" : {
+    "sid" : "ADMIN",
+    "principal" : true
+  },
+  "entriesInheriting" : true,
+  "allAceInfo" : {
+    "ADMIN" : {
+      "sidInfo" : {
+        "sid" : "ADMIN",
+        "principal" : true
+      },
+      "permissionMask" : 16
+    }
+  },
+  "uuid" : null,
+  "last_modified" : 1502104557664,
+  "version" : "2.1.0"
+}
