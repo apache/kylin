@@ -205,25 +205,26 @@ public class MetadataManager {
      * @return
      */
     public TableExtDesc getTableExt(String tableName) {
-        if (tableName.indexOf(".") < 0)
-            tableName = "DEFAULT." + tableName;
+        TableDesc t = getTableDesc(tableName);
+        if (t == null)
+            return null;
 
-        TableExtDesc result = srcTableExdMap.get(tableName.toUpperCase());
+        TableExtDesc result = srcTableExdMap.get(t.getIdentity());
 
         // create new
         if (null == result) {
             result = new TableExtDesc();
-            result.setName(tableName);
+            result.setIdentity(t.getIdentity());
             result.setUuid(UUID.randomUUID().toString());
             result.setLastModified(0);
             result.init();
-            srcTableExdMap.put(result.getName(), result);
+            srcTableExdMap.put(t.getIdentity(), result);
         }
         return result;
     }
 
     public void saveTableExt(TableExtDesc tableExt) throws IOException {
-        if (tableExt.getUuid() == null || tableExt.getName() == null) {
+        if (tableExt.getUuid() == null || tableExt.getIdentity() == null) {
             throw new IllegalArgumentException();
         }
 
@@ -234,11 +235,11 @@ public class MetadataManager {
         ResourceStore store = getStore();
 
         TableExtDesc t = store.getResource(path, TableExtDesc.class, TABLE_EXT_SERIALIZER);
-        if (t != null && t.getName() == null)
+        if (t != null && t.getIdentity() == null)
             store.deleteResource(path);
 
         store.putResource(path, tableExt, TABLE_EXT_SERIALIZER);
-        srcTableExdMap.put(tableExt.getName(), tableExt);
+        srcTableExdMap.put(tableExt.getIdentity(), tableExt);
     }
 
     public void removeTableExt(String tableName) throws IOException {
@@ -405,13 +406,13 @@ public class MetadataManager {
         }
 
         // convert old tableExt json to new one
-        if (t.getName() == null) {
+        if (t.getIdentity() == null) {
             t = convertOldTableExtToNewer(path);
         }
 
         t.init();
 
-        srcTableExdMap.putLocal(t.getName(), t);
+        srcTableExdMap.putLocal(t.getIdentity(), t);
         return t;
     }
 
@@ -439,7 +440,7 @@ public class MetadataManager {
         }
         String tableIdentity = file.substring(0, file.length() - MetadataConstants.FILE_SURFIX.length()).toUpperCase();
         TableExtDesc result = new TableExtDesc();
-        result.setName(tableIdentity);
+        result.setIdentity(tableIdentity);
         result.setUuid(UUID.randomUUID().toString());
         result.setLastModified(0);
         result.init();

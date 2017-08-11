@@ -38,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class TableExtDesc extends RootPersistentEntity {
 
     @JsonProperty("table_name")
-    private String tableName;
+    private String tableIdentity;
     @JsonProperty("last_build_job_id")
     private String jodID;
 
@@ -63,7 +63,7 @@ public class TableExtDesc extends RootPersistentEntity {
     }
 
     public String getResourcePath() {
-        return concatResourcePath(getName());
+        return concatResourcePath(getIdentity());
     }
 
     public static String concatResourcePath(String tableIdentity) {
@@ -78,8 +78,8 @@ public class TableExtDesc extends RootPersistentEntity {
         this.frequency = frequency;
     }
 
-    public String getName() {
-        return this.tableName;
+    public String getIdentity() {
+        return this.tableIdentity;
     }
 
     public String getJodID() {
@@ -137,7 +137,7 @@ public class TableExtDesc extends RootPersistentEntity {
                 this.columnStats.get(i).setCardinality(Long.parseLong(cardi[i]));
             }
         } else {
-            throw new IllegalArgumentException("The given cardinality columns don't match tables " + tableName);
+            throw new IllegalArgumentException("The given cardinality columns don't match tables " + tableIdentity);
 
         }
     }
@@ -159,8 +159,8 @@ public class TableExtDesc extends RootPersistentEntity {
         return this.totalRows;
     }
 
-    public void setName(String name) {
-        this.tableName = name;
+    public void setIdentity(String name) {
+        this.tableIdentity = name;
     }
 
     public void setJodID(String jobID) {
@@ -168,8 +168,8 @@ public class TableExtDesc extends RootPersistentEntity {
     }
 
     public void init() {
-        if (this.tableName != null)
-            this.tableName = this.tableName.toUpperCase();
+        if (this.tableIdentity != null)
+            this.tableIdentity = this.tableIdentity.toUpperCase();
     }
 
     public void setLastModifiedTime(long lastModifiedTime) {
@@ -186,7 +186,7 @@ public class TableExtDesc extends RootPersistentEntity {
 
     @Override
     public int hashCode() {
-        return getName().hashCode();
+        return getIdentity().hashCode();
     }
 
     @Override
@@ -198,7 +198,7 @@ public class TableExtDesc extends RootPersistentEntity {
 
     @Override
     public String toString() {
-        return "TableExtDesc{" + "name='" + (null == tableName ? "NULL" : tableName) + '\'' + ", columns_samples=" + (null == columnStats ? "null" : Arrays.toString(columnStats.toArray()));
+        return "TableExtDesc{" + "name='" + (null == tableIdentity ? "NULL" : tableIdentity) + '\'' + ", columns_samples=" + (null == columnStats ? "null" : Arrays.toString(columnStats.toArray()));
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
