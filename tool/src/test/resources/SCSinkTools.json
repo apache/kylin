@@ -1,0 +1,1 @@
+[["org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool",{"storage_type":2,"cube_desc_override_properties":["java.util.HashMap",{"kylin.cube.algorithm":"INMEM"}]}]]

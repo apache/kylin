@@ -85,6 +85,10 @@ public class ParameterDesc implements Serializable {
         return type;
     }
 
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public byte[] getBytes() throws UnsupportedEncodingException {
         return value.getBytes("UTF-8");
     }
@@ -93,7 +97,7 @@ public class ParameterDesc implements Serializable {
         return value;
     }
 
-    void setValue(String value) {
+    public void setValue(String value) {
         this.value = value;
     }
 

@@ -117,7 +117,7 @@ public class PartitionDesc implements Serializable {
     }
 
     // for test
-    void setPartitionTimeColumn(String partitionTimeColumn) {
+    public void setPartitionTimeColumn(String partitionTimeColumn) {
         this.partitionTimeColumn = partitionTimeColumn;
     }
 
