@@ -37,4 +37,21 @@ public class KylinVersionTest {
         Assert.assertEquals(1, ver1.minor);
         Assert.assertEquals(0, ver1.revision);
     }
+
+    @Test
+    public void testToString() {
+        KylinVersion ver1 = new KylinVersion("2.1.7.321");
+        Assert.assertEquals(2, ver1.major);
+        Assert.assertEquals(1, ver1.minor);
+        Assert.assertEquals(7, ver1.revision);
+        Assert.assertEquals(321, ver1.internal);
+        Assert.assertEquals("2.1.7.321", ver1.toString());
+    }
+    
+    @Test
+    public void testCompare() {
+        Assert.assertEquals(true, KylinVersion.isBefore200("1.9.9"));
+        Assert.assertEquals(false, KylinVersion.isBefore200("2.0.0"));
+        Assert.assertEquals(true, new KylinVersion("2.1.0").compareTo(new KylinVersion("2.1.0.123")) < 0);
+    }
 }
