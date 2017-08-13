@@ -21,13 +21,14 @@ package org.apache.kylin.metrics.lib;
 import java.io.Closeable;
 import java.util.regex.Pattern;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 
 import com.google.common.base.Strings;
 
 public abstract class ActiveReservoirReporter implements Closeable {
 
-    public static final String KYLIN_PREFIX = "KYLIN";
+    public static final String KYLIN_PREFIX = KylinConfig.getInstanceFromEnv().getKylinMetricsPrefix();
 
     public static Pair<String, String> getTableNameSplits(String tableName) {
         if (Strings.isNullOrEmpty(tableName)) {

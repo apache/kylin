@@ -1340,6 +1340,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.core.metrics.reporter-job-enabled", "false"));
     }
 
+    public String getKylinMetricsPrefix() {
+        return getOptional("kylin.core.metrics.prefix", "KYLIN").toUpperCase();
+    }
+
     public String getKylinMetricsActiveReservoirDefaultClass() {
         return getOptional("kylin.core.metrics.active-reservoir-default-class",
                 "org.apache.kylin.metrics.lib.impl.StubReservoir");
