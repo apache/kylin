@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.kylin.cube.cuboid.AggregationGroupScheduler;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -296,7 +295,7 @@ public class AggregationGroup implements Serializable {
         long combination = 1;
 
         if (this.getDimCap() > 0) {
-            combination = AggregationGroupScheduler.getCuboidsForAgg(cubeDesc, this).size();
+            combination = cubeDesc.getCuboidScheduler().calculateCuboidsForAggGroup(this).size();
         } else {
             Set<String> includeDims = new TreeSet<>(Arrays.asList(includes));
             Set<String> mandatoryDims = new TreeSet<>(Arrays.asList(selectRule.mandatoryDims));
@@ -387,13 +386,6 @@ public class AggregationGroup implements Serializable {
             }
         }
         return true;
-    }
-
-    public boolean checkDimCap(long cuboidID) {
-        if (getDimCap() <= 0) {
-            return true;
-        }
-        return Long.bitCount(cuboidID) <= getDimCap();
     }
 
     public void setIncludes(String[] includes) {

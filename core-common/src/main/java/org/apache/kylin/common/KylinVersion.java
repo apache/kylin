@@ -37,10 +37,11 @@ public class KylinVersion implements Comparable {
     private static final String COMMIT_SHA1_v15 = "commit_SHA1";
     private static final String COMMIT_SHA1_v13 = "commit.sha1";
 
-    public int major;
-    public int minor;
-    public int revision;
-    public boolean isSnapshot;
+    public final int major;
+    public final int minor;
+    public final int revision;
+    public final int internal;
+    public final boolean isSnapshot;
 
     public KylinVersion(String version) {
 
@@ -58,12 +59,13 @@ public class KylinVersion implements Comparable {
 
         major = Integer.parseInt(splits[0]);
         minor = Integer.parseInt(splits[1]);
-        revision = splits.length < 3 ? 0 : Integer.parseInt(splits[2]);
+        revision = splits.length > 2 ? Integer.parseInt(splits[2]) : 0;
+        internal = splits.length > 3 ? Integer.parseInt(splits[3]) : 0;
     }
 
     @Override
     public String toString() {
-        return "" + major + "." + minor + "." + revision;
+        return "" + major + "." + minor + "." + revision + "." + internal + (isSnapshot ? "-SNAPSHOT" : "");
     }
 
     @Override
@@ -83,13 +85,17 @@ public class KylinVersion implements Comparable {
         if (comp != 0)
             return comp;
 
+        comp = this.internal - v.internal;
+        if (comp != 0)
+            return comp;
+        
         return (this.isSnapshot ? 0 : 1) - (v.isSnapshot ? 0 : 1);
     }
 
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("2.1.0");
+    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("2.1.0.20403");
 
     private static final KylinVersion VERSION_200 = new KylinVersion("2.0.0");
 
@@ -124,6 +130,10 @@ public class KylinVersion implements Comparable {
 
     public static boolean isBefore200(String ver) {
         return new KylinVersion(ver).compareTo(VERSION_200) < 0;
+    }
+    
+    public static int compare(String v1, String v2) {
+        return new KylinVersion(v1).compareTo(new KylinVersion(v2));
     }
 
     public static void main(String[] args) {

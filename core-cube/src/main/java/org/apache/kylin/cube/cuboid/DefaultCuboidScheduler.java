@@ -48,7 +48,6 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
     private final Set<Long> allCuboidIds;
     private final Map<Long, List<Long>> parent2child;
     
-
     public DefaultCuboidScheduler(CubeDesc cubeDesc) {
         super(cubeDesc);
         
@@ -84,6 +83,46 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
     }
 
     /**
+     * Get the parent cuboid really on the spanning tree.
+     * @param child an on-tree cuboid
+     * @return
+     */
+    @Override
+    public long findBestMatchCuboid(long child) {
+        long parent = getOnTreeParent(child);
+        while (parent > 0) {
+            if (cubeDesc.getAllCuboids().contains(parent)) {
+                break;
+            }
+            parent = getOnTreeParent(parent);
+        }
+
+        if (parent <= 0) {
+            throw new IllegalStateException("Can't find valid parent for Cuboid " + child);
+        }
+        return parent;
+    }
+
+    private long getOnTreeParent(long child) {
+        Collection<Long> candidates = getOnTreeParents(child);
+        if (candidates == null || candidates.isEmpty()) {
+            return -1;
+        }
+        return Collections.min(candidates, Cuboid.cuboidSelectComparator);
+    }
+
+    private Set<Long> getOnTreeParents(long child) {
+        List<AggregationGroup> aggrs = Lists.newArrayList();
+        for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
+            if (agg.isOnTree(child)) {
+                aggrs.add(agg);
+            }
+        }
+
+        return getOnTreeParents(child, aggrs);
+    }
+
+    /**
      * Collect cuboid from bottom up, considering all factor including black list
      * Build tree steps:
      * 1. Build tree from bottom up considering dim capping
@@ -94,7 +133,7 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
      *    and grandparent are missing, add grandparent to the tree.
      * @return Cuboid collection
      */
-    private Pair<Set<Long>, Map<Long, List<Long>>> buildTreeBottomUp() {
+    protected Pair<Set<Long>, Map<Long, List<Long>>> buildTreeBottomUp() {
         int forward = cubeDesc.getParentForward();
         KylinConfig config = cubeDesc.getConfig();
 
@@ -159,35 +198,6 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
     }
 
     /**
-     * Get the parent cuboid really on the spanning tree.
-     * @param child an on-tree cuboid
-     * @return
-     */
-    @Override
-    public long findBestMatchCuboid(long child) {
-        long parent = getOnTreeParent(child);
-        while (parent > 0) {
-            if (cubeDesc.getAllCuboids().contains(parent)) {
-                break;
-            }
-            parent = getOnTreeParent(parent);
-        }
-
-        if (parent <= 0) {
-            throw new IllegalStateException("Can't find valid parent for Cuboid " + child);
-        }
-        return parent;
-    }
-
-    private long getOnTreeParent(long child) {
-        Collection<Long> candidates = getOnTreeParents(child);
-        if (candidates == null || candidates.isEmpty()) {
-            return -1;
-        }
-        return Collections.min(candidates, Cuboid.cuboidSelectComparator);
-    }
-
-    /**
      * Get all parent for children cuboids, considering dim cap.
      * @param children children cuboids
      * @return all parents cuboids
@@ -205,7 +215,7 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
                 }
 
                 for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
-                    if (agg.isOnTree(cuboidId) && agg.checkDimCap(cuboidId)) {
+                    if (agg.isOnTree(cuboidId) && checkDimCap(agg, cuboidId)) {
                         return true;
                     }
                 }
@@ -214,22 +224,6 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
             }
         }));
         return parents;
-    }
-
-    /**
-     * Get all *possible* parent for a child cuboid
-     * @param child Child cuboid ID
-     * @return all *possible* parent cuboids
-     */
-    private Set<Long> getOnTreeParents(long child) {
-        List<AggregationGroup> aggrs = Lists.newArrayList();
-        for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
-            if (agg.isOnTree(child)) {
-                aggrs.add(agg);
-            }
-        }
-
-        return getOnTreeParents(child, aggrs);
     }
 
     /**
@@ -252,9 +246,108 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
                 parentCandidate.add(Cuboid.getBaseCuboidId(cubeDesc));
                 return parentCandidate;
             }
-            parentCandidate.addAll(AggregationGroupScheduler.getOnTreeParents(child, agg));
+            parentCandidate.addAll(getOnTreeParents(child, agg));
         }
 
         return parentCandidate;
     }
+    
+    /**
+     * Get all valid cuboids for agg group, ignoring padding
+     * @param agg agg group
+     * @return cuboidId list
+     */
+    @Override
+    public Set<Long> calculateCuboidsForAggGroup(AggregationGroup agg) {
+        Set<Long> cuboidHolder = new HashSet<>();
+
+        // build tree structure
+        Set<Long> children = getLowestCuboids(agg);
+        while (!children.isEmpty()) {
+            if (cuboidHolder.size() > cubeDesc.getConfig().getCubeAggrGroupMaxCombination()) {
+                throw new IllegalStateException("too many combination for the aggregation group");
+            }
+            cuboidHolder.addAll(children);
+            children = getOnTreeParentsByLayer(children, agg);
+        }
+
+        return Sets.newHashSet(Iterators.filter(cuboidHolder.iterator(), new Predicate<Long>() {
+            @Override
+            public boolean apply(@Nullable Long cuboidId) {
+                return !cubeDesc.isBlackedCuboid(cuboidId);
+            }
+        }));
+    }
+
+    private Set<Long> getOnTreeParentsByLayer(Collection<Long> children, final AggregationGroup agg) {
+        Set<Long> parents = new HashSet<>();
+        for (long child : children) {
+            parents.addAll(getOnTreeParents(child, agg));
+        }
+        parents = Sets.newHashSet(Iterators.filter(parents.iterator(), new Predicate<Long>() {
+            @Override
+            public boolean apply(@Nullable Long cuboidId) {
+                return checkDimCap(agg, cuboidId);
+            }
+        }));
+        return parents;
+    }
+
+    private Set<Long> getLowestCuboids(AggregationGroup agg) {
+        return getOnTreeParents(0L, agg);
+    }
+
+    private Set<Long> getOnTreeParents(long child, AggregationGroup agg) {
+        Set<Long> parentCandidate = new HashSet<>();
+
+        long tmpChild = child;
+        if (tmpChild == agg.getPartialCubeFullMask()) {
+            return parentCandidate;
+        }
+
+        if (agg.getMandatoryColumnMask() != 0L) {
+            if (agg.isMandatoryOnlyValid()) {
+                if (fillBit(tmpChild, agg.getMandatoryColumnMask(), parentCandidate)) {
+                    return parentCandidate;
+                }
+            } else {
+                tmpChild |= agg.getMandatoryColumnMask();
+            }
+        }
+
+        for (Long normal : agg.getNormalDims()) {
+            fillBit(tmpChild, normal, parentCandidate);
+        }
+
+        for (Long joint : agg.getJoints()) {
+            fillBit(tmpChild, joint, parentCandidate);
+        }
+
+        for (AggregationGroup.HierarchyMask hierarchy : agg.getHierarchyMasks()) {
+            for (long mask : hierarchy.allMasks) {
+                if (fillBit(tmpChild, mask, parentCandidate)) {
+                    break;
+                }
+            }
+        }
+
+        return parentCandidate;
+    }
+
+    private boolean fillBit(long origin, long other, Set<Long> coll) {
+        if ((origin & other) != other) {
+            coll.add(origin | other);
+            return true;
+        }
+        return false;
+    }
+    
+    private boolean checkDimCap(AggregationGroup agg, long cuboidID) {
+        int dimCap = agg.getDimCap();
+        if (dimCap <= 0)
+            return true;
+        
+        return Long.bitCount(cuboidID) <= dimCap;
+    }
+
 }

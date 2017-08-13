@@ -18,10 +18,14 @@
 
 package org.apache.kylin.cube.model;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SelectRule implements java.io.Serializable {
+public class SelectRule implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     @JsonProperty("hierarchy_dims")
     public String[][] hierarchyDims;
     @JsonProperty("mandatory_dims")
