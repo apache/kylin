@@ -112,6 +112,10 @@ public class PushDownUtil {
         FromTablesVisitor ftv = new FromTablesVisitor();
         fromNode.accept(ftv);
         List<SqlNode> tablesWithoutSchema = ftv.getTablesWithoutSchema();
+        // sql do not need completion
+        if (tablesWithoutSchema.isEmpty()) {
+            return inputSql;
+        }
 
         List<Pair<Integer, Integer>> tablesPos = new ArrayList<>();
         for (SqlNode tables : tablesWithoutSchema) {

@@ -25,12 +25,12 @@ import org.mockito.Mockito;
 public class PushDownUtilTest {
     @Test
     public void testSchemaCompletion() {
-        String sql1 = "SELECT a \n"+
+        String sql1 = "SELECT a \n" +
                 "FROM a.KYLIN_SALES as KYLIN_SALES\n" +
                 "INNER JOIN \"A\".KYLIN_ACCOUNT as BUYER_ACCOUNT\n" +
                 "ON KYLIN_SALES.BUYER_ID = BUYER_ACCOUNT.ACCOUNT_ID\n" +
                 "INNER JOIN \"KYLIN_COUNTRY\" as BUYER_COUNTRY\n" +
-                "ON BUYER_ACCOUNT.ACCOUNT_COUNTRY = BUYER_COUNTRY.COUNTRY";
+                "ON BUYER_ACCOUNT.ACCOUNT_COUNTRY = BUYER_COUNTRY.COUNTRY LIMIT 5";
         String sql2 = "select * from DB2.t,DB2.tt,ttt";
 
         String sql3 = "SELECT t1.week_beg_dt, t1.sum_price, t2.cnt\n" +
@@ -56,14 +56,14 @@ public class PushDownUtilTest {
                 "  ON test_kylin_fact.lstg_site_id = test_sites.site_id\n" +
                 "  group by test_cal_dt.week_beg_dt\n" +
                 ") t2\n" +
-                "on t1.week_beg_dt=t2.week_beg_dt";
+                "on t1.week_beg_dt=t2.week_beg_dt limit 5";
 
         String exceptSQL1 = "SELECT a \n" +
                 "FROM a.KYLIN_SALES as KYLIN_SALES\n" +
                 "INNER JOIN \"A\".KYLIN_ACCOUNT as BUYER_ACCOUNT\n" +
                 "ON KYLIN_SALES.BUYER_ID = BUYER_ACCOUNT.ACCOUNT_ID\n" +
                 "INNER JOIN EDW.\"KYLIN_COUNTRY\" as BUYER_COUNTRY\n" +
-                "ON BUYER_ACCOUNT.ACCOUNT_COUNTRY = BUYER_COUNTRY.COUNTRY";
+                "ON BUYER_ACCOUNT.ACCOUNT_COUNTRY = BUYER_COUNTRY.COUNTRY LIMIT 5";
 
         String exceptSQL2 = "select * from DB2.t,DB2.tt,EDW.ttt";
 
@@ -90,7 +90,7 @@ public class PushDownUtilTest {
                 "  ON test_kylin_fact.lstg_site_id = test_sites.site_id\n" +
                 "  group by test_cal_dt.week_beg_dt\n" +
                 ") t2\n" +
-                "on t1.week_beg_dt=t2.week_beg_dt";
+                "on t1.week_beg_dt=t2.week_beg_dt limit 5";
         Assert.assertEquals(exceptSQL1, PushDownUtil.schemaCompletion(sql1, "EDW"));
         Assert.assertEquals(exceptSQL2, PushDownUtil.schemaCompletion(sql2, "EDW"));
         Assert.assertEquals(exceptSQL3, PushDownUtil.schemaCompletion(sql3, "EDW"));
