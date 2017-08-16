@@ -18,18 +18,12 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
@@ -72,12 +66,16 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * @author ysong1
@@ -158,22 +156,22 @@ public class JobService extends BasicService implements InitializingBean {
         Message msg = MsgPicker.getMsg();
 
         switch (status) {
-        case DISCARDED:
-            return ExecutableState.DISCARDED;
-        case ERROR:
-            return ExecutableState.ERROR;
-        case FINISHED:
-            return ExecutableState.SUCCEED;
-        case NEW:
-            return ExecutableState.READY;
-        case PENDING:
-            return ExecutableState.READY;
-        case RUNNING:
-            return ExecutableState.RUNNING;
-        case STOPPED:
-            return ExecutableState.STOPPED;
-        default:
-            throw new BadRequestException(String.format(msg.getILLEGAL_EXECUTABLE_STATE(), status));
+            case DISCARDED:
+                return ExecutableState.DISCARDED;
+            case ERROR:
+                return ExecutableState.ERROR;
+            case FINISHED:
+                return ExecutableState.SUCCEED;
+            case NEW:
+                return ExecutableState.READY;
+            case PENDING:
+                return ExecutableState.READY;
+            case RUNNING:
+                return ExecutableState.RUNNING;
+            case STOPPED:
+                return ExecutableState.STOPPED;
+            default:
+                throw new BadRequestException(String.format(msg.getILLEGAL_EXECUTABLE_STATE(), status));
         }
     }
 
@@ -181,30 +179,30 @@ public class JobService extends BasicService implements InitializingBean {
         Message msg = MsgPicker.getMsg();
 
         switch (timeFilter) {
-        case LAST_ONE_DAY:
-            calendar.add(Calendar.DAY_OF_MONTH, -1);
-            return calendar.getTimeInMillis();
-        case LAST_ONE_WEEK:
-            calendar.add(Calendar.WEEK_OF_MONTH, -1);
-            return calendar.getTimeInMillis();
-        case LAST_ONE_MONTH:
-            calendar.add(Calendar.MONTH, -1);
-            return calendar.getTimeInMillis();
-        case LAST_ONE_YEAR:
-            calendar.add(Calendar.YEAR, -1);
-            return calendar.getTimeInMillis();
-        case ALL:
-            return 0;
-        default:
-            throw new BadRequestException(String.format(msg.getILLEGAL_TIME_FILTER(), timeFilter));
+            case LAST_ONE_DAY:
+                calendar.add(Calendar.DAY_OF_MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_WEEK:
+                calendar.add(Calendar.WEEK_OF_MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_MONTH:
+                calendar.add(Calendar.MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_YEAR:
+                calendar.add(Calendar.YEAR, -1);
+                return calendar.getTimeInMillis();
+            case ALL:
+                return 0;
+            default:
+                throw new BadRequestException(String.format(msg.getILLEGAL_TIME_FILTER(), timeFilter));
         }
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
             + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, //
-            Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
-            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
+                                 Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
+                                 CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
         JobInstance jobInstance = submitJobInternal(cube, startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart,
                 sourcePartitionOffsetEnd, buildType, force, submitter);
 
@@ -215,9 +213,9 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public JobInstance submitJobInternal(CubeInstance cube, long startDate, long endDate, long startOffset,
-            long endOffset, //
-            Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
-            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
+                                         long endOffset, //
+                                         Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
+                                         CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
@@ -330,7 +328,7 @@ public class JobService extends BasicService implements InitializingBean {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
             + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public JobInstance cancelJob(JobInstance job) throws IOException {
-        if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube())) {
+        if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube()) || null == job.getRelatedSegment()) {
             getExecutableManager().discardJob(job.getId());
             return job;
         }
@@ -366,11 +364,12 @@ public class JobService extends BasicService implements InitializingBean {
 
     /**
      * currently only support substring match
+     *
      * @return
      */
     public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName,
-            final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue,
-            final JobTimeFilterEnum timeFilter) {
+                                        final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue,
+                                        final JobTimeFilterEnum timeFilter) {
         Integer limit = (null == limitValue) ? 30 : limitValue;
         Integer offset = (null == offsetValue) ? 0 : offsetValue;
         List<JobInstance> jobs = searchJobsByCubeName(cubeNameSubstring, projectName, statusList, timeFilter);
@@ -388,17 +387,17 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public List<JobInstance> searchJobsByCubeName(final String cubeNameSubstring, final String projectName,
-            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+                                                  final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
         return innerSearchCubingJobs(cubeNameSubstring, null, projectName, statusList, timeFilter);
     }
 
     public List<JobInstance> searchJobsByJobName(final String jobName, final String projectName,
-            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+                                                 final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
         return innerSearchCubingJobs(null, jobName, projectName, statusList, timeFilter);
     }
 
     public List<JobInstance> innerSearchCubingJobs(final String cubeName, final String jobName,
-            final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+                                                   final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
         // prepare time range
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
@@ -421,8 +420,8 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public List<CubingJob> innerSearchCubingJobs(final String cubeName, final String jobName,
-            final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
-            final Map<String, Output> allOutputs, final boolean nameExactMatch, final String projectName) {
+                                                 final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
+                                                 final Map<String, Output> allOutputs, final boolean nameExactMatch, final String projectName) {
         List<CubingJob> results = Lists.newArrayList(FluentIterable.from(
                 getExecutableManager().getAllAbstractExecutables(timeStartInMillis, timeEndInMillis, CubingJob.class))
                 .filter(new Predicate<AbstractExecutable>() {
@@ -491,7 +490,7 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public List<CubingJob> listJobsByRealizationName(final String realizationName, final String projectName,
-            final Set<ExecutableState> statusList) {
+                                                     final Set<ExecutableState> statusList) {
         return innerSearchCubingJobs(realizationName, null, statusList, 0L, Long.MAX_VALUE,
                 getExecutableManager().getAllOutputs(), true, projectName);
     }
