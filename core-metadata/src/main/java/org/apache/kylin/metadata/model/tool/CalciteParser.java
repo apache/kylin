@@ -29,6 +29,7 @@ import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
@@ -69,14 +70,21 @@ public class CalciteParser {
     }
 
     public static SqlNode getFromNode(String sql) {
-        //When the sql have limit clause, calcite will parse it as a SqlOrder Object.
-        sql = sql.split("LIMIT")[0];
-        SqlNode fromNode = null;
+        SqlNode node = null;
         try {
-            fromNode = ((SqlSelect) (CalciteParser.parse(sql))).getFrom();
+            node = CalciteParser.parse(sql);
         } catch (SqlParseException e) {
-            throw new RuntimeException("Failed to parse expression \'" + sql
-                    + "\', please make sure the expression is valid");
+            throw new RuntimeException(
+                    "Failed to parse expression \'" + sql + "\', please make sure the expression is valid");
+        }
+        //When the sql have limit clause, calcite will parse it as a SqlOrder Object.
+        SqlNode fromNode = null;
+        if (node instanceof SqlOrderBy) {
+            SqlOrderBy orderBy = (SqlOrderBy) node;
+            fromNode = ((SqlSelect) orderBy.query).getFrom();
+        } else {
+            SqlSelect sqlSelect = (SqlSelect) node;
+            fromNode = sqlSelect.getFrom();
         }
         return fromNode;
     }
