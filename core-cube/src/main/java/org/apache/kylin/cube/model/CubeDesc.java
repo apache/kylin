@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -603,8 +604,21 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         validateAggregationGroups(); // check if aggregation group is valid
         validateAggregationGroupsCombination();
 
-        if (hbaseMapping != null) {
-            hbaseMapping.init(this);
+        String hbaseMappingAdapterName = config.getHBaseMappingAdapter();
+
+        if (hbaseMappingAdapterName != null) {
+            try {
+                Class<?> hbaseMappingAdapterClass = Class.forName(hbaseMappingAdapterName);
+                Method initMethod = hbaseMappingAdapterClass.getMethod("initHBaseMapping", CubeDesc.class);
+                initMethod.invoke(null, this);
+            } catch (Exception e) {
+                logger.error("Wrong configuration for kylin.metadata.hbasemapping-adapter: class "
+                        + hbaseMappingAdapterName + " not found. ");
+            }
+        } else {
+            if (hbaseMapping != null) {
+                hbaseMapping.init(this);
+            }
         }
 
         initMeasureReferenceToColumnFamily();

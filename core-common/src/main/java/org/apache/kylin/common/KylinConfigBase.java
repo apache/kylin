@@ -286,6 +286,10 @@ abstract public class KylinConfigBase implements Serializable {
                 "org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock$Factory");
         return (DistributedLockFactory) ClassUtil.newInstance(clsName);
     }
+    
+    public String getHBaseMappingAdapter() {
+        return getOptional("kylin.metadata.hbasemapping-adapter");
+    }
 
     // ============================================================================
     // DICTIONARY & SNAPSHOT
