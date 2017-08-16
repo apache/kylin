@@ -79,7 +79,7 @@ public class TableControllerV2 extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableName:.+}", method = { RequestMethod.GET }, produces = {
+    @RequestMapping(value = "/{project}/{tableName:.+}", method = { RequestMethod.GET }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getTableDescV2(@PathVariable String tableName, @PathVariable String project) {

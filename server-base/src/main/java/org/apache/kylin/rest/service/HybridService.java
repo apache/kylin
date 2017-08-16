@@ -27,13 +27,12 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.job.HybridCubeCLI;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PostFilter;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component("hybridService")
@@ -41,8 +40,11 @@ public class HybridService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(HybridService.class);
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    @Autowired
+    private AclEvaluate aclEvaluate;
+
     public HybridInstance createHybridCube(String hybridName, String projectName, String modelName, String[] cubeNames) {
+        aclEvaluate.checkProjectWritePermission(projectName);
         List<String> args = new ArrayList<String>();
         args.add("-name");
         args.add(hybridName);
@@ -63,8 +65,8 @@ public class HybridService extends BasicService {
         return getHybridInstance(hybridName);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public HybridInstance updateHybridCube(String hybridName, String projectName, String modelName, String[] cubeNames) {
+        aclEvaluate.checkProjectWritePermission(projectName);
         List<String> args = new ArrayList<String>();
         args.add("-name");
         args.add(hybridName);
@@ -85,8 +87,8 @@ public class HybridService extends BasicService {
         return getHybridInstance(hybridName);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void deleteHybridCube(String hybridName, String projectName, String modelName) {
+        aclEvaluate.checkProjectWritePermission(projectName);
         List<String> args = new ArrayList<String>();
         args.add("-name");
         args.add(hybridName);
@@ -109,8 +111,8 @@ public class HybridService extends BasicService {
         return hybridInstance;
     }
 
-    @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<HybridInstance> listHybrids(final String projectName, final String modelName) {
+        aclEvaluate.checkProjectReadPermission(projectName);
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
         List<HybridInstance> hybridsInProject = new ArrayList<HybridInstance>();
 

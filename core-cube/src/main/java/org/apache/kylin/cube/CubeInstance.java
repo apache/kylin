@@ -36,6 +36,8 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -383,6 +385,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     public String getProject() {
         return getDescriptor().getProject();
+    }
+
+    public ProjectInstance getProjectInstance() {
+        return ProjectManager.getInstance(getConfig()).getProject(getProject());
     }
 
     @Override

@@ -167,7 +167,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         this.duration = duration;
     }
 
-    public String getRelatedCube() {
+    public String getRelatedCube() { // if model check, return model name.
         return relatedCube;
     }
 

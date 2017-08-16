@@ -50,10 +50,10 @@ import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.lock.JobLock;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.SourcePartition;
@@ -63,7 +63,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
@@ -92,6 +91,9 @@ public class JobService extends BasicService implements InitializingBean {
     @Autowired
     @Qualifier("accessService")
     private AccessService accessService;
+
+    @Autowired
+    private AclEvaluate aclEvaluate;
 
     /*
     * (non-Javadoc)
@@ -198,11 +200,10 @@ public class JobService extends BasicService implements InitializingBean {
         }
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, //
-                                 Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
-                                 CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
+            Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
+            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
+        aclEvaluate.checkProjectOperationPermission(cube);
         JobInstance jobInstance = submitJobInternal(cube, startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart,
                 sourcePartitionOffsetEnd, buildType, force, submitter);
 
@@ -313,21 +314,18 @@ public class JobService extends BasicService implements InitializingBean {
         return result;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void resumeJob(JobInstance job) {
+        aclEvaluate.checkProjectOperationPermission(job);
         getExecutableManager().resumeJob(job.getId());
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void rollbackJob(JobInstance job, String stepId) {
+        aclEvaluate.checkProjectOperationPermission(job);
         getExecutableManager().rollbackJob(job.getId(), stepId);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public JobInstance cancelJob(JobInstance job) throws IOException {
+        aclEvaluate.checkProjectOperationPermission(job);
         if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube()) || null == job.getRelatedSegment()) {
             getExecutableManager().discardJob(job.getId());
             return job;
@@ -349,16 +347,14 @@ public class JobService extends BasicService implements InitializingBean {
         return job;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public JobInstance pauseJob(JobInstance job) {
+        aclEvaluate.checkProjectOperationPermission(job);
         getExecutableManager().pauseJob(job.getId());
         return job;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void dropJob(JobInstance job) throws IOException {
+        aclEvaluate.checkProjectOperationPermission(job);
         getExecutableManager().deleteJob(job.getId());
     }
 
@@ -397,7 +393,12 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public List<JobInstance> innerSearchCubingJobs(final String cubeName, final String jobName,
-                                                   final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+            final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+        if (null == projectName) {
+            aclEvaluate.checkIsGlobalAdmin();
+        } else {
+            aclEvaluate.checkProjectOperationPermission(projectName);
+        }
         // prepare time range
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());

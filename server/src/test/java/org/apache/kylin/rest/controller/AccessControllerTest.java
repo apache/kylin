@@ -154,7 +154,12 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         assertTrue(cubes.size() > 0);
         CubeInstance cube = cubes.get(0);
         swichToAnalyst();
-        cubes = cubeController.getCubes(null, null, null, 100000, 0);
+        cubes.clear();
+        try {
+            cubes = cubeController.getCubes(null, null, null, 100000, 0);
+        } catch (AccessDeniedException e) {
+            //correct
+        }
         assertTrue(cubes.size() == 0);
 
         //grant auth
@@ -166,24 +171,30 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
             //correct
         }
         swichToAdmin();
-        List<AccessEntryResponse> aes = accessController.grant(CUBE_INSTANCE, cube.getUuid(), accessRequest);
+        List<ProjectInstance> projects = projectController.getProjects(10000, 0);
+        List<AccessEntryResponse> aes = accessController.grant(PROJECT_INSTANCE, projects.get(0).getUuid(), accessRequest);
         Assert.assertTrue(aes.size() == 1);
         swichToAnalyst();
-        cubes = cubeController.getCubes(null, null, null, 100000, 0);
-        assertEquals(1, cubes.size());
+        cubes = cubeController.getCubes(null, null, "default", 100000, 0);
+        assertTrue(cubes.size() > 0);
+        cubes.clear();
 
         //revoke auth
         try {
-            accessController.revoke(CUBE_INSTANCE, cube.getUuid(), accessRequest);
+            accessController.revoke(PROJECT_INSTANCE, projects.get(0).getUuid(), accessRequest);
             fail("ANALYST should not have auth to revoke");
         } catch (AccessDeniedException e) {
             //correct
         }
         swichToAdmin();
         accessRequest.setAccessEntryId((Long) aes.get(0).getId());
-        accessController.revoke(CUBE_INSTANCE, cube.getUuid(), accessRequest);
+        accessController.revoke(PROJECT_INSTANCE, projects.get(0).getUuid(), accessRequest);
         swichToAnalyst();
-        cubes = cubeController.getCubes(null, null, null, 10000, 0);
+        try {
+            cubes = cubeController.getCubes(null, null, null, 10000, 0);
+        } catch (AccessDeniedException e) {
+            //correct
+        }
         assertEquals(0, cubes.size());
     }
 

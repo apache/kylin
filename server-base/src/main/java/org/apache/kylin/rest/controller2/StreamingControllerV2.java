@@ -81,6 +81,7 @@ public class StreamingControllerV2 extends BasicController {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getStreamingsV2(@RequestParam(value = "table", required = false) String table,
+            @RequestParam(value = "project", required = true) String project,
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
             throws IOException {
@@ -89,7 +90,7 @@ public class StreamingControllerV2 extends BasicController {
         int limit = pageSize;
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS,
-                streamingService.getStreamingConfigs(table, limit, offset), "");
+                streamingService.getStreamingConfigs(table, project, limit, offset), "");
     }
 
     @RequestMapping(value = "/getKfkConfig", method = { RequestMethod.GET }, produces = {
@@ -97,6 +98,7 @@ public class StreamingControllerV2 extends BasicController {
     @ResponseBody
     public EnvelopeResponse getKafkaConfigsV2(
             @RequestParam(value = "kafkaConfigName", required = false) String kafkaConfigName,
+            @RequestParam(value = "project", required = true) String project,
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
             throws IOException {
@@ -105,7 +107,7 @@ public class StreamingControllerV2 extends BasicController {
         int limit = pageSize;
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS,
-                kafkaConfigService.getKafkaConfigs(kafkaConfigName, limit, offset), "");
+                kafkaConfigService.getKafkaConfigs(kafkaConfigName, project, limit, offset), "");
     }
 
     /**
@@ -145,7 +147,7 @@ public class StreamingControllerV2 extends BasicController {
             }
             try {
                 streamingConfig.setUuid(UUID.randomUUID().toString());
-                streamingService.createStreamingConfig(streamingConfig);
+                streamingService.createStreamingConfig(streamingConfig, project);
                 saveStreamingSuccess = true;
             } catch (IOException e) {
                 logger.error("Failed to save StreamingConfig:" + e.getLocalizedMessage(), e);
@@ -153,11 +155,11 @@ public class StreamingControllerV2 extends BasicController {
             }
             try {
                 kafkaConfig.setUuid(UUID.randomUUID().toString());
-                kafkaConfigService.createKafkaConfig(kafkaConfig);
+                kafkaConfigService.createKafkaConfig(kafkaConfig, project);
                 saveKafkaSuccess = true;
             } catch (IOException e) {
                 try {
-                    streamingService.dropStreamingConfig(streamingConfig);
+                    streamingService.dropStreamingConfig(streamingConfig, project);
                 } catch (IOException e1) {
                     throw new InternalErrorException(msg.getCREATE_KAFKA_CONFIG_FAIL());
                 }
@@ -171,15 +173,15 @@ public class StreamingControllerV2 extends BasicController {
                     StreamingConfig sConfig = streamingService.getStreamingManager()
                             .getStreamingConfig(streamingConfig.getName());
                     try {
-                        streamingService.dropStreamingConfig(sConfig);
+                        streamingService.dropStreamingConfig(sConfig, project);
                     } catch (IOException e) {
                         throw new InternalErrorException(msg.getROLLBACK_STREAMING_CONFIG_FAIL());
                     }
                 }
                 if (saveKafkaSuccess == true) {
                     try {
-                        KafkaConfig kConfig = kafkaConfigService.getKafkaConfig(kafkaConfig.getName());
-                        kafkaConfigService.dropKafkaConfig(kConfig);
+                        KafkaConfig kConfig = kafkaConfigService.getKafkaConfig(kafkaConfig.getName(), project);
+                        kafkaConfigService.dropKafkaConfig(kConfig, project);
                     } catch (IOException e) {
                         throw new InternalErrorException(msg.getROLLBACK_KAFKA_CONFIG_FAIL());
                     }
@@ -196,36 +198,37 @@ public class StreamingControllerV2 extends BasicController {
 
         StreamingConfig streamingConfig = deserializeSchemalDescV2(streamingRequest);
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDescV2(streamingRequest);
+        String project = streamingRequest.getProject();
 
         if (streamingConfig == null) {
             throw new BadRequestException(msg.getINVALID_STREAMING_CONFIG_DEFINITION());
         }
         try {
-            streamingService.updateStreamingConfig(streamingConfig);
+            streamingService.updateStreamingConfig(streamingConfig, project);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException(msg.getUPDATE_STREAMING_CONFIG_NO_RIGHT());
         }
 
         try {
-            kafkaConfigService.updateKafkaConfig(kafkaConfig);
+            kafkaConfigService.updateKafkaConfig(kafkaConfig, project);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException(msg.getUPDATE_KAFKA_CONFIG_NO_RIGHT());
         }
     }
 
-    @RequestMapping(value = "/{configName}", method = { RequestMethod.DELETE }, produces = {
+    @RequestMapping(value = "/{project}/{configName}", method = { RequestMethod.DELETE }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void deleteConfigV2(@PathVariable String configName) throws IOException {
+    public void deleteConfigV2(@PathVariable String project, @PathVariable String configName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         StreamingConfig config = streamingService.getStreamingManager().getStreamingConfig(configName);
-        KafkaConfig kafkaConfig = kafkaConfigService.getKafkaConfig(configName);
+        KafkaConfig kafkaConfig = kafkaConfigService.getKafkaConfig(configName, project);
         if (null == config) {
             throw new BadRequestException(String.format(msg.getSTREAMING_CONFIG_NOT_FOUND(), configName));
         }
-        streamingService.dropStreamingConfig(config);
-        kafkaConfigService.dropKafkaConfig(kafkaConfig);
+        streamingService.dropStreamingConfig(config, project);
+        kafkaConfigService.dropKafkaConfig(kafkaConfig, project);
     }
 
     private TableDesc deserializeTableDescV2(StreamingRequest streamingRequest) throws IOException {

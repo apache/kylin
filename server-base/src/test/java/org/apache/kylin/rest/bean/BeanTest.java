@@ -65,7 +65,12 @@ public class BeanTest {
         Assert.assertTrue(!coulmnMeta.isSigned());
 
         Assert.assertEquals(Constant.ACCESS_HAS_ROLE_ADMIN, "hasRole('ROLE_ADMIN')");
-        Assert.assertEquals(Constant.ACCESS_POST_FILTER_READ, "hasRole('ROLE_ADMIN') or hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'MANAGEMENT') " + "or hasPermission(filterObject, 'OPERATION') or hasPermission(filterObject, 'ADMINISTRATION')");
+        Assert.assertEquals(Constant.ACCESS_POST_FILTER_READ,
+                "hasRole('ROLE_ADMIN') " +
+                        " or hasPermission(filterObject, 'ADMINISTRATION')"+
+                        " or hasPermission(filterObject, 'MANAGEMENT')" +
+                        " or hasPermission(filterObject, 'OPERATION')" +
+                        " or hasPermission(filterObject, 'READ')");
         Assert.assertEquals(Constant.FakeCatalogName, "defaultCatalog");
         Assert.assertEquals(Constant.FakeSchemaName, "defaultSchema");
         Assert.assertEquals(Constant.IDENTITY_ROLE, "role");

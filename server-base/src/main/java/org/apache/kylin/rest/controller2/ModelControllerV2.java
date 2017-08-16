@@ -201,21 +201,20 @@ public class ModelControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
-    @RequestMapping(value = "/{modelName}", method = { RequestMethod.DELETE }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{projectName}/{modelName}", method = {RequestMethod.DELETE}, produces = {
+            "application/vnd.apache.kylin-v2+json"})
     @ResponseBody
-    public void deleteModelV2(@PathVariable String modelName) throws IOException {
+    public void deleteModelV2(@PathVariable String projectName, @PathVariable String modelName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
-        DataModelDesc model = modelService.getMetadataManager().getDataModelDesc(modelName);
-        Draft draft = modelService.getModelDraft(modelName);
-        
+        DataModelDesc model = modelService.getModel(modelName, projectName);
+        Draft draft = modelService.getModelDraft(modelName, projectName);
         if (null == model && null == draft)
             throw new BadRequestException(String.format(msg.getMODEL_NOT_FOUND(), modelName));
-        
+
         if (model != null)
             modelService.dropModel(model);
-        
+
         if (draft != null)
             modelService.getDraftManager().delete(draft.getUuid());
     }
@@ -283,18 +282,18 @@ public class ModelControllerV2 extends BasicController {
         return desc;
     }
 
-    @RequestMapping(value = "/{modelName}/usedCols", method = RequestMethod.GET, produces = {
+    @RequestMapping(value = "/{modelName}/{projectName}/usedCols", method = RequestMethod.GET, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getUsedColsV2(@PathVariable String modelName) {
+    public EnvelopeResponse getUsedColsV2(@PathVariable String projectName, @PathVariable String modelName) {
 
         Map<String, Set<String>> data = new HashMap<>();
 
-        for (Map.Entry<TblColRef, Set<CubeInstance>> entry : modelService.getUsedDimCols(modelName).entrySet()) {
+        for (Map.Entry<TblColRef, Set<CubeInstance>> entry : modelService.getUsedDimCols(modelName, projectName).entrySet()) {
             populateUsedColResponse(entry.getKey(), entry.getValue(), data);
         }
 
-        for (Map.Entry<TblColRef, Set<CubeInstance>> entry : modelService.getUsedNonDimCols(modelName).entrySet()) {
+        for (Map.Entry<TblColRef, Set<CubeInstance>> entry : modelService.getUsedNonDimCols(modelName, projectName).entrySet()) {
             populateUsedColResponse(entry.getKey(), entry.getValue(), data);
         }
 

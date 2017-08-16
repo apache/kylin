@@ -77,10 +77,11 @@ public class StreamingController extends BasicController {
 
     @RequestMapping(value = "/getConfig", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<StreamingConfig> getStreamings(@RequestParam(value = "table", required = false) String table, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
+    public List<StreamingConfig> getStreamings(@RequestParam(value = "table", required = false) String table, @RequestParam(value = "project", required = false) String project, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         try {
-            return streamingService.getStreamingConfigs(table, limit, offset);
+            return streamingService.getStreamingConfigs(table, project, limit, offset);
         } catch (IOException e) {
+
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
         }
@@ -88,9 +89,9 @@ public class StreamingController extends BasicController {
 
     @RequestMapping(value = "/getKfkConfig", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<KafkaConfig> getKafkaConfigs(@RequestParam(value = "kafkaConfigName", required = false) String kafkaConfigName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
+    public List<KafkaConfig> getKafkaConfigs(@RequestParam(value = "kafkaConfigName", required = false) String kafkaConfigName, @RequestParam(value = "project", required = false) String project, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         try {
-            return kafkaConfigService.getKafkaConfigs(kafkaConfigName, limit, offset);
+            return kafkaConfigService.getKafkaConfigs(kafkaConfigName, project, limit, offset);
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
@@ -131,7 +132,7 @@ public class StreamingController extends BasicController {
             }
             try {
                 streamingConfig.setUuid(UUID.randomUUID().toString());
-                streamingService.createStreamingConfig(streamingConfig);
+                streamingService.createStreamingConfig(streamingConfig, project);
                 saveStreamingSuccess = true;
             } catch (IOException e) {
                 logger.error("Failed to save StreamingConfig:" + e.getLocalizedMessage(), e);
@@ -139,11 +140,11 @@ public class StreamingController extends BasicController {
             }
             try {
                 kafkaConfig.setUuid(UUID.randomUUID().toString());
-                kafkaConfigService.createKafkaConfig(kafkaConfig);
+                kafkaConfigService.createKafkaConfig(kafkaConfig, project);
                 saveKafkaSuccess = true;
             } catch (IOException e) {
                 try {
-                    streamingService.dropStreamingConfig(streamingConfig);
+                    streamingService.dropStreamingConfig(streamingConfig, project);
                 } catch (IOException e1) {
                     throw new InternalErrorException("StreamingConfig is created, but failed to create KafkaConfig: " + e.getLocalizedMessage());
                 }
@@ -156,15 +157,15 @@ public class StreamingController extends BasicController {
                 if (saveStreamingSuccess == true) {
                     StreamingConfig sConfig = streamingService.getStreamingManager().getStreamingConfig(streamingConfig.getName());
                     try {
-                        streamingService.dropStreamingConfig(sConfig);
+                        streamingService.dropStreamingConfig(sConfig, project);
                     } catch (IOException e) {
                         throw new InternalErrorException("Action failed and failed to rollback the created streaming config: " + e.getLocalizedMessage());
                     }
                 }
                 if (saveKafkaSuccess == true) {
                     try {
-                        KafkaConfig kConfig = kafkaConfigService.getKafkaConfig(kafkaConfig.getName());
-                        kafkaConfigService.dropKafkaConfig(kConfig);
+                        KafkaConfig kConfig = kafkaConfigService.getKafkaConfig(kafkaConfig.getName(), project);
+                        kafkaConfigService.dropKafkaConfig(kConfig, project);
                     } catch (IOException e) {
                         throw new InternalErrorException("Action failed and failed to rollback the created kafka config: " + e.getLocalizedMessage());
                     }
@@ -181,12 +182,12 @@ public class StreamingController extends BasicController {
     public StreamingRequest updateStreamingConfig(@RequestBody StreamingRequest streamingRequest) throws JsonProcessingException {
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDesc(streamingRequest);
-
+        String project = streamingRequest.getProject();
         if (streamingConfig == null) {
             return streamingRequest;
         }
         try {
-            streamingConfig = streamingService.updateStreamingConfig(streamingConfig);
+            streamingConfig = streamingService.updateStreamingConfig(streamingConfig, project);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this StreamingConfig.");
         } catch (Exception e) {
@@ -194,7 +195,7 @@ public class StreamingController extends BasicController {
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
         }
         try {
-            kafkaConfig = kafkaConfigService.updateKafkaConfig(kafkaConfig);
+            kafkaConfig = kafkaConfigService.updateKafkaConfig(kafkaConfig, project);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this KafkaConfig.");
         } catch (Exception e) {
@@ -207,17 +208,17 @@ public class StreamingController extends BasicController {
         return streamingRequest;
     }
 
-    @RequestMapping(value = "/{configName}", method = { RequestMethod.DELETE }, produces = { "application/json" })
+    @RequestMapping(value = "/{project}/{configName}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
-    public void deleteConfig(@PathVariable String configName) throws IOException {
+    public void deleteConfig(@PathVariable String project, @PathVariable String configName) throws IOException {
         StreamingConfig config = streamingService.getStreamingManager().getStreamingConfig(configName);
-        KafkaConfig kafkaConfig = kafkaConfigService.getKafkaConfig(configName);
+        KafkaConfig kafkaConfig = kafkaConfigService.getKafkaConfig(configName, project);
         if (null == config) {
             throw new NotFoundException("StreamingConfig with name " + configName + " not found..");
         }
         try {
-            streamingService.dropStreamingConfig(config);
-            kafkaConfigService.dropKafkaConfig(kafkaConfig);
+            streamingService.dropStreamingConfig(config, project);
+            kafkaConfigService.dropKafkaConfig(kafkaConfig, project);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to delete StreamingConfig. " + " Caused by: " + e.getMessage(), e);

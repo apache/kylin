@@ -43,11 +43,11 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.TableDescResponse;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob;
@@ -57,7 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -88,27 +87,34 @@ public class TableService extends BasicService {
     @Qualifier("kafkaMgmtService")
     private KafkaConfigService kafkaConfigService;
 
+    @Autowired
+    private AclEvaluate aclEvaluate;
+
     public List<TableDesc> getTableDescByProject(String project, boolean withExt) throws IOException {
+        aclEvaluate.checkProjectReadPermission(project);
         List<TableDesc> tables = getProjectManager().listDefinedTables(project);
         if (null == tables) {
             return Collections.emptyList();
         }
         if (withExt) {
+            aclEvaluate.checkProjectWritePermission(project);
             tables = cloneTableDesc(tables, project);
         }
         return tables;
     }
 
     public TableDesc getTableDescByName(String tableName, boolean withExt, String prj) {
+        aclEvaluate.checkProjectReadPermission(prj);
         TableDesc table = getMetadataManager().getTableDesc(tableName, prj);
         if (withExt) {
+            aclEvaluate.checkProjectWritePermission(prj);
             table = cloneTableDesc(table, prj);
         }
         return table;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String[] loadHiveTablesToProject(String[] tables, String project) throws Exception {
+        aclEvaluate.checkProjectWritePermission(project);
         // de-dup
         SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
         for (String fullTableName : tables) {
@@ -176,6 +182,7 @@ public class TableService extends BasicService {
     }
     
     public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile) throws Exception {
+        aclEvaluate.checkProjectWritePermission(project);
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         Map<String, String[]> result = new HashMap<String, String[]>();
 
@@ -198,6 +205,7 @@ public class TableService extends BasicService {
     }
 
     public Map<String, String[]> unloadHiveTables(String[] tableNames, String project) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         Set<String> unLoadSuccess = Sets.newHashSet();
         Set<String> unLoadFail = Sets.newHashSet();
         Map<String, String[]> result = new HashMap<String, String[]>();
@@ -231,8 +239,8 @@ public class TableService extends BasicService {
      * @param project
      * @return
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public boolean unLoadHiveTable(String tableName, String project) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         Message msg = MsgPicker.getMsg();
 
         boolean rtn = false;
@@ -266,9 +274,9 @@ public class TableService extends BasicService {
             KafkaConfig kafkaConfig = null;
             try {
                 config = streamingService.getStreamingManager().getStreamingConfig(tableName);
-                kafkaConfig = kafkaConfigService.getKafkaConfig(tableName);
-                streamingService.dropStreamingConfig(config);
-                kafkaConfigService.dropKafkaConfig(kafkaConfig);
+                kafkaConfig = kafkaConfigService.getKafkaConfig(tableName, project);
+                streamingService.dropStreamingConfig(config, project);
+                kafkaConfigService.dropKafkaConfig(kafkaConfig, project);
                 rtn = true;
             } catch (Exception e) {
                 rtn = false;
@@ -284,8 +292,8 @@ public class TableService extends BasicService {
      * @param project
      * @throws IOException
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void addStreamingTable(TableDesc desc, String project) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         desc.setUuid(UUID.randomUUID().toString());
         getMetadataManager().saveSourceTable(desc, project);
         syncTableToProject(new String[] { desc.getIdentity() }, project);
@@ -351,7 +359,6 @@ public class TableService extends BasicService {
         return descs;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void calculateCardinalityIfNotPresent(String[] tables, String submitter, String prj) throws Exception {
         MetadataManager metaMgr = getMetadataManager();
         ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
@@ -370,8 +377,8 @@ public class TableService extends BasicService {
      *
      * @param tableName
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void calculateCardinality(String tableName, String submitter, String prj) throws Exception {
+        aclEvaluate.checkProjectWritePermission(prj);
         Message msg = MsgPicker.getMsg();
 
         tableName = normalizeHiveTableName(tableName);

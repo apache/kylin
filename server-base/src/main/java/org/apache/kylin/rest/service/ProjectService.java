@@ -27,7 +27,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.apache.directory.api.util.Strings;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -37,7 +36,7 @@ import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.security.AclPermission;
-import org.apache.kylin.rest.util.AclUtil;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +69,7 @@ public class ProjectService extends BasicService {
     private CubeService cubeService;
 
     @Autowired
-    private AclUtil aclUtil;
+    private AclEvaluate aclEvaluate;
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public ProjectInstance createProject(ProjectInstance newProject) throws IOException {
@@ -93,7 +92,7 @@ public class ProjectService extends BasicService {
         return createdProject;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION') or hasPermission(#currentProject, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION')")
     public ProjectInstance updateProject(ProjectInstance newProject, ProjectInstance currentProject) throws IOException {
         if (!newProject.getName().equals(currentProject.getName())) {
             return renameProject(newProject, currentProject);
@@ -152,7 +151,7 @@ public class ProjectService extends BasicService {
         return projects.subList(coffset, coffset + climit);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void deleteProject(String projectName, ProjectInstance project) throws IOException {
         getProjectManager().dropProject(projectName);
 
@@ -212,34 +211,18 @@ public class ProjectService extends BasicService {
 
             boolean hasProjectPermission = false;
             try {
-                hasProjectPermission = aclUtil.hasProjectReadPermission(projectInstance);
+                hasProjectPermission = aclEvaluate.hasProjectReadPermission(projectInstance);
             } catch (AccessDeniedException e) {
                 //ignore to continue
             }
 
-            if (!hasProjectPermission) {
-                List<CubeInstance> cubeInstances = cubeService.listAllCubes(projectInstance.getName());
-
-                for (CubeInstance cubeInstance : cubeInstances) {
-                    if (cubeInstance == null) {
-                        continue;
-                    }
-
-                    try {
-                        aclUtil.hasCubeReadPermission(cubeInstance);
-                        hasProjectPermission = true;
-                        break;
-                    } catch (AccessDeniedException e) {
-                        //ignore to continue
-                    }
-                }
-            }
             if (hasProjectPermission) {
                 readableProjects.add(projectInstance);
             }
 
         }
 
+        // listAll method may not need a single param.But almost all listAll method pass
         if (!Strings.isEmpty(projectName)) {
             readableProjects = Lists
                     .newArrayList(Iterators.filter(readableProjects.iterator(), new Predicate<ProjectInstance>() {

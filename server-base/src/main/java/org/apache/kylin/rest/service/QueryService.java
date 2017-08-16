@@ -93,7 +93,7 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.rest.util.AclUtil;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hybrid.HybridInstance;
@@ -142,7 +142,7 @@ public class QueryService extends BasicService {
     private ModelService modelService;
 
     @Autowired
-    private AclUtil aclUtil;
+    private AclEvaluate aclEvaluate;
 
     public QueryService() {
         queryStore = ResourceStore.getStore(getConfig());
@@ -231,7 +231,7 @@ public class QueryService extends BasicService {
     }
 
     public void logQuery(final SQLRequest request, final SQLResponse response) {
-        final String user = aclUtil.getCurrentUserName();
+        final String user = aclEvaluate.getCurrentUserName();
         final List<String> realizationNames = new LinkedList<>();
         final Set<Long> cuboidIds = new HashSet<Long>();
         float duration = response.getDuration() / (float) 1000;
@@ -289,7 +289,7 @@ public class QueryService extends BasicService {
         //project 
         ProjectInstance projectInstance = getProjectManager().getProject(project);
         try {
-            if (aclUtil.hasProjectReadPermission(projectInstance)) {
+            if (aclEvaluate.hasProjectReadPermission(projectInstance)) {
                 return;
             }
         } catch (AccessDeniedException e) {
@@ -325,7 +325,7 @@ public class QueryService extends BasicService {
     }
 
     private void checkCubeAuthorization(CubeInstance cube) throws AccessDeniedException {
-        Preconditions.checkState(aclUtil.hasCubeReadPermission(cube));
+        Preconditions.checkState(aclEvaluate.hasCubeReadPermission(cube));
     }
 
     private void checkHybridAuthorization(HybridInstance hybridInstance) throws AccessDeniedException {

@@ -273,6 +273,11 @@ public class AccessService {
         return AclEntityFactory.createAclEntity(entityType, uuid);
     }
 
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN +
+            " or hasPermission(#ae, 'ADMINISTRATION')" +
+            " or hasPermission(#ae, 'MANAGEMENT')" +
+            " or hasPermission(#ae, 'OPERATION')" +
+            " or hasPermission(#ae, 'READ')")
     public Acl getAcl(AclEntity ae) {
         if (null == ae) {
             return null;

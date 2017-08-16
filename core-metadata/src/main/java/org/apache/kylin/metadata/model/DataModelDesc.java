@@ -40,6 +40,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.JoinsTree.Chain;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -827,7 +828,11 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public String getProject() {
-        return ProjectManager.getInstance(getConfig()).getProjectOfModel(this.getName()).getName();
+        return ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProjectOfModel(this.getName()).getName();
+    }
+
+    public ProjectInstance getProjectInstance() {
+        return ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProjectOfModel(this.getName());
     }
 
     public static DataModelDesc getCopyOf(DataModelDesc orig) {

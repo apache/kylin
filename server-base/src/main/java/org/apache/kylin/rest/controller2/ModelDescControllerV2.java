@@ -62,27 +62,27 @@ public class ModelDescControllerV2 extends BasicController {
 
     /**
      * Get detail information of the "Model ID"
-     * 
+     *
      * @param modelName
      *            Model ID
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{modelName}", method = { RequestMethod.GET }, produces = {
+    @RequestMapping(value = "/{projectName}/{modelName}", method = { RequestMethod.GET }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getModelV2(@PathVariable String modelName) throws IOException {
+    public EnvelopeResponse getModelV2(@PathVariable String projectName, @PathVariable String modelName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         MetadataManager metaMgr = MetadataManager.getInstance(config);
-        
-        DataModelDesc model = metaMgr.getDataModelDesc(modelName);
-        Draft draft = modelService.getModelDraft(modelName);
-        
+
+        DataModelDesc model = modelService.getModel(modelName, projectName);
+        Draft draft = modelService.getModelDraft(modelName, projectName);
+
         if (model == null && draft == null)
             throw new BadRequestException(String.format(msg.getMODEL_NOT_FOUND(), modelName));
-        
+
         // figure out project
         String project = null;
         if (model != null) {
@@ -90,7 +90,7 @@ public class ModelDescControllerV2 extends BasicController {
         } else {
             project = draft.getProject();
         }
-        
+
         // result
         HashMap<String, DataModelDescResponse> result = new HashMap<String, DataModelDescResponse>();
         if (model != null) {

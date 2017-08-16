@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.util;
 
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,20 +26,44 @@ import org.springframework.stereotype.Component;
 
 @Component("aclUtil")
 public class AclUtil {
-
-    //such method MUST NOT be called from within same class
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')" + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
-    public boolean hasCubeReadPermission(CubeInstance cube) {
-        return true;
+    String getCurrentUserName() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
     //such method MUST NOT be called from within same class
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')" + " or hasPermission(#project, 'OPERATION') or hasPermission(#project, 'READ')")
+    //do not change public to package private
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN +
+            " or hasPermission(#project, 'ADMINISTRATION')" +
+            " or hasPermission(#project, 'MANAGEMENT')" +
+            " or hasPermission(#project, 'OPERATION')" +
+            " or hasPermission(#project, 'READ')")
     public boolean hasProjectReadPermission(ProjectInstance project) {
         return true;
     }
 
-    public String getCurrentUserName() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN +
+            " or hasPermission(#project, 'ADMINISTRATION')" +
+            " or hasPermission(#project, 'MANAGEMENT')" +
+            " or hasPermission(#project, 'OPERATION')")
+    public boolean hasProjectOperationPermission(ProjectInstance project) {
+        return true;
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN +
+            " or hasPermission(#project, 'ADMINISTRATION')" +
+            " or hasPermission(#project, 'MANAGEMENT')")
+    public boolean hasProjectWritePermission(ProjectInstance project) {
+        return true;
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN +
+            " or hasPermission(#project, 'ADMINISTRATION')")
+    public boolean hasProjectAdminPermission(ProjectInstance project) {
+        return true;
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public boolean checkIsGlobalAdmin() {
+        return true;
     }
 }

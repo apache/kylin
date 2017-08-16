@@ -51,15 +51,15 @@ public class CubeDescControllerV2 extends BasicController {
     @Qualifier("cubeMgmtService")
     private CubeService cubeService;
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{projectName}/{cubeName}", method = {RequestMethod.GET}, produces = {
+            "application/vnd.apache.kylin-v2+json"})
     @ResponseBody
-    public EnvelopeResponse getDescV2(@PathVariable String cubeName) throws IOException {
+    public EnvelopeResponse getDescV2(@PathVariable String projectName, @PathVariable String cubeName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        Draft draft = cubeService.getCubeDraft(cubeName);
-        
+        Draft draft = cubeService.getCubeDraft(cubeName, projectName);
+
         if (cube == null && draft == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }

@@ -24,17 +24,18 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
-import org.springframework.security.access.prepost.PostFilter;
+import org.apache.kylin.rest.util.AclEvaluate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component("streamingMgmtService")
 public class StreamingService extends BasicService {
+    @Autowired
+    private AclEvaluate aclEvaluate;
 
-    @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<StreamingConfig> listAllStreamingConfigs(final String table) throws IOException {
         List<StreamingConfig> streamingConfigs = new ArrayList();
         if (StringUtils.isEmpty(table)) {
@@ -49,8 +50,8 @@ public class StreamingService extends BasicService {
         return streamingConfigs;
     }
 
-    public List<StreamingConfig> getStreamingConfigs(final String table, final Integer limit, final Integer offset) throws IOException {
-
+    public List<StreamingConfig> getStreamingConfigs(final String table, final String project, final Integer limit, final Integer offset) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         List<StreamingConfig> streamingConfigs;
         streamingConfigs = listAllStreamingConfigs(table);
 
@@ -65,7 +66,8 @@ public class StreamingService extends BasicService {
         return streamingConfigs.subList(offset, offset + limit);
     }
 
-    public StreamingConfig createStreamingConfig(StreamingConfig config) throws IOException {
+    public StreamingConfig createStreamingConfig(StreamingConfig config, String project) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         Message msg = MsgPicker.getMsg();
 
         if (getStreamingManager().getStreamingConfig(config.getName()) != null) {
@@ -75,13 +77,13 @@ public class StreamingService extends BasicService {
         return streamingConfig;
     }
 
-    //    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
-    public StreamingConfig updateStreamingConfig(StreamingConfig config) throws IOException {
+    public StreamingConfig updateStreamingConfig(StreamingConfig config, String project) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         return getStreamingManager().updateStreamingConfig(config);
     }
 
-    //    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
-    public void dropStreamingConfig(StreamingConfig config) throws IOException {
+    public void dropStreamingConfig(StreamingConfig config, String project) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         getStreamingManager().removeStreamingConfig(config);
     }
 

@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -32,7 +31,7 @@ import org.apache.kylin.rest.request.ProjectRequest;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.ProjectService;
-import org.apache.kylin.rest.util.AclUtil;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +67,7 @@ public class ProjectController extends BasicController {
     @Qualifier("cubeMgmtService")
     private CubeService cubeService;
     @Autowired
-    private AclUtil aclUtil;
+    private AclEvaluate aclEvaluate;
 
     /**
      * Get available project list
@@ -99,29 +98,11 @@ public class ProjectController extends BasicController {
 
             boolean hasProjectPermission = false;
             try {
-                hasProjectPermission = aclUtil.hasProjectReadPermission(projectInstance);
+                hasProjectPermission = aclEvaluate.hasProjectReadPermission(projectInstance);
             } catch (AccessDeniedException e) {
                 //ignore to continue
             }
 
-            if (!hasProjectPermission) {
-                List<CubeInstance> cubeInstances = cubeService.listAllCubes(projectInstance.getName());
-
-                for (CubeInstance cubeInstance : cubeInstances) {
-                    if (cubeInstance == null) {
-                        continue;
-                    }
-
-                    try {
-                        aclUtil.hasCubeReadPermission(cubeInstance);
-                        hasProjectPermission = true;
-                        break;
-                    } catch (AccessDeniedException e) {
-                        //ignore to continue
-                    }
-                }
-            }
-            
             if (hasProjectPermission) {
                 readableProjects.add(projectInstance);
             }

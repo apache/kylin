@@ -37,19 +37,17 @@ import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PostFilter;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -72,14 +70,18 @@ public class ModelService extends BasicService {
     @Qualifier("cubeMgmtService")
     private CubeService cubeService;
 
-    @PostFilter(Constant.ACCESS_POST_FILTER_READ)
+    @Autowired
+    private AclEvaluate aclEvaluate;
+
     public List<DataModelDesc> listAllModels(final String modelName, final String projectName, boolean exactMatch) throws IOException {
         List<DataModelDesc> models;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
         if (null == project) {
+            aclEvaluate.checkIsGlobalAdmin();
             models = getMetadataManager().getModels();
         } else {
+            aclEvaluate.hasProjectReadPermission(project);
             models = getMetadataManager().getModels(projectName);
         }
 
@@ -114,6 +116,7 @@ public class ModelService extends BasicService {
     }
 
     public DataModelDesc createModelDesc(String projectName, DataModelDesc desc) throws IOException {
+        aclEvaluate.hasProjectWritePermission(getProjectManager().getProject(projectName));
         Message msg = MsgPicker.getMsg();
 
         if (getMetadataManager().getDataModelDesc(desc.getName()) != null) {
@@ -131,19 +134,15 @@ public class ModelService extends BasicService {
         return createdDesc;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public DataModelDesc updateModelAndDesc(DataModelDesc desc) throws IOException {
-
+        aclEvaluate.hasProjectWritePermission(desc.getProjectInstance());
         getMetadataManager().updateDataModelDesc(desc);
         return desc;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public void dropModel(DataModelDesc desc) throws IOException {
+        aclEvaluate.hasProjectWritePermission(desc.getProjectInstance());
         Message msg = MsgPicker.getMsg();
-
         //check cube desc exist
         List<CubeDesc> cubeDescs = getCubeDescManager().listAllDesc();
         for (CubeDesc cubeDesc : cubeDescs) {
@@ -169,9 +168,9 @@ public class ModelService extends BasicService {
         return getMetadataManager().getModelsUsingTable(table, project);
     }
 
-    public Map<TblColRef, Set<CubeInstance>> getUsedDimCols(String modelName) {
+    public Map<TblColRef, Set<CubeInstance>> getUsedDimCols(String modelName, String project) {
         Map<TblColRef, Set<CubeInstance>> ret = Maps.newHashMap();
-        List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, null, modelName, true);
+        List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, project, modelName, true);
         for (CubeInstance cubeInstance : cubeInstances) {
             CubeDesc cubeDesc = cubeInstance.getDescriptor();
             for (TblColRef tblColRef : cubeDesc.listDimensionColumnsIncludingDerived()) {
@@ -186,9 +185,9 @@ public class ModelService extends BasicService {
         return ret;
     }
 
-    public Map<TblColRef, Set<CubeInstance>> getUsedNonDimCols(String modelName) {
+    public Map<TblColRef, Set<CubeInstance>> getUsedNonDimCols(String modelName, String project) {
         Map<TblColRef, Set<CubeInstance>> ret = Maps.newHashMap();
-        List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, null, modelName, true);
+        List<CubeInstance> cubeInstances = cubeService.listAllCubes(null, project, modelName, true);
         for (CubeInstance cubeInstance : cubeInstances) {
             CubeDesc cubeDesc = cubeInstance.getDescriptor();
             Set<TblColRef> tblColRefs = Sets.newHashSet(cubeDesc.listAllColumns());//make a copy
@@ -205,9 +204,9 @@ public class ModelService extends BasicService {
         return ret;
     }
 
-    private boolean validateUpdatingModel(DataModelDesc dataModelDesc) throws IOException {
+    private boolean validateUpdatingModel(DataModelDesc dataModelDesc, String project) throws IOException {
         String modelName = dataModelDesc.getName();
-        List<CubeInstance> cubes = cubeService.listAllCubes(null, null, modelName, true);
+        List<CubeInstance> cubes = cubeService.listAllCubes(null, project, modelName, true);
         if (cubes != null && cubes.size() != 0) {
             dataModelDesc.init(getConfig(), getMetadataManager().getAllTablesMap(dataModelDesc.getProject()),
                     getMetadataManager().listDataModels());
@@ -231,8 +230,8 @@ public class ModelService extends BasicService {
                 dimAndMCols.add(measure);
             }
 
-            Set<TblColRef> usedDimCols = getUsedDimCols(modelName).keySet();
-            Set<TblColRef> usedNonDimCols = getUsedNonDimCols(modelName).keySet();
+            Set<TblColRef> usedDimCols = getUsedDimCols(modelName, project).keySet();
+            Set<TblColRef> usedNonDimCols = getUsedNonDimCols(modelName, project).keySet();
 
             for (TblColRef tblColRef : usedDimCols) {
                 if (!dimCols.contains(tblColRef.getTableAlias() + "." + tblColRef.getName()))
@@ -244,8 +243,7 @@ public class ModelService extends BasicService {
                     return false;
             }
 
-            DataModelDesc originDataModelDesc = listAllModels(modelName, null, true).get(0);
-
+            DataModelDesc originDataModelDesc = listAllModels(modelName, project, true).get(0);
             if (!dataModelDesc.getRootFactTable().equals(originDataModelDesc.getRootFactTable()))
                 return false;
 
@@ -276,6 +274,7 @@ public class ModelService extends BasicService {
     }
 
     public DataModelDesc updateModelToResourceStore(DataModelDesc modelDesc, String projectName) throws IOException {
+        aclEvaluate.hasProjectWritePermission(getProjectManager().getProject(projectName));
         Message msg = MsgPicker.getMsg();
         
         modelDesc.setDraft(false);
@@ -288,7 +287,7 @@ public class ModelService extends BasicService {
                 modelDesc = createModelDesc(projectName, modelDesc);
             } else {
                 // update
-                if (!validateUpdatingModel(modelDesc)) {
+                if (!validateUpdatingModel(modelDesc, projectName)) {
                     throw new BadRequestException(msg.getUPDATE_MODEL_KEY_FIELD());
                 }
                 modelDesc = updateModelAndDesc(modelDesc);
@@ -304,17 +303,35 @@ public class ModelService extends BasicService {
         return modelDesc;
     }
 
-    public Draft getModelDraft(String modelName) throws IOException {
-        for (Draft d : listModelDrafts(modelName, null)) {
+    public DataModelDesc getModel(final String modelName, final String projectName) throws IOException {
+        ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
+        if (null == project) {
+            aclEvaluate.checkIsGlobalAdmin();
+        } else {
+            aclEvaluate.hasProjectReadPermission(project);
+        }
+
+        return getMetadataManager().getDataModelDesc(modelName);
+    }
+
+    public Draft getModelDraft(String modelName, String projectName) throws IOException {
+        for (Draft d : listModelDrafts(modelName, projectName)) {
             return d;
         }
         return null;
     }
-    
-    public List<Draft> listModelDrafts(String modelName, String project) throws IOException {
+
+    public List<Draft> listModelDrafts(String modelName,  String projectName) throws IOException {
+        ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
+        if (null == project) {
+            aclEvaluate.checkIsGlobalAdmin();
+        } else {
+            aclEvaluate.hasProjectReadPermission(project);
+        }
+
         List<Draft> result = new ArrayList<>();
-        
-        for (Draft d : getDraftManager().list(project)) {
+
+        for (Draft d : getDraftManager().list(projectName)) {
             RootPersistentEntity e = d.getEntity();
             if (e instanceof DataModelDesc) {
                 DataModelDesc m = (DataModelDesc) e;

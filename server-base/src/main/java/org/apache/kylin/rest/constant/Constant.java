@@ -35,9 +35,14 @@ public class Constant {
     public final static String ROLE_ANALYST = "ROLE_ANALYST";
 
     public final static String ACCESS_HAS_ROLE_ADMIN = "hasRole('ROLE_ADMIN')";
-//    public final static String ACCESS_HAS_ROLE_MODELER = "hasRole('ROLE_MODELER')";
+    //public final static String ACCESS_HAS_ROLE_MODELER = "hasRole('ROLE_MODELER')";
 
-    public final static String ACCESS_POST_FILTER_READ = "hasRole('ROLE_ADMIN') or hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'MANAGEMENT') " + "or hasPermission(filterObject, 'OPERATION') or hasPermission(filterObject, 'ADMINISTRATION')";
+    public final static String ACCESS_POST_FILTER_READ =
+            "hasRole('ROLE_ADMIN') " +
+            " or hasPermission(filterObject, 'ADMINISTRATION')"+
+            " or hasPermission(filterObject, 'MANAGEMENT')" +
+            " or hasPermission(filterObject, 'OPERATION')" +
+            " or hasPermission(filterObject, 'READ')";
 
     public final static String SERVER_MODE_QUERY = "query";
     public final static String SERVER_MODE_JOB = "job";

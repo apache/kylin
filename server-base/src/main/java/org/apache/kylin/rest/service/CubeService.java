@@ -58,13 +58,12 @@ import org.apache.kylin.rest.request.MetricsRequest;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.security.AclPermission;
-import org.apache.kylin.rest.util.AclUtil;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -99,18 +98,19 @@ public class CubeService extends BasicService {
     private ModelService modelService;
 
     @Autowired
-    private AclUtil aclUtil;
+    private AclEvaluate aclEvaluate;
 
-    @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName,
-            boolean exactMatch) {
+                                           boolean exactMatch) {
         List<CubeInstance> cubeInstances = null;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
         if (null == project) {
             cubeInstances = getCubeManager().listAllCubes();
+            aclEvaluate.checkIsGlobalAdmin();
         } else {
             cubeInstances = listAllCubes(projectName);
+            aclEvaluate.hasProjectReadPermission(project);
         }
 
         List<CubeInstance> filterModelCubes = new ArrayList<CubeInstance>();
@@ -141,10 +141,8 @@ public class CubeService extends BasicService {
         return filterCubes;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance updateCubeCost(CubeInstance cube, int cost) throws IOException {
-
+        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
         if (cube.getCost() == cost) {
             // Do nothing
             return cube;
@@ -235,10 +233,9 @@ public class CubeService extends BasicService {
         return false;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName, boolean forceUpdate)
             throws IOException {
+        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
         Message msg = MsgPicker.getMsg();
 
         final List<CubingJob> cubingJobs = jobService.listJobsByRealizationName(cube.getName(), null,
@@ -268,9 +265,8 @@ public class CubeService extends BasicService {
         return updatedCubeDesc;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void deleteCube(CubeInstance cube) throws IOException {
+        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
         Message msg = MsgPicker.getMsg();
 
         final List<CubingJob> cubingJobs = jobService.listJobsByRealizationName(cube.getName(), null,
@@ -299,9 +295,8 @@ public class CubeService extends BasicService {
      * @throws IOException
      * @throws JobException
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance purgeCube(CubeInstance cube) throws IOException {
+        aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
         Message msg = MsgPicker.getMsg();
 
         String cubeName = cube.getName();
@@ -322,9 +317,8 @@ public class CubeService extends BasicService {
      * @throws IOException
      * @throws JobException
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance disableCube(CubeInstance cube) throws IOException {
+        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
         Message msg = MsgPicker.getMsg();
 
         String cubeName = cube.getName();
@@ -352,9 +346,8 @@ public class CubeService extends BasicService {
      * @return
      * @throws IOException
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance enableCube(CubeInstance cube) throws IOException {
+        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
         Message msg = MsgPicker.getMsg();
 
         String cubeName = cube.getName();
@@ -441,27 +434,24 @@ public class CubeService extends BasicService {
         return hr;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
     public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException {
+        aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
         CubeDesc desc = cube.getDescriptor();
         desc.setNotifyList(notifyList);
         getCubeDescManager().updateCubeDesc(desc);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable)
             throws IOException {
+        aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
         CubeSegment seg = cube.getSegment(segmentName, SegmentStatusEnum.READY);
         getCubeManager().buildSnapshotTable(seg, lookupTable);
 
         return cube;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
+        aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
         Message msg = MsgPicker.getMsg();
 
         if (!segmentName.equals(cube.getSegments().get(0).getName())
@@ -641,7 +631,7 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+            + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
     public void saveDraft(ProjectInstance project, CubeInstance cube, String uuid, RootPersistentEntity... entities)
             throws IOException {
         Draft draft = new Draft();
@@ -662,12 +652,12 @@ public class CubeService extends BasicService {
     }
 
     public void deleteDraft(Draft draft) throws IOException {
+        aclEvaluate.hasProjectWritePermission(getProjectManager().getProject(draft.getProject()));
         getDraftManager().delete(draft.getUuid());
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeDesc updateCube(CubeInstance cube, CubeDesc desc, ProjectInstance project) throws IOException {
+        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
         Message msg = MsgPicker.getMsg();
         String projectName = project.getName();
 
@@ -690,8 +680,8 @@ public class CubeService extends BasicService {
         return desc;
     }
 
-    public Draft getCubeDraft(String cubeName) throws IOException {
-        for (Draft d : listCubeDrafts(cubeName, null, null, true)) {
+    public Draft getCubeDraft(String cubeName, String projectName) throws IOException {
+        for (Draft d : listCubeDrafts(cubeName, null, projectName, true)) {
             return d;
         }
         return null;
@@ -699,6 +689,11 @@ public class CubeService extends BasicService {
 
     public List<Draft> listCubeDrafts(String cubeName, String modelName, String project, boolean exactMatch)
             throws IOException {
+        if (null == project) {
+            aclEvaluate.checkIsGlobalAdmin();
+        } else {
+            aclEvaluate.hasProjectReadPermission(getProjectManager().getProject(project));
+        }
         List<Draft> result = new ArrayList<>();
 
         for (Draft d : getDraftManager().list(project)) {
@@ -712,34 +707,6 @@ public class CubeService extends BasicService {
                 }
             }
         }
-
-        List<Draft> filtered = new ArrayList<>();
-
-        // if cube's there, follow cube permission. otherwise follow project permission
-        for (Draft d : result) {
-            CubeDesc desc = (CubeDesc) d.getEntity();
-            CubeInstance cube = getCubeManager().getCube(desc.getName());
-
-            if (cube == null) {
-                try {
-                    project = project == null ? d.getProject() : project;
-                    if (aclUtil.hasProjectReadPermission(getProjectManager().getProject(project))) {
-                        filtered.add(d);
-                    }
-                } catch (Exception e) {
-                    // do nothing
-                }
-            } else {
-                try {
-                    if (aclUtil.hasCubeReadPermission(cube)) {
-                        filtered.add(d);
-                    }
-                } catch (Exception e) {
-                    // do nothing
-                }
-            }
-        }
-
-        return filtered;
+        return result;
     }
 }
