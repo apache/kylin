@@ -133,7 +133,7 @@ public class BytesUtil {
 
     public static long readLong(ByteBuffer in) {
         long integer = 0;
-        int mask = 0xff;
+        long mask = 0xff;
         int shift = 0;
         for (int i = 0; i < 8; i++) {
             integer |= (in.get() << shift) & mask;
