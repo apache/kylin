@@ -96,7 +96,8 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
         }
 
         int taskCount = config.getCubeAlgorithmInMemConcurrentThreads();
-        DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), flatDesc, dictionaryMap);
+        DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cubeSegment.getCuboidScheduler(), flatDesc,
+                dictionaryMap);
         cubeBuilder.setReserveMemoryMB(calculateReserveMB(context.getConfiguration()));
         cubeBuilder.setConcurrentThreads(taskCount);
 

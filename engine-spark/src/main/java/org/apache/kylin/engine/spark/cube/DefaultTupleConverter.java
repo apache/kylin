@@ -65,7 +65,7 @@ public final class DefaultTupleConverter implements TupleConverter {
 
     @Override
     public final Tuple2<byte[], byte[]> convert(long cuboidId, GTRecord record) {
-        Cuboid cuboid = Cuboid.findById(segment.getCubeDesc(), cuboidId);
+        Cuboid cuboid = Cuboid.findById(segment, cuboidId);
         RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(cuboid);
 
         final int dimensions = Long.bitCount(cuboidId);

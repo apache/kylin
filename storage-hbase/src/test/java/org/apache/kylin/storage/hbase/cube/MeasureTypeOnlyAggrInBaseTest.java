@@ -91,10 +91,10 @@ public class MeasureTypeOnlyAggrInBaseTest extends LocalFileMetadataTestCase {
     @Test
     public void testIdentifyCuboidV2() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, NoSuchFieldException {
         CubeDesc cubeDesc = cube.getDescriptor();
-        Cuboid ret = Cuboid.identifyCuboid(cubeDesc, Sets.<TblColRef> newHashSet(), Lists.<FunctionDesc> newArrayList());
+        Cuboid ret = Cuboid.identifyCuboid(cube, Sets.<TblColRef> newHashSet(), Lists.<FunctionDesc> newArrayList());
         long baseCuboidId = cubeDesc.getRowkey().getFullMask();
         assertNotEquals(baseCuboidId, ret.getId());
-        ret = Cuboid.identifyCuboid(cubeDesc, dimensions, metrics);
+        ret = Cuboid.identifyCuboid(cube, dimensions, metrics);
         assertEquals(baseCuboidId, ret.getId());
     }
 

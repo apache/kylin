@@ -32,6 +32,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 public class RowKeySplitter implements java.io.Serializable {
 
+    private CubeSegment cubeSegment;
     private CubeDesc cubeDesc;
     private RowKeyColumnIO colIO;
 
@@ -63,6 +64,7 @@ public class RowKeySplitter implements java.io.Serializable {
     }
 
     public RowKeySplitter(CubeSegment cubeSeg, int splitLen, int bytesLen) {
+        this.cubeSegment = cubeSeg;
         this.enableSharding = cubeSeg.isEnableSharding();
         this.cubeDesc = cubeSeg.getCubeDesc();
         IDimensionEncodingMap dimEncoding = new CubeDimEncMap(cubeSeg);
@@ -113,7 +115,7 @@ public class RowKeySplitter implements java.io.Serializable {
         offset += RowConstants.ROWKEY_CUBOIDID_LEN;
 
         long lastSplittedCuboidId = Bytes.toLong(cuboidIdSplit.value, 0, cuboidIdSplit.length);
-        Cuboid cuboid = Cuboid.findById(cubeDesc, lastSplittedCuboidId);
+        Cuboid cuboid = Cuboid.findById(cubeSegment, lastSplittedCuboidId);
 
         // rowkey columns
         for (int i = 0; i < cuboid.getColumns().size(); i++) {
