@@ -43,6 +43,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DictionaryDesc;
 import org.apache.kylin.dict.DictionaryInfo;
@@ -306,13 +307,14 @@ public class CubeManager implements IRealizationProvider {
         // delete cube instance and cube desc
         CubeInstance cube = getCube(cubeName);
 
-        if (deleteDesc && cube.getDescriptor() != null) {
-            CubeDescManager.getInstance(config).removeCubeDesc(cube.getDescriptor());
-        }
-
         // remove cube and update cache
         getStore().deleteResource(cube.getResourcePath());
         cubeMap.remove(cube.getName());
+        Cuboid.reloadCache(cube);
+
+        if (deleteDesc && cube.getDescriptor() != null) {
+            CubeDescManager.getInstance(config).removeCubeDesc(cube.getDescriptor());
+        }
 
         // delete cube from project
         ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
@@ -629,17 +631,20 @@ public class CubeManager implements IRealizationProvider {
      * @param cubeName
      */
     public CubeInstance reloadCubeLocal(String cubeName) {
-        return reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
+        CubeInstance cubeInstance = reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
+        Cuboid.reloadCache(cubeInstance);
+        return cubeInstance;
     }
 
     public void removeCubeLocal(String cubeName) {
         CubeInstance cube = cubeMap.get(cubeName);
         if (cube != null) {
+            cubeMap.removeLocal(cubeName);
             for (CubeSegment segment : cube.getSegments()) {
                 usedStorageLocation.remove(segment.getUuid());
             }
+            Cuboid.reloadCache(cube);
         }
-        cubeMap.removeLocal(cubeName);
     }
 
     public LookupStringTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {

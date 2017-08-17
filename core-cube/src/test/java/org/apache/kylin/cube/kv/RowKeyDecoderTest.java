@@ -91,7 +91,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
         data[7] = "15";
 
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+        Cuboid baseCuboid = Cuboid.findById(cube, baseCuboidId);
         RowKeyEncoder rowKeyEncoder = new RowKeyEncoder(cube.getFirstSegment(), baseCuboid);
 
         byte[] encodedKey = rowKeyEncoder.encode(data);

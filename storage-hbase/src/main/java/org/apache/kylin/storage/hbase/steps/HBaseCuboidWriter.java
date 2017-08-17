@@ -81,7 +81,7 @@ public class HBaseCuboidWriter implements ICuboidWriter {
     //TODO:shardingonstreaming
     private byte[] createKey(Long cuboidId, GTRecord record) {
         if (rowKeyEncoder == null || rowKeyEncoder.getCuboidID() != cuboidId) {
-            rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, Cuboid.findById(cubeDesc, cuboidId));
+            rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, Cuboid.findById(cubeSegment, cuboidId));
             keybuf = rowKeyEncoder.createBuf();
         }
         rowKeyEncoder.encode(record, record.getInfo().getPrimaryKey(), keybuf);
@@ -92,7 +92,7 @@ public class HBaseCuboidWriter implements ICuboidWriter {
     @Override
     public void write(long cuboidId, GTRecord record) throws IOException {
         byte[] key = createKey(cuboidId, record);
-        final Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
+        final Cuboid cuboid = Cuboid.findById(cubeSegment, cuboidId);
         final int nDims = cuboid.getColumns().size();
         final ImmutableBitSet bitSet = new ImmutableBitSet(nDims, nDims + cubeDesc.getMeasures().size());
 
