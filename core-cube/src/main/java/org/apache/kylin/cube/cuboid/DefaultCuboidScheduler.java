@@ -84,13 +84,17 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
     }
 
     /**
-     * Get the parent cuboid really on the spanning tree.
-     * @param child an on-tree cuboid
+     * Get the parent cuboid rely on the spanning tree.
+     * @param cuboid an on-tree cuboid
      * @return
      */
     @Override
-    public long findBestMatchCuboid(long child) {
-        long parent = getOnTreeParent(child);
+    public long findBestMatchCuboid(long cuboid) {
+        return findBestMatchCuboid1(cuboid);
+    }
+
+    public long findBestMatchCuboid1(long cuboid) {
+        long parent = getOnTreeParent(cuboid);
         while (parent > 0) {
             if (cubeDesc.getAllCuboids().contains(parent)) {
                 break;
@@ -99,7 +103,7 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         }
 
         if (parent <= 0) {
-            throw new IllegalStateException("Can't find valid parent for Cuboid " + child);
+            throw new IllegalStateException("Can't find valid parent for Cuboid " + cuboid);
         }
         return parent;
     }
@@ -352,4 +356,40 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         return Long.bitCount(cuboidID) <= dimCap;
     }
 
+    public long findBestMatchCuboid2(long cuboid) {
+        long bestParent = doFindBestMatchCuboid2(cuboid, Cuboid.getBaseCuboidId(cubeDesc));
+        if (bestParent < -1) {
+            throw new IllegalStateException("Cannot find the parent of the cuboid:" + cuboid);
+        }
+        return bestParent;
+    }
+
+    private long doFindBestMatchCuboid2(long cuboid, long parent) {
+        if (!canDerive(cuboid, parent)) {
+            return -1;
+        }
+        List<Long> children = parent2child.get(parent);
+        List<Long> candidates = Lists.newArrayList();
+        if (children != null) {
+            for (long child : children) {
+                long candidate = doFindBestMatchCuboid2(cuboid, child);
+                if (candidate > 0) {
+                    candidates.add(candidate);
+                }
+            }
+        }
+        if (candidates.isEmpty()) {
+            candidates.add(parent);
+        }
+
+        return Collections.min(candidates, Cuboid.cuboidSelectComparator);
+    }
+
+    private boolean canDerive(long cuboidId, long parentCuboid) {
+        return (cuboidId & ~parentCuboid) == 0;
+    }
+
+    public String getResponsibleKey() {
+        return CubeDesc.class.getName() + "-" + cubeDesc.getName();
+    }
 }

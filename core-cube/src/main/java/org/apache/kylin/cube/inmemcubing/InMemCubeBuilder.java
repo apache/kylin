@@ -39,7 +39,6 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.gridtable.GTAggregateScanner;
 import org.apache.kylin.gridtable.GTBuilder;
 import org.apache.kylin.gridtable.GTInfo;
@@ -71,7 +70,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private static final double DERIVE_AGGR_CACHE_CONSTANT_FACTOR = 0.1;
     private static final double DERIVE_AGGR_CACHE_VARIABLE_FACTOR = 0.9;
 
-    private final CuboidScheduler cuboidScheduler;
     private final long baseCuboidId;
     private final int totalCuboidCount;
     private final String[] metricsAggrFuncs;
@@ -90,9 +88,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private Object[] totalSumForSanityCheck;
     private ICuboidCollector resultCollector;
 
-    public InMemCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
-        super(cubeDesc, flatDesc, dictionaryMap);
-        this.cuboidScheduler = cubeDesc.getCuboidScheduler();
+    public InMemCubeBuilder(CuboidScheduler cuboidScheduler, IJoinedFlatTableDesc flatDesc,
+            Map<TblColRef, Dictionary<String>> dictionaryMap) {
+        super(cuboidScheduler, flatDesc, dictionaryMap);
         this.baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         this.totalCuboidCount = cuboidScheduler.getCuboidCount();
 
@@ -109,8 +107,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
-        GTInfo info = CubeGridTable.newGTInfo(
-                Cuboid.findById(cubeDesc, cuboidID),
+        GTInfo info = CubeGridTable.newGTInfo(Cuboid.findById(cuboidScheduler, cuboidID),
                 new CubeDimEncMap(cubeDesc, dictionaryMap)
         );
 

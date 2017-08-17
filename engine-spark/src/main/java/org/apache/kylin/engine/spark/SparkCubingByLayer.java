@@ -191,7 +191,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             reducerFunction2 = new CuboidReducerFunction2(cubeName, metaUrl, needAggr);
         }
 
-        final int totalLevels = cubeDesc.getBuildLevel();
+        final int totalLevels = cubeSegment.getCuboidScheduler().getBuildLevel();
         JavaPairRDD<ByteArray, Object[]>[] allRDDs = new JavaPairRDD[totalLevels + 1];
         int level = 0;
         long baseRDDSize = SizeEstimator.estimate(encodedBaseRDD) / (1024 * 1024);
@@ -298,7 +298,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                         CubeJoinedFlatTableEnrich interDesc = new CubeJoinedFlatTableEnrich(
                                 EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
                         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-                        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+                        Cuboid baseCuboid = Cuboid.findById(cubeInstance, baseCuboidId);
                         baseCuboidBuilder = new BaseCuboidBuilder(kConfig, cubeDesc, cubeSegment, interDesc,
                                 AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid),
                                 MeasureIngester.create(cubeDesc.getMeasures()), cubeSegment.buildDictionaryMap());
@@ -413,7 +413,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
             this.cubeSegment = cubeInstance.getSegmentById(segmentId);
             this.cubeDesc = cubeInstance.getDescriptor();
-            this.cuboidScheduler = cubeDesc.getCuboidScheduler();
+            this.cuboidScheduler = cubeSegment.getCuboidScheduler();
             this.ndCuboidBuilder = new NDCuboidBuilder(cubeSegment, new RowKeyEncoderProvider(cubeSegment));
             this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
         }
@@ -431,9 +431,9 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
             byte[] key = tuple2._1().array();
             long cuboidId = rowKeySplitter.split(key);
-            Cuboid parentCuboid = Cuboid.findById(cubeDesc, cuboidId);
+            Cuboid parentCuboid = Cuboid.findById(cubeSegment, cuboidId);
 
-            Collection<Long> myChildren = cuboidScheduler.getSpanningCuboid(cuboidId);
+            Collection<Long> myChildren = cubeSegment.getCuboidScheduler().getSpanningCuboid(cuboidId);
 
             // if still empty or null
             if (myChildren == null || myChildren.size() == 0) {
@@ -442,7 +442,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
             List<Tuple2<ByteArray, Object[]>> tuples = new ArrayList(myChildren.size());
             for (Long child : myChildren) {
-                Cuboid childCuboid = Cuboid.findById(cubeDesc, child);
+                Cuboid childCuboid = Cuboid.findById(cubeSegment, child);
                 Pair<Integer, ByteArray> result = ndCuboidBuilder.buildKey(parentCuboid, childCuboid,
                         rowKeySplitter.getSplitBuffers());
 

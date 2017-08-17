@@ -295,7 +295,7 @@ public class AggregationGroup implements Serializable {
         long combination = 1;
 
         if (this.getDimCap() > 0) {
-            combination = cubeDesc.getCuboidScheduler().calculateCuboidsForAggGroup(this).size();
+            combination = cubeDesc.getInitialCuboidScheduler().calculateCuboidsForAggGroup(this).size();
         } else {
             Set<String> includeDims = new TreeSet<>(Arrays.asList(includes));
             Set<String> mandatoryDims = new TreeSet<>(Arrays.asList(selectRule.mandatoryDims));

@@ -67,9 +67,20 @@ abstract public class CuboidScheduler {
     /** (AggGroupScheduler) Calculate the cuboid set defined by an aggregation group. */
     abstract public Set<Long> calculateCuboidsForAggGroup(AggregationGroup agg);
 
+    /** Returns the key for what this cuboid scheduler responsible for*/
+    abstract public String getResponsibleKey();
+
     // ============================================================================
     
     private transient List<List<Long>> cuboidsByLayer;
+
+    public long getBaseCuboidId() {
+        return Cuboid.getBaseCuboidId(cubeDesc);
+    }
+
+    public CubeDesc getCubeDesc() {
+        return cubeDesc;
+    }
 
     /**
      * Get cuboids by layer. It's built from pre-expanding tree.
@@ -105,4 +116,11 @@ abstract public class CuboidScheduler {
         return cuboidsByLayer;
     }
 
+    /**
+     * Get cuboid level count except base cuboid
+     * @return
+     */
+    public int getBuildLevel() {
+        return getCuboidsByLayer().size() - 1;
+    }
 }

@@ -109,7 +109,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
     private void testBuildInner() throws Exception {
 
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
-        InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(cube.getDescriptor(), flatDesc, dictionaryMap);
+        InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(cube.getCuboidScheduler(), flatDesc, dictionaryMap);
         //DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
         cubeBuilder.setConcurrentThreads(nThreads);
 

@@ -81,7 +81,7 @@ public class CubeStatsReader {
 
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
         ResourceStore store = ResourceStore.getStore(kylinConfig);
-        cuboidScheduler = cubeSegment.getCubeDesc().getCuboidScheduler();
+        cuboidScheduler = cubeSegment.getCuboidScheduler();
         String statsKey = cubeSegment.getStatisticsResourcePath();
         File tmpSeqFile = writeTmpSeqFile(store.getResource(statsKey).inputStream);
         Reader reader = null;
@@ -174,8 +174,7 @@ public class CubeStatsReader {
     public static Map<Long, Double> getCuboidSizeMapFromRowCount(CubeSegment cubeSegment, Map<Long, Long> rowCountMap) {
         final CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         final List<Integer> rowkeyColumnSize = Lists.newArrayList();
-        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        final Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+        final Cuboid baseCuboid = Cuboid.getBaseCuboid(cubeDesc);
         final List<TblColRef> columnList = baseCuboid.getColumns();
         final CubeDimEncMap dimEncMap = cubeSegment.getDimensionEncodingMap();
 
@@ -185,7 +184,7 @@ public class CubeStatsReader {
 
         Map<Long, Double> sizeMap = Maps.newHashMap();
         for (Map.Entry<Long, Long> entry : rowCountMap.entrySet()) {
-            sizeMap.put(entry.getKey(), estimateCuboidStorageSize(cubeSegment, entry.getKey(), entry.getValue(), baseCuboidId, rowkeyColumnSize));
+            sizeMap.put(entry.getKey(), estimateCuboidStorageSize(cubeSegment, entry.getKey(), entry.getValue(), baseCuboid.getId(), rowkeyColumnSize));
         }
         return sizeMap;
     }
