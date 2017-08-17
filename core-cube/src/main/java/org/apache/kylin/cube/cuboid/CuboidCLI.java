@@ -88,29 +88,28 @@ public class CuboidCLI {
                 //check all valid and invalid
                 for (long i = 0; i < baseCuboid; ++i) {
                     if (cuboidSet.contains(i)) {
-                        if (!Cuboid.isValid(cubeDesc.getInitialCuboidScheduler(), i)) {
+                        if (!cubeDesc.getInitialCuboidScheduler().isValid(i)) {
                             throw new RuntimeException();
                         }
 
-                        if (Cuboid.translateToValidCuboid(cubeDesc.getInitialCuboidScheduler(), i) != i) {
+                        if (cubeDesc.getInitialCuboidScheduler().findBestMatchCuboid(i) != i) {
                             throw new RuntimeException();
                         }
                     } else {
-                        if (Cuboid.isValid(cubeDesc.getInitialCuboidScheduler(), i)) {
+                        if (cubeDesc.getInitialCuboidScheduler().isValid(i)) {
                             throw new RuntimeException();
                         }
 
-                        long corrected = Cuboid.translateToValidCuboid(cubeDesc.getInitialCuboidScheduler(), i);
+                        long corrected = cubeDesc.getInitialCuboidScheduler().findBestMatchCuboid(i);
                         if (corrected == i) {
                             throw new RuntimeException();
                         }
 
-                        if (!Cuboid.isValid(cubeDesc.getInitialCuboidScheduler(), corrected)) {
+                        if (!cubeDesc.getInitialCuboidScheduler().isValid(corrected)) {
                             throw new RuntimeException();
                         }
 
-                        if (Cuboid.translateToValidCuboid(cubeDesc.getInitialCuboidScheduler(),
-                                corrected) != corrected) {
+                        if (cubeDesc.getInitialCuboidScheduler().findBestMatchCuboid(corrected) != corrected) {
                             throw new RuntimeException();
                         }
                     }
@@ -126,7 +125,7 @@ public class CuboidCLI {
         long baseCuboid = Cuboid.getBaseCuboidId(cube);
         TreeSet<Long> expectedCuboids = new TreeSet<Long>();
         for (long cuboid = 0; cuboid <= baseCuboid; cuboid++) {
-            if (Cuboid.isValid(cube.getInitialCuboidScheduler(), cuboid)) {
+            if (cube.getInitialCuboidScheduler().isValid(cuboid)) {
                 expectedCuboids.add(cuboid);
             }
         }

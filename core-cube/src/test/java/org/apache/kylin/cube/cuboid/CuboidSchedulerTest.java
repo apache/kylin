@@ -115,7 +115,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
             System.out.println("Spanning result for " + cuboidId + "(" + Long.toBinaryString(cuboidId) + "): " + toString(spannings));
 
             for (long child : spannings) {
-                assertTrue(Cuboid.isValid(scheduler, child));
+                assertTrue(scheduler.isValid(child));
             }
         }
 
@@ -335,7 +335,7 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         CuboidScheduler scheduler = cube.getInitialCuboidScheduler();
 
         Cuboid baseCuboid = Cuboid.getBaseCuboid(cube);
-        assertTrue(Cuboid.isValid(scheduler, baseCuboid.getId()));
+        assertTrue(scheduler.isValid(baseCuboid.getId()));
 
         List<Long> spanningChild = scheduler.getSpanningCuboid(baseCuboid.getId());
         assertTrue(spanningChild.size() > 0);

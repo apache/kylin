@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
 
 import com.google.common.base.Preconditions;
@@ -63,9 +62,9 @@ abstract public class CuboidScheduler {
     
     /** Returns a cuboid on the tree that best matches the request cuboid. */
     abstract public long findBestMatchCuboid(long requestCuboid);
-    
-    /** (AggGroupScheduler) Calculate the cuboid set defined by an aggregation group. */
-    abstract public Set<Long> calculateCuboidsForAggGroup(AggregationGroup agg);
+
+    /** Returns whether requestCuboid is valid or not*/
+    abstract public boolean isValid(long requestCuboid);
 
     /** Returns the key for what this cuboid scheduler responsible for*/
     abstract public String getResponsibleKey();

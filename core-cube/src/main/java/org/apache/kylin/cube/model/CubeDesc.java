@@ -51,7 +51,6 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.cuboid.DefaultCuboidScheduler;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
@@ -608,7 +607,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         amendAllColumns();
     }
 
-    public CuboidScheduler getInitialCuboidScheduler() {
+    public DefaultCuboidScheduler getInitialCuboidScheduler() {
         return new DefaultCuboidScheduler(this);
     }
 

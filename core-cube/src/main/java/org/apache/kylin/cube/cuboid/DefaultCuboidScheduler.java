@@ -83,6 +83,11 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         return Sets.newHashSet(allCuboidIds);
     }
 
+    @Override
+    public boolean isValid(long requestCuboid) {
+        return allCuboidIds.contains(requestCuboid);
+    }
+
     /**
      * Get the parent cuboid rely on the spanning tree.
      * @param cuboid an on-tree cuboid
@@ -263,7 +268,6 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
      * @param agg agg group
      * @return cuboidId list
      */
-    @Override
     public Set<Long> calculateCuboidsForAggGroup(AggregationGroup agg) {
         Set<Long> cuboidHolder = new HashSet<>();
 

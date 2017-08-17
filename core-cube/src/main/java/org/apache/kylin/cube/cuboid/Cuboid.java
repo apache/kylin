@@ -118,15 +118,11 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
         }
         Cuboid cuboid = cubeCache.get(cuboidID);
         if (cuboid == null) {
-            long validCuboidID = translateToValidCuboid(cuboidScheduler, cuboidID);
+            long validCuboidID = cuboidScheduler.findBestMatchCuboid(cuboidID);
             cuboid = new Cuboid(cuboidScheduler.getCubeDesc(), cuboidID, validCuboidID);
             cubeCache.put(cuboidID, cuboid);
         }
         return cuboid;
-    }
-
-    public static boolean isValid(CuboidScheduler cuboidScheduler, long cuboidID) {
-        return cuboidScheduler.getAllCuboidIds().contains(cuboidID);
     }
 
     public static long getBaseCuboidId(CubeDesc cube) {
@@ -135,13 +131,6 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
 
     public static Cuboid getBaseCuboid(CubeDesc cube) {
         return findForMandatory(cube, getBaseCuboidId(cube));
-    }
-
-    static long translateToValidCuboid(CuboidScheduler cuboidScheduler, long cuboidID) {
-        if (isValid(cuboidScheduler, cuboidID)) {
-            return cuboidID;
-        }
-        return cuboidScheduler.findBestMatchCuboid(cuboidID);
     }
 
     // ============================================================================
