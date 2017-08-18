@@ -70,5 +70,9 @@ collections:
     output: true
   docs20-cn:
     output: true
+  docs21:
+    output: true
+  docs21-cn:
+    output: true
   dev:
     output: true
