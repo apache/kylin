@@ -455,24 +455,21 @@ Please notice to always use your Apache mail address to send this;
 Here is a sample of announcement email (by studying Kafka's):
 
 {% highlight text %} 
-The Apache Kylin team is pleased to announce the immediate availability of the x.y.z release. 
+The Apache Kylin team is pleased to announce the immediate availability of the 2.1.0 release. 
 
-This is a bug fix release based on 1.5.2.1; All of the changes in this release can be found in:
-https://kylin.apache.org/docs15/release_notes.html
+This is a major release after 2.0, with more than 100 bug fixes and enhancements; All of the changes in this release can be found in:
+https://kylin.apache.org/docs21/release_notes.html
 
-You can download the source release and binary packages from 
-https://www.apache.org/dyn/closer.cgi?path=/kylin/apache-kylin-1.5.2.1/
-
-More information about the binary packages is on Apache Kylin's download page https://kylin.apache.org/download/
+You can download the source release and binary packages from Apache Kylin's download page: https://kylin.apache.org/download/
 
 Apache Kylin is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Apache Hadoop, supporting extremely large datasets.
 
 Apache Kylin lets you query massive data set at sub-second latency in 3 steps:
-1. Identify a Star Schema data on Hadoop.
+1. Identify a star schema or snowflake schema data set on Hadoop.
 2. Build Cube on Hadoop.
 3. Query data with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.
 
-Thanks everyone who have contributed to the x.y.z release.
+Thanks everyone who have contributed to the 2.1.0 release.
 
 We welcome your help and feedback. For more information on how to
 report problems, and to get involved, visit the project website at
