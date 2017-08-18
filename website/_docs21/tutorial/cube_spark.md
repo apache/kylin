@@ -6,6 +6,8 @@ permalink: /docs21/tutorial/cube_spark.html
 ---
 Kylin v2.0 introduces the Spark cube engine, it uses Apache Spark to replace MapReduce in the build cube step; You can check [this blog](/blog/2017/02/23/by-layer-spark-cubing/) for an overall picture. The current document uses the sample cube to demo how to try the new engine.
 
+**Please note, this toturial is based on Kylin 2.0 + Spark 1.6; Now Kylin v2.1 has upgraded Spark to 2.1.1. This document is out of date but the main steps are very similar.**
+
 ## Preparation
 To finish this tutorial, you need a Hadoop environment which has Kylin v2.0.0 or above installed. Here we will use Hortonworks HDP 2.4 Sandbox VM, the Hadoop components as well as Hive/HBase has already been started. 
 
@@ -162,6 +164,6 @@ Click a specific job, there you will see the detail runtime information, that is
 
 ## Go further
 
-If you're a Kylin administrator but new to Spark, suggest you go through [Spark documents](https://spark.apache.org/docs/1.6.3/), and don't forget to update the configurations accordingly. You can enable Spark [Dynamic Resource Allocation](https://spark.apache.org/docs/1.6.1/configuration.html#dynamic-allocation) so that it can auto scale/shrink for different work load. Spark's performance relies on Cluster's memory and CPU resource, while Kylin's Cube build is a heavy task when having a complex data model and a huge dataset to build at one time. If your cluster resource couldn't fulfill, errors like "OutOfMemorry" will be thrown in Spark executors, so please use it properly. For Cube which has UHC dimension, many combinations (e.g, a full cube with more than 12 dimensions), or memory hungry measures (Count Distinct, Top-N), suggest to use the MapReduce engine. If your Cube model is simple, all measures are SUM/MIN/MAX/COUNT, source data is small to medium scale, Spark engine would be a good choice. Besides, Streaming build isn't supported in this engine so far (KYLIN-2484).
+If you're a Kylin administrator but new to Spark, suggest you go through [Spark documents](https://spark.apache.org/docs/2.1.0/), and don't forget to update the configurations accordingly. You can enable Spark [Dynamic Resource Allocation](https://spark.apache.org/docs/2.1.0/job-scheduling.html#dynamic-resource-allocation) so that it can auto scale/shrink for different work load. Spark's performance relies on Cluster's memory and CPU resource, while Kylin's Cube build is a heavy task when having a complex data model and a huge dataset to build at one time. If your cluster resource couldn't fulfill, errors like "OutOfMemorry" will be thrown in Spark executors, so please use it properly. For Cube which has UHC dimension, many combinations (e.g, a full cube with more than 12 dimensions), or memory hungry measures (Count Distinct, Top-N), suggest to use the MapReduce engine. If your Cube model is simple, all measures are SUM/MIN/MAX/COUNT, source data is small to medium scale, Spark engine would be a good choice. Besides, Streaming build isn't supported in this engine so far (KYLIN-2484).
 
 Now the Spark engine is in public beta; If you have any question, comment, or bug fix, welcome to discuss in dev@kylin.apache.org.
