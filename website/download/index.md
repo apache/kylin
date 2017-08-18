@@ -7,7 +7,7 @@ permalink: /download/index.html
 You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](http://kylin.apache.org/KEYS).
 
 ## 2.1.0
-
+- This is a bug fix and enhancement release after 2.0.0. 
 - [Release notes](/docs21/release_notes.html) and [upgrade guide](/docs21/howto/howto_upgrade.html) 
 - Source download: [apache-kylin-2.1.0-src.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.1.0/apache-kylin-2.1.0-src.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-2.1.0/apache-kylin-2.1.0-src.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-2.1.0/apache-kylin-2.1.0-src.tar.gz.md5)\]
 - Binary download:

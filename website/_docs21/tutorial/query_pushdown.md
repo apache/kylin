@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Query Pushdown to Hive
+title:  Enable Query Pushdown
 categories: tutorial
 permalink: /docs21/tutorial/query_pushdown.html
 since: v2.1
@@ -8,7 +8,7 @@ since: v2.1
 
 ### Introduction
 
-If a query can not be answered by any cube, Kylin supports pushing down such query to backup query engines like Hive, SparkSQL, Impala through JDBC. In the following sample, Hive is used as an example, for it's one of Kylin's data sources and convenient to configure. 
+If a query can not be answered by any cube, Kylin supports pushing down such query to backup query engines like Hive, SparkSQL, Impala through JDBC. In the following, Hive is used as an example, as it is one of Kylin's data sources and be convenient to configure. 
 
 
 ### Query Pushdown config
