@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.WeakHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -41,6 +40,7 @@ import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -52,6 +52,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
+import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
@@ -61,6 +62,7 @@ import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
@@ -68,6 +70,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 
 /**
@@ -76,14 +80,14 @@ import com.google.common.collect.Lists;
  * @author yangli9
  */
 @Component("cubeMgmtService")
-public class CubeService extends BasicService {
+public class CubeService extends BasicService implements InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
 
     public static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
             .toCharArray();
 
-    private WeakHashMap<String, HBaseResponse> htableInfoCache = new WeakHashMap<>();
+    protected Cache<String, HBaseResponse> htableInfoCache = CacheBuilder.newBuilder().build();
 
     @Autowired
     @Qualifier("accessService")
@@ -101,7 +105,7 @@ public class CubeService extends BasicService {
     private AclEvaluate aclEvaluate;
 
     public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName,
-                                           boolean exactMatch) {
+            boolean exactMatch) {
         List<CubeInstance> cubeInstances = null;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
@@ -414,11 +418,12 @@ public class CubeService extends BasicService {
      * @throws IOException Exception when HTable resource is not closed correctly.
      */
     public HBaseResponse getHTableInfo(String tableName) throws IOException {
-        if (htableInfoCache.containsKey(tableName)) {
-            return htableInfoCache.get(tableName);
+        HBaseResponse hr = htableInfoCache.getIfPresent(tableName);
+        if (null != hr) {
+            return hr;
         }
 
-        HBaseResponse hr = new HBaseResponse();
+        hr = new HBaseResponse();
         if ("hbase".equals(getConfig().getMetadataUrl().getScheme())) {
             try {
                 // use reflection to isolate NoClassDef errors when HBase is not available
@@ -708,5 +713,34 @@ public class CubeService extends BasicService {
             }
         }
         return result;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Broadcaster.getInstance(getConfig()).registerListener(new HTableInfoSyncListener(), "cube");
+    }
+
+    private class HTableInfoSyncListener extends Broadcaster.Listener {
+        @Override
+        public void onClearAll(Broadcaster broadcaster) throws IOException {
+            htableInfoCache.invalidateAll();
+        }
+
+        @Override
+        public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey)
+                throws IOException {
+            String cubeName = cacheKey;
+
+            CubeInstance cube = getCubeManager().getCube(cubeName);
+            if (null == cube) {
+                throw new InternalErrorException("Cannot find cube " + cubeName);
+            }
+
+            List<String> htableNameList = Lists.newArrayListWithExpectedSize(cube.getSegments().size());
+            for (CubeSegment segment : cube.getSegments()) {
+                htableNameList.add(segment.getStorageLocationIdentifier());
+            }
+            htableInfoCache.invalidateAll(htableNameList);
+        }
     }
 }
