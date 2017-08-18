@@ -4395,7 +4395,7 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS</td><td>##IDS_PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS##</td><td/></row>
 		<row><td>ProductCode</td><td>{C8B1B296-2F8B-423F-97D5-429C9B6D2AE6}</td><td/></row>
 		<row><td>ProductName</td><td>KylinODBCDriver (x64)</td><td/></row>
-		<row><td>ProductVersion</td><td>1.5.0000</td><td/></row>
+		<row><td>ProductVersion</td><td>2.1.0</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>
 		<row><td>ProgressType1</td><td>Installing</td><td/></row>
 		<row><td>ProgressType2</td><td>installed</td><td/></row>
