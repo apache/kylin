@@ -207,7 +207,7 @@ public class HBaseConnection {
         path = Path.getPathWithoutSchemeAndAuthority(path);
 
         try {
-            FileSystem fs = FileSystem.get(getCurrentHBaseConfiguration());
+            FileSystem fs = HadoopUtil.getWorkingFileSystem(getCurrentHBaseConfiguration());
             return fs.makeQualified(path).toString();
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot create FileSystem from current hbase cluster conf", e);
