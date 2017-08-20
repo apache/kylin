@@ -44,6 +44,7 @@ public class QueryUtil {
     public static String massageSql(String sql, String project, int limit, int offset) {
         sql = sql.trim();
         sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
@@ -54,6 +55,12 @@ public class QueryUtil {
 
         if (offset > 0 && !sql.toLowerCase().contains("offset")) {
             sql += ("\nOFFSET " + offset);
+        }
+
+        // https://issues.apache.org/jira/browse/KYLIN-2649
+        if (kylinConfig.getForceLimit() > 0 &&
+                !sql.toLowerCase().contains("limit") && sql.toLowerCase().contains("*")) {
+            sql += ("\nLIMIT " + kylinConfig.getForceLimit());
         }
 
         // customizable SQL transformation

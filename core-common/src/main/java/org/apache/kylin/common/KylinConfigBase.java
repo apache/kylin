@@ -936,6 +936,12 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.max-limit-pushdown", "10000"));
     }
 
+    // Select star on large table is too slow for BI, add limit by default if missing
+    // https://issues.apache.org/jira/browse/KYLIN-2649
+    public int getForceLimit() {
+        return Integer.parseInt(getOptional("kylin.query.force-limit", "-1"));
+    }
+
     @Deprecated
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan-threshold", "10000000"));
