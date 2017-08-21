@@ -34,6 +34,7 @@ Older releases can be found in [https://archive.apache.org/dist/kylin/](https://
 
 ## ODBC Driver
 
+* [Kylin ODBC Driver v2.1.0](http://kylin.apache.org/download/KylinODBCDriver-2.1.0.zip) (compatible with all Kylin versions)
 * [Kylin ODBC Driver v1.6](http://kylin.apache.org/download/KylinODBCDriver-1.6.zip) (compatible with all Kylin versions)
 * [Kylin ODBC Driver v1.5](http://kylin.apache.org/download/KylinODBCDriver-1.5.zip)
 
