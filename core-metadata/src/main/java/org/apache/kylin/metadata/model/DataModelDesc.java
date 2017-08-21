@@ -501,7 +501,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
         for (ComputedColumnDesc newCC : this.computedColumnDescs) {
 
-            newCC.init(aliasMap.keySet(), rootFactTableRef.getAlias());
+            newCC.init(aliasMap, rootFactTableRef.getAlias());
             final String newCCFullName = newCC.getFullName();
             final String newCCColumnName = newCC.getColumnName();
 

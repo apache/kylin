@@ -1,0 +1,1 @@
+select count(*) as a , sum (F.DEAL_AMOUNT) as b from test_kylin_fact f inner join test_account a on f.seller_id = a.account_id  inner join test_country c on country = account_country group by F.SELLER_ID_AND_COUNTRY_NAME
