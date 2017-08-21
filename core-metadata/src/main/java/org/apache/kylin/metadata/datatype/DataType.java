@@ -164,14 +164,16 @@ public class DataType implements Serializable {
                 try {
                     n = Integer.parseInt(parts[i]);
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("bad data type -- " + datatype + ", precision/scale not numeric");
+                    throw new IllegalArgumentException(
+                            "bad data type -- " + datatype + ", precision/scale not numeric");
                 }
                 if (i == 0)
                     precision = n;
                 else if (i == 1)
                     scale = n;
                 else
-                    throw new IllegalArgumentException("bad data type -- " + datatype + ", too many precision/scale parts");
+                    throw new IllegalArgumentException(
+                            "bad data type -- " + datatype + ", too many precision/scale parts");
             }
         }
 
@@ -179,6 +181,9 @@ public class DataType implements Serializable {
         if ((name.equals("char") || name.equals("varchar")) && precision == -1) {
             precision = 256; // to save memory at frontend, e.g. tableau will
                              // allocate memory according to this
+            if (name.equals("char")) {
+                precision -= 1; //at most 255 according to https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-CharcharChar
+            }
         }
 
         // FIXME (19,4) for unknown decimal precision
@@ -217,7 +222,7 @@ public class DataType implements Serializable {
     public boolean isTimeFamily() {
         return DATETIME_FAMILY.contains(name) && !isDate();
     }
-    
+
     public boolean isDate() {
         return name.equals("date");
     }
