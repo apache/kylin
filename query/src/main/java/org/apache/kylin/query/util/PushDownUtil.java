@@ -21,9 +21,8 @@ package org.apache.kylin.query.util;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
@@ -39,16 +38,11 @@ import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlVisitor;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.ComputedColumnDesc;
-import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
@@ -56,9 +50,6 @@ import org.apache.kylin.source.adhocquery.IPushDownConverter;
 import org.apache.kylin.source.adhocquery.IPushDownRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class PushDownUtil {
     private static final Logger logger = LoggerFactory.getLogger(PushDownUtil.class);
@@ -98,7 +89,7 @@ public class PushDownUtil {
 
             for (String converterName : kylinConfig.getPushDownConverterClassNames()) {
                 IPushDownConverter converter = (IPushDownConverter) ClassUtil.newInstance(converterName);
-                String converted = converter.convert(sql);
+                String converted = converter.convert(sql, project, defaultSchema);
                 if (!sql.equals(converted)) {
                     logger.info("the query is converted to {} after applying converter {}", converted, converterName);
                     sql = converted;
@@ -133,104 +124,20 @@ public class PushDownUtil {
         }
 
         // make the behind position in the front of the list, so that the front position will not be affected when replaced
-        Collections.sort(tablesPos);
-        Collections.reverse(tablesPos);
+        Collections.sort(tablesPos, new Comparator<Pair<Integer, Integer>>() {
+            @Override
+            public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
+                int r = o2.getFirst() - o1.getFirst();
+                return r == 0 ? o2.getSecond() - o1.getSecond() : r;
+            }
+        });
 
         StrBuilder afterConvert = new StrBuilder(inputSql);
         for (Pair<Integer, Integer> pos : tablesPos) {
-            String tableWithSchema = schema + "." + inputSql.substring(pos.getLeft(), pos.getRight());
-            afterConvert.replace(pos.getLeft(), pos.getRight(), tableWithSchema);
+            String tableWithSchema = schema + "." + inputSql.substring(pos.getFirst(), pos.getSecond());
+            afterConvert.replace(pos.getFirst(), pos.getSecond(), tableWithSchema);
         }
         return afterConvert.toString();
-    }
-
-    private final static Pattern identifierInSqlPattern = Pattern.compile(
-            //find pattern like "table"."column" or "column"
-            "((?<![\\p{L}_0-9\\.\\\"])(\\\"[\\p{L}_0-9]+\\\"\\.)?(\\\"[\\p{L}_0-9]+\\\")(?![\\p{L}_0-9\\.\\\"]))" + "|"
-            //find pattern like table.column or column
-                    + "((?<![\\p{L}_0-9\\.\\\"])([\\p{L}_0-9]+\\.)?([\\p{L}_0-9]+)(?![\\p{L}_0-9\\.\\\"]))");
-
-    private final static Pattern endWithAsPattern = Pattern.compile("\\s+as\\s+$", Pattern.CASE_INSENSITIVE);
-
-    public static String restoreComputedColumnToExpr(String beforeSql, String project) {
-        final MetadataManager metadataManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        List<DataModelDesc> dataModelDescs = metadataManager.getModels(project);
-
-        String afterSql = beforeSql;
-        for (DataModelDesc dataModelDesc : dataModelDescs) {
-            for (ComputedColumnDesc computedColumnDesc : dataModelDesc.getComputedColumnDescs()) {
-                afterSql = restoreComputedColumnToExpr(afterSql, computedColumnDesc);
-            }
-        }
-        return afterSql;
-    }
-
-    static String restoreComputedColumnToExpr(String sql, ComputedColumnDesc computedColumnDesc) {
-
-        String ccName = computedColumnDesc.getColumnName();
-        List<Triple<Integer, Integer, String>> replacements = Lists.newArrayList();
-        Matcher matcher = identifierInSqlPattern.matcher(sql);
-
-        while (matcher.find()) {
-            if (matcher.group(1) != null) { //with quote case: "TABLE"."COLUMN"
-
-                String quotedColumnName = matcher.group(3);
-                Preconditions.checkNotNull(quotedColumnName);
-                String columnName = StringUtils.strip(quotedColumnName, "\"");
-                if (!columnName.equalsIgnoreCase(ccName)) {
-                    continue;
-                }
-
-                if (matcher.group(2) != null) { // table name exist 
-                    String quotedTableAlias = StringUtils.strip(matcher.group(2), ".");
-                    String tableAlias = StringUtils.strip(quotedTableAlias, "\"");
-                    replacements.add(Triple.of(matcher.start(1), matcher.end(1),
-                            replaceIdentifierInExpr(computedColumnDesc.getExpression(), tableAlias, true)));
-                } else { //only column
-                    if (endWithAsPattern.matcher(sql.substring(0, matcher.start(1))).find()) {
-                        //select DEAL_AMOUNT as "deal_amount" case
-                        continue;
-                    }
-                    replacements.add(Triple.of(matcher.start(1), matcher.end(1),
-                            replaceIdentifierInExpr(computedColumnDesc.getExpression(), null, true)));
-                }
-            } else if (matcher.group(4) != null) { //without quote case: table.column or simply column
-                String columnName = matcher.group(6);
-                Preconditions.checkNotNull(columnName);
-                if (!columnName.equalsIgnoreCase(ccName)) {
-                    continue;
-                }
-
-                if (matcher.group(5) != null) { //table name exist
-                    String tableAlias = StringUtils.strip(matcher.group(5), ".");
-                    replacements.add(Triple.of(matcher.start(4), matcher.end(4),
-                            replaceIdentifierInExpr(computedColumnDesc.getExpression(), tableAlias, false)));
-
-                } else { //only column 
-                    if (endWithAsPattern.matcher(sql.substring(0, matcher.start(4))).find()) {
-                        //select DEAL_AMOUNT as deal_amount case
-                        continue;
-                    }
-                    replacements.add(Triple.of(matcher.start(4), matcher.end(4),
-                            replaceIdentifierInExpr(computedColumnDesc.getExpression(), null, false)));
-                }
-            }
-        }
-
-        Collections.reverse(replacements);
-        for (Triple<Integer, Integer, String> triple : replacements) {
-            sql = sql.substring(0, triple.getLeft()) + "(" + triple.getRight() + ")"
-                    + sql.substring(triple.getMiddle());
-        }
-        return sql;
-    }
-
-    static String replaceIdentifierInExpr(String expr, String tableAlias, boolean quoted) {
-        if (tableAlias == null) {
-            return expr;
-        }
-
-        return CalciteParser.insertAliasInExpr(expr, tableAlias);
     }
 
     /**

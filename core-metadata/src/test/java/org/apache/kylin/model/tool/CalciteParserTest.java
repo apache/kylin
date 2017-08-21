@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.junit.Rule;
 import org.junit.Test;
@@ -96,7 +96,7 @@ public class CalciteParserTest {
         for (String sql : sqls) {
             SqlNode parse = ((SqlSelect) CalciteParser.parse(sql)).getSelectList().get(0);
             Pair<Integer, Integer> replacePos = CalciteParser.getReplacePos(parse, sql);
-            String substring = sql.substring(replacePos.getLeft(), replacePos.getRight());
+            String substring = sql.substring(replacePos.getFirst(), replacePos.getSecond());
             Preconditions.checkArgument(substring.startsWith("a"));
             Preconditions.checkArgument(substring.endsWith("b"));
         }
@@ -114,7 +114,7 @@ public class CalciteParserTest {
         for (String sql : sqls) {
             SqlNode parse = ((SqlSelect) CalciteParser.parse(sql)).getSelectList().get(0);
             Pair<Integer, Integer> replacePos = CalciteParser.getReplacePos(parse, sql);
-            String substring = sql.substring(replacePos.getLeft(), replacePos.getRight());
+            String substring = sql.substring(replacePos.getFirst(), replacePos.getSecond());
             Preconditions.checkArgument(substring.startsWith("("));
             Preconditions.checkArgument(substring.endsWith(")"));
         }

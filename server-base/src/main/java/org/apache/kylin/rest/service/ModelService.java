@@ -43,7 +43,6 @@ import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
@@ -228,7 +227,7 @@ public class ModelService extends BasicService {
         for (ComputedColumnDesc cc : dataModelDesc.getComputedColumnDescs()) {
 
             //check by calcite parser
-            CalciteParser.ensureAliasInExpr(cc.getExpression(), dataModelDesc.getAliasMap().keySet());
+            cc.simpleParserCheck(cc.getExpression(), dataModelDesc.getAliasMap().keySet());
 
             //check by hive cli, this could be slow
             StringBuilder sb = new StringBuilder();

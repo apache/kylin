@@ -291,7 +291,7 @@ public class HivePushDownConverter implements IPushDownConverter {
     }
 
     @Override
-    public String convert(String originSql) {
+    public String convert(String originSql, String project, String defaultSchema) {
         return doConvert(originSql);
     }
 }

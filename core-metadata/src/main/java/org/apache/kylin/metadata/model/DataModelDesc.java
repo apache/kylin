@@ -54,6 +54,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -810,6 +811,24 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public List<ModelDimensionDesc> getDimensions() {
         return dimensions;
+    }
+
+    public ComputedColumnDesc findCCByCCColumnName(final String columnName) {
+        return Iterables.find(this.computedColumnDescs, new Predicate<ComputedColumnDesc>() {
+            @Override
+            public boolean apply(@Nullable ComputedColumnDesc input) {
+                Preconditions.checkNotNull(input);
+                return columnName.equals(input.getColumnName());
+            }
+        });
+    }
+
+    public Set<String> getComputedColumnNames() {
+        Set<String> ccColumnNames = Sets.newHashSet();
+        for (ComputedColumnDesc cc : this.getComputedColumnDescs()) {
+            ccColumnNames.add(cc.getColumnName());
+        }
+        return Collections.unmodifiableSet(ccColumnNames);
     }
 
     public List<ComputedColumnDesc> getComputedColumnDescs() {
