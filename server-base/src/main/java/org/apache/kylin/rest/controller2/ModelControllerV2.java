@@ -103,7 +103,7 @@ public class ModelControllerV2 extends BasicController {
         // official models
         for (DataModelDesc m : modelService.listAllModels(modelName, projectName, exactMatch)) {
             Preconditions.checkState(!m.isDraft());
-            
+
             DataModelDescResponse r = new DataModelDescResponse(m);
             r.setProject(projectService.getProjectOfModel(m.getName()));
             response.add(r);
@@ -154,7 +154,7 @@ public class ModelControllerV2 extends BasicController {
         DraftManager draftMgr = modelService.getDraftManager();
 
         DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
-        modelService.validateModelDesc(modelDesc);
+        modelService.primaryCheck(modelDesc);
 
         String project = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
                 : modelRequest.getProject();
@@ -175,6 +175,20 @@ public class ModelControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
+    @RequestMapping(value = "/validness", method = { RequestMethod.POST }, produces = {
+            "application/vnd.apache.kylin-v2+json" })
+    @ResponseBody
+    public EnvelopeResponse checkModel(@RequestBody ModelRequest modelRequest) throws IOException {
+        Preconditions.checkNotNull(modelRequest.getProject());
+        Preconditions.checkNotNull(modelRequest.getModelDescData());
+
+        DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
+        modelService.primaryCheck(modelDesc);
+        modelService.checkCCExpression(modelDesc, modelRequest.getProject());
+
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, null, "");
+    }
+
     @RequestMapping(value = "/draft", method = { RequestMethod.PUT }, produces = {
             "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
@@ -182,11 +196,11 @@ public class ModelControllerV2 extends BasicController {
         DraftManager draftMgr = modelService.getDraftManager();
 
         DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
-        modelService.validateModelDesc(modelDesc);
+        modelService.primaryCheck(modelDesc);
 
         String project = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
                 : modelRequest.getProject();
-        
+
         if (modelDesc.getUuid() == null)
             modelDesc.updateRandomUuid();
         modelDesc.setDraft(true);
@@ -271,7 +285,7 @@ public class ModelControllerV2 extends BasicController {
 
         DataModelDesc desc = null;
         try {
-            logger.debug("Saving MODEL " + modelRequest.getModelDescData());
+            logger.debug("deserialize MODEL " + modelRequest.getModelDescData());
             desc = JsonUtil.readValue(modelRequest.getModelDescData(), DataModelDesc.class);
         } catch (JsonParseException e) {
             logger.error("The data model definition is not valid.", e);

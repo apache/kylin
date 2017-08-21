@@ -17,6 +17,7 @@
 */
 package org.apache.kylin.query.util;
 
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,7 +25,7 @@ import org.mockito.Mockito;
 
 public class PushDownUtilTest {
     @Test
-    public void testSchemaCompletion() {
+    public void testSchemaCompletion() throws SqlParseException {
         String sql1 = "SELECT a \n" +
                 "FROM a.KYLIN_SALES as KYLIN_SALES\n" +
                 "INNER JOIN \"A\".KYLIN_ACCOUNT as BUYER_ACCOUNT\n" +
@@ -43,7 +44,10 @@ public class PushDownUtilTest {
                 "  ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id\n" +
                 "  inner JOIN test_sites as test_sites\n" +
                 "  ON test_kylin_fact.lstg_site_id = test_sites.site_id\n" +
+                "  where price > 100\n" +
                 "  group by test_cal_dt.week_beg_dt\n" +
+                "  having sum(price) > 1000\n" +
+                "  order by sum(price)\n" +
                 ") t1\n" +
                 "inner join  (\n" +
                 "  select test_cal_dt.week_beg_dt, count(*) as cnt\n" +
@@ -77,7 +81,10 @@ public class PushDownUtilTest {
                 "  ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id\n" +
                 "  inner JOIN EDW.test_sites as test_sites\n" +
                 "  ON test_kylin_fact.lstg_site_id = test_sites.site_id\n" +
+                "  where price > 100\n" +
                 "  group by test_cal_dt.week_beg_dt\n" +
+                "  having sum(price) > 1000\n" +
+                "  order by sum(price)\n" +
                 ") t1\n" +
                 "inner join  (\n" +
                 "  select test_cal_dt.week_beg_dt, count(*) as cnt\n" +
@@ -94,6 +101,40 @@ public class PushDownUtilTest {
         Assert.assertEquals(exceptSQL1, PushDownUtil.schemaCompletion(sql1, "EDW"));
         Assert.assertEquals(exceptSQL2, PushDownUtil.schemaCompletion(sql2, "EDW"));
         Assert.assertEquals(exceptSQL3, PushDownUtil.schemaCompletion(sql3, "EDW"));
+    }
+
+    @Test
+    public void testSchemaCompletionWithComplexSubquery() throws SqlParseException {
+        String sql =
+                "SELECT a, b " +
+                        "FROM (" +
+                        "   SELECT c, d, sum(p) " +
+                        "   FROM table1 t1, DB.table2 t2 " +
+                        "   WHERE t1.c > t2.d " +
+                        "   GROUP BY t.e" +
+                        "   HAVING sum(p) > 100" +
+                        "   ORDER BY t2.f" +
+                        ") at1 " +
+                        "INNER JOIN table3 t3 " +
+                        "ON at1.c = t3.c " +
+                        "WHERE t3.d > 0 " +
+                        "ORDER BY t3.e";
+
+        String exceptSQL =
+                "SELECT a, b " +
+                        "FROM (" +
+                        "   SELECT c, d, sum(p) " +
+                        "   FROM EDW.table1 t1, DB.table2 t2 " +
+                        "   WHERE t1.c > t2.d " +
+                        "   GROUP BY t.e" +
+                        "   HAVING sum(p) > 100" +
+                        "   ORDER BY t2.f" +
+                        ") at1 " +
+                        "INNER JOIN EDW.table3 t3 " +
+                        "ON at1.c = t3.c " +
+                        "WHERE t3.d > 0 " +
+                        "ORDER BY t3.e";
+        Assert.assertEquals(exceptSQL, PushDownUtil.schemaCompletion(sql, "EDW"));
     }
 
     @Test

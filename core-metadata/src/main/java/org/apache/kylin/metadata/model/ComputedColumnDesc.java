@@ -17,20 +17,30 @@
 */
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
-import java.io.Serializable;
-
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class ComputedColumnDesc implements Serializable {
+    private static final Logger logger = LoggerFactory.getLogger(ComputedColumnDesc.class);
+
     @JsonProperty
-    private String tableIdentity;
+    private String tableIdentity; // the alias in the model where the computed column belong to 
     @JsonProperty
-    private String columnName;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String tableAlias;
+    @JsonProperty
+    private String columnName; // the new col name
     @JsonProperty
     private String expression;
     @JsonProperty
@@ -38,21 +48,56 @@ public class ComputedColumnDesc implements Serializable {
     @JsonProperty
     private String comment;
 
-    public void init() {
+    public void init(Set<String> aliasSet, String rootFactTableName) {
         Preconditions.checkNotNull(tableIdentity, "tableIdentity is null");
         Preconditions.checkNotNull(columnName, "columnName is null");
         Preconditions.checkNotNull(expression, "expression is null");
         Preconditions.checkNotNull(datatype, "datatype is null");
 
-        Preconditions.checkState(tableIdentity.equals(tableIdentity.trim()), "tableIdentity of ComputedColumnDesc has heading/tailing whitespace");
-        Preconditions.checkState(columnName.equals(columnName.trim()), "columnName of ComputedColumnDesc has heading/tailing whitespace");
-        Preconditions.checkState(datatype.equals(datatype.trim()), "datatype of ComputedColumnDesc has heading/tailing whitespace");
+        if (tableAlias == null) // refer to comment of handleLegacyCC()
+            tableAlias = tableIdentity.substring(tableIdentity.indexOf(".") + 1);
+
+        Preconditions.checkState(tableIdentity.equals(tableIdentity.trim()),
+                "tableIdentity of ComputedColumnDesc has heading/tailing whitespace");
+        Preconditions.checkState(tableAlias.equals(tableAlias.trim()),
+                "tableAlias of ComputedColumnDesc has heading/tailing whitespace");
+        Preconditions.checkState(columnName.equals(columnName.trim()),
+                "columnName of ComputedColumnDesc has heading/tailing whitespace");
+        Preconditions.checkState(datatype.equals(datatype.trim()),
+                "datatype of ComputedColumnDesc has heading/tailing whitespace");
 
         tableIdentity = tableIdentity.toUpperCase();
+        tableAlias = tableAlias.toUpperCase();
         columnName = columnName.toUpperCase();
 
-        if ("true".equals(System.getProperty("needCheckCC")))
-            CalciteParser.ensureNoTableNameExists(expression);
+        if (!tableIdentity.contains(rootFactTableName) || !tableAlias.equals(rootFactTableName)) {
+            throw new IllegalArgumentException("Computed column has to be defined on fact table");
+        }
+
+        if ("true".equals(System.getProperty("needCheckCC"))) { //conditional execute this because of the calcite dependency is to available every where
+            try {
+                CalciteParser.ensureAliasInExpr(expression, aliasSet);
+            } catch (Exception e) {
+                String legacyHandled = handleLegacyCC(expression, rootFactTableName, aliasSet);
+                if (legacyHandled != null) {
+                    expression = legacyHandled;
+                } else {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private String handleLegacyCC(String expr, String rootFact, Set<String> aliasSet) {
+        try {
+            CalciteParser.ensureNoAliasInExpr(expr);
+            String ret = CalciteParser.insertAliasInExpr(expr, rootFact);
+            CalciteParser.ensureAliasInExpr(ret, aliasSet);
+            return ret;
+        } catch (Exception e) {
+            logger.error("failed to handle legacy CC " + expr);
+            return null;
+        }
     }
 
     public String getFullName() {
@@ -61,6 +106,10 @@ public class ComputedColumnDesc implements Serializable {
 
     public String getTableIdentity() {
         return tableIdentity;
+    }
+
+    public String getTableAlias() {
+        return tableAlias;
     }
 
     public String getColumnName() {
@@ -90,6 +139,8 @@ public class ComputedColumnDesc implements Serializable {
 
         if (!tableIdentity.equals(that.tableIdentity))
             return false;
+        if (!StringUtils.equals(tableAlias, that.tableAlias))
+            return false;
         if (!columnName.equals(that.columnName))
             return false;
         if (!expression.equals(that.expression))
@@ -100,6 +151,8 @@ public class ComputedColumnDesc implements Serializable {
     @Override
     public int hashCode() {
         int result = tableIdentity.hashCode();
+        if (tableAlias != null)
+            result = 31 * result + tableAlias.hashCode();
         result = 31 * result + columnName.hashCode();
         result = 31 * result + expression.hashCode();
         result = 31 * result + datatype.hashCode();

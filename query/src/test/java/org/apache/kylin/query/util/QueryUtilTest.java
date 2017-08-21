@@ -40,13 +40,15 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     public void testMassageSql() {
         {
             String sql = "select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
-            String s = QueryUtil.massageSql(sql, null, 0, 0);
+            String s = QueryUtil.massageSql(sql, null, 0, 0, "DEFAULT");
             Assert.assertEquals("select ( date '2001-09-28' + interval '1' day) from test_kylin_fact", s);
         }
         {
             String sql = "select ( date '2001-09-28' + interval floor(2) month) from test_kylin_fact group by ( date '2001-09-28' + interval floor(2) month)";
-            String s = QueryUtil.massageSql(sql, null, 0, 0);
-            Assert.assertEquals("select ( date '2001-09-28' + interval '2' month) from test_kylin_fact group by ( date '2001-09-28' + interval '2' month)", s);
+            String s = QueryUtil.massageSql(sql, null, 0, 0, "DEFAULT");
+            Assert.assertEquals(
+                    "select ( date '2001-09-28' + interval '2' month) from test_kylin_fact group by ( date '2001-09-28' + interval '2' month)",
+                    s);
         }
     }
 
@@ -54,7 +56,7 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     public void testKeywordDefaultDirtyHack() {
         {
             String sql = "select * from DEFAULT.TEST_KYLIN_FACT";
-            String s = QueryUtil.massageSql(sql, null, 0, 0);
+            String s = QueryUtil.massageSql(sql, null, 0, 0, "DEFAULT");
             Assert.assertEquals("select * from \"DEFAULT\".TEST_KYLIN_FACT", s);
         }
     }

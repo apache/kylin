@@ -114,7 +114,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         @Override
         public String toString() {
-            return "DeriveInfo [type=" + type + ", join=" + join + ", columns=" + Arrays.toString(columns) + ", isOneToOne=" + isOneToOne + "]";
+            return "DeriveInfo [type=" + type + ", join=" + join + ", columns=" + Arrays.toString(columns)
+                    + ", isOneToOne=" + isOneToOne + "]";
         }
 
     }
@@ -286,7 +287,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         throw new RuntimeException("Cannot get host info for " + derived);
     }
 
-    public Map<Array<TblColRef>, List<DeriveInfo>> getHostToDerivedInfo(List<TblColRef> rowCols, Collection<TblColRef> wantedCols) {
+    public Map<Array<TblColRef>, List<DeriveInfo>> getHostToDerivedInfo(List<TblColRef> rowCols,
+            Collection<TblColRef> wantedCols) {
         Map<Array<TblColRef>, List<DeriveInfo>> result = new HashMap<Array<TblColRef>, List<DeriveInfo>>();
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedMap.entrySet()) {
             Array<TblColRef> hostCols = entry.getKey();
@@ -496,12 +498,15 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         KylinVersion cubeVersion = new KylinVersion(getVersion());
         KylinVersion kylinVersion = KylinVersion.getCurrentVersion();
         if (!kylinVersion.isCompatibleWith(cubeVersion)) {
-            logger.info("checkSignature on {} is skipped as the its version {} is different from kylin version {}", getName(), cubeVersion, kylinVersion);
+            logger.info("checkSignature on {} is skipped as the its version {} is different from kylin version {}",
+                    getName(), cubeVersion, kylinVersion);
             return true;
         }
 
         if (kylinVersion.isCompatibleWith(cubeVersion) && !kylinVersion.isSignatureCompatibleWith(cubeVersion)) {
-            logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), cubeVersion);
+            logger.info(
+                    "checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ",
+                    getName(), cubeVersion);
             return true;
         }
 
@@ -606,7 +611,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived(true);
-        checkState(rowkey.getRowKeyColumns().length == dimCols.size(), "RowKey columns count (%s) doesn't match dimensions columns count (%s)", rowkey.getRowKeyColumns().length, dimCols.size());
+        checkState(rowkey.getRowKeyColumns().length == dimCols.size(),
+                "RowKey columns count (%s) doesn't match dimensions columns count (%s)",
+                rowkey.getRowKeyColumns().length, dimCols.size());
 
         initDictionaryDesc();
         amendAllColumns();
@@ -615,7 +622,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     public CuboidScheduler getCuboidScheduler() {
         if (cuboidScheduler != null)
             return cuboidScheduler;
-        
+
         synchronized (this) {
             if (cuboidScheduler == null) {
                 cuboidScheduler = CuboidScheduler.getInstance(this);
@@ -632,22 +639,25 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         int index = 0;
 
         for (AggregationGroup agg : getAggregationGroups()) {
-            long combination = 0L;
             try {
-                combination = agg.calculateCuboidCombination();
-            } catch (Exception ex) {
-                combination = config.getCubeAggrGroupMaxCombination() + 1;
-            } finally {
+                long combination = agg.calculateCuboidCombination();
+
                 if (combination > config.getCubeAggrGroupMaxCombination()) {
-                    String msg = "Aggregation group " + index + " has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.";
-                    logger.error("Aggregation group " + index + " has " + combination + " combinations;");
-                    logger.error(msg);
-                    throw new IllegalStateException(msg);
+                    String msg = "Aggregation group " + index + " of Cube Desc " + this.name
+                            + " has too many combinations: " + combination
+                            + ". Use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.";
+                    throw new TooManyCuboidException(msg);
                 }
+            } catch (TooManyCuboidException tmce) {
+                throw tmce;
+            } catch (Exception e) {
+                throw new IllegalStateException("Unknown error while calculating cuboid number for " + //
+                        "Aggregation group " + index + " of Cube Desc " + this.name, e);
             }
 
             index++;
         }
+
     }
 
     public void validateAggregationGroups() {
@@ -678,50 +688,64 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             Set<String> jointDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(jointDimsList, jointDims, agg.getSelectRule().jointDims);
 
-            if (!includeDims.containsAll(mandatoryDims) || !includeDims.containsAll(hierarchyDims) || !includeDims.containsAll(jointDims)) {
+            if (!includeDims.containsAll(mandatoryDims) || !includeDims.containsAll(hierarchyDims)
+                    || !includeDims.containsAll(jointDims)) {
                 List<String> notIncluded = Lists.newArrayList();
-                final Iterable<String> all = Iterables.unmodifiableIterable(Iterables.concat(mandatoryDims, hierarchyDims, jointDims));
+                final Iterable<String> all = Iterables
+                        .unmodifiableIterable(Iterables.concat(mandatoryDims, hierarchyDims, jointDims));
                 for (String dim : all) {
                     if (includeDims.contains(dim) == false) {
                         notIncluded.add(dim);
                     }
                 }
                 Collections.sort(notIncluded);
-                logger.error("Aggregation group " + index + " Include dimensions not containing all the used dimensions");
-                throw new IllegalStateException("Aggregation group " + index + " 'includes' dimensions not include all the dimensions:" + notIncluded.toString());
+                logger.error(
+                        "Aggregation group " + index + " Include dimensions not containing all the used dimensions");
+                throw new IllegalStateException("Aggregation group " + index
+                        + " 'includes' dimensions not include all the dimensions:" + notIncluded.toString());
             }
 
             if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
-                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with hierarchy dimensions: " + ensureOrder(CollectionUtils.intersection(mandatoryDims, hierarchyDims)));
+                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with hierarchy dimensions: "
+                        + ensureOrder(CollectionUtils.intersection(mandatoryDims, hierarchyDims)));
             }
             if (CollectionUtils.containsAny(mandatoryDims, jointDims)) {
-                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with joint dimensions: " + ensureOrder(CollectionUtils.intersection(mandatoryDims, jointDims)));
+                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with joint dimensions: "
+                        + ensureOrder(CollectionUtils.intersection(mandatoryDims, jointDims)));
             }
 
             if (CollectionUtils.containsAny(hierarchyDims, jointDims)) {
                 logger.error("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions");
-                throw new IllegalStateException("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions: " + ensureOrder(CollectionUtils.intersection(hierarchyDims, jointDims)));
+                throw new IllegalStateException(
+                        "Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions: "
+                                + ensureOrder(CollectionUtils.intersection(hierarchyDims, jointDims)));
             }
 
             if (hasSingleOrNone(hierarchyDimsList)) {
                 logger.error("Aggregation group " + index + " require at least 2 dimensions in a hierarchy");
-                throw new IllegalStateException("Aggregation group " + index + " require at least 2 dimensions in a hierarchy.");
+                throw new IllegalStateException(
+                        "Aggregation group " + index + " require at least 2 dimensions in a hierarchy.");
             }
             if (hasSingleOrNone(jointDimsList)) {
                 logger.error("Aggregation group " + index + " require at least 2 dimensions in a joint");
-                throw new IllegalStateException("Aggregation group " + index + " require at least 2 dimensions in a joint");
+                throw new IllegalStateException(
+                        "Aggregation group " + index + " require at least 2 dimensions in a joint");
             }
 
             Pair<Boolean, Set<String>> overlap = hasOverlap(hierarchyDimsList, hierarchyDims);
             if (overlap.getFirst() == true) {
-                logger.error("Aggregation group " + index + " a dimension exist in more than one hierarchy: " + ensureOrder(overlap.getSecond()));
-                throw new IllegalStateException("Aggregation group " + index + " a dimension exist in more than one hierarchy: " + ensureOrder(overlap.getSecond()));
+                logger.error("Aggregation group " + index + " a dimension exist in more than one hierarchy: "
+                        + ensureOrder(overlap.getSecond()));
+                throw new IllegalStateException("Aggregation group " + index
+                        + " a dimension exist in more than one hierarchy: " + ensureOrder(overlap.getSecond()));
             }
 
             overlap = hasOverlap(jointDimsList, jointDims);
             if (overlap.getFirst() == true) {
-                logger.error("Aggregation group " + index + " a dimension exist in more than one joint: " + ensureOrder(overlap.getSecond()));
-                throw new IllegalStateException("Aggregation group " + index + " a dimension exist in more than one joint: " + ensureOrder(overlap.getSecond()));
+                logger.error("Aggregation group " + index + " a dimension exist in more than one joint: "
+                        + ensureOrder(overlap.getSecond()));
+                throw new IllegalStateException("Aggregation group " + index
+                        + " a dimension exist in more than one joint: " + ensureOrder(overlap.getSecond()));
             }
 
             index++;
@@ -849,7 +873,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return new String[][] { cols, extra };
     }
 
-    private void initDerivedMap(TblColRef[] hostCols, DeriveType type, JoinDesc join, TblColRef[] derivedCols, String[] extra) {
+    private void initDerivedMap(TblColRef[] hostCols, DeriveType type, JoinDesc join, TblColRef[] derivedCols,
+            String[] extra) {
         if (hostCols.length == 0 || derivedCols.length == 0)
             throw new IllegalStateException("host/derived columns must not be empty");
 
@@ -870,7 +895,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         for (int i = 0; i < derivedCols.length; i++) {
             TblColRef derivedCol = derivedCols[i];
-            boolean isOneToOne = type == DeriveType.PK_FK || ArrayUtils.contains(hostCols, derivedCol) || (extra != null && extra[i].contains("1-1"));
+            boolean isOneToOne = type == DeriveType.PK_FK || ArrayUtils.contains(hostCols, derivedCol)
+                    || (extra != null && extra[i].contains("1-1"));
             derivedToHostMap.put(derivedCol, new DeriveInfo(type, join, hostCols, isOneToOne));
         }
 
@@ -902,7 +928,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 whatsLeft.add(derCol);
         }
         if (whatsLeft.size() > 0) {
-            infoList.add(new DeriveInfo(type, join, (TblColRef[]) whatsLeft.toArray(new TblColRef[whatsLeft.size()]), false));
+            infoList.add(new DeriveInfo(type, join, (TblColRef[]) whatsLeft.toArray(new TblColRef[whatsLeft.size()]),
+                    false));
         }
     }
 
@@ -993,7 +1020,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
 
         for (int i = 0; i < measures.size(); i++) {
-            checkState(checkEachMeasureExist.get(i), "measure (%s) does not exist in column family，or measure duplicates", measures.get(i));
+            checkState(checkEachMeasureExist.get(i),
+                    "measure (%s) does not exist in column family，or measure duplicates", measures.get(i));
         }
     }
 

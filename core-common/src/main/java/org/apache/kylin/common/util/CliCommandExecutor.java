@@ -89,9 +89,10 @@ public class CliCommandExecutor {
         }
 
         if (r.getFirst() != 0)
-            throw new IOException("OS command error exit with " + r.getFirst() //
+            throw new IOException("OS command error exit with return code: " + r.getFirst() //
+                    + ", error message: " + r.getSecond() + "The command is: \n" + command
                     + (remoteHost == null ? "" : " (remoteHost:" + remoteHost + ")") //
-                    + " -- " + command + "\n" + r.getSecond());
+            );
 
         return r;
     }

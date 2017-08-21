@@ -158,7 +158,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
             RexCall call = (RexCall) rexNode;
             column = translateRexCall(call, inputColumnRowType, fieldName, sourceCollector);
         } else {
-            throw new IllegalStateException("Unsupport RexNode " + rexNode);
+            throw new IllegalStateException("Unsupported RexNode " + rexNode);
         }
         return column;
     }

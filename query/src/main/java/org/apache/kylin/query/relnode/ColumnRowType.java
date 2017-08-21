@@ -56,6 +56,10 @@ public class ColumnRowType {
             return columns.get(index);
     }
 
+    public TblColRef getColumnByName(String columnName) {
+        return getColumnByIndexNullable(getIndexByName(columnName));
+    }
+
     public int getIndexByName(String columnName) {
         for (int i = 0; i < columns.size(); i++) {
             if (columns.get(i).getName().equals(columnName)) {

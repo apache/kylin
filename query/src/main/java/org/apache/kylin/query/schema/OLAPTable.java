@@ -92,13 +92,15 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         SQLTYPE_MAPPING.put("any", SqlTypeName.ANY);
     }
 
+    private final boolean exposeMore;
     private final OLAPSchema olapSchema;
     private final TableDesc sourceTable;
     private RelDataType rowType;
-    private List<ColumnDesc> exposedColumns;
+    private List<ColumnDesc> sourceColumns;
 
-    public OLAPTable(OLAPSchema schema, TableDesc tableDesc) {
+    public OLAPTable(OLAPSchema schema, TableDesc tableDesc, boolean exposeMore) {
         super(Object[].class);
+        this.exposeMore = exposeMore;
         this.olapSchema = schema;
         this.sourceTable = tableDesc;
         this.rowType = null;
@@ -116,15 +118,18 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         return this.sourceTable.getIdentity();
     }
 
-    public List<ColumnDesc> getExposedColumns() {
-        return exposedColumns;
+    public List<ColumnDesc> getSourceColumns() {
+        if (sourceColumns == null) {
+            sourceColumns = listSourceColumns();
+        }
+        return sourceColumns;
     }
 
     @Override
     public RelDataType getRowType(RelDataTypeFactory typeFactory) {
         if (this.rowType == null) {
             // always build exposedColumns and rowType together
-            this.exposedColumns = listSourceColumns();
+            this.sourceColumns = getSourceColumns();
             this.rowType = deriveRowType(typeFactory);
         }
         return this.rowType;
@@ -132,7 +137,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
 
     private RelDataType deriveRowType(RelDataTypeFactory typeFactory) {
         RelDataTypeFactory.FieldInfoBuilder fieldInfo = typeFactory.builder();
-        for (ColumnDesc column : exposedColumns) {
+        for (ColumnDesc column : sourceColumns) {
             RelDataType sqlType = createSqlType(typeFactory, column.getUpgradedType(), column.isNullable());
             sqlType = SqlTypeUtil.addCharsetAndCollation(sqlType, typeFactory);
             fieldInfo.add(column.getName(), sqlType);
@@ -169,7 +174,10 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     private List<ColumnDesc> listSourceColumns() {
         ProjectManager mgr = ProjectManager.getInstance(olapSchema.getConfig());
 
-        List<ColumnDesc> tableColumns = mgr.listExposedColumns(olapSchema.getProjectName(), sourceTable);
+        // take care of computed columns
+        boolean exposeMore = olapSchema.getConfig().isPushDownEnabled() || this.exposeMore;
+
+        List<ColumnDesc> tableColumns = mgr.listExposedColumns(olapSchema.getProjectName(), sourceTable, exposeMore);
 
         List<ColumnDesc> metricColumns = Lists.newArrayList();
         List<MeasureDesc> countMeasures = mgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(),

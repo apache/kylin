@@ -274,7 +274,7 @@ public class ProjectManager {
                     }
                 }
             }
-            
+
             getStore().putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
             projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
             clearL2Cache();
@@ -457,11 +457,10 @@ public class ProjectManager {
                 l2Cache.listExposedTables(norm(project));
     }
 
-    public List<ColumnDesc> listExposedColumns(String project, TableDesc tableDesc) {
+    public List<ColumnDesc> listExposedColumns(String project, TableDesc tableDesc, boolean exposeMore) {
         Set<ColumnDesc> exposedColumns = l2Cache.listExposedColumns(norm(project), tableDesc.getIdentity());
 
-        if (config.isPushDownEnabled()) {
-            // take care of computed columns
+        if (exposeMore) {
             Set<ColumnDesc> dedup = Sets.newHashSet(tableDesc.getColumns());
             dedup.addAll(exposedColumns);
             return Lists.newArrayList(dedup);

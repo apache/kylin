@@ -71,7 +71,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
         this.allRows = table.getAllRows();
 
         OLAPTable olapTable = (OLAPTable) olapContext.firstTableScan.getOlapTable();
-        this.colDescs = olapTable.getExposedColumns();
+        this.colDescs = olapTable.getSourceColumns();
         this.current = new Object[colDescs.size()];
 
         reset();

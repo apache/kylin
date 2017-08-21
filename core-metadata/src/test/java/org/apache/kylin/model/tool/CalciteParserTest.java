@@ -103,22 +103,6 @@ public class CalciteParserTest {
 
     }
 
-    @Test
-    public void testEqual() throws SqlParseException {
-        String sql0 = "select a.a + a.b + a.c from t as a";
-        String sql1 = "select (((a . a +    a.b +    a.c))) from t as a";
-        String sql2 = "select (a + b) + c  from t";
-        String sql3 = "select a.a + (a.b + a.c) from t as a";
-
-        SqlNode sn0 = CalciteParser.getOnlySelectNode(sql0);
-        SqlNode sn1 = CalciteParser.getOnlySelectNode(sql1);
-        SqlNode sn2 = CalciteParser.getOnlySelectNode(sql2);
-        SqlNode sn3 = CalciteParser.getOnlySelectNode(sql3);
-
-        assertEquals(true, CalciteParser.isNodeEqual(sn0, sn1));
-        assertEquals(true, CalciteParser.isNodeEqual(sn0, sn2));
-        assertEquals(false, CalciteParser.isNodeEqual(sn0, sn3));
-    }
 
     @Test
     public void testPosWithBrackets() throws SqlParseException {

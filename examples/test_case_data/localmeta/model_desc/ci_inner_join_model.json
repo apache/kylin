@@ -127,21 +127,47 @@
       "columnName": "DEAL_AMOUNT",
       "expression": "PRICE * ITEM_COUNT",
       "datatype": "decimal",
-      "comment": "deal amount of inner join model"
+      "comment": "deal amount of inner join model (with legacy expression format)"
     },
     {
       "tableIdentity": "DEFAULT.TEST_KYLIN_FACT",
+      "tableAlias": "TEST_KYLIN_FACT",
       "columnName": "DEAL_YEAR",
-      "expression": "year(CAL_DT)",
+      "expression": "year(TEST_KYLIN_FACT.CAL_DT)",
       "datatype": "integer",
-      "comment": "the year of the deal of the inner join model"
+      "comment": "the year of the deal"
     },
     {
-      "tableIdentity": "DEFAULT.TEST_ACCOUNT",
-      "columnName": "COUNTRY_ABBR",
-      "expression": "SUBSTR(ACCOUNT_COUNTRY,0,1)",
+      "tableIdentity": "DEFAULT.TEST_KYLIN_FACT",
+      "tableAlias": "TEST_KYLIN_FACT",
+      "columnName": "BUYER_ID_AND_COUNTRY_NAME",
+      "expression": "CONCAT(BUYER_ACCOUNT.ACCOUNT_ID, BUYER_COUNTRY.NAME)",
       "datatype": "string",
-      "comment": "first char of country of the inner join model"
+      "comment": "synthetically concat buyer's account id and buyer country"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_KYLIN_FACT",
+      "tableAlias": "TEST_KYLIN_FACT",
+      "columnName": "SELLER_ID_AND_COUNTRY_NAME",
+      "expression": "CONCAT(SELLER_ACCOUNT.ACCOUNT_ID, SELLER_COUNTRY.NAME)",
+      "datatype": "string",
+      "comment": "synthetically concat seller's account id and seller country"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_KYLIN_FACT",
+      "tableAlias": "TEST_KYLIN_FACT",
+      "columnName": "BUYER_COUNTRY_ABBR",
+      "expression": "SUBSTR(BUYER_ACCOUNT.ACCOUNT_COUNTRY,0,1)",
+      "datatype": "string",
+      "comment": "first char of country of buyer account"
+    },
+    {
+      "tableIdentity": "DEFAULT.TEST_KYLIN_FACT",
+      "tableAlias": "TEST_KYLIN_FACT",
+      "columnName": "SELLER_COUNTRY_ABBR",
+      "expression": "SUBSTR(SELLER_ACCOUNT.ACCOUNT_COUNTRY,0,1)",
+      "datatype": "string",
+      "comment": "first char of country of seller account"
     }
   ],
   "dimensions": [
@@ -157,7 +183,11 @@
         "SLR_SEGMENT_CD",
         "SELLER_ID",
         "TEST_COUNT_DISTINCT_BITMAP",
-        "DEAL_YEAR"
+        "DEAL_YEAR",
+        "SELLER_COUNTRY_ABBR",
+        "BUYER_COUNTRY_ABBR",
+        "SELLER_ID_AND_COUNTRY_NAME",
+        "BUYER_ID_AND_COUNTRY_NAME"
       ]
     },
     {
@@ -177,8 +207,7 @@
         "ACCOUNT_BUYER_LEVEL",
         "ACCOUNT_SELLER_LEVEL",
         "ACCOUNT_COUNTRY",
-        "ACCOUNT_CONTACT",
-        "COUNTRY_ABBR"
+        "ACCOUNT_CONTACT"
       ]
     },
     {
@@ -188,8 +217,7 @@
         "ACCOUNT_BUYER_LEVEL",
         "ACCOUNT_SELLER_LEVEL",
         "ACCOUNT_COUNTRY",
-        "ACCOUNT_CONTACT",
-        "COUNTRY_ABBR"
+        "ACCOUNT_CONTACT"
       ]
     },
     {

@@ -130,13 +130,13 @@
     },
     {
       "name": "SELLER_COUNTRY_ABBR",
-      "table": "SELLER_ACCOUNT",
-      "column": "COUNTRY_ABBR"
+      "table": "TEST_KYLIN_FACT",
+      "column": "SELLER_COUNTRY_ABBR"
     },
     {
       "name": "BUYER_COUNTRY_ABBR",
-      "table": "BUYER_ACCOUNT",
-      "column": "COUNTRY_ABBR"
+      "table": "TEST_KYLIN_FACT",
+      "column": "BUYER_COUNTRY_ABBR"
     },
     {
       "name": "BUYER_COUNTRY_NAME",
@@ -237,18 +237,20 @@
         "encoding": "dict"
       },
       {
-        "column": "SELLER_ACCOUNT.COUNTRY_ABBR",
+        "column": "TEST_KYLIN_FACT.SELLER_COUNTRY_ABBR",
         "encoding": "dict"
       },
       {
-        "column": "BUYER_ACCOUNT.COUNTRY_ABBR",
+        "column": "TEST_KYLIN_FACT.BUYER_COUNTRY_ABBR",
         "encoding": "dict"
       }
     ]
   },
   "signature": null,
   "null_string": null,
-  "hbase_mapping": { "column_family": [ ] },
+  "hbase_mapping": {
+    "column_family": []
+  },
   "aggregation_groups": [
     {
       "includes": [
@@ -280,7 +282,7 @@
             "TEST_KYLIN_FACT.DEAL_YEAR"
           ]
         ],
-        "dim_cap" : 3
+        "dim_cap": 3
       }
     },
     {
@@ -306,8 +308,8 @@
         "BUYER_ACCOUNT.ACCOUNT_SELLER_LEVEL",
         "BUYER_ACCOUNT.ACCOUNT_COUNTRY",
         "BUYER_COUNTRY.NAME",
-        "SELLER_ACCOUNT.COUNTRY_ABBR",
-        "BUYER_ACCOUNT.COUNTRY_ABBR"
+        "TEST_KYLIN_FACT.SELLER_COUNTRY_ABBR",
+        "TEST_KYLIN_FACT.BUYER_COUNTRY_ABBR"
       ],
       "select_rule": {
         "hierarchy_dims": [],
@@ -325,8 +327,8 @@
             "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
             "TEST_KYLIN_FACT.LSTG_SITE_ID",
             "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
-            "SELLER_ACCOUNT.COUNTRY_ABBR",
-            "BUYER_ACCOUNT.COUNTRY_ABBR"
+            "TEST_KYLIN_FACT.SELLER_COUNTRY_ABBR",
+            "TEST_KYLIN_FACT.BUYER_COUNTRY_ABBR"
           ],
           [
             "TEST_KYLIN_FACT.SELLER_ID",
@@ -346,7 +348,7 @@
             "BUYER_COUNTRY.NAME"
           ]
         ],
-        "dim_cap" : 3
+        "dim_cap": 3
       }
     }
   ],
