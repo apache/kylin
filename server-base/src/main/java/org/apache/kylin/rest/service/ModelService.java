@@ -27,15 +27,23 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.HiveCmdBuilder;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.metadata.draft.Draft;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
@@ -73,7 +81,8 @@ public class ModelService extends BasicService {
     @Autowired
     private AclEvaluate aclEvaluate;
 
-    public List<DataModelDesc> listAllModels(final String modelName, final String projectName, boolean exactMatch) throws IOException {
+    public List<DataModelDesc> listAllModels(final String modelName, final String projectName, boolean exactMatch)
+            throws IOException {
         List<DataModelDesc> models;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
@@ -204,9 +213,97 @@ public class ModelService extends BasicService {
         return ret;
     }
 
-    private boolean validateUpdatingModel(DataModelDesc dataModelDesc, String project) throws IOException {
+    /**
+     * check if the computed column expressions are valid ( in hive)
+     */
+    public boolean checkCCExpression(final DataModelDesc dataModelDesc, String project) throws IOException {
+
+        dataModelDesc.setDraft(false);
+        if (dataModelDesc.getUuid() == null)
+            dataModelDesc.updateRandomUuid();
+
+        dataModelDesc.init(getConfig(), getMetadataManager().getAllTablesMap(project),
+                getMetadataManager().listDataModels());
+
+        for (ComputedColumnDesc cc : dataModelDesc.getComputedColumnDescs()) {
+
+            //check by calcite parser
+            CalciteParser.ensureAliasInExpr(cc.getExpression(), dataModelDesc.getAliasMap().keySet());
+
+            //check by hive cli, this could be slow
+            StringBuilder sb = new StringBuilder();
+            sb.append("select ");
+            sb.append(cc.getExpression());
+            sb.append(" ");
+            JoinedFlatTable.appendJoinStatement(new IJoinedFlatTableDesc() {
+                @Override
+                public String getTableName() {
+                    return null;
+                }
+
+                @Override
+                public DataModelDesc getDataModel() {
+                    return dataModelDesc;
+                }
+
+                @Override
+                public List<TblColRef> getAllColumns() {
+                    return null;
+                }
+
+                @Override
+                public int getColumnIndex(TblColRef colRef) {
+                    return 0;
+                }
+
+                @Override
+                public long getSourceOffsetStart() {
+                    return 0;
+                }
+
+                @Override
+                public long getSourceOffsetEnd() {
+                    return 0;
+                }
+
+                @Override
+                public TblColRef getDistributedBy() {
+                    return null;
+                }
+
+                @Override
+                public TblColRef getClusterBy() {
+                    return null;
+                }
+
+                @Override
+                public ISegment getSegment() {
+                    return null;
+                }
+            }, sb, false);
+            sb.append(" limit 0");
+
+            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+            hiveCmdBuilder.addStatement(sb.toString());
+
+            long ts = System.currentTimeMillis();
+            Pair<Integer, String> response = KylinConfig.getInstanceFromEnv().getCliCommandExecutor()
+                    .execute(hiveCmdBuilder.toString());
+            logger.debug("Spent " + (System.currentTimeMillis() - ts)
+                    + " ms to execute the hive command to validate computed column expression: " + cc.getExpression());
+            if (response.getFirst() != 0) {
+                throw new IllegalArgumentException("The expression " + cc.getExpression()
+                        + " failed syntax check with output message: " + response.getSecond());
+            }
+        }
+
+        return true;
+    }
+
+    private boolean checkIfBreakExistingCubes(DataModelDesc dataModelDesc, String project) throws IOException {
         String modelName = dataModelDesc.getName();
         List<CubeInstance> cubes = cubeService.listAllCubes(null, project, modelName, true);
+
         if (cubes != null && cubes.size() != 0) {
             dataModelDesc.init(getConfig(), getMetadataManager().getAllTablesMap(dataModelDesc.getProject()),
                     getMetadataManager().listDataModels());
@@ -254,7 +351,7 @@ public class ModelService extends BasicService {
         return true;
     }
 
-    public void validateModelDesc(DataModelDesc modelDesc) {
+    public void primaryCheck(DataModelDesc modelDesc) {
         Message msg = MsgPicker.getMsg();
 
         if (modelDesc == null) {
@@ -276,7 +373,7 @@ public class ModelService extends BasicService {
     public DataModelDesc updateModelToResourceStore(DataModelDesc modelDesc, String projectName) throws IOException {
         aclEvaluate.hasProjectWritePermission(getProjectManager().getProject(projectName));
         Message msg = MsgPicker.getMsg();
-        
+
         modelDesc.setDraft(false);
         if (modelDesc.getUuid() == null)
             modelDesc.updateRandomUuid();
@@ -287,7 +384,7 @@ public class ModelService extends BasicService {
                 modelDesc = createModelDesc(projectName, modelDesc);
             } else {
                 // update
-                if (!validateUpdatingModel(modelDesc, projectName)) {
+                if (!checkIfBreakExistingCubes(modelDesc, projectName)) {
                     throw new BadRequestException(msg.getUPDATE_MODEL_KEY_FIELD());
                 }
                 modelDesc = updateModelAndDesc(modelDesc);
@@ -299,7 +396,7 @@ public class ModelService extends BasicService {
         if (!modelDesc.getError().isEmpty()) {
             throw new BadRequestException(String.format(msg.getBROKEN_MODEL_DESC(), modelDesc.getName()));
         }
-        
+
         return modelDesc;
     }
 
@@ -321,7 +418,7 @@ public class ModelService extends BasicService {
         return null;
     }
 
-    public List<Draft> listModelDrafts(String modelName,  String projectName) throws IOException {
+    public List<Draft> listModelDrafts(String modelName, String projectName) throws IOException {
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
         if (null == project) {
             aclEvaluate.checkIsGlobalAdmin();
@@ -339,7 +436,7 @@ public class ModelService extends BasicService {
                     result.add(d);
             }
         }
-        
+
         return result;
     }
 }

@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -187,6 +188,10 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public Set<TableRef> getFactTables() {
         return factTableRefs;
+    }
+
+    public Map<String, TableRef> getAliasMap() {
+        return Collections.unmodifiableMap(aliasMap);
     }
 
     public Set<TableRef> getLookupTables() {
@@ -430,8 +435,9 @@ public class DataModelDesc extends RootPersistentEntity {
             String alias = join.getAlias();
             if (alias == null) {
                 alias = tableDesc.getName();
-                join.setAlias(alias);
             }
+            alias = alias.toUpperCase();
+            join.setAlias(alias);
 
             TableRef ref = new TableRef(this, alias, tableDesc);
 
@@ -494,25 +500,26 @@ public class DataModelDesc extends RootPersistentEntity {
 
         for (ComputedColumnDesc newCC : this.computedColumnDescs) {
 
-            newCC.init();
-            final String newCCName = newCC.getFullName();
+            newCC.init(aliasMap.keySet(), rootFactTableRef.getAlias());
+            final String newCCFullName = newCC.getFullName();
             final String newCCColumnName = newCC.getColumnName();
 
             for (Pair<ComputedColumnDesc, DataModelDesc> pair : existingCCs) {
                 DataModelDesc dataModelDesc = pair.getSecond();
                 ComputedColumnDesc cc = pair.getFirst();
 
-                if (StringUtils.equalsIgnoreCase(cc.getFullName(), newCCName) && !(cc.equals(newCC))) {
+                if (StringUtils.equalsIgnoreCase(cc.getFullName(), newCCFullName) && !(cc.equals(newCC))) {
                     throw new IllegalArgumentException(String.format(
                             "Column name for computed column %s is already used in model %s, you should apply the same expression ' %s ' here, or use a different column name.",
-                            newCCName, dataModelDesc.getName(), cc.getExpression()));
+                            newCCFullName, dataModelDesc.getName(), cc.getExpression()));
                 }
 
                 if (isTwoCCDefinitionEquals(cc.getExpression(), newCC.getExpression())
                         && !StringUtils.equalsIgnoreCase(cc.getColumnName(), newCCColumnName)) {
                     throw new IllegalArgumentException(String.format(
-                            "Expression for computed column %s is already used in model %s, you should use the same column name with ' %s ' .",
-                            newCCName, dataModelDesc.getName(), cc.getColumnName()));
+                            "Expression %s in computed column %s is already defined by computed column %s from model %s, you should use the same column name: ' %s ' .",
+                            newCC.getExpression(), newCCFullName, cc.getFullName(), dataModelDesc.getName(),
+                            cc.getColumnName()));
                 }
             }
             existingCCs.add(Pair.newPair(newCC, this));

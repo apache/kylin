@@ -36,6 +36,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.TooManyCuboidException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
@@ -47,13 +48,13 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
     private final long max;
     private final Set<Long> allCuboidIds;
     private final Map<Long, List<Long>> parent2child;
-    
+
     public DefaultCuboidScheduler(CubeDesc cubeDesc) {
         super(cubeDesc);
-        
+
         int size = this.cubeDesc.getRowkey().getRowKeyColumns().length;
         this.max = (long) Math.pow(2, size) - 1;
-        
+
         Pair<Set<Long>, Map<Long, List<Long>>> pair = buildTreeBottomUp();
         this.allCuboidIds = pair.getFirst();
         this.parent2child = pair.getSecond();
@@ -145,7 +146,8 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         maxCombination = maxCombination < 0 ? Long.MAX_VALUE : maxCombination;
         while (!children.isEmpty()) {
             if (cuboidHolder.size() > maxCombination) {
-                throw new IllegalStateException("Too many cuboids for the cube. Cuboid combination reached " + cuboidHolder.size() + " and limit is " + maxCombination + ". Abort calculation.");
+                throw new IllegalStateException("Too many cuboids for the cube. Cuboid combination reached "
+                        + cuboidHolder.size() + " and limit is " + maxCombination + ". Abort calculation.");
             }
             cuboidHolder.addAll(children);
             children = getOnTreeParentsByLayer(children);
@@ -251,7 +253,7 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
 
         return parentCandidate;
     }
-    
+
     /**
      * Get all valid cuboids for agg group, ignoring padding
      * @param agg agg group
@@ -265,7 +267,7 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         Set<Long> children = getLowestCuboids(agg);
         while (!children.isEmpty()) {
             if (cuboidHolder.size() > cubeDesc.getConfig().getCubeAggrGroupMaxCombination()) {
-                throw new IllegalStateException("too many combination for the aggregation group");
+                throw new TooManyCuboidException("Holder size larger than kylin.cube.aggrgroup.max-combination");
             }
             cuboidHolder.addAll(children);
             children = getOnTreeParentsByLayer(children, agg);
@@ -341,12 +343,12 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         }
         return false;
     }
-    
+
     private boolean checkDimCap(AggregationGroup agg, long cuboidID) {
         int dimCap = agg.getDimCap();
         if (dimCap <= 0)
             return true;
-        
+
         return Long.bitCount(cuboidID) <= dimCap;
     }
 

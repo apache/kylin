@@ -21,15 +21,11 @@ package org.apache.kylin.metadata.model.tool;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
-import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
@@ -54,8 +50,8 @@ public class CalciteParser {
         try {
             selectList = ((SqlSelect) CalciteParser.parse(sql)).getSelectList();
         } catch (SqlParseException e) {
-            throw new RuntimeException("Failed to parse expression \'" + sql
-                    + "\', please make sure the expression is valid and no table name exists in the expression");
+            throw new RuntimeException(
+                    "Failed to parse expression \'" + sql + "\', please make sure the expression is valid");
         }
 
         Preconditions.checkArgument(selectList.size() == 1,
@@ -66,100 +62,34 @@ public class CalciteParser {
 
     public static SqlNode getExpNode(String expr) {
         return getOnlySelectNode("select " + expr + " from t");
-
     }
 
-    public static SqlNode getFromNode(String sql) {
-        SqlNode node = null;
-        try {
-            node = CalciteParser.parse(sql);
-        } catch (SqlParseException e) {
-            throw new RuntimeException(
-                    "Failed to parse expression \'" + sql + "\', please make sure the expression is valid");
-        }
-        //When the sql have limit clause, calcite will parse it as a SqlOrder Object.
-        SqlNode fromNode = null;
-        if (node instanceof SqlOrderBy) {
-            SqlOrderBy orderBy = (SqlOrderBy) node;
-            fromNode = ((SqlSelect) orderBy.query).getFrom();
-        } else {
-            SqlSelect sqlSelect = (SqlSelect) node;
-            fromNode = sqlSelect.getFrom();
-        }
-        return fromNode;
-    }
+    public static void ensureAliasInExpr(final String expr, final Set<String> aliasSet) {
+        SqlNode sqlNode = getExpNode(expr);
 
-    public static boolean isNodeEqual(SqlNode node0, SqlNode node1) {
-        if (node0 == null) {
-            return node1 == null;
-        } else if (node1 == null) {
-            return false;
-        }
-
-        if (!Objects.equals(node0.getClass().getSimpleName(), node1.getClass().getSimpleName())) {
-            return false;
-        }
-
-        if (node0 instanceof SqlCall) {
-            SqlCall thisNode = (SqlCall) node0;
-            SqlCall thatNode = (SqlCall) node1;
-            if (!thisNode.getOperator().getName().equalsIgnoreCase(thatNode.getOperator().getName())) {
-                return false;
-            }
-            return isNodeEqual(thisNode.getOperandList(), thatNode.getOperandList());
-        }
-        if (node0 instanceof SqlLiteral) {
-            SqlLiteral thisNode = (SqlLiteral) node0;
-            SqlLiteral thatNode = (SqlLiteral) node1;
-            return Objects.equals(thisNode.getValue(), thatNode.getValue());
-        }
-        if (node0 instanceof SqlNodeList) {
-            SqlNodeList thisNode = (SqlNodeList) node0;
-            SqlNodeList thatNode = (SqlNodeList) node1;
-            if (thisNode.getList().size() != thatNode.getList().size()) {
-                return false;
-            }
-            for (int i = 0; i < thisNode.getList().size(); i++) {
-                SqlNode thisChild = thisNode.getList().get(i);
-                final SqlNode thatChild = thatNode.getList().get(i);
-                if (!isNodeEqual(thisChild, thatChild)) {
-                    return false;
+        SqlVisitor sqlVisitor = new SqlBasicVisitor() {
+            @Override
+            public Object visit(SqlIdentifier id) {
+                if (id.names.size() < 2 || !aliasSet.contains(id.names.get(0))) {
+                    throw new IllegalArgumentException("Column Identifier in the computed column " + expr
+                            + "expression should comply to ALIAS.COLUMN ");
                 }
+                return null;
             }
-            return true;
-        }
-        if (node0 instanceof SqlIdentifier) {
-            SqlIdentifier thisNode = (SqlIdentifier) node0;
-            SqlIdentifier thatNode = (SqlIdentifier) node1;
-            // compare ignore table alias.eg: expression like "a.b + a.c + a.d" ,alias a will be ignored when compared
-            String name0 = thisNode.names.get(thisNode.names.size() - 1).replace("\"", "");
-            String name1 = thatNode.names.get(thatNode.names.size() - 1).replace("\"", "");
-            return name0.equalsIgnoreCase(name1);
-        }
+        };
 
-        return false;
+        sqlNode.accept(sqlVisitor);
     }
 
-    private static boolean isNodeEqual(List<SqlNode> operands0, List<SqlNode> operands1) {
-        if (operands0.size() != operands1.size()) {
-            return false;
-        }
-        for (int i = 0; i < operands0.size(); i++) {
-            if (!isNodeEqual(operands0.get(i), operands1.get(i))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static void ensureNoTableNameExists(String expr) {
+    public static void ensureNoAliasInExpr(String expr) {
         SqlNode sqlNode = getExpNode(expr);
 
         SqlVisitor sqlVisitor = new SqlBasicVisitor() {
             @Override
             public Object visit(SqlIdentifier id) {
                 if (id.names.size() > 1) {
-                    throw new IllegalArgumentException("SqlIdentifier " + id + " contains DB/Table name");
+                    throw new IllegalArgumentException(
+                            "Column Identifier in the computed column expression should only contain COLUMN");
                 }
                 return null;
             }

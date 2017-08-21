@@ -54,7 +54,7 @@ public class OLAPSchemaFactory implements SchemaFactory {
     @Override
     public Schema create(SchemaPlus parentSchema, String schemaName, Map<String, Object> operand) {
         String project = (String) operand.get(SCHEMA_PROJECT);
-        Schema newSchema = new OLAPSchema(project, schemaName);
+        Schema newSchema = new OLAPSchema(project, schemaName, false);
         return newSchema;
     }
 

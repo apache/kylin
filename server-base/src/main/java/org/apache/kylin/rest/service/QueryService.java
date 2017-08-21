@@ -82,6 +82,7 @@ import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -94,7 +95,6 @@ import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
@@ -473,38 +473,47 @@ public class QueryService extends BasicService {
     }
 
     private SQLResponse queryWithSqlMassage(SQLRequest sqlRequest) throws Exception {
-        String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
-        final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext()
-                .getAuthentication().getAuthorities();
-        for (GrantedAuthority grantedAuthority : grantedAuthorities) {
-            userInfo += ",";
-            userInfo += grantedAuthority.getAuthority();
+        Connection conn = null;
+
+        try {
+            conn = QueryConnection.getConnection(sqlRequest.getProject());
+
+            String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
+            final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext()
+                    .getAuthentication().getAuthorities();
+            for (GrantedAuthority grantedAuthority : grantedAuthorities) {
+                userInfo += ",";
+                userInfo += grantedAuthority.getAuthority();
+            }
+
+            SQLResponse fakeResponse = TableauInterceptor.tableauIntercept(sqlRequest.getSql());
+            if (null != fakeResponse) {
+                logger.debug("Return fake response, is exception? " + fakeResponse.getIsException());
+                return fakeResponse;
+            }
+
+            String correctedSql = QueryUtil.massageSql(sqlRequest.getSql(), sqlRequest.getProject(),
+                    sqlRequest.getLimit(), sqlRequest.getOffset(), conn.getSchema());
+            if (!correctedSql.equals(sqlRequest.getSql())) {
+                logger.info("The corrected query: " + correctedSql);
+
+                //CAUTION: should not change sqlRequest content!
+                //sqlRequest.setSql(correctedSql);
+            }
+
+            // add extra parameters into olap context, like acceptPartial
+            Map<String, String> parameters = new HashMap<String, String>();
+            parameters.put(OLAPContext.PRM_USER_AUTHEN_INFO, userInfo);
+            parameters.put(OLAPContext.PRM_ACCEPT_PARTIAL_RESULT, String.valueOf(sqlRequest.isAcceptPartial()));
+            OLAPContext.setParameters(parameters);
+            // force clear the query context before a new query
+            OLAPContext.clearThreadLocalContexts();
+
+            return execute(correctedSql, sqlRequest, conn);
+
+        } finally {
+            DBUtils.closeQuietly(conn);
         }
-
-        SQLResponse fakeResponse = TableauInterceptor.tableauIntercept(sqlRequest.getSql());
-        if (null != fakeResponse) {
-            logger.debug("Return fake response, is exception? " + fakeResponse.getIsException());
-            return fakeResponse;
-        }
-
-        String correctedSql = QueryUtil.massageSql(sqlRequest.getSql(), sqlRequest.getProject(), sqlRequest.getLimit(),
-                sqlRequest.getOffset());
-        if (!correctedSql.equals(sqlRequest.getSql())) {
-            logger.info("The corrected query: " + correctedSql);
-
-            //CAUTION: should not change sqlRequest content!
-            //sqlRequest.setSql(correctedSql);
-        }
-
-        // add extra parameters into olap context, like acceptPartial
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put(OLAPContext.PRM_USER_AUTHEN_INFO, userInfo);
-        parameters.put(OLAPContext.PRM_ACCEPT_PARTIAL_RESULT, String.valueOf(sqlRequest.isAcceptPartial()));
-        OLAPContext.setParameters(parameters);
-        // force clear the query context before a new query
-        OLAPContext.clearThreadLocalContexts();
-
-        return execute(correctedSql, sqlRequest);
 
     }
 
@@ -746,8 +755,7 @@ public class QueryService extends BasicService {
      * @return
      * @throws Exception
      */
-    private SQLResponse execute(String correctedSql, SQLRequest sqlRequest) throws Exception {
-        Connection conn = null;
+    private SQLResponse execute(String correctedSql, SQLRequest sqlRequest, Connection conn) throws Exception {
         Statement stat = null;
         ResultSet resultSet = null;
         Boolean isPushDown = false;
@@ -756,7 +764,6 @@ public class QueryService extends BasicService {
         List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
 
         try {
-            conn = QueryConnection.getConnection(sqlRequest.getProject());
 
             // special case for prepare query. 
             if (BackdoorToggles.getPrepareOnly()) {
@@ -791,13 +798,13 @@ public class QueryService extends BasicService {
                 results.add(oneRow);
             }
         } catch (SQLException sqlException) {
-            isPushDown = PushDownUtil.doPushDownQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(), results, columnMetas,
-                    sqlException);
+            isPushDown = PushDownUtil.doPushDownQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(), results,
+                    columnMetas, sqlException);
             if (!isPushDown) {
                 throw sqlException;
             }
         } finally {
-            close(resultSet, stat, conn);
+            close(resultSet, stat, null);//conn is passed in, not my duty to close
         }
 
         return getSqlResponse(isPushDown, results, columnMetas);

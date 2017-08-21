@@ -35,6 +35,9 @@ import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlOrderBy;
+import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrBuilder;
@@ -60,7 +63,7 @@ import com.google.common.collect.Lists;
 public class PushDownUtil {
     private static final Logger logger = LoggerFactory.getLogger(PushDownUtil.class);
 
-    public static boolean doPushDownQuery(String project, String sql, String schema, List<List<String>> results,
+    public static boolean doPushDownQuery(String project, String sql, String defaultSchema, List<List<String>> results,
             List<SelectedColumnMeta> columnMetas, SQLException sqlException) throws Exception {
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -75,42 +78,49 @@ public class PushDownUtil {
 
             logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
             IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
-            IPushDownConverter converter = (IPushDownConverter) ClassUtil
-                    .newInstance(kylinConfig.getPushDownConverterClassName());
-
             runner.init(kylinConfig);
+            logger.debug("Query Pushdown runner {}", runner);
 
-            logger.debug("Query pushdown runner {}", runner);
+            //            String expandCC = restoreComputedColumnToExpr(sql, project);
+            //            if (!StringUtils.equals(expandCC, sql)) {
+            //                logger.info("computed column in sql is expanded to:  " + expandCC);
+            //            }
 
-            String expandCC = restoreComputedColumnToExpr(sql, project);
-            if (!StringUtils.equals(expandCC, sql)) {
-                logger.info("computed column in sql is expanded to:  " + expandCC);
-            }
-            if (schema != null && !schema.equals("DEFAULT")) {
-                expandCC = schemaCompletion(expandCC, schema);
-            }
-            String adhocSql = converter.convert(expandCC);
-            if (!adhocSql.equals(expandCC)) {
-                logger.info("the query is converted to {} according to kylin.query.pushdown.converter-class-name",
-                        adhocSql);
+            // default schema in calcite does not apply to other engines.
+            // since this is a universql requirement, it's not implemented as a converter
+            if (defaultSchema != null && !defaultSchema.equals("DEFAULT")) {
+                String completed = schemaCompletion(sql, defaultSchema);
+                if (!sql.equals(completed)) {
+                    logger.info("the query is converted to {} after schema completion", completed);
+                    sql = completed;
+                }
             }
 
-            runner.executeQuery(adhocSql, results, columnMetas);
+            for (String converterName : kylinConfig.getPushDownConverterClassNames()) {
+                IPushDownConverter converter = (IPushDownConverter) ClassUtil.newInstance(converterName);
+                String converted = converter.convert(sql);
+                if (!sql.equals(converted)) {
+                    logger.info("the query is converted to {} after applying converter {}", converted, converterName);
+                    sql = converted;
+                }
+            }
+
+            runner.executeQuery(sql, results, columnMetas);
             return true;
         } else {
             return false;
         }
     }
 
-    static String schemaCompletion(String inputSql, String schema) {
+    static String schemaCompletion(String inputSql, String schema) throws SqlParseException {
         if (inputSql == null || inputSql.equals("")) {
             return "";
         }
-        SqlNode fromNode = CalciteParser.getFromNode(inputSql);
+        SqlNode node = CalciteParser.parse(inputSql);
 
         // get all table node that don't have schema by visitor pattern
         FromTablesVisitor ftv = new FromTablesVisitor();
-        fromNode.accept(ftv);
+        node.accept(ftv);
         List<SqlNode> tablesWithoutSchema = ftv.getTablesWithoutSchema();
         // sql do not need completion
         if (tablesWithoutSchema.isEmpty()) {
@@ -139,10 +149,6 @@ public class PushDownUtil {
             "((?<![\\p{L}_0-9\\.\\\"])(\\\"[\\p{L}_0-9]+\\\"\\.)?(\\\"[\\p{L}_0-9]+\\\")(?![\\p{L}_0-9\\.\\\"]))" + "|"
             //find pattern like table.column or column
                     + "((?<![\\p{L}_0-9\\.\\\"])([\\p{L}_0-9]+\\.)?([\\p{L}_0-9]+)(?![\\p{L}_0-9\\.\\\"]))");
-
-    private final static Pattern identifierInExprPattern = Pattern.compile(
-            // a.b.c
-            "((?<![\\p{L}_0-9\\.\\\"])([\\p{L}_0-9]+\\.)([\\p{L}_0-9]+\\.)([\\p{L}_0-9]+)(?![\\p{L}_0-9\\.\\\"]))");
 
     private final static Pattern endWithAsPattern = Pattern.compile("\\s+as\\s+$", Pattern.CASE_INSENSITIVE);
 
@@ -226,74 +232,84 @@ public class PushDownUtil {
 
         return CalciteParser.insertAliasInExpr(expr, tableAlias);
     }
-}
 
-/**
- * Created by jiatao.tao
- * Get all the tables from "FROM" clause that without schema
- */
-class FromTablesVisitor implements SqlVisitor<SqlNode> {
-    private List<SqlNode> tables;
+    /**
+     * Get all the tables from "FROM clause" that without schema
+     * subquery is only considered in "from clause"
+     */
+    static class FromTablesVisitor implements SqlVisitor<SqlNode> {
+        private List<SqlNode> tables;
 
-    FromTablesVisitor() {
-        this.tables = new ArrayList<>();
-    }
+        FromTablesVisitor() {
+            this.tables = new ArrayList<>();
+        }
 
-    List<SqlNode> getTablesWithoutSchema() {
-        return tables;
-    }
+        List<SqlNode> getTablesWithoutSchema() {
+            return tables;
+        }
 
-    @Override
-    public SqlNode visit(SqlNodeList nodeList) {
-        return null;
-    }
-
-    @Override
-    public SqlNode visit(SqlLiteral literal) {
-        return null;
-    }
-
-    @Override
-    public SqlNode visit(SqlCall call) {
-        if (call instanceof SqlBasicCall) {
-            SqlBasicCall node = (SqlBasicCall) call;
-            node.getOperands()[0].accept(this);
+        @Override
+        public SqlNode visit(SqlNodeList nodeList) {
             return null;
         }
-        if (call instanceof SqlJoin) {
-            SqlJoin node = (SqlJoin) call;
-            node.getLeft().accept(this);
-            node.getRight().accept(this);
+
+        @Override
+        public SqlNode visit(SqlLiteral literal) {
             return null;
         }
-        for (SqlNode operand : call.getOperandList()) {
-            if (operand != null) {
-                operand.accept(this);
+
+        @Override
+        public SqlNode visit(SqlCall call) {
+            if (call instanceof SqlSelect) {
+                SqlSelect select = (SqlSelect) call;
+                select.getFrom().accept(this);
+                return null;
             }
+            if (call instanceof SqlOrderBy) {
+                SqlOrderBy orderBy = (SqlOrderBy) call;
+                ((SqlSelect) orderBy.query).getFrom().accept(this);
+                return null;
+            }
+            if (call instanceof SqlBasicCall) {
+                SqlBasicCall node = (SqlBasicCall) call;
+                node.getOperands()[0].accept(this);
+                return null;
+            }
+            if (call instanceof SqlJoin) {
+                SqlJoin node = (SqlJoin) call;
+                node.getLeft().accept(this);
+                node.getRight().accept(this);
+                return null;
+            }
+            for (SqlNode operand : call.getOperandList()) {
+                if (operand != null) {
+                    operand.accept(this);
+                }
+            }
+            return null;
         }
-        return null;
-    }
 
-    @Override
-    public SqlNode visit(SqlIdentifier id) {
-        if (id.names.size() == 1) {
-            tables.add(id);
+        @Override
+        public SqlNode visit(SqlIdentifier id) {
+            if (id.names.size() == 1) {
+                tables.add(id);
+            }
+            return null;
         }
-        return null;
-    }
 
-    @Override
-    public SqlNode visit(SqlDataTypeSpec type) {
-        return null;
-    }
+        @Override
+        public SqlNode visit(SqlDataTypeSpec type) {
+            return null;
+        }
 
-    @Override
-    public SqlNode visit(SqlDynamicParam param) {
-        return null;
-    }
+        @Override
+        public SqlNode visit(SqlDynamicParam param) {
+            return null;
+        }
 
-    @Override
-    public SqlNode visit(SqlIntervalQualifier intervalQualifier) {
-        return null;
+        @Override
+        public SqlNode visit(SqlIntervalQualifier intervalQualifier) {
+            return null;
+        }
     }
 }

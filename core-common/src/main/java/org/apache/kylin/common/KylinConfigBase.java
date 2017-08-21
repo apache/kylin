@@ -605,7 +605,7 @@ abstract public class KylinConfigBase implements Serializable {
     public Map<String, String> getKafkaConfigOverride() {
         return getPropertiesByPrefix("kylin.source.kafka.config-override.");
     }
-    
+
     // ============================================================================
     // SOURCE.JDBC
     // ============================================================================
@@ -613,23 +613,23 @@ abstract public class KylinConfigBase implements Serializable {
     public String getJdbcConnectionUrl() {
         return getOptional("kylin.source.jdbc.connection-url");
     }
-    
+
     public String getJdbcDriver() {
         return getOptional("kylin.source.jdbc.driver");
     }
-    
+
     public String getJdbcDialect() {
         return getOptional("kylin.source.jdbc.dialect");
     }
-    
+
     public String getJdbcUser() {
         return getOptional("kylin.source.jdbc.user");
     }
-    
+
     public String getJdbcPass() {
         return getOptional("kylin.source.jdbc.pass");
     }
-    
+
     public String getSqoopHome() {
         return getOptional("kylin.source.jdbc.sqoop-home");
     }
@@ -1042,9 +1042,9 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.query.pushdown.runner-class-name", "");
     }
 
-    public String getPushDownConverterClassName() {
-        return getOptional("kylin.query.pushdown.converter-class-name",
-                "org.apache.kylin.source.adhocquery.HivePushDownConverter");
+    public String[] getPushDownConverterClassNames() {
+        return getOptionalStringArray("kylin.query.pushdown.converter-class-names",
+                new String[] { "org.apache.kylin.source.adhocquery.HivePushDownConverter" });
     }
 
     public String getJdbcUrl() {

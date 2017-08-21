@@ -38,10 +38,10 @@ public class QueryUtil {
     private static List<IQueryTransformer> queryTransformers;
 
     public interface IQueryTransformer {
-        String transform(String sql, String project);
+        String transform(String sql, String project, String defaultSchema);
     }
 
-    public static String massageSql(String sql, String project, int limit, int offset) {
+    public static String massageSql(String sql, String project, int limit, int offset, String defaultSchema) {
         sql = sql.trim();
         sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -68,7 +68,7 @@ public class QueryUtil {
             initQueryTransformers();
         }
         for (IQueryTransformer t : queryTransformers) {
-            sql = t.transform(sql, project);
+            sql = t.transform(sql, project, defaultSchema);
         }
         return sql;
     }
@@ -95,15 +95,22 @@ public class QueryUtil {
         private static final String S0 = "\\s*";
         private static final String S1 = "\\s";
         private static final String SM = "\\s+";
-        private static final Pattern PTN_GROUP_BY = Pattern.compile(S1 + "GROUP" + SM + "BY" + S1, Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_HAVING_COUNT_GREATER_THAN_ZERO = Pattern.compile(S1 + "HAVING" + SM + "[(]?" + S0 + "COUNT" + S0 + "[(]" + S0 + "1" + S0 + "[)]" + S0 + ">" + S0 + "0" + S0 + "[)]?", Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_SUM_1 = Pattern.compile(S0 + "SUM" + S0 + "[(]" + S0 + "[1]" + S0 + "[)]" + S0, Pattern.CASE_INSENSITIVE);
+        private static final Pattern PTN_GROUP_BY = Pattern.compile(S1 + "GROUP" + SM + "BY" + S1,
+                Pattern.CASE_INSENSITIVE);
+        private static final Pattern PTN_HAVING_COUNT_GREATER_THAN_ZERO = Pattern.compile(S1 + "HAVING" + SM + "[(]?"
+                + S0 + "COUNT" + S0 + "[(]" + S0 + "1" + S0 + "[)]" + S0 + ">" + S0 + "0" + S0 + "[)]?",
+                Pattern.CASE_INSENSITIVE);
+        private static final Pattern PTN_SUM_1 = Pattern.compile(S0 + "SUM" + S0 + "[(]" + S0 + "[1]" + S0 + "[)]" + S0,
+                Pattern.CASE_INSENSITIVE);
         private static final Pattern PTN_NOT_EQ = Pattern.compile(S0 + "!=" + S0, Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_INTERVAL = Pattern.compile("interval" + SM + "(floor\\()([\\d\\.]+)(\\))" + SM + "(second|minute|hour|day|month|year)", Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}", Pattern.CASE_INSENSITIVE);
+        private static final Pattern PTN_INTERVAL = Pattern.compile(
+                "interval" + SM + "(floor\\()([\\d\\.]+)(\\))" + SM + "(second|minute|hour|day|month|year)",
+                Pattern.CASE_INSENSITIVE);
+        private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}",
+                Pattern.CASE_INSENSITIVE);
 
         @Override
-        public String transform(String sql, String project) {
+        public String transform(String sql, String project, String defaultSchema) {
             Matcher m;
 
             // Case fn{ EXTRACT(...) }

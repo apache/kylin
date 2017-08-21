@@ -44,6 +44,7 @@ import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.CubeDesc.DeriveType;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.cube.model.TooManyCuboidException;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.After;
@@ -204,8 +205,8 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBadInit4() throws Exception {
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.");
+        thrown.expect(TooManyCuboidException.class);
+        thrown.expectMessage("Aggregation group 0 of Cube Desc test_kylin_cube_with_slr_desc has too many combinations: 31. Use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         try {
@@ -312,7 +313,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
             }
         }
 
-        thrown.expect(IllegalStateException.class);
+        thrown.expect(TooManyCuboidException.class);
         CubeDescManager.clearCache();
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("ut_cube_desc_combination_int_overflow");
         cubeDesc.init(getTestConfig());

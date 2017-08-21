@@ -405,7 +405,7 @@ public class ProjectManager {
         projectInstance.removeExtFilter(filterName);
         updateProject(projectInstance);
     }
-    
+
     public ProjectInstance getProjectOfModel(String model) {
         for (ProjectInstance prj : projectMap.values()) {
             if (prj.getModels().contains(model))
@@ -413,7 +413,7 @@ public class ProjectManager {
         }
         throw new IllegalStateException("No project found for model " + model);
     }
-    
+
     public List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
         List<ProjectInstance> result = Lists.newArrayList();
         for (ProjectInstance prj : projectMap.values()) {
@@ -465,11 +465,10 @@ public class ProjectManager {
                 l2Cache.listExposedTables(norm(project));
     }
 
-    public List<ColumnDesc> listExposedColumns(String project, TableDesc tableDesc) {
+    public List<ColumnDesc> listExposedColumns(String project, TableDesc tableDesc, boolean exposeMore) {
         Set<ColumnDesc> exposedColumns = l2Cache.listExposedColumns(norm(project), tableDesc.getIdentity());
 
-        if (config.isPushDownEnabled()) {
-            // take care of computed columns
+        if (exposeMore) {
             Set<ColumnDesc> dedup = Sets.newHashSet(tableDesc.getColumns());
             dedup.addAll(exposedColumns);
             return Lists.newArrayList(dedup);

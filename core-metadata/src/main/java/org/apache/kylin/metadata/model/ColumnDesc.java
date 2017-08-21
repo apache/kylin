@@ -21,7 +21,6 @@ package org.apache.kylin.metadata.model;
 import java.io.Serializable;
 
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -198,8 +197,7 @@ public class ColumnDesc implements Serializable {
         Preconditions.checkState(computedColumnExpr != null);
         Preconditions.checkState(tableAlias != null);
 
-        String s = CalciteParser.insertAliasInExpr(computedColumnExpr, tableAlias);
-        return s;
+        return computedColumnExpr;
     }
 
     public boolean isComputedColumnn() {
@@ -221,6 +219,17 @@ public class ColumnDesc implements Serializable {
         } else {
             this.setDatatype(normalized.toString());
         }
+    }
+
+    // for test mainly
+    public static ColumnDesc mockup(TableDesc table, int oneBasedColumnIndex, String name, String datatype) {
+        ColumnDesc desc = new ColumnDesc();
+        String id = "" + oneBasedColumnIndex;
+        desc.setId(id);
+        desc.setName(name);
+        desc.setDatatype(datatype);
+        desc.init(table);
+        return desc;
     }
 
     @Override
