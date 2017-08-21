@@ -18,6 +18,7 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.calcite.sql.SqlAsOperator;
@@ -55,7 +56,9 @@ public class ComputedColumnDesc implements Serializable {
     @JsonProperty
     private String comment;
 
-    public void init(Set<String> aliasSet, String rootFactTableName) {
+    public void init(Map<String, TableRef> aliasMap, String rootFactTableName) {
+        Set<String> aliasSet = aliasMap.keySet();
+
         Preconditions.checkNotNull(tableIdentity, "tableIdentity is null");
         Preconditions.checkNotNull(columnName, "columnName is null");
         Preconditions.checkNotNull(expression, "expression is null");
@@ -79,6 +82,18 @@ public class ComputedColumnDesc implements Serializable {
 
         if (!tableIdentity.contains(rootFactTableName) || !tableAlias.equals(rootFactTableName)) {
             throw new IllegalArgumentException("Computed column has to be defined on fact table");
+        }
+
+        for (TableRef tableRef : aliasMap.values()) {
+            if (!rootFactTableName.equals(tableRef.getAlias())) {
+                for (TblColRef tblColRef : tableRef.getColumns()) {
+                    if (this.columnName.equals(tblColRef.getName())) {
+                        throw new IllegalArgumentException(
+                                "Computed column name " + columnName + " is already found on table "
+                                        + tableRef.getTableIdentity() + ", use a different computed column name");
+                    }
+                }
+            }
         }
 
         if ("true".equals(System.getProperty("needCheckCC"))) { //conditional execute this because of the calcite dependency is to available every where

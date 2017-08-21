@@ -1,0 +1,2 @@
+select count(*) as a, sum (F.PRICE * F.ITEM_COUNT) as b from test_kylin_fact f
+                    inner join test_account a on f.seller_id = a.account_id  inner join test_country c on country = account_country group by CONCAT(A.ACCOUNT_ID, C.NAME)
