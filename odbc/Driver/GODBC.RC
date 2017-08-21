@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -86,8 +86,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 2,1,0,0
+ PRODUCTVERSION 2,1,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -102,14 +102,14 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "kylinolap"
+            VALUE "CompanyName", "Apache Kylin"
             VALUE "FileDescription", "Kylin ODBC Driver"
-            VALUE "FileVersion", "1, 0, 0, 1"
-            VALUE "InternalName", "KylinODBC"
+            VALUE "FileVersion", "2.1.0.0"
+            VALUE "InternalName", "KylinODBCDriver"
             VALUE "LegalCopyright", "Copyright ?2014"
             VALUE "OriginalFilename", "driver.dll"
             VALUE "ProductName", "Kylin ODBC Driver"
-            VALUE "ProductVersion", "1, 0, 0, 1"
+            VALUE "ProductVersion", "2.1.0.0"
         END
     END
     BLOCK "VarFileInfo"
