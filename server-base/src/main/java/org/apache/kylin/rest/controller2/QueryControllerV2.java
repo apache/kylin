@@ -19,6 +19,9 @@
 package org.apache.kylin.rest.controller2;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -159,7 +162,7 @@ public class QueryControllerV2 extends BasicController {
             "application/vnd.apache.kylin-v2+json" }, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ResponseBody
     public void downloadQueryResultV2(@PathVariable String format, SQLRequest sqlRequest,
-            HttpServletResponse response) {
+            HttpServletResponse response) throws IOException {
 
         SQLResponse result = queryService.doQueryWithCache(sqlRequest);
 
@@ -170,8 +173,11 @@ public class QueryControllerV2 extends BasicController {
         ICsvListWriter csvWriter = null;
 
         try {
-            csvWriter = new CsvListWriter(response.getWriter(), CsvPreference.STANDARD_PREFERENCE);
+            //Add a BOM for Excel
+            Writer writer = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8);
+            writer.write('\uFEFF');
 
+            csvWriter = new CsvListWriter(writer, CsvPreference.STANDARD_PREFERENCE);
             List<String> headerList = new ArrayList<String>();
 
             for (SelectedColumnMeta column : result.getColumnMetas()) {
