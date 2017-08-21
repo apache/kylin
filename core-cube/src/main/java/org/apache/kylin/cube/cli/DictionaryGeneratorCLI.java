@@ -27,17 +27,12 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.DimensionDesc;
-import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.DictionaryProvider;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.IReadableTable;
-import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +55,7 @@ public class DictionaryGeneratorCLI {
         // dictionary
         for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionaryBuilt()) {
             logger.info("Building dictionary for " + col);
-            IReadableTable inpTable = decideInputTable(cubeSeg.getModel(), col, factTableValueProvider);
+            IReadableTable inpTable = factTableValueProvider.getDistinctValuesFor(col);
             if (dictProvider != null) {
                 Dictionary<String> dict = dictProvider.getDictionary(col);
                 if (dict != null) {
@@ -99,20 +94,4 @@ public class DictionaryGeneratorCLI {
         }
     }
 
-    private static IReadableTable decideInputTable(DataModelDesc model, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) {
-        KylinConfig config = model.getConfig();
-        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-        TblColRef srcCol = dictMgr.decideSourceData(model, col);
-        String srcTable = srcCol.getTable();
-
-        IReadableTable inpTable;
-        if (model.isFactTable(srcTable)) {
-            inpTable = factTableValueProvider.getDistinctValuesFor(srcCol);
-        } else {
-            MetadataManager metadataManager = MetadataManager.getInstance(config);
-            TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable, model.getProject()));
-            inpTable = SourceFactory.createReadableTable(tableDesc);
-        }
-        return inpTable;
-    }
 }

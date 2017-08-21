@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
@@ -52,6 +51,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -98,7 +98,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeConfig = cube.getConfig();
         cubeDesc = cube.getDescriptor();
-        columnList = CubeManager.getInstance(config).getAllDictColumnsOnFact(cubeDesc);
+        columnList = Lists.newArrayList(cubeDesc.getAllColumnsNeedDictionaryBuilt());
 
         boolean collectStatistics = Boolean.parseBoolean(conf.get(BatchConstants.CFG_STATISTICS_ENABLED));
         int numberOfTasks = context.getNumReduceTasks();
