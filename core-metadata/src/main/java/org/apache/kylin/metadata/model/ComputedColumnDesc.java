@@ -20,6 +20,13 @@ package org.apache.kylin.metadata.model;
 import java.io.Serializable;
 import java.util.Set;
 
+import org.apache.calcite.sql.SqlAsOperator;
+import org.apache.calcite.sql.SqlBasicCall;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.util.SqlBasicVisitor;
+import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.slf4j.Logger;
@@ -76,7 +83,7 @@ public class ComputedColumnDesc implements Serializable {
 
         if ("true".equals(System.getProperty("needCheckCC"))) { //conditional execute this because of the calcite dependency is to available every where
             try {
-                CalciteParser.ensureAliasInExpr(expression, aliasSet);
+                simpleParserCheck(expression, aliasSet);
             } catch (Exception e) {
                 String legacyHandled = handleLegacyCC(expression, rootFactTableName, aliasSet);
                 if (legacyHandled != null) {
@@ -92,12 +99,38 @@ public class ComputedColumnDesc implements Serializable {
         try {
             CalciteParser.ensureNoAliasInExpr(expr);
             String ret = CalciteParser.insertAliasInExpr(expr, rootFact);
-            CalciteParser.ensureAliasInExpr(ret, aliasSet);
+            simpleParserCheck(ret, aliasSet);
             return ret;
         } catch (Exception e) {
             logger.error("failed to handle legacy CC " + expr);
             return null;
         }
+    }
+
+    public void simpleParserCheck(final String expr, final Set<String> aliasSet) {
+        SqlNode sqlNode = CalciteParser.getExpNode(expr);
+
+        SqlVisitor sqlVisitor = new SqlBasicVisitor() {
+            @Override
+            public Object visit(SqlIdentifier id) {
+                if (id.names.size() != 2 || !aliasSet.contains(id.names.get(0))) {
+                    throw new IllegalArgumentException("Column Identifier in the computed column " + expr
+                            + "expression should comply to ALIAS.COLUMN ");
+                }
+                return null;
+            }
+
+            @Override
+            public Object visit(SqlCall call) {
+                if (call instanceof SqlBasicCall && call.getOperator() instanceof SqlAsOperator) {
+                    throw new IllegalArgumentException(
+                            "Computed column expression " + expr + " should not contain AS ");
+                }
+                return call.getOperator().acceptCall(this, call);
+            }
+        };
+
+        sqlNode.accept(sqlVisitor);
     }
 
     public String getFullName() {

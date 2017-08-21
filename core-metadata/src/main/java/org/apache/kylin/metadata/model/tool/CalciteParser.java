@@ -32,11 +32,11 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.calcite.sql.util.SqlVisitor;
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.apache.kylin.common.util.Pair;
 
 public class CalciteParser {
     public static SqlNode parse(String sql) throws SqlParseException {
@@ -62,23 +62,6 @@ public class CalciteParser {
 
     public static SqlNode getExpNode(String expr) {
         return getOnlySelectNode("select " + expr + " from t");
-    }
-
-    public static void ensureAliasInExpr(final String expr, final Set<String> aliasSet) {
-        SqlNode sqlNode = getExpNode(expr);
-
-        SqlVisitor sqlVisitor = new SqlBasicVisitor() {
-            @Override
-            public Object visit(SqlIdentifier id) {
-                if (id.names.size() < 2 || !aliasSet.contains(id.names.get(0))) {
-                    throw new IllegalArgumentException("Column Identifier in the computed column " + expr
-                            + "expression should comply to ALIAS.COLUMN ");
-                }
-                return null;
-            }
-        };
-
-        sqlNode.accept(sqlVisitor);
     }
 
     public static void ensureNoAliasInExpr(String expr) {
@@ -119,6 +102,18 @@ public class CalciteParser {
         sqlNode.accept(sqlVisitor);
         List<SqlIdentifier> sqlIdentifiers = Lists.newArrayList(s);
 
+        descSortByPosition(sqlIdentifiers);
+
+        for (SqlIdentifier sqlIdentifier : sqlIdentifiers) {
+            Pair<Integer, Integer> replacePos = getReplacePos(sqlIdentifier, sql);
+            int start = replacePos.getFirst();
+            sql = sql.substring(0, start) + alias + "." + sql.substring(start);
+        }
+
+        return sql.substring(prefix.length(), sql.length() - suffix.length());
+    }
+
+    public static void descSortByPosition(List<SqlIdentifier> sqlIdentifiers) {
         Collections.sort(sqlIdentifiers, new Comparator<SqlIdentifier>() {
             @Override
             public int compare(SqlIdentifier o1, SqlIdentifier o2) {
@@ -129,19 +124,11 @@ public class CalciteParser {
                 return o2.getParserPosition().getColumnNum() - o1.getParserPosition().getColumnNum();
             }
         });
-
-        for (SqlIdentifier sqlIdentifier : sqlIdentifiers) {
-            Pair<Integer, Integer> replacePos = getReplacePos(sqlIdentifier, sql);
-            int start = replacePos.getLeft();
-            sql = sql.substring(0, start) + alias + "." + sql.substring(start);
-        }
-
-        return sql.substring(prefix.length(), sql.length() - suffix.length());
     }
 
     public static Pair<Integer, Integer> getReplacePos(SqlNode node, String inputSql) {
         if (inputSql == null) {
-            return Pair.of(0, 0);
+            return Pair.newPair(0, 0);
         }
         String[] lines = inputSql.split("\n");
         SqlParserPos pos = node.getParserPosition();
@@ -188,6 +175,6 @@ public class CalciteParser {
             right++;
             rightBracketNum++;
         }
-        return Pair.of(left, right);
+        return Pair.newPair(left, right);
     }
 }
