@@ -111,7 +111,6 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         // bind dynamic variables
         bindVariable(olapContext.filter);
 
-        // cube don't have correct result for simple query without group by, but let's try to return something makes sense
         olapContext.resetSQLDigest();
         SQLDigest sqlDigest = olapContext.getSQLDigest();
 

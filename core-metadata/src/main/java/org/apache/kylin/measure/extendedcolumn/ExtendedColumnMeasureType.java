@@ -95,6 +95,9 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
     @Override
     public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
         for (MeasureDesc measureDesc : measureDescs) {
+            if (!sqlDigest.involvedMeasure.contains(measureDesc)) {
+                continue;
+            }
             FunctionDesc extendColumnFunc = measureDesc.getFunction();
             List<TblColRef> hosts = getExtendedColumnHosts(extendColumnFunc);
             TblColRef extended = getExtendedColumn(extendColumnFunc);
@@ -111,7 +114,7 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
     }
 
     @Override
-    public CapabilityResult.CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, MeasureDesc measureDesc) {
+    public CapabilityResult.CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, final MeasureDesc measureDesc) {
         TblColRef extendedCol = getExtendedColumn(measureDesc.getFunction());
 
         if (!unmatchedDimensions.contains(extendedCol)) {
@@ -128,6 +131,11 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
             @Override
             public double suggestCostMultiplier() {
                 return 0.9;
+            }
+
+            @Override
+            public MeasureDesc getInvolvedMeasure() {
+                return measureDesc;
             }
         };
     }

@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.ImmutableList;
@@ -71,11 +72,14 @@ public class SQLDigest {
     public boolean isRawQuery;
     public boolean limitPrecedesAggr;
 
+    public Set<MeasureDesc> involvedMeasure;
+
     public SQLDigest(String factTable, Set<TblColRef> allColumns, List<JoinDesc> joinDescs, // model
             List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants, // group by
             Set<TblColRef> metricColumns, List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, // aggregation
             Set<TblColRef> filterColumns, TupleFilter filter, TupleFilter havingFilter, // filter
-            List<TblColRef> sortColumns, List<OrderEnum> sortOrders, boolean limitPrecedesAggr // sort & limit
+            List<TblColRef> sortColumns, List<OrderEnum> sortOrders, boolean limitPrecedesAggr, // sort & limit
+            Set<MeasureDesc> involvedMeasure
     ) {
         this.factTable = factTable;
         this.allColumns = allColumns;
@@ -96,7 +100,9 @@ public class SQLDigest {
         this.sortOrders = sortOrders;
         this.isRawQuery = isRawQuery();
         this.limitPrecedesAggr = limitPrecedesAggr;
-        
+
+        this.involvedMeasure = involvedMeasure;
+
         this.includeSubqueryJoinParticipants();
     }
 

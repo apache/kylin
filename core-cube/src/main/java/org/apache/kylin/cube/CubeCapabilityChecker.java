@@ -127,6 +127,11 @@ public class CubeCapabilityChecker {
                 public double suggestCostMultiplier() {
                     return 100;
                 }
+
+                @Override
+                public MeasureDesc getInvolvedMeasure() {
+                    return null;
+                }
             });
         }
 

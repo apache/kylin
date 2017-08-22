@@ -167,7 +167,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
         return Collections.singletonList(literalCol);
     }
 
-    public CapabilityResult.CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, MeasureDesc measureDesc) {
+    public CapabilityResult.CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, final MeasureDesc measureDesc) {
         //is raw query
         if (!digest.isRawQuery)
             return null;
@@ -185,6 +185,11 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
             public double suggestCostMultiplier() {
                 return 0.9;
             }
+
+            @Override
+            public MeasureDesc getInvolvedMeasure() {
+                return measureDesc;
+            }
         };
     }
 
@@ -198,6 +203,9 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
 
         if (sqlDigest.isRawQuery) {
             for (MeasureDesc measureDesc : measureDescs) {
+                if (!sqlDigest.involvedMeasure.contains(measureDesc)) {
+                    continue;
+                }
                 TblColRef col = this.getRawColumn(measureDesc.getFunction());
                 ParameterDesc colParameter = ParameterDesc.newInstance(col);
                 FunctionDesc rawFunc = FunctionDesc.newInstance("RAW", colParameter, null);

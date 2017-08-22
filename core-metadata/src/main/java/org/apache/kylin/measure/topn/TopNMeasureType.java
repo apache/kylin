@@ -233,7 +233,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     }
 
     @Override
-    public CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, MeasureDesc topN) {
+    public CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, final MeasureDesc topN) {
         // TopN measure can (and only can) provide one numeric measure and one literal dimension
         // e.g. select seller, sum(gmv) from ... group by seller order by 2 desc limit 100
 
@@ -263,6 +263,11 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                 public double suggestCostMultiplier() {
                     return 0.3; // make sure TopN get ahead of other matched realizations
                 }
+
+                @Override
+                public MeasureDesc getInvolvedMeasure() {
+                    return topN;
+                }
             };
         }
 
@@ -273,6 +278,11 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                 @Override
                 public double suggestCostMultiplier() {
                     return 2.0; // topn can answer but with a higher cost
+                }
+
+                @Override
+                public MeasureDesc getInvolvedMeasure() {
+                    return topN;
                 }
             };
         }
@@ -318,6 +328,9 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         }
 
         for (MeasureDesc measureDesc : measureDescs) {
+            if (!sqlDigest.involvedMeasure.contains(measureDesc)) {
+                continue;
+            }
             FunctionDesc topnFunc = measureDesc.getFunction();
             List<TblColRef> topnLiteralCol = getTopNLiteralColumn(topnFunc);
 

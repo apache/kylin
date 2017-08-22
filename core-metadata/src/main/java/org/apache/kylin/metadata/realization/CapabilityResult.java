@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.kylin.metadata.model.FunctionDesc;
 
 import com.google.common.collect.Lists;
+import org.apache.kylin.metadata.model.MeasureDesc;
 
 public class CapabilityResult {
 
@@ -41,6 +42,8 @@ public class CapabilityResult {
     public static interface CapabilityInfluence {
         /** Suggest a multiplier to influence query cost */
         double suggestCostMultiplier();
+
+        MeasureDesc getInvolvedMeasure();
     }
 
     public static class DimensionAsMeasure implements CapabilityInfluence {
@@ -54,6 +57,11 @@ public class CapabilityResult {
         @Override
         public double suggestCostMultiplier() {
             return 1;
+        }
+
+        @Override
+        public MeasureDesc getInvolvedMeasure() {
+            return null;
         }
 
         public FunctionDesc getMeasureFunction() {

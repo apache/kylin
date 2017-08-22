@@ -34,6 +34,7 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -110,6 +111,7 @@ public class OLAPContext {
     public OLAPSchema olapSchema = null;
     public OLAPTableScan firstTableScan = null; // to be fact table scan except "select * from lookupTable"
     public Set<OLAPTableScan> allTableScans = new HashSet<>();
+    public Set<MeasureDesc> involvedMeasure = new HashSet<>();
     public TupleInfo returnTupleInfo = null;
     public boolean afterAggregate = false;
     public boolean afterHavingClauseFilter = false;
@@ -156,7 +158,8 @@ public class OLAPContext {
                     groupByColumns, subqueryJoinParticipants, // group by
                     metricsColumns, aggregations, aggrSqlCalls, // aggregation
                     filterColumns, filter, havingFilter, // filter
-                    sortColumns, sortOrders, limitPrecedesAggr // sort & limit
+                    sortColumns, sortOrders, limitPrecedesAggr, // sort & limit
+                    involvedMeasure
             );
         return sqlDigest;
     }
