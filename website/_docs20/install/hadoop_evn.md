@@ -7,10 +7,10 @@ permalink: /docs20/install/hadoop_env.html
 
 Kylin need run in a Hadoop node, to get better stability, we suggest you to deploy it a pure Hadoop client machine, on which  the command lines like `hive`, `hbase`, `hadoop`, `hdfs` already be installed and configured. The Linux account that running Kylin has got permission to the Hadoop cluster, including create/write hdfs, hive tables, hbase tables and submit MR jobs. 
 
-## Recommended Hadoop Versions
+## Minimal Hadoop Versions
 
 * Hadoop: 2.7+
-* Hive: 0.13 - 1.2.1
+* Hive: 0.13 - 1.2.1+
 * HBase: 0.98 - 0.99, 1.1+
 * JDK: 1.7+
 
