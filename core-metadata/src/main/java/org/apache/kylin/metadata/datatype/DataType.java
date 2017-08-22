@@ -31,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.measure.MeasureTypeFactory;
@@ -177,19 +178,20 @@ public class DataType implements Serializable {
             }
         }
 
-        // FIXME 256 for unknown string precision
-        if ((name.equals("char") || name.equals("varchar")) && precision == -1) {
-            precision = 256; // to save memory at frontend, e.g. tableau will
-                             // allocate memory according to this
-            if (name.equals("char")) {
-                precision -= 1; //at most 255 according to https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-CharcharChar
-            }
-        }
+        if (precision == -1) {
+            // FIXME 256 for unknown string precision
 
-        // FIXME (19,4) for unknown decimal precision
-        if ((name.equals("decimal") || name.equals("numeric")) && precision == -1) {
-            precision = 19;
-            scale = 4;
+            // why 256(255) as default? 
+            // to save memory at frontend, e.g. tableau will
+            // allocate memory according to this
+            if (name.equals("char")) {
+                precision = KylinConfig.getInstanceFromEnv().getDefaultCharPrecision();
+            } else if (name.equals("varchar")) {
+                precision = KylinConfig.getInstanceFromEnv().getDefaultVarcharPrecision();
+            } else if ((name.equals("decimal") || name.equals("numeric"))) {
+                precision = KylinConfig.getInstanceFromEnv().getDefaultDecimalPrecision();
+                scale = KylinConfig.getInstanceFromEnv().getDefaultDecimalScale();
+            }
         }
 
     }
