@@ -598,6 +598,47 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.source.hive.flat-table-cluster-by-dict-column");
     }
 
+    public int getDefaultVarcharPrecision() {
+        int v = Integer.parseInt(getOptional("kylin.source.hive.default-varchar-precision", "256"));
+        if (v < 1) {
+            return 256;
+        } else if (v > 65355) {
+            return 65535;
+        } else {
+            return v;
+        }
+    }
+
+    public int getDefaultCharPrecision() {
+        //at most 255 according to https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-CharcharChar
+        int v = Integer.parseInt(getOptional("kylin.source.hive.default-char-precision", "255"));
+        if (v < 1) {
+            return 255;
+        } else if (v > 255) {
+            return 255;
+        } else {
+            return v;
+        }
+    }
+
+    public int getDefaultDecimalPrecision() {
+        int v = Integer.parseInt(getOptional("kylin.source.hive.default-decimal-precision", "19"));
+        if (v < 1) {
+            return 19;
+        } else {
+            return v;
+        }
+    }
+
+    public int getDefaultDecimalScale() {
+        int v = Integer.parseInt(getOptional("kylin.source.hive.default-decimal-scale", "4"));
+        if (v < 1) {
+            return 4;
+        } else {
+            return v;
+        }
+    }
+
     // ============================================================================
     // SOURCE.KAFKA
     // ============================================================================
