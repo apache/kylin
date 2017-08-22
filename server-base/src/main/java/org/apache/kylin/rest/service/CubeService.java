@@ -718,6 +718,7 @@ public class CubeService extends BasicService implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         Broadcaster.getInstance(getConfig()).registerListener(new HTableInfoSyncListener(), "cube");
+        logger.info("HTableInfoSyncListener is on.");
     }
 
     private class HTableInfoSyncListener extends Broadcaster.Listener {

@@ -104,8 +104,9 @@ public class HBaseRegionSizeCalculator {
                         sizeMap.put(regionId, regionSizeBytes);
                         countMap.put(regionId, new Pair<>(regionLoad.getStores(), regionLoad.getStorefiles()));
 
-                        // logger.info("Region " + regionLoad.getNameAsString()
-                        // + " has size " + regionSizeBytes);
+                        if (regionSizeBytes == 0L) {
+                            logger.info("Region " + regionLoad.getNameAsString() + " has size " + regionSizeBytes);
+                        }
                     }
                 }
             }
