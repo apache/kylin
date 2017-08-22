@@ -89,8 +89,7 @@ public class TreeCuboidScheduler extends CuboidScheduler {
             return createFromCuboids(allCuboidIds, Cuboid.cuboidSelectComparator);
         }
 
-        @VisibleForTesting
-        static CuboidTree createFromCuboids(List<Long> allCuboidIds, Comparator<Long> cuboidComparator) {
+        public static CuboidTree createFromCuboids(List<Long> allCuboidIds, Comparator<Long> cuboidComparator) {
             // sort the cuboid ids in descending order, so that don't need to adjust
             // the cuboid tree when adding cuboid id to the tree.
             Collections.sort(allCuboidIds, new Comparator<Long>() {
