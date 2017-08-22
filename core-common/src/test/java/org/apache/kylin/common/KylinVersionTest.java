@@ -47,7 +47,7 @@ public class KylinVersionTest {
         Assert.assertEquals(321, ver1.internal);
         Assert.assertEquals("2.1.7.321", ver1.toString());
     }
-    
+
     @Test
     public void testCompare() {
         Assert.assertEquals(true, KylinVersion.isBefore200("1.9.9"));

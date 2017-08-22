@@ -1442,6 +1442,7 @@
                                 <!--Test Data-->
                                 <exclude>**/src/test/resources/**</exclude>
                                 <exclude>**/test_case_data/localmeta/UUID</exclude>
+                                <exclude>**/examples/sample_cube/template/**</exclude>
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
                                 <exclude>lib/**</exclude>
