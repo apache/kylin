@@ -31,19 +31,32 @@ import java.util.Comparator;
 import java.util.Random;
 import java.util.UUID;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.ByteComparator;
 import org.apache.kylin.dict.BytesConverter;
 import org.apache.kylin.dict.IDictionaryValueEnumerator;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.dict.TableColumnValueEnumerator;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * Created by xiefan on 16-11-14.
  */
-public class SortedColumnReaderTest {
+public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
+
+    @Before
+    public void setup() throws Exception {
+        this.createTestMetadata();
+    }
+
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
 
     @Test
     public void testReadStringMultiFile() throws Exception {
@@ -297,7 +310,7 @@ public class SortedColumnReaderTest {
         }
         return result;
     }
-    
+
     private String qualify(String path) {
         String absolutePath = new File(path).getAbsolutePath();
         if (absolutePath.startsWith("/"))
