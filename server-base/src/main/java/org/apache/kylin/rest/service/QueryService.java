@@ -366,7 +366,8 @@ public class QueryService extends BasicService {
             logger.info("Using project: " + project);
             logger.info("The original query:  " + sql);
 
-            if (!sql.toLowerCase().contains("select")) {
+            if (!sql.toLowerCase().contains("select")
+                    && KylinConfig.getInstanceFromEnv().isPushDownEnabled() == false) {
                 logger.debug("Directly return exception as not supported");
                 throw new BadRequestException(msg.getNOT_SUPPORTED_SQL());
             }
