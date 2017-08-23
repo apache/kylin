@@ -16,6 +16,6 @@
 -- limitations under the License.
 --
 
-select cal_dt, sum(price) as x,leaf_categ_id as GMV 
+select cal_dt,leaf_categ_id as x, sum(price) as GMV 
  from test_kylin_fact 
  group by leaf_categ_id, cal_dt
