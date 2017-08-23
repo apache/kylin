@@ -87,6 +87,7 @@ import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.metrics.QueryMetrics2Facade;
 import org.apache.kylin.rest.metrics.QueryMetricsFacade;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.msg.Message;
@@ -436,6 +437,7 @@ public class QueryService extends BasicService {
             logQuery(sqlRequest, sqlResponse);
 
             QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
+            QueryMetrics2Facade.updateMetrics(sqlRequest, sqlResponse);
 
             if (sqlResponse.getIsException())
                 throw new InternalErrorException(sqlResponse.getExceptionMessage());

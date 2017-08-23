@@ -1173,4 +1173,24 @@ abstract public class KylinConfigBase implements Serializable {
     public boolean isWebCrossDomainEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.web.cross-domain-enabled", "true"));
     }
+
+    /**
+     * metric
+     */
+    public String getCoadhaleMetricReportClassesName() {
+        return getOptional("kylin.metric.codahale-metric-report-classes",
+                "org.apache.kylin.common.metrics.metrics2.JsonFileMetricsReporter,org.apache.kylin.common.metrics.metrics2.JmxMetricsReporter");
+    }
+
+    public String getMetricFileLocation() {
+        return getOptional("kylin.metric.file.location", "/tmp/report.json");
+    }
+
+    public Long getJsonFileMetricsReporterInterval() {
+        return Long.parseLong(getOptional("kylin.metric.json-file-metric-reporter.interval", "5000"));
+    }
+
+    public String getPerfLoggerClassName() {
+        return getOptional("kylin.metric.perf-logger.class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
+    }
 }
