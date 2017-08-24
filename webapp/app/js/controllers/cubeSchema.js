@@ -401,6 +401,26 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
 
 
+        angular.forEach($scope.cubeMetaFrame.measures, function (measure, index) {
+            if (measure.function.expression === 'COUNT_DISTINCT' && measure.function.returntype === 'bitmap' && !$scope.isIntMeasure(measure)) {
+                var measureColumn = measure.function.parameter.value;
+
+                var isColumnExit = false;
+                angular.forEach($scope.cubeMetaFrame.dictionaries, function (dictionaries) {
+                    if (!isColumnExit) {
+                        //keep backward compatibility
+                        if (dictionaries.column == measureColumn || dictionaries.column == VdmUtil.removeNameSpace(measureColumn))
+                            isColumnExit = true;
+                    }
+                });
+
+                if (!isColumnExit) {
+                    errors.push("The non-Int type precise count distinct measure must set advanced cict: " + measureColumn);
+                }
+            }
+        });
+
+
         var errorInfo = "";
         angular.forEach(errors,function(item){
             errorInfo+="\n"+item;
