@@ -30,6 +30,7 @@ import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,7 +63,8 @@ public class ModelServiceTest extends ServiceTestBase {
     }
 
     @Test
-    public void testSuccessModelUpdateOnComputedColumn() throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
+    public void testSuccessModelUpdateOnComputedColumn()
+            throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
 
         List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
         Assert.assertTrue(dataModelDescs.size() == 1);
@@ -79,9 +81,11 @@ public class ModelServiceTest extends ServiceTestBase {
     }
 
     @Test
-    public void testFailureModelUpdateDueToComputedColumnConflict() throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
+    public void testFailureModelUpdateDueToComputedColumnConflict()
+            throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Column name for computed column DEFAULT.TEST_KYLIN_FACT.DEAL_AMOUNT is already used in model ci_inner_join_model, you should apply the same expression ' PRICE * ITEM_COUNT ' here, or use a different column name.");
+        expectedEx.expectMessage(
+                "Column name for computed column DEFAULT.TEST_KYLIN_FACT.DEAL_AMOUNT is already used in model ci_inner_join_model, you should apply the same expression ' PRICE * ITEM_COUNT ' here, or use a different column name.");
 
         List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
         Assert.assertTrue(dataModelDescs.size() == 1);
@@ -97,11 +101,12 @@ public class ModelServiceTest extends ServiceTestBase {
         DataModelDesc dataModelDesc = modelService.updateModelAndDesc(deserialize);
     }
 
-
     @Test
-    public void testFailureModelUpdateDueToComputedColumnConflict2() throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
+    public void testFailureModelUpdateDueToComputedColumnConflict2()
+            throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("There is already a column named cal_dt on table DEFAULT.TEST_KYLIN_FACT, please change your computed column name");
+        expectedEx.expectMessage(
+                "There is already a column named cal_dt on table DEFAULT.TEST_KYLIN_FACT, please change your computed column name");
 
         List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
         Assert.assertTrue(dataModelDescs.size() == 1);
@@ -115,5 +120,82 @@ public class ModelServiceTest extends ServiceTestBase {
         field.setAccessible(true);
         field.set(deserialize.getComputedColumnDescs().get(0), "cal_dt");
         DataModelDesc dataModelDesc = modelService.updateModelAndDesc(deserialize);
+    }
+
+    @Test
+    public void testRevisableModelInCaseOfDeleteMeasure() throws IOException {
+        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
+        Assert.assertTrue(dataModelDescs.size() == 1);
+
+        DataModelDesc revisableModel = dataModelDescs.get(0);
+
+        String[] originM = revisableModel.getMetrics();
+        String[] reviseM = cutItems(originM, 1);
+
+        revisableModel.setMetrics(reviseM);
+
+        expectedEx.expect(org.apache.kylin.rest.exception.BadRequestException.class);
+        expectedEx.expectMessage(
+                "Measure: TEST_KYLIN_FACT.DEAL_AMOUNT can't be removed, It is referred in Cubes: [ci_left_join_cube]");
+        modelService.updateModelToResourceStore(revisableModel, "default");
+    }
+
+    @Test
+    public void testRevisableModelInCaseOfDeleteDims() throws IOException {
+        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
+        Assert.assertTrue(dataModelDescs.size() == 1);
+
+        DataModelDesc revisableModel = dataModelDescs.get(0);
+
+        List<ModelDimensionDesc> originDims = revisableModel.getDimensions();
+        String[] reviseDims = cutItems(originDims.get(0).getColumns(), 2);
+        originDims.get(0).setColumns(reviseDims);
+        revisableModel.setDimensions(originDims);
+
+        expectedEx.expect(org.apache.kylin.rest.exception.BadRequestException.class);
+        expectedEx.expectMessage(
+                "Dimension: TEST_KYLIN_FACT.SELLER_ID_AND_COUNTRY_NAME can't be removed, It is referred in Cubes: [ci_left_join_cube]");
+        modelService.updateModelToResourceStore(revisableModel, "default");
+    }
+
+    @Test
+    public void testRevisableModelInCaseOfMoveMeasureToDim() throws IOException {
+        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
+        Assert.assertTrue(dataModelDescs.size() == 1);
+
+        DataModelDesc revisableModel = dataModelDescs.get(0);
+
+        String[] originM = revisableModel.getMetrics();
+        String[] reviseM = cutItems(originM, 1);
+        revisableModel.setMetrics(reviseM);
+
+        String col = originM[originM.length - 1];
+        col = col.substring(col.indexOf('.') + 1);
+
+        List<ModelDimensionDesc> originDims = revisableModel.getDimensions();
+        String[] reviseDims = addItems(originDims.get(0).getColumns(), col);
+        originDims.get(0).setColumns(reviseDims);
+        revisableModel.setDimensions(originDims);
+        modelService.updateModelToResourceStore(revisableModel, "default");
+        //It should pass without any exceptions.
+    }
+
+    private String[] cutItems(String[] origin, int count) {
+        if (origin == null)
+            return null;
+
+        String[] ret = new String[origin.length - count];
+        for (int i = 0; i < ret.length; i++)
+            ret[i] = origin[i];
+        return ret;
+    }
+
+    private String[] addItems(String[] origin, String... toAddItems) {
+        if (origin == null)
+            return null;
+        String[] ret = new String[origin.length + toAddItems.length];
+        System.arraycopy(origin, 0, ret, 0, origin.length);
+        System.arraycopy(toAddItems, 0, ret, origin.length, toAddItems.length);
+        return ret;
     }
 }

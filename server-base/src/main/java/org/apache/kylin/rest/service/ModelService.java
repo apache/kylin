@@ -22,6 +22,7 @@ import static org.apache.kylin.rest.controller2.ModelControllerV2.VALID_MODELNAM
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -299,55 +300,112 @@ public class ModelService extends BasicService {
         return true;
     }
 
-    private boolean checkIfBreakExistingCubes(DataModelDesc dataModelDesc, String project) throws IOException {
+    private List<String> getModelCols(DataModelDesc model) {
+        List<String> dimCols = new ArrayList<String>();
+
+        List<ModelDimensionDesc> dimensions = model.getDimensions();
+
+        for (ModelDimensionDesc dim : dimensions) {
+            String table = dim.getTable();
+            for (String c : dim.getColumns()) {
+                dimCols.add(table + "." + c);
+            }
+        }
+        return dimCols;
+    }
+
+    private List<String> getModelMeasures(DataModelDesc model) {
+        List<String> measures = new ArrayList<String>();
+
+        for (String s : model.getMetrics()) {
+            measures.add(s);
+        }
+        return measures;
+    }
+
+    private Map<String, List<String>> getInfluencedCubesByDims(List<String> dims, List<CubeInstance> cubes) {
+        Map<String, List<String>> influencedCubes = new HashMap<>();
+        for (CubeInstance cubeInstance : cubes) {
+            CubeDesc cubeDesc = cubeInstance.getDescriptor();
+            for (TblColRef tblColRef : cubeDesc.listDimensionColumnsIncludingDerived()) {
+                if (dims.contains(tblColRef.getIdentity()))
+                    continue;
+                if (influencedCubes.get(tblColRef.getIdentity()) == null) {
+                    List<String> candidates = new ArrayList<>();
+                    candidates.add(cubeInstance.getName());
+                    influencedCubes.put(tblColRef.getIdentity(), candidates);
+                } else
+                    influencedCubes.get(tblColRef.getIdentity()).add(cubeInstance.getName());
+            }
+        }
+        return influencedCubes;
+    }
+
+    private Map<String, List<String>> getInfluencedCubesByMeasures(List<String> allCols, List<CubeInstance> cubes) {
+        Map<String, List<String>> influencedCubes = new HashMap<>();
+        for (CubeInstance cubeInstance : cubes) {
+            CubeDesc cubeDesc = cubeInstance.getDescriptor();
+            Set<TblColRef> tblColRefs = Sets.newHashSet(cubeDesc.listAllColumns());
+            tblColRefs.removeAll(cubeDesc.listDimensionColumnsIncludingDerived());
+            for (TblColRef tblColRef : tblColRefs) {
+                if (allCols.contains(tblColRef.getIdentity()))
+                    continue;
+                if (influencedCubes.get(tblColRef.getIdentity()) == null) {
+                    List<String> candidates = new ArrayList<>();
+                    candidates.add(cubeInstance.getName());
+                    influencedCubes.put(tblColRef.getIdentity(), candidates);
+                } else
+                    influencedCubes.get(tblColRef.getIdentity()).add(cubeInstance.getName());
+            }
+        }
+        return influencedCubes;
+    }
+
+    private String checkIfBreakExistingCubes(DataModelDesc dataModelDesc, String project) throws IOException {
         String modelName = dataModelDesc.getName();
         List<CubeInstance> cubes = cubeService.listAllCubes(null, project, modelName, true);
+        DataModelDesc originDataModelDesc = listAllModels(modelName, project, true).get(0);
 
+        StringBuilder checkRet = new StringBuilder();
         if (cubes != null && cubes.size() != 0) {
             dataModelDesc.init(getConfig(), getMetadataManager().getAllTablesMap(dataModelDesc.getProject()),
                     getMetadataManager().listDataModels());
 
-            List<String> dimCols = new ArrayList<String>();
-            List<String> dimAndMCols = new ArrayList<String>();
+            List<String> curModelDims = getModelCols(dataModelDesc);
+            List<String> curModelMeasures = getModelMeasures(dataModelDesc);
 
-            List<ModelDimensionDesc> dimensions = dataModelDesc.getDimensions();
-            String[] measures = dataModelDesc.getMetrics();
+            List<String> curModelDimsAndMeasures = new ArrayList<>();
+            curModelDimsAndMeasures.addAll(curModelDims);
+            curModelDimsAndMeasures.addAll(curModelMeasures);
 
-            for (ModelDimensionDesc dim : dimensions) {
-                String table = dim.getTable();
-                for (String c : dim.getColumns()) {
-                    dimCols.add(table + "." + c);
-                }
+            Map<String, List<String>> influencedCubesByDims = getInfluencedCubesByDims(curModelDims, cubes);
+            Map<String, List<String>> influencedCubesByMeasures = getInfluencedCubesByMeasures(curModelDimsAndMeasures,
+                    cubes);
+
+            for (Map.Entry<String, List<String>> e : influencedCubesByDims.entrySet()) {
+                checkRet.append("Dimension: ");
+                checkRet.append(e.getKey());
+                checkRet.append(" can't be removed, It is referred in Cubes: ");
+                checkRet.append(e.getValue().toString());
+                checkRet.append("\r\n");
             }
 
-            dimAndMCols.addAll(dimCols);
-
-            for (String measure : measures) {
-                dimAndMCols.add(measure);
+            for (Map.Entry<String, List<String>> e : influencedCubesByMeasures.entrySet()) {
+                checkRet.append("Measure: ");
+                checkRet.append(e.getKey());
+                checkRet.append(" can't be removed, It is referred in Cubes: ");
+                checkRet.append(e.getValue().toString());
+                checkRet.append("\r\n");
             }
 
-            Set<TblColRef> usedDimCols = getUsedDimCols(modelName, project).keySet();
-            Set<TblColRef> usedNonDimCols = getUsedNonDimCols(modelName, project).keySet();
-
-            for (TblColRef tblColRef : usedDimCols) {
-                if (!dimCols.contains(tblColRef.getTableAlias() + "." + tblColRef.getName()))
-                    return false;
-            }
-
-            for (TblColRef tblColRef : usedNonDimCols) {
-                if (!dimAndMCols.contains(tblColRef.getTableAlias() + "." + tblColRef.getName()))
-                    return false;
-            }
-
-            DataModelDesc originDataModelDesc = listAllModels(modelName, project, true).get(0);
             if (!dataModelDesc.getRootFactTable().equals(originDataModelDesc.getRootFactTable()))
-                return false;
+                checkRet.append("Root fact table can't be modified. \r\n");
 
             JoinsTree joinsTree = dataModelDesc.getJoinsTree(), originJoinsTree = originDataModelDesc.getJoinsTree();
             if (joinsTree.matchNum(originJoinsTree) != originDataModelDesc.getJoinTables().length + 1)
-                return false;
+                checkRet.append("The join shouldn't be modified in this model.");
         }
-        return true;
+        return checkRet.toString();
     }
 
     public void primaryCheck(DataModelDesc modelDesc) {
@@ -383,8 +441,9 @@ public class ModelService extends BasicService {
                 modelDesc = createModelDesc(projectName, modelDesc);
             } else {
                 // update
-                if (!checkIfBreakExistingCubes(modelDesc, projectName)) {
-                    throw new BadRequestException(msg.getUPDATE_MODEL_KEY_FIELD());
+                String error = checkIfBreakExistingCubes(modelDesc, projectName);
+                if (!error.isEmpty()) {
+                    throw new BadRequestException(error);
                 }
                 modelDesc = updateModelAndDesc(modelDesc);
             }
