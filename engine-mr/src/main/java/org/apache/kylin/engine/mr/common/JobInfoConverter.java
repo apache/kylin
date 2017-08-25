@@ -28,6 +28,7 @@ import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ import org.slf4j.LoggerFactory;
 public class JobInfoConverter {
     private static final Logger logger = LoggerFactory.getLogger(JobInfoConverter.class);
 
-    public static JobInstance parseToJobInstanceQuietly(AbstractExecutable job, Map<String, Output> outputs) {
+    public static JobInstance parseToJobInstanceQuietly(CubingJob job, Map<String, Output> outputs) {
         try {
             return parseToJobInstance(job, outputs);
         } catch (Exception e) {
@@ -45,26 +46,29 @@ public class JobInfoConverter {
         }
     }
 
-    public static JobInstance parseToJobInstance(AbstractExecutable job, Map<String, Output> outputs) {
+    public static JobInstance parseToJobInstanceQuietly(CheckpointExecutable job, Map<String, Output> outputs) {
+        try {
+            return parseToJobInstance(job, outputs);
+        } catch (Exception e) {
+            logger.error("Failed to parse job instance: uuid={}", job, e);
+            return null;
+        }
+    }
+
+    public static JobInstance parseToJobInstance(CubingJob job, Map<String, Output> outputs) {
         if (job == null) {
             logger.warn("job is null.");
             return null;
         }
 
-        if (!(job instanceof CubingJob)) {
-            logger.warn("illegal job type, id:" + job.getId());
-            return null;
-        }
-
-        CubingJob cubeJob = (CubingJob) job;
         Output output = outputs.get(job.getId());
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
-        result.setRelatedCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
-        result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
+        result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
+        result.setRelatedSegment(CubingExecutableUtil.getSegmentId(job.getParams()));
         result.setLastModified(output.getLastModified());
-        result.setSubmitter(cubeJob.getSubmitter());
-        result.setUuid(cubeJob.getId());
+        result.setSubmitter(job.getSubmitter());
+        result.setUuid(job.getId());
         result.setType(CubeBuildTypeEnum.BUILD);
         result.setStatus(parseToJobStatus(output.getState()));
         result.setMrWaiting(AbstractExecutable.getExtraInfoAsLong(output, CubingJob.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
@@ -73,8 +77,35 @@ public class JobInfoConverter {
         result.setExecInterruptTime(AbstractExecutable.getInterruptTime(output));
         result.setDuration(AbstractExecutable.getDuration(result.getExecStartTime(), result.getExecEndTime(),
                 result.getExecInterruptTime()) / 1000);
-        for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
-            AbstractExecutable task = cubeJob.getTasks().get(i);
+        for (int i = 0; i < job.getTasks().size(); ++i) {
+            AbstractExecutable task = job.getTasks().get(i);
+            result.addStep(parseToJobStep(task, i, outputs.get(task.getId())));
+        }
+        return result;
+    }
+
+    public static JobInstance parseToJobInstance(CheckpointExecutable job, Map<String, Output> outputs) {
+        if (job == null) {
+            logger.warn("job is null.");
+            return null;
+        }
+
+        Output output = outputs.get(job.getId());
+        final JobInstance result = new JobInstance();
+        result.setName(job.getName());
+        result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
+        result.setLastModified(output.getLastModified());
+        result.setSubmitter(job.getSubmitter());
+        result.setUuid(job.getId());
+        result.setType(CubeBuildTypeEnum.CHECKPOINT);
+        result.setStatus(parseToJobStatus(output.getState()));
+        result.setExecStartTime(AbstractExecutable.getStartTime(output));
+        result.setExecEndTime(AbstractExecutable.getEndTime(output));
+        result.setExecInterruptTime(AbstractExecutable.getInterruptTime(output));
+        result.setDuration(AbstractExecutable.getDuration(result.getExecStartTime(), result.getExecEndTime(),
+                result.getExecInterruptTime()) / 1000);
+        for (int i = 0; i < job.getTasks().size(); ++i) {
+            AbstractExecutable task = job.getTasks().get(i);
             result.addStep(parseToJobStep(task, i, outputs.get(task.getId())));
         }
         return result;

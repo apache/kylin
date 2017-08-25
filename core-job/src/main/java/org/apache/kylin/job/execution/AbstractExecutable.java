@@ -384,6 +384,11 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return getDuration(getStartTime(), getEndTime(), getInterruptTime());
     }
 
+    public boolean isReady() {
+        final Output output = getManager().getOutput(id);
+        return output.getState() == ExecutableState.READY;
+    }
+
     /*
     * discarded is triggered by JobService, the Scheduler is not awake of that
     *
