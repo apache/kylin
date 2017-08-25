@@ -1088,6 +1088,10 @@ abstract public class KylinConfigBase implements Serializable {
                 new String[] { "org.apache.kylin.source.adhocquery.HivePushDownConverter" });
     }
 
+    public boolean isPushdownQueryCacheEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.query.pushdown.cache-enabled", "false"));
+    }
+
     public String getJdbcUrl() {
         return getOptional("kylin.query.pushdown.jdbc.url", "");
     }

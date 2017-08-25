@@ -38,6 +38,7 @@ import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlVisitor;
+import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.commons.lang.text.StrBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -61,10 +62,14 @@ public class PushDownUtil {
         if (!kylinConfig.isPushDownEnabled()) {
             return false;
         }
-
-        Throwable rootCause = ExceptionUtils.getRootCause(sqlException);
-        boolean isExpectedCause = rootCause != null && (rootCause.getClass().equals(NoRealizationFoundException.class));
-
+        boolean isSelect = QueryUtil.isSelectStatement(sql);
+        boolean isExpectedCause = true;
+        
+        if (sqlException != null) {
+            Throwable rootCause = ExceptionUtils.getRootCause(sqlException);
+            isExpectedCause = rootCause != null && ((rootCause.getClass().equals(NoRealizationFoundException.class)) || (rootCause.getClass().equals(SqlValidatorException.class)));
+        }
+        
         if (isExpectedCause) {
 
             logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
@@ -72,15 +77,16 @@ public class PushDownUtil {
             runner.init(kylinConfig);
             logger.debug("Query Pushdown runner {}", runner);
 
-            //            String expandCC = restoreComputedColumnToExpr(sql, project);
-            //            if (!StringUtils.equals(expandCC, sql)) {
-            //                logger.info("computed column in sql is expanded to:  " + expandCC);
-            //            }
-
             // default schema in calcite does not apply to other engines.
             // since this is a universql requirement, it's not implemented as a converter
             if (defaultSchema != null && !defaultSchema.equals("DEFAULT")) {
-                String completed = schemaCompletion(sql, defaultSchema);
+                String completed = sql;
+                try {
+                    completed = schemaCompletion(sql, defaultSchema);
+                } catch (SqlParseException e) {
+                    // fail to parse the pushdown sql, ignore
+                    logger.debug("fail to do schema completion on the pushdown sql, ignore it.", e.getMessage());
+                }
                 if (!sql.equals(completed)) {
                     logger.info("the query is converted to {} after schema completion", completed);
                     sql = completed;
@@ -96,7 +102,11 @@ public class PushDownUtil {
                 }
             }
 
-            runner.executeQuery(sql, results, columnMetas);
+            if (isSelect == true) {
+                runner.executeQuery(sql, results, columnMetas);
+            } else {
+                runner.executeUpdate(sql);
+            }
             return true;
         } else {
             return false;

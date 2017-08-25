@@ -60,4 +60,43 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
             Assert.assertEquals("select * from \"DEFAULT\".TEST_KYLIN_FACT", s);
         }
     }
+
+    @Test
+    public void testRemoveCommentInSql() {
+
+        String originSql =  "select count(*) from test_kylin_fact where price > 10.0";
+
+        {
+            String sqlWithComment = "-- comment \n" + originSql;
+
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "-- comment \n -- comment\n" + originSql;
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+
+            String sqlWithComment = "-- \n -- comment \n" + originSql;
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = originSql + "-- \n -- comment \n";
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "-- \n -- comment \n" + originSql + "-- \n -- comment \n";
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "/* comment */ " + originSql + "-- \n -- comment \n";
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+    }
 }

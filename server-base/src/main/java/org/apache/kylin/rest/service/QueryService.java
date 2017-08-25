@@ -182,6 +182,29 @@ public class QueryService extends BasicService {
         }
     }
 
+
+    public SQLResponse update(SQLRequest sqlRequest) throws Exception {
+        // non select operations, only supported when enable pushdown
+        logger.debug("Query pushdown enabled, redirect the query to alternative engine. ");
+        Connection conn = null;
+        List<List<String>> results = Lists.newArrayList();
+        boolean isPushDown;
+        try {
+            conn = QueryConnection.getConnection(sqlRequest.getProject());
+            isPushDown = PushDownUtil.doPushDownQuery(sqlRequest.getProject(), sqlRequest.getSql(), conn.getSchema(), null, null, null);
+        } catch (Exception e) {
+            logger.error("failed to do pushdown, error is " + e.getMessage(), e);
+            throw new InternalErrorException(e);
+        } finally {
+            close(null, null, conn);
+        }
+        List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
+        columnMetas.add(new SelectedColumnMeta(false, false, false, false, 1, false, Integer.MAX_VALUE, "c0", "c0",
+                null, null, null, Integer.MAX_VALUE, 128, 1, "char", false, false, false));
+        SQLResponse sqlResponse = getSqlResponse(isPushDown, results, columnMetas);
+        return sqlResponse;
+    }
+
     public void saveQuery(final String creator, final Query query) throws IOException {
         List<Query> queries = getQueries(creator);
         queries.add(query);
@@ -367,11 +390,7 @@ public class QueryService extends BasicService {
             logger.info("Using project: " + project);
             logger.info("The original query:  " + sql);
 
-            if (!sql.toLowerCase().contains("select")
-                    && KylinConfig.getInstanceFromEnv().isPushDownEnabled() == false) {
-                logger.debug("Directly return exception as not supported");
-                throw new BadRequestException(msg.getNOT_SUPPORTED_SQL());
-            }
+            final boolean isSelect = QueryUtil.isSelectStatement(sql);
 
             long startTime = System.currentTimeMillis();
 
@@ -386,7 +405,15 @@ public class QueryService extends BasicService {
 
             try {
                 if (null == sqlResponse) {
-                    sqlResponse = query(sqlRequest);
+                    if (isSelect == true) {
+                        sqlResponse = query(sqlRequest);
+                    } else if (kylinConfig.isPushDownEnabled() == true) {
+                        sqlResponse = update(sqlRequest);
+                    } else {
+                        logger.debug(
+                                "Directly return exception as the sql is unsupported, and query pushdown is disabled");
+                        throw new BadRequestException(msg.getNOT_SUPPORTED_SQL());
+                    }
 
                     long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
                     long scanCountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
@@ -397,6 +424,9 @@ public class QueryService extends BasicService {
                             String.valueOf(sqlResponse.getTotalScanCount()));
                     if (checkCondition(queryCacheEnabled, "query cache is disabled") //
                             && checkCondition(!sqlResponse.getIsException(), "query has exception") //
+                            && checkCondition(!(sqlResponse.isPushDown()
+                                    && (isSelect == false || kylinConfig.isPushdownQueryCacheEnabled() == false)),
+                                    "query is executed with pushdown, but it is non-select, or the cache for pushdown is disabled") //
                             && checkCondition(
                                     sqlResponse.getDuration() > durationThreshold
                                             || sqlResponse.getTotalScanCount() > scanCountThreshold

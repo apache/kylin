@@ -36,4 +36,17 @@ public interface IPushDownRunner {
      * @throws Exception if running pushdown query fails
      */
     void executeQuery(String query, List<List<String>> returnRows, List<SelectedColumnMeta> returnColumnMeta) throws Exception;
+
+
+    /**
+     * Run an pushdown non-query sql
+     *
+     * @param sql                 the sql statement
+     *
+     * @return whether the SQL is executed successfully
+     *
+     * @throws Exception if running pushdown fails
+     */
+    boolean executeUpdate(String sql) throws Exception;
+
 }

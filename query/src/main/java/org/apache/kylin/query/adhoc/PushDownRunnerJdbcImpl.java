@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.source.adhocquery.IPushDownRunner;
 
@@ -62,18 +63,15 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
         Connection connection = this.getConnection();
         ResultSet resultSet = null;
 
+        //extract column metadata
+        ResultSetMetaData metaData = null;
+        int columnCount = 0;
+
         try {
             statement = connection.createStatement();
             resultSet = statement.executeQuery(query);
             extractResults(resultSet, results);
-        } catch (SQLException sqlException) {
-            throw sqlException;
-        }
 
-        //extract column metadata
-        ResultSetMetaData metaData = null;
-        int columnCount = 0;
-        try {
             metaData = resultSet.getMetaData();
             columnCount = metaData.getColumnCount();
 
@@ -85,12 +83,32 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
                         metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i),
                         metaData.getColumnTypeName(i), metaData.isReadOnly(i), false, false));
             }
-
         } catch (SQLException sqlException) {
             throw sqlException;
+        } finally {
+            DBUtils.closeQuietly(resultSet);
+            DBUtils.closeQuietly(statement);
+            closeConnection(connection);
         }
+    }
 
-        closeConnection(connection);
+    @Override
+    public boolean executeUpdate(String sql) throws Exception {
+        Statement statement = null;
+        Connection connection = this.getConnection();
+
+        boolean success;
+        try {
+            statement = connection.createStatement();
+            statement.execute(sql);
+            success = true;
+        } catch (SQLException sqlException) {
+            throw sqlException;
+        } finally {
+            DBUtils.closeQuietly(statement);
+            closeConnection(connection);
+        }
+        return success;
     }
 
     private Connection getConnection() {

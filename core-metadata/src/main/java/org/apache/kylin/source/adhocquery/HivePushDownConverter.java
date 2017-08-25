@@ -262,6 +262,10 @@ public class HivePushDownConverter implements IPushDownConverter {
         // Step7.Add quote for interval in timestampadd
         convertedSql = timestampaddReplace(convertedSql);
 
+        // Step8.Replace integer with int
+        convertedSql = replaceString(convertedSql, "INTEGER", "INT");
+        convertedSql = replaceString(convertedSql, "integer", "int");
+
         return convertedSql;
     }
 
