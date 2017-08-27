@@ -247,10 +247,9 @@ public class StreamingControllerV2 extends BasicController {
         }
 
         if (null != desc) {
-            String[] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
+            String[] dbTable = HadoopUtil.parseHiveTableName(desc.getIdentity());
             desc.setName(dbTable[1]);
             desc.setDatabase(dbTable[0]);
-            desc.getIdentity();
         }
         return desc;
     }
