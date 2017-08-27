@@ -210,7 +210,8 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         Preconditions.checkState(columnRowType == null, "OLAPTableScan MUST NOT be shared by more than one prent");
 
         // create context in case of non-join
-        if (implementor.getContext() == null || !(implementor.getParentNode() instanceof OLAPJoinRel) || implementor.isNewOLAPContextRequired()) {
+        if (implementor.getContext() == null || !(implementor.getParentNode() instanceof OLAPJoinRel)
+                || implementor.isNewOLAPContextRequired()) {
             implementor.allocateContext();
         }
 
@@ -226,6 +227,13 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
         if (context.firstTableScan == null) {
             context.firstTableScan = this;
+        }
+
+        if (implementor.getParentNode() instanceof OLAPToEnumerableConverter) {
+            // OLAPToEnumerableConverter on top of table scan, should be a select * from table
+            for (TblColRef tblColRef : columnRowType.getAllColumns()) {
+                context.allColumns.add(tblColRef);
+            }
         }
     }
 
@@ -288,7 +296,8 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         String execFunction = genExecFunc();
 
         PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), this.rowType, pref.preferArray());
-        MethodCallExpression exprCall = Expressions.call(table.getExpression(OLAPTable.class), execFunction, implementor.getRootExpression(), Expressions.constant(context.id));
+        MethodCallExpression exprCall = Expressions.call(table.getExpression(OLAPTable.class), execFunction,
+                implementor.getRootExpression(), Expressions.constant(context.id));
         return implementor.result(physType, Blocks.toBlock(exprCall));
     }
 
