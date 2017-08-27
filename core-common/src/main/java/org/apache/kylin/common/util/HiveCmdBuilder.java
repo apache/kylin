@@ -66,11 +66,12 @@ public class HiveCmdBuilder {
 
         switch (clientMode) {
         case CLI:
-            buf.append("hive -e \"");
+            // use single-quote to ignore the executing back-ticks surrounded column name in shell
+            buf.append("hive -e \'");
             for (String statement : statements) {
                 buf.append(statement).append("\n");
             }
-            buf.append("\"");
+            buf.append("\'");
             buf.append(parseProps());
             break;
         case BEELINE:
