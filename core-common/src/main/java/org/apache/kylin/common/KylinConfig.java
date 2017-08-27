@@ -18,6 +18,15 @@
 
 package org.apache.kylin.common;
 
+import com.google.common.base.Preconditions;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.OrderedProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,26 +43,15 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.restclient.RestClient;
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.OrderedProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-
 /**
  */
 public class KylinConfig extends KylinConfigBase {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 
-    /** Kylin properties file name */
+    /**
+     * Kylin properties file name
+     */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
@@ -62,7 +60,7 @@ public class KylinConfig extends KylinConfigBase {
 
     // thread-local instances, will override SYS_ENV_INSTANCE
     private static transient ThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new ThreadLocal<>();
-    
+
     static {
         /*
          * Make Calcite to work with Unicode.
@@ -121,9 +119,6 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     private static UriType decideUriType(String metaUri) {
-        if (metaUri.indexOf("@hdfs") > 0) {
-            return UriType.HDFS_FILE;
-        }
 
         try {
             File file = new File(metaUri);
@@ -162,23 +157,6 @@ public class KylinConfig extends KylinConfigBase {
          * LOCAL_FOLDER: path to resource folder
          */
         UriType uriType = decideUriType(uri);
-
-        if (uriType == UriType.HDFS_FILE) {
-            KylinConfig config;
-            FileSystem fs;
-            int cut = uri.indexOf('@');
-            String realHdfsPath = uri.substring(0, cut) + "/" + KYLIN_CONF_PROPERTIES_FILE;
-            try {
-                config = new KylinConfig();
-                fs = HadoopUtil.getFileSystem(realHdfsPath);
-                InputStream is = fs.open(new Path(realHdfsPath));
-                Properties prop = streamToProps(is);
-                config.reloadKylinConfig(prop);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            return config;
-        }
 
         if (uriType == UriType.LOCAL_FOLDER) {
             KylinConfig config = new KylinConfig();
@@ -241,7 +219,7 @@ public class KylinConfig extends KylinConfigBase {
     public static void setKylinConfigThreadLocal(KylinConfig config) {
         THREAD_ENV_INSTANCE.set(config);
     }
-    
+
     public static void removeKylinConfigThreadLocal() {
         THREAD_ENV_INSTANCE.remove();
     }
