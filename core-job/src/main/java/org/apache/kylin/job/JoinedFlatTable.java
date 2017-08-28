@@ -21,17 +21,11 @@ package org.apache.kylin.job;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -41,9 +35,6 @@ import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.model.tool.CalciteParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -52,7 +43,6 @@ import org.slf4j.LoggerFactory;
 public class JoinedFlatTable {
 
     public static final String BACKTICK = "`";
-    private static final Logger logger = LoggerFactory.getLogger(JoinedFlatTable.class);
 
     public static String getTableDir(IJoinedFlatTableDesc flatDesc, String storageDfsDir) {
         return storageDfsDir + "/" + flatDesc.getTableName();
@@ -140,7 +130,11 @@ public class JoinedFlatTable {
                 sql.append(",");
             }
             String colTotalName = String.format("%s.%s", col.getTableRef().getTableName(), col.getName());
-            String expressionInSourceDB = quoteOriginalColumnWithBacktick(col.getExpressionInSourceDB());
+            String expressionInSourceDB = col.getExpressionInSourceDB();
+            if (expressionInSourceDB.contains(".")) {
+                // surround column name with back-tick, to support unicode column name
+                expressionInSourceDB = expressionInSourceDB.replace(".", "." + BACKTICK) + BACKTICK;
+            }
             if (skipAsList.contains(colTotalName)) {
                 sql.append(expressionInSourceDB + sep);
             } else {
@@ -283,65 +277,4 @@ public class JoinedFlatTable {
         return sql.toString();
     }
 
-    /**
-     * quote column name with back-tick, to support unicode column name
-     *
-     * @param sourceSQL
-     * @return
-     */
-    static String quoteOriginalColumnWithBacktick(String sourceSQL) {
-        StringBuilder result = new StringBuilder(sourceSQL);
-        try {
-            List<Pair<Integer, Integer>> replacePoses = new ArrayList<>();
-            for (SqlIdentifier id : SqlIdentifierVisitor.getAllSqlIdentifier(CalciteParser.getExpNode(sourceSQL))) {
-                replacePoses.add(CalciteParser.getReplacePos(id.getComponentParserPosition(1), "select " + sourceSQL + " from t"));
-            }
-
-            // latter replace position in the front of the list.
-            Collections.sort(replacePoses, new Comparator<Pair<Integer, Integer>>() {
-                @Override
-                public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
-                    return -(o1.getSecond() - o2.getSecond());
-                }
-            });
-
-            // cuz the pos is add "select "'s size, so minus 7 offset.
-            final int OFFSET = 7;
-            for (Pair<Integer, Integer> replacePos : replacePoses) {
-                result.insert(replacePos.getSecond() - OFFSET, "`");
-                result.insert(replacePos.getFirst() - OFFSET, "`");
-            }
-        } catch (Exception e) {
-            logger.error("quote original column with backtick fail.Return origin SQL." + e.getMessage());
-        }
-
-        return result.toString();
-    }
-
-
-    static class SqlIdentifierVisitor extends SqlBasicVisitor<SqlNode> {
-        private List<SqlIdentifier> sqlIdentifier;
-
-        SqlIdentifierVisitor() {
-            this.sqlIdentifier = new ArrayList<>();
-        }
-
-        List<SqlIdentifier> getSqlIdentifier() {
-            return sqlIdentifier;
-        }
-
-        static List<SqlIdentifier> getAllSqlIdentifier(SqlNode node) {
-            SqlIdentifierVisitor siv = new SqlIdentifierVisitor();
-            node.accept(siv);
-            return siv.getSqlIdentifier();
-        }
-
-        @Override
-        public SqlNode visit(SqlIdentifier id) {
-            if (id.names.size() == 2) {
-                sqlIdentifier.add(id);
-            }
-            return null;
-        }
-    }
 }
