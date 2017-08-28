@@ -42,8 +42,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 public class JoinedFlatTable {
 
-    public static final String BACKTICK = "`";
-
     public static String getTableDir(IJoinedFlatTableDesc flatDesc, String storageDfsDir) {
         return storageDfsDir + "/" + flatDesc.getTableName();
     }
@@ -77,7 +75,7 @@ public class JoinedFlatTable {
             ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
         }
         ddl.append("STORED AS " + format + "\n");
-        ddl.append("LOCATION '\"'\"'" + getTableDir(flatDesc, storageDfsDir) + "'\"'\"';").append("\n");
+        ddl.append("LOCATION '" + getTableDir(flatDesc, storageDfsDir) + "';").append("\n");
         return ddl.toString();
     }
 
@@ -130,15 +128,10 @@ public class JoinedFlatTable {
                 sql.append(",");
             }
             String colTotalName = String.format("%s.%s", col.getTableRef().getTableName(), col.getName());
-            String expressionInSourceDB = col.getExpressionInSourceDB();
-            if (expressionInSourceDB.contains(".")) {
-                // surround column name with back-tick, to support unicode column name
-                expressionInSourceDB = expressionInSourceDB.replace(".", "." + BACKTICK) + BACKTICK;
-            }
             if (skipAsList.contains(colTotalName)) {
-                sql.append(expressionInSourceDB + sep);
+                sql.append(col.getExpressionInSourceDB() + sep);
             } else {
-                sql.append(expressionInSourceDB + " as " + colName(col) + sep);
+                sql.append(col.getExpressionInSourceDB() + " as " + colName(col) + sep);
             }
         }
         appendJoinStatement(flatDesc, sql, singleLine);
@@ -146,13 +139,7 @@ public class JoinedFlatTable {
         return sql.toString();
     }
 
-    /**
-     * @deprecated
-     * @param flatDesc
-     * @param outputDir
-     * @return
-     */
-    static String generateCountDataStatement(IJoinedFlatTableDesc flatDesc, final String outputDir) {
+    public static String generateCountDataStatement(IJoinedFlatTableDesc flatDesc, final String outputDir) {
         final StringBuilder sql = new StringBuilder();
         final TableRef rootTbl = flatDesc.getDataModel().getRootFactTable();
         sql.append("dfs -mkdir -p " + outputDir + ";\n");
@@ -246,13 +233,8 @@ public class JoinedFlatTable {
         }
     }
 
-    /**
-     * Column name with `BACKTICK`
-     * @param col
-     * @return
-     */
     private static String colName(TblColRef col) {
-        return BACKTICK + col.getTableAlias() + "_" + col.getName() + BACKTICK;
+        return col.getTableAlias() + "_" + col.getName();
     }
 
     private static String getHiveDataType(String javaDataType) {

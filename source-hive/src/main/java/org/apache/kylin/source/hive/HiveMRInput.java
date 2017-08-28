@@ -221,7 +221,7 @@ public class HiveMRInput implements IMRInput {
                     createIntermediateTableHql.append("DROP TABLE IF EXISTS " + intermediate + ";\n");
                     createIntermediateTableHql
                             .append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediate + " LIKE " + identity + "\n");
-                    createIntermediateTableHql.append("LOCATION '\"'\"'" + jobWorkingDir + "/" + intermediate + "'\"'\"';\n");
+                    createIntermediateTableHql.append("LOCATION '" + jobWorkingDir + "/" + intermediate + "';\n");
                     createIntermediateTableHql
                             .append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + ";\n");
                     hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
