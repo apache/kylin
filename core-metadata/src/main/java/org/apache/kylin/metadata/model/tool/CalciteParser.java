@@ -32,11 +32,11 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.calcite.sql.util.SqlVisitor;
+import org.apache.kylin.common.util.Pair;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.apache.kylin.common.util.Pair;
 
 public class CalciteParser {
     public static SqlNode parse(String sql) throws SqlParseException {
@@ -127,11 +127,15 @@ public class CalciteParser {
     }
 
     public static Pair<Integer, Integer> getReplacePos(SqlNode node, String inputSql) {
+        SqlParserPos pos = node.getParserPosition();
+        return getReplacePos(pos, inputSql);
+    }
+
+    public static Pair<Integer, Integer> getReplacePos(SqlParserPos pos, String inputSql) {
         if (inputSql == null) {
             return Pair.newPair(0, 0);
         }
         String[] lines = inputSql.split("\n");
-        SqlParserPos pos = node.getParserPosition();
         int lineStart = pos.getLineNum();
         int lineEnd = pos.getEndLineNum();
         int columnStart = pos.getColumnNum() - 1;
