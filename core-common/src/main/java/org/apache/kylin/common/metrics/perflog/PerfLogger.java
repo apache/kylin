@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 
-
 /**
  * PerfLogger.
  * <p>
@@ -49,7 +48,7 @@ public class PerfLogger implements IPerfLogger {
         if (LOG.isDebugEnabled()) {
             LOG.debug("<PERFLOG method=" + method + " from=" + callerName + ">");
         }
-        beginMetrics(callerName + "." +  method);
+        beginMetrics(callerName + "." + method);
     }
 
     public long perfLogEnd(String callerName, String method) {

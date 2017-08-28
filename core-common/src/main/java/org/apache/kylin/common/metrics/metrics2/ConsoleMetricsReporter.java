@@ -26,7 +26,7 @@ import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
 
 /**
- * A wrapper around Codahale ConsoleReporter to make it a pluggable/configurable Hive Metrics reporter.
+ * A wrapper around Codahale ConsoleReporter to make it a pluggable/configurable Kylin Metrics reporter.
  */
 public class ConsoleMetricsReporter implements CodahaleReporter {
 

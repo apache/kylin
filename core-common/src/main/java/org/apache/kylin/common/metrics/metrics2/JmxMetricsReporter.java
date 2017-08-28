@@ -26,7 +26,7 @@ import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
 
 /**
- * A wrapper around Codahale JmxReporter to make it a pluggable/configurable Hive Metrics reporter.
+ * A wrapper around Codahale JmxReporter to make it a pluggable/configurable Kylin Metrics reporter.
  */
 public class JmxMetricsReporter implements CodahaleReporter {
 

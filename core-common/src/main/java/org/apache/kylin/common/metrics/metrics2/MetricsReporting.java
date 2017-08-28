@@ -18,9 +18,6 @@
 
 package org.apache.kylin.common.metrics.metrics2;
 
-/**
- * Reporting options for org.apache.hadoop.hive.common.metrics.metrics2.Metrics.
- */
 public enum MetricsReporting {
     JMX, CONSOLE, JSON_FILE, HADOOP2
 }

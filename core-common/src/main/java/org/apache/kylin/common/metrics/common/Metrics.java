@@ -17,12 +17,12 @@
 */
 package org.apache.kylin.common.metrics.common;
 
+import java.util.concurrent.TimeUnit;
+
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Generic Metics interface.
@@ -35,7 +35,6 @@ public interface Metrics {
     public void close() throws Exception;
 
     /**
-     *
      * @param name starts a scope of a given name.  Scopes is stored as thread-local variable.
      */
     public void startStoredScope(String name);
@@ -43,12 +42,14 @@ public interface Metrics {
     /**
      * Closes the stored scope of a given name.
      * Note that this must be called on the same thread as where the scope was started.
+     *
      * @param name
      */
     public void endStoredScope(String name);
 
     /**
      * Create scope with given name and returns it.
+     *
      * @param name
      * @return
      */
@@ -56,6 +57,7 @@ public interface Metrics {
 
     /**
      * Close the given scope.
+     *
      * @param scope
      */
     public void endScope(MetricsScope scope);
@@ -64,6 +66,7 @@ public interface Metrics {
 
     /**
      * Increments a counter of the given name by 1.
+     *
      * @param name
      * @return
      */
@@ -71,6 +74,7 @@ public interface Metrics {
 
     /**
      * Increments a counter of the given name by "increment"
+     *
      * @param name
      * @param increment
      * @return
@@ -79,6 +83,7 @@ public interface Metrics {
 
     /**
      * Decrements a counter of the given name by 1.
+     *
      * @param name
      * @return
      */
@@ -86,6 +91,7 @@ public interface Metrics {
 
     /**
      * Decrements a counter of the given name by "decrement"
+     *
      * @param name
      * @param decrement
      * @return
@@ -94,15 +100,17 @@ public interface Metrics {
 
     /**
      * Adds a metrics-gauge to track variable.  For example, number of open database connections.
-     * @param name name of gauge
+     *
+     * @param name     name of gauge
      * @param variable variable to track.
      */
     public void addGauge(String name, final MetricsVariable variable);
 
     /**
      * Add a ratio metric to track the correlation between two variables
-     * @param name name of the ratio gauge
-     * @param numerator numerator of the ratio
+     *
+     * @param name        name of the ratio gauge
+     * @param numerator   numerator of the ratio
      * @param denominator denominator of the ratio
      */
     public void addRatio(String name, MetricsVariable<Integer> numerator, MetricsVariable<Integer> denominator);
@@ -110,51 +118,45 @@ public interface Metrics {
     /**
      * Mark an event occurance for a meter. Meters measure the rate of an event and track
      * 1/5/15 minute moving averages
+     *
      * @param name name of the meter
      */
     public void markMeter(String name);
 
     /**
-     *
-     * @param name         name of the Timer
+     * @param name     name of the Timer
      * @param duration
      * @param unit
      */
 
     public void updateTimer(String name, long duration, TimeUnit unit);
 
-
     /**
-     *
-     * @param name        name of the histogram
+     * @param name  name of the histogram
      * @param count
      */
     public void updateHistogram(String name, long count);
 
     /**
-     *
-     * @param name      name of the time
+     * @param name name of the time
      * @return
      */
     public Timer getTimer(String name);
 
     /**
-     *
-     * @param name      name of the counter
+     * @param name name of the counter
      * @return
      */
     public Counter getCounter(String name);
 
     /**
-     *
-     * @param name      name of the time
+     * @param name name of the time
      * @return
      */
     public Histogram getHistogram(String name);
 
     /**
-     *
-     * @param name      name of the meter
+     * @param name name of the meter
      * @return
      */
     public Meter getMeter(String name);

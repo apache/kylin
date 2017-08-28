@@ -18,7 +18,6 @@
 
 package org.apache.kylin.common.metrics.common;
 
-
 import org.apache.kylin.common.metrics.metrics2.CodahaleMetrics;
 
 /**
@@ -29,6 +28,7 @@ public class MetricsFactory {
     //Volatile ensures that static access returns Metrics instance in fully-initialized state.
     //Alternative is to synchronize static access, which has performance penalties.
     private volatile static Metrics metrics;
+
     static {
         MetricsFactory.init();
     }

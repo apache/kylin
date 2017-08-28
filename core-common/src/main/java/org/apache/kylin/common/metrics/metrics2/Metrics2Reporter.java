@@ -27,7 +27,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.github.joshelser.dropwizard.metrics.hadoop.HadoopMetrics2Reporter;
 
 /**
- * A wrapper around Codahale HadoopMetrics2Reporter to make it a pluggable/configurable Hive Metrics reporter.
+ * A wrapper around Codahale HadoopMetrics2Reporter to make it a pluggable/configurable Kylin Metrics reporter.
  */
 public class Metrics2Reporter implements CodahaleReporter {
 

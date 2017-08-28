@@ -88,7 +88,7 @@ public class CodahaleMetrics implements Metrics {
     private KylinConfig conf;
 
     public CodahaleMetrics() {
-        this.conf = conf;
+        this.conf = KylinConfig.getInstanceFromEnv();
         //Codahale artifacts are lazily-created.
         timers = CacheBuilder.newBuilder().build(new CacheLoader<String, Timer>() {
             @Override
@@ -365,8 +365,8 @@ public class CodahaleMetrics implements Metrics {
     }
 
     /**
-     * Initializes reporters from HIVE_CODAHALE_METRICS_REPORTER_CLASSES or HIVE_METRICS_REPORTER if the former is not defined.
-     * Note: if both confs are defined, only  HIVE_CODAHALE_METRICS_REPORTER_CLASSES will be used.
+     * Initializes reporters from kylin.metric.codahale-metric-report-classes  if the former is not defined.
+     * Note: if both confs are defined, only  kylin.metric.codahale-metric-report-classes will be used.
      */
     private void initReporting() {
 
@@ -380,7 +380,8 @@ public class CodahaleMetrics implements Metrics {
     }
 
     /**
-     * Initializes reporting using HIVE_CODAHALE_METRICS_REPORTER_CLASSES.
+     * Initializes reporting using kylin.metric.codahale-metric-report-classes.
+     *
      * @return whether initialization was successful or not
      */
     private boolean initCodahaleMetricsReporterClasses() {
@@ -397,7 +398,7 @@ public class CodahaleMetrics implements Metrics {
                 name = ClassUtils.getClass(reporterClass);
             } catch (ClassNotFoundException e) {
                 LOGGER.error("Unable to instantiate metrics reporter class " + reporterClass
-                        + " from conf HIVE_CODAHALE_METRICS_REPORTER_CLASSES", e);
+                        + " from conf kylin.metric.codahale-metric-report-classes", e);
                 throw new IllegalArgumentException(e);
             }
             try {
@@ -407,8 +408,8 @@ public class CodahaleMetrics implements Metrics {
                 reporters.add(reporter);
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException
                     | InvocationTargetException e) {
-                LOGGER.error("Unable to instantiate using constructor(MetricRegistry, HiveConf) for" + " reporter "
-                        + reporterClass + " from conf HIVE_CODAHALE_METRICS_REPORTER_CLASSES", e);
+                LOGGER.error("Unable to instantiate using constructor(MetricRegistry, KylinConfig) for" + " reporter "
+                        + reporterClass + " from conf kylin.metric.codahale-metric-report-classes", e);
                 throw new IllegalArgumentException(e);
             }
         }
@@ -416,7 +417,8 @@ public class CodahaleMetrics implements Metrics {
     }
 
     /**
-     * Initializes reporting using HIVE_METRICS+REPORTER.
+     * Initializes reporting using KYLIN_METRICS+REPORTER.
+     *
      * @return whether initialization was successful or not
      */
     private boolean initMetricsReporter() {
@@ -470,6 +472,7 @@ public class CodahaleMetrics implements Metrics {
 
         /**
          * Instantiates a named scope - intended to only be called by Metrics, so locally scoped.
+         *
          * @param name - name of the variable
          */
         private CodahaleMetricsScope(String name) {
@@ -480,7 +483,6 @@ public class CodahaleMetrics implements Metrics {
 
         /**
          * Opens scope, and makes note of the time started, increments run counter
-         *
          */
         public void open() {
             if (!isOpen) {

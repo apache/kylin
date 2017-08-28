@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.metrics;
 
-import static org.apache.kylin.common.metrics.common.Metricss.buildCubeMetricPrefix;
+import static org.apache.kylin.common.metrics.common.MetricsNameBuilder.buildCubeMetricPrefix;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ import javax.management.ObjectName;
 import org.apache.kylin.common.metrics.common.Metrics;
 import org.apache.kylin.common.metrics.common.MetricsConstant;
 import org.apache.kylin.common.metrics.common.MetricsFactory;
-import org.apache.kylin.common.metrics.common.Metricss;
+import org.apache.kylin.common.metrics.common.MetricsNameBuilder;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.ServiceTestBase;
@@ -54,13 +54,11 @@ public class QueryMetrics2Test extends ServiceTestBase {
 
     @Test
     public void testQueryMetrics() throws Exception {
-        System.setProperty("kylin.server.query-metrics-enabled", "true");
+        System.setProperty("kylin.server.query-metrics2-enabled", "true");
         QueryMetrics2Facade.init();
-
         SQLRequest sqlRequest = new SQLRequest();
         sqlRequest.setSql("select * from TEST_KYLIN_FACT");
         sqlRequest.setProject("default");
-
         SQLResponse sqlResponse = new SQLResponse();
         sqlResponse.setDuration(10);
         sqlResponse.setCube("test_cube");
@@ -83,46 +81,50 @@ public class QueryMetrics2Test extends ServiceTestBase {
         Thread.sleep(2000);
 
         Assert.assertEquals(1L,
-                metrics.getCounter(Metricss.buildMetricName(prefix, MetricsConstant.QUERY_COUNT)).getCount());
+                metrics.getCounter(MetricsNameBuilder.buildMetricName(prefix, MetricsConstant.QUERY_COUNT)).getCount());
         Assert.assertEquals(1L,
-                metrics.getCounter(Metricss.buildMetricName(prefix, MetricsConstant.QUERY_SUCCESS_COUNT)).getCount());
-        Assert.assertEquals(0L,
-                metrics.getCounter(Metricss.buildMetricName(prefix, MetricsConstant.QUERY_FAIL_COUNT)).getCount());
-        Assert.assertEquals(1L,
-                metrics.getCounter(Metricss.buildMetricName(prefix, MetricsConstant.QUERY_CACHE_COUNT)).getCount());
+                metrics.getCounter(MetricsNameBuilder.buildMetricName(prefix, MetricsConstant.QUERY_SUCCESS_COUNT))
+                        .getCount());
+        Assert.assertEquals(0L, metrics
+                .getCounter(MetricsNameBuilder.buildMetricName(prefix, MetricsConstant.QUERY_FAIL_COUNT)).getCount());
+        Assert.assertEquals(1L, metrics
+                .getCounter(MetricsNameBuilder.buildMetricName(prefix, MetricsConstant.QUERY_CACHE_COUNT)).getCount());
         //
-        Snapshot  queryScanSnapshot= metrics
-                .getHistogram(Metricss.buildMetricName(prefix, MetricsConstant.QUERY_SCAN_ROWCOUNT)).getSnapshot();
+        Snapshot queryScanSnapshot = metrics
+                .getHistogram(MetricsNameBuilder.buildMetricName(prefix, MetricsConstant.QUERY_SCAN_ROWCOUNT))
+                .getSnapshot();
         Assert.assertEquals(100.0, queryScanSnapshot.getMean(), 0);
         Assert.assertEquals(100.0, queryScanSnapshot.getMax(), 0);
         Assert.assertEquals(100.0, queryScanSnapshot.getMin(), 0);
 
         Snapshot queryResultSnapshot = metrics
-                .getHistogram(Metricss.buildMetricName(prefix, MetricsConstant.QUERY_RESULT_ROWCOUNT)).getSnapshot();
+                .getHistogram(MetricsNameBuilder.buildMetricName(prefix, MetricsConstant.QUERY_RESULT_ROWCOUNT))
+                .getSnapshot();
 
         Assert.assertEquals(2.0, queryResultSnapshot.getMean(), 0);
         Assert.assertEquals(2.0, queryResultSnapshot.getMax(), 0);
         Assert.assertEquals(2.0, queryResultSnapshot.getMin(), 0);
 
-        Snapshot queryLatencySnapshot = metrics.getTimer(Metricss.buildMetricName(prefix, MetricsConstant.QUERY_DURATION)).getSnapshot();
+        Snapshot queryLatencySnapshot = metrics
+                .getTimer(MetricsNameBuilder.buildMetricName(prefix, MetricsConstant.QUERY_DURATION)).getSnapshot();
         Assert.assertEquals(TimeUnit.MILLISECONDS.toNanos(10), queryLatencySnapshot.getMean(), 0);
         Assert.assertEquals(TimeUnit.MILLISECONDS.toNanos(10), queryLatencySnapshot.getMax(), 0);
         Assert.assertEquals(TimeUnit.MILLISECONDS.toNanos(10), queryLatencySnapshot.getMin(), 0);
 
-                SQLResponse sqlResponse2 = new SQLResponse();
-                sqlResponse2.setDuration(10);
-                sqlResponse2.setCube("test_cube");
-                sqlResponse2.setIsException(true);
-
+        SQLResponse sqlResponse2 = new SQLResponse();
+        sqlResponse2.setDuration(10);
+        sqlResponse2.setCube("test_cube");
+        sqlResponse2.setIsException(true);
 
         QueryMetrics2Facade.updateMetrics(sqlRequest, sqlResponse2);
-         prefix = buildCubeMetricPrefix(sqlRequest.getProject(), sqlResponse.getCube().replace("=", "->"));
+        prefix = buildCubeMetricPrefix(sqlRequest.getProject(), sqlResponse.getCube().replace("=", "->"));
         Assert.assertEquals(2L,
-                metrics.getCounter(Metricss.buildMetricName(prefix, MetricsConstant.QUERY_COUNT)).getCount());
+                metrics.getCounter(MetricsNameBuilder.buildMetricName(prefix, MetricsConstant.QUERY_COUNT)).getCount());
         Assert.assertEquals(1L,
-                metrics.getCounter(Metricss.buildMetricName(prefix, MetricsConstant.QUERY_SUCCESS_COUNT)).getCount());
-        Assert.assertEquals(1L,
-                metrics.getCounter(Metricss.buildMetricName(prefix, MetricsConstant.QUERY_FAIL_COUNT)).getCount());
+                metrics.getCounter(MetricsNameBuilder.buildMetricName(prefix, MetricsConstant.QUERY_SUCCESS_COUNT))
+                        .getCount());
+        Assert.assertEquals(1L, metrics
+                .getCounter(MetricsNameBuilder.buildMetricName(prefix, MetricsConstant.QUERY_FAIL_COUNT)).getCount());
     }
 
 }

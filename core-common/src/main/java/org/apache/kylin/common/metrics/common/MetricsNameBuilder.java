@@ -18,14 +18,13 @@
 
 package org.apache.kylin.common.metrics.common;
 
-public final class Metricss {
+public final class MetricsNameBuilder {
     public final static String METRICS = "metrics:";
     public final static String PROJECT_TEMPLATE = METRICS + "project=%s";
     public final static String CUBE_TEMPLATE = METRICS + "project=%s,cube=%s";
 
-
     public static String buildMetricName(String prefix, String name) {
-        return String.format(prefix+",name=%s", name);
+        return String.format(prefix + ",name=%s", name);
     }
 
     public static String buildCubeMetricPrefix(String project) {
@@ -35,6 +34,5 @@ public final class Metricss {
     public static String buildCubeMetricPrefix(String project, String cube) {
         return String.format(CUBE_TEMPLATE, project, cube);
     }
-
 
 }

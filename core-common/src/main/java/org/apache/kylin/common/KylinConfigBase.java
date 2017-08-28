@@ -1149,6 +1149,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.server.query-metrics-enabled", "false"));
     }
 
+    public boolean getQueryMetrics2Enabled() {
+        return Boolean.parseBoolean(getOptional("kylin.server.query-metrics2-enabled", "false"));
+    }
+
     public int[] getQueryMetricsPercentilesIntervals() {
         String[] dft = { "60", "300", "3600" };
         return getOptionalIntArray("kylin.server.query-metrics-percentiles-intervals", dft);

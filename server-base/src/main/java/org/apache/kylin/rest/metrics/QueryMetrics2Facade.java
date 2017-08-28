@@ -19,7 +19,7 @@
 package org.apache.kylin.rest.metrics;
 
 import static org.apache.kylin.common.metrics.common.MetricsConstant.TOTAL;
-import static org.apache.kylin.common.metrics.common.Metricss.buildCubeMetricPrefix;
+import static org.apache.kylin.common.metrics.common.MetricsNameBuilder.buildCubeMetricPrefix;
 
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +29,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.metrics.common.Metrics;
 import org.apache.kylin.common.metrics.common.MetricsConstant;
 import org.apache.kylin.common.metrics.common.MetricsFactory;
-import org.apache.kylin.common.metrics.common.Metricss;
+import org.apache.kylin.common.metrics.common.MetricsNameBuilder;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
@@ -46,7 +46,7 @@ public class QueryMetrics2Facade {
     private static boolean enabled = false;
 
     public static void init() {
-        enabled = KylinConfig.getInstanceFromEnv().getQueryMetricsEnabled();
+        enabled = KylinConfig.getInstanceFromEnv().getQueryMetrics2Enabled();
     }
 
     public static void updateMetrics(SQLRequest sqlRequest, SQLResponse sqlResponse) {
@@ -75,11 +75,11 @@ public class QueryMetrics2Facade {
             incrQueryCount(name, sqlResponse);
             incrCacheHitCount(name, sqlResponse);
             if (!sqlResponse.getIsException()) {
-                metrics.updateTimer(Metricss.buildMetricName(name, MetricsConstant.QUERY_DURATION),
+                metrics.updateTimer(MetricsNameBuilder.buildMetricName(name, MetricsConstant.QUERY_DURATION),
                         sqlResponse.getDuration(), TimeUnit.MILLISECONDS);
-                metrics.updateHistogram(Metricss.buildMetricName(name, MetricsConstant.QUERY_RESULT_ROWCOUNT),
+                metrics.updateHistogram(MetricsNameBuilder.buildMetricName(name, MetricsConstant.QUERY_RESULT_ROWCOUNT),
                         sqlResponse.getResults().size());
-                metrics.updateHistogram(Metricss.buildMetricName(name, MetricsConstant.QUERY_SCAN_ROWCOUNT),
+                metrics.updateHistogram(MetricsNameBuilder.buildMetricName(name, MetricsConstant.QUERY_SCAN_ROWCOUNT),
                         sqlResponse.getTotalScanCount());
             }
         } catch (Exception e) {
@@ -90,16 +90,16 @@ public class QueryMetrics2Facade {
 
     private static void incrQueryCount(String name, SQLResponse sqlResponse) {
         if (!sqlResponse.isHitExceptionCache() && !sqlResponse.getIsException()) {
-            metrics.incrementCounter(Metricss.buildMetricName(name, MetricsConstant.QUERY_SUCCESS_COUNT));
+            metrics.incrementCounter(MetricsNameBuilder.buildMetricName(name, MetricsConstant.QUERY_SUCCESS_COUNT));
         } else {
-            metrics.incrementCounter(Metricss.buildMetricName(name, MetricsConstant.QUERY_FAIL_COUNT));
+            metrics.incrementCounter(MetricsNameBuilder.buildMetricName(name, MetricsConstant.QUERY_FAIL_COUNT));
         }
-        metrics.incrementCounter(Metricss.buildMetricName(name, MetricsConstant.QUERY_COUNT));
+        metrics.incrementCounter(MetricsNameBuilder.buildMetricName(name, MetricsConstant.QUERY_COUNT));
     }
 
     private static void incrCacheHitCount(String name, SQLResponse sqlResponse) {
         if (sqlResponse.isStorageCacheUsed()) {
-            metrics.incrementCounter(Metricss.buildMetricName(name, MetricsConstant.QUERY_CACHE_COUNT));
+            metrics.incrementCounter(MetricsNameBuilder.buildMetricName(name, MetricsConstant.QUERY_CACHE_COUNT));
         }
     }
 

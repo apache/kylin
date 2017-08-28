@@ -19,14 +19,14 @@ package org.apache.kylin.common.metrics.common;
 
 /**
  * Metrics Scope to represent duration of an event.
- *
+ * <p>
  * Implementation can capture information like the average duration of open scopes,
  * number of open scopes, number of completed scopes.
- *
+ * <p>
  * Scopes are created via the Metrics framework (see Metrics#createScope or Metrics$createStoredScope)
- *
+ * <p>
  * Scope may be stored by the Metrics framework via 'storedScope' concept for further reference.
- *
+ * <p>
  * In either case, it is the caller's responsibility to end the scope via the Metrics framework (see Metrics#endScope)
  */
 public interface MetricsScope {

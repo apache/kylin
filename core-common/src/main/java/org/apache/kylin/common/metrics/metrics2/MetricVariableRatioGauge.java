@@ -18,9 +18,9 @@
 
 package org.apache.kylin.common.metrics.metrics2;
 
-import com.codahale.metrics.RatioGauge;
 import org.apache.kylin.common.metrics.common.MetricsVariable;
 
+import com.codahale.metrics.RatioGauge;
 
 /**
  * Combines two numeric metric variables into one gauge type metric displaying their ratio
