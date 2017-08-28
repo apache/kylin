@@ -29,6 +29,7 @@ public interface BatchConstants {
      * ConFiGuration entry names for MR jobs
      */
 
+    String CFG_CUBOID_MODE = "cuboid.mode";
     String CFG_CUBE_NAME = "cube.name";
     String CFG_CUBE_SEGMENT_NAME = "cube.segment.name";
     String CFG_CUBE_SEGMENT_ID = "cube.segment.id";

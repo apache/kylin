@@ -24,7 +24,6 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
-import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -39,23 +38,24 @@ import com.google.common.collect.Lists;
 
 /**
  */
-public class InMemCubeBuilderInputConverter {
+public class InputConverterUnitForRawData implements InputConverterUnit<String[]> {
 
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(InMemCubeBuilderInputConverter.class);
+    private static final Logger logger = LoggerFactory.getLogger(InputConverterUnitForRawData.class);
     
     public static final byte[] HIVE_NULL = Bytes.toBytes("\\N");
+    public static final String[] EMPTY_ROW = new String[0];
+    public static final String[] CUT_ROW = { "" };
 
     private final CubeJoinedFlatTableEnrich flatDesc;
     private final MeasureDesc[] measureDescs;
     private final MeasureIngester<?>[] measureIngesters;
     private final int measureCount;
     private final Map<TblColRef, Dictionary<String>> dictionaryMap;
-    private final GTInfo gtInfo;
     protected List<byte[]> nullBytes;
 
-    public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap, GTInfo gtInfo) {
-        this.gtInfo = gtInfo;
+    public InputConverterUnitForRawData(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc,
+            Map<TblColRef, Dictionary<String>> dictionaryMap) {
         this.flatDesc = new CubeJoinedFlatTableEnrich(flatDesc, cubeDesc);
         this.measureCount = cubeDesc.getMeasures().size();
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
@@ -64,13 +64,7 @@ public class InMemCubeBuilderInputConverter {
         initNullBytes(cubeDesc);
     }
 
-    public final GTRecord convert(List<String> row) {
-        final GTRecord record = new GTRecord(gtInfo);
-        convert(row, record);
-        return record;
-    }
-
-    public final void convert(List<String> row, GTRecord record) {
+    public final void convert(String[] row, GTRecord record) {
         Object[] dimensions = buildKey(row);
         Object[] metricsValues = buildValue(row);
         Object[] recordValues = new Object[dimensions.length + metricsValues.length];
@@ -79,12 +73,28 @@ public class InMemCubeBuilderInputConverter {
         record.setValues(recordValues);
     }
 
-    private Object[] buildKey(List<String> row) {
+    public boolean ifEnd(String[] currentObject) {
+        return currentObject == EMPTY_ROW;
+    }
+
+    public boolean ifCut(String[] currentObject) {
+        return currentObject == CUT_ROW;
+    }
+
+    public String[] getEmptyUnit() {
+        return EMPTY_ROW;
+    }
+
+    public String[] getCutUnit() {
+        return CUT_ROW;
+    }
+
+    private Object[] buildKey(String[] row) {
         int keySize = flatDesc.getRowKeyColumnIndexes().length;
         Object[] key = new Object[keySize];
 
         for (int i = 0; i < keySize; i++) {
-            key[i] = row.get(flatDesc.getRowKeyColumnIndexes()[i]);
+            key[i] = row[flatDesc.getRowKeyColumnIndexes()[i]];
             if (key[i] != null && isNull(Bytes.toBytes((String) key[i]))) {
                 key[i] = null;
             }
@@ -93,7 +103,7 @@ public class InMemCubeBuilderInputConverter {
         return key;
     }
 
-    private Object[] buildValue(List<String> row) {
+    private Object[] buildValue(String[] row) {
         Object[] values = new Object[measureCount];
         for (int i = 0; i < measureCount; i++) {
             values[i] = buildValueOf(i, row);
@@ -101,7 +111,7 @@ public class InMemCubeBuilderInputConverter {
         return values;
     }
 
-    private Object buildValueOf(int idxOfMeasure, List<String> row) {
+    private Object buildValueOf(int idxOfMeasure, String[] row) {
         MeasureDesc measure = measureDescs[idxOfMeasure];
         FunctionDesc function = measure.getFunction();
         int[] colIdxOnFlatTable = flatDesc.getMeasureColumnIndexes()[idxOfMeasure];
@@ -117,7 +127,7 @@ public class InMemCubeBuilderInputConverter {
             if (function.isCount()) {
                 value = "1";
             } else if (param.isColumnType()) {
-                value = row.get(colIdxOnFlatTable[paramColIdx++]);
+                value = row[colIdxOnFlatTable[paramColIdx++]];
             } else {
                 value = param.getValue();
             }

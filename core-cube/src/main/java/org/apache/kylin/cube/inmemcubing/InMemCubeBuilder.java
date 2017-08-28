@@ -87,6 +87,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private CuboidResult baseResult;
     private Object[] totalSumForSanityCheck;
     private ICuboidCollector resultCollector;
+    private boolean ifBaseCuboidCollected = true;
 
     public InMemCubeBuilder(CuboidScheduler cuboidScheduler, IJoinedFlatTableDesc flatDesc,
             Map<TblColRef, Dictionary<String>> dictionaryMap) {
@@ -121,8 +122,10 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     @Override
-    public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
-        ConcurrentNavigableMap<Long, CuboidResult> result = build(input);
+    public <T> void build(BlockingQueue<T> input, InputConverterUnit<T> inputConverterUnit, ICuboidWriter output)
+            throws IOException {
+        ConcurrentNavigableMap<Long, CuboidResult> result = build(
+                RecordConsumeBlockingQueueController.getQueueController(inputConverterUnit, input));
         try {
             for (CuboidResult cuboidResult : result.values()) {
                 outputCuboid(cuboidResult.cuboidId, cuboidResult.table, output);
@@ -133,7 +136,11 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         }
     }
 
-    public ConcurrentNavigableMap<Long, CuboidResult> build(BlockingQueue<List<String>> input) throws IOException {
+    public <T> ConcurrentNavigableMap<Long, CuboidResult> build(RecordConsumeBlockingQueueController<T> input)
+            throws IOException {
+        if (input.inputConverterUnit instanceof InputConverterUnitForBaseCuboid) {
+            ifBaseCuboidCollected = false;
+        }
         final ConcurrentNavigableMap<Long, CuboidResult> result = new ConcurrentSkipListMap<Long, CuboidResult>();
         build(input, new ICuboidCollector() {
             @Override
@@ -150,7 +157,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         void collect(CuboidResult result);
     }
 
-    private void build(BlockingQueue<List<String>> input, ICuboidCollector collector) throws IOException {
+    private <T> void build(RecordConsumeBlockingQueueController<T> input, ICuboidCollector collector)
+            throws IOException {
         long startTime = System.currentTimeMillis();
         logger.info("In Mem Cube Build start, " + cubeDesc.getName());
 
@@ -326,7 +334,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         memBudget = new MemoryBudgetController(budget);
     }
 
-    private CuboidResult createBaseCuboid(BlockingQueue<List<String>> input) throws IOException {
+    private <T> CuboidResult createBaseCuboid(RecordConsumeBlockingQueueController<T> input) throws IOException {
         long startTime = System.currentTimeMillis();
         logger.info("Calculating base cuboid " + baseCuboidId);
 
@@ -356,10 +364,15 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache() / MemoryBudgetController.ONE_MB);
         logger.info("Wild estimate of base aggr cache is " + mbEstimateBaseAggrCache + " MB");
 
-        return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, 0);
+        return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, 0, ifBaseCuboidCollected);
     }
 
     private CuboidResult updateCuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB) {
+        return updateCuboidResult(cuboidId, table, nRows, timeSpent, aggrCacheMB, true);
+    }
+
+    private CuboidResult updateCuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB,
+            boolean ifCollect) {
         if (aggrCacheMB <= 0 && baseResult != null) {
             aggrCacheMB = (int) Math.round(//
                     (DERIVE_AGGR_CACHE_CONSTANT_FACTOR + DERIVE_AGGR_CACHE_VARIABLE_FACTOR * nRows / baseResult.nRows) //
@@ -369,7 +382,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         CuboidResult result = new CuboidResult(cuboidId, table, nRows, timeSpent, aggrCacheMB);
         taskCuboidCompleted.incrementAndGet();
 
-        resultCollector.collect(result);
+        if (ifCollect) {
+            resultCollector.collect(result);
+        }
         return result;
     }
 
@@ -506,64 +521,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         public int compareTo(CuboidTask o) {
             long comp = this.childCuboidId - o.childCuboidId;
             return comp < 0 ? -1 : (comp > 0 ? 1 : 0);
-        }
-    }
-
-    // ============================================================================
-
-    private class InputConverter implements IGTScanner {
-        GTInfo info;
-        GTRecord record;
-        BlockingQueue<List<String>> input;
-        final InMemCubeBuilderInputConverter inMemCubeBuilderInputConverter;
-
-        public InputConverter(GTInfo info, BlockingQueue<List<String>> input) {
-            this.info = info;
-            this.input = input;
-            this.record = new GTRecord(info);
-            this.inMemCubeBuilderInputConverter = new InMemCubeBuilderInputConverter(cubeDesc, flatDesc, dictionaryMap, info);
-        }
-
-        @Override
-        public Iterator<GTRecord> iterator() {
-            return new Iterator<GTRecord>() {
-
-                List<String> currentObject = null;
-
-                @Override
-                public boolean hasNext() {
-                    try {
-                        currentObject = input.take();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException(e);
-                    }
-                    return currentObject != null && currentObject.size() > 0;
-                }
-
-                @Override
-                public GTRecord next() {
-                    if (currentObject.size() == 0)
-                        throw new IllegalStateException();
-
-                    inMemCubeBuilderInputConverter.convert(currentObject, record);
-                    return record;
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
-        }
-
-        @Override
-        public void close() throws IOException {
-        }
-
-        @Override
-        public GTInfo getInfo() {
-            return info;
         }
     }
 }

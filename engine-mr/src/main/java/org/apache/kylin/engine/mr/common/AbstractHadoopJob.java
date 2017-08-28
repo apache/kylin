@@ -506,9 +506,19 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     }
 
     protected void attachSegmentMetadataWithDict(CubeSegment segment, Configuration conf) throws IOException {
+        attachSegmentMetadata(segment, conf, true, true);
+    }
+
+    protected void attachSegmentMetadata(CubeSegment segment, Configuration conf, boolean ifDictIncluded,
+            boolean ifStatsIncluded) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.addAll(JobRelatedMetaUtil.collectCubeMetadata(segment.getCubeInstance()));
-        dumpList.addAll(segment.getDictionaryPaths());
+        if (ifDictIncluded) {
+            dumpList.addAll(segment.getDictionaryPaths());
+        }
+        if (ifStatsIncluded) {
+            dumpList.add(segment.getStatisticsResourcePath());
+        }
         dumpKylinPropsAndMetadata(segment.getProject(), dumpList, segment.getConfig(), conf);
     }
 
