@@ -69,8 +69,11 @@ public class TupleFilterSerializer {
                 internalSerialize(rootFilter, decorator, buffer, cs);
                 break;
             } catch (BufferOverflowException e) {
-                logger.info("Buffer size {} cannot hold the filter, resizing to 4 times", bufferSize);
-                bufferSize *= 4;
+                if (bufferSize == (1 << 30))
+                    throw e;
+
+                logger.info("Buffer size {} cannot hold the filter, resizing to 2 times", bufferSize);
+                bufferSize = bufferSize << 1;
             }
         }
         byte[] result = new byte[buffer.position()];
@@ -78,7 +81,8 @@ public class TupleFilterSerializer {
         return result;
     }
 
-    private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer, IFilterCodeSystem<?> cs) {
+    private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer,
+            IFilterCodeSystem<?> cs) {
         if (decorator != null) { // give decorator a chance to manipulate the output filter
             filter = decorator.onSerialize(filter);
         }
@@ -203,7 +207,8 @@ public class TupleFilterSerializer {
             if (extendedTupleFilters.containsKey(op)) {
                 try {
                     filter = (TupleFilter) extendedTupleFilters.get(op).getConstructor().newInstance();
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException
+                        | NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 }
             } else {
