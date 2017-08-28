@@ -187,7 +187,7 @@ public class Message {
     }
 
     public String getUPDATE_MODEL_KEY_FIELD() {
-        return "Dimensions and measures in use and existing join tree cannot be modified.";
+        return "Model cannot save because there are dimensions, measures or join relations modified to be inconsistent with existing cube.";
     }
 
     public String getBROKEN_MODEL_DESC() {

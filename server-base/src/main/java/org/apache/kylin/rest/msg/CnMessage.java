@@ -187,7 +187,7 @@ public class CnMessage extends Message {
     }
 
     public String getUPDATE_MODEL_KEY_FIELD() {
-        return "已使用的维度和度量与现有的连接树不能被修改";
+        return "由于维度、度量或者连接关系被修改导致与存在的cube定义不一致，因而当前模型无法保存。";
     }
 
     public String getBROKEN_MODEL_DESC() {
