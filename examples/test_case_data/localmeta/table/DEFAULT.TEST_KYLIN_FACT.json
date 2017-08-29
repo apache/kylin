@@ -44,7 +44,7 @@
   }, {
     "id" : "8",
     "name" : "SELLER_ID",
-    "datatype" : "bigint",
+    "datatype" : "int",
     "data_gen" : "RAND||10000000|10001000",
     "index": "T"
   }, {

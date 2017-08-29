@@ -234,6 +234,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testJoinCastQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_join", null, true);
+    }
+
+    @Test
     public void testCachedQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_cache", null, true);
     }
