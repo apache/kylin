@@ -58,7 +58,7 @@ public class ModelServiceTest extends ServiceTestBase {
         DataModelDesc deserialize = MetadataManager.MODELDESC_SERIALIZER.deserialize(new DataInputStream(bais));
 
         deserialize.setOwner("somebody");
-        DataModelDesc dataModelDesc = modelService.updateModelAndDesc(deserialize);
+        DataModelDesc dataModelDesc = modelService.updateModelAndDesc("default", deserialize);
         Assert.assertTrue(dataModelDesc.getOwner().equals("somebody"));
     }
 
@@ -77,7 +77,7 @@ public class ModelServiceTest extends ServiceTestBase {
         Field field = ComputedColumnDesc.class.getDeclaredField("comment");
         field.setAccessible(true);
         field.set(deserialize.getComputedColumnDescs().get(0), "change on comment is okay");
-        DataModelDesc dataModelDesc = modelService.updateModelAndDesc(deserialize);
+        DataModelDesc dataModelDesc = modelService.updateModelAndDesc("default", deserialize);
     }
 
     @Test
@@ -98,7 +98,7 @@ public class ModelServiceTest extends ServiceTestBase {
         Field field = ComputedColumnDesc.class.getDeclaredField("expression");
         field.setAccessible(true);
         field.set(deserialize.getComputedColumnDescs().get(0), "another expression");
-        DataModelDesc dataModelDesc = modelService.updateModelAndDesc(deserialize);
+        DataModelDesc dataModelDesc = modelService.updateModelAndDesc("default", deserialize);
     }
 
     @Test
@@ -119,7 +119,7 @@ public class ModelServiceTest extends ServiceTestBase {
         Field field = ComputedColumnDesc.class.getDeclaredField("columnName");
         field.setAccessible(true);
         field.set(deserialize.getComputedColumnDescs().get(0), "cal_dt");
-        DataModelDesc dataModelDesc = modelService.updateModelAndDesc(deserialize);
+        DataModelDesc dataModelDesc = modelService.updateModelAndDesc("default", deserialize);
     }
 
     @Test

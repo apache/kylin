@@ -854,11 +854,11 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public String getProject() {
-        return ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProjectOfModel(this.getName()).getName();
+        return ProjectManager.getInstance(getConfig()).getProjectOfModel(this.getName()).getName();
     }
 
     public ProjectInstance getProjectInstance() {
-        return ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProjectOfModel(this.getName());
+        return ProjectManager.getInstance(getConfig()).getProjectOfModel(this.getName());
     }
 
     public static DataModelDesc getCopyOf(DataModelDesc orig) {

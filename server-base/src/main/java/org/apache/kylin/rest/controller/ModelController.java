@@ -131,7 +131,7 @@ public class ModelController extends BasicController {
             return modelRequest;
         }
         try {
-            modelDesc = modelService.updateModelAndDesc(modelDesc);
+            modelDesc = modelService.updateModelAndDesc(modelRequest.getProject(), modelDesc);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this model.");
         } catch (Exception e) {

@@ -143,8 +143,8 @@ public class ModelService extends BasicService {
         return createdDesc;
     }
 
-    public DataModelDesc updateModelAndDesc(DataModelDesc desc) throws IOException {
-        aclEvaluate.hasProjectWritePermission(desc.getProjectInstance());
+    public DataModelDesc updateModelAndDesc(String project, DataModelDesc desc) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
         getMetadataManager().updateDataModelDesc(desc);
         return desc;
     }
@@ -428,7 +428,7 @@ public class ModelService extends BasicService {
     }
 
     public DataModelDesc updateModelToResourceStore(DataModelDesc modelDesc, String projectName) throws IOException {
-        aclEvaluate.hasProjectWritePermission(getProjectManager().getProject(projectName));
+        aclEvaluate.checkProjectWritePermission(projectName);
         Message msg = MsgPicker.getMsg();
 
         modelDesc.setDraft(false);
@@ -445,7 +445,7 @@ public class ModelService extends BasicService {
                 if (!error.isEmpty()) {
                     throw new BadRequestException(error);
                 }
-                modelDesc = updateModelAndDesc(modelDesc);
+                modelDesc = updateModelAndDesc(projectName, modelDesc);
             }
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException(msg.getUPDATE_MODEL_NO_RIGHT());
