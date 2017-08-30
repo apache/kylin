@@ -70,7 +70,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 /**
@@ -261,14 +260,12 @@ public class KylinTestBase {
 
             return output(resultSet, needDisplay);
         } catch (SQLException sqlException) {
-            List<List<String>> results = Lists.newArrayList();
-            List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
-            boolean b = PushDownUtil.doPushDownQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", results,
-                    columnMetas, sqlException);
-            if (!b) {
+            Pair<List<List<String>>, List<SelectedColumnMeta>> result = PushDownUtil
+                    .tryPushDownQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", sqlException);
+            if (result == null) {
                 throw sqlException;
             }
-            return results.size();
+            return result.getFirst().size();
         } finally {
             if (resultSet != null) {
                 try {

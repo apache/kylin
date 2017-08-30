@@ -63,6 +63,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -187,22 +188,18 @@ public class QueryService extends BasicService {
         // non select operations, only supported when enable pushdown
         logger.debug("Query pushdown enabled, redirect the query to alternative engine. ");
         Connection conn = null;
-        List<List<String>> results = Lists.newArrayList();
-        boolean isPushDown;
         try {
             conn = QueryConnection.getConnection(sqlRequest.getProject());
-            isPushDown = PushDownUtil.doPushDownQuery(sqlRequest.getProject(), sqlRequest.getSql(), conn.getSchema(), null, null, null);
+            Pair<List<List<String>>, List<SelectedColumnMeta>> r = PushDownUtil
+                    .tryPushDownQuery(sqlRequest.getProject(), sqlRequest.getSql(), conn.getSchema(), null);
+            return buildSqlResponse(true, r.getFirst(), r.getSecond());
+            
         } catch (Exception e) {
             logger.error("failed to do pushdown, error is " + e.getMessage(), e);
             throw new InternalErrorException(e);
         } finally {
             close(null, null, conn);
         }
-        List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
-        columnMetas.add(new SelectedColumnMeta(false, false, false, false, 1, false, Integer.MAX_VALUE, "c0", "c0",
-                null, null, null, Integer.MAX_VALUE, 128, 1, "char", false, false, false));
-        SQLResponse sqlResponse = getSqlResponse(isPushDown, results, columnMetas);
-        return sqlResponse;
     }
 
     public void saveQuery(final String creator, final Query query) throws IOException {
@@ -791,7 +788,7 @@ public class QueryService extends BasicService {
     private SQLResponse execute(String correctedSql, SQLRequest sqlRequest, Connection conn) throws Exception {
         Statement stat = null;
         ResultSet resultSet = null;
-        Boolean isPushDown = false;
+        boolean isPushDown = false;
 
         List<List<String>> results = Lists.newArrayList();
         List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
@@ -830,17 +827,22 @@ public class QueryService extends BasicService {
 
                 results.add(oneRow);
             }
+            
         } catch (SQLException sqlException) {
-            isPushDown = PushDownUtil.doPushDownQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(), results,
-                    columnMetas, sqlException);
-            if (!isPushDown) {
+            Pair<List<List<String>>, List<SelectedColumnMeta>> r = PushDownUtil
+                    .tryPushDownQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(), sqlException);
+            if (r == null)
                 throw sqlException;
-            }
+            
+            isPushDown = true;
+            results = r.getFirst();
+            columnMetas = r.getSecond();
+            
         } finally {
-            close(resultSet, stat, null);//conn is passed in, not my duty to close
+            close(resultSet, stat, null); //conn is passed in, not my duty to close
         }
 
-        return getSqlResponse(isPushDown, results, columnMetas);
+        return buildSqlResponse(isPushDown, results, columnMetas);
     }
 
     private SQLResponse getPrepareOnlySqlResponse(String correctedSql, Connection conn, Boolean isPushDown,
@@ -883,10 +885,10 @@ public class QueryService extends BasicService {
             CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(false);
         }
 
-        return getSqlResponse(isPushDown, results, columnMetas);
+        return buildSqlResponse(isPushDown, results, columnMetas);
     }
 
-    private SQLResponse getSqlResponse(Boolean isPushDown, List<List<String>> results,
+    private SQLResponse buildSqlResponse(Boolean isPushDown, List<List<String>> results,
             List<SelectedColumnMeta> columnMetas) {
 
         boolean isPartialResult = false;
@@ -918,6 +920,7 @@ public class QueryService extends BasicService {
      * @param param
      * @throws SQLException
      */
+    @SuppressWarnings("unused")
     private void setParam(PreparedStatement preparedState, int index, PrepareSqlRequest.StateParam param)
             throws SQLException {
         boolean isNull = (null == param.getValue());

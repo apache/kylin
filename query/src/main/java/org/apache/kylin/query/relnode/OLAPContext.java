@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -111,6 +112,7 @@ public class OLAPContext {
     public OLAPSchema olapSchema = null;
     public OLAPTableScan firstTableScan = null; // to be fact table scan except "select * from lookupTable"
     public Set<OLAPTableScan> allTableScans = new HashSet<>();
+    public Set<OLAPJoinRel> allOlapJoins = new HashSet<>();
     public Set<MeasureDesc> involvedMeasure = new HashSet<>();
     public TupleInfo returnTupleInfo = null;
     public boolean afterAggregate = false;
@@ -203,14 +205,7 @@ public class OLAPContext {
     // ============================================================================
 
     public interface IAccessController {
-        /*
-        * @return {TupleFilter} if the filter condition exists
-        * @OLAPAuthentication the authentication info
-        * @columns required columns from logic query plan
-        * @realization the cube used in this query
-        * @OLAPInsufficientException no rights exception
-        */
-        public TupleFilter check(OLAPAuthentication olapAuthentication, Collection<TblColRef> columns, IRealization realization) throws IllegalArgumentException;
+        public void check(List<OLAPContext> contexts, KylinConfig config) throws IllegalStateException;
     }
 
 }

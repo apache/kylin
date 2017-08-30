@@ -47,70 +47,78 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
+import org.apache.kylin.query.routing.RoutingIndicatorException;
 import org.apache.kylin.source.adhocquery.IPushDownConverter;
 import org.apache.kylin.source.adhocquery.IPushDownRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+
 public class PushDownUtil {
     private static final Logger logger = LoggerFactory.getLogger(PushDownUtil.class);
 
-    public static boolean doPushDownQuery(String project, String sql, String defaultSchema, List<List<String>> results,
-            List<SelectedColumnMeta> columnMetas, SQLException sqlException) throws Exception {
+    public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownQuery(String project, String sql,
+            String defaultSchema, SQLException sqlException) throws Exception {
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        if (!kylinConfig.isPushDownEnabled()) {
-            return false;
+
+        if (!kylinConfig.isPushDownEnabled())
+            return null;
+
+        if (!isExpectedCause(sqlException))
+            return null;
+
+        logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
+        IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
+        runner.init(kylinConfig);
+        logger.debug("Query Pushdown runner {}", runner);
+
+        // default schema in calcite does not apply to other engines.
+        // since this is a universql requirement, it's not implemented as a converter
+        if (defaultSchema != null && !defaultSchema.equals("DEFAULT")) {
+            String completed = sql;
+            try {
+                completed = schemaCompletion(sql, defaultSchema);
+            } catch (SqlParseException e) {
+                // fail to parse the pushdown sql, ignore
+                logger.debug("fail to do schema completion on the pushdown sql, ignore it.", e.getMessage());
+            }
+            if (!sql.equals(completed)) {
+                logger.info("the query is converted to {} after schema completion", completed);
+                sql = completed;
+            }
         }
-        boolean isSelect = QueryUtil.isSelectStatement(sql);
-        boolean isExpectedCause = true;
-        
-        if (sqlException != null) {
-            Throwable rootCause = ExceptionUtils.getRootCause(sqlException);
-            isExpectedCause = rootCause != null && ((rootCause.getClass().equals(NoRealizationFoundException.class)) || (rootCause.getClass().equals(SqlValidatorException.class)));
+
+        for (String converterName : kylinConfig.getPushDownConverterClassNames()) {
+            IPushDownConverter converter = (IPushDownConverter) ClassUtil.newInstance(converterName);
+            String converted = converter.convert(sql, project, defaultSchema);
+            if (!sql.equals(converted)) {
+                logger.info("the query is converted to {} after applying converter {}", converted, converterName);
+                sql = converted;
+            }
         }
-        
-        if (isExpectedCause) {
 
-            logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
-            IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
-            runner.init(kylinConfig);
-            logger.debug("Query Pushdown runner {}", runner);
+        List<List<String>> returnRows = Lists.newArrayList();
+        List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
 
-            // default schema in calcite does not apply to other engines.
-            // since this is a universql requirement, it's not implemented as a converter
-            if (defaultSchema != null && !defaultSchema.equals("DEFAULT")) {
-                String completed = sql;
-                try {
-                    completed = schemaCompletion(sql, defaultSchema);
-                } catch (SqlParseException e) {
-                    // fail to parse the pushdown sql, ignore
-                    logger.debug("fail to do schema completion on the pushdown sql, ignore it.", e.getMessage());
-                }
-                if (!sql.equals(completed)) {
-                    logger.info("the query is converted to {} after schema completion", completed);
-                    sql = completed;
-                }
-            }
-
-            for (String converterName : kylinConfig.getPushDownConverterClassNames()) {
-                IPushDownConverter converter = (IPushDownConverter) ClassUtil.newInstance(converterName);
-                String converted = converter.convert(sql, project, defaultSchema);
-                if (!sql.equals(converted)) {
-                    logger.info("the query is converted to {} after applying converter {}", converted, converterName);
-                    sql = converted;
-                }
-            }
-
-            if (isSelect == true) {
-                runner.executeQuery(sql, results, columnMetas);
-            } else {
-                runner.executeUpdate(sql);
-            }
-            return true;
+        if (QueryUtil.isSelectStatement(sql)) {
+            runner.executeQuery(sql, returnRows, returnColumnMeta);
         } else {
-            return false;
+            runner.executeUpdate(sql);
         }
+        return Pair.newPair(returnRows, returnColumnMeta);
+    }
+
+    private static boolean isExpectedCause(SQLException sqlException) {
+        Preconditions.checkArgument(sqlException != null);
+
+        Throwable rootCause = ExceptionUtils.getRootCause(sqlException);
+        return rootCause != null && //
+                (rootCause instanceof NoRealizationFoundException //
+                        || rootCause instanceof SqlValidatorException // 
+                        || rootCause instanceof RoutingIndicatorException);
     }
 
     static String schemaCompletion(String inputSql, String schema) throws SqlParseException {

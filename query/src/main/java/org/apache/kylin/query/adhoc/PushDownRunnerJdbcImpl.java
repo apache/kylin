@@ -93,22 +93,19 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
     }
 
     @Override
-    public boolean executeUpdate(String sql) throws Exception {
+    public void executeUpdate(String sql) throws Exception {
         Statement statement = null;
         Connection connection = this.getConnection();
 
-        boolean success;
         try {
             statement = connection.createStatement();
             statement.execute(sql);
-            success = true;
         } catch (SQLException sqlException) {
             throw sqlException;
         } finally {
             DBUtils.closeQuietly(statement);
             closeConnection(connection);
         }
-        return success;
     }
 
     private Connection getConnection() {

@@ -47,6 +47,6 @@ public interface IPushDownRunner {
      *
      * @throws Exception if running pushdown fails
      */
-    boolean executeUpdate(String sql) throws Exception;
+    void executeUpdate(String sql) throws Exception;
 
 }

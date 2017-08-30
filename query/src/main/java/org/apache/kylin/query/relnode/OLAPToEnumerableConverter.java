@@ -19,36 +19,24 @@
 package org.apache.kylin.query.relnode;
 
 import java.util.List;
-import java.util.Set;
 
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
-import org.apache.calcite.adapter.enumerable.PhysType;
-import org.apache.calcite.adapter.enumerable.PhysTypeImpl;
-import org.apache.calcite.linq4j.tree.Blocks;
-import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterImpl;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.metadata.filter.ColumnTupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.routing.RealizationChooser;
-import org.apache.kylin.query.schema.OLAPTable;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
  */
@@ -81,14 +69,11 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         OLAPRel.OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
         olapImplementor.visitChild(getInput(), this);
 
-        // identify model
+        // identify model & realization
         List<OLAPContext> contexts = listContextsHavingScan();
         RealizationChooser.selectRealization(contexts);
 
-        // identify realization for each context
-        for (OLAPContext context : contexts) {
-            doAccessControl(context);
-        }
+        doAccessControl(contexts);
 
         // rewrite query if necessary
         OLAPRel.RewriteImplementor rewriteImplementor = new OLAPRel.RewriteImplementor();
@@ -122,47 +107,13 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         return result;
     }
 
-    private void doAccessControl(OLAPContext context) {
-        String controllerCls = KylinConfig.getInstanceFromEnv().getQueryAccessController();
+    private void doAccessControl(List<OLAPContext> contexts) {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String controllerCls = config.getQueryAccessController();
         if (null != controllerCls && !controllerCls.isEmpty()) {
             OLAPContext.IAccessController accessController = (OLAPContext.IAccessController) ClassUtil.newInstance(controllerCls);
-            TupleFilter tupleFilter = accessController.check(context.olapAuthen, context.allColumns, context.realization);
-            if (null != tupleFilter) {
-                context.filterColumns.addAll(collectColumns(tupleFilter));
-                context.allColumns.addAll(collectColumns(tupleFilter));
-                context.filter = TupleFilter.and(context.filter, tupleFilter);
-            }
+            accessController.check(contexts, config);
         }
-    }
-
-    private Set<TblColRef> collectColumns(TupleFilter filter) {
-        Set<TblColRef> ret = Sets.newHashSet();
-        collectColumnsRecursively(filter, ret);
-        return ret;
-    }
-
-    private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
-        if (filter == null)
-            return;
-
-        if (filter instanceof ColumnTupleFilter) {
-            collector.add(((ColumnTupleFilter) filter).getColumn());
-        }
-        for (TupleFilter child : filter.getChildren()) {
-            collectColumnsRecursively(child, collector);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    private Result buildHiveResult(EnumerableRelImplementor enumImplementor, Prefer pref, OLAPContext context) {
-        RelDataType hiveRowType = getRowType();
-
-        context.setReturnTupleInfo(hiveRowType, null);
-        PhysType physType = PhysTypeImpl.of(enumImplementor.getTypeFactory(), hiveRowType, pref.preferArray());
-
-        RelOptTable factTable = context.firstTableScan.getTable();
-        Result result = enumImplementor.result(physType, Blocks.toBlock(Expressions.call(factTable.getExpression(OLAPTable.class), "executeHiveQuery", enumImplementor.getRootExpression())));
-        return result;
     }
 
 }

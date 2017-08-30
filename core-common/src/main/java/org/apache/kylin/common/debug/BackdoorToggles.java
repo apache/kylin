@@ -40,12 +40,29 @@ public class BackdoorToggles {
         _backdoorToggles.set(toggles);
     }
 
+    public static void addToggle(String key, String value) {
+        Map<String, String> map = _backdoorToggles.get();
+        if (map == null) {
+            setToggles(Maps.<String, String> newHashMap());
+        }
+        _backdoorToggles.get().put(key, value);
+    }
+    
     public static void addToggles(Map<String, String> toggles) {
         Map<String, String> map = _backdoorToggles.get();
         if (map == null) {
             setToggles(Maps.<String, String> newHashMap());
         }
         _backdoorToggles.get().putAll(toggles);
+    }
+    
+    // try avoid using this generic method
+    public static String getToggle(String key) {
+        Map<String, String> map = _backdoorToggles.get();
+        if (map == null)
+            return null;
+        
+        return map.get(key);
     }
 
     public static String getCoprocessorBehavior() {
@@ -109,7 +126,7 @@ public class BackdoorToggles {
     public static boolean getPrepareOnly() {
         return getBoolean(DEBUG_TOGGLE_PREPARE_ONLY);
     }
-
+    
     private static String getString(String key) {
         Map<String, String> toggles = _backdoorToggles.get();
         if (toggles == null) {
