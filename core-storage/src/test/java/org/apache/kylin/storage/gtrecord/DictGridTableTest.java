@@ -426,7 +426,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
         // $1<="9" round down to FALSE
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
-        assertEquals("AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], []]", newFilter.toString());
+        assertEquals(ConstantTupleFilter.FALSE, newFilter);
     }
 
     @Test
