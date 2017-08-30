@@ -39,6 +39,9 @@ public class ExecutablePO extends RootPersistentEntity {
     @JsonProperty("tasks")
     private List<ExecutablePO> tasks;
 
+    @JsonProperty("tasks_check")
+    private List<ExecutablePO> tasksForCheck;
+
     @JsonProperty("type")
     private String type;
 
@@ -59,6 +62,14 @@ public class ExecutablePO extends RootPersistentEntity {
 
     public void setTasks(List<ExecutablePO> tasks) {
         this.tasks = tasks;
+    }
+
+    public List<ExecutablePO> getTasksForCheck() {
+        return tasksForCheck;
+    }
+
+    public void setTasksForCheck(List<ExecutablePO> tasksForCheck) {
+        this.tasksForCheck = tasksForCheck;
     }
 
     public String getType() {

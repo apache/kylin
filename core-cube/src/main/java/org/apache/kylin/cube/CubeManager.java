@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -76,6 +77,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -406,6 +408,10 @@ public class CubeManager implements IRealizationProvider {
             cube.setCuboids(update.getCuboids());
         }
 
+        if (update.getCuboidsRecommend() != null) {
+            cube.setCuboidsRecommend(update.getCuboidsRecommend());
+        }
+
         try {
             getStore().putResource(cube.getResourcePath(), cube, CUBE_SERIALIZER);
         } catch (IllegalStateException ise) {
@@ -483,8 +489,7 @@ public class CubeManager implements IRealizationProvider {
         return newSegment;
     }
 
-    public CubeSegment refreshSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange)
-            throws IOException {
+    public CubeSegment refreshSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange) throws IOException {
         checkInputRanges(tsRange, segRange);
         checkBuildingSegment(cube);
 
@@ -517,6 +522,27 @@ public class CubeManager implements IRealizationProvider {
         updateCube(cubeBuilder);
 
         return newSegment;
+    }
+
+    public CubeSegment[] optimizeSegments(CubeInstance cube, Set<Long> cuboidsRecommend) throws IOException {
+        checkReadyForOptimize(cube);
+
+        List<CubeSegment> readySegments = cube.getSegments(SegmentStatusEnum.READY);
+        CubeSegment[] optimizeSegments = new CubeSegment[readySegments.size()];
+        int i = 0;
+        for (CubeSegment segment : readySegments) {
+            CubeSegment newSegment = newSegment(cube, segment.getTSRange(), null);
+            validateNewSegments(cube, newSegment);
+
+            optimizeSegments[i++] = newSegment;
+        }
+
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
+        cubeBuilder.setCuboidsRecommend(cuboidsRecommend);
+        cubeBuilder.setToAddSegs(optimizeSegments);
+        updateCube(cubeBuilder);
+
+        return optimizeSegments;
     }
 
     public CubeSegment mergeSegments(CubeInstance cube, TSRange tsRange, SegmentRange segRange, boolean force)
@@ -594,8 +620,15 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private void checkBuildingSegment(CubeInstance cube) {
-        int maxBuldingSeg = cube.getConfig().getMaxBuildingSegments();
-        if (cube.getBuildingSegments().size() >= maxBuldingSeg) {
+        checkBuildingSegment(cube, cube.getConfig().getMaxBuildingSegments());
+    }
+
+    public void checkReadyForOptimize(CubeInstance cube) {
+        checkBuildingSegment(cube, 1);
+    }
+
+    private void checkBuildingSegment(CubeInstance cube, int maxBuildingSeg) {
+        if (cube.getBuildingSegments().size() >= maxBuildingSeg) {
             throw new IllegalStateException(
                     "There is already " + cube.getBuildingSegments().size() + " building segment; ");
         }
@@ -722,6 +755,49 @@ public class CubeManager implements IRealizationProvider {
         CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()]))
                 .setToUpdateSegs(newSegment).setStatus(RealizationStatusEnum.READY);
+        updateCube(cubeBuilder);
+    }
+
+    public void promoteNewlyOptimizeSegments(CubeInstance cube, CubeSegment... optimizedSegments) throws IOException {
+        for (CubeSegment seg : optimizedSegments) {
+            seg.setStatus(SegmentStatusEnum.READY_PENDING);
+        }
+
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
+        cubeBuilder.setToUpdateSegs(optimizedSegments);
+        updateCube(cubeBuilder);
+    }
+
+    public void promoteCheckpointOptimizeSegments(CubeInstance cube, Map<Long, Long> recommendCuboids,
+            CubeSegment... optimizedSegments) throws IOException {
+        if (cube.getSegments().size() != optimizedSegments.length * 2) {
+            throw new IllegalStateException("For cube " + cube
+                    + ", every READY segment should be optimized and all segments should be READY before optimizing");
+        }
+        CubeSegment[] originalSegments = new CubeSegment[optimizedSegments.length];
+        int i = 0;
+        for (CubeSegment seg : optimizedSegments) {
+            originalSegments[i++] = cube.getOriginalSegmentToOptimize(seg);
+
+            if (StringUtils.isBlank(seg.getStorageLocationIdentifier()))
+                throw new IllegalStateException(
+                        "For cube " + cube + ", segment " + seg + " missing StorageLocationIdentifier");
+
+            if (StringUtils.isBlank(seg.getLastBuildJobID()))
+                throw new IllegalStateException("For cube " + cube + ", segment " + seg + " missing LastBuildJobID");
+
+            seg.setStatus(SegmentStatusEnum.READY);
+        }
+
+        logger.info("Promoting cube " + cube + ", new segments " + Arrays.toString(optimizedSegments)
+                + ", to remove segments " + originalSegments);
+
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
+        cubeBuilder.setToRemoveSegs(originalSegments) //
+                .setToUpdateSegs(optimizedSegments) //
+                .setStatus(RealizationStatusEnum.READY) //
+                .setCuboids(recommendCuboids) //
+                .setCuboidsRecommend(Sets.<Long> newHashSet());
         updateCube(cubeBuilder);
     }
 

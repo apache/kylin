@@ -95,7 +95,7 @@ public abstract class KVGTRecordWriter implements ICuboidWriter {
     protected abstract void writeAsKeyValue(ByteArrayWritable key, ByteArrayWritable value) throws IOException;
 
     private void initVariables(Long cuboidId) {
-        rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, Cuboid.findById(cubeSegment, cuboidId));
+        rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, Cuboid.findForMandatory(cubeDesc, cuboidId));
         keyBuf = rowKeyEncoder.createBuf();
 
         dimensions = Long.bitCount(cuboidId);

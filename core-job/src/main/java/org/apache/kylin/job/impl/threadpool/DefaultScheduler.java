@@ -88,8 +88,9 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         nRunning++;
                         continue;
                     }
-                    final Output output = executableManager.getOutput(id);
-                    if ((output.getState() != ExecutableState.READY)) {
+                    final AbstractExecutable executable = executableManager.getJob(id);
+                    if (!executable.isReady()) {
+                        final Output output = executableManager.getOutput(id);
                         // logger.debug("Job id:" + id + " not runnable");
                         if (output.getState() == ExecutableState.DISCARDED) {
                             nDiscarded++;
@@ -105,10 +106,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         continue;
                     }
                     nReady++;
-                    AbstractExecutable executable = null;
                     String jobDesc = null;
                     try {
-                        executable = executableManager.getJob(id);
                         jobDesc = executable.toString();
                         logger.info(jobDesc + " prepare to schedule");
                         context.addRunningJob(executable);

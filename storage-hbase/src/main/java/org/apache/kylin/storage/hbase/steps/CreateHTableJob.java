@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
@@ -67,6 +68,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
     CubeInstance cube = null;
     CubeDesc cubeDesc = null;
     String segmentID = null;
+    String cuboidModeName = null;
     KylinConfig kylinConfig;
     Path partitionFilePath;
 
@@ -78,6 +80,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_PARTITION_FILE_PATH);
         options.addOption(OPTION_STATISTICS_ENABLED);
+        options.addOption(OPTION_CUBOID_MODE);
         parseOptions(options, args);
 
         partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
@@ -89,13 +92,27 @@ public class CreateHTableJob extends AbstractHadoopJob {
         cubeDesc = cube.getDescriptor();
         kylinConfig = cube.getConfig();
         segmentID = getOptionValue(OPTION_SEGMENT_ID);
+        cuboidModeName = getOptionValue(OPTION_CUBOID_MODE);
         CubeSegment cubeSegment = cube.getSegmentById(segmentID);
 
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
 
         byte[][] splitKeys;
         if (statsEnabled) {
-            final Map<Long, Double> cuboidSizeMap = new CubeStatsReader(cubeSegment, kylinConfig).getCuboidSizeMap();
+            Map<Long, Double> cuboidSizeMap = new CubeStatsReader(cubeSegment, null, kylinConfig).getCuboidSizeMap();
+            Set<Long> buildingCuboids = cube.getCuboidsByMode(cuboidModeName);
+            if (buildingCuboids != null && !buildingCuboids.isEmpty()) {
+                Map<Long, Double> optimizedCuboidSizeMap = Maps.newHashMapWithExpectedSize(buildingCuboids.size());
+                for (Long cuboid : buildingCuboids) {
+                    Double cuboidSize = cuboidSizeMap.get(cuboid);
+                    if (cuboidSize == null) {
+                        logger.warn(cuboid + "cuboid's size is null will replace by 0");
+                        cuboidSize = 0.0;
+                    }
+                    optimizedCuboidSizeMap.put(cuboid, cuboidSize);
+                }
+                cuboidSizeMap = optimizedCuboidSizeMap;
+            }
             splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment, partitionFilePath.getParent());
         } else {
             splitKeys = getRegionSplits(conf, partitionFilePath);

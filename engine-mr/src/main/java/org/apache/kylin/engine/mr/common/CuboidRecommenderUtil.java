@@ -39,20 +39,21 @@ public class CuboidRecommenderUtil {
             return null;
         }
 
-        CubeStatsReader cubeStatsReader = new CubeStatsReader(segment, segment.getConfig());
+        CubeStatsReader cubeStatsReader = new CubeStatsReader(segment, null, segment.getConfig());
         if (cubeStatsReader.getCuboidRowEstimatesHLL() == null
                 || cubeStatsReader.getCuboidRowEstimatesHLL().isEmpty()) {
             logger.info("Cuboid Statistics is not enabled.");
             return null;
         }
-        long baseCuboid = segment.getCuboidScheduler().getBaseCuboidId();
+        CubeInstance cube = segment.getCubeInstance();
+        long baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
         if (cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == null
                 || cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == 0L) {
             logger.info("Base cuboid count in cuboid statistics is 0.");
             return null;
         }
 
-        String key = segment.getCubeInstance().getName();
+        String key = cube.getName();
         CuboidStats cuboidStats = new CuboidStats.Builder(key, baseCuboid, cubeStatsReader.getCuboidRowEstimatesHLL(),
                 cubeStatsReader.getCuboidSizeMap()).build();
         return CuboidRecommender.getInstance().getRecommendCuboidList(cuboidStats, segment.getConfig(), false);
@@ -81,20 +82,21 @@ public class CuboidRecommenderUtil {
             return null;
         }
 
-        CubeStatsReader cubeStatsReader = new CubeStatsReader(segment, segment.getConfig());
+        CubeStatsReader cubeStatsReader = new CubeStatsReader(segment, null, segment.getConfig());
         if (cubeStatsReader.getCuboidRowEstimatesHLL() == null
                 || cubeStatsReader.getCuboidRowEstimatesHLL().isEmpty()) {
             logger.info("Cuboid Statistics is not enabled.");
             return null;
         }
-        long baseCuboid = segment.getCuboidScheduler().getBaseCuboidId();
+        CubeInstance cube = segment.getCubeInstance();
+        long baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
         if (cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == null
                 || cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == 0L) {
             logger.info("Base cuboid count in cuboid statistics is 0.");
             return null;
         }
 
-        String key = segment.getCubeInstance().getName() + "-" + segment.getName();
+        String key = cube.getName() + "-" + segment.getName();
         CuboidStats cuboidStats = new CuboidStats.Builder(key, baseCuboid, cubeStatsReader.getCuboidRowEstimatesHLL(),
                 cubeStatsReader.getCuboidSizeMap()).setHitFrequencyMap(hitFrequencyMap)
                         .setRollingUpCountSourceMap(rollingUpCountSourceMap,

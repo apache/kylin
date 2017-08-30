@@ -21,13 +21,13 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.cube.cuboid.CuboidScheduler;
+import org.apache.kylin.cube.cuboid.CuboidUtil;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HLLCounter;
@@ -37,7 +37,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -56,7 +55,6 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
 
 
     protected boolean collectStatistics = false;
-    protected CuboidScheduler cuboidScheduler = null;
     protected int nRowKey;
     private Integer[][] allCuboidsBitSet = null;
     private HLLCounter[] allCuboidsHLL = null;
@@ -86,15 +84,11 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
             samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
-            cuboidScheduler = cubeDesc.getInitialCuboidScheduler();
             nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
 
-            List<Long> cuboidIdList = Lists.newArrayList();
-            List<Integer[]> allCuboidsBitSetList = Lists.newArrayList();
-            addCuboidBitSet(baseCuboidId, allCuboidsBitSetList, cuboidIdList);
-
-            allCuboidsBitSet = allCuboidsBitSetList.toArray(new Integer[cuboidIdList.size()][]);
-            cuboidIds = cuboidIdList.toArray(new Long[cuboidIdList.size()]);
+            Set<Long> cuboidIdSet = cubeSeg.getCuboidScheduler().getAllCuboidIds();
+            cuboidIds = cuboidIdSet.toArray(new Long[cuboidIdSet.size()]);
+            allCuboidsBitSet = CuboidUtil.getCuboidBitSet(cuboidIds, nRowKey);
 
             allCuboidsHLL = new HLLCounter[cuboidIds.length];
             for (int i = 0; i < cuboidIds.length; i++) {
@@ -127,27 +121,6 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
             }
         }
 
-    }
-
-    private void addCuboidBitSet(long cuboidId, List<Integer[]> allCuboidsBitSet, List<Long> allCuboids) {
-        allCuboids.add(cuboidId);
-        Integer[] indice = new Integer[Long.bitCount(cuboidId)];
-
-        long mask = Long.highestOneBit(baseCuboidId);
-        int position = 0;
-        for (int i = 0; i < nRowKey; i++) {
-            if ((mask & cuboidId) > 0) {
-                indice[position] = i;
-                position++;
-            }
-            mask = mask >> 1;
-        }
-
-        allCuboidsBitSet.add(indice);
-        Collection<Long> children = cuboidScheduler.getSpanningCuboid(cuboidId);
-        for (Long childId : children) {
-            addCuboidBitSet(childId, allCuboidsBitSet, allCuboids);
-        }
     }
 
     @Override

@@ -88,6 +88,11 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
         return cuboidID;
     }
 
+    // for mandatory cuboid, no need to translate cuboid
+    public static Cuboid findForMandatory(CubeDesc cube, long cuboidID) {
+        return new Cuboid(cube, cuboidID, cuboidID);
+    }
+
     public static Cuboid findById(CuboidScheduler cuboidScheduler, byte[] cuboidID) {
         return findById(cuboidScheduler, Bytes.toLong(cuboidID));
     }

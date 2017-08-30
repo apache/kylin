@@ -34,11 +34,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.EngineFactory;
+import org.apache.kylin.engine.mr.BatchOptimizeJobCheckpointBuilder;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.JobInfoConverter;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
@@ -48,6 +50,7 @@ import org.apache.kylin.job.SchedulerFactory;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.CheckpointExecutable;
@@ -72,6 +75,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Function;
@@ -273,6 +277,137 @@ public class JobService extends BasicService implements InitializingBean {
         return jobInstance;
     }
 
+    public Pair<JobInstance, List<JobInstance>> submitOptimizeJob(CubeInstance cube, Set<Long> cuboidsRecommend,
+            String submitter) throws IOException, JobException {
+
+        Pair<JobInstance, List<JobInstance>> result = submitOptimizeJobInternal(cube, cuboidsRecommend, submitter);
+        accessService.init(result.getFirst(), null);
+        accessService.inherit(result.getFirst(), cube);
+        for (JobInstance jobInstance : result.getSecond()) {
+            accessService.init(jobInstance, null);
+            accessService.inherit(jobInstance, cube);
+        }
+
+        return result;
+    }
+
+    private Pair<JobInstance, List<JobInstance>> submitOptimizeJobInternal(CubeInstance cube,
+            Set<Long> cuboidsRecommend, String submitter) throws IOException {
+        Message msg = MsgPicker.getMsg();
+
+        if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
+            throw new BadRequestException(String.format(msg.getBUILD_BROKEN_CUBE(), cube.getName()));
+        }
+
+        checkCubeDescSignature(cube);
+        checkAllowOptimization(cube, cuboidsRecommend);
+
+        CubeSegment[] optimizeSegments = null;
+        try {
+            /** Add optimize segments */
+            optimizeSegments = getCubeManager().optimizeSegments(cube, cuboidsRecommend);
+            List<JobInstance> optimizeJobInstances = Lists.newLinkedList();
+
+            /** Add optimize jobs */
+            List<AbstractExecutable> optimizeJobList = Lists.newArrayListWithExpectedSize(optimizeSegments.length);
+            for (CubeSegment optimizeSegment : optimizeSegments) {
+                DefaultChainedExecutable optimizeJob = EngineFactory.createBatchOptimizeJob(optimizeSegment, submitter);
+                getExecutableManager().addJob(optimizeJob);
+
+                optimizeJobList.add(optimizeJob);
+                optimizeJobInstances.add(getSingleJobInstance(optimizeJob));
+            }
+
+            /** Add checkpoint job for batch jobs */
+            CheckpointExecutable checkpointJob = new BatchOptimizeJobCheckpointBuilder(cube, submitter).build();
+            checkpointJob.addTaskListForCheck(optimizeJobList);
+
+            getExecutableManager().addJob(checkpointJob);
+
+            return new Pair(getCheckpointJobInstance(checkpointJob), optimizeJobInstances);
+        } catch (Exception e) {
+            if (optimizeSegments != null) {
+                logger.error("Job submission might failed for NEW segments {}, will clean the NEW segments from cube",
+                        optimizeSegments);
+                try {
+                    // Remove this segments
+                    CubeUpdate cubeBuilder = new CubeUpdate(cube);
+                    cubeBuilder.setToRemoveSegs(optimizeSegments);
+                    getCubeManager().updateCube(cubeBuilder);
+                } catch (Exception ee) {
+                    // swallow the exception
+                    logger.error("Clean New segments failed, ignoring it", e);
+                }
+            }
+            throw e;
+        }
+    }
+
+    public JobInstance submitRecoverSegmentOptimizeJob(CubeSegment segment, String submitter)
+            throws IOException, JobException {
+        CubeInstance cubeInstance = segment.getCubeInstance();
+
+        checkCubeDescSignature(cubeInstance);
+
+        String cubeName = cubeInstance.getName();
+        List<JobInstance> jobInstanceList = searchJobsByCubeName(cubeName, null,
+                Lists.newArrayList(JobStatusEnum.NEW, JobStatusEnum.PENDING, JobStatusEnum.ERROR),
+                JobTimeFilterEnum.ALL, JobSearchMode.CHECKPOINT_ONLY);
+        if (jobInstanceList.size() > 1) {
+            throw new IllegalStateException("Exist more than one CheckpointExecutable for cube " + cubeName);
+        } else if (jobInstanceList.size() == 0) {
+            throw new IllegalStateException("There's no CheckpointExecutable for cube " + cubeName);
+        }
+        CheckpointExecutable checkpointExecutable = (CheckpointExecutable) getExecutableManager()
+                .getJob(jobInstanceList.get(0).getId());
+
+        AbstractExecutable toBeReplaced = null;
+        for (AbstractExecutable taskForCheck : checkpointExecutable.getSubTasksForCheck()) {
+            if (taskForCheck instanceof CubingJob) {
+                CubingJob subCubingJob = (CubingJob) taskForCheck;
+                String segmentName = CubingExecutableUtil.getSegmentName(subCubingJob.getParams());
+                if (segmentName != null && segmentName.equals(segment.getName())) {
+                    String segmentID = CubingExecutableUtil.getSegmentId(subCubingJob.getParams());
+                    CubeSegment beingOptimizedSegment = cubeInstance.getSegmentById(segmentID);
+                    if (beingOptimizedSegment != null) { // beingOptimizedSegment exists & should not be recovered
+                        throw new IllegalStateException("Segment " + beingOptimizedSegment.getName() + "-"
+                                + beingOptimizedSegment.getUuid()
+                                + " still exists. Please delete it or discard the related optimize job first!!!");
+                    }
+                    toBeReplaced = taskForCheck;
+                    break;
+                }
+            }
+        }
+        if (toBeReplaced == null) {
+            throw new IllegalStateException("There's no CubingJob for segment " + segment.getName()
+                    + " in CheckpointExecutable " + checkpointExecutable.getName());
+        }
+
+        /** Add CubingJob for the related segment **/
+        CubeSegment optimizeSegment = getCubeManager().appendSegment(cubeInstance, segment.getTSRange());
+        CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
+        cubeBuilder.setToAddSegs(optimizeSegment);
+        getCubeManager().updateCube(cubeBuilder);
+
+        DefaultChainedExecutable optimizeJob = EngineFactory.createBatchOptimizeJob(optimizeSegment, submitter);
+
+        getExecutableManager().addJob(optimizeJob);
+
+        JobInstance optimizeJobInstance = getSingleJobInstance(optimizeJob);
+        accessService.init(optimizeJobInstance, null);
+        accessService.inherit(optimizeJobInstance, cubeInstance);
+
+        /** Update the checkpoint job */
+        checkpointExecutable.getSubTasksForCheck().set(checkpointExecutable.getSubTasksForCheck().indexOf(toBeReplaced),
+                optimizeJob);
+
+        getExecutableManager().updateCheckpointJob(checkpointExecutable.getId(),
+                checkpointExecutable.getSubTasksForCheck());
+
+        return optimizeJobInstance;
+    }
+
     private void checkCubeDescSignature(CubeInstance cube) {
         Message msg = MsgPicker.getMsg();
 
@@ -281,8 +416,25 @@ public class JobService extends BasicService implements InitializingBean {
                     String.format(msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
     }
 
+    private void checkAllowOptimization(CubeInstance cube, Set<Long> cuboidsRecommend) {
+        long baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
+        if (!cuboidsRecommend.contains(baseCuboid)) {
+            throw new BadRequestException("The recommend cuboids should contain the base cuboid " + baseCuboid);
+        }
+        Set<Long> currentCuboidSet = cube.getCuboidScheduler().getAllCuboidIds();
+        if (currentCuboidSet.equals(cuboidsRecommend)) {
+            throw new BadRequestException(
+                    "The recommend cuboids are the same as the current cuboids. It's no need to do optimization.");
+        }
+    }
+
     public JobInstance getJobInstance(String uuid) {
-        return getSingleJobInstance(getExecutableManager().getJob(uuid));
+        AbstractExecutable job = getExecutableManager().getJob(uuid);
+        if (job instanceof CheckpointExecutable) {
+            return getCheckpointJobInstance(job);
+        } else {
+            return getSingleJobInstance(job);
+        }
     }
 
     public Output getOutput(String id) {
@@ -362,21 +514,90 @@ public class JobService extends BasicService implements InitializingBean {
             getExecutableManager().discardJob(job.getId());
             return job;
         }
-        CubeInstance cubeInstance = getCubeManager().getCube(job.getRelatedCube());
+
+        logger.info("Cancel job [" + job.getId() + "] trigger by "
+                + SecurityContextHolder.getContext().getAuthentication().getName());
+        if (job.getStatus() == JobStatusEnum.FINISHED) {
+            throw new IllegalStateException(
+                    "The job " + job.getId() + " has already been finished and cannot be discarded.");
+        }
+        if (job.getStatus() == JobStatusEnum.DISCARDED) {
+            return job;
+        }
+
+        AbstractExecutable executable = getExecutableManager().getJob(job.getId());
+        if (executable instanceof CubingJob) {
+            cancelCubingJobInner((CubingJob) executable);
+        } else if (executable instanceof CheckpointExecutable) {
+            cancelCheckpointJobInner((CheckpointExecutable) executable);
+        } else {
+            getExecutableManager().discardJob(executable.getId());
+        }
+        return job;
+    }
+
+    private void cancelCubingJobInner(CubingJob cubingJob) throws IOException {
+        CubeInstance cubeInstance = getCubeManager().getCube(CubingExecutableUtil.getCubeName(cubingJob.getParams()));
         // might not a cube job
-        final String segmentIds = job.getRelatedSegment();
-        for (String segmentId : StringUtils.split(segmentIds)) {
-            final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
-            if (segment != null && (segment.getStatus() == SegmentStatusEnum.NEW || segment.getTSRange().end.v == 0)) {
-                // Remove this segments
+        final String segmentIds = CubingExecutableUtil.getSegmentId(cubingJob.getParams());
+        if (!StringUtils.isEmpty(segmentIds)) {
+            List<CubeSegment> toRemoveSegments = Lists.newLinkedList();
+            for (String segmentId : StringUtils.split(segmentIds)) {
+                final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
+                if (segment != null
+                        && (segment.getStatus() == SegmentStatusEnum.NEW || segment.getTSRange().end.v == 0)) {
+                    // Remove this segment
+                    toRemoveSegments.add(segment);
+                }
+            }
+            if (!toRemoveSegments.isEmpty()) {
                 CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
-                cubeBuilder.setToRemoveSegs(segment);
+                cubeBuilder.setToRemoveSegs(toRemoveSegments.toArray(new CubeSegment[toRemoveSegments.size()]));
                 getCubeManager().updateCube(cubeBuilder);
             }
         }
-        getExecutableManager().discardJob(job.getId());
+        getExecutableManager().discardJob(cubingJob.getId());
+    }
 
-        return job;
+    private void cancelCheckpointJobInner(CheckpointExecutable checkpointExecutable) throws IOException {
+        List<String> segmentIdList = Lists.newLinkedList();
+        List<String> jobIdList = Lists.newLinkedList();
+        jobIdList.add(checkpointExecutable.getId());
+        setRelatedIdList(checkpointExecutable, segmentIdList, jobIdList);
+
+        CubeInstance cubeInstance = getCubeManager()
+                .getCube(CubingExecutableUtil.getCubeName(checkpointExecutable.getParams()));
+        if (!segmentIdList.isEmpty()) {
+            List<CubeSegment> toRemoveSegments = Lists.newLinkedList();
+            for (String segmentId : segmentIdList) {
+                final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
+                if (segment != null && segment.getStatus() != SegmentStatusEnum.READY) {
+                    toRemoveSegments.add(segment);
+                }
+            }
+
+            CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
+            cubeBuilder.setToRemoveSegs(toRemoveSegments.toArray(new CubeSegment[toRemoveSegments.size()]));
+            cubeBuilder.setCuboidsRecommend(Sets.<Long> newHashSet()); //Set recommend cuboids to be null
+            getCubeManager().updateCube(cubeBuilder);
+        }
+
+        for (String jobId : jobIdList) {
+            getExecutableManager().discardJob(jobId);
+        }
+    }
+
+    private void setRelatedIdList(CheckpointExecutable checkpointExecutable, List<String> segmentIdList,
+            List<String> jobIdList) {
+        for (AbstractExecutable taskForCheck : checkpointExecutable.getSubTasksForCheck()) {
+            jobIdList.add(taskForCheck.getId());
+            if (taskForCheck instanceof CubingJob) {
+                segmentIdList.addAll(Lists
+                        .newArrayList(StringUtils.split(CubingExecutableUtil.getSegmentId(taskForCheck.getParams()))));
+            } else if (taskForCheck instanceof CheckpointExecutable) {
+                setRelatedIdList((CheckpointExecutable) taskForCheck, segmentIdList, jobIdList);
+            }
+        }
     }
 
     public JobInstance pauseJob(JobInstance job) {

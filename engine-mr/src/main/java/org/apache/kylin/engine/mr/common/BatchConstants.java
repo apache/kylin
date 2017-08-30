@@ -75,6 +75,7 @@ public interface BatchConstants {
     String ARG_INPUT = "input";
     String ARG_OUTPUT = "output";
     String ARG_PROJECT = "project";
+    String ARG_CUBOID_MODE = "cuboidMode";
     String ARG_JOB_NAME = "jobname";
     String ARG_CUBING_JOB_ID = "cubingJobId";
     String ARG_CUBE_NAME = "cubename";

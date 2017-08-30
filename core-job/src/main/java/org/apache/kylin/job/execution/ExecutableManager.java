@@ -96,6 +96,13 @@ public class ExecutableManager {
             }
             result.setTasks(tasks);
         }
+        if (executable instanceof CheckpointExecutable) {
+            List<ExecutablePO> tasksForCheck = Lists.newArrayList();
+            for (AbstractExecutable taskForCheck : ((CheckpointExecutable) executable).getSubTasksForCheck()) {
+                tasksForCheck.add(parse(taskForCheck));
+            }
+            result.setTasksForCheck(tasksForCheck);
+        }
         return result;
     }
 
@@ -118,6 +125,23 @@ public class ExecutableManager {
             for (AbstractExecutable subTask : ((DefaultChainedExecutable) executable).getTasks()) {
                 addJobOutput(subTask);
             }
+        }
+    }
+
+    public void updateCheckpointJob(String jobId, List<AbstractExecutable> subTasksForCheck) {
+        try {
+            final ExecutablePO job = executableDao.getJob(jobId);
+            Preconditions.checkArgument(job != null, "there is no related job for job id:" + jobId);
+
+            List<ExecutablePO> tasksForCheck = Lists.newArrayListWithExpectedSize(subTasksForCheck.size());
+            for (AbstractExecutable taskForCheck : subTasksForCheck) {
+                tasksForCheck.add(parse(taskForCheck));
+            }
+            job.setTasksForCheck(tasksForCheck);
+            executableDao.updateJob(job);
+        } catch (PersistentException e) {
+            logger.error("fail to update checkpoint job:" + jobId, e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -349,7 +373,15 @@ public class ExecutableManager {
         if (job == null) {
             return;
         }
-
+        if (job.getStatus().isFinalState()) {
+            if (job.getStatus() != ExecutableState.DISCARDED) {
+                logger.warn("The status of job " + jobId + " is " + job.getStatus().toString()
+                        + ". It's final state and cannot be transfer to be discarded!!!");
+            } else {
+                logger.warn("The job " + jobId + " has been discarded.");
+            }
+            return;
+        }
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
@@ -499,6 +531,13 @@ public class ExecutableManager {
                 Preconditions.checkArgument(result instanceof ChainedExecutable);
                 for (ExecutablePO subTask : tasks) {
                     ((ChainedExecutable) result).addTask(parseTo(subTask));
+                }
+            }
+            List<ExecutablePO> tasksForCheck = executablePO.getTasksForCheck();
+            if (tasksForCheck != null && !tasksForCheck.isEmpty()) {
+                Preconditions.checkArgument(result instanceof CheckpointExecutable);
+                for (ExecutablePO subTaskForCheck : tasksForCheck) {
+                    ((CheckpointExecutable) result).addTaskForCheck(parseTo(subTaskForCheck));
                 }
             }
             return result;

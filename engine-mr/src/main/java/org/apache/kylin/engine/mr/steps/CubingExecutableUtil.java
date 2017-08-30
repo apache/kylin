@@ -38,6 +38,7 @@ import javax.annotation.Nullable;
 public class CubingExecutableUtil {
 
     public static final String CUBE_NAME = "cubeName";
+    public static final String SEGMENT_NAME = "segmentName";
     public static final String SEGMENT_ID = "segmentId";
     public static final String MERGING_SEGMENT_IDS = "mergingSegmentIds";
     public static final String STATISTICS_PATH = "statisticsPath";
@@ -59,6 +60,14 @@ public class CubingExecutableUtil {
 
     public static String getCubeName(Map<String, String> params) {
         return params.get(CUBE_NAME);
+    }
+
+    public static void setSegmentName(String segmentName, Map<String, String> params) {
+        params.put(SEGMENT_NAME, segmentName);
+    }
+
+    public static String getSegmentName(Map<String, String> params) {
+        return params.get(SEGMENT_NAME);
     }
 
     public static void setSegmentId(String segmentId, Map<String, String> params) {

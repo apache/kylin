@@ -35,6 +35,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.common.CuboidSchedulerUtil;
 import org.apache.kylin.engine.mr.common.NDCuboidBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,8 +51,8 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private Text outputKey = new Text();
     private String cubeName;
     private String segmentID;
-    private CubeSegment cubeSegment;
     private CubeDesc cubeDesc;
+    private CubeSegment cubeSegment;
     private CuboidScheduler cuboidScheduler;
 
     private int handleCounter;
@@ -65,17 +66,18 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
 
-        cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
+        cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME);
         segmentID = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_ID);
+        String cuboidModeName = context.getConfiguration().get(BatchConstants.CFG_CUBOID_MODE);
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
-        cubeSegment = cube.getSegmentById(segmentID);
         cubeDesc = cube.getDescriptor();
+        cubeSegment = cube.getSegmentById(segmentID);
         ndCuboidBuilder = new NDCuboidBuilder(cubeSegment);
         // initialize CubiodScheduler
-        cuboidScheduler = cubeSegment.getCuboidScheduler();
+        cuboidScheduler = CuboidSchedulerUtil.getCuboidSchedulerByMode(cubeSegment, cuboidModeName);
         rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
     }
 
@@ -104,7 +106,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         }
 
         for (Long child : myChildren) {
-            Cuboid childCuboid = Cuboid.findById(cuboidScheduler, child);
+            Cuboid childCuboid = Cuboid.findForMandatory(cubeDesc, child);
             Pair<Integer, ByteArray> result = ndCuboidBuilder.buildKey(parentCuboid, childCuboid, rowKeySplitter.getSplitBuffers());
             outputKey.set(result.getSecond().array(), 0, result.getFirst());
             context.write(outputKey, value);

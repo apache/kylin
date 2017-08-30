@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.engine.mr.steps;
+package org.apache.kylin.engine.mr.common;
 
 import java.io.IOException;
 import java.util.Map;
@@ -24,25 +24,31 @@ import java.util.Map;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.job.exception.JobException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReducerNumSizing {
+public class MapReduceUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(ReducerNumSizing.class);
+    private static final Logger logger = LoggerFactory.getLogger(MapReduceUtil.class);
 
-    public static int getLayeredCubingReduceTaskNum(CubeSegment cubeSegment, double totalMapInputMB, int level) throws ClassNotFoundException, IOException, InterruptedException, JobException {
+    /**
+     * @param cuboidScheduler specified can provide more flexibility
+     * */
+    public static int getLayeredCubingReduceTaskNum(CubeSegment cubeSegment, CuboidScheduler cuboidScheduler,
+            double totalMapInputMB, int level)
+            throws ClassNotFoundException, IOException, InterruptedException, JobException {
         CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         KylinConfig kylinConfig = cubeDesc.getConfig();
 
         double perReduceInputMB = kylinConfig.getDefaultHadoopJobReducerInputMB();
         double reduceCountRatio = kylinConfig.getDefaultHadoopJobReducerCountRatio();
-        logger.info("Having per reduce MB " + perReduceInputMB + ", reduce count ratio " + reduceCountRatio + ", level " + level);
+        logger.info("Having per reduce MB " + perReduceInputMB + ", reduce count ratio " + reduceCountRatio + ", level "
+                + level);
 
-        CubeStatsReader cubeStatsReader = new CubeStatsReader(cubeSegment, kylinConfig);
+        CubeStatsReader cubeStatsReader = new CubeStatsReader(cubeSegment, cuboidScheduler, kylinConfig);
 
         double parentLayerSizeEst, currentLayerSizeEst, adjustedCurrentLayerSizeEst;
 
@@ -50,7 +56,8 @@ public class ReducerNumSizing {
             //merge case
             double estimatedSize = cubeStatsReader.estimateCubeSize();
             adjustedCurrentLayerSizeEst = estimatedSize > totalMapInputMB ? totalMapInputMB : estimatedSize;
-            logger.debug("estimated size {}, input size {}, adjustedCurrentLayerSizeEst: {}", estimatedSize, totalMapInputMB, adjustedCurrentLayerSizeEst);
+            logger.debug("estimated size {}, input size {}, adjustedCurrentLayerSizeEst: {}", estimatedSize,
+                    totalMapInputMB, adjustedCurrentLayerSizeEst);
         } else if (level == 0) {
             //base cuboid case TODO: the estimation could be very WRONG because it has no correction
             adjustedCurrentLayerSizeEst = cubeStatsReader.estimateLayerSize(0);
@@ -59,7 +66,9 @@ public class ReducerNumSizing {
             parentLayerSizeEst = cubeStatsReader.estimateLayerSize(level - 1);
             currentLayerSizeEst = cubeStatsReader.estimateLayerSize(level);
             adjustedCurrentLayerSizeEst = totalMapInputMB / parentLayerSizeEst * currentLayerSizeEst;
-            logger.debug("totalMapInputMB: {}, parentLayerSizeEst: {}, currentLayerSizeEst: {}, adjustedCurrentLayerSizeEst: {}", totalMapInputMB, parentLayerSizeEst, currentLayerSizeEst, adjustedCurrentLayerSizeEst);
+            logger.debug(
+                    "totalMapInputMB: {}, parentLayerSizeEst: {}, currentLayerSizeEst: {}, adjustedCurrentLayerSizeEst: {}",
+                    totalMapInputMB, parentLayerSizeEst, currentLayerSizeEst, adjustedCurrentLayerSizeEst);
         }
 
         // number of reduce tasks
@@ -79,19 +88,21 @@ public class ReducerNumSizing {
         return numReduceTasks;
     }
 
-    public static int getInmemCubingReduceTaskNum(CubeSegment cubeSeg) throws IOException {
+    public static int getInmemCubingReduceTaskNum(CubeSegment cubeSeg, CuboidScheduler cuboidScheduler)
+            throws IOException {
         KylinConfig kylinConfig = cubeSeg.getConfig();
 
-        Map<Long, Double> cubeSizeMap = new CubeStatsReader(cubeSeg, kylinConfig).getCuboidSizeMap();
+        Map<Long, Double> cubeSizeMap = new CubeStatsReader(cubeSeg, cuboidScheduler, kylinConfig).getCuboidSizeMap();
         double totalSizeInM = 0;
         for (Double cuboidSize : cubeSizeMap.values()) {
             totalSizeInM += cuboidSize;
         }
 
         double perReduceInputMB = kylinConfig.getDefaultHadoopJobReducerInputMB();
+        double reduceCountRatio = kylinConfig.getDefaultHadoopJobReducerCountRatio();
 
         // number of reduce tasks
-        int numReduceTasks = (int) Math.round(totalSizeInM / perReduceInputMB);
+        int numReduceTasks = (int) Math.round(totalSizeInM / perReduceInputMB * reduceCountRatio);
 
         // at least 1 reducer by default
         numReduceTasks = Math.max(kylinConfig.getHadoopJobMinReducerNumber(), numReduceTasks);

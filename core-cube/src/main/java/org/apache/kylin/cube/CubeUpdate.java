@@ -19,6 +19,7 @@
 package org.apache.kylin.cube;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 
@@ -34,6 +35,7 @@ public class CubeUpdate {
     private String owner;
     private int cost = -1;
     private Map<Long, Long> cuboids = null;
+    private Set<Long> cuboidsRecommend = null;
 
     public CubeUpdate(CubeInstance cubeInstance) {
         this.cubeInstance = cubeInstance;
@@ -106,7 +108,17 @@ public class CubeUpdate {
         return cuboids;
     }
 
-    public void setCuboids(Map<Long, Long> cuboids) {
+    public CubeUpdate setCuboids(Map<Long, Long> cuboids) {
         this.cuboids = cuboids;
+        return this;
+    }
+
+    public Set<Long> getCuboidsRecommend() {
+        return cuboidsRecommend;
+    }
+
+    public CubeUpdate setCuboidsRecommend(Set<Long> cuboidsRecommend) {
+        this.cuboidsRecommend = cuboidsRecommend;
+        return this;
     }
 }

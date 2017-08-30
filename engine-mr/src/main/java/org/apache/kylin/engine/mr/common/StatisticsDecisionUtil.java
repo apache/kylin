@@ -38,7 +38,7 @@ public class StatisticsDecisionUtil {
     protected static final Logger logger = LoggerFactory.getLogger(StatisticsDecisionUtil.class);
 
     public static void decideCubingAlgorithm(CubingJob cubingJob, CubeSegment seg) throws IOException {
-        CubeStatsReader cubeStats = new CubeStatsReader(seg, seg.getConfig());
+        CubeStatsReader cubeStats = new CubeStatsReader(seg, null, seg.getConfig());
         decideCubingAlgorithm(cubingJob, seg, cubeStats.getMapperOverlapRatioOfFirstBuild(),
                 cubeStats.getMapperNumberOfFirstBuild());
     }

@@ -64,7 +64,7 @@ public class TreeCuboidSchedulerManager {
      * @param cubeName
      * @return null if the cube has no pre-built cuboids
      */
-    public static TreeCuboidScheduler getTreeCuboidScheduler(String cubeName) {
+    public TreeCuboidScheduler getTreeCuboidScheduler(String cubeName) {
         TreeCuboidScheduler result = cache.get(cubeName);
         if (result == null) {
             CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -83,14 +83,14 @@ public class TreeCuboidSchedulerManager {
         return result;
     }
 
-    public static TreeCuboidScheduler getTreeCuboidScheduler(CubeDesc cubeDesc, Map<Long, Long> cuboidsWithRowCnt) {
+    public TreeCuboidScheduler getTreeCuboidScheduler(CubeDesc cubeDesc, Map<Long, Long> cuboidsWithRowCnt) {
         if (cuboidsWithRowCnt == null || cuboidsWithRowCnt.isEmpty()) {
             return null;
         }
         return getTreeCuboidScheduler(cubeDesc, Lists.newArrayList(cuboidsWithRowCnt.keySet()), cuboidsWithRowCnt);
     }
 
-    public static TreeCuboidScheduler getTreeCuboidScheduler(CubeDesc cubeDesc, List<Long> cuboidIds,
+    public TreeCuboidScheduler getTreeCuboidScheduler(CubeDesc cubeDesc, List<Long> cuboidIds,
             Map<Long, Long> cuboidsWithRowCnt) {
         if (cuboidIds == null || cuboidsWithRowCnt == null) {
             return null;

@@ -91,7 +91,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     protected void doSetup(Context context) throws IOException, InterruptedException {
         super.bindCurrentConfiguration(context.getConfiguration());
 
-        cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
+        cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME);
         segmentID = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_ID);
 
         config = AbstractHadoopJob.loadKylinPropsAndMetadata();

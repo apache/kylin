@@ -65,7 +65,7 @@ public class CubingJob extends DefaultChainedExecutable {
     }
 
     public enum CubingJobTypeEnum {
-        BUILD("BUILD"), MERGE("MERGE");
+        BUILD("BUILD"), OPTIMIZE("OPTIMIZE"), MERGE("MERGE");
 
         private final String name;
 
@@ -106,6 +106,10 @@ public class CubingJob extends DefaultChainedExecutable {
         return initCubingJob(seg, CubingJobTypeEnum.BUILD.toString(), submitter, config);
     }
 
+    public static CubingJob createOptimizeJob(CubeSegment seg, String submitter, JobEngineConfig config) {
+        return initCubingJob(seg, CubingJobTypeEnum.OPTIMIZE.toString(), submitter, config);
+    }
+
     public static CubingJob createMergeJob(CubeSegment seg, String submitter, JobEngineConfig config) {
         return initCubingJob(seg, CubingJobTypeEnum.MERGE.toString(), submitter, config);
     }
@@ -135,6 +139,7 @@ public class CubingJob extends DefaultChainedExecutable {
         result.setJobType(jobType);
         CubingExecutableUtil.setCubeName(seg.getCubeInstance().getName(), result.getParams());
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
+        CubingExecutableUtil.setSegmentName(seg.getName(), result.getParams());
         result.setName(jobType + " CUBE - " + seg.getCubeInstance().getName() + " - " + seg.getName() + " - "
                 + format.format(new Date(System.currentTimeMillis())));
         result.setSubmitter(submitter);
