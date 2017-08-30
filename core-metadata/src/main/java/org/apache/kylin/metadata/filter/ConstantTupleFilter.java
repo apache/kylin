@@ -108,4 +108,18 @@ public class ConstantTupleFilter extends TupleFilter {
         }
     }
 
+    @Override public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        ConstantTupleFilter that = (ConstantTupleFilter) o;
+
+        return constantValues.equals(that.constantValues);
+    }
+
+    @Override public int hashCode() {
+        return constantValues.hashCode();
+    }
 }

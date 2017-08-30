@@ -28,7 +28,12 @@ import com.google.common.collect.Lists;
 
 /**
  * optimize the filter if possible, not limited to:
- * 1. prune filters like (a = ? OR 1 = 1)
+ * 
+ * 1. replace filters like (a = 10 OR 1 = 1) to ConstantTupleFilter.TRUE
+ * 2. replace filters like (a = 10 AND 1 = 2) to ConstantTupleFilter.FALSE
+ * 
+ * 3. replace filter like (a = 10 AND ConstantTupleFilter.TRUE) to (a = 10)
+ * 4. replace filter like (a = 10 OR ConstantTupleFilter.FALSE) to (a = 10)
  * 
  * is a first type transformer defined in ITupleFilterTransformer
  */
@@ -66,23 +71,41 @@ public class FilterOptimizeTransformer implements ITupleFilterTransformer {
 
         if (logicalTupleFilter.getOperator() == TupleFilter.FilterOperatorEnum.OR) {
             @SuppressWarnings("unchecked")
-            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) logicalTupleFilter.getChildren().listIterator();
+            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) logicalTupleFilter.getChildren()
+                    .listIterator();
             while (childIterator.hasNext()) {
                 TupleFilter next = childIterator.next();
-                if (ConstantTupleFilter.TRUE == next) {
+                if (ConstantTupleFilter.TRUE.equals(next)) {
                     logger.debug("Optimized {{}} to ConstantTupleFilter.TRUE", logicalTupleFilter);
                     return ConstantTupleFilter.TRUE;
                 }
+
+                if (ConstantTupleFilter.FALSE.equals(next)) {
+                    childIterator.remove();
+                }
+            }
+
+            if (logicalTupleFilter.getChildren().size() == 0) {
+                return ConstantTupleFilter.FALSE;
             }
         } else if (logicalTupleFilter.getOperator() == TupleFilter.FilterOperatorEnum.AND) {
             @SuppressWarnings("unchecked")
-            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) logicalTupleFilter.getChildren().listIterator();
+            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) logicalTupleFilter.getChildren()
+                    .listIterator();
             while (childIterator.hasNext()) {
                 TupleFilter next = childIterator.next();
-                if (ConstantTupleFilter.FALSE == next) {
+                if (ConstantTupleFilter.FALSE.equals(next)) {
                     logger.debug("Optimized {{}} to ConstantTupleFilter.FALSE", logicalTupleFilter);
                     return ConstantTupleFilter.FALSE;
                 }
+
+                if (ConstantTupleFilter.TRUE.equals(next)) {
+                    childIterator.remove();
+                }
+            }
+
+            if (logicalTupleFilter.getChildren().size() == 0) {
+                return ConstantTupleFilter.TRUE;
             }
         }
 
@@ -116,7 +139,7 @@ public class FilterOptimizeTransformer implements ITupleFilterTransformer {
             if (newFilters.size() == 1) {
                 return newFilters.get(0);
             }
-            
+
             CaseTupleFilter newCaseTupleFilter = new CaseTupleFilter();
             newCaseTupleFilter.addChildren(newFilters);
             return newCaseTupleFilter;
