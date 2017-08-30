@@ -38,9 +38,13 @@ public class CuboidStatsReaderUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(CuboidStatsReaderUtil.class);
 
-    public static Map<Long, Long> readCuboidStatsFromCube(Set<Long> cuboidIds, CubeInstance cubeInstance)
-            throws IOException {
-        Map<Long, Long> statisticsMerged = readCuboidStatsAndSizeFromCube(cuboidIds, cubeInstance).getFirst();
+    public static Map<Long, Long> readCuboidStatsFromCube(Set<Long> cuboidIds, CubeInstance cubeInstance) {
+        Map<Long, Long> statisticsMerged = null;
+        try {
+            statisticsMerged = readCuboidStatsAndSizeFromCube(cuboidIds, cubeInstance).getFirst();
+        } catch (IOException e) {
+            logger.warn("Fail to read statistics for cube " + cubeInstance.getName() + " due to " + e);
+        }
         return statisticsMerged.isEmpty() ? null : statisticsMerged;
     }
 

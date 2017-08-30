@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -32,10 +34,13 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidCLI;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.common.CuboidRecommenderUtil;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -55,6 +60,8 @@ import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
+import org.apache.kylin.rest.response.CuboidTreeResponse;
+import org.apache.kylin.rest.response.CuboidTreeResponse.NodeInfo;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.security.AclPermission;
@@ -760,5 +767,85 @@ public class CubeService extends BasicService implements InitializingBean {
                     htableInfoCache.invalidate(k);
             }
         }
+    }
+
+    public CuboidTreeResponse getCuboidTreeResponse(CuboidScheduler cuboidScheduler, Map<Long, Long> rowCountMap,
+            Map<Long, Long> hitFrequencyMap, Map<Long, Long> queryMatchMap, Set<Long> currentCuboidSet) {
+        long baseCuboidId = cuboidScheduler.getBaseCuboidId();
+        int dimensionCount = Long.bitCount(baseCuboidId);
+
+        // get cube query count total
+        long cubeQueryCount = 0L;
+        if (hitFrequencyMap != null) {
+            for (long queryCount : hitFrequencyMap.values()) {
+                cubeQueryCount += queryCount;
+            }
+        }
+
+        NodeInfo root = generateNodeInfo(baseCuboidId, dimensionCount, cubeQueryCount, rowCountMap, hitFrequencyMap,
+                queryMatchMap, currentCuboidSet);
+
+        List<NodeInfo> nodeQueue = Lists.newLinkedList();
+        nodeQueue.add(root);
+        while (!nodeQueue.isEmpty()) {
+            NodeInfo parentNode = nodeQueue.remove(0);
+            for (long childId : cuboidScheduler.getSpanningCuboid(parentNode.getId())) {
+                NodeInfo childNode = generateNodeInfo(childId, dimensionCount, cubeQueryCount, rowCountMap,
+                        hitFrequencyMap, queryMatchMap, currentCuboidSet);
+                parentNode.addChild(childNode);
+                nodeQueue.add(childNode);
+            }
+        }
+
+        CuboidTreeResponse result = new CuboidTreeResponse();
+        result.setRoot(root);
+        return result;
+    }
+
+    private NodeInfo generateNodeInfo(long cuboidId, int dimensionCount, long cubeQueryCount,
+            Map<Long, Long> rowCountMap, Map<Long, Long> hitFrequencyMap, Map<Long, Long> queryMatchMap,
+            Set<Long> currentCuboidSet) {
+        Long queryCount = hitFrequencyMap == null || hitFrequencyMap.get(cuboidId) == null ? 0L
+                : hitFrequencyMap.get(cuboidId);
+        float queryRate = cubeQueryCount <= 0 ? 0 : queryCount.floatValue() / cubeQueryCount;
+        long queryExactlyMatchCount = queryMatchMap == null || queryMatchMap.get(cuboidId) == null ? 0L
+                : queryMatchMap.get(cuboidId);
+        boolean ifExist = currentCuboidSet.contains(cuboidId);
+        long rowCount = rowCountMap == null ? 0L : rowCountMap.get(cuboidId);
+
+        NodeInfo node = new NodeInfo();
+        node.setId(cuboidId);
+        node.setName(Cuboid.getDisplayName(cuboidId, dimensionCount));
+        node.setQueryCount(queryCount);
+        node.setQueryRate(queryRate);
+        node.setExactlyMatchCount(queryExactlyMatchCount);
+        node.setExisted(ifExist);
+        node.setRowCount(rowCount);
+        return node;
+    }
+
+    /** cube planner services */
+    public Map<Long, Long> formatQueryCount(List<List<String>> orgQueryCount) {
+        Map<Long, Long> formattedQueryCount = Maps.newLinkedHashMap();
+        for (List<String> hit : orgQueryCount) {
+            formattedQueryCount.put(Long.parseLong(hit.get(0)), (long) Double.parseDouble(hit.get(1)));
+        }
+        return formattedQueryCount;
+    }
+
+    public Map<Long, Map<Long, Long>> formatRollingUpCount(List<List<String>> orgRollingUpCount) {
+        Map<Long, Map<Long, Long>> formattedRollingUpCount = Maps.newLinkedHashMap();
+        for (List<String> rollingUp : orgRollingUpCount) {
+            Map<Long, Long> childMap = Maps.newLinkedHashMap();
+            childMap.put(Long.parseLong(rollingUp.get(1)), (long) Double.parseDouble(rollingUp.get(2)));
+            formattedRollingUpCount.put(Long.parseLong(rollingUp.get(0)), childMap);
+        }
+        return formattedRollingUpCount;
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION')")
+    public Map<Long, Long> getRecommendCuboidStatistics(CubeInstance cube, Map<Long, Long> hitFrequencyMap,
+            Map<Long, Map<Long, Long>> rollingUpCountSourceMap) throws IOException {
+        return CuboidRecommenderUtil.getRecommendCuboidList(cube, hitFrequencyMap, rollingUpCountSourceMap);
     }
 }
