@@ -464,7 +464,7 @@ public class QueryService extends BasicService {
                     sqlResponse.setTotalScanBytes(0);
                 }
 
-                checkQueryAuth(sqlResponse, project);
+                checkQueryAuth(sqlResponse, project, secureEnabled);
 
             } catch (Throwable e) { // calcite may throw AssertError
                 logger.error("Exception while executing query", e);
@@ -526,8 +526,9 @@ public class QueryService extends BasicService {
         return response;
     }
 
-    protected void checkQueryAuth(SQLResponse sqlResponse, String project) throws AccessDeniedException {
-        if (!sqlResponse.getIsException() && KylinConfig.getInstanceFromEnv().isQuerySecureEnabled()) {
+    protected void checkQueryAuth(SQLResponse sqlResponse, String project, boolean secureEnabled)
+            throws AccessDeniedException {
+        if (!sqlResponse.getIsException() && KylinConfig.getInstanceFromEnv().isQuerySecureEnabled() && secureEnabled) {
             checkAuthorization(sqlResponse, project);
         }
     }

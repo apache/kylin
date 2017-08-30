@@ -58,13 +58,13 @@ import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -184,6 +184,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("parent_forward")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private int parentForward = 3;
+
+    @JsonProperty("mandatory_dimension_set_list")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<Set<String>> mandatoryDimensionSetList = Collections.emptyList();
 
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
     private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
@@ -446,6 +450,14 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.overrideKylinProps = overrideKylinProps;
     }
 
+    public List<Set<String>> getMandatoryDimensionSetList() {
+        return mandatoryDimensionSetList;
+    }
+
+    public void setMandatoryDimensionSetList(List<Set<String>> mandatoryDimensionSetList) {
+        this.mandatoryDimensionSetList = mandatoryDimensionSetList;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -536,6 +548,13 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     .append(JsonUtil.writeValueAsString(this.hbaseMapping)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.engineType)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.storageType)).append("|");
+
+            if (mandatoryDimensionSetList != null && !mandatoryDimensionSetList.isEmpty()) {
+                for (Set<String> mandatoryDimensionSet : mandatoryDimensionSetList) {
+                    TreeSet<String> sortedSet = Sets.newTreeSet(mandatoryDimensionSet);
+                    sigString.append(JsonUtil.writeValueAsString(sortedSet)).append("|");
+                }
+            }
 
             String signatureInput = sigString.toString().replaceAll("\\s+", "").toLowerCase();
 
@@ -631,6 +650,26 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         initDictionaryDesc();
         amendAllColumns();
+
+        // check if mandatory dimension set list is valid
+        validateMandatoryDimensionSetList();
+    }
+
+    public void validateMandatoryDimensionSetList() {
+        Set<String> rowKeyColumns = Sets.newHashSet();
+        for (RowKeyColDesc entry : getRowkey().getRowKeyColumns()) {
+            rowKeyColumns.add(entry.getColumn());
+        }
+
+        for (Set<String> mandatoryDimensionSet : this.mandatoryDimensionSetList) {
+            for (String columnName : mandatoryDimensionSet) {
+                if (!rowKeyColumns.contains(columnName)) {
+                    logger.info("Column " + columnName + " in " + mandatoryDimensionSet + " does not exist");
+                    throw new IllegalStateException(
+                            "Column " + columnName + " in " + mandatoryDimensionSet + " does not exist");
+                }
+            }
+        }
     }
 
     public CuboidScheduler getInitialCuboidScheduler() {

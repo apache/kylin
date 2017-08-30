@@ -898,11 +898,13 @@ public class CubeController extends BasicController {
         return getCuboidHitFrequency(cubeName, false);
     }
 
-    private Map<Long, Long> getCuboidHitFrequency(String cubeName, boolean ifSource) {
+    private Map<Long, Long> getCuboidHitFrequency(String cubeName, boolean isCuboidSource) {
         SQLRequest sqlRequest = new SQLRequest();
         sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
-        String cuboidColumn = ifSource ? QueryCubePropertyEnum.CUBOID_SOURCE.toString()
-                : QueryCubePropertyEnum.CUBOID_TARGET.toString();
+        String cuboidColumn = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
+        if (!isCuboidSource) {
+            cuboidColumn = QueryCubePropertyEnum.CUBOID_TARGET.toString();
+        }
         String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
         String table = cubeService.getMetricsManager()
                 .getSystemTableFromSubject(cubeService.getConfig().getKylinMetricsSubjectQueryCube());

@@ -98,5 +98,4 @@ public abstract class BasicService {
     public MetricsManager getMetricsManager() {
         return MetricsManager.getInstance();
     }
-
 }
