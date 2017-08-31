@@ -5,7 +5,7 @@ categories: tutorial
 permalink: /docs21/tutorial/microstrategy.html
 ---
 
-## Integration from MicroStrategy 10.X
+## Integration with MicroStrategy 10.X
 
 ### Install ODBC Driver
 
@@ -18,15 +18,15 @@ Connect Kylin using ODBC driver: open your MicroStrategy Developer and connect t
 
 Once logged in, go to `Administration` -> `Configuration manager` -> `Database Instance`, create a new database instance with local ODBC connection that you created in the previous step. Under database connection type, please choose Generic DBMS.
 
+### Setting Database Instance
+
+Depending on your business scenario, you may need to create a new project and set Kylin database instance as your primary database instance or if there is an existing project, set Kylin database instance as one of your primary or non-primary database instance. You can achieve this by right click on your project, and go to `project configuration` -> `database instance`. 
+
+![](/images/tutorial/2.1/MicroStrategy/2.png)
+
 ![](/images/tutorial/2.1/MicroStrategy/1.png)
 
-### Setting Database instance
-
-Depending on your business scenario, you may need to create a new project and set kylin database instance as your primary database instance or if there is an existing project, set kylin database instance as one of your primary or non-primary database instance. You can achieve this by right click on your project, and go to `project configuration` -> `database instance`. 
-
-![](/images/tutorial/2.1/MicroStrategy/1.png)
-
-### Import logical table
+### Import Logical Table
 
 Open up your project, go to `schema` -> `warehouse catalog` to import the tables your need. 
 
@@ -46,13 +46,13 @@ Create Attribute, Facts and Metric objects
 
 ### Create a Simple Report
 
-Now you can start creating reports with Kylin as Data source.
+Now you can start creating reports with Kylin as data source.
 
 ![](/images/tutorial/2.1/MicroStrategy/9.png)
 
 ![](/images/tutorial/2.1/MicroStrategy/10.png)
 
-### Best Practice for connecting MicroStrategy to Kylin datasource
+### Best Practice for Connecting MicroStrategy to Kylin Data Source
 
 1. Kylin does not work with multiple SQL passes at the moment, so it is recommended to set up your report intermediate table type as derived, you can change this setting at report level using `Data`-> `VLDB property`-> `Tables`-> `Intermediate Table Type`
 
@@ -64,7 +64,7 @@ Now you can start creating reports with Kylin as Data source.
 
    ​	Reports with custom groups
 
-3. Dimension named with kylin keywords will cause sql to error out. You may find kylin keywords here, it is recommended to avoid naming the column name as kylin keywords, especially when you use MicroStrategy as the front-end BI tool, as far as I am concern there is no setting MicroStrategy that can escape the keyword.  [https://calcite.apache.org/docs/reference.html#keywords](https://calcite.apache.org/docs/reference.html#keywords)
+3. Dimension named with Kylin keywords will cause sql to error out. You may find Kylin keywords here, it is recommended to avoid naming the column name as Kylin keywords, especially when you use MicroStrategy as the front-end BI tool, as far as we know there is no setting in MicroStrategy that can escape the keyword.  [https://calcite.apache.org/docs/reference.html#keywords](https://calcite.apache.org/docs/reference.html#keywords)
 
 4. If underlying Kylin data model has left join from fact table to lookup table, In order for Microstrategy to also generate the same left join in sql, please follow below MicroStrategy TN to modify VLDB property:
 
@@ -76,5 +76,5 @@ Now you can start creating reports with Kylin as Data source.
    2. Then right click on the database, choose VLDB properties. 
    3. On the top menu choose `Tools` -> `show Advanced Settings`.
    4. Go to `select/insert` -> `date format`.
-   5. Change the date format to follow date format in kylin, for example 'yyyy-mm-dd'.
+   5. Change the date format to follow date format in Kylin, for example 'yyyy-mm-dd'.
    6.  Restart MicroStrategy Intelligence Server so that change can be effective. 
