@@ -1,30 +1,34 @@
 ---
 layout: docs21
-title:  MicroStrategy 10
+title:  Integration with MicroStrategy 10.X
 categories: tutorial
 permalink: /docs21/tutorial/microstrategy.html
 ---
 
-## Integration with MicroStrategy 10.X
-
 ### Install ODBC Driver
 
 Refer to this guide: [Kylin ODBC Driver Tutorial](./odbc.html).
-Please make sure to download and install Kylin ODBC Driver __v1.6__ or above. If you already installed ODBC Driver in your system, please uninstall it first. already installed ODBC Driver in your system, please uninstall it first.  
+Please make sure to download and install Kylin ODBC Driver __v1.6__ 64 bit or above. If you already installed ODBC Driver in your system, please uninstall it first. already installed ODBC Driver in your system, please uninstall it first.  
 
-### Connect to Kylin Server
+The Kylin ODBC driver needs to be installed in the machine or virtual environment where your Microstrategy Intelligenec Server is installed. 
 
-Connect Kylin using ODBC driver: open your MicroStrategy Developer and connect to the project source where your are going to connect Kylin data source using a user account with administrative privilege. 
+###Create Local DSN
 
-Once logged in, go to `Administration` -> `Configuration manager` -> `Database Instance`, create a new database instance with local ODBC connection that you created in the previous step. Under database connection type, please choose Generic DBMS.
+Open your window ODBC Data Source Administrator (64bit) and create a system DSN that point to your kylin instance. 
+
+![](/images/tutorial/2.1/MicroStrategy/0.png)
 
 ### Setting Database Instance
 
-Depending on your business scenario, you may need to create a new project and set Kylin database instance as your primary database instance or if there is an existing project, set Kylin database instance as one of your primary or non-primary database instance. You can achieve this by right click on your project, and go to `project configuration` -> `database instance`. 
+Connect Kylin using ODBC driver: open your MicroStrategy Developer and connect to the project source where your are going to connect Kylin data source using a user account with administrative privilege. 
+
+Once logged in, go to `Administration` -> `Configuration manager` -> `Database Instance`, create a new database instance with system DSN that you created in the previous step. Under database connection type, please choose Generic DBMS.
 
 ![](/images/tutorial/2.1/MicroStrategy/2.png)
 
 ![](/images/tutorial/2.1/MicroStrategy/1.png)
+
+Depending on your business scenario, you may need to create a new project and set Kylin database instance as your primary database instance or if there is an existing project, set Kylin database instance as one of your primary or non-primary database instance. You can achieve this by right click on your project, and go to `project configuration` -> `database instance`. 
 
 ### Import Logical Table
 
@@ -77,4 +81,4 @@ Now you can start creating reports with Kylin as data source.
    3. On the top menu choose `Tools` -> `show Advanced Settings`.
    4. Go to `select/insert` -> `date format`.
    5. Change the date format to follow date format in Kylin, for example 'yyyy-mm-dd'.
-   6.  Restart MicroStrategy Intelligence Server so that change can be effective. 
+   6. Restart MicroStrategy Intelligence Server so that change can be effective. 
