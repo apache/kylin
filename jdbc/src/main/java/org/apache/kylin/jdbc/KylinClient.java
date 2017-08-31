@@ -112,6 +112,7 @@ public class KylinClient implements IRemoteClient {
             result = BigDecimal.class;
             break;
         case Types.BIT:
+        case Types.BOOLEAN:
             result = Boolean.class;
             break;
         case Types.TINYINT:
@@ -167,6 +168,7 @@ public class KylinClient implements IRemoteClient {
         case Types.DECIMAL:
             return new BigDecimal(value);
         case Types.BIT:
+        case Types.BOOLEAN:
             return Boolean.parseBoolean(value);
         case Types.TINYINT:
             return Byte.valueOf(value);
