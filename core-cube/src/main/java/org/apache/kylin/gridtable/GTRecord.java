@@ -45,7 +45,7 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
         }
         this.info = info;
     }
-
+    
     @Override
     public GTRecord clone() { // deep copy
         ByteArray[] cols = new ByteArray[this.cols.length];
@@ -113,6 +113,7 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
         }
         return result;
     }
+
 
     /** decode and return the values of this record */
     public Object[] getValues(int[] selectedColumns, Object[] result) {
@@ -294,21 +295,27 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
             buf.position(pos);
         }
     }
-
-    public void loadColumnsFromColumnBlocks(ImmutableBitSet[] selectedColumnBlocks, ImmutableBitSet selectedCols,
-            ByteBuffer buf) {
+    
+    public void loadColumnsFromColumnBlocks(ImmutableBitSet[] selectedColumnBlocks, ImmutableBitSet selectedCols, ByteBuffer buf) {
+                
         int pos = buf.position();
+        
         for (ImmutableBitSet selectedColBlock : selectedColumnBlocks) {
+            
             for (int i = 0; i < selectedColBlock.trueBitCount(); i++) {
+                
                 int c = selectedColBlock.trueBitAt(i);
+                
                 int len = info.codeSystem.codeLength(c, buf);
-                if (selectedCols.get(c)) {
-                    cols[c].set(buf.array(), buf.arrayOffset() + pos, len);
+                if(selectedCols.get(c)) {                  
+                    cols[c].set(buf.array(), buf.arrayOffset() + pos, len);                         
                 }
                 pos += len;
                 buf.position(pos);
             }
+            
         }
+        
     }
 
     /** change pointers to point to data in given buffer, this
