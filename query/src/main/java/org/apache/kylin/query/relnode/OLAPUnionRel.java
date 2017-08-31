@@ -19,7 +19,9 @@
 package org.apache.kylin.query.relnode;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
@@ -34,6 +36,7 @@ import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.SetOp;
 import org.apache.calcite.rel.core.Union;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
 
@@ -71,20 +74,39 @@ public class OLAPUnionRel extends Union implements OLAPRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
+        // Always create new OlapContext to combine columns from all children contexts.
+        implementor.allocateContext();
+        this.context = implementor.getContext();
         for (int i = 0, n = getInputs().size(); i < n; i++) {
             implementor.fixSharedOlapTableScanAt(this, i);
             implementor.visitChild(getInputs().get(i), this);
+            if (implementor.getContext() != this.context) {
+                implementor.freeContext();
+            }
         }
 
         this.columnRowType = buildColumnRowType();
-        this.context = implementor.getContext();
     }
 
+    /**
+     * Fake ColumnRowType for Union, all the columns are inner columns.
+     */
     private ColumnRowType buildColumnRowType() {
-        // TODO just hack for now
-        OLAPRel olapChild = (OLAPRel) getInput(0);
-        ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
-        return inputColumnRowType;
+        ColumnRowType inputColumnRowType = ((OLAPRel) getInput(0)).getColumnRowType();
+        List<TblColRef> columns = new ArrayList<>();
+        List<Set<TblColRef>> sourceColumns = new ArrayList<>();
+
+        for (TblColRef tblColRef : inputColumnRowType.getAllColumns()) {
+            columns.add(TblColRef.newInnerColumn(tblColRef.getName(), TblColRef.InnerDataTypeEnum.LITERAL));
+        }
+
+        for (RelNode child : getInputs()) {
+            OLAPRel olapChild = (OLAPRel) child;
+            sourceColumns.add(new HashSet<>(olapChild.getColumnRowType().getAllColumns()));
+        }
+
+        ColumnRowType fackColumnRowType = new ColumnRowType(columns, sourceColumns);
+        return fackColumnRowType;
     }
 
     @Override

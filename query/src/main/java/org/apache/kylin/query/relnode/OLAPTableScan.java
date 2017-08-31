@@ -21,6 +21,7 @@ package org.apache.kylin.query.relnode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
@@ -229,12 +230,42 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
             context.firstTableScan = this;
         }
 
-        if (implementor.getParentNode() instanceof OLAPToEnumerableConverter) {
+        if (needCollectionColumns(implementor)) {
             // OLAPToEnumerableConverter on top of table scan, should be a select * from table
             for (TblColRef tblColRef : columnRowType.getAllColumns()) {
-                context.allColumns.add(tblColRef);
+                if (!tblColRef.getName().startsWith("_KY_")) {
+                    context.allColumns.add(tblColRef);
+                }
             }
         }
+    }
+
+    /**
+     * There're 3 special RelNode in parents stack, OLAPProjectRel, OLAPToEnumerableConverter
+     * and OLAPUnionRel. OLAPProjectRel will helps collect required columns but the other two
+     * don't. Go through the parent RelNodes from bottom to top, and the first-met special
+     * RelNode determines the behavior.
+     *      * OLAPProjectRel -> skip column collection
+     *      * OLAPToEnumerableConverter and OLAPUnionRel -> require column collection
+     */
+    private boolean needCollectionColumns(OLAPImplementor implementor) {
+        Stack<RelNode> allParents = implementor.getParentStack();
+        int index = allParents.size() - 1;
+
+        while (index >= 0) {
+            RelNode parent = allParents.get(index);
+            if (parent instanceof OLAPProjectRel) {
+                return false;
+            }
+
+            if (parent instanceof OLAPToEnumerableConverter || parent instanceof OLAPUnionRel) {
+                return true;
+            }
+
+            index--;
+        }
+
+        return true;
     }
 
     public String getAlias() {

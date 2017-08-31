@@ -74,18 +74,23 @@ public interface OLAPRel extends RelNode {
      */
     public static class OLAPImplementor {
 
-        private RelNode parentNode = null;
+        private Stack<RelNode> parentNodeStack = new Stack<>();
         private int ctxSeq = 0;
         private Stack<OLAPContext> ctxStack = new Stack<OLAPContext>();
         private boolean newOLAPContextRequired = false;
 
         public void visitChild(RelNode input, RelNode parentNode) {
-            this.parentNode = parentNode;
+            this.parentNodeStack.push(parentNode);
             ((OLAPRel) input).implementOLAP(this);
+            this.parentNodeStack.pop();
         }
 
         public RelNode getParentNode() {
-            return parentNode;
+            return parentNodeStack.peek();
+        }
+
+        public Stack<RelNode> getParentStack() {
+            return parentNodeStack;
         }
 
         public OLAPContext getContext() {
@@ -176,6 +181,10 @@ public interface OLAPRel extends RelNode {
         public static boolean needRewrite(OLAPContext ctx) {
             if (ctx.hasJoin)
                 return true;
+
+            if (ctx.realization == null) {
+                return false;
+            }
 
             String realRootFact = ctx.realization.getModel().getRootFactTable().getTableIdentity();
             if (ctx.firstTableScan.getTableName().equals(realRootFact))

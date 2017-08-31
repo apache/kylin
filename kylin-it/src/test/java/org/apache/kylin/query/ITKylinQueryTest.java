@@ -239,6 +239,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testUnionQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_union", null, true);
+    }
+
+    @Test
     public void testCachedQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_cache", null, true);
     }
