@@ -52,6 +52,9 @@ public class ITDistributedSchedulerBaseTest extends BaseTestDistributedScheduler
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task2.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task3.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(job.getId()).getState());
+        
+        //wait to make sure lock is release
+        Thread.sleep(5000);
 
         Assert.assertEquals(null, getServerName(segmentId1));
     }
