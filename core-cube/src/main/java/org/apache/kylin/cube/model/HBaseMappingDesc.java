@@ -87,24 +87,6 @@ public class HBaseMappingDesc implements java.io.Serializable {
         }
     }
 
-    public void initAsSeparatedColumns(CubeDesc cubeDesc) {
-        cubeRef = cubeDesc;
-
-        int cfNum = cubeDesc.getMeasures().size();
-        columnFamily = new HBaseColumnFamilyDesc[cfNum];
-
-        for (int i = 0; i < cfNum; i++) {
-            HBaseColumnFamilyDesc cf = new HBaseColumnFamilyDesc();
-            HBaseColumnDesc col = new HBaseColumnDesc();
-            String measureRef = cubeDesc.getMeasures().get(i).getName();
-            col.setMeasureRefs(new String[] { measureRef });
-            col.setQualifier("M");
-            cf.setColumns(new HBaseColumnDesc[] { col });
-            cf.setName("F" + (i + 1));
-            columnFamily[i] = cf;
-        }
-    }
-
     @Override
     public String toString() {
         return "HBaseMappingDesc [columnFamily=" + Arrays.toString(columnFamily) + "]";

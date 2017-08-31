@@ -295,28 +295,6 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
             buf.position(pos);
         }
     }
-    
-    public void loadColumnsFromColumnBlocks(ImmutableBitSet[] selectedColumnBlocks, ImmutableBitSet selectedCols, ByteBuffer buf) {
-                
-        int pos = buf.position();
-        
-        for (ImmutableBitSet selectedColBlock : selectedColumnBlocks) {
-            
-            for (int i = 0; i < selectedColBlock.trueBitCount(); i++) {
-                
-                int c = selectedColBlock.trueBitAt(i);
-                
-                int len = info.codeSystem.codeLength(c, buf);
-                if(selectedCols.get(c)) {                  
-                    cols[c].set(buf.array(), buf.arrayOffset() + pos, len);                         
-                }
-                pos += len;
-                buf.position(pos);
-            }
-            
-        }
-        
-    }
 
     /** change pointers to point to data in given buffer, this
      *  method allows to defined specific column to load */
