@@ -18,7 +18,9 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
+import java.util.Comparator;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -51,7 +54,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
     private JobLock jobLock;
     private ExecutableManager executableManager;
-    private FetcherRunner fetcher;
+    private Runnable fetcher;
     private ScheduledExecutorService fetcherPool;
     private ExecutorService jobPool;
     private DefaultContext context;
@@ -66,6 +69,110 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     public DefaultScheduler() {
         if (INSTANCE != null) {
             throw new IllegalStateException("DefaultScheduler has been initiated.");
+        }
+    }
+
+    private class FetcherRunnerWithPriority implements Runnable {
+        volatile PriorityQueue<Pair<AbstractExecutable, Integer>> jobPriorityQueue = new PriorityQueue<>(1,
+                new Comparator<Pair<AbstractExecutable, Integer>>() {
+                    @Override
+                    public int compare(Pair<AbstractExecutable, Integer> o1, Pair<AbstractExecutable, Integer> o2) {
+                        return o1.getSecond() > o2.getSecond() ? -1 : 1;
+                    }
+                });
+
+        private void addToJobPool(AbstractExecutable executable, int priority) {
+            String jobDesc = executable.toString();
+            logger.info(jobDesc + " prepare to schedule and its priority is " + priority);
+            try {
+                context.addRunningJob(executable);
+                jobPool.execute(new JobRunner(executable));
+                logger.info(jobDesc + " scheduled");
+            } catch (Exception ex) {
+                context.removeRunningJob(executable);
+                logger.warn(jobDesc + " fail to schedule", ex);
+            }
+        }
+
+        @Override
+        synchronized public void run() {
+            try {
+                // logger.debug("Job Fetcher is running...");
+                Map<String, Executable> runningJobs = context.getRunningJobs();
+
+                // fetch job from jobPriorityQueue first to reduce chance to scan job list
+                Map<String, Integer> leftJobPriorities = Maps.newHashMap();
+                Pair<AbstractExecutable, Integer> executableWithPriority;
+                while ((executableWithPriority = jobPriorityQueue.peek()) != null
+                        // the priority of jobs in pendingJobPriorities should be above a threshold
+                        && executableWithPriority.getSecond() >= jobEngineConfig.getFetchQueuePriorityBar()) {
+                    executableWithPriority = jobPriorityQueue.poll();
+                    AbstractExecutable executable = executableWithPriority.getFirst();
+                    int curPriority = executableWithPriority.getSecond();
+                    // the job should wait more than one time
+                    if (curPriority > executable.getDefaultPriority() + 1) {
+                        addToJobPool(executable, curPriority);
+                    } else {
+                        leftJobPriorities.put(executable.getId(), curPriority + 1);
+                    }
+                }
+
+                if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
+                    logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
+                    return;
+                }
+
+                while ((executableWithPriority = jobPriorityQueue.poll()) != null) {
+                    leftJobPriorities.put(executableWithPriority.getFirst().getId(),
+                            executableWithPriority.getSecond() + 1);
+                }
+
+                int nRunning = 0, nReady = 0, nStopped = 0, nOthers = 0, nError = 0, nDiscarded = 0, nSUCCEED = 0;
+                for (final String id : executableManager.getAllJobIds()) {
+                    if (runningJobs.containsKey(id)) {
+                        // logger.debug("Job id:" + id + " is already running");
+                        nRunning++;
+                        continue;
+                    }
+
+                    AbstractExecutable executable = executableManager.getJob(id);
+                    if (!executable.isReady()) {
+                        final Output output = executableManager.getOutput(id);
+                        // logger.debug("Job id:" + id + " not runnable");
+                        if (output.getState() == ExecutableState.DISCARDED) {
+                            nDiscarded++;
+                        } else if (output.getState() == ExecutableState.ERROR) {
+                            nError++;
+                        } else if (output.getState() == ExecutableState.SUCCEED) {
+                            nSUCCEED++;
+                        } else if (output.getState() == ExecutableState.STOPPED) {
+                            nStopped++;
+                        } else {
+                            nOthers++;
+                        }
+                        continue;
+                    }
+
+                    nReady++;
+                    Integer priority = leftJobPriorities.get(id);
+                    if (priority == null) {
+                        priority = executable.getDefaultPriority();
+                    }
+                    jobPriorityQueue.add(new Pair<>(executable, priority));
+                }
+
+                while (runningJobs.size() < jobEngineConfig.getMaxConcurrentJobLimit()
+                        && (executableWithPriority = jobPriorityQueue.poll()) != null) {
+                    addToJobPool(executableWithPriority.getFirst(), executableWithPriority.getSecond());
+                }
+
+                logger.info("Job Fetcher: " + nRunning + " running, " + runningJobs.size() + " actual running, "
+                        + nStopped + " stopped, " + nReady + " ready, " + jobPriorityQueue.size() + " waiting, " //
+                        + nSUCCEED + " already succeed, " + nError + " error, " + nDiscarded + " discarded, " + nOthers
+                        + " others");
+            } catch (Exception e) {
+                logger.warn("Job Fetcher caught a exception " + e);
+            }
         }
     }
 
@@ -222,7 +329,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
         int pollSecond = jobEngineConfig.getPollIntervalSecond();
         logger.info("Fetching jobs every {} seconds", pollSecond);
-        fetcher = new FetcherRunner();
+        fetcher = jobEngineConfig.getJobPriorityConsidered() ? new FetcherRunnerWithPriority() : new FetcherRunner();
         fetcherPool.scheduleAtFixedRate(fetcher, pollSecond / 10, pollSecond, TimeUnit.SECONDS);
         hasStarted = true;
     }

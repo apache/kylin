@@ -29,6 +29,8 @@ public class CheckpointExecutable extends DefaultChainedExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(CheckpointExecutable.class);
 
+    public static final Integer DEFAULT_PRIORITY = 30;
+
     private static final String DEPLOY_ENV_NAME = "envName";
     private static final String PROJECT_INSTANCE_NAME = "projectName";
 
@@ -74,5 +76,10 @@ public class CheckpointExecutable extends DefaultChainedExecutable {
 
     public void setProjectName(String name) {
         setParam(PROJECT_INSTANCE_NAME, name);
+    }
+
+    @Override
+    public int getDefaultPriority() {
+        return DEFAULT_PRIORITY;
     }
 }

@@ -577,6 +577,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.job.scheduler.default", "0"));
     }
 
+    public boolean getSchedulerPriorityConsidered() {
+        return Boolean.parseBoolean(getOptional("kylin.job.scheduler.priority-considered", "false"));
+    }
+
+    public Integer getSchedulerPriorityBarFetchFromQueue() {
+        return Integer.parseInt(getOptional("kylin.job.scheduler.priority-bar-fetch-from-queue", "20"));
+    }
+
     public Integer getSchedulerPollIntervalSecond() {
         return Integer.parseInt(getOptional("kylin.job.scheduler.poll-interval-second", "30"));
     }

@@ -65,12 +65,18 @@ public class CubingJob extends DefaultChainedExecutable {
     }
 
     public enum CubingJobTypeEnum {
-        BUILD("BUILD"), OPTIMIZE("OPTIMIZE"), MERGE("MERGE");
+        BUILD("BUILD", 20), OPTIMIZE("OPTIMIZE", 5), MERGE("MERGE", 25);
 
         private final String name;
+        private final int defaultPriority;
 
-        CubingJobTypeEnum(String name) {
+        CubingJobTypeEnum(String name, int priority) {
             this.name = name;
+            this.defaultPriority = priority;
+        }
+
+        public int getDefaultPriority() {
+            return defaultPriority;
         }
 
         public String toString() {
@@ -149,6 +155,15 @@ public class CubingJob extends DefaultChainedExecutable {
 
     public CubingJob() {
         super();
+    }
+
+    @Override
+    public int getDefaultPriority() {
+        CubingJobTypeEnum jobType = CubingJobTypeEnum.getByName(getJobType());
+        if (jobType == null) {
+            return super.getDefaultPriority();
+        }
+        return jobType.getDefaultPriority();
     }
 
     protected void setDeployEnvName(String name) {
