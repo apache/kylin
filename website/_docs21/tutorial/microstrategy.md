@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Integration with MicroStrategy 10.X
+title:  MicroStrategy
 categories: tutorial
 permalink: /docs21/tutorial/microstrategy.html
 ---

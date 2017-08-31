@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Cleanup Storage (HDFS & HBase)
+title:  Cleanup Storage
 categories: howto
 permalink: /docs21/howto/howto_cleanup_storage.html
 ---

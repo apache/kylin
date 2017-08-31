@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Use JDBC Driver
+title:  Kylin JDBC Driver
 categories: howto
 permalink: /docs21/howto/howto_jdbc.html
 ---

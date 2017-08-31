@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Connect from SQuirreL
+title:  SQuirreL
 categories: tutorial
 permalink: /docs21/tutorial/squirrel.html
 ---

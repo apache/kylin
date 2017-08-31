@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Kylin Web Interface
+title:  Web Interface
 categories: tutorial
 permalink: /docs21/tutorial/web.html
 ---

@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  How to Update HBase Coprocessor
+title:  Update Coprocessor
 categories: howto
 permalink: /docs21/howto/howto_update_coprocessor.html
 ---

@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Connect from Apache Flink
+title:  Apache Flink
 categories: tutorial
 permalink: /docs21/tutorial/flink.html
 ---

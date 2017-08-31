@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title: Cube Build Tuning Step by Step
+title: Cube Build Tuning
 categories: tutorial
 permalink: /docs21/tutorial/cube_build_performance.html
 ---

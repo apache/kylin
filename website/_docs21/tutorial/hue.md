@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title: Connect from Apache Hue
+title: Apache Hue
 categories: tutorial
 permalink: /docs21/tutorial/hue.html
 ---

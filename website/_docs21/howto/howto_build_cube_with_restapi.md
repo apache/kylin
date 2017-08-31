@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Build Cube with RESTful API
+title:  Build Cube with API
 categories: howto
 permalink: /docs21/howto/howto_build_cube_with_restapi.html
 ---

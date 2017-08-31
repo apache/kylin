@@ -28,13 +28,13 @@ Installation & Setup
 Tutorial
 ------------  
 1. [Quick Start with Sample Cube](tutorial/kylin_sample.html)
-2. [Cube Creation](tutorial/create_cube.html)
+2. [Web Interface](tutorial/web.html)
+3. [Cube Wizard](tutorial/create_cube.html)
 3. [Cube Build and Job Monitoring](tutorial/cube_build_job.html)
-4. [Web Interface](tutorial/web.html)
 5. [SQL reference: by Apache Calcite](http://calcite.apache.org/docs/reference.html)
 6. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
 7. [Build Cube with Spark Engine (beta)](tutorial/cube_spark.html)
-8. [Cube Build Tuning Step by Step](tutorial/cube_build_performance.html)
+8. [Cube Build Tuning](tutorial/cube_build_performance.html)
 9. [Enable Query Pushdown](tutorial/query_pushdown.html)
 
 
@@ -45,10 +45,10 @@ Connectivity and APIs
 2. [JDBC driver](howto/howto_jdbc.html)
 3. [RESTful API list](howto/howto_use_restapi.html)
 4. [Build cube with RESTful API](howto/howto_build_cube_with_restapi.html)
-5. [Call RESTful API in Javascript](howto/howto_use_restapi_in_js.html)
-6. [Connect from MS Excel and PowerBI](tutorial/powerbi.html)
-7. [Connect from Tableau 8](tutorial/tableau.html)
-8. [Connect from Tableau 9](tutorial/tableau_91.html)
+5. [Connect from MS Excel and PowerBI](tutorial/powerbi.html)
+6. [Connect from Tableau 8](tutorial/tableau.html)
+7. [Connect from Tableau 9](tutorial/tableau_91.html)
+8. [Connect from MicroStrategy](tutorial/microstrategy.html)
 9. [Connect from SQuirreL](tutorial/squirrel.html)
 10. [Connect from Apache Flink](tutorial/flink.html)
 11. [Connect from Apache Hue](tutorial/hue.html)
@@ -56,7 +56,7 @@ Connectivity and APIs
 Operations
 ------------  
 1. [Backup/restore Kylin metadata](howto/howto_backup_metadata.html)
-2. [Cleanup storage (HDFS & HBase)](howto/howto_cleanup_storage.html)
+2. [Cleanup storage](howto/howto_cleanup_storage.html)
 3. [Upgrade from old version](howto/howto_upgrade.html)
 
 

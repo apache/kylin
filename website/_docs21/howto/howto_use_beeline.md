@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Use Beeline for Hive Commands
+title:  Use Beeline for Hive
 categories: howto
 permalink: /docs21/howto/howto_use_beeline.html
 ---

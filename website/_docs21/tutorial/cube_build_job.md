@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Kylin Cube Build and Job Monitoring
+title:  Cube Build and Job Monitoring
 categories: tutorial
 permalink: /docs21/tutorial/cube_build_job.html
 ---

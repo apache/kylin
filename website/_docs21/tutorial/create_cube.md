@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Kylin Cube Creation
+title:  Cube Wizard
 categories: tutorial
 permalink: /docs21/tutorial/create_cube.html
 ---

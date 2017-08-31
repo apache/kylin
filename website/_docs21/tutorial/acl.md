@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title:  Kylin Cube Permission
+title: Cube Permission
 categories: tutorial
 permalink: /docs21/tutorial/acl.html
 since: v0.7.1

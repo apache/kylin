@@ -1,6 +1,6 @@
 ---
 layout: docs21
-title: Enable Security with LDAP and SSO
+title: Secure with LDAP and SSO
 categories: howto
 permalink: /docs21/howto/howto_ldap_and_sso.html
 ---
