@@ -101,6 +101,9 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.refreshRowKey($scope.convertedRowkeys,i,$scope.convertedRowkeys[i]);
     }
   }
+  $scope.sortableOptions = {
+    stop:$scope.resortRowkey
+  };
 
   $scope.addNewHierarchy = function(grp){
     grp.select_rule.hierarchy_dims.push([]);
@@ -184,7 +187,6 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   };
   $scope.initUpdateDictionariesStatus();
 
-
   $scope.addNewDictionaries = function (dictionaries, index) {
     if(dictionaries&&index>=0){
       $scope.updateDictionariesStatus.isEdit = true;
@@ -204,10 +206,6 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   };
 
   $scope.saveNewDictionaries = function (){
-    if(!$scope.cubeMetaFrame.dictionaries){
-      $scope.cubeMetaFrame.dictionaries=[];
-    }
-
     if($scope.updateDictionariesStatus.isEdit == true) {
       if ($scope.cubeMetaFrame.dictionaries[$scope.updateDictionariesStatus.editIndex].column != $scope.newDictionaries.column) {
         if(!$scope.checkColumn()){

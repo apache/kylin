@@ -35,7 +35,7 @@
                                ng-model="modelsManager.selectedModel.name" required
                                placeholder="You can use letters, numbers, and '_'"
                                ng-maxlength=100 ng-pattern="/^\w+$/" />
-                        <small class="help-block" ng-show="forms.model_info_form.model_name.$error.required && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">Model name is required.</small>
+                        <small style="color:red" class="help-block" ng-show="forms.model_info_form.model_name.$error.required && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">Model name is required.</small>
                         <small class="help-block" ng-show="!forms.model_info_form.model_name.$error.required&&forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">Model name is invalid.</small>
 
 

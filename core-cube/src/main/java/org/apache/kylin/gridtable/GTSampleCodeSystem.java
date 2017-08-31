@@ -118,4 +118,8 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
         }
     };
 
+    @Override
+    public DataTypeSerializer<?> getSerializer(int col) {
+        return serializers[col];
+    }
 }

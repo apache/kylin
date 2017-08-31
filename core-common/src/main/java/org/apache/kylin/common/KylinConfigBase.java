@@ -542,6 +542,7 @@ abstract public class KylinConfigBase implements Serializable {
         // ref constants in ISourceAware
         r.put(0, "org.apache.kylin.source.hive.HiveSource");
         r.put(1, "org.apache.kylin.source.kafka.KafkaSource");
+        r.put(8, "org.apache.kylin.source.jdbc.JdbcSource");
         r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.source.provider.")));
         return r;
     }

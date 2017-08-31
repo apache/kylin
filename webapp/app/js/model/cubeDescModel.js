@@ -19,8 +19,6 @@
 KylinApp.service('CubeDescModel', function (kylinConfig) {
 
   this.cubeMetaFrame = {};
-
-  //
   this.createNew = function (defaultPara) {
     var cubeMeta = {
       "name": "",
@@ -100,10 +98,6 @@ KylinApp.service('CubeDescModel', function (kylinConfig) {
           "joint_dims" : [  ]//2 dim array
       }
     }
-
     return group;
   }
-
-
-
 })

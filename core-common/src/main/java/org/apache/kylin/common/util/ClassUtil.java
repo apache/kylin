@@ -27,7 +27,6 @@ import java.net.URLDecoder;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +53,6 @@ public class ClassUtil {
         }
     }
 
-    private static final WeakHashMap<String, Class<?>> forNameCache = new WeakHashMap<>();
     private static final Map<String, String> classRenameMap;
     static {
         classRenameMap = new HashMap<>();
@@ -70,15 +68,8 @@ public class ClassUtil {
 
     @SuppressWarnings("unchecked")
     public static <T> Class<? extends T> forName(String name, Class<T> clz) throws ClassNotFoundException {
-        String origName = name;
-
-        Class<? extends T> result = (Class<? extends T>) forNameCache.get(origName);
-        if (result == null) {
-            name = forRenamedClass(name);
-            result = (Class<? extends T>) Class.forName(name);
-            forNameCache.put(origName, result);
-        }
-        return result;
+        name = forRenamedClass(name);
+        return (Class<? extends T>) Class.forName(name);
     }
 
     private static String forRenamedClass(String name) {

@@ -64,6 +64,7 @@ public interface BatchConstants {
     String CFG_OUTPUT_DICT = "dict";
     String CFG_OUTPUT_STATISTICS = "statistics";
     String CFG_OUTPUT_PARTITION = "partition";
+    String CFG_MR_SPARK_JOB = "mr.spark.job";
 
     /**
      * command line ARGuments

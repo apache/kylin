@@ -163,6 +163,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         }
         builder.setSpillEnabled(cubeSeg.getConfig().getQueryCoprocessorSpillEnabled());
         builder.setMaxScanBytes(cubeSeg.getConfig().getPartitionMaxScanBytes());
+        builder.setIsExactAggregate(storageContext.isExactAggregation());
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
             executorService.submit(new Runnable() {

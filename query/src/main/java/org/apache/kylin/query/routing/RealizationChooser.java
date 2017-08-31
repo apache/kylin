@@ -66,12 +66,13 @@ public class RealizationChooser {
             throw new NoRealizationFoundException("No model found for " + toErrorMsg(context));
         }
 
-        for (DataModelDesc model : modelMap.keySet()) {
-            Map<String, String> aliasMap = matches(model, context);
+        for (Map.Entry<DataModelDesc, Set<IRealization>> entry : modelMap.entrySet()) {
+            final DataModelDesc model = entry.getKey();
+            final Map<String, String> aliasMap = matches(model, context);
             if (aliasMap != null) {
                 fixModel(context, model, aliasMap);
 
-                IRealization realization = QueryRouter.selectRealization(context, modelMap.get(model));
+                IRealization realization = QueryRouter.selectRealization(context, entry.getValue());
                 if (realization == null) {
                     logger.info("Give up on model {} because no suitable realization is found", model);
                     unfixModel(context);

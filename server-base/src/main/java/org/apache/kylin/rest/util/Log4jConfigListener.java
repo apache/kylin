@@ -35,6 +35,7 @@ public class Log4jConfigListener extends org.springframework.web.util.Log4jConfi
         if (!isDebugTomcat) {
             super.contextInitialized(event);
         }
+        System.setProperty("needCheckCC", "true");
     }
 
     @Override

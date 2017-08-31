@@ -18,6 +18,15 @@
 
 package org.apache.kylin.common;
 
+import com.google.common.base.Preconditions;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.OrderedProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,23 +43,15 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.restclient.RestClient;
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.OrderedProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-
 /**
  */
 public class KylinConfig extends KylinConfigBase {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 
-    /** Kylin properties file name */
+    /**
+     * Kylin properties file name
+     */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
@@ -60,6 +61,26 @@ public class KylinConfig extends KylinConfigBase {
     // thread-local instances, will override SYS_ENV_INSTANCE
     private static transient ThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new ThreadLocal<>();
     
+    static {
+        /*
+         * Make Calcite to work with Unicode.
+         * 
+         * Sets default char set for string literals in SQL and row types of
+         * RelNode. This is more a label used to compare row type equality. For
+         * both SQL string and row record, they are passed to Calcite in String
+         * object and does not require additional codec.
+         * 
+         * Ref SaffronProperties.defaultCharset
+         * Ref SqlUtil.translateCharacterSetName() 
+         * Ref NlsString constructor()
+         */
+        // copied from org.apache.calcite.util.ConversionUtil.NATIVE_UTF16_CHARSET_NAME
+        String NATIVE_UTF16_CHARSET_NAME = (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN) ? "UTF-16BE" : "UTF-16LE";
+        System.setProperty("saffron.default.charset", NATIVE_UTF16_CHARSET_NAME);
+        System.setProperty("saffron.default.nationalcharset", NATIVE_UTF16_CHARSET_NAME);
+        System.setProperty("saffron.default.collation.name", NATIVE_UTF16_CHARSET_NAME + "$en_US");
+    }
+
     static {
         /*
          * Make Calcite to work with Unicode.
@@ -114,7 +135,7 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public enum UriType {
-        PROPERTIES_FILE, REST_ADDR, LOCAL_FOLDER
+        PROPERTIES_FILE, REST_ADDR, LOCAL_FOLDER, HDFS_FILE
     }
 
     private static UriType decideUriType(String metaUri) {
@@ -218,7 +239,7 @@ public class KylinConfig extends KylinConfigBase {
     public static void setKylinConfigThreadLocal(KylinConfig config) {
         THREAD_ENV_INSTANCE.set(config);
     }
-    
+
     public static void removeKylinConfigThreadLocal() {
         THREAD_ENV_INSTANCE.remove();
     }
@@ -400,6 +421,16 @@ public class KylinConfig extends KylinConfigBase {
 
     protected KylinConfig(Properties props, boolean force) {
         super(props, force);
+    }
+
+    public void writeProperties(Properties props, File file) throws IOException {
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(file);
+            props.store(fos, file.getAbsolutePath());
+        } finally {
+            IOUtils.closeQuietly(fos);
+        }
     }
 
     public void writeProperties(File file) throws IOException {

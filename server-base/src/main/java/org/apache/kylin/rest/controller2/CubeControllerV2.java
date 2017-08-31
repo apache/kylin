@@ -101,7 +101,8 @@ public class CubeControllerV2 extends BasicController {
             @RequestParam(value = "modelName", required = false) String modelName,
             @RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) throws IOException {
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
+            throws IOException {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
         List<CubeInstanceResponse> response = new ArrayList<CubeInstanceResponse>();
@@ -115,7 +116,7 @@ public class CubeControllerV2 extends BasicController {
                 logger.error("Error creating cube instance response, skipping.", e);
             }
         }
-        
+
         // draft cubes
         for (Draft d : cubeService.listCubeDrafts(cubeName, modelName, projectName, exactMatch)) {
             CubeDesc c = (CubeDesc) d.getEntity();
@@ -144,7 +145,7 @@ public class CubeControllerV2 extends BasicController {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
-    
+
     private boolean contains(List<CubeInstanceResponse> response, String name) {
         for (CubeInstanceResponse r : response) {
             if (r.getName().equals(name))
@@ -156,24 +157,24 @@ public class CubeControllerV2 extends BasicController {
     private CubeInstanceResponse createCubeInstanceResponseFromDraft(Draft d) {
         CubeDesc desc = (CubeDesc) d.getEntity();
         Preconditions.checkState(desc.isDraft());
-        
+
         CubeInstance mock = new CubeInstance();
         mock.setName(desc.getName());
         mock.setDescName(desc.getName());
         mock.setStatus(RealizationStatusEnum.DISABLED);
-        
+
         CubeInstanceResponse r = new CubeInstanceResponse(mock);
-        
+
         r.setModel(desc.getModelName());
         r.setProject(d.getProject());
         r.setDraft(true);
-        
+
         return r;
     }
 
     private CubeInstanceResponse createCubeInstanceResponse(CubeInstance cube) {
         Preconditions.checkState(!cube.getDescriptor().isDraft());
-        
+
         CubeInstanceResponse r = new CubeInstanceResponse(cube);
 
         r.setModel(cube.getDescriptor().getModelName());
@@ -187,7 +188,7 @@ public class CubeControllerV2 extends BasicController {
                     cube.getModel().getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
         }
         r.setProject(projectService.getProjectOfCube(cube.getName()));
-        
+
         return r;
     }
 

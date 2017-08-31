@@ -44,6 +44,7 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -95,7 +96,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
 
         return new SequentialCubeTupleIterator(scanners, request.getCuboid(), request.getDimensions(),
-                request.getMetrics(), returnTupleInfo, request.getContext(), sqlDigest);
+                request.getGroups(), request.getMetrics(), returnTupleInfo, request.getContext(), sqlDigest);
     }
 
     protected GTCubeStorageQueryRequest getStorageQueryRequest(StorageContext context, SQLDigest sqlDigest,
@@ -136,6 +137,10 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         // set whether to aggr at storage
         Set<TblColRef> singleValuesD = findSingleValueColumns(filter);
         context.setNeedStorageAggregation(isNeedStorageAggregation(cuboid, groupsD, singleValuesD));
+
+        // exactAggregation mean: needn't aggregation at storage and query engine both.
+        boolean exactAggregation = isExactAggregation(context, cuboid, groups, otherDimsD, singleValuesD, derivedPostAggregation, sqlDigest.aggregations);
+        context.setExactAggregation(exactAggregation);
 
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
         Set<TblColRef> loosenedColumnD = Sets.newHashSet();
@@ -486,6 +491,52 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             aggrOutCol.getColumnDesc().setId("" + (aggrIdxAmongMetrics + 1));
         }
         return havingFilter;
+    }
+
+    private boolean isExactAggregation(StorageContext context, Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> othersD, Set<TblColRef> singleValuesD, Set<TblColRef> derivedPostAggregation, Collection<FunctionDesc> functionDescs) {
+        if (context.isNeedStorageAggregation()) {
+            logger.info("exactAggregation is false because need storage aggregation");
+            return false;
+        }
+
+        if (cuboid.requirePostAggregation()) {
+            logger.info("exactAggregation is false because cuboid " + cuboid.getInputID() + "=> " + cuboid.getId());
+            return false;
+        }
+
+        // derived aggregation is bad, unless expanded columns are already in group by
+        if (groups.containsAll(derivedPostAggregation) == false) {
+            logger.info("exactAggregation is false because derived column require post aggregation: " + derivedPostAggregation);
+            return false;
+        }
+
+        // other columns (from filter) is bad, unless they are ensured to have single value
+        if (singleValuesD.containsAll(othersD) == false) {
+            logger.info("exactAggregation is false because some column not on group by: " + othersD //
+                    + " (single value column: " + singleValuesD + ")");
+            return false;
+        }
+
+        //for DimensionAsMetric like max(cal_dt), the dimension column maybe not in real group by
+        for (FunctionDesc functionDesc : functionDescs) {
+            if (functionDesc.isDimensionAsMetric()) {
+                logger.info("exactAggregation is false because has DimensionAsMetric");
+                return false;
+            }
+        }
+
+        // for partitioned cube, the partition column must belong to group by or has single value
+        PartitionDesc partDesc = cuboid.getCubeDesc().getModel().getPartitionDesc();
+        if (partDesc.isPartitioned()) {
+            TblColRef col = partDesc.getPartitionDateColumnRef();
+            if (!groups.contains(col) && !singleValuesD.contains(col)) {
+                logger.info("exactAggregation is false because cube is partitioned and " + col + " is not on group by");
+                return false;
+            }
+        }
+
+        logger.info("exactAggregation is true, cuboid id is " + cuboid.getId());
+        return true;
     }
 
 }

@@ -56,8 +56,6 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.RawResource;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
@@ -68,9 +66,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,23 +74,43 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractHadoopJob extends Configured implements Tool {
     private static final Logger logger = LoggerFactory.getLogger(AbstractHadoopJob.class);
 
-    protected static final Option OPTION_PROJECT = OptionBuilder.withArgName(BatchConstants.ARG_PROJECT).hasArg().isRequired(true).withDescription("Project name.").create(BatchConstants.ARG_PROJECT);
-    protected static final Option OPTION_JOB_NAME = OptionBuilder.withArgName(BatchConstants.ARG_JOB_NAME).hasArg().isRequired(true).withDescription("Job name. For example, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)").create(BatchConstants.ARG_JOB_NAME);
-    protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_CUBE_NAME).hasArg().isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube").create(BatchConstants.ARG_CUBE_NAME);
-    protected static final Option OPTION_CUBING_JOB_ID = OptionBuilder.withArgName(BatchConstants.ARG_CUBING_JOB_ID).hasArg().isRequired(false).withDescription("ID of cubing job executable").create(BatchConstants.ARG_CUBING_JOB_ID);
+    protected static final Option OPTION_PROJECT = OptionBuilder.withArgName(BatchConstants.ARG_PROJECT).hasArg()
+            .isRequired(true).withDescription("Project name.").create(BatchConstants.ARG_PROJECT);
+    protected static final Option OPTION_JOB_NAME = OptionBuilder.withArgName(BatchConstants.ARG_JOB_NAME).hasArg()
+            .isRequired(true).withDescription("Job name. For example, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)")
+            .create(BatchConstants.ARG_JOB_NAME);
+    protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_CUBE_NAME).hasArg()
+            .isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube")
+            .create(BatchConstants.ARG_CUBE_NAME);
+    protected static final Option OPTION_CUBING_JOB_ID = OptionBuilder.withArgName(BatchConstants.ARG_CUBING_JOB_ID)
+            .hasArg().isRequired(false).withDescription("ID of cubing job executable")
+            .create(BatchConstants.ARG_CUBING_JOB_ID);
     //    @Deprecated
-    protected static final Option OPTION_SEGMENT_NAME = OptionBuilder.withArgName(BatchConstants.ARG_SEGMENT_NAME).hasArg().isRequired(true).withDescription("Cube segment name").create(BatchConstants.ARG_SEGMENT_NAME);
-    protected static final Option OPTION_SEGMENT_ID = OptionBuilder.withArgName(BatchConstants.ARG_SEGMENT_ID).hasArg().isRequired(true).withDescription("Cube segment id").create(BatchConstants.ARG_SEGMENT_ID);
-    protected static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg().isRequired(true).withDescription("Input path").create(BatchConstants.ARG_INPUT);
-    protected static final Option OPTION_INPUT_FORMAT = OptionBuilder.withArgName(BatchConstants.ARG_INPUT_FORMAT).hasArg().isRequired(false).withDescription("Input format").create(BatchConstants.ARG_INPUT_FORMAT);
-    protected static final Option OPTION_OUTPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_OUTPUT).hasArg().isRequired(true).withDescription("Output path").create(BatchConstants.ARG_OUTPUT);
-    protected static final Option OPTION_NCUBOID_LEVEL = OptionBuilder.withArgName(BatchConstants.ARG_LEVEL).hasArg().isRequired(true).withDescription("N-Cuboid build level, e.g. 1, 2, 3...").create(BatchConstants.ARG_LEVEL);
-    protected static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder.withArgName(BatchConstants.ARG_PARTITION).hasArg().isRequired(true).withDescription("Partition file path.").create(BatchConstants.ARG_PARTITION);
-    protected static final Option OPTION_HTABLE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_HTABLE_NAME).hasArg().isRequired(true).withDescription("HTable name").create(BatchConstants.ARG_HTABLE_NAME);
+    protected static final Option OPTION_SEGMENT_NAME = OptionBuilder.withArgName(BatchConstants.ARG_SEGMENT_NAME)
+            .hasArg().isRequired(true).withDescription("Cube segment name").create(BatchConstants.ARG_SEGMENT_NAME);
+    protected static final Option OPTION_SEGMENT_ID = OptionBuilder.withArgName(BatchConstants.ARG_SEGMENT_ID).hasArg()
+            .isRequired(true).withDescription("Cube segment id").create(BatchConstants.ARG_SEGMENT_ID);
+    protected static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
+            .isRequired(true).withDescription("Input path").create(BatchConstants.ARG_INPUT);
+    protected static final Option OPTION_INPUT_FORMAT = OptionBuilder.withArgName(BatchConstants.ARG_INPUT_FORMAT)
+            .hasArg().isRequired(false).withDescription("Input format").create(BatchConstants.ARG_INPUT_FORMAT);
+    protected static final Option OPTION_OUTPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_OUTPUT).hasArg()
+            .isRequired(true).withDescription("Output path").create(BatchConstants.ARG_OUTPUT);
+    protected static final Option OPTION_NCUBOID_LEVEL = OptionBuilder.withArgName(BatchConstants.ARG_LEVEL).hasArg()
+            .isRequired(true).withDescription("N-Cuboid build level, e.g. 1, 2, 3...").create(BatchConstants.ARG_LEVEL);
+    protected static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder.withArgName(BatchConstants.ARG_PARTITION)
+            .hasArg().isRequired(true).withDescription("Partition file path.").create(BatchConstants.ARG_PARTITION);
+    protected static final Option OPTION_HTABLE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_HTABLE_NAME)
+            .hasArg().isRequired(true).withDescription("HTable name").create(BatchConstants.ARG_HTABLE_NAME);
 
-    protected static final Option OPTION_STATISTICS_ENABLED = OptionBuilder.withArgName(BatchConstants.ARG_STATS_ENABLED).hasArg().isRequired(false).withDescription("Statistics enabled").create(BatchConstants.ARG_STATS_ENABLED);
-    protected static final Option OPTION_STATISTICS_OUTPUT = OptionBuilder.withArgName(BatchConstants.ARG_STATS_OUTPUT).hasArg().isRequired(false).withDescription("Statistics output").create(BatchConstants.ARG_STATS_OUTPUT);
-    protected static final Option OPTION_STATISTICS_SAMPLING_PERCENT = OptionBuilder.withArgName(BatchConstants.ARG_STATS_SAMPLING_PERCENT).hasArg().isRequired(false).withDescription("Statistics sampling percentage").create(BatchConstants.ARG_STATS_SAMPLING_PERCENT);
+    protected static final Option OPTION_STATISTICS_ENABLED = OptionBuilder
+            .withArgName(BatchConstants.ARG_STATS_ENABLED).hasArg().isRequired(false)
+            .withDescription("Statistics enabled").create(BatchConstants.ARG_STATS_ENABLED);
+    protected static final Option OPTION_STATISTICS_OUTPUT = OptionBuilder.withArgName(BatchConstants.ARG_STATS_OUTPUT)
+            .hasArg().isRequired(false).withDescription("Statistics output").create(BatchConstants.ARG_STATS_OUTPUT);
+    protected static final Option OPTION_STATISTICS_SAMPLING_PERCENT = OptionBuilder
+            .withArgName(BatchConstants.ARG_STATS_SAMPLING_PERCENT).hasArg().isRequired(false)
+            .withDescription("Statistics sampling percentage").create(BatchConstants.ARG_STATS_SAMPLING_PERCENT);
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 
@@ -152,7 +168,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         } else {
             job.waitForCompletion(true);
             retVal = job.isSuccessful() ? 0 : 1;
-            logger.debug("Job '" + job.getJobName() + "' finished " + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ") + formatTime((System.nanoTime() - start) / 1000000L));
+            logger.debug("Job '" + job.getJobName() + "' finished "
+                    + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ")
+                    + formatTime((System.nanoTime() - start) / 1000000L));
         }
         return retVal;
     }
@@ -173,7 +191,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         Configuration jobConf = job.getConfiguration();
         String classpath = jobConf.get(MAP_REDUCE_CLASSPATH);
         if (classpath == null || classpath.length() == 0) {
-            logger.info("Didn't find " + MAP_REDUCE_CLASSPATH + " in job configuration, will run 'mapred classpath' to get the default value.");
+            logger.info("Didn't find " + MAP_REDUCE_CLASSPATH
+                    + " in job configuration, will run 'mapred classpath' to get the default value.");
             classpath = getDefaultMapRedClasspath();
             logger.info("The default mapred classpath is: " + classpath);
         }
@@ -206,11 +225,13 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 StringUtil.appendWithSeparator(kylinDependency, hiveExecJarPath);
                 logger.debug("hive-exec jar file: " + hiveExecJarPath);
 
-                String hiveHCatJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hive.hcatalog.mapreduce.HCatInputFormat"));
+                String hiveHCatJarPath = ClassUtil
+                        .findContainingJar(Class.forName("org.apache.hive.hcatalog.mapreduce.HCatInputFormat"));
                 StringUtil.appendWithSeparator(kylinDependency, hiveHCatJarPath);
                 logger.debug("hive-catalog jar file: " + hiveHCatJarPath);
 
-                String hiveMetaStoreJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hadoop.hive.metastore.api.Table"));
+                String hiveMetaStoreJarPath = ClassUtil
+                        .findContainingJar(Class.forName("org.apache.hadoop.hive.metastore.api.Table"));
                 StringUtil.appendWithSeparator(kylinDependency, hiveMetaStoreJarPath);
                 logger.debug("hive-metastore jar file: " + hiveMetaStoreJarPath);
             } catch (ClassNotFoundException e) {
@@ -226,7 +247,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         } else {
             logger.debug("No Kafka dependency jar set in the environment, will find them from classpath:");
             try {
-                String kafkaClientJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.kafka.clients.consumer.KafkaConsumer"));
+                String kafkaClientJarPath = ClassUtil
+                        .findContainingJar(Class.forName("org.apache.kafka.clients.consumer.KafkaConsumer"));
                 StringUtil.appendWithSeparator(kylinDependency, kafkaClientJarPath);
                 logger.debug("kafka jar file: " + kafkaClientJarPath);
 
@@ -449,12 +471,13 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     }
 
     protected void attachCubeMetadata(CubeInstance cube, Configuration conf) throws IOException {
-        dumpKylinPropsAndMetadata(cube.getProject(), collectCubeMetadata(cube), cube.getConfig(), conf);
+        dumpKylinPropsAndMetadata(cube.getProject(), JobRelatedMetaUtil.collectCubeMetadata(cube), cube.getConfig(),
+                conf);
     }
 
     protected void attachCubeMetadataWithDict(CubeInstance cube, Configuration conf) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
-        dumpList.addAll(collectCubeMetadata(cube));
+        dumpList.addAll(JobRelatedMetaUtil.collectCubeMetadata(cube));
         for (CubeSegment segment : cube.getSegments()) {
             dumpList.addAll(segment.getDictionaryPaths());
         }
@@ -463,28 +486,13 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected void attachSegmentMetadataWithDict(CubeSegment segment, Configuration conf) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
-        dumpList.addAll(collectCubeMetadata(segment.getCubeInstance()));
+        dumpList.addAll(JobRelatedMetaUtil.collectCubeMetadata(segment.getCubeInstance()));
         dumpList.addAll(segment.getDictionaryPaths());
         dumpKylinPropsAndMetadata(segment.getProject(), dumpList, segment.getConfig(), conf);
     }
 
-    private Set<String> collectCubeMetadata(CubeInstance cube) {
-        // cube, model_desc, cube_desc, table
-        Set<String> dumpList = new LinkedHashSet<>();
-        dumpList.add(cube.getResourcePath());
-        dumpList.add(cube.getDescriptor().getModel().getResourcePath());
-        dumpList.add(cube.getDescriptor().getResourcePath());
-
-        for (TableRef tableRef : cube.getDescriptor().getModel().getAllTables()) {
-            TableDesc table = tableRef.getTableDesc();
-            dumpList.add(table.getResourcePath());
-            dumpList.addAll(SourceFactory.getMRDependentResources(table));
-        }
-        
-        return dumpList;
-    }
-
-    protected void dumpKylinPropsAndMetadata(String prj, Set<String> dumpList, KylinConfig kylinConfig, Configuration conf) throws IOException {
+    protected void dumpKylinPropsAndMetadata(String prj, Set<String> dumpList, KylinConfig kylinConfig,
+            Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
         FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 
@@ -494,13 +502,13 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         // write kylin.properties
         File kylinPropsFile = new File(metaDir, "kylin.properties");
         kylinConfig.writeProperties(kylinPropsFile);
-        
+
         if (prj != null) {
             dumpList.add(ProjectManager.getInstance(kylinConfig).getProject(prj).getResourcePath());
         }
 
         // write resources
-        dumpResources(kylinConfig, metaDir, dumpList);
+        JobRelatedMetaUtil.dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
         String hdfsMetaDir = OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
@@ -536,28 +544,12 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
     }
 
-    private void dumpResources(KylinConfig kylinConfig, File metaDir, Set<String> dumpList) throws IOException {
-        long startTime = System.currentTimeMillis();
-
-        ResourceStore from = ResourceStore.getStore(kylinConfig);
-        KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath());
-        ResourceStore to = ResourceStore.getStore(localConfig);
-        for (String path : dumpList) {
-            RawResource res = from.getResource(path);
-            if (res == null)
-                throw new IllegalStateException("No resource found at -- " + path);
-            to.putResource(path, res.inputStream, res.timestamp);
-            res.inputStream.close();
-        }
-
-        logger.debug("Dump resources to {} took {} ms", metaDir, System.currentTimeMillis() - startTime);
-    }
-
     protected void deletePath(Configuration conf, Path path) throws IOException {
         HadoopUtil.deletePath(conf, path);
     }
 
-    public static double getTotalMapInputMB(Job job) throws ClassNotFoundException, IOException, InterruptedException, JobException {
+    public static double getTotalMapInputMB(Job job)
+            throws ClassNotFoundException, IOException, InterruptedException, JobException {
         if (job == null) {
             throw new JobException("Job is null");
         }
@@ -574,11 +566,13 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return totalMapInputMB;
     }
 
-    protected double getTotalMapInputMB() throws ClassNotFoundException, IOException, InterruptedException, JobException {
+    protected double getTotalMapInputMB()
+            throws ClassNotFoundException, IOException, InterruptedException, JobException {
         return getTotalMapInputMB(job);
     }
 
-    protected int getMapInputSplitCount() throws ClassNotFoundException, JobException, IOException, InterruptedException {
+    protected int getMapInputSplitCount()
+            throws ClassNotFoundException, JobException, IOException, InterruptedException {
         if (job == null) {
             throw new JobException("Job is null");
         }

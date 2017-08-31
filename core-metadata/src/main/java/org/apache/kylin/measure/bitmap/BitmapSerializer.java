@@ -28,6 +28,9 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
     private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
     private static final BitmapCounter DELEGATE = factory.newBitmap();
 
+    private static final int IS_RESULT_FLAG = 1;
+    private static final int RESULT_SIZE = 12;
+
     // called by reflection
     public BitmapSerializer(DataType type) {
     }
@@ -44,8 +47,13 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
     @Override
     public BitmapCounter deserialize(ByteBuffer in) {
         try {
-            return factory.newBitmap(in);
-
+            //The length of RoaringBitmap is larger than 12
+            if (peekLength(in) == RESULT_SIZE) {
+                int flag = in.getInt();
+                return factory.newBitmap(in.getLong());
+            } else {
+                return factory.newBitmap(in);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -53,7 +61,12 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
 
     @Override
     public int peekLength(ByteBuffer in) {
-        return DELEGATE.peekLength(in);
+        ByteBuffer buffer = in.slice();
+        if (buffer.getInt(0) == IS_RESULT_FLAG) {
+            return RESULT_SIZE;
+        } else {
+            return DELEGATE.peekLength(in);
+        }
     }
 
     @Override
@@ -70,5 +83,24 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
     public int getStorageBytesEstimate() {
         // It's difficult to decide the size before data was ingested, comparing with HLLCounter(16) as 64KB, here is assumption
         return 8 * 1024;
+    }
+
+    @Override
+    public boolean supportDirectReturnResult() {
+        return true;
+    }
+
+    @Override
+    public ByteBuffer getFinalResult(ByteBuffer in) {
+        ByteBuffer out = ByteBuffer.allocate(RESULT_SIZE);
+        try {
+            BitmapCounter counter = factory.newBitmap(in);
+            out.putInt(IS_RESULT_FLAG);
+            out.putLong(counter.getCount());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        out.flip();
+        return out;
     }
 }

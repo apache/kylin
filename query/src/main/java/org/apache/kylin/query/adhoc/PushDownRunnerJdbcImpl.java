@@ -66,12 +66,10 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
         //extract column metadata
         ResultSetMetaData metaData = null;
         int columnCount = 0;
-
         try {
             statement = connection.createStatement();
             resultSet = statement.executeQuery(query);
             extractResults(resultSet, results);
-
             metaData = resultSet.getMetaData();
             columnCount = metaData.getColumnCount();
 

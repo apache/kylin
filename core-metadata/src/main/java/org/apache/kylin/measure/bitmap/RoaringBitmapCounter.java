@@ -35,6 +35,7 @@ import java.util.Iterator;
 public class RoaringBitmapCounter implements BitmapCounter, Serializable {
 
     private ImmutableRoaringBitmap bitmap;
+    private Long counter;
 
     RoaringBitmapCounter() {
         bitmap = new MutableRoaringBitmap();
@@ -43,6 +44,11 @@ public class RoaringBitmapCounter implements BitmapCounter, Serializable {
     RoaringBitmapCounter(ImmutableRoaringBitmap bitmap) {
         this.bitmap = bitmap;
     }
+
+    RoaringBitmapCounter(long counter) {
+        this.counter = counter;
+    }
+
 
     private MutableRoaringBitmap getMutableBitmap() {
         if (bitmap instanceof MutableRoaringBitmap) {
@@ -86,6 +92,10 @@ public class RoaringBitmapCounter implements BitmapCounter, Serializable {
 
     @Override
     public long getCount() {
+        if (counter != null) {
+            return counter;
+        }
+
         return bitmap.getCardinality();
     }
 

@@ -21,6 +21,8 @@ package org.apache.kylin.engine.spark;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.kylin.engine.spark.util.PercentileCounterSerializer;
+import org.apache.kylin.measure.percentile.PercentileCounter;
 import org.apache.spark.serializer.KryoRegistrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,8 +93,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.roaringbitmap.buffer.MutableRoaringBitmap.class);
         kyroClasses.add(org.roaringbitmap.buffer.MappeableArrayContainer.class);
         kyroClasses.add(org.roaringbitmap.buffer.MappeableBitmapContainer.class);
-        kyroClasses.add(com.tdunning.math.stats.AVLTreeDigest.class);
-        kyroClasses.add(com.tdunning.math.stats.Centroid.class);
+
 
         addClassQuitely(kyroClasses, "com.google.common.collect.EmptyImmutableList");
         addClassQuitely(kyroClasses, "java.nio.HeapShortBuffer");
@@ -100,14 +101,12 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         addClassQuitely(kyroClasses, "scala.collection.immutable.Map$EmptyMap$");
         addClassQuitely(kyroClasses, "org.apache.spark.sql.catalyst.expressions.GenericInternalRow");
         addClassQuitely(kyroClasses, "org.apache.spark.unsafe.types.UTF8String");
-        addClassQuitely(kyroClasses, "com.tdunning.math.stats.AVLGroupTree");
 
         for (Class kyroClass : kyroClasses) {
             kryo.register(kyroClass);
         }
 
-        // TODO: should use JavaSerializer for PercentileCounter after Kryo bug be fixed: https://github.com/EsotericSoftware/kryo/issues/489
-        //        kryo.register(PercentileCounter.class, new JavaSerializer());
+        kryo.register(PercentileCounter.class, new PercentileCounterSerializer());
     }
 
     /**
@@ -237,7 +236,6 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.measure.hllc.SingleValueRegister.class);
         kyroClasses.add(org.apache.kylin.measure.hllc.SparseRegister.class);
         kyroClasses.add(org.apache.kylin.measure.percentile.PercentileAggregator.class);
-        kyroClasses.add(org.apache.kylin.measure.percentile.PercentileCounter.class);
         kyroClasses.add(org.apache.kylin.measure.percentile.PercentileMeasureType.class);
         kyroClasses.add(org.apache.kylin.measure.percentile.PercentileSerializer.class);
         kyroClasses.add(org.apache.kylin.measure.raw.RawAggregator.class);
@@ -270,6 +268,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity.class);
         kyroClasses.add(org.apache.kylin.metadata.model.DataModelDesc.TableKind.class);
         kyroClasses.add(org.apache.kylin.metadata.model.DatabaseDesc.class);
+        kyroClasses.add(org.apache.kylin.metadata.model.ComputedColumnDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.ExternalFilterDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.FunctionDesc.class);
         kyroClasses.add(org.apache.kylin.metadata.model.JoinDesc.class);

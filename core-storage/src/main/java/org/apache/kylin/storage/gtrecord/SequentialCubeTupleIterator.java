@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -53,7 +54,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     private int scanCountDelta;
 
     public SequentialCubeTupleIterator(List<CubeSegmentScanner> scanners, Cuboid cuboid, Set<TblColRef> selectedDimensions, //
-            Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context, SQLDigest sqlDigest) {
+            Set<TblColRef> groups, Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context, SQLDigest sqlDigest) {
         this.context = context;
         this.scanners = scanners;
 
@@ -66,7 +67,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             //query with limit
             logger.info("Using SortedIteratorMergerWithLimit to merge segment results");
             Iterator<Iterator<ITuple>> transformed = (Iterator<Iterator<ITuple>>) (Iterator<?>) segmentCubeTupleIterators.iterator();
-            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, context.getFinalPushDownLimit(), getTupleDimensionComparator(cuboid, returnTupleInfo)).getIterator();
+            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, context.getFinalPushDownLimit(), getTupleDimensionComparator(cuboid, groups, returnTupleInfo)).getIterator();
         } else {
             //normal case
             logger.info("Using Iterators.concat to merge segment results");
@@ -74,10 +75,18 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         }
     }
 
-    public Comparator<ITuple> getTupleDimensionComparator(Cuboid cuboid, TupleInfo returnTupleInfo) {
+    public Comparator<ITuple> getTupleDimensionComparator(Cuboid cuboid, Set<TblColRef> groups, TupleInfo returnTupleInfo) {
         // dimensionIndexOnTuple is for SQL with limit
+        List<TblColRef> dimColumns = cuboid.getColumns();
+
+        TreeSet<Integer> groupIndexOnDim = new TreeSet<>();
+        for (TblColRef colRef: groups) {
+            groupIndexOnDim.add(dimColumns.indexOf(colRef));
+        }
+
         List<Integer> temp = Lists.newArrayList();
-        for (TblColRef dim : cuboid.getColumns()) {
+        for (Integer index: groupIndexOnDim) {
+            TblColRef dim = dimColumns.get(index);
             if (returnTupleInfo.hasColumn(dim)) {
                 temp.add(returnTupleInfo.getColumnIndex(dim));
             }

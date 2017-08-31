@@ -106,6 +106,12 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
         }
       };
     }
+    if ($scope.newMeasure.function.expression === 'COUNT_DISTINCT') {
+      $scope.convertedColumns=[];
+      if ($scope.newMeasure.function.parameter.next_parameter) {
+        $scope.recursion($scope.newMeasure.function.parameter.next_parameter, $scope.convertedColumns)
+      }
+    }
   };
 
 
@@ -114,7 +120,6 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       $scope.nextParameters[i].next_parameter=$scope.nextParameters[i+1];
     }
     $scope.newMeasure.function.parameter.next_parameter = $scope.nextParameters[0];
-    console.log($scope.newMeasure.function.parameter);
   }
 
   $scope.editNextParameter = function(parameter){
@@ -213,13 +218,34 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           $scope.newMeasure.function.configuration[versionKey]=version;
           });
     }
+    if ($scope.newMeasure.function.expression === 'COUNT_DISTINCT' && $scope.newMeasure.function.returntype!=='bitmap') {
+
+      var hasExisted = [];
+
+      for (var column in $scope.convertedColumns){
+        if(hasExisted.indexOf($scope.convertedColumns[column].name)==-1){
+          hasExisted.push($scope.convertedColumns[column].name);
+        }
+        else{
+          SweetAlert.swal('', 'The column named ['+$scope.convertedColumns[column].name+'] already exits.', 'warning');
+          return false;
+        }
+      }
+      $scope.nextPara.next_parameter={};
+      if ($scope.convertedColumns.length > 0) {
+        $scope.groupby($scope.nextPara);
+      } else {
+        $scope.nextPara=null;
+        $scope.newMeasure.function.parameter.next_parameter=null;
+      }
+    }
 
     if ($scope.isNameDuplicated($scope.cubeMetaFrame.measures, $scope.newMeasure) == true) {
       SweetAlert.swal('', 'The measure name: ' + $scope.newMeasure.name + ' is duplicated', 'warning');
       return false;
     }
 
-    if($scope.nextPara.value!=="" && ($scope.newMeasure.function.expression == 'EXTENDED_COLUMN' || $scope.newMeasure.function.expression == 'TOP_N')){
+    if($scope.nextPara && $scope.nextPara.value!=="" && ($scope.newMeasure.function.expression == 'EXTENDED_COLUMN' || $scope.newMeasure.function.expression == 'TOP_N'||$scope.newMeasure.function.expression == 'COUNT_DISTINCT')){
       $scope.newMeasure.function.parameter.next_parameter = jQuery.extend(true,{},$scope.nextPara);
     }
 
@@ -295,14 +321,13 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       return false;
     }
   }
-  $scope.converted = function (next_parameter) {
-    if (next_parameter != null) {
-      $scope.groupby.push(next_parameter.value);
-      converted(next_parameter.next_parameter)
-    }
-    else {
-      $scope.groupby.push(next_parameter.value);
-      return false;
+
+  $scope.recursion = function (parameter, list) {
+    list.push({name: parameter.value})
+    if (parameter.next_parameter) {
+      $scope.recursion(parameter.next_parameter, list)
+    } else {
+      return
     }
   }
 
@@ -319,16 +344,20 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   }
 
   //map right return type for param
-  $scope.measureReturnTypeUpdate = function(){
+  $scope.measureReturnTypeUpdate = function() {
 
-    if($scope.newMeasure.function.expression == 'TOP_N'){
-      if($scope.newMeasure.function.parameter.type==""||!$scope.newMeasure.function.parameter.type){
-        $scope.newMeasure.function.parameter.type= 'column';
+    if ($scope.newMeasure.function.expression == 'TOP_N') {
+      if ($scope.newMeasure.function.parameter.type == "" || !$scope.newMeasure.function.parameter.type) {
+        $scope.newMeasure.function.parameter.type = 'column';
       }
-      $scope.convertedColumns=[];
+      $scope.convertedColumns = [];
       $scope.newMeasure.function.returntype = "topn(100)";
       return;
-    }else if($scope.newMeasure.function.expression == 'EXTENDED_COLUMN'){
+    } else if ($scope.newMeasure.function.expression == 'COUNT_DISTINCT') {
+      $scope.newMeasure.function.parameter.type= 'column';
+      $scope.newMeasure.function.returntype = "hllc(10)";
+      $scope.convertedColumns = [];
+    } else if($scope.newMeasure.function.expression == 'EXTENDED_COLUMN'){
       $scope.newMeasure.function.parameter.type= 'column';
       $scope.newMeasure.function.returntype = "extendedcolumn(100)";
       return;
@@ -395,6 +424,13 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           break;
       }
     }
+  }
+
+  if ($scope.state.mode == 'edit') {
+    $scope.$on('$destroy', function () {
+      // emit measures edit event in order to re-generate advanced dict.
+      $scope.$emit('MeasuresEdited');
+    });
   }
 
 });

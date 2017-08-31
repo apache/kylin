@@ -83,6 +83,15 @@ KylinApp.controller('ModelConditionsSettingsCtrl', function ($scope, $modal,Meta
   $scope.partitionChange = function (dateColumn) {
     judgeFormatEditable(dateColumn);
   };
+
+  $scope.tableChange = function (table) {
+    if (table == null) {
+      $scope.modelsManager.selectedModel.partition_desc.partition_date_column=null;
+      $scope.isFormatEdit.editable = false;
+      return;
+    }
+  };
+  
   $scope.partitionColumn ={
       "hasSeparateTimeColumn" : false
   }

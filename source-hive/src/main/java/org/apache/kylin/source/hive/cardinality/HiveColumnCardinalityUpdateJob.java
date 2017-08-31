@@ -37,6 +37,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -126,7 +127,7 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
     }
 
     private static List<String> readLines(Path location, Configuration conf) throws Exception {
-        FileSystem fileSystem = FileSystem.get(location.toUri(), conf);
+        FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
         CompressionCodecFactory factory = new CompressionCodecFactory(conf);
         FileStatus[] items = fileSystem.listStatus(location);
         if (items == null)

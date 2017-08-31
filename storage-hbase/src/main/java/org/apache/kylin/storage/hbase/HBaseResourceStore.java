@@ -56,6 +56,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -247,7 +248,7 @@ public class HBaseResourceStore extends ResourceStore {
         byte[] value = r.getValue(B_FAMILY, B_COLUMN);
         if (value.length == 0) {
             Path redirectPath = bigCellHDFSPath(resPath);
-            FileSystem fileSystem = FileSystem.get(HBaseConnection.getCurrentHBaseConfiguration());
+            FileSystem fileSystem = HadoopUtil.getWorkingFileSystem(HBaseConnection.getCurrentHBaseConfiguration());
 
             try {
                 return fileSystem.open(redirectPath);
@@ -340,7 +341,7 @@ public class HBaseResourceStore extends ResourceStore {
 
             if (hdfsResourceExist) { // remove hdfs cell value
                 Path redirectPath = bigCellHDFSPath(resPath);
-                FileSystem fileSystem = FileSystem.get(HBaseConnection.getCurrentHBaseConfiguration());
+                FileSystem fileSystem = HadoopUtil.getWorkingFileSystem(HBaseConnection.getCurrentHBaseConfiguration());
 
                 if (fileSystem.exists(redirectPath)) {
                     fileSystem.delete(redirectPath, true);
@@ -388,7 +389,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     private Path writeLargeCellToHdfs(String resPath, byte[] largeColumn, Table table) throws IOException {
         Path redirectPath = bigCellHDFSPath(resPath);
-        FileSystem fileSystem = FileSystem.get(HBaseConnection.getCurrentHBaseConfiguration());
+        FileSystem fileSystem = HadoopUtil.getWorkingFileSystem(HBaseConnection.getCurrentHBaseConfiguration());
 
         if (fileSystem.exists(redirectPath)) {
             fileSystem.delete(redirectPath, true);

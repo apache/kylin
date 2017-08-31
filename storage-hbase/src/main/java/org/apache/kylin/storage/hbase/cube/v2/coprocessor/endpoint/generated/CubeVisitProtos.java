@@ -123,7 +123,7 @@ public final class CubeVisitProtos {
      * <code>optional int64 maxScanBytes = 8;</code>
      *
      * <pre>
-     * 0 means no limit
+     * must be positive
      * </pre>
      */
     boolean hasMaxScanBytes();
@@ -131,10 +131,20 @@ public final class CubeVisitProtos {
      * <code>optional int64 maxScanBytes = 8;</code>
      *
      * <pre>
-     * 0 means no limit
+     * must be positive
      * </pre>
      */
     long getMaxScanBytes();
+
+    // optional bool isExactAggregate = 9 [default = false];
+    /**
+     * <code>optional bool isExactAggregate = 9 [default = false];</code>
+     */
+    boolean hasIsExactAggregate();
+    /**
+     * <code>optional bool isExactAggregate = 9 [default = false];</code>
+     */
+    boolean getIsExactAggregate();
   }
   /**
    * Protobuf type {@code CubeVisitRequest}
@@ -228,6 +238,11 @@ public final class CubeVisitProtos {
             case 64: {
               bitField0_ |= 0x00000040;
               maxScanBytes_ = input.readInt64();
+              break;
+            }
+            case 72: {
+              bitField0_ |= 0x00000080;
+              isExactAggregate_ = input.readBool();
               break;
             }
           }
@@ -982,7 +997,7 @@ public final class CubeVisitProtos {
      * <code>optional int64 maxScanBytes = 8;</code>
      *
      * <pre>
-     * 0 means no limit
+     * must be positive
      * </pre>
      */
     public boolean hasMaxScanBytes() {
@@ -992,11 +1007,27 @@ public final class CubeVisitProtos {
      * <code>optional int64 maxScanBytes = 8;</code>
      *
      * <pre>
-     * 0 means no limit
+     * must be positive
      * </pre>
      */
     public long getMaxScanBytes() {
       return maxScanBytes_;
+    }
+
+    // optional bool isExactAggregate = 9 [default = false];
+    public static final int ISEXACTAGGREGATE_FIELD_NUMBER = 9;
+    private boolean isExactAggregate_;
+    /**
+     * <code>optional bool isExactAggregate = 9 [default = false];</code>
+     */
+    public boolean hasIsExactAggregate() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional bool isExactAggregate = 9 [default = false];</code>
+     */
+    public boolean getIsExactAggregate() {
+      return isExactAggregate_;
     }
 
     private void initFields() {
@@ -1008,6 +1039,7 @@ public final class CubeVisitProtos {
       queryId_ = "";
       spillEnabled_ = true;
       maxScanBytes_ = 0L;
+      isExactAggregate_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1061,6 +1093,9 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeInt64(8, maxScanBytes_);
       }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBool(9, isExactAggregate_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1101,6 +1136,10 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(8, maxScanBytes_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(9, isExactAggregate_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1162,6 +1201,11 @@ public final class CubeVisitProtos {
         result = result && (getMaxScanBytes()
             == other.getMaxScanBytes());
       }
+      result = result && (hasIsExactAggregate() == other.hasIsExactAggregate());
+      if (hasIsExactAggregate()) {
+        result = result && (getIsExactAggregate()
+            == other.getIsExactAggregate());
+      }
       result = result &&
           getUnknownFields().equals(other.getUnknownFields());
       return result;
@@ -1206,6 +1250,10 @@ public final class CubeVisitProtos {
       if (hasMaxScanBytes()) {
         hash = (37 * hash) + MAXSCANBYTES_FIELD_NUMBER;
         hash = (53 * hash) + hashLong(getMaxScanBytes());
+      }
+      if (hasIsExactAggregate()) {
+        hash = (37 * hash) + ISEXACTAGGREGATE_FIELD_NUMBER;
+        hash = (53 * hash) + hashBoolean(getIsExactAggregate());
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -1337,6 +1385,8 @@ public final class CubeVisitProtos {
         bitField0_ = (bitField0_ & ~0x00000040);
         maxScanBytes_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000080);
+        isExactAggregate_ = false;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -1402,6 +1452,10 @@ public final class CubeVisitProtos {
           to_bitField0_ |= 0x00000040;
         }
         result.maxScanBytes_ = maxScanBytes_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.isExactAggregate_ = isExactAggregate_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1468,6 +1522,9 @@ public final class CubeVisitProtos {
         }
         if (other.hasMaxScanBytes()) {
           setMaxScanBytes(other.getMaxScanBytes());
+        }
+        if (other.hasIsExactAggregate()) {
+          setIsExactAggregate(other.getIsExactAggregate());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2068,7 +2125,7 @@ public final class CubeVisitProtos {
        * <code>optional int64 maxScanBytes = 8;</code>
        *
        * <pre>
-       * 0 means no limit
+       * must be positive
        * </pre>
        */
       public boolean hasMaxScanBytes() {
@@ -2078,7 +2135,7 @@ public final class CubeVisitProtos {
        * <code>optional int64 maxScanBytes = 8;</code>
        *
        * <pre>
-       * 0 means no limit
+       * must be positive
        * </pre>
        */
       public long getMaxScanBytes() {
@@ -2088,7 +2145,7 @@ public final class CubeVisitProtos {
        * <code>optional int64 maxScanBytes = 8;</code>
        *
        * <pre>
-       * 0 means no limit
+       * must be positive
        * </pre>
        */
       public Builder setMaxScanBytes(long value) {
@@ -2101,12 +2158,45 @@ public final class CubeVisitProtos {
        * <code>optional int64 maxScanBytes = 8;</code>
        *
        * <pre>
-       * 0 means no limit
+       * must be positive
        * </pre>
        */
       public Builder clearMaxScanBytes() {
         bitField0_ = (bitField0_ & ~0x00000080);
         maxScanBytes_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional bool isExactAggregate = 9 [default = false];
+      private boolean isExactAggregate_ ;
+      /**
+       * <code>optional bool isExactAggregate = 9 [default = false];</code>
+       */
+      public boolean hasIsExactAggregate() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional bool isExactAggregate = 9 [default = false];</code>
+       */
+      public boolean getIsExactAggregate() {
+        return isExactAggregate_;
+      }
+      /**
+       * <code>optional bool isExactAggregate = 9 [default = false];</code>
+       */
+      public Builder setIsExactAggregate(boolean value) {
+        bitField0_ |= 0x00000100;
+        isExactAggregate_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool isExactAggregate = 9 [default = false];</code>
+       */
+      public Builder clearIsExactAggregate() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        isExactAggregate_ = false;
         onChanged();
         return this;
       }
@@ -5516,32 +5606,33 @@ public final class CubeVisitProtos {
     java.lang.String[] descriptorData = {
       "\npstorage-hbase/src/main/java/org/apache" +
       "/kylin/storage/hbase/cube/v2/coprocessor" +
-      "/endpoint/protobuf/CubeVisit.proto\"\205\002\n\020C" +
+      "/endpoint/protobuf/CubeVisit.proto\"\246\002\n\020C" +
       "ubeVisitRequest\022\025\n\rgtScanRequest\030\001 \002(\014\022\024" +
       "\n\014hbaseRawScan\030\002 \002(\014\022\032\n\022rowkeyPreambleSi" +
       "ze\030\003 \002(\005\0223\n\020hbaseColumnsToGT\030\004 \003(\0132\031.Cub" +
       "eVisitRequest.IntList\022\027\n\017kylinProperties" +
       "\030\005 \002(\t\022\017\n\007queryId\030\006 \001(\t\022\032\n\014spillEnabled\030" +
-      "\007 \001(\010:\004true\022\024\n\014maxScanBytes\030\010 \001(\003\032\027\n\007Int" +
-      "List\022\014\n\004ints\030\001 \003(\005\"\253\004\n\021CubeVisitResponse",
-      "\022\026\n\016compressedRows\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132" +
-      "\030.CubeVisitResponse.Stats\022/\n\terrorInfo\030\003" +
-      " \001(\0132\034.CubeVisitResponse.ErrorInfo\032\220\002\n\005S" +
-      "tats\022\030\n\020serviceStartTime\030\001 \001(\003\022\026\n\016servic" +
-      "eEndTime\030\002 \001(\003\022\027\n\017scannedRowCount\030\003 \001(\003\022" +
-      "\032\n\022aggregatedRowCount\030\004 \001(\003\022\025\n\rsystemCpu" +
-      "Load\030\005 \001(\001\022\036\n\026freePhysicalMemorySize\030\006 \001" +
-      "(\001\022\031\n\021freeSwapSpaceSize\030\007 \001(\001\022\020\n\010hostnam" +
-      "e\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(\t\022\026\n\016normalComplet" +
-      "e\030\n \001(\005\022\024\n\014scannedBytes\030\013 \001(\003\032H\n\tErrorIn",
-      "fo\022*\n\004type\030\001 \002(\0162\034.CubeVisitResponse.Err" +
-      "orType\022\017\n\007message\030\002 \002(\t\"G\n\tErrorType\022\020\n\014" +
-      "UNKNOWN_TYPE\020\000\022\013\n\007TIMEOUT\020\001\022\033\n\027RESOURCE_" +
-      "LIMIT_EXCEEDED\020\0022F\n\020CubeVisitService\0222\n\t" +
-      "visitCube\022\021.CubeVisitRequest\032\022.CubeVisit" +
-      "ResponseB`\nEorg.apache.kylin.storage.hba" +
-      "se.cube.v2.coprocessor.endpoint.generate" +
-      "dB\017CubeVisitProtosH\001\210\001\001\240\001\001"
+      "\007 \001(\010:\004true\022\024\n\014maxScanBytes\030\010 \001(\003\022\037\n\020isE" +
+      "xactAggregate\030\t \001(\010:\005false\032\027\n\007IntList\022\014\n",
+      "\004ints\030\001 \003(\005\"\253\004\n\021CubeVisitResponse\022\026\n\016com" +
+      "pressedRows\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132\030.CubeV" +
+      "isitResponse.Stats\022/\n\terrorInfo\030\003 \001(\0132\034." +
+      "CubeVisitResponse.ErrorInfo\032\220\002\n\005Stats\022\030\n" +
+      "\020serviceStartTime\030\001 \001(\003\022\026\n\016serviceEndTim" +
+      "e\030\002 \001(\003\022\027\n\017scannedRowCount\030\003 \001(\003\022\032\n\022aggr" +
+      "egatedRowCount\030\004 \001(\003\022\025\n\rsystemCpuLoad\030\005 " +
+      "\001(\001\022\036\n\026freePhysicalMemorySize\030\006 \001(\001\022\031\n\021f" +
+      "reeSwapSpaceSize\030\007 \001(\001\022\020\n\010hostname\030\010 \001(\t" +
+      "\022\016\n\006etcMsg\030\t \001(\t\022\026\n\016normalComplete\030\n \001(\005",
+      "\022\024\n\014scannedBytes\030\013 \001(\003\032H\n\tErrorInfo\022*\n\004t" +
+      "ype\030\001 \002(\0162\034.CubeVisitResponse.ErrorType\022" +
+      "\017\n\007message\030\002 \002(\t\"G\n\tErrorType\022\020\n\014UNKNOWN" +
+      "_TYPE\020\000\022\013\n\007TIMEOUT\020\001\022\033\n\027RESOURCE_LIMIT_E" +
+      "XCEEDED\020\0022F\n\020CubeVisitService\0222\n\tvisitCu" +
+      "be\022\021.CubeVisitRequest\032\022.CubeVisitRespons" +
+      "eB`\nEorg.apache.kylin.storage.hbase.cube" +
+      ".v2.coprocessor.endpoint.generatedB\017Cube" +
+      "VisitProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5553,7 +5644,7 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitRequest_descriptor,
-              new java.lang.String[] { "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "KylinProperties", "QueryId", "SpillEnabled", "MaxScanBytes", });
+              new java.lang.String[] { "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "KylinProperties", "QueryId", "SpillEnabled", "MaxScanBytes", "IsExactAggregate", });
           internal_static_CubeVisitRequest_IntList_descriptor =
             internal_static_CubeVisitRequest_descriptor.getNestedTypes().get(0);
           internal_static_CubeVisitRequest_IntList_fieldAccessorTable = new

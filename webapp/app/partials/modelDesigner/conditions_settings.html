@@ -29,6 +29,7 @@
                   <div class="col-xs-12 col-sm-6" ng-if="state.mode=='edit'">
                       <select style="width: 49%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
                               ng-model="selectedTables.fact"
+                              ng-change="tableChange(selectedTables.fact)"
                               data-placement=""
                               ng-options="alias as alias for alias in availableFactTables" >
                           <option value="">--Select Partition Table--</option>

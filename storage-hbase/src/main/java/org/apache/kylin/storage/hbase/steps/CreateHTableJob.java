@@ -41,6 +41,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -274,7 +275,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         // note read-write separation, respect HBase FS here
         Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
-        FileSystem fs = FileSystem.get(hbaseConf);
+        FileSystem fs = HadoopUtil.getWorkingFileSystem(hbaseConf);
         if (fs.exists(outputFolder) == false) {
             fs.mkdirs(outputFolder);
         }

@@ -22,10 +22,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapreduce.Counters;
+import org.apache.hadoop.mapreduce.FileSystemCounter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskCounter;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsMapper.RawDataCounter;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
@@ -94,17 +95,17 @@ public class HadoopCmdOutput {
             }
             this.output.append(counters.toString()).append("\n");
             logger.debug(counters.toString());
-            
-            String bytsWrittenCounterName = "HDFS_BYTES_WRITTEN";
-            String fsScheme = FileSystem.get(job.getConfiguration()).getScheme();
-            if (("wasb").equalsIgnoreCase(fsScheme)) {
-                // for Azure blob store
-                bytsWrittenCounterName = "WASB_BYTES_WRITTEN";
-            }
 
             mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
-            hdfsBytesWritten = String.valueOf(counters.findCounter("FileSystemCounters", bytsWrittenCounterName).getValue());
             rawInputBytesRead = String.valueOf(counters.findCounter(RawDataCounter.BYTES).getValue());
+
+            String fsScheme = HadoopUtil.getWorkingFileSystem().getScheme();
+            long bytesWritten = counters.findCounter(fsScheme, FileSystemCounter.BYTES_WRITTEN).getValue();
+            if (bytesWritten == 0) {
+                bytesWritten = counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue();
+            }
+            hdfsBytesWritten = String.valueOf(bytesWritten);
+
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             output.append(e.getLocalizedMessage());

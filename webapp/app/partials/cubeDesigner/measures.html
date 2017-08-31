@@ -69,7 +69,6 @@
               </table>
       </div>
   </ng-form>
-
   <!--Add Measures Button-->
   <div class="form-group">
       <button class="btn btn-sm btn-info" ng-click="addNewMeasure()" ng-show="state.mode=='edit' && !newMeasure" ng-disabled="instance.status=='READY'">
@@ -218,22 +217,23 @@
                       </div>
 
                       <!--Group by Column-->
-                      <div class="form-group" ng-if="newMeasure.function.expression == 'TOP_N'" >
+                      <div class="form-group" ng-if="newMeasure.function.expression === 'TOP_N'||(newMeasure.function.expression === 'COUNT_DISTINCT' && newMeasure.function.returntype!=='bitmap')" >
                         <div class="row">
                           <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                            <b>Group by Column</b>
+                            <b ng-if="newMeasure.function.expression === 'TOP_N'">Group by Column:</b>
+                            <b ng-if="newMeasure.function.expression === 'COUNT_DISTINCT' && newMeasure.function.returntype!=='bitmap')">Additional distinct column in this measure:</b>
                           </label>
                           <div class="form-group large-popover" >
                               <div class="box-body">
-                                <table style="margin-left:width:92%"
+                                <table style="width:92%"
                                        class="table table-hover table-bordered list">
                                   <thead>
                                   <tr>
                                     <th  style="width:40px;">ID</th>
                                     <th  style="width:300px;">Column</th>
-                                    <th  style="width:140px;">Encoding</th>
-                                    <th >Length</th>
-                                    <th ng-if="state.mode=='edit'"></th>
+                                    <th  style="width:140px;" ng-if="newMeasure.function.expression === 'TOP_N'">Encoding</th>
+                                    <th ng-if="newMeasure.function.expression === 'TOP_N'">Length</th>
+                                    <th style="width:50px;" ng-if="state.mode=='edit'"></th>
                                   </tr>
                                   </thead>
 
@@ -248,22 +248,22 @@
                                     </td>
                                     <!--Column Name -->
                                     <td>
-                                      <select class="form-control" chosen ng-if="nextPara.type !== 'constant'" required
+                                      <select style="width:270px"  chosen ng-if="nextPara.type !== 'constant'" required
                                               ng-model="groupby_column.name"
                                               ng-options="column as column for column in getAllModelDimColumns()" >
                                         <option value="">--Select A Column--</option>
                                       </select>
                                     </td>
                                     <!--Column Encoding -->
-                                    <td>
-                                      <select ng-if="state.mode=='edit'" style="width: 100%"
+                                    <td ng-if="newMeasure.function.expression === 'TOP_N'">
+                                      <select ng-if="state.mode=='edit'" style="width:100%"
                                               chosen ng-model="groupby_column.encoding"
                                               ng-change="refreshGroupBy(convertedColumns,$index,groupby_column)"
                                               ng-options="dt.value as dt.name for dt in getEncodings(groupby_column.name)">
                                         <option value=""></option>
                                       </select>
                                     </td>
-                                    <td>
+                                    <td ng-if="newMeasure.function.expression === 'TOP_N'">
                                       <!--Column Length -->
                                       <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
                                              tooltip="group by column length.." tooltip-trigger="focus"

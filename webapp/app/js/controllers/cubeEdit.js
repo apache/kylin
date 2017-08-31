@@ -721,7 +721,59 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     }
   }
 
+  function reGenerateAdvancedDict () {
+    if (!$scope.cubeMetaFrame.dictionaries) {
+      $scope.cubeMetaFrame.dictionaries = [];
+    }
 
+    var distinctMeasures = [];
+
+    angular.forEach($scope.cubeMetaFrame.measures, function (measure, index) {
+      if (measure.function.expression === 'COUNT_DISTINCT' && measure.function.returntype === 'bitmap') {
+        var measureColumn = measure.function.parameter.value;
+        distinctMeasures.push(measureColumn);
+        //keep backward compatibility
+        distinctMeasures.push(VdmUtil.removeNameSpace(measureColumn))
+
+        var isColumnExit = false;
+        angular.forEach($scope.cubeMetaFrame.dictionaries, function (dictionaries) {
+          if (!isColumnExit) {
+            //keep backward compatibility
+            if (dictionaries.column == measureColumn || dictionaries.column == VdmUtil.removeNameSpace(measureColumn))
+              isColumnExit = true;
+          }
+        });
+
+        if (!isColumnExit) {
+          var dict = CubeDescModel.createDictionaries();
+          dict.column = measureColumn;
+          dict.builder = cubeConfig.buildDictionaries[0].value;
+          $scope.cubeMetaFrame.dictionaries.push(dict)
+        }
+      }
+    });
+
+    //get all reuse columns
+    var reuseColumns = [];
+    angular.forEach($scope.cubeMetaFrame.dictionaries, function (dict, index) {
+      if (dict.reuse != null && reuseColumns.indexOf(dict.reuse) === -1) {
+        reuseColumns.push(dict.reuse);
+      }
+    });
+
+    //remove deprecated distinct measures
+    angular.forEach($scope.cubeMetaFrame.dictionaries, function (dict, index) {
+      if (distinctMeasures.indexOf(dict.column) === -1 && reuseColumns.indexOf(dict.column) === -1) {
+        $scope.cubeMetaFrame.dictionaries.splice(index, 1);
+      }
+    });
+  }
+
+  $scope.$on('MeasuresEdited', function (event) {
+    if ($scope.cubeMetaFrame) {
+      reGenerateAdvancedDict();
+    }
+  });
 
   $scope.$on('DimensionsEdited', function (event) {
     if ($scope.cubeMetaFrame) {
