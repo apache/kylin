@@ -41,6 +41,8 @@ import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -270,8 +272,8 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest req) {
-        return buildInternal(cubeName, req.getStartTime(), req.getEndTime(), 0, 0, null, null, req.getBuildType(),
-                req.isForce() || req.isForceMergeEmptySegment());
+        return buildInternal(cubeName, new TSRange(req.getStartTime(), req.getEndTime()), null, null, null, 
+                req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment());
     }
 
     /** Build/Rebuild a cube segment by source offset */
@@ -297,14 +299,14 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/rebuild2", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance rebuild2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
-        return buildInternal(cubeName, 0, 0, req.getSourceOffsetStart(), req.getSourceOffsetEnd(),
+        return buildInternal(cubeName, null, new SegmentRange(req.getSourceOffsetStart(), req.getSourceOffsetEnd()),
                 req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(), req.getBuildType(),
                 req.isForce());
     }
 
-    private JobInstance buildInternal(String cubeName, long startTime, long endTime, //
-            long startOffset, long endOffset, Map<Integer, Long> sourcePartitionOffsetStart,
-            Map<Integer, Long> sourcePartitionOffsetEnd, String buildType, boolean force) {
+    private JobInstance buildInternal(String cubeName, TSRange tsRange, SegmentRange segRange, //
+            Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
+            String buildType, boolean force) {
         try {
             String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
@@ -312,9 +314,8 @@ public class CubeController extends BasicController {
             if (cube == null) {
                 throw new InternalErrorException("Cannot find cube " + cubeName);
             }
-            return jobService.submitJob(cube, startTime, endTime, startOffset, endOffset, //
-                    sourcePartitionOffsetStart, sourcePartitionOffsetEnd, CubeBuildTypeEnum.valueOf(buildType), force,
-                    submitter);
+            return jobService.submitJob(cube, tsRange, segRange, sourcePartitionOffsetStart, sourcePartitionOffsetEnd,
+                    CubeBuildTypeEnum.valueOf(buildType), force, submitter);
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
@@ -581,14 +582,14 @@ public class CubeController extends BasicController {
             }
 
             hr.setTableName(tableName);
-            hr.setDateRangeStart(segment.getDateRangeStart());
-            hr.setDateRangeEnd(segment.getDateRangeEnd());
+            hr.setDateRangeStart(segment.getTSRange().start.v);
+            hr.setDateRangeEnd(segment.getTSRange().end.v);
             hr.setSegmentName(segment.getName());
             hr.setSegmentStatus(segment.getStatus().toString());
             hr.setSourceCount(segment.getInputRecords());
-            if (segment.isSourceOffsetsOn()) {
-                hr.setSourceOffsetStart(segment.getSourceOffsetStart());
-                hr.setSourceOffsetEnd(segment.getSourceOffsetEnd());
+            if (segment.isOffsetCube()) {
+                hr.setSourceOffsetStart((Long) segment.getSegRange().start.v);
+                hr.setSourceOffsetEnd((Long) segment.getSegRange().end.v);
             }
             hbase.add(hr);
         }
@@ -627,14 +628,13 @@ public class CubeController extends BasicController {
             return jobs;
         }
 
-        boolean isOffsetOn = holes.get(0).isSourceOffsetsOn();
         for (CubeSegment hole : holes) {
-            if (isOffsetOn == true) {
+            if (hole.isOffsetCube()) {
                 JobBuildRequest2 request = new JobBuildRequest2();
                 request.setBuildType(CubeBuildTypeEnum.BUILD.toString());
-                request.setSourceOffsetStart(hole.getSourceOffsetStart());
+                request.setSourceOffsetStart((Long) hole.getSegRange().start.v);
+                request.setSourceOffsetEnd((Long) hole.getSegRange().end.v);
                 request.setSourcePartitionOffsetStart(hole.getSourcePartitionOffsetStart());
-                request.setSourceOffsetEnd(hole.getSourceOffsetEnd());
                 request.setSourcePartitionOffsetEnd(hole.getSourcePartitionOffsetEnd());
                 try {
                     JobInstance job = build2(cubeName, request);
@@ -647,8 +647,8 @@ public class CubeController extends BasicController {
             } else {
                 JobBuildRequest request = new JobBuildRequest();
                 request.setBuildType(CubeBuildTypeEnum.BUILD.toString());
-                request.setStartTime(hole.getDateRangeStart());
-                request.setEndTime(hole.getDateRangeEnd());
+                request.setStartTime(hole.getTSRange().start.v);
+                request.setEndTime(hole.getTSRange().end.v);
 
                 try {
                     JobInstance job = build(cubeName, request);

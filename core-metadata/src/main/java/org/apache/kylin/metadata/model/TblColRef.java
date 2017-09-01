@@ -27,7 +27,7 @@ import org.apache.kylin.metadata.datatype.DataType;
 
 /**
  */
-@SuppressWarnings({ "serial", "deprecation" })
+@SuppressWarnings({ "serial" })
 public class TblColRef implements Serializable {
 
     private static final String INNER_TABLE_NAME = "_kylin_table";

@@ -57,9 +57,11 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.streaming.Kafka10DataLoader;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.metadata.streaming.StreamingManager;
+import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.SourcePartition;
@@ -68,7 +70,6 @@ import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.apache.kylin.storage.hbase.util.ZookeeperUtil;
-import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -245,9 +246,9 @@ public class BuildCubeWithStream {
         Assert.assertTrue(segments.size() == succeedBuild);
 
         if (fastBuildMode == false) {
-            long endOffset = segments.get(segments.size() - 1).getSourceOffsetEnd();
+            long endOffset = (Long) segments.get(segments.size() - 1).getSegRange().end.v;
             //merge
-            ExecutableState result = mergeSegment(cubeName, 0, endOffset);
+            ExecutableState result = mergeSegment(cubeName, new SegmentRange(0L, endOffset));
             Assert.assertTrue(result == ExecutableState.SUCCEED);
 
             segments = cubeManager.getCube(cubeName).getSegments();
@@ -255,7 +256,7 @@ public class BuildCubeWithStream {
 
             CubeSegment toRefreshSeg = segments.get(0);
 
-            refreshSegment(cubeName, toRefreshSeg.getSourceOffsetStart(), toRefreshSeg.getSourceOffsetEnd());
+            refreshSegment(cubeName, toRefreshSeg.getSegRange());
             segments = cubeManager.getCube(cubeName).getSegments();
             Assert.assertTrue(segments.size() == 1);
         }
@@ -263,16 +264,16 @@ public class BuildCubeWithStream {
         logger.info("Build is done");
     }
 
-    private ExecutableState mergeSegment(String cubeName, long startOffset, long endOffset) throws Exception {
-        CubeSegment segment = cubeManager.mergeSegments(cubeManager.getCube(cubeName), 0, 0, startOffset, endOffset, false);
+    private ExecutableState mergeSegment(String cubeName, SegmentRange segRange) throws Exception {
+        CubeSegment segment = cubeManager.mergeSegments(cubeManager.getCube(cubeName), null, segRange, false);
         DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
         return job.getStatus();
     }
 
-    private String refreshSegment(String cubeName, long startOffset, long endOffset) throws Exception {
-        CubeSegment segment = cubeManager.refreshSegment(cubeManager.getCube(cubeName), 0, 0, startOffset, endOffset);
+    private String refreshSegment(String cubeName, SegmentRange segRange) throws Exception {
+        CubeSegment segment = cubeManager.refreshSegment(cubeManager.getCube(cubeName), null, segRange);
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
@@ -282,7 +283,7 @@ public class BuildCubeWithStream {
     protected ExecutableState buildSegment(String cubeName, long startOffset, long endOffset) throws Exception {
         CubeInstance cubeInstance = cubeManager.getCube(cubeName);
         ISource source = SourceFactory.getSource(cubeInstance);
-        SourcePartition partition = source.enrichSourcePartitionBeforeBuild(cubeInstance, new SourcePartition(0, 0, startOffset, endOffset, null, null));
+        SourcePartition partition = source.enrichSourcePartitionBeforeBuild(cubeInstance, new SourcePartition(null, new SegmentRange(startOffset, endOffset), null, null));
         CubeSegment segment = cubeManager.appendSegment(cubeManager.getCube(cubeName), partition);
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);

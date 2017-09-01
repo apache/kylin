@@ -19,9 +19,7 @@ package org.apache.kylin.source.kafka.job;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 
-import com.google.common.base.Preconditions;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -31,8 +29,13 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentRange.TSRange;
+import org.apache.kylin.metadata.model.Segments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 /**
  */
@@ -52,7 +55,7 @@ public class MergeOffsetStep extends AbstractExecutable {
         final CubeSegment segment = cube.getSegmentById(segmentId);
 
         Preconditions.checkNotNull(segment, "Cube segment '" + segmentId + "' not found.");
-        List<CubeSegment> mergingSegs = cube.getMergingSegments(segment);
+        Segments<CubeSegment> mergingSegs = cube.getMergingSegments(segment);
 
         Preconditions.checkArgument(mergingSegs.size() > 0, "Merging segment not exist.");
 
@@ -60,16 +63,11 @@ public class MergeOffsetStep extends AbstractExecutable {
         final CubeSegment first = mergingSegs.get(0);
         final CubeSegment last = mergingSegs.get(mergingSegs.size() - 1);
 
-        segment.setSourceOffsetStart(first.getSourceOffsetStart());
+        segment.setSegRange(new SegmentRange(first.getSegRange().start, last.getSegRange().end));
         segment.setSourcePartitionOffsetStart(first.getSourcePartitionOffsetStart());
-        segment.setSourceOffsetEnd(last.getSourceOffsetEnd());
         segment.setSourcePartitionOffsetEnd(last.getSourcePartitionOffsetEnd());
 
-        long dateRangeStart = CubeManager.minDateRangeStart(mergingSegs);
-        long dateRangeEnd = CubeManager.maxDateRangeEnd(mergingSegs);
-
-        segment.setDateRangeStart(dateRangeStart);
-        segment.setDateRangeEnd(dateRangeEnd);
+        segment.setTSRange(new TSRange(mergingSegs.getTSStart(), mergingSegs.getTSEnd()));
 
         CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToUpdateSegs(segment);

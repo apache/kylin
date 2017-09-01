@@ -18,19 +18,20 @@
 
 package org.apache.kylin.metadata.model;
 
-public interface ISegment {
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 
+public interface ISegment extends Comparable<ISegment> {
+
+    public KylinConfig getConfig();
+    
     public String getName();
 
-    public long getDateRangeStart();
-
-    public long getDateRangeEnd();
-
-    public boolean isSourceOffsetsOn();
-
-    public long getSourceOffsetStart();
-
-    public long getSourceOffsetEnd();
+    public boolean isOffsetCube();
+    
+    public SegmentRange getSegRange();
+    
+    public TSRange getTSRange();
 
     public DataModelDesc getModel();
 

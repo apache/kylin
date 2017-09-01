@@ -66,7 +66,6 @@ public class ClassUtil {
         classRenameMap.put("org.apache.kylin.rest.util.KeywordDefaultDirtyHack", "org.apache.kylin.query.util.KeywordDefaultDirtyHack");
     }
 
-    @SuppressWarnings("unchecked")
     public static <T> Class<? extends T> forName(String name, Class<T> clz) throws ClassNotFoundException {
         name = forRenamedClass(name);
         return (Class<? extends T>) Class.forName(name);

@@ -18,6 +18,10 @@
 
 package org.apache.kylin.rest.job;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -38,10 +42,6 @@ import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 1. Create new HybridCube
@@ -194,12 +194,12 @@ public class HybridCubeCLI extends AbstractApplication {
             if (segment == null)
                 continue;
             if (lastOffset == -1) {
-                lastOffset = segment.getSourceOffsetEnd();
+                lastOffset = (Long) segment.getSegRange().end.v;
             } else {
-                if (lastOffset > segment.getSourceOffsetStart()) {
-                    throw new RuntimeException("Segments has overlap, could not hybrid. Last Segment End: " + lastOffset + ", Next Segment Start: " + segment.getSourceOffsetStart());
+                if (lastOffset > (Long) segment.getSegRange().start.v) {
+                    throw new RuntimeException("Segments has overlap, could not hybrid. Last Segment End: " + lastOffset + ", Next Segment Start: " + segment.getSegRange().start.v);
                 }
-                lastOffset = segment.getSourceOffsetEnd();
+                lastOffset = (Long) segment.getSegRange().end.v;
             }
         }
     }

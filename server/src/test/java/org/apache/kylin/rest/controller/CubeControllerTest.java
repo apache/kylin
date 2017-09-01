@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.service.CubeService;
@@ -35,10 +36,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @author xduo
@@ -179,10 +180,10 @@ public class CubeControllerTest extends ServiceTestBase {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         List<CubeSegment> segments = cube.getSegments();
 
-        final long dateEnd = segments.get(segments.size() -1).getDateRangeEnd();
+        final long dateEnd = segments.get(segments.size() -1).getTSRange().end.v;
 
         final long ONEDAY = 24 * 60 * 60000;
-        cubeService.getCubeManager().appendSegment(cube, dateEnd + ONEDAY, dateEnd + ONEDAY * 2);
+        cubeService.getCubeManager().appendSegment(cube, new TSRange(dateEnd + ONEDAY, dateEnd + ONEDAY * 2));
 
         List<CubeSegment> holes = cubeController.getHoles(cubeName);
 
@@ -190,8 +191,7 @@ public class CubeControllerTest extends ServiceTestBase {
 
         CubeSegment hole = holes.get(0);
 
-        Assert.assertTrue(hole.getDateRangeStart() == dateEnd && hole.getDateRangeEnd() == (dateEnd + ONEDAY));
-
+        Assert.assertTrue(hole.getTSRange().equals(new TSRange(dateEnd, dateEnd + ONEDAY)));
     }
 
 

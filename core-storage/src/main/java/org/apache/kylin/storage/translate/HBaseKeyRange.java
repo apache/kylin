@@ -268,6 +268,6 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
     }
 
     public boolean hitSegment() {
-        return cubeSeg.getDateRangeStart() <= getPartitionColumnEndDate() && cubeSeg.getDateRangeEnd() >= getPartitionColumnStartDate();
+        return cubeSeg.getTSRange().start.v <= getPartitionColumnEndDate() && cubeSeg.getTSRange().end.v >= getPartitionColumnStartDate();
     }
 }

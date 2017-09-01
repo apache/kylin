@@ -25,6 +25,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
+@SuppressWarnings("serial")
 public class TableRef implements Serializable {
 
     final transient private DataModelDesc model;

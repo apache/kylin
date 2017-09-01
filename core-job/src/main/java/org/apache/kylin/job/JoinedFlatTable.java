@@ -33,6 +33,7 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -216,12 +217,11 @@ public class JoinedFlatTable {
         if (flatDesc.getSegment() != null) {
             PartitionDesc partDesc = model.getPartitionDesc();
             if (partDesc != null && partDesc.getPartitionDateColumn() != null) {
-                long dateStart = flatDesc.getSourceOffsetStart();
-                long dateEnd = flatDesc.getSourceOffsetEnd();
+                SegmentRange segRange = flatDesc.getSegRange();
 
-                if (!(dateStart == 0 && dateEnd == Long.MAX_VALUE)) {
+                if (segRange != null && !segRange.isInfinite()) {
                     whereBuilder.append(hasCondition ? " AND (" : " (");
-                    whereBuilder.append(partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, dateStart, dateEnd));
+                    whereBuilder.append(partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, segRange));
                     whereBuilder.append(")" + sep);
                     hasCondition = true;
                 }

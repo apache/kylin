@@ -55,6 +55,8 @@ import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -404,7 +406,7 @@ public class CubeManager implements IRealizationProvider {
         }
 
         Collections.sort(newSegs);
-        CubeValidator.validate(newSegs);
+        newSegs.validate();
         cube.setSegments(newSegs);
 
         if (update.getStatus() != null) {
@@ -454,39 +456,38 @@ public class CubeManager implements IRealizationProvider {
 
     // append a full build segment
     public CubeSegment appendSegment(CubeInstance cube) throws IOException {
-        return appendSegment(cube, 0, Long.MAX_VALUE, 0, 0, null, null);
+        return appendSegment(cube, null, null, null, null);
     }
 
-    public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate) throws IOException {
-        return appendSegment(cube, startDate, endDate, 0, 0, null, null);
+    public CubeSegment appendSegment(CubeInstance cube, TSRange tsRange) throws IOException {
+        return appendSegment(cube, tsRange, null, null, null);
     }
 
-    public CubeSegment appendSegment(CubeInstance cube, SourcePartition sourcePartition) throws IOException {
-        return appendSegment(cube, sourcePartition.getStartDate(), sourcePartition.getEndDate(),
-                sourcePartition.getStartOffset(), sourcePartition.getEndOffset(),
-                sourcePartition.getSourcePartitionOffsetStart(), sourcePartition.getSourcePartitionOffsetEnd());
+    public CubeSegment appendSegment(CubeInstance cube, SourcePartition src) throws IOException {
+        return appendSegment(cube, src.getTSRange(), src.getSegRange(), src.getSourcePartitionOffsetStart(),
+                src.getSourcePartitionOffsetEnd());
     }
 
-    CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset,
+    CubeSegment appendSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange,
             Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd)
             throws IOException {
+        checkInputRanges(tsRange, segRange);
         checkBuildingSegment(cube);
 
         // fix start/end a bit
         if (cube.getModel().getPartitionDesc().isPartitioned()) {
             // if missing start, set it to where last time ends
-            if (startDate == 0 && startOffset == 0 && cube.getLastSegment() != null) {
-                CubeSegment last = cube.getLastSegment();
-                startDate = last.isSourceOffsetsOn() ? 0 : last.getDateRangeEnd();
-                startOffset = last.isSourceOffsetsOn() ? last.getSourceOffsetEnd() : 0;
+            CubeSegment last = cube.getLastSegment();
+            if (last != null && !last.isOffsetCube() && tsRange.start.v == 0) {
+                tsRange = new TSRange(last.getTSRange().end.v, tsRange.end.v);
             }
         } else {
             // full build
-            startDate = startOffset = endOffset = 0;
-            endDate = Long.MAX_VALUE;
+            tsRange = null;
+            segRange = null;
         }
 
-        CubeSegment newSegment = newSegment(cube, startDate, endDate, startOffset, endOffset);
+        CubeSegment newSegment = newSegment(cube, tsRange, segRange);
         newSegment.setSourcePartitionOffsetStart(sourcePartitionOffsetStart);
         newSegment.setSourcePartitionOffsetEnd(sourcePartitionOffsetEnd);
         validateNewSegments(cube, newSegment);
@@ -497,22 +498,22 @@ public class CubeManager implements IRealizationProvider {
         return newSegment;
     }
 
-    public CubeSegment refreshSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset)
+    public CubeSegment refreshSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange)
             throws IOException {
+        checkInputRanges(tsRange, segRange);
         checkBuildingSegment(cube);
 
-        CubeSegment newSegment = newSegment(cube, startDate, endDate, startOffset, endOffset);
+        CubeSegment newSegment = newSegment(cube, tsRange, segRange);
 
-        Pair<Boolean, Boolean> pair = CubeValidator.fitInSegments(cube.getSegments(), newSegment);
+        Pair<Boolean, Boolean> pair = cube.getSegments().fitInSegments(newSegment);
         if (pair.getFirst() == false || pair.getSecond() == false)
             throw new IllegalArgumentException("The new refreshing segment " + newSegment
                     + " does not match any existing segment in cube " + cube);
 
-        if (startOffset > 0 || endOffset > 0) {
+        if (segRange != null) {
             CubeSegment toRefreshSeg = null;
             for (CubeSegment cubeSegment : cube.getSegments()) {
-                if (cubeSegment.getSourceOffsetStart() == startOffset
-                        && cubeSegment.getSourceOffsetEnd() == endOffset) {
+                if (cubeSegment.getSegRange().equals(segRange)) {
                     toRefreshSeg = cubeSegment;
                     break;
                 }
@@ -533,61 +534,48 @@ public class CubeManager implements IRealizationProvider {
         return newSegment;
     }
 
-    public CubeSegment mergeSegments(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset,
-            boolean force) throws IOException {
+    public CubeSegment mergeSegments(CubeInstance cube, TSRange tsRange, SegmentRange segRange, boolean force)
+            throws IOException {
         if (cube.getSegments().isEmpty())
             throw new IllegalArgumentException("Cube " + cube + " has no segments");
-        if (startDate >= endDate && startOffset >= endOffset)
-            throw new IllegalArgumentException("Invalid merge range");
 
+        checkInputRanges(tsRange, segRange);
         checkBuildingSegment(cube);
         checkCubeIsPartitioned(cube);
 
-        boolean isOffsetsOn = cube.getSegments().get(0).isSourceOffsetsOn();
-
-        if (isOffsetsOn) {
+        if (cube.getSegments().getFirstSegment().isOffsetCube()) {
             // offset cube, merge by date range?
-            if (startOffset == endOffset) {
+            if (segRange == null && tsRange != null) {
                 Pair<CubeSegment, CubeSegment> pair = cube.getSegments(SegmentStatusEnum.READY)
-                        .findMergeOffsetsByDateRange(startDate, endDate, Long.MAX_VALUE);
+                        .findMergeOffsetsByDateRange(tsRange, Long.MAX_VALUE);
                 if (pair == null)
-                    throw new IllegalArgumentException("Find no segments to merge by date range " + startDate + "-"
-                            + endDate + " for cube " + cube);
-                startOffset = pair.getFirst().getSourceOffsetStart();
-                endOffset = pair.getSecond().getSourceOffsetEnd();
+                    throw new IllegalArgumentException("Find no segments to merge by " + tsRange + " for cube " + cube);
+                segRange = new SegmentRange(pair.getFirst().getSegRange().start, pair.getSecond().getSegRange().end);
             }
-            startDate = 0;
-            endDate = 0;
+            tsRange = null;
+            Preconditions.checkArgument(segRange != null);
         } else {
-            // date range cube, make sure range is on dates
-            if (startDate == endDate) {
-                startDate = startOffset;
-                endDate = endOffset;
-            }
-            startOffset = 0;
-            endOffset = 0;
+            segRange = null;
+            Preconditions.checkArgument(tsRange != null);
         }
 
-        CubeSegment newSegment = newSegment(cube, startDate, endDate, startOffset, endOffset);
+        CubeSegment newSegment = newSegment(cube, tsRange, segRange);
 
-        List<CubeSegment> mergingSegments = cube.getMergingSegments(newSegment);
+        Segments<CubeSegment> mergingSegments = cube.getMergingSegments(newSegment);
         if (mergingSegments.size() <= 1)
-            throw new IllegalArgumentException(
-                    "Range " + newSegment.getSourceOffsetStart() + "-" + newSegment.getSourceOffsetEnd()
-                            + " must contain at least 2 segments, but there is " + mergingSegments.size());
+            throw new IllegalArgumentException("Range " + newSegment.getSegRange()
+                    + " must contain at least 2 segments, but there is " + mergingSegments.size());
 
         CubeSegment first = mergingSegments.get(0);
         CubeSegment last = mergingSegments.get(mergingSegments.size() - 1);
-        if (newSegment.isSourceOffsetsOn()) {
-            newSegment.setDateRangeStart(minDateRangeStart(mergingSegments));
-            newSegment.setDateRangeEnd(maxDateRangeEnd(mergingSegments));
-            newSegment.setSourceOffsetStart(first.getSourceOffsetStart());
-            newSegment.setSourceOffsetEnd(last.getSourceOffsetEnd());
+        if (first.isOffsetCube()) {
+            newSegment.setSegRange(new SegmentRange(first.getSegRange().start, last.getSegRange().end));
             newSegment.setSourcePartitionOffsetStart(first.getSourcePartitionOffsetStart());
             newSegment.setSourcePartitionOffsetEnd(last.getSourcePartitionOffsetEnd());
+            newSegment.setTSRange(null);
         } else {
-            newSegment.setDateRangeStart(first.getSourceOffsetStart());
-            newSegment.setDateRangeEnd(last.getSourceOffsetEnd());
+            newSegment.setTSRange(new TSRange(mergingSegments.getTSStart(), mergingSegments.getTSEnd()));
+            newSegment.setSegRange(null);
         }
 
         if (force == false) {
@@ -613,27 +601,10 @@ public class CubeManager implements IRealizationProvider {
 
         return newSegment;
     }
-
-    public static long minDateRangeStart(List<CubeSegment> mergingSegments) {
-        long min = Long.MAX_VALUE;
-        for (CubeSegment seg : mergingSegments)
-            min = Math.min(min, seg.getDateRangeStart());
-        return min;
-    }
-
-    public static long maxDateRangeEnd(List<CubeSegment> mergingSegments) {
-        long max = Long.MIN_VALUE;
-        for (CubeSegment seg : mergingSegments)
-            max = Math.max(max, seg.getDateRangeEnd());
-        return max;
-    }
-
-    public CubeSegment getLatestSegment(CubeInstance cube) {
-        List<CubeSegment> existing = cube.getSegments();
-        if (existing.isEmpty()) {
-            return null;
-        } else {
-            return existing.get(existing.size() - 1);
+    
+    private void checkInputRanges(TSRange tsRange, SegmentRange segRange) {
+        if (tsRange != null && segRange != null) {
+            throw new IllegalArgumentException("Build or refresh cube segment either by TSRange or by SegmentRange, not both.");
         }
     }
 
@@ -690,15 +661,19 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    private CubeSegment newSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset) {
+    private CubeSegment newSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange) {
         CubeSegment segment = new CubeSegment();
         segment.setUuid(UUID.randomUUID().toString());
-        segment.setName(CubeSegment.makeSegmentName(startDate, endDate, startOffset, endOffset));
+        segment.setName(CubeSegment.makeSegmentName(tsRange, segRange));
         segment.setCreateTimeUTC(System.currentTimeMillis());
-        segment.setDateRangeStart(startDate);
-        segment.setDateRangeEnd(endDate);
-        segment.setSourceOffsetStart(startOffset);
-        segment.setSourceOffsetEnd(endOffset);
+        segment.setCubeInstance(cube);
+        
+        // let full build range be backward compatible
+        if (tsRange == null && segRange == null)
+            tsRange = new TSRange(0L, Long.MAX_VALUE);
+        
+        segment.setTSRange(tsRange);
+        segment.setSegRange(segRange);
         segment.setStatus(SegmentStatusEnum.NEW);
         segment.setStorageLocationIdentifier(generateStorageLocation());
 
@@ -722,10 +697,6 @@ public class CubeManager implements IRealizationProvider {
         } while (this.usedStorageLocation.containsValue(tableName));
 
         return tableName;
-    }
-
-    public Pair<Long, Long> autoMergeCubeSegments(CubeInstance cube) throws IOException {
-        return cube.autoMergeCubeSegments();
     }
 
     public void promoteNewlyBuiltSegments(CubeInstance cube, CubeSegment newSegment) throws IOException {
@@ -923,25 +894,24 @@ public class CubeManager implements IRealizationProvider {
         }
 
         Collections.sort(segments);
-        boolean isOffsetOn = segments.get(0).isSourceOffsetsOn();
         for (int i = 0; i < segments.size() - 1; ++i) {
             CubeSegment first = segments.get(i);
             CubeSegment second = segments.get(i + 1);
-            if (first.getSourceOffsetEnd() == second.getSourceOffsetStart()) {
+            if (first.getSegRange().connects(second.getSegRange()))
                 continue;
-            } else if (first.getSourceOffsetEnd() < second.getSourceOffsetStart()) {
+            
+            if (first.getSegRange().apartBefore(second.getSegRange())) {
                 CubeSegment hole = new CubeSegment();
-                if (isOffsetOn == true) {
-                    hole.setSourceOffsetStart(first.getSourceOffsetEnd());
+                hole.setCubeInstance(cube);
+                if (first.isOffsetCube()) {
+                    hole.setSegRange(new SegmentRange(first.getSegRange().end, second.getSegRange().start));
                     hole.setSourcePartitionOffsetStart(first.getSourcePartitionOffsetEnd());
-                    hole.setSourceOffsetEnd(second.getSourceOffsetStart());
                     hole.setSourcePartitionOffsetEnd(second.getSourcePartitionOffsetStart());
+                    hole.setName(CubeSegment.makeSegmentName(null, hole.getSegRange()));
                 } else {
-                    hole.setDateRangeStart(first.getDateRangeEnd());
-                    hole.setDateRangeEnd(second.getDateRangeStart());
+                    hole.setTSRange(new TSRange(first.getTSRange().end.v, second.getTSRange().start.v));
+                    hole.setName(CubeSegment.makeSegmentName(hole.getTSRange(), null));
                 }
-                hole.setName(CubeSegment.makeSegmentName(hole.getDateRangeStart(), hole.getDateRangeEnd(),
-                        hole.getSourceOffsetStart(), hole.getSourceOffsetEnd()));
                 holes.add(hole);
             }
         }

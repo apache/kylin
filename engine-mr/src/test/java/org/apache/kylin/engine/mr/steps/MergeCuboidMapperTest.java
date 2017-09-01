@@ -41,6 +41,7 @@ import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.source.IReadableTable.TableSignature;
@@ -158,7 +159,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         //        String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 
-        CubeSegment newSeg = cubeManager.mergeSegments(cube, 0L, Long.MAX_VALUE, 0, 0, false);
+        CubeSegment newSeg = cubeManager.mergeSegments(cube, new TSRange(0L, Long.MAX_VALUE), null, false);
         //        String segmentName = newSeg.getName();
 
         final Dictionary<String> dictionary = cubeManager.getDictionary(newSeg, lfn);

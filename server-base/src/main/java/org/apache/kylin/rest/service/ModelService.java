@@ -42,6 +42,7 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -257,13 +258,8 @@ public class ModelService extends BasicService {
                 }
 
                 @Override
-                public long getSourceOffsetStart() {
-                    return 0;
-                }
-
-                @Override
-                public long getSourceOffsetEnd() {
-                    return 0;
+                public SegmentRange getSegRange() {
+                    return null;
                 }
 
                 @Override

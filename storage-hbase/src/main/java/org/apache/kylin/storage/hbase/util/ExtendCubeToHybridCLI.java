@@ -156,17 +156,17 @@ public class ExtendCubeToHybridCLI {
         CubeSegment currentSeg = null;
         while (segmentIterator.hasNext()) {
             currentSeg = segmentIterator.next();
-            if (partitionDateStr != null && (currentSeg.getDateRangeStart() >= partitionDate || currentSeg.getDateRangeEnd() > partitionDate)) {
+            if (partitionDateStr != null && (currentSeg.getTSRange().start.v >= partitionDate || currentSeg.getTSRange().end.v > partitionDate)) {
                 segmentIterator.remove();
                 logger.info("CubeSegment[" + currentSeg + "] was removed.");
             }
         }
-        if (partitionDateStr != null && partitionDate != currentSeg.getDateRangeEnd()) {
+        if (partitionDateStr != null && partitionDate != currentSeg.getTSRange().end.v) {
             logger.error("PartitionDate must be end date of one segment.");
             return;
         }
         if (currentSeg != null && partitionDateStr == null)
-            partitionDate = currentSeg.getDateRangeEnd();
+            partitionDate = currentSeg.getTSRange().end.v;
 
         cubeManager.createCube(newCubeInstance, projectName, owner);
         logger.info("CubeInstance was saved at: " + newCubeInstance.getResourcePath());

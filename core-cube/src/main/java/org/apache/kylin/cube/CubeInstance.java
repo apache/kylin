@@ -26,13 +26,13 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -99,11 +99,11 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     public CubeInstance() {
     }
 
-    public List<CubeSegment> getBuildingSegments() {
+    public Segments<CubeSegment> getBuildingSegments() {
         return segments.getBuildingSegments();
     }
 
-    public List<CubeSegment> getMergingSegments(CubeSegment mergedSegment) {
+    public Segments<CubeSegment> getMergingSegments(CubeSegment mergedSegment) {
         return segments.getMergingSegments(mergedSegment);
     }
 
@@ -337,12 +337,12 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     @Override
     public long getDateRangeStart() {
-        return segments.getDateRangeStart();
+        return segments.getTSStart();
     }
 
     @Override
     public long getDateRangeEnd() {
-        return segments.getDateRangeEnd();
+        return segments.getTSEnd();
     }
 
     @Override
@@ -366,7 +366,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return this.getDescriptor().getAutoMergeTimeRanges() != null && this.getDescriptor().getAutoMergeTimeRanges().length > 0;
     }
 
-    public Pair<Long, Long> autoMergeCubeSegments() throws IOException {
+    public SegmentRange autoMergeCubeSegments() throws IOException {
         return segments.autoMergeCubeSegments(needAutoMerge(), getName(), getDescriptor().getAutoMergeTimeRanges());
     }
 

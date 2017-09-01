@@ -29,6 +29,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
@@ -68,8 +69,9 @@ public class KafkaSource implements ISource {
     public SourcePartition enrichSourcePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition) {
         checkSourceOffsets(srcPartition);
         final SourcePartition result = SourcePartition.getCopyOf(srcPartition);
+        final SegmentRange range = result.getSegRange();
         final CubeInstance cube = (CubeInstance) buildable;
-        if (result.getStartOffset() == 0) {
+        if (range == null || range.start.v.equals(0L)) {
             final CubeSegment last = cube.getLastSegment();
             if (last != null) {
                 logger.debug("Last segment exists, continue from last segment " + last.getName() + "'s end position: " + last.getSourcePartitionOffsetEnd());
@@ -101,7 +103,7 @@ public class KafkaSource implements ISource {
             }
         }
 
-        if (result.getEndOffset() == Long.MAX_VALUE) {
+        if (range == null || range.end.v.equals(Long.MAX_VALUE)) {
             logger.debug("Seek end offsets from topic");
             Map<Integer, Long> latestOffsets = KafkaClient.getLatestOffsets(cube);
             logger.debug("The end offsets are " + latestOffsets);
@@ -134,18 +136,20 @@ public class KafkaSource implements ISource {
             throw new IllegalArgumentException("No new message comes, startOffset = endOffset:" + totalStartOffset);
         }
 
-        result.setStartOffset(totalStartOffset);
-        result.setEndOffset(totalEndOffset);
+        result.setSegRange(new SegmentRange(totalStartOffset, totalEndOffset));
 
         logger.debug("parsePartitionBeforeBuild() return: " + result);
         return result;
     }
 
-    private void checkSourceOffsets(SourcePartition srcPartition) {
-        long startOffset = srcPartition.getStartOffset();
-        long endOffset = srcPartition.getEndOffset();
-        final Map<Integer, Long> sourcePartitionOffsetStart = srcPartition.getSourcePartitionOffsetStart();
-        final Map<Integer, Long> sourcePartitionOffsetEnd = srcPartition.getSourcePartitionOffsetEnd();
+    private void checkSourceOffsets(SourcePartition src) {
+        if (src.getSegRange() == null)
+            return;
+        
+        long startOffset = (Long) src.getSegRange().start.v;
+        long endOffset = (Long) src.getSegRange().end.v;
+        final Map<Integer, Long> sourcePartitionOffsetStart = src.getSourcePartitionOffsetStart();
+        final Map<Integer, Long> sourcePartitionOffsetEnd = src.getSourcePartitionOffsetEnd();
         if (endOffset <= 0 || startOffset >= endOffset) {
             throw new IllegalArgumentException("'startOffset' need be smaller than 'endOffset'");
         }

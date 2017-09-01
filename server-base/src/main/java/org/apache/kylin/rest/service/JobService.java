@@ -18,12 +18,18 @@
 
 package org.apache.kylin.rest.service;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
@@ -48,6 +54,8 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.lock.JobLock;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -65,16 +73,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author ysong1
@@ -200,11 +204,11 @@ public class JobService extends BasicService implements InitializingBean {
         }
     }
 
-    public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, //
+    public JobInstance submitJob(CubeInstance cube, TSRange tsRange, SegmentRange segRange, //
             Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
             CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
         aclEvaluate.checkProjectOperationPermission(cube);
-        JobInstance jobInstance = submitJobInternal(cube, startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart,
+        JobInstance jobInstance = submitJobInternal(cube, tsRange, segRange, sourcePartitionOffsetStart,
                 sourcePartitionOffsetEnd, buildType, force, submitter);
 
         accessService.init(jobInstance, null);
@@ -213,9 +217,8 @@ public class JobService extends BasicService implements InitializingBean {
         return jobInstance;
     }
 
-    public JobInstance submitJobInternal(CubeInstance cube, long startDate, long endDate, long startOffset,
-                                         long endOffset, //
-                                         Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
+    public JobInstance submitJobInternal(CubeInstance cube, TSRange tsRange, SegmentRange segRange, //
+                                         Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd, //
                                          CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
         Message msg = MsgPicker.getMsg();
 
@@ -230,16 +233,15 @@ public class JobService extends BasicService implements InitializingBean {
         try {
             if (buildType == CubeBuildTypeEnum.BUILD) {
                 ISource source = SourceFactory.getSource(cube);
-                SourcePartition sourcePartition = new SourcePartition(startDate, endDate, startOffset, endOffset,
-                        sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
-                sourcePartition = source.enrichSourcePartitionBeforeBuild(cube, sourcePartition);
-                newSeg = getCubeManager().appendSegment(cube, sourcePartition);
+                SourcePartition src = new SourcePartition(tsRange, segRange, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
+                src = source.enrichSourcePartitionBeforeBuild(cube, src);
+                newSeg = getCubeManager().appendSegment(cube, src);
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter);
             } else if (buildType == CubeBuildTypeEnum.MERGE) {
-                newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, startOffset, endOffset, force);
+                newSeg = getCubeManager().mergeSegments(cube, tsRange, segRange, force);
                 job = EngineFactory.createBatchMergeJob(newSeg, submitter);
             } else if (buildType == CubeBuildTypeEnum.REFRESH) {
-                newSeg = getCubeManager().refreshSegment(cube, startDate, endDate, startOffset, endOffset);
+                newSeg = getCubeManager().refreshSegment(cube, tsRange, segRange);
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter);
             } else {
                 throw new BadRequestException(String.format(msg.getINVALID_BUILD_TYPE(), buildType));
@@ -335,7 +337,7 @@ public class JobService extends BasicService implements InitializingBean {
         final String segmentIds = job.getRelatedSegment();
         for (String segmentId : StringUtils.split(segmentIds)) {
             final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
-            if (segment != null && (segment.getStatus() == SegmentStatusEnum.NEW || segment.getDateRangeEnd() == 0)) {
+            if (segment != null && (segment.getStatus() == SegmentStatusEnum.NEW || segment.getTSRange().end.v == 0)) {
                 // Remove this segments
                 CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
                 cubeBuilder.setToRemoveSegs(segment);

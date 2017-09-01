@@ -28,7 +28,6 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -43,6 +42,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -537,11 +537,11 @@ public class CubeService extends BasicService implements InitializingBean {
                 return;
 
             List<CubeSegment> toRemoveSegs = Lists.newArrayList();
-            long tail = readySegs.get(readySegs.size() - 1).getDateRangeEnd();
+            long tail = readySegs.get(readySegs.size() - 1).getTSRange().end.v;
             long head = tail - desc.getRetentionRange();
             for (CubeSegment seg : readySegs) {
-                if (seg.getDateRangeEnd() > 0) { // for streaming cube its initial value is 0
-                    if (seg.getDateRangeEnd() <= head) {
+                if (seg.getTSRange().end.v > 0) { // for streaming cube its initial value is 0
+                    if (seg.getTSRange().end.v <= head) {
                         toRemoveSegs.add(seg);
                     }
                 }
@@ -567,10 +567,9 @@ public class CubeService extends BasicService implements InitializingBean {
         synchronized (CubeService.class) {
             try {
                 cube = getCubeManager().getCube(cubeName);
-                Pair<Long, Long> offsets = getCubeManager().autoMergeCubeSegments(cube);
+                SegmentRange offsets = cube.autoMergeCubeSegments();
                 if (offsets != null) {
-                    CubeSegment newSeg = getCubeManager().mergeSegments(cube, 0, 0, offsets.getFirst(),
-                            offsets.getSecond(), true);
+                    CubeSegment newSeg = getCubeManager().mergeSegments(cube, null, offsets, true);
                     logger.debug("Will submit merge job on " + newSeg);
                     DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
                     getExecutableManager().addJob(job);

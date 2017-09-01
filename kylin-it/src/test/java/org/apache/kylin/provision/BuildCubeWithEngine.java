@@ -55,10 +55,8 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.rest.job.StorageCleanupJob;
-import org.apache.kylin.source.ISource;
-import org.apache.kylin.source.SourceFactory;
-import org.apache.kylin.source.SourcePartition;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
@@ -243,7 +241,6 @@ public class BuildCubeWithEngine {
             this.countDownLatch = countDownLatch;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public Boolean call() throws Exception {
             try {
@@ -259,12 +256,10 @@ public class BuildCubeWithEngine {
         }
     }
 
-    @SuppressWarnings("unused")
     protected boolean testTableExt() throws Exception {
         return true;
     }
 
-    @SuppressWarnings("unused")
     protected boolean testModel() throws Exception {
         return true;
     }
@@ -322,6 +317,7 @@ public class BuildCubeWithEngine {
         return false;
     }
 
+    @SuppressWarnings("unused")
     private void updateCubeEngineType(String cubeName) throws IOException {
         CubeDesc cubeDesc = cubeDescManager.getCubeDesc(cubeName);
         if (cubeDesc.getEngineType() != engineType) {
@@ -339,7 +335,7 @@ public class BuildCubeWithEngine {
     }
 
     private Boolean mergeSegment(String cubeName, long startDate, long endDate) throws Exception {
-        CubeSegment segment = cubeManager.mergeSegments(cubeManager.getCube(cubeName), startDate, endDate, 0, 0, true);
+        CubeSegment segment = cubeManager.mergeSegments(cubeManager.getCube(cubeName), new TSRange(startDate, endDate), null, true);
         DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(segment, "TEST");
         jobService.addJob(job);
         ExecutableState state = waitForJob(job.getId());
@@ -348,9 +344,7 @@ public class BuildCubeWithEngine {
 
     private Boolean buildSegment(String cubeName, long startDate, long endDate) throws Exception {
         CubeInstance cubeInstance = cubeManager.getCube(cubeName);
-        ISource source = SourceFactory.getSource(cubeInstance);
-        SourcePartition partition = source.enrichSourcePartitionBeforeBuild(cubeInstance, new SourcePartition(0, endDate, 0, 0, null, null));
-        CubeSegment segment = cubeManager.appendSegment(cubeInstance, partition.getStartDate(), partition.getEndDate());
+        CubeSegment segment = cubeManager.appendSegment(cubeInstance, new TSRange(0L, endDate));
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
         ExecutableState state = waitForJob(job.getId());

@@ -18,20 +18,23 @@
 
 package org.apache.kylin.cube.model;
 
+import java.io.Serializable;
+import java.util.List;
+
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import java.util.List;
 
 /**
  * An enrich of IJoinedFlatTableDesc for cubes
  */
-public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc, java.io.Serializable {
+@SuppressWarnings("serial")
+public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc, Serializable {
 
     private CubeDesc cubeDesc;
     private IJoinedFlatTableDesc flatDesc;
@@ -113,13 +116,8 @@ public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc, java.io.
     }
 
     @Override
-    public long getSourceOffsetStart() {
-        return flatDesc.getSourceOffsetStart();
-    }
-
-    @Override
-    public long getSourceOffsetEnd() {
-        return flatDesc.getSourceOffsetEnd();
+    public SegmentRange getSegRange() {
+        return flatDesc.getSegRange();
     }
 
     @Override

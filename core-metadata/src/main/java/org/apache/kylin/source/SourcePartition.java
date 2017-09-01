@@ -21,6 +21,9 @@ package org.apache.kylin.source;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentRange.TSRange;
+
 import com.google.common.base.Objects;
 
 /**
@@ -34,55 +37,35 @@ import com.google.common.base.Objects;
  * its own start and end offset within that partition.
  */
 public class SourcePartition {
-    long startDate;
-    long endDate;
-    long startOffset;
-    long endOffset;
+    TSRange tsRange;
+    SegmentRange segRange;
     Map<Integer, Long> sourcePartitionOffsetStart;
     Map<Integer, Long> sourcePartitionOffsetEnd;
 
     public SourcePartition() {
     }
 
-    public SourcePartition(long startDate, long endDate, long startOffset, long endOffset, Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) {
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.startOffset = startOffset;
-        this.endOffset = endOffset;
+    public SourcePartition(TSRange tsRange, SegmentRange segRange, Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) {
+        this.tsRange = tsRange;
+        this.segRange = segRange;
         this.sourcePartitionOffsetStart = sourcePartitionOffsetStart;
         this.sourcePartitionOffsetEnd = sourcePartitionOffsetEnd;
     }
 
-    public long getStartDate() {
-        return startDate;
+    public TSRange getTSRange() {
+        return tsRange;
     }
 
-    public void setStartDate(long startDate) {
-        this.startDate = startDate;
+    public void setTSRange(TSRange tsRange) {
+        this.tsRange = tsRange;
     }
 
-    public long getEndDate() {
-        return endDate;
+    public SegmentRange getSegRange() {
+        return segRange;
     }
 
-    public void setEndDate(long endDate) {
-        this.endDate = endDate;
-    }
-
-    public long getStartOffset() {
-        return startOffset;
-    }
-
-    public void setStartOffset(long startOffset) {
-        this.startOffset = startOffset;
-    }
-
-    public long getEndOffset() {
-        return endOffset;
-    }
-
-    public void setEndOffset(long endOffset) {
-        this.endOffset = endOffset;
+    public void setSegRange(SegmentRange segRange) {
+        this.segRange = segRange;
     }
 
     public Map<Integer, Long> getSourcePartitionOffsetStart() {
@@ -103,15 +86,13 @@ public class SourcePartition {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("startDate", startDate).add("endDate", endDate).add("startOffset", startOffset).add("endOffset", endOffset).add("sourcePartitionOffsetStart", sourcePartitionOffsetStart.toString()).add("sourcePartitionOffsetEnd", sourcePartitionOffsetEnd.toString()).toString();
+        return Objects.toStringHelper(this).add("tsRange", tsRange).add("segRange", segRange).add("sourcePartitionOffsetStart", sourcePartitionOffsetStart.toString()).add("sourcePartitionOffsetEnd", sourcePartitionOffsetEnd.toString()).toString();
     }
 
     public static SourcePartition getCopyOf(SourcePartition origin) {
         SourcePartition copy = new SourcePartition();
-        copy.setStartDate(origin.getStartDate());
-        copy.setEndDate(origin.getEndDate());
-        copy.setStartOffset(origin.getStartOffset());
-        copy.setEndOffset(origin.getEndOffset());
+        copy.setTSRange(origin.getTSRange());
+        copy.setSegRange(origin.getSegRange());
         if (origin.getSourcePartitionOffsetStart() != null) {
             copy.setSourcePartitionOffsetStart(new HashMap<>(origin.getSourcePartitionOffsetStart()));
         }

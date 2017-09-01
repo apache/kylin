@@ -335,6 +335,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.cube.cuboid-scheduler", "org.apache.kylin.cube.cuboid.DefaultCuboidScheduler");
     }
 
+    public String getSegmentAdvisor() {
+        return getOptional("kylin.cube.segment-advisor", "org.apache.kylin.cube.CubeSegmentAdvisor");
+    }
+    
     public double getJobCuboidSizeRatio() {
         return Double.parseDouble(getOptional("kylin.cube.size-estimate-ratio", "0.25"));
     }

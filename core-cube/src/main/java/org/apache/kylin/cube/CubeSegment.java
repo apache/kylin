@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -37,6 +38,9 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.metadata.model.ISegmentAdvisor;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -50,8 +54,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegment, java.io.Serializable {
+public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     @JsonBackReference
     private CubeInstance cubeInstance;
@@ -114,32 +119,27 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
     private Map<String, String> additionalInfo = new LinkedHashMap<String, String>();
 
     private Map<Long, Short> cuboidBaseShards = Maps.newConcurrentMap(); // cuboid id ==> base(starting) shard for this cuboid
+    
+    // lazy init
+    transient ISegmentAdvisor advisor = null;
 
     public CubeDesc getCubeDesc() {
         return getCubeInstance().getDescriptor();
     }
 
-    /**
-     * @param startDate
-     * @param endDate
-     * @return if(startDate == 0 && endDate == 0), returns "FULL_BUILD", else
-     * returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
-     */
-    public static String makeSegmentName(long startDate, long endDate, long startOffset, long endOffset) {
-        if (startOffset == 0 && startDate == 0 //
-                && (endOffset == 0 || endOffset == Long.MAX_VALUE) //
-                && (endDate == 0 || endDate == Long.MAX_VALUE)) {
+    public static String makeSegmentName(TSRange tsRange, SegmentRange segRange) {
+        if (tsRange == null && segRange == null) {
             return "FULL_BUILD";
         }
 
-        if (startOffset != 0 || endOffset != 0) {
-            return startOffset + "_" + endOffset;
+        if (segRange != null) {
+            return segRange.start.v + "_" + segRange.end.v;
         }
 
         // using time
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-        return dateFormat.format(startDate) + "_" + dateFormat.format(endDate);
+        return dateFormat.format(tsRange.start.v) + "_" + dateFormat.format(tsRange.end.v);
     }
 
     // ============================================================================
@@ -162,22 +162,6 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public long getDateRangeStart() {
-        return dateRangeStart;
-    }
-
-    public void setDateRangeStart(long dateRangeStart) {
-        this.dateRangeStart = dateRangeStart;
-    }
-
-    public long getDateRangeEnd() {
-        return dateRangeEnd;
-    }
-
-    public void setDateRangeEnd(long dateRangeEnd) {
-        this.dateRangeEnd = dateRangeEnd;
     }
 
     public SegmentStatusEnum getStatus() {
@@ -254,7 +238,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
         return cubeInstance;
     }
 
-    public void setCubeInstance(CubeInstance cubeInstance) {
+    void setCubeInstance(CubeInstance cubeInstance) {
         this.cubeInstance = cubeInstance;
     }
 
@@ -335,46 +319,76 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
         return new CubeDimEncMap(this);
     }
 
-    public boolean isSourceOffsetsOn() {
-        return sourceOffsetStart != 0 || sourceOffsetEnd != 0;
+    // Hide the 4 confusing fields: dateRangeStart, dateRangeEnd, sourceOffsetStart, sourceOffsetEnd.
+    // They are now managed via SegmentRange and TSRange.
+    long _getDateRangeStart() {
+        return dateRangeStart;
     }
 
-    // date range is used in place of source offsets when offsets are missing
-    public long getSourceOffsetStart() {
-        return isSourceOffsetsOn() ? sourceOffsetStart : dateRangeStart;
+    void _setDateRangeStart(long dateRangeStart) {
+        this.dateRangeStart = dateRangeStart;
     }
 
-    public void setSourceOffsetStart(long sourceOffsetStart) {
+    long _getDateRangeEnd() {
+        return dateRangeEnd;
+    }
+
+    void _setDateRangeEnd(long dateRangeEnd) {
+        this.dateRangeEnd = dateRangeEnd;
+    }
+
+    long _getSourceOffsetStart() {
+        return sourceOffsetStart;
+    }
+
+    void _setSourceOffsetStart(long sourceOffsetStart) {
         this.sourceOffsetStart = sourceOffsetStart;
     }
 
-    // date range is used in place of source offsets when offsets are missing
-    public long getSourceOffsetEnd() {
-        return isSourceOffsetsOn() ? sourceOffsetEnd : dateRangeEnd;
+    long _getSourceOffsetEnd() {
+        return sourceOffsetEnd;
     }
 
-    public void setSourceOffsetEnd(long sourceOffsetEnd) {
+    void _setSourceOffsetEnd(long sourceOffsetEnd) {
         this.sourceOffsetEnd = sourceOffsetEnd;
     }
-
-    // date range is used in place of source offsets when offsets are missing
-    public boolean sourceOffsetOverlaps(CubeSegment seg) {
-        return Segments.sourceOffsetOverlaps(this, seg);
+    
+    @Override
+    public SegmentRange getSegRange() {
+        return getAdvisor().getSegRange();
     }
-
-    // date range is used in place of source offsets when offsets are missing
-    public boolean sourceOffsetContains(ISegment seg) {
-        return Segments.sourceOffsetContains(this, seg);
+    
+    public void setSegRange(SegmentRange range) {
+        getAdvisor().setSegRange(range);
     }
 
     @Override
-    public void validate() throws IllegalStateException {
-        if (cubeInstance.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
-            if (!isSourceOffsetsOn() && dateRangeStart >= dateRangeEnd)
-                throw new IllegalStateException("Invalid segment, dateRangeStart(" + dateRangeStart + ") must be smaller than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
-            if (isSourceOffsetsOn() && sourceOffsetStart >= sourceOffsetEnd)
-                throw new IllegalStateException("Invalid segment, sourceOffsetStart(" + sourceOffsetStart + ") must be smaller than sourceOffsetEnd(" + sourceOffsetEnd + ") in segment " + this);
+    public TSRange getTSRange() {
+        return getAdvisor().getTSRange();
+    }
+    
+    public void setTSRange(TSRange range) {
+        getAdvisor().setTSRange(range);
+    }
+    
+    public boolean isOffsetCube() {
+        return getAdvisor().isOffsetCube();
+    }
+    
+    private ISegmentAdvisor getAdvisor() {
+        if (advisor != null)
+            return advisor;
+        
+        synchronized (this) {
+            if (advisor == null) {
+                advisor = Segments.newSegmentAdvisor(this);
+            }
+            return advisor;
         }
+    }
+    
+    @Override
+    public void validate() throws IllegalStateException {
     }
     
     public String getProject() {
@@ -382,16 +396,12 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
     }
 
     @Override
-    public int compareTo(CubeSegment other) {
-        long comp = this.getSourceOffsetStart() - other.getSourceOffsetStart();
+    public int compareTo(ISegment other) {
+        int comp = this.getSegRange().start.compareTo(other.getSegRange().start);
         if (comp != 0)
-            return comp < 0 ? -1 : 1;
+            return comp;
 
-        comp = this.getSourceOffsetEnd() - other.getSourceOffsetEnd();
-        if (comp != 0)
-            return comp < 0 ? -1 : 1;
-        else
-            return 0;
+        return this.getSegRange().end.compareTo(other.getSegRange().end);
     }
 
     @Override
