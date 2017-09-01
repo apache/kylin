@@ -217,6 +217,10 @@ public class MetadataManager {
         if (t == null)
             return null;
 
+        return getTableExt(t);
+    }
+
+    public TableExtDesc getTableExt(TableDesc t) {
         TableExtDesc result = srcTableExtMap.get(mapKey(t.getIdentity(), t.getProject()));
 
         // avoid returning null, since the TableDesc exists
