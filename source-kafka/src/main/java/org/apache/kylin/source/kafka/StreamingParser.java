@@ -76,7 +76,7 @@ public abstract class StreamingParser {
             Constructor constructor = clazz.getConstructor(List.class, Map.class);
             return (StreamingParser) constructor.newInstance(columns, properties);
         } else {
-            throw new IllegalStateException("invalid StreamingConfig, parserName " + parserName + ", parserProperties " + parserProperties + ".");
+            throw new IllegalStateException("Invalid StreamingConfig, parserName " + parserName + ", parserProperties " + parserProperties + ".");
         }
     }
 

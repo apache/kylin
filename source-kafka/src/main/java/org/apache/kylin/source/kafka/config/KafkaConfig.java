@@ -34,6 +34,7 @@ import org.apache.kylin.metadata.MetadataConstants;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.source.kafka.TimedJsonStreamParser;
 
 /**
  */
@@ -141,12 +142,12 @@ public class KafkaConfig extends RootPersistentEntity {
 
     public String getAllParserProperties() {
         StringBuilder sb = new StringBuilder();
+        if (parserTimeStampField != null) {
+            sb.append(TimedJsonStreamParser.PROPERTY_TS_COLUMN_NAME + "=" + parserTimeStampField);
+            sb.append(";");
+        }
         if (parserProperties != null)
             sb.append(parserProperties);
-        if (parserTimeStampField != null) {
-            sb.append(";");
-            sb.append(parserTimeStampField);
-        }
         return sb.toString();
     }
 
