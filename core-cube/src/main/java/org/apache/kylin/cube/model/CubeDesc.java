@@ -189,6 +189,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<Set<String>> mandatoryDimensionSetList = Collections.emptyList();
 
+    private Set<Long> mandatoryCuboids = Sets.newHashSet();
+
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
     private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
     private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<>();
@@ -458,6 +460,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.mandatoryDimensionSetList = mandatoryDimensionSetList;
     }
 
+    public Set<Long> getMandatoryCuboids() {
+        return mandatoryCuboids;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -651,24 +657,30 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         initDictionaryDesc();
         amendAllColumns();
 
-        // check if mandatory dimension set list is valid
-        validateMandatoryDimensionSetList();
+        // initialize mandatory cuboids based on mandatoryDimensionSetList
+        initMandatoryCuboids();
     }
 
-    public void validateMandatoryDimensionSetList() {
-        Set<String> rowKeyColumns = Sets.newHashSet();
+    private void initMandatoryCuboids() {
+        Map<String, RowKeyColDesc> rowKeyColDescMap = Maps.newHashMap();
         for (RowKeyColDesc entry : getRowkey().getRowKeyColumns()) {
-            rowKeyColumns.add(entry.getColumn());
+            rowKeyColDescMap.put(entry.getColumn(), entry);
         }
 
         for (Set<String> mandatoryDimensionSet : this.mandatoryDimensionSetList) {
+            long cuboid = 0L;
             for (String columnName : mandatoryDimensionSet) {
-                if (!rowKeyColumns.contains(columnName)) {
-                    logger.info("Column " + columnName + " in " + mandatoryDimensionSet + " does not exist");
+                TblColRef tblColRef = model.findColumn(columnName);
+                RowKeyColDesc rowKeyColDesc = rowKeyColDescMap.get(tblColRef.getIdentity());
+                // check if mandatory dimension set list is valid
+                if (rowKeyColDesc == null) {
+                    logger.warn("Column " + columnName + " in " + mandatoryDimensionSet + " does not exist");
                     throw new IllegalStateException(
                             "Column " + columnName + " in " + mandatoryDimensionSet + " does not exist");
                 }
+                cuboid |= 1L << rowKeyColDesc.getBitIndex();
             }
+            mandatoryCuboids.add(cuboid);
         }
     }
 

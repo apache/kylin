@@ -88,15 +88,9 @@ public class StatisticsDecisionUtil {
         cubingJob.setAlgorithm(alg);
     }
 
+    // For triggering cube planner phase one
     public static void optimizeCubingPlan(CubeSegment segment) throws IOException {
-        CubeInstance cube = segment.getCubeInstance();
-        
-        if (cube.getConfig().isCubePlannerEnabled() == false)
-            return;
-        
-        List<CubeSegment> readySegments = cube.getSegments(SegmentStatusEnum.READY);
-        if (readySegments.size() == 0 || (cube.getConfig().isCubePlannerEnabledForExistingCube()
-                && readySegments.size() == 1 && (readySegments.get(0).getSegRange().equals(segment.getSegRange())))) {
+        if (isAbleToOptimizeCubingPlan(segment)) {
             logger.info("It's able to trigger cuboid planner algorithm.");
         } else {
             return;
@@ -107,8 +101,30 @@ public class StatisticsDecisionUtil {
             return;
         }
 
+        CubeInstance cube = segment.getCubeInstance();
         CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setCuboids(recommendCuboidsWithStats);
         CubeManager.getInstance(cube.getConfig()).updateCube(cubeBuilder);
+    }
+
+    public static boolean isAbleToOptimizeCubingPlan(CubeSegment segment) {
+        CubeInstance cube = segment.getCubeInstance();
+        if (!cube.getConfig().isCubePlannerEnabled())
+            return false;
+
+        if (cube.getSegments(SegmentStatusEnum.READY_PENDING).size() > 0) {
+            logger.info("Has read pending segments and will not enable cube planner.");
+            return false;
+        }
+        List<CubeSegment> readySegments = cube.getSegments(SegmentStatusEnum.READY);
+        List<CubeSegment> newSegments = cube.getSegments(SegmentStatusEnum.NEW);
+        if (newSegments.size() <= 1 && //
+                (readySegments.size() == 0 || //
+                        (cube.getConfig().isCubePlannerEnabledForExistingCube() && readySegments.size() == 1
+                                && readySegments.get(0).getSegRange().equals(segment.getSegRange())))) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

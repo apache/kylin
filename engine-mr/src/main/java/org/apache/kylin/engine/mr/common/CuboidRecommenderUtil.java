@@ -20,6 +20,7 @@ package org.apache.kylin.engine.mr.common;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -53,10 +54,13 @@ public class CuboidRecommenderUtil {
             return null;
         }
 
+        Set<Long> mandatoryCuboids = segment.getCubeDesc().getMandatoryCuboids();
+
         String key = cube.getName();
         CuboidStats cuboidStats = new CuboidStats.Builder(key, baseCuboid, cubeStatsReader.getCuboidRowEstimatesHLL(),
-                cubeStatsReader.getCuboidSizeMap()).build();
-        return CuboidRecommender.getInstance().getRecommendCuboidList(cuboidStats, segment.getConfig(), false);
+                cubeStatsReader.getCuboidSizeMap()).setMandatoryCuboids(mandatoryCuboids).build();
+        return CuboidRecommender.getInstance().getRecommendCuboidList(cuboidStats, segment.getConfig(),
+                !mandatoryCuboids.isEmpty());
     }
 
     /** Trigger cube planner phase two for optimization */
