@@ -52,7 +52,6 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
-import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
@@ -417,8 +416,9 @@ public class CubeService extends BasicService implements InitializingBean {
      * if error happens
      * @throws IOException Exception when HTable resource is not closed correctly.
      */
-    public HBaseResponse getHTableInfo(String tableName) throws IOException {
-        HBaseResponse hr = htableInfoCache.getIfPresent(tableName);
+    public HBaseResponse getHTableInfo(String cubeName, String tableName) throws IOException {
+        String key = cubeName + "/" + tableName;
+        HBaseResponse hr = htableInfoCache.getIfPresent(key);
         if (null != hr) {
             return hr;
         }
@@ -426,6 +426,8 @@ public class CubeService extends BasicService implements InitializingBean {
         hr = new HBaseResponse();
         if ("hbase".equals(getConfig().getMetadataUrl().getScheme())) {
             try {
+                logger.debug("Loading HTable info " + cubeName + ", " + tableName);
+                
                 // use reflection to isolate NoClassDef errors when HBase is not available
                 hr = (HBaseResponse) Class.forName("org.apache.kylin.rest.service.HBaseInfoUtil")//
                         .getMethod("getHBaseInfo", new Class[] { String.class, KylinConfig.class })//
@@ -435,7 +437,7 @@ public class CubeService extends BasicService implements InitializingBean {
             }
         }
 
-        htableInfoCache.put(tableName, hr);
+        htableInfoCache.put(key, hr);
         return hr;
     }
 
@@ -716,8 +718,7 @@ public class CubeService extends BasicService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        Broadcaster.getInstance(getConfig()).registerListener(new HTableInfoSyncListener(), "cube");
-        logger.info("HTableInfoSyncListener is on.");
+        Broadcaster.getInstance(getConfig()).registerStaticListener(new HTableInfoSyncListener(), "cube");
     }
 
     private class HTableInfoSyncListener extends Broadcaster.Listener {
@@ -730,17 +731,11 @@ public class CubeService extends BasicService implements InitializingBean {
         public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey)
                 throws IOException {
             String cubeName = cacheKey;
-
-            CubeInstance cube = getCubeManager().getCube(cubeName);
-            if (null == cube) {
-                throw new InternalErrorException("Cannot find cube " + cubeName);
+            String keyPrefix = cubeName + "/";
+            for (String k : htableInfoCache.asMap().keySet()) {
+                if (k.startsWith(keyPrefix))
+                    htableInfoCache.invalidate(k);
             }
-
-            List<String> htableNameList = Lists.newArrayListWithExpectedSize(cube.getSegments().size());
-            for (CubeSegment segment : cube.getSegments()) {
-                htableNameList.add(segment.getStorageLocationIdentifier());
-            }
-            htableInfoCache.invalidateAll(htableNameList);
         }
     }
 }

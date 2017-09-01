@@ -103,8 +103,9 @@ public class Broadcaster {
 
     // ============================================================================
 
-    private KylinConfig config;
+    static final Map<String, List<Listener>> staticListenerMap = Maps.newConcurrentMap();
 
+    private KylinConfig config;
     private BlockingDeque<BroadcastEvent> broadcastEvents = new LinkedBlockingDeque<>();
     private Map<String, List<Listener>> listenerMap = Maps.newConcurrentMap();
     private AtomicLong counter = new AtomicLong();
@@ -158,31 +159,40 @@ public class Broadcaster {
         });
     }
 
+    // static listener survives cache wipe and goes after normal listeners
+    public void registerStaticListener(Listener listener, String... entities) {
+        doRegisterListener(staticListenerMap, listener, entities);
+    }
+    
     public void registerListener(Listener listener, String... entities) {
-        synchronized (listenerMap) {
+        doRegisterListener(listenerMap, listener, entities);
+    }
+    
+    private static void doRegisterListener(Map<String, List<Listener>> lmap, Listener listener, String... entities) {
+        synchronized (lmap) {
             // ignore re-registration
-            List<Listener> all = listenerMap.get(SYNC_ALL);
+            List<Listener> all = lmap.get(SYNC_ALL);
             if (all != null && all.contains(listener)) {
                 return;
             }
 
             for (String entity : entities) {
                 if (!StringUtils.isBlank(entity))
-                    addListener(entity, listener);
+                    addListener(lmap, entity, listener);
             }
-            addListener(SYNC_ALL, listener);
-            addListener(SYNC_PRJ_SCHEMA, listener);
-            addListener(SYNC_PRJ_DATA, listener);
+            addListener(lmap, SYNC_ALL, listener);
+            addListener(lmap, SYNC_PRJ_SCHEMA, listener);
+            addListener(lmap, SYNC_PRJ_DATA, listener);
         }
     }
 
-    private void addListener(String entity, Listener listener) {
-        List<Listener> list = listenerMap.get(entity);
+    private static void addListener(Map<String, List<Listener>> lmap, String entity, Listener listener) {
+        List<Listener> list = lmap.get(entity);
         if (list == null) {
             list = new ArrayList<>();
+            lmap.put(entity, list);
         }
         list.add(listener);
-        listenerMap.put(entity, list);
     }
 
     public void notifyClearAll() throws IOException {
@@ -198,15 +208,19 @@ public class Broadcaster {
     }
 
     public void notifyListener(String entity, Event event, String cacheKey) throws IOException {
-        List<Listener> list = listenerMap.get(entity);
-        if (list == null)
+        // prevents concurrent modification exception
+        List<Listener> list = Lists.newArrayList();
+        List<Listener> l1 = listenerMap.get(entity); // normal listeners first
+        if (l1 != null)
+            list.addAll(l1);
+        List<Listener> l2 = staticListenerMap.get(entity); // static listeners second
+        if (l2 != null)
+            list.addAll(l2);
+        if (list.isEmpty())
             return;
 
-        logger.trace("Broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey
-                + ", listeners=" + list);
+        logger.debug("Broadcasting" + event + ", " + entity + ", " + cacheKey);
 
-        // prevents concurrent modification exception
-        list = Lists.newArrayList(list);
         switch (entity) {
         case SYNC_ALL:
             for (Listener l : list) {
@@ -233,8 +247,7 @@ public class Broadcaster {
             break;
         }
 
-        logger.debug(
-                "Done broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey);
+        logger.debug("Done broadcasting" + event + ", " + entity + ", " + cacheKey);
     }
 
     /**

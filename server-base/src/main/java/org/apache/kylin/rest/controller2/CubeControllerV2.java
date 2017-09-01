@@ -460,7 +460,7 @@ public class CubeControllerV2 extends BasicController {
 
             // Get info of given table.
             try {
-                hr = cubeService.getHTableInfo(tableName);
+                hr = cubeService.getHTableInfo(cubeName, tableName);
             } catch (IOException e) {
                 logger.error("Failed to calculate size of HTable \"" + tableName + "\".", e);
             }

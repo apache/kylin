@@ -29,6 +29,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.QueryDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -38,7 +39,7 @@ import net.sf.ehcache.CacheManager;
 /**
  */
 @Component("cacheService")
-public class CacheService extends BasicService {
+public class CacheService extends BasicService implements InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
     private static QueryDataSource queryDataSource = new QueryDataSource();
@@ -92,6 +93,11 @@ public class CacheService extends BasicService {
         this.cubeService = cubeService;
     }
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Broadcaster.getInstance(getConfig()).registerStaticListener(cacheSyncListener, "cube");
+    }
+
     public void wipeProjectCache(String project) {
         if (project == null)
             annouceWipeCache("all", "update", "all");
@@ -106,10 +112,6 @@ public class CacheService extends BasicService {
 
     public void notifyMetadataChange(String entity, Event event, String cacheKey) throws IOException {
         Broadcaster broadcaster = Broadcaster.getInstance(getConfig());
-
-        // broadcaster can be clearCache() too, make sure listener is registered; re-registration will be ignored
-        broadcaster.registerListener(cacheSyncListener, "cube");
-
         broadcaster.notifyListener(entity, event, cacheKey);
     }
 
