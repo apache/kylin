@@ -324,10 +324,8 @@ public class StorageCleanupJob extends AbstractApplication {
         for (String jobId : workingJobList) {
             String segmentId = getSegmentIdFromJobId(jobId);
 
-            if (null == segmentId)
-                continue;
-
-            return segUuid.equals(segmentId);
+            if (segUuid.equals(segmentId))
+                return true;
         }
         return false;
     }
