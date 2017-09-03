@@ -27,6 +27,7 @@ This page lists the major RESTful APIs provided by Kylin.
    * [Discard job](#discard-job)
    * [Get job status](#get-job-status)
    * [Get job step output](#get-job-step-output)
+   * [Get job list](#get-job-list)
 * Metadata
    * [Get Hive Table](#get-hive-table)
    * [Get Hive Table (Extend Info)](#get-hive-table-extend-info)
@@ -899,6 +900,70 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 }
 ```
 
+## Get job list
+`GET /kylin/api/jobs`
+
+#### Path Variable
+* cubeName - `required` `string` Cube name.
+* projectName - `required` `string` Project name.
+* status - `required` `int` Job status, e.g. (NEW: 0, PENDING: 1, RUNNING: 2, STOPPED: 32, FINISHED: 4, ERROR: 8, DISCARDED: 16)
+* offset - `required` `int` Offset used by pagination.
+* limit - `required` `int` Jobs per page.
+* timeFilter - `required` `int`, e.g. (LAST ONE DAY: 0, LAST ONE WEEK: 1, LAST ONE MONTH: 2, LAST ONE YEAR: 3, ALL: 4)
+
+#### Response Sample
+```
+[
+  { 
+    "uuid": "9eb7bccf-4448-4578-9c29-552658b5a2ca", 
+    "last_modified": 1490957579843, 
+    "version": "2.0.0", 
+    "name": "Sample_Cube - 19700101000000_20150101000000 - BUILD - GMT+08:00 2017-03-31 18:36:08", 
+    "type": "BUILD", 
+    "duration": 936, 
+    "related_cube": "Sample_Cube", 
+    "related_segment": "53a5d7f7-7e06-4ea1-b3ee-b7f30343c723", 
+    "exec_start_time": 1490956581743, 
+    "exec_end_time": 1490957518131, 
+    "mr_waiting": 0, 
+    "steps": [
+      { 
+        "interruptCmd": null, 
+        "id": "9eb7bccf-4448-4578-9c29-552658b5a2ca-00", 
+        "name": "Create Intermediate Flat Hive Table", 
+        "sequence_id": 0, 
+        "exec_cmd": null, 
+        "interrupt_cmd": null, 
+        "exec_start_time": 1490957508721, 
+        "exec_end_time": 1490957518102, 
+        "exec_wait_time": 0, 
+        "step_status": "DISCARDED", 
+        "cmd_type": "SHELL_CMD_HADOOP", 
+        "info": { "endTime": "1490957518102", "startTime": "1490957508721" }, 
+        "run_async": false 
+      }, 
+      { 
+        "interruptCmd": null, 
+        "id": "9eb7bccf-4448-4578-9c29-552658b5a2ca-01", 
+        "name": "Redistribute Flat Hive Table", 
+        "sequence_id": 1, 
+        "exec_cmd": null, 
+        "interrupt_cmd": null, 
+        "exec_start_time": 0, 
+        "exec_end_time": 0, 
+        "exec_wait_time": 0, 
+        "step_status": "DISCARDED", 
+        "cmd_type": "SHELL_CMD_HADOOP", 
+        "info": {}, 
+        "run_async": false 
+      }
+    ],
+    "submitter": "ADMIN", 
+    "job_status": "FINISHED", 
+    "progress": 100.0 
+  }
+]
+```
 ***
 
 ## Get Hive Table
