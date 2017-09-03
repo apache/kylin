@@ -1,0 +1,37 @@
+From 4ec9faaf84489df1b6dc2a6d72b02735f357155c Mon Sep 17 00:00:00 2001
+From: lichao <chaoli@mobvoi.com>
+Date: Fri, 25 Aug 2017 14:31:17 +0800
+Subject: [PATCH] fix connection  may not be released when sync wipe cache
+
+---
+ .../main/java/org/apache/kylin/common/restclient/RestClient.java    | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/core-common/src/main/java/org/apache/kylin/common/restclient/RestClient.java b/core-common/src/main/java/org/apache/kylin/common/restclient/RestClient.java
+index 13490cb6d..efd0438c4 100644
+--- a/core-common/src/main/java/org/apache/kylin/common/restclient/RestClient.java
++++ b/core-common/src/main/java/org/apache/kylin/common/restclient/RestClient.java
+@@ -121,8 +121,9 @@ public class RestClient {
+         String url = baseUrl + "/cache/" + entity + "/" + cacheKey + "/" + event;
+         HttpPut request = new HttpPut(url);
+ 
++        HttpResponse response = null;
+         try {
+-            HttpResponse response = client.execute(request);
++            response = client.execute(request);
+ 
+             if (response.getStatusLine().getStatusCode() != 200) {
+                 String msg = EntityUtils.toString(response.getEntity());
+@@ -131,6 +132,9 @@ public class RestClient {
+         } catch (Exception ex) {
+             throw new IOException(ex);
+         } finally {
++            if(response != null){
++                EntityUtils.consume(response.getEntity());
++            }
+             request.releaseConnection();
+         }
+     }
+-- 
+2.11.0 (Apple Git-81)
+
