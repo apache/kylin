@@ -23,6 +23,26 @@ Install following tools before you add or edit documentation:
 	
 3. And optionally any markdown editor you prefer
 
+Below is a gem list that works. Stick to these versions if jekyll installation becomes a problem.
+
+```
+$ gem list
+
+...
+jekyll (2.5.3)
+jekyll-coffeescript (1.0.1)
+jekyll-gist (1.4.0)
+jekyll-multiple-languages (1.0.8)
+jekyll-paginate (1.1.0)
+jekyll-sass-converter (1.4.0)
+jekyll-watch (1.3.1)
+json (1.8.1)
+kramdown (1.9.0)
+...
+rouge (1.10.1)
+...
+```
+
 ## About Jekyll
 Jekyll is a Ruby script to generate a static HTML website from source text and themes, the HTML is generated before being deployed to the web server. Jekyll also happens to be the engine behind GitHub Pages.
 
