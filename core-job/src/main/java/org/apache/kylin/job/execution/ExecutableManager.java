@@ -338,12 +338,13 @@ public class ExecutableManager {
                     break;
                 }
             }
-            info = Maps.newHashMap();
             final long endTime = job.getEndTime();
-            long interruptTime = System.currentTimeMillis() - endTime + job.getInterruptTime();
-            info.putAll(getJobOutput(jobId).getInfo());
-            info.put(AbstractExecutable.INTERRUPT_TIME, Long.toString(interruptTime));
-            info.remove(AbstractExecutable.END_TIME);
+            if (endTime != 0) {
+                long interruptTime = System.currentTimeMillis() - endTime + job.getInterruptTime();
+                info = Maps.newHashMap(getJobOutput(jobId).getInfo());
+                info.put(AbstractExecutable.INTERRUPT_TIME, Long.toString(interruptTime));
+                info.remove(AbstractExecutable.END_TIME);
+            }
         }
         updateJobOutput(jobId, ExecutableState.READY, info, null);
     }

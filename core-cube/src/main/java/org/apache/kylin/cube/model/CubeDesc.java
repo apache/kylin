@@ -189,7 +189,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private int parentForward = 3;
 
-    // lazy init
     transient private CuboidScheduler cuboidScheduler = null;
 
     public boolean isEnableSharding() {
