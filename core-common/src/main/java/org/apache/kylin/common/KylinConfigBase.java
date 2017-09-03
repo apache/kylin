@@ -973,6 +973,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.valueOf(getOptional("kylin.query.skip-empty-segments", "true"));
     }
 
+    public boolean isDisableCubeNoAggSQL() {
+        return Boolean.valueOf(getOptional("kylin.query.disable-cube-noagg-sql", "false"));
+    }
+
     public boolean isStreamAggregateEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.stream-aggregate-enabled", "true"));
     }

@@ -292,6 +292,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     @Override
     public CapabilityResult isCapable(SQLDigest digest) {
         CapabilityResult result = CubeCapabilityChecker.check(this, digest);
+        result = localCapacityCheck(digest, result);
         if (result.capable) {
             result.cost = getCost(digest);
             for (CapabilityInfluence i : result.influences) {
@@ -301,6 +302,15 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
             result.cost = -1;
         }
         return result;
+    }
+
+    private CapabilityResult localCapacityCheck(SQLDigest digest, CapabilityResult originResult) {
+        if (this.getDescriptor().getConfig().isDisableCubeNoAggSQL()) {
+            CapabilityResult notCap = new CapabilityResult();
+            notCap.capable = false;
+            return digest.aggregations.isEmpty() ? notCap : originResult ;
+        }
+        return originResult;
     }
 
     public int getCost(SQLDigest digest) {
