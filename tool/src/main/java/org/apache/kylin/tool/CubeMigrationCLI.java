@@ -201,7 +201,7 @@ public class CubeMigrationCLI {
     }
 
     protected void changeHtableHost(CubeInstance cube) {
-        if (cube.getDescriptor().getEngineType() != IStorageAware.ID_SHARDED_HBASE)
+        if (cube.getDescriptor().getStorageType() != IStorageAware.ID_SHARDED_HBASE)
             return;
         for (CubeSegment segment : cube.getSegments()) {
             operations
