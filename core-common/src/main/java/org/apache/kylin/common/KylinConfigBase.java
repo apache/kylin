@@ -226,6 +226,10 @@ abstract public class KylinConfigBase implements Serializable {
         return cachedHdfsWorkingDirectory;
     }
 
+    public String getZkBasePath() {
+        return getOptional("kylin.zk.base.path", "/kylin");
+    }
+
     /**
      * A comma separated list of host:port pairs, each corresponding to a ZooKeeper server
      */
