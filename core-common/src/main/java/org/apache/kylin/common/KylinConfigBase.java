@@ -1003,6 +1003,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.engine.mr.uhc-config-override.");
     }
 
+    public Map<String, String> getBaseCuboidMRConfigOverride() {
+        return getPropertiesByPrefix("kylin.engine.mr.base-cuboid-config-override.");
+    }
+
     public Map<String, String> getSparkConfigOverride() {
         return getPropertiesByPrefix("kylin.engine.spark-conf.");
     }
