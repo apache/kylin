@@ -148,7 +148,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
             scanRequest = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(scanRanges).setDimensions(gtDimensions).//
                     setAggrGroupBy(gtAggrGroups).setAggrMetrics(gtAggrMetrics).setAggrMetricsFuncs(gtAggrFuncs).setFilterPushDown(gtFilter).//
                     setAllowStorageAggregation(context.isNeedStorageAggregation()).setAggCacheMemThreshold(cubeSegment.getConfig().getQueryCoprocessorMemGB()).//
-                    setStoragePushDownLimit(context.getFinalPushDownLimit()).setHavingFilterPushDown(havingFilter).createGTScanRequest();
+                    setStoragePushDownLimit(context.getFinalPushDownLimit()).setStorageLimitLevel(context.getStorageLimitLevel()).setHavingFilterPushDown(havingFilter).createGTScanRequest();
         } else {
             scanRequest = null;
         }

@@ -35,6 +35,7 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.gridtable.StorageLimitLevel;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.filter.CaseTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
@@ -139,7 +140,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         context.setNeedStorageAggregation(isNeedStorageAggregation(cuboid, groupsD, singleValuesD));
 
         // exactAggregation mean: needn't aggregation at storage and query engine both.
-        boolean exactAggregation = isExactAggregation(context, cuboid, groups, otherDimsD, singleValuesD, derivedPostAggregation, sqlDigest.aggregations);
+        boolean exactAggregation = isExactAggregation(context, cuboid, groups, otherDimsD, singleValuesD,
+                derivedPostAggregation, sqlDigest.aggregations);
         context.setExactAggregation(exactAggregation);
 
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
@@ -161,9 +163,10 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         TupleFilter havingFilter = checkHavingCanPushDown(sqlDigest.havingFilter, groupsD, sqlDigest.aggregations,
                 metrics);
 
-        logger.info("Cuboid identified: cube={}, cuboidId={}, groupsD={}, filterD={}, limitPushdown={}, storageAggr={}",
+        logger.info(
+                "Cuboid identified: cube={}, cuboidId={}, groupsD={}, filterD={}, limitPushdown={}, limitLevel={}, storageAggr={}",
                 cubeInstance.getName(), cuboid.getId(), groupsD, filterColumnD, context.getFinalPushDownLimit(),
-                context.isNeedStorageAggregation());
+                context.getStorageLimitLevel(), context.isNeedStorageAggregation());
 
         return new GTCubeStorageQueryRequest(cuboid, dimensionsD, groupsD, filterColumnD, metrics, filterD,
                 havingFilter, context);
@@ -365,50 +368,50 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     private void enableStorageLimitIfPossible(Cuboid cuboid, Collection<TblColRef> groups,
             Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter,
             Set<TblColRef> loosenedColumnD, Collection<FunctionDesc> functionDescs, StorageContext context) {
-        boolean possible = true;
 
-        if (!TupleFilter.isEvaluableRecursively(filter)) {
-            possible = false;
-            logger.debug("Storage limit push down is impossible because the filter isn't evaluable");
-        }
-
-        if (!loosenedColumnD.isEmpty()) { // KYLIN-2173
-            possible = false;
-            logger.debug("Storage limit push down is impossible because filter is loosened: " + loosenedColumnD);
-        }
-
-        if (context.hasSort()) {
-            possible = false;
-            logger.debug("Storage limit push down is impossible because the query has order by");
-        }
-
-        // derived aggregation is bad, unless expanded columns are already in group by
-        if (!groups.containsAll(derivedPostAggregation)) {
-            possible = false;
-            logger.debug("Storage limit push down is impossible because derived column require post aggregation: "
-                    + derivedPostAggregation);
-        }
+        StorageLimitLevel storageLimitLevel = StorageLimitLevel.LIMIT_ON_SCAN;
 
         //if groupsD is clustered at "head" of the rowkey, then limit push down is possible
         int size = groupsD.size();
         if (!groupsD.containsAll(cuboid.getColumns().subList(0, size))) {
-            possible = false;
+            storageLimitLevel = StorageLimitLevel.LIMIT_ON_RETURN_SIZE;
             logger.debug(
-                    "Storage limit push down is impossible because groupD is not clustered at head, groupsD: " + groupsD //
+                    "storageLimitLevel set to LIMIT_ON_RETURN_SIZE because groupD is not clustered at head, groupsD: "
+                            + groupsD //
                             + " with cuboid columns: " + cuboid.getColumns());
+        }
+
+        // derived aggregation is bad, unless expanded columns are already in group by
+        if (!groups.containsAll(derivedPostAggregation)) {
+            storageLimitLevel = StorageLimitLevel.NO_LIMIT;
+            logger.debug("storageLimitLevel set to NO_LIMIT because derived column require post aggregation: "
+                    + derivedPostAggregation);
+        }
+
+        if (!TupleFilter.isEvaluableRecursively(filter)) {
+            storageLimitLevel = StorageLimitLevel.NO_LIMIT;
+            logger.debug("storageLimitLevel set to NO_LIMIT because the filter isn't evaluable");
+        }
+
+        if (!loosenedColumnD.isEmpty()) { // KYLIN-2173
+            storageLimitLevel = StorageLimitLevel.NO_LIMIT;
+            logger.debug("storageLimitLevel set to NO_LIMIT because filter is loosened: " + loosenedColumnD);
+        }
+
+        if (context.hasSort()) {
+            storageLimitLevel = StorageLimitLevel.NO_LIMIT;
+            logger.debug("storageLimitLevel set to NO_LIMIT because the query has order by");
         }
 
         //if exists measures like max(cal_dt), then it's not a perfect cuboid match, cannot apply limit
         for (FunctionDesc functionDesc : functionDescs) {
             if (functionDesc.isDimensionAsMetric()) {
-                possible = false;
-                logger.debug("Storage limit push down is impossible because {} isDimensionAsMetric ", functionDesc);
+                storageLimitLevel = StorageLimitLevel.NO_LIMIT;
+                logger.debug("storageLimitLevel set to NO_LIMIT because {} isDimensionAsMetric ", functionDesc);
             }
         }
 
-        if (possible) {
-            context.setFinalPushDownLimit(cubeInstance);
-        }
+        context.applyLimitPushDown(cubeInstance, storageLimitLevel);
     }
 
     private void enableStreamAggregateIfBeneficial(Cuboid cuboid, Set<TblColRef> groupsD, StorageContext context) {
@@ -493,7 +496,9 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         return havingFilter;
     }
 
-    private boolean isExactAggregation(StorageContext context, Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> othersD, Set<TblColRef> singleValuesD, Set<TblColRef> derivedPostAggregation, Collection<FunctionDesc> functionDescs) {
+    private boolean isExactAggregation(StorageContext context, Cuboid cuboid, Collection<TblColRef> groups,
+            Set<TblColRef> othersD, Set<TblColRef> singleValuesD, Set<TblColRef> derivedPostAggregation,
+            Collection<FunctionDesc> functionDescs) {
         if (context.isNeedStorageAggregation()) {
             logger.info("exactAggregation is false because need storage aggregation");
             return false;
@@ -506,7 +511,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
         // derived aggregation is bad, unless expanded columns are already in group by
         if (groups.containsAll(derivedPostAggregation) == false) {
-            logger.info("exactAggregation is false because derived column require post aggregation: " + derivedPostAggregation);
+            logger.info("exactAggregation is false because derived column require post aggregation: "
+                    + derivedPostAggregation);
             return false;
         }
 

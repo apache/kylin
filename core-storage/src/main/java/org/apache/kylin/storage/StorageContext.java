@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.gridtable.StorageLimitLevel;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryBase;
 import org.slf4j.Logger;
@@ -41,6 +42,7 @@ public class StorageContext {
     private boolean overlookOuterLimit = false;
     private int offset = 0;
     private int finalPushDownLimit = Integer.MAX_VALUE;
+    private StorageLimitLevel storageLimitLevel = StorageLimitLevel.NO_LIMIT;
     private boolean hasSort = false;
     private boolean acceptPartialResult = false;
     private long deadline;
@@ -68,7 +70,8 @@ public class StorageContext {
     //the limit here correspond to the limit concept in SQL
     //also take into consideration Statement.setMaxRows in JDBC
     private int getLimit() {
-        if (overlookOuterLimit || BackdoorToggles.getStatementMaxRows() == null || BackdoorToggles.getStatementMaxRows() == 0) {
+        if (overlookOuterLimit || BackdoorToggles.getStatementMaxRows() == null
+                || BackdoorToggles.getStatementMaxRows() == 0) {
             return limit;
         } else {
             return Math.min(limit, BackdoorToggles.getStatementMaxRows());
@@ -77,7 +80,8 @@ public class StorageContext {
 
     public void setLimit(int l) {
         if (limit != Integer.MAX_VALUE) {
-            logger.warn("Setting limit to {} but in current olap context, the limit is already {}, won't apply", l, limit);
+            logger.warn("Setting limit to {} but in current olap context, the limit is already {}, won't apply", l,
+                    limit);
         } else {
             limit = l;
         }
@@ -107,7 +111,7 @@ public class StorageContext {
         return isValidPushDownLimit(finalPushDownLimit);
     }
 
-    public static boolean isValidPushDownLimit(int finalPushDownLimit) {
+    public static boolean isValidPushDownLimit(long finalPushDownLimit) {
         return finalPushDownLimit < Integer.MAX_VALUE && finalPushDownLimit > 0;
     }
 
@@ -115,20 +119,31 @@ public class StorageContext {
         return finalPushDownLimit;
     }
 
-    public void setFinalPushDownLimit(IRealization realization) {
+    public StorageLimitLevel getStorageLimitLevel() {
+        return storageLimitLevel;
+    }
 
-        if (!isValidPushDownLimit(this.getLimit())) {
+    public void applyLimitPushDown(IRealization realization, StorageLimitLevel storageLimitLevel) {
+
+        if (storageLimitLevel == StorageLimitLevel.NO_LIMIT) {
             return;
         }
 
-        int tempPushDownLimit = this.getOffset() + this.getLimit();
-
         if (!realization.supportsLimitPushDown()) {
             logger.warn("Not enabling limit push down because cube storage type not supported");
-        } else {
-            this.finalPushDownLimit = tempPushDownLimit;
-            logger.info("Enable limit (storage push down limit) :" + tempPushDownLimit);
+            return;
         }
+
+        long temp = this.getOffset() + this.getLimit();
+
+        if (!isValidPushDownLimit(temp)) {
+            logger.warn("Not enabling limit push down because current limit is invalid: " + this.getLimit());
+            return;
+        }
+
+        this.finalPushDownLimit = (int) temp;
+        this.storageLimitLevel = storageLimitLevel;
+        logger.info("Enabling limit push down: {} at level: {}", temp, storageLimitLevel);
     }
 
     public boolean mergeSortPartitionResults() {

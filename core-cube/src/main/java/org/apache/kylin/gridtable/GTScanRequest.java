@@ -73,15 +73,19 @@ public class GTScanRequest {
     private boolean allowStorageAggregation;
     private double aggCacheMemThreshold;
     private int storageScanRowNumThreshold;
+    //valid value iff GTCubeStorageQueryBase.enableStorageLimitIfPossible is true
     private int storagePushDownLimit;
+    private StorageLimitLevel storageLimitLevel;
 
     // runtime computed fields
     private transient boolean doingStorageAggregation = false;
 
     GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
-            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown, TupleFilter havingFilterPushDown, // 
+            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown,
+            TupleFilter havingFilterPushDown, // 
             boolean allowStorageAggregation, double aggCacheMemThreshold, int storageScanRowNumThreshold, //
-            int storagePushDownLimit, String storageBehavior, long startTime, long timeout) {
+            int storagePushDownLimit, StorageLimitLevel storageLimitLevel, String storageBehavior, long startTime,
+            long timeout) {
         this.info = info;
         if (ranges == null) {
             this.ranges = Lists.newArrayList(new GTScanRange(new GTRecord(info), new GTRecord(info)));
@@ -103,6 +107,7 @@ public class GTScanRequest {
         this.aggCacheMemThreshold = aggCacheMemThreshold;
         this.storageScanRowNumThreshold = storageScanRowNumThreshold;
         this.storagePushDownLimit = storagePushDownLimit;
+        this.storageLimitLevel = storageLimitLevel;
 
         validate(info);
     }
@@ -173,14 +178,16 @@ public class GTScanRequest {
      * 
      * Refer to CoprocessorBehavior for explanation
      */
-    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn) throws IOException {
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn)
+            throws IOException {
         return decorateScanner(scanner, filterToggledOn, aggrToggledOn, false, true);
     }
 
     /**
      * hasPreFiltered indicate the data has been filtered before scanning
      */
-    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, boolean hasPreFiltered, boolean spillEnabled) throws IOException {
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn,
+            boolean hasPreFiltered, boolean spillEnabled) throws IOException {
         IGTScanner result = scanner;
         if (!filterToggledOn) { //Skip reading this section if you're not profiling! 
             lookAndForget(result);
@@ -188,7 +195,9 @@ public class GTScanRequest {
         } else {
 
             if (this.hasFilterPushDown() && !hasPreFiltered) {
-                result = new GTFilterScanner(result, this);
+                result = new GTFilterScanner(result, this, null);
+            } else {
+                result = new GTForwardingScanner(result);//need its check function
             }
 
             if (!aggrToggledOn) {//Skip reading this section if you're not profiling! 
@@ -207,7 +216,6 @@ public class GTScanRequest {
             }
             return result;
         }
-
     }
 
     public BufferedMeasureCodec createMeasureCodec() {
@@ -281,7 +289,7 @@ public class GTScanRequest {
     public TupleFilter getHavingFilterPushDown() {
         return havingFilterPushDown;
     }
-    
+
     public ImmutableBitSet getDimensions() {
         return this.getColumns().andNot(this.getAggrMetrics());
     }
@@ -321,6 +329,10 @@ public class GTScanRequest {
         return this.storagePushDownLimit;
     }
 
+    public StorageLimitLevel getStorageLimitLevel() {
+        return storageLimitLevel;
+    }
+
     public String getStorageBehavior() {
         return storageBehavior;
     }
@@ -335,7 +347,9 @@ public class GTScanRequest {
 
     @Override
     public String toString() {
-        return "GTScanRequest [range=" + ranges + ", columns=" + columns + ", filterPushDown=" + filterPushDown + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs=" + Arrays.toString(aggrMetricsFuncs) + "]";
+        return "GTScanRequest [range=" + ranges + ", columns=" + columns + ", filterPushDown=" + filterPushDown
+                + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs="
+                + Arrays.toString(aggrMetricsFuncs) + "]";
     }
 
     public byte[] toByteArray() {
@@ -350,12 +364,12 @@ public class GTScanRequest {
 
     private static final int SERIAL_0_BASE = 0;
     private static final int SERIAL_1_HAVING_FILTER = 1;
-    
+
     public static final BytesSerializer<GTScanRequest> serializer = new BytesSerializer<GTScanRequest>() {
         @Override
         public void serialize(GTScanRequest value, ByteBuffer out) {
             final int serialLevel = KylinConfig.getInstanceFromEnv().getGTScanRequestSerializationLevel();
-            
+
             GTInfo.serializer.serialize(value.info, out);
 
             BytesUtil.writeVInt(value.ranges.size(), out);
@@ -370,9 +384,10 @@ public class GTScanRequest {
 
             ImmutableBitSet.serializer.serialize(value.columns, out);
             BytesUtil.writeByteArray(GTUtil.serializeGTFilter(value.filterPushDown, value.info), out);
-            
+
             if (serialLevel >= SERIAL_1_HAVING_FILTER) {
-                BytesUtil.writeByteArray(TupleFilterSerializer.serialize(value.havingFilterPushDown, StringCodeSystem.INSTANCE), out);
+                BytesUtil.writeByteArray(
+                        TupleFilterSerializer.serialize(value.havingFilterPushDown, StringCodeSystem.INSTANCE), out);
             }
 
             ImmutableBitSet.serializer.serialize(value.aggrGroupBy, out);
@@ -380,6 +395,7 @@ public class GTScanRequest {
             BytesUtil.writeAsciiStringArray(value.aggrMetricsFuncs, out);
             BytesUtil.writeVInt(value.allowStorageAggregation ? 1 : 0, out);
             out.putDouble(value.aggCacheMemThreshold);
+            BytesUtil.writeUTFString(value.getStorageLimitLevel().name(), out);
             BytesUtil.writeVInt(value.storageScanRowNumThreshold, out);
             BytesUtil.writeVInt(value.storagePushDownLimit, out);
             BytesUtil.writeVLong(value.startTime, out);
@@ -390,7 +406,7 @@ public class GTScanRequest {
         @Override
         public GTScanRequest deserialize(ByteBuffer in) {
             final int serialLevel = KylinConfig.getInstanceFromEnv().getGTScanRequestSerializationLevel();
-            
+
             GTInfo sInfo = GTInfo.serializer.deserialize(in);
 
             List<GTScanRange> sRanges = Lists.newArrayList();
@@ -409,10 +425,11 @@ public class GTScanRequest {
 
             ImmutableBitSet sColumns = ImmutableBitSet.serializer.deserialize(in);
             TupleFilter sGTFilter = GTUtil.deserializeGTFilter(BytesUtil.readByteArray(in), sInfo);
-            
+
             TupleFilter sGTHavingFilter = null;
             if (serialLevel >= SERIAL_1_HAVING_FILTER) {
-                sGTHavingFilter = TupleFilterSerializer.deserialize(BytesUtil.readByteArray(in), StringCodeSystem.INSTANCE);
+                sGTHavingFilter = TupleFilterSerializer.deserialize(BytesUtil.readByteArray(in),
+                        StringCodeSystem.INSTANCE);
             }
 
             ImmutableBitSet sAggGroupBy = ImmutableBitSet.serializer.deserialize(in);
@@ -420,17 +437,21 @@ public class GTScanRequest {
             String[] sAggrMetricFuncs = BytesUtil.readAsciiStringArray(in);
             boolean sAllowPreAggr = (BytesUtil.readVInt(in) == 1);
             double sAggrCacheGB = in.getDouble();
+            StorageLimitLevel storageLimitLevel = StorageLimitLevel.valueOf(BytesUtil.readUTFString(in));
             int storageScanRowNumThreshold = BytesUtil.readVInt(in);
             int storagePushDownLimit = BytesUtil.readVInt(in);
             long startTime = BytesUtil.readVLong(in);
             long timeout = BytesUtil.readVLong(in);
             String storageBehavior = BytesUtil.readUTFString(in);
 
-            return new GTScanRequestBuilder().setInfo(sInfo).setRanges(sRanges).setDimensions(sColumns).//
-            setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs).//
-            setFilterPushDown(sGTFilter).setHavingFilterPushDown(sGTHavingFilter).setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB).//
-            setStorageScanRowNumThreshold(storageScanRowNumThreshold).setStoragePushDownLimit(storagePushDownLimit).//
-            setStartTime(startTime).setTimeout(timeout).setStorageBehavior(storageBehavior).createGTScanRequest();
+            return new GTScanRequestBuilder().setInfo(sInfo).setRanges(sRanges).setDimensions(sColumns)
+                    .setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs)
+                    .setFilterPushDown(sGTFilter).setHavingFilterPushDown(sGTHavingFilter)
+                    .setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB)
+                    .setStorageScanRowNumThreshold(storageScanRowNumThreshold)
+                    .setStoragePushDownLimit(storagePushDownLimit).setStorageLimitLevel(storageLimitLevel)
+                    .setStartTime(startTime).setTimeout(timeout).setStorageBehavior(storageBehavior)
+                    .createGTScanRequest();
         }
 
         private void serializeGTRecord(GTRecord gtRecord, ByteBuffer out) {

@@ -18,14 +18,12 @@
 
 package org.apache.kylin.gridtable;
 
-import java.io.IOException;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.apache.kylin.GTForwardingScanner;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -36,25 +34,35 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 public class GTFilterScanner extends GTForwardingScanner {
 
-    final private TupleFilter filter;
-    final private IFilterCodeSystem<ByteArray> filterCodeSystem;
-    final private IEvaluatableTuple oneTuple; // avoid instance creation
+    private TupleFilter filter;
+    private IFilterCodeSystem<ByteArray> filterCodeSystem;
+    private IEvaluatableTuple oneTuple; // avoid instance creation
 
     private GTRecord next = null;
 
-    public GTFilterScanner(IGTScanner delegated, GTScanRequest req) throws IOException {
-        super(delegated);
-        this.filter = req.getFilterPushDown();
-        this.filterCodeSystem = GTUtil.wrap(getInfo().codeSystem.getComparator());
-        this.oneTuple = new IEvaluatableTuple() {
-            @Override
-            public Object getValue(TblColRef col) {
-                return next.get(col.getColumnDesc().getZeroBasedIndex());
-            }
-        };
+    private IGTBypassChecker checker = null;
 
-        if (!TupleFilter.isEvaluableRecursively(filter))
-            throw new IllegalArgumentException();
+    public GTFilterScanner(IGTScanner delegated, GTScanRequest req, IGTBypassChecker checker) {
+        super(delegated);
+        this.checker = checker;
+
+        if (req != null) {
+            this.filter = req.getFilterPushDown();
+            this.filterCodeSystem = GTUtil.wrap(getInfo().codeSystem.getComparator());
+            this.oneTuple = new IEvaluatableTuple() {
+                @Override
+                public Object getValue(TblColRef col) {
+                    return next.get(col.getColumnDesc().getZeroBasedIndex());
+                }
+            };
+
+            if (!TupleFilter.isEvaluableRecursively(filter))
+                throw new IllegalArgumentException();
+        }
+    }
+
+    public void setChecker(IGTBypassChecker checker) {
+        this.checker = checker;
     }
 
     @Override
@@ -81,6 +89,10 @@ public class GTFilterScanner extends GTForwardingScanner {
             }
 
             private boolean evaluate() {
+                if (checker != null && checker.shouldBypass(next)) {
+                    return false;
+                }
+
                 if (filter == null)
                     return true;
 
