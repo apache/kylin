@@ -277,8 +277,10 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         info.append(Bytes.toStringBinary(rawScan.endKey) + ")");
         if (rawScan.fuzzyKeys != null && rawScan.fuzzyKeys.size() != 0) {
             info.append(" Fuzzy key counts: " + rawScan.fuzzyKeys.size());
-            info.append(". Fuzzy keys : ");
-            info.append(rawScan.getFuzzyKeyAsString());
+            if (rawScan.fuzzyKeys.size() <= 20) { // avoid logging too many fuzzy keys
+                info.append(". Fuzzy keys : ");
+                info.append(rawScan.getFuzzyKeyAsString());
+            }
         } else {
             info.append(", No Fuzzy Key");
         }
