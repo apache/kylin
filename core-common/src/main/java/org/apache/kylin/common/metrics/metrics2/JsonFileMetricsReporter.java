@@ -51,7 +51,7 @@ public class JsonFileMetricsReporter implements CodahaleReporter {
     private final ObjectWriter jsonWriter;
     private final ScheduledExecutorService executorService;
     private final KylinConfig conf;
-    private final long interval;
+    private final long frequency;
     private final String pathString;
     private final Path path;
 
@@ -63,8 +63,8 @@ public class JsonFileMetricsReporter implements CodahaleReporter {
         executorService = Executors.newSingleThreadScheduledExecutor();
         this.conf = conf;
 
-        interval = KylinConfig.getInstanceFromEnv().getJsonFileMetricsReporterInterval();
-        pathString = KylinConfig.getInstanceFromEnv().getMetricFileLocation();
+        frequency = KylinConfig.getInstanceFromEnv().getMetricsReporterFrequency();
+        pathString = KylinConfig.getInstanceFromEnv().getMetricsFileLocation();
         path = new Path(pathString);
     }
 
@@ -126,7 +126,7 @@ public class JsonFileMetricsReporter implements CodahaleReporter {
             }
         };
 
-        executorService.scheduleWithFixedDelay(task, 0, interval, TimeUnit.MILLISECONDS);
+        executorService.scheduleWithFixedDelay(task, 0, frequency, TimeUnit.MILLISECONDS);
     }
 
     @Override

@@ -1198,20 +1198,20 @@ abstract public class KylinConfigBase implements Serializable {
     /**
      * metric
      */
-    public String getCoadhaleMetricReportClassesName() {
-        return getOptional("kylin.metric.codahale-metric-report-classes",
+    public String getCoadhaleMetricsReportClassesNames() {
+        return getOptional("kylin.metrics.reporter-classes",
                 "org.apache.kylin.common.metrics.metrics2.JsonFileMetricsReporter,org.apache.kylin.common.metrics.metrics2.JmxMetricsReporter");
     }
 
-    public String getMetricFileLocation() {
-        return getOptional("kylin.metric.file.location", "/tmp/report.json");
+    public String getMetricsFileLocation() {
+        return getOptional("kylin.metrics.file-location", "/tmp/report.json");
     }
 
-    public Long getJsonFileMetricsReporterInterval() {
-        return Long.parseLong(getOptional("kylin.metric.json-file-metric-reporter.interval", "5000"));
+    public Long getMetricsReporterFrequency() {
+        return Long.parseLong(getOptional("kylin.metrics.file-frequency", "5000"));
     }
 
     public String getPerfLoggerClassName() {
-        return getOptional("kylin.metric.perf-logger.class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
+        return getOptional("kylin.metrics.perflogger-class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
     }
 }
