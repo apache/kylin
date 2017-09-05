@@ -523,11 +523,11 @@
             "qualifier": "m",
             "measure_refs": [
               "TEST_EXTENDED_COLUMN",
+              "BUYER_CONTACT",
+              "SELLER_CONTACT",
               "TRANS_ID_RAW",
               "PRICE_RAW",
               "CAL_DT_RAW",
-              "BUYER_CONTACT",
-              "SELLER_CONTACT",
               "GVM_PERCENTILE"
             ]
           }

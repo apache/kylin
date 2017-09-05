@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -602,8 +603,21 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         validateAggregationGroups(); // check if aggregation group is valid
         validateAggregationGroupsCombination();
 
-        if (hbaseMapping != null) {
-            hbaseMapping.init(this);
+        String hbaseMappingAdapterName = config.getHBaseMappingAdapter();
+
+        if (hbaseMappingAdapterName != null) {
+            try {
+                Class<?> hbaseMappingAdapterClass = Class.forName(hbaseMappingAdapterName);
+                Method initMethod = hbaseMappingAdapterClass.getMethod("initHBaseMapping", CubeDesc.class);
+                initMethod.invoke(null, this);
+            } catch (Exception e) {
+                logger.error("Wrong configuration for kylin.metadata.hbasemapping-adapter: class "
+                        + hbaseMappingAdapterName + " not found. ");
+            }
+        } else {
+            if (hbaseMapping != null) {
+                hbaseMapping.init(this);
+            }
         }
 
         initMeasureReferenceToColumnFamily();
@@ -999,16 +1013,24 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             measureIndexLookup.put(measures.get(i).getName(), i);
 
         BitSet checkEachMeasureExist = new BitSet();
+        Set<String> measureSet = Sets.newHashSet();
         for (HBaseColumnFamilyDesc cf : getHbaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc c : cf.getColumns()) {
                 String[] colMeasureRefs = c.getMeasureRefs();
                 MeasureDesc[] measureDescs = new MeasureDesc[colMeasureRefs.length];
                 int[] measureIndex = new int[colMeasureRefs.length];
+                int lastMeasureIndex = -1;
                 for (int i = 0; i < colMeasureRefs.length; i++) {
                     measureDescs[i] = measureLookup.get(colMeasureRefs[i]);
                     checkState(measureDescs[i] != null, "measure desc at (%s) is null", i);
                     measureIndex[i] = measureIndexLookup.get(colMeasureRefs[i]);
                     checkState(measureIndex[i] >= 0, "measure index at (%s) not positive", i);
+                    
+                    checkState(measureIndex[i] > lastMeasureIndex, "measure (%s) is not in order", colMeasureRefs[i]);
+                    lastMeasureIndex = measureIndex[i];
+                    
+                    checkState(!measureSet.contains(colMeasureRefs[i]), "column (%s) duplicates", colMeasureRefs[i]);
+                    measureSet.add(colMeasureRefs[i]);
 
                     checkEachMeasureExist.set(measureIndex[i]);
                 }
@@ -1020,8 +1042,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         for (int i = 0; i < measures.size(); i++) {
             checkState(checkEachMeasureExist.get(i),
-                    "measure (%s) does not exist in column family，or measure duplicates", measures.get(i));
+                    "measure (%s) does not exist in column family, or measure duplicates", measures.get(i));
         }
+        
     }
 
     private void initDictionaryDesc() {

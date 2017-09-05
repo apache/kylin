@@ -128,12 +128,13 @@ public class GTScanRequest {
 
         if (columns == null)
             columns = info.colAll;
-
-        this.selectedColBlocks = info.selectColumnBlocks(columns);
-
+        
         if (hasFilterPushDown()) {
             validateFilterPushDown(info);
         }
+
+        this.selectedColBlocks = info.selectColumnBlocks(columns);
+
     }
 
     public void setTimeout(long timeout) {
@@ -248,7 +249,7 @@ public class GTScanRequest {
                 }
             }
         }
-        System.out.println("Meaningless byte is " + meaninglessByte);
+        logger.info("Meaningless byte is " + meaninglessByte);
         IOUtils.closeQuietly(scanner);
         return scanned;
     }
