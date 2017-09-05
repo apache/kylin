@@ -34,11 +34,13 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +52,14 @@ public class SparkExecutable extends AbstractExecutable {
 
     private static final String CLASS_NAME = "className";
     private static final String JARS = "jars";
+    private static final String JOB_ID = "jobId";
 
     public void setClassName(String className) {
         this.setParam(CLASS_NAME, className);
+    }
+
+    public void setJobId(String jobId) {
+        this.setParam(JOB_ID, jobId);
     }
 
     public void setJars(String jars) {
@@ -66,7 +73,7 @@ public class SparkExecutable extends AbstractExecutable {
             tmp.append("-").append(entry.getKey()).append(" ").append(entry.getValue()).append(" ");
             if (entry.getKey().equals(CLASS_NAME)) {
                 stringBuilder.insert(0, tmp);
-            } else if (entry.getKey().equals(JARS)) {
+            } else if (entry.getKey().equals(JARS) || entry.getKey().equals(JOB_ID)) {
                 // JARS is for spark-submit, not for app
                 continue;
             } else {
@@ -86,6 +93,8 @@ public class SparkExecutable extends AbstractExecutable {
         CubeInstance cube = CubeManager.getInstance(context.getConfig()).getCube(cubeName);
         final KylinConfig config = cube.getConfig();
 
+        setAlgorithmLayer();
+
         if (KylinConfig.getSparkHome() == null) {
             throw new NullPointerException();
         }
@@ -99,7 +108,8 @@ public class SparkExecutable extends AbstractExecutable {
         hadoopConf = System.getProperty("kylin.hadoop.conf.dir");
 
         if (StringUtils.isEmpty(hadoopConf)) {
-            throw new RuntimeException("kylin_hadoop_conf_dir is empty, check if there's error in the output of 'kylin.sh start'");
+            throw new RuntimeException(
+                    "kylin_hadoop_conf_dir is empty, check if there's error in the output of 'kylin.sh start'");
         }
 
         File hiveConfFile = new File(hadoopConf, "hive-site.xml");
@@ -124,7 +134,8 @@ public class SparkExecutable extends AbstractExecutable {
         }
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry ");
+        stringBuilder.append(
+                "export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry ");
 
         Map<String, String> sparkConfs = config.getSparkConfigOverride();
         for (Map.Entry<String, String> entry : sparkConfs.entrySet()) {
@@ -133,7 +144,8 @@ public class SparkExecutable extends AbstractExecutable {
 
         stringBuilder.append("--jars %s %s %s");
         try {
-            String cmd = String.format(stringBuilder.toString(), hadoopConf, KylinConfig.getSparkHome(), jars, jobJar, formatArgs());
+            String cmd = String.format(stringBuilder.toString(), hadoopConf, KylinConfig.getSparkHome(), jars, jobJar,
+                    formatArgs());
             logger.info("cmd: " + cmd);
             CliCommandExecutor exec = new CliCommandExecutor();
             PatternedLogger patternedLogger = new PatternedLogger(logger);
@@ -146,6 +158,13 @@ public class SparkExecutable extends AbstractExecutable {
         }
     }
 
+    // Spark Cubing can only work in layer algorithm
+    private void setAlgorithmLayer() {
+        ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
+        CubingJob cubingJob = (CubingJob) execMgr.getJob(this.getParam(JOB_ID));
+        cubingJob.setAlgorithm(CubingJob.AlgorithmEnum.LAYER);
+    }
+
     private void attachSegmentMetadataWithDict(CubeSegment segment) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.addAll(JobRelatedMetaUtil.collectCubeMetadata(segment.getCubeInstance()));
@@ -154,7 +173,8 @@ public class SparkExecutable extends AbstractExecutable {
         dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig());
     }
 
-    private void dumpAndUploadKylinPropsAndMetadata(Set<String> dumpList, KylinConfigExt kylinConfig) throws IOException {
+    private void dumpAndUploadKylinPropsAndMetadata(Set<String> dumpList, KylinConfigExt kylinConfig)
+            throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
         FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 

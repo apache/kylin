@@ -18,15 +18,6 @@
 
 package org.apache.kylin.common;
 
-import com.google.common.base.Preconditions;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.restclient.RestClient;
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.OrderedProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,6 +31,16 @@ import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Properties;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.OrderedProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 /**
  */
@@ -58,7 +59,7 @@ public class KylinConfig extends KylinConfigBase {
 
     // thread-local instances, will override SYS_ENV_INSTANCE
     private static transient ThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new ThreadLocal<>();
-    
+
     static {
         /*
          * Make Calcite to work with Unicode.
@@ -226,7 +227,7 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
-    private static Properties streamToProps(InputStream is) throws IOException {
+    public static Properties streamToProps(InputStream is) throws IOException {
         Properties prop = new Properties();
         prop.load(is);
         IOUtils.closeQuietly(is);

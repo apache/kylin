@@ -27,10 +27,12 @@ import static org.apache.hadoop.util.StringUtils.formatTime;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -462,6 +464,30 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         } else {
             return KylinConfig.getInstanceFromEnv();
         }
+    }
+
+    public static KylinConfig loadKylinConfigFromHdfs(String uri) {
+        if (uri == null)
+            throw new IllegalArgumentException("meta url should not be null");
+
+        if (!uri.contains("@hdfs"))
+            throw new IllegalArgumentException("meta url should like @hdfs schema");
+
+        logger.info("Ready to load KylinConfig from uri: {}", uri);
+        KylinConfig config;
+        FileSystem fs;
+        int cut = uri.indexOf('@');
+        String realHdfsPath = uri.substring(0, cut) + "/" + KylinConfig.KYLIN_CONF_PROPERTIES_FILE;
+        try {
+            fs = HadoopUtil.getFileSystem(realHdfsPath);
+            InputStream is = fs.open(new Path(realHdfsPath));
+            Properties prop = KylinConfig.streamToProps(is);
+            config = KylinConfig.createKylinConfig(prop);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        KylinConfig.setKylinConfigThreadLocal(config);
+        return config;
     }
 
     protected void attachTableMetadata(TableDesc table, Configuration conf) throws IOException {
