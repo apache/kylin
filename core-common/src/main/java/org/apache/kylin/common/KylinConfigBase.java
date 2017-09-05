@@ -780,6 +780,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.storage.hbase.table-name-prefix", "KYLIN_");
     }
 
+    public String getHBaseStorageNameSpace() {
+        return getOptional("kylin.storage.hbase.namespace", "default");
+    }
+
     public String getHBaseClusterFs() {
         return getOptional("kylin.storage.hbase.cluster-fs", "");
     }
