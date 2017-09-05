@@ -287,8 +287,8 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         logger.info(info.toString());
     }
 
-    protected int getCoprocessorTimeoutMillis() {
-        int coopTimeout;
+    protected long getCoprocessorTimeoutMillis() {
+        long coopTimeout;
         if (BackdoorToggles.getQueryTimeout() != -1) {
             coopTimeout = BackdoorToggles.getQueryTimeout();
         } else {
@@ -307,10 +307,14 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         
         // coprocessor timeout is 0 by default
         if (coopTimeout <= 0) {
-            coopTimeout = (int) (rpcTimeout * 0.9);
+            coopTimeout = (long) (rpcTimeout * 0.9);
         }
+
+        long millisBeforeDeadline = queryContext.checkMillisBeforeDeadline();
+        coopTimeout = Math.min(coopTimeout, millisBeforeDeadline);
         
-        logger.debug("{} = {} ms, use {} ms as timeout for coprocessor", HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, coopTimeout);
+        logger.debug("{} = {} ms, {} ms before deadline, use {} ms as timeout for coprocessor",
+                HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, millisBeforeDeadline, coopTimeout);
         return coopTimeout;
     }
 

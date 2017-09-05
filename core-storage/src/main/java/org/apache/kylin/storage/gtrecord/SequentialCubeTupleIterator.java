@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.kylin.common.exceptions.KylinTimeoutException;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -141,8 +141,8 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     @Override
     public ITuple next() {
-        if (scanCount++ % 100 == 1 && System.currentTimeMillis() > context.getDeadline()) {
-            throw new KylinTimeoutException("Query timeout after \"kylin.query.timeout-seconds\" seconds");
+        if (scanCount++ % 100 == 1) {
+            QueryContext.current().checkMillisBeforeDeadline();
         }
 
         if (++scanCountDelta >= 1000)

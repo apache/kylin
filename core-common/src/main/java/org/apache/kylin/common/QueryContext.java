@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,9 @@ public class QueryContext {
         }
     };
 
+    private long queryStartMillis;
+    private long deadline = Long.MAX_VALUE;
+
     private String queryId;
     private String username;
     private AtomicLong scannedRows = new AtomicLong();
@@ -54,7 +58,7 @@ public class QueryContext {
 
     private QueryContext() {
         // use QueryContext.current() instead
-        
+        queryStartMillis = System.currentTimeMillis();
         queryId = UUID.randomUUID().toString();
     }
 
@@ -64,6 +68,32 @@ public class QueryContext {
 
     public static void reset() {
         contexts.remove();
+    }
+
+    public long getQueryStartMillis() {
+        return queryStartMillis;
+    }
+
+    public void setDeadline(long timeoutMillis) {
+        if (timeoutMillis > 0) {
+            deadline  = queryStartMillis + timeoutMillis;
+        }
+    }
+
+    public long getDeadline() {
+        return deadline;
+    }
+
+    /**
+     * @return millis before deadline
+     * @throws KylinTimeoutException if deadline has passed
+     */
+    public long checkMillisBeforeDeadline() {
+        long remain = deadline - System.currentTimeMillis();
+        if (remain <= 0) {
+            throw new KylinTimeoutException("Query timeout");
+        }
+        return remain;
     }
 
     public String getQueryId() {
