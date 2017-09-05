@@ -40,7 +40,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
-    
+
     @Test
     public void testBasics() throws IOException {
         Broadcaster broadcaster = Broadcaster.getInstance(getTestConfig());
@@ -53,7 +53,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
                 Assert.assertEquals(2, i.incrementAndGet());
             }
         }, "test");
-        
+
         broadcaster.registerListener(new Listener() {
             @Override
             public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
@@ -61,10 +61,35 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
                 Assert.assertEquals(1, i.incrementAndGet());
             }
         }, "test");
-        
+
         broadcaster.notifyListener("test", Event.UPDATE, "");
-        
+
         Broadcaster.staticListenerMap.clear();
     }
 
+    @Test
+    public void testNotifyNonStatic() throws IOException {
+        Broadcaster broadcaster = Broadcaster.getInstance(getTestConfig());
+        final AtomicInteger i = new AtomicInteger(0);
+
+        broadcaster.registerStaticListener(new Listener() {
+            @Override
+            public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                    throws IOException {
+                throw new IllegalStateException("Should not notify static listener.");
+            }
+        }, "test");
+
+        broadcaster.registerListener(new Listener() {
+            @Override
+            public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                    throws IOException {
+                Assert.assertEquals(1, i.incrementAndGet());
+            }
+        }, "test");
+
+        broadcaster.notifyNonStaticListener("test", Event.UPDATE, "");
+
+        Broadcaster.staticListenerMap.clear();
+    }
 }

@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -40,6 +39,8 @@ import org.apache.kylin.metadata.realization.IRealizationProvider;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -77,11 +78,6 @@ public class HybridManager implements IRealizationProvider {
 
     public static void clearCache() {
         CACHE.clear();
-    }
-
-    public static void clearCache(KylinConfig kylinConfig) {
-        if (kylinConfig != null)
-            CACHE.remove(kylinConfig);
     }
 
     // ============================================================================

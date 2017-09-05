@@ -72,11 +72,6 @@ public class BadQueryHistoryManager {
         CACHE.clear();
     }
 
-    public static void clearCache(KylinConfig kylinConfig) {
-        if (kylinConfig != null)
-            CACHE.remove(kylinConfig);
-    }
-
     private ResourceStore getStore() {
         return ResourceStore.getStore(this.kylinConfig);
     }

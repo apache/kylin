@@ -86,11 +86,6 @@ public class ProjectManager {
         CACHE.clear();
     }
 
-    public static void clearCache(KylinConfig kylinConfig) {
-        if (kylinConfig != null)
-            CACHE.remove(kylinConfig);
-    }
-
     // ============================================================================
 
     private KylinConfig config;

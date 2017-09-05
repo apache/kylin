@@ -163,11 +163,11 @@ public class Broadcaster {
     public void registerStaticListener(Listener listener, String... entities) {
         doRegisterListener(staticListenerMap, listener, entities);
     }
-    
+
     public void registerListener(Listener listener, String... entities) {
         doRegisterListener(listenerMap, listener, entities);
     }
-    
+
     private static void doRegisterListener(Map<String, List<Listener>> lmap, Listener listener, String... entities) {
         synchronized (lmap) {
             // ignore re-registration
@@ -208,14 +208,26 @@ public class Broadcaster {
     }
 
     public void notifyListener(String entity, Event event, String cacheKey) throws IOException {
+        notifyListener(entity, event, cacheKey, true);
+    }
+
+    public void notifyNonStaticListener(String entity, Event event, String cacheKey) throws IOException {
+        notifyListener(entity, event, cacheKey, false);
+    }
+
+    private void notifyListener(String entity, Event event, String cacheKey, boolean includeStatic) throws IOException {
         // prevents concurrent modification exception
         List<Listener> list = Lists.newArrayList();
         List<Listener> l1 = listenerMap.get(entity); // normal listeners first
         if (l1 != null)
             list.addAll(l1);
-        List<Listener> l2 = staticListenerMap.get(entity); // static listeners second
-        if (l2 != null)
-            list.addAll(l2);
+
+        if (includeStatic) {
+            List<Listener> l2 = staticListenerMap.get(entity); // static listeners second
+            if (l2 != null)
+                list.addAll(l2);
+        }
+
         if (list.isEmpty())
             return;
 
