@@ -509,6 +509,8 @@ public class QueryService extends BasicService {
             conn = QueryConnection.getConnection(sqlRequest.getProject());
 
             String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
+            QueryContext context = QueryContext.current();
+            context.setUsername(userInfo);
             final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext()
                     .getAuthentication().getAuthorities();
             for (GrantedAuthority grantedAuthority : grantedAuthorities) {
@@ -841,6 +843,7 @@ public class QueryService extends BasicService {
         } finally {
             close(resultSet, stat, null); //conn is passed in, not my duty to close
         }
+
 
         return buildSqlResponse(isPushDown, results, columnMetas);
     }

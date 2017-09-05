@@ -25,6 +25,7 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.acl.TableACLManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.draft.DraftManager;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -82,6 +83,10 @@ public abstract class BasicService {
     
     public DraftManager getDraftManager() {
         return DraftManager.getInstance(getConfig());
+    }
+
+    public TableACLManager getTableACLManager() {
+        return TableACLManager.getInstance(getConfig());
     }
 
 }

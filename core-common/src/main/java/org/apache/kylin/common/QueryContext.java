@@ -34,6 +34,7 @@ public class QueryContext {
     };
 
     private String queryId;
+    private String username;
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong scannedBytes = new AtomicLong();
 
@@ -57,6 +58,14 @@ public class QueryContext {
 
     public void setQueryId(String queryId) {
         this.queryId = queryId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public long getScannedRows() {

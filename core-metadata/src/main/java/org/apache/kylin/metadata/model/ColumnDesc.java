@@ -193,9 +193,8 @@ public class ColumnDesc implements Serializable {
         return index;
     }
 
-    public String getComputedColumnExpr(String tableAlias) {
+    public String getComputedColumnExpr() {
         Preconditions.checkState(computedColumnExpr != null);
-        Preconditions.checkState(tableAlias != null);
 
         return computedColumnExpr;
     }

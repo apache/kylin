@@ -86,4 +86,11 @@ public class PushDownUtilTest {
                 + "ON at1.c = t3.c " + "WHERE t3.d > 0 " + "ORDER BY t3.e";
         Assert.assertEquals(exceptSQL, PushDownUtil.schemaCompletion(sql, "EDW"));
     }
+
+    @Test
+    public void testSchemaCompletionWithJoin() throws SqlParseException {
+        String sql = "select * from t1 join (select * from t2 join (select * from t3))";
+        String exceptSQL = "select * from EDW.t1 join (select * from EDW.t2 join (select * from EDW.t3))";
+        Assert.assertEquals(exceptSQL, PushDownUtil.schemaCompletion(sql, "EDW"));
+    }
 }

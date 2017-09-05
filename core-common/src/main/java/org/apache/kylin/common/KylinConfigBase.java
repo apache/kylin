@@ -1038,6 +1038,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptionalStringArray("kylin.query.transformers", new String[0]);
     }
 
+    public String[] getQueryIntercept() {
+        return getOptionalStringArray("kylin.query.intercepts", new String[0]);
+    }
+
     public long getQueryDurationCacheThreshold() {
         return Long.parseLong(this.getOptional("kylin.query.cache-threshold-duration", String.valueOf(2000)));
     }

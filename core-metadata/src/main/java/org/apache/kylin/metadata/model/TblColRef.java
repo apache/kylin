@@ -158,7 +158,7 @@ public class TblColRef implements Serializable {
         if (!column.isComputedColumnn()) {
             return getIdentity();
         } else {
-            return column.getComputedColumnExpr(getTableAlias());
+            return column.getComputedColumnExpr();
         }
     }
 
@@ -243,4 +243,19 @@ public class TblColRef implements Serializable {
         }
     }
 
+    // return DB.TABLE
+    public String getTableWithSchema() {
+        if (isInnerColumn() && parserDescription != null)
+            return parserDescription;
+        if (column.getTable() == null) {
+            return "NULL";
+        } else {
+            return column.getTable().getIdentity().toUpperCase();
+        }
+    }
+
+    // return DB.TABLE.COLUMN
+    public String getColumWithTableAndSchema() {
+        return (getTableWithSchema() + "." + column.getName()).toUpperCase();
+    }
 }

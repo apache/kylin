@@ -32,11 +32,11 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.calcite.sql.util.SqlVisitor;
+import org.apache.kylin.common.util.Pair;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.apache.kylin.common.util.Pair;
 
 public class CalciteParser {
     public static SqlNode parse(String sql) throws SqlParseException {
@@ -62,6 +62,13 @@ public class CalciteParser {
 
     public static SqlNode getExpNode(String expr) {
         return getOnlySelectNode("select " + expr + " from t");
+    }
+
+    public static String getLastNthName(SqlIdentifier id, int n) {
+        //n = 1 is getting column
+        //n = 2 is getting table's alias, if has.
+        //n = 3 is getting database name, if has.
+        return id.names.get(id.names.size() - n).replace("\"", "").toUpperCase();
     }
 
     public static void ensureNoAliasInExpr(String expr) {
