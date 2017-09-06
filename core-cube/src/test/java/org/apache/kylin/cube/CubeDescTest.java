@@ -383,6 +383,20 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testTooManyRowkeys() throws Exception {
+        File metaFile = new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA, "cube_desc/ut_78_rowkeys.json.bad");
+        Assert.assertTrue(metaFile.exists());
+        String path = metaFile.getPath();
+        metaFile.renameTo(new File(path.substring(0, path.length() - 4)));
+
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Too many rowkeys (78) in CubeDesc, please try to reduce dimension number or adopt derived dimensions");
+        CubeDescManager.clearCache();
+        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("ut_78_rowkeys");
+        cubeDesc.init(getTestConfig());
+    }
+
+    @Test
     public void testSerialize() throws Exception {
         CubeDesc desc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         String str = JsonUtil.writeValueAsIndentString(desc);

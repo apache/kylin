@@ -96,6 +96,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
     }
 
+    public static final int MAX_ROWKEY_SIZE = 64;
+
     public enum DeriveType implements java.io.Serializable {
         LOOKUP, PK_FK, EXTENDED_COLUMN
     }
@@ -569,6 +571,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         checkArgument(StringUtils.isNotBlank(name), "CubeDesc name is blank");
         checkArgument(StringUtils.isNotBlank(modelName), "CubeDesc (%s) has blank model name", name);
+        checkArgument(this.rowkey.getRowKeyColumns().length < MAX_ROWKEY_SIZE,
+                "Too many rowkeys (%s) in CubeDesc, please try to reduce dimension number or adopt derived dimensions",
+                this.rowkey.getRowKeyColumns().length);
 
         // note CubeDesc.name == CubeInstance.name
         List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, name);
