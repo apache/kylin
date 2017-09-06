@@ -16,14 +16,17 @@
 -- limitations under the License.
 --
 
+SELECT count(1) cnt
+ FROM (
+ select LSTG_FORMAT_NAME, sum(test_kylin_fact.price) as sum_price, count(1) as cnt_1
+ from test_kylin_fact
+inner JOIN edw.test_cal_dt as test_cal_dt
+ ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
+ inner JOIN test_category_groupings
+ ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
+ inner JOIN edw.test_sites as test_sites
+ ON test_kylin_fact.lstg_site_id = test_sites.site_id
+ group by LSTG_FORMAT_NAME
+ )
+ limit 1
 
-SELECT "TEST_KYLIN_FACT"."CAL_DT", SUM("TEST_KYLIN_FACT"."PRICE") AS "sum_PRICE_ok" FROM "TEST_KYLIN_FACT" "TEST_KYLIN_FACT"
-   RIGHT JOIN (
-             SELECT COUNT(1) AS "XTableau_join_flag",     SUM("TEST_KYLIN_FACT"."PRICE") AS "X__alias__A",     "TEST_KYLIN_FACT"."CAL_DT"  AS "none_CAL_DT_ok"   FROM "TEST_KYLIN_FACT" "TEST_KYLIN_FACT"
-             GROUP BY "TEST_KYLIN_FACT"."CAL_DT"   ORDER BY 2 DESC   LIMIT 7  )
-    "t0" ON
-    CASE WHEN 1 = 1
-    THEN  ("TEST_KYLIN_FACT"."CAL_DT" = "t0"."none_CAL_DT_ok")
-    ELSE "TEST_KYLIN_FACT"."CAL_DT" = "t0"."none_CAL_DT_ok"
-    END
-    GROUP BY "TEST_KYLIN_FACT"."CAL_DT"

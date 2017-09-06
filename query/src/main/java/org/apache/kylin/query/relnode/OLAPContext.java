@@ -134,6 +134,7 @@ public class OLAPContext {
     public boolean hasJoin = false;
     public boolean hasWindow = false;
     public boolean groupByExpression = false; // checkout if group by column has operator
+    public boolean afterOuterAggregate = false;
 
     // cube metadata
     public IRealization realization;
