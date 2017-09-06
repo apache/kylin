@@ -19,18 +19,26 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
+import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AclPermissionFactory;
+import org.apache.kylin.rest.security.ExternalAclProvider;
 import org.apache.kylin.rest.service.AccessService;
+import org.apache.kylin.rest.service.UserService;
+import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,6 +58,10 @@ public class AccessController extends BasicController {
     @Qualifier("accessService")
     private AccessService accessService;
 
+    @Autowired
+    @Qualifier("userService")
+    private UserService userService;
+
     /**
      * Get access entry list of a domain object
      * 
@@ -59,11 +71,35 @@ public class AccessController extends BasicController {
      */
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<AccessEntryResponse> getAccessEntities(@PathVariable String type, @PathVariable String uuid) {
-        AclEntity ae = accessService.getAclEntity(type, uuid);
-        Acl acl = accessService.getAcl(ae);
+    public List<AccessEntryResponse> getAccessEntities(@PathVariable String type, @PathVariable String uuid) throws IOException {
+        ExternalAclProvider eap = ExternalAclProvider.getInstance();
 
-        return accessService.generateAceResponses(acl);
+        if (eap != null) {
+            List<AccessEntryResponse> ret = new ArrayList<>();
+            List<Pair<String, AclPermission>> acl = eap.getAcl(type, uuid);
+            if (acl != null) {
+                for (Pair<String, AclPermission> p : acl) {
+                    PrincipalSid sid = new PrincipalSid(p.getFirst());
+                    ret.add(new AccessEntryResponse(null, sid, p.getSecond(), true));
+                }
+            } else {
+                // in case getAcl() does not work, try checkPermission() as a fall back
+                for (UserDetails user : userService.listUsers()) {
+                    PrincipalSid sid = new PrincipalSid(user.getUsername());
+                    List<String> authorities = AclPermissionUtil.transformAuthorities(user.getAuthorities());
+                    for (Permission p : AclPermissionFactory.getPermissions()) {
+                        if (eap.checkPermission(user.getUsername(), authorities, type, uuid, p)) {
+                            ret.add(new AccessEntryResponse(null, sid, p, true));
+                        }
+                    }
+                }
+            }
+            return ret;
+        } else {
+            AclEntity ae = accessService.getAclEntity(type, uuid);
+            Acl acl = accessService.getAcl(ae);
+            return accessService.generateAceResponses(acl);
+        }
     }
 
     /**

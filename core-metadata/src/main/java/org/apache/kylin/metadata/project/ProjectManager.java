@@ -442,6 +442,15 @@ public class ProjectManager {
         return projects;
     }
 
+    public ProjectInstance getProjectByUuid(String uuid) {
+        Collection<ProjectInstance> copy = new ArrayList<ProjectInstance>(projectMap.values());
+        for (ProjectInstance project : copy) {
+            if (uuid.equals(project.getUuid()))
+                return project;
+        }
+        return null;
+    }
+
     public ExternalFilterDesc getExternalFilterDesc(String project, String extFilter) {
         return l2Cache.getExternalFilterDesc(project, extFilter);
     }

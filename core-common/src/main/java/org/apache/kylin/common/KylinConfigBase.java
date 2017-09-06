@@ -1194,6 +1194,10 @@ abstract public class KylinConfigBase implements Serializable {
     public int getServerUserCacheMaxEntries() {
         return Integer.valueOf(this.getOptional("kylin.server.auth-user-cache.max-entries", "100"));
     }
+    
+    public String getExternalAclProvider() {
+        return getOptional("kylin.server.external-acl-provider", "");
+    }
 
     // ============================================================================
     // WEB
@@ -1238,4 +1242,5 @@ abstract public class KylinConfigBase implements Serializable {
     public String getPerfLoggerClassName() {
         return getOptional("kylin.metrics.perflogger-class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
     }
+
 }

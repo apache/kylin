@@ -38,9 +38,9 @@
         <property name="permissionEvaluator" ref="permissionEvaluator"/>
     </bean>
 
-    <bean id="permissionEvaluator" class="org.springframework.security.acls.AclPermissionEvaluator">
+    <bean id="permissionEvaluator" class="org.apache.kylin.rest.security.KylinAclPermissionEvaluator">
         <constructor-arg ref="aclService"/>
-        <property name="permissionFactory" ref="aclPermissionFactory"/>
+        <constructor-arg ref="aclPermissionFactory"/>
     </bean>
 
     <bean id="aclAuthorizationStrategy"
