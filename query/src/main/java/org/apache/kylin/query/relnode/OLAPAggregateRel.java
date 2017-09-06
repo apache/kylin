@@ -199,6 +199,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 this.context.limitPrecedesAggr = true;
             }
         } else {
+            this.context.afterOuterAggregate = true;
             for (AggregateCall aggCall : aggCalls) {
                 // check if supported by kylin
                 if (aggCall.isDistinct()) {
