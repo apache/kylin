@@ -52,6 +52,7 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_META_URL.getOpt(),
                 getSegmentMetadataUrl(seg.getConfig(), seg.getUuid()));
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_OUTPUT_PATH.getOpt(), cuboidRootPath);
+        sparkExecutable.setJobId(jobId);
 
         StringBuilder jars = new StringBuilder();
 
