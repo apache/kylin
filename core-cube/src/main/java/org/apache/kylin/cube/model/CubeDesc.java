@@ -1001,7 +1001,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         extendedColumnToHosts.put(extendedColumn, new DeriveInfo(DeriveType.EXTENDED_COLUMN, null, hostCols, false));
     }
 
-    private void initMeasureReferenceToColumnFamily() {
+    public void initMeasureReferenceToColumnFamily() {
         if (measures == null || measures.size() == 0)
             return;
 
@@ -1026,11 +1026,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     measureIndex[i] = measureIndexLookup.get(colMeasureRefs[i]);
                     checkState(measureIndex[i] >= 0, "measure index at (%s) not positive", i);
                     
+                    checkState(!measureSet.contains(colMeasureRefs[i]), "measure (%s) duplicates", colMeasureRefs[i]);
+                    measureSet.add(colMeasureRefs[i]);
+                    
                     checkState(measureIndex[i] > lastMeasureIndex, "measure (%s) is not in order", colMeasureRefs[i]);
                     lastMeasureIndex = measureIndex[i];
-                    
-                    checkState(!measureSet.contains(colMeasureRefs[i]), "column (%s) duplicates", colMeasureRefs[i]);
-                    measureSet.add(colMeasureRefs[i]);
 
                     checkEachMeasureExist.set(measureIndex[i]);
                 }
