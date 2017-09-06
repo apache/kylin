@@ -35,6 +35,7 @@ public class Candidate implements Comparable<Candidate> {
 
     static {
         DEFAULT_PRIORITIES.put(RealizationType.HYBRID, 0);
+        DEFAULT_PRIORITIES.put(RealizationType.HYBRID2, 0);
         DEFAULT_PRIORITIES.put(RealizationType.CUBE, 1);
         DEFAULT_PRIORITIES.put(RealizationType.INVERTED_INDEX, 1);
     }

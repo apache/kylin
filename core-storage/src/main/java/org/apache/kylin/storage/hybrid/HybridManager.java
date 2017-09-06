@@ -106,7 +106,7 @@ public class HybridManager implements IRealizationProvider {
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
             for (IRealization real : ProjectManager.getInstance(config).listAllRealizations(project)) {
-                if (real instanceof HybridInstance) {
+                if (real instanceof HybridInstance && real.getType().equals(RealizationType.HYBRID)) {
                     reloadHybridInstance(real.getName());
                 }
             }
