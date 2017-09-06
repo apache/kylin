@@ -59,18 +59,35 @@ import com.google.common.collect.Lists;
 public class PushDownUtil {
     private static final Logger logger = LoggerFactory.getLogger(PushDownUtil.class);
 
-    public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownQuery(String project, String sql,
+    public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownSelectQuery(String project, String sql,
             String defaultSchema, SQLException sqlException) throws Exception {
+        return tryPushDownQuery(project, sql, defaultSchema, sqlException, true);
+    }
+
+    public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String project,
+            String sql, String defaultSchema) throws Exception {
+        return tryPushDownQuery(project, sql, defaultSchema, null, false);
+    }
+
+    private static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownQuery(String project, String sql,
+            String defaultSchema, SQLException sqlException, boolean isSelect) throws Exception {
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
         if (!kylinConfig.isPushDownEnabled())
             return null;
 
-        if (!isExpectedCause(sqlException))
-            return null;
+        if (isSelect) {
+            logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
+            if (!isExpectedCause(sqlException)) {
+                logger.info("quit doPushDownQuery because prior exception thrown is unexpected");
+                return null;
+            }
+        } else {
+            Preconditions.checkState(sqlException == null);
+            logger.info("Kylin cannot support non-select queries, routing to other engines");
+        }
 
-        logger.info("Query failed to utilize pre-calculation, routing to other engines", sqlException);
         IPushDownRunner runner = (IPushDownRunner) ClassUtil.newInstance(kylinConfig.getPushDownRunnerClassName());
         runner.init(kylinConfig);
         logger.debug("Query Pushdown runner {}", runner);
@@ -103,7 +120,7 @@ public class PushDownUtil {
         List<List<String>> returnRows = Lists.newArrayList();
         List<SelectedColumnMeta> returnColumnMeta = Lists.newArrayList();
 
-        if (QueryUtil.isSelectStatement(sql)) {
+        if (isSelect) {
             runner.executeQuery(sql, returnRows, returnColumnMeta);
         } else {
             runner.executeUpdate(sql);

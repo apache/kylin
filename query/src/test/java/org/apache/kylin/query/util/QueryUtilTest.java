@@ -53,6 +53,37 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testIsSelect() {
+        {
+            String sql = "select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
+            boolean selectStatement = QueryUtil.isSelectStatement(sql);
+            Assert.assertEquals(true, selectStatement);
+        }
+        {
+            String sql = " Select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
+            boolean selectStatement = QueryUtil.isSelectStatement(sql);
+            Assert.assertEquals(true, selectStatement);
+        }
+        {
+            String sql = " \n" + "Select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
+            boolean selectStatement = QueryUtil.isSelectStatement(sql);
+            Assert.assertEquals(true, selectStatement);
+        }
+        {
+            String sql = "--comment\n"
+                    + " /* comment */Select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
+            boolean selectStatement = QueryUtil.isSelectStatement(sql);
+            Assert.assertEquals(true, selectStatement);
+        }
+        {
+            String sql = " UPDATE Customers\n" + "SET ContactName = 'Alfred Schmidt', City= 'Frankfurt'\n"
+                    + "WHERE CustomerID = 1;";
+            boolean selectStatement = QueryUtil.isSelectStatement(sql);
+            Assert.assertEquals(false, selectStatement);
+        }
+    }
+
+    @Test
     public void testKeywordDefaultDirtyHack() {
         {
             String sql = "select * from DEFAULT.TEST_KYLIN_FACT";
@@ -64,7 +95,7 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     @Test
     public void testRemoveCommentInSql() {
 
-        String originSql =  "select count(*) from test_kylin_fact where price > 10.0";
+        String originSql = "select count(*) from test_kylin_fact where price > 10.0";
 
         {
             String sqlWithComment = "-- comment \n" + originSql;

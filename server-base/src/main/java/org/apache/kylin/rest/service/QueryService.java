@@ -183,20 +183,24 @@ public class QueryService extends BasicService {
         }
     }
 
-
     public SQLResponse update(SQLRequest sqlRequest) throws Exception {
         // non select operations, only supported when enable pushdown
-        logger.debug("Query pushdown enabled, redirect the query to alternative engine. ");
+        logger.debug("Query pushdown enabled, redirect the non-select query to pushdown engine.");
         Connection conn = null;
         try {
             conn = QueryConnection.getConnection(sqlRequest.getProject());
             Pair<List<List<String>>, List<SelectedColumnMeta>> r = PushDownUtil
-                    .tryPushDownQuery(sqlRequest.getProject(), sqlRequest.getSql(), conn.getSchema(), null);
-            return buildSqlResponse(true, r.getFirst(), r.getSecond());
-            
+                    .tryPushDownNonSelectQuery(sqlRequest.getProject(), sqlRequest.getSql(), conn.getSchema());
+
+            List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
+            columnMetas.add(new SelectedColumnMeta(false, false, false, false, 1, false, Integer.MAX_VALUE, "c0", "c0",
+                    null, null, null, Integer.MAX_VALUE, 128, 1, "char", false, false, false));
+
+            return buildSqlResponse(true, r.getFirst(), columnMetas);
+
         } catch (Exception e) {
-            logger.error("failed to do pushdown, error is " + e.getMessage(), e);
-            throw new InternalErrorException(e);
+            logger.info("pushdown engine failed to finish current non-select query");
+            throw e;
         } finally {
             close(null, null, conn);
         }
@@ -402,9 +406,9 @@ public class QueryService extends BasicService {
 
             try {
                 if (null == sqlResponse) {
-                    if (isSelect == true) {
+                    if (isSelect) {
                         sqlResponse = query(sqlRequest);
-                    } else if (kylinConfig.isPushDownEnabled() == true) {
+                    } else if (kylinConfig.isPushDownEnabled()) {
                         sqlResponse = update(sqlRequest);
                     } else {
                         logger.debug(
@@ -447,7 +451,7 @@ public class QueryService extends BasicService {
                 checkQueryAuth(sqlResponse, project);
 
             } catch (Throwable e) { // calcite may throw AssertError
-                logger.error("Exception when execute sql", e);
+                logger.error("Exception while executing query", e);
                 String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
 
                 sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
@@ -829,17 +833,24 @@ public class QueryService extends BasicService {
 
                 results.add(oneRow);
             }
-            
+
         } catch (SQLException sqlException) {
-            Pair<List<List<String>>, List<SelectedColumnMeta>> r = PushDownUtil
-                    .tryPushDownQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(), sqlException);
+            Pair<List<List<String>>, List<SelectedColumnMeta>> r = null;
+            try {
+                r = PushDownUtil.tryPushDownSelectQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(),
+                        sqlException);
+            } catch (Exception e2) {
+                //exception in pushdown engine will be printed, but we'll not re-throw it, we'll 
+                logger.info("pushdown engine failed current query too", e2);
+            }
+
             if (r == null)
                 throw sqlException;
-            
+
             isPushDown = true;
             results = r.getFirst();
             columnMetas = r.getSecond();
-            
+
         } finally {
             close(resultSet, stat, null); //conn is passed in, not my duty to close
         }

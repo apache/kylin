@@ -58,8 +58,8 @@ public class QueryUtil {
         }
 
         // https://issues.apache.org/jira/browse/KYLIN-2649
-        if (kylinConfig.getForceLimit() > 0 &&
-                !sql.toLowerCase().contains("limit") && sql.toLowerCase().contains("*")) {
+        if (kylinConfig.getForceLimit() > 0 && !sql.toLowerCase().contains("limit")
+                && sql.toLowerCase().contains("*")) {
             sql += ("\nLIMIT " + kylinConfig.getForceLimit());
         }
 
@@ -198,15 +198,16 @@ public class QueryUtil {
     }
 
     public static boolean isSelectStatement(String sql) {
-        String sql1 = removeCommentInSql(sql);
-        return sql1.startsWith("select") || sql1.startsWith("with") && sql1.contains("select");
+        String sql1 = sql.toLowerCase();
+        sql1 = removeCommentInSql(sql1);
+        sql1 = sql1.trim();
+        return sql1.startsWith("select") || (sql1.startsWith("with") && sql1.contains("select"));
     }
 
-    public static String removeCommentInSql(String sql) {
-        String sql1 = sql.toLowerCase();
+    public static String removeCommentInSql(String sql1) {
         // match two patterns, one is "-- comment", the other is "/* comment */"
-        final String[] commentPatterns = new String[] {"--[^\r\n]*", "/\\*[^\\*/]*"};
-        final int[] endOffset = new int[] {0, 2};
+        final String[] commentPatterns = new String[] { "--[^\r\n]*", "/\\*[^\\*/]*" };
+        final int[] endOffset = new int[] { 0, 2 };
 
         for (int i = 0; i < commentPatterns.length; i++) {
             String commentPattern = commentPatterns[i];

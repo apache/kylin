@@ -261,7 +261,7 @@ public class KylinTestBase {
             return output(resultSet, needDisplay);
         } catch (SQLException sqlException) {
             Pair<List<List<String>>, List<SelectedColumnMeta>> result = PushDownUtil
-                    .tryPushDownQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", sqlException);
+                    .tryPushDownSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", sqlException);
             if (result == null) {
                 throw sqlException;
             }
