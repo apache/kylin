@@ -56,15 +56,15 @@ public class DictionaryGeneratorCLI {
         for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionaryBuilt()) {
             logger.info("Building dictionary for " + col);
             IReadableTable inpTable = factTableValueProvider.getDistinctValuesFor(col);
+            
+            Dictionary<String> preBuiltDict = null;
             if (dictProvider != null) {
-                Dictionary<String> dict = dictProvider.getDictionary(col);
-                if (dict != null) {
-                    logger.debug("Dict for '" + col.getName() + "' has already been built, save it");
-                    cubeMgr.saveDictionary(cubeSeg, col, inpTable, dict);
-                } else {
-                    logger.debug("Dict for '" + col.getName() + "' not pre-built, build it from " + inpTable.toString());
-                    cubeMgr.buildDictionary(cubeSeg, col, inpTable);
-                }
+                preBuiltDict = dictProvider.getDictionary(col);
+            }
+        
+            if (preBuiltDict != null) {
+                logger.debug("Dict for '" + col.getName() + "' has already been built, save it");
+                cubeMgr.saveDictionary(cubeSeg, col, inpTable, preBuiltDict);
             } else {
                 logger.debug("Dict for '" + col.getName() + "' not pre-built, build it from " + inpTable.toString());
                 cubeMgr.buildDictionary(cubeSeg, col, inpTable);
