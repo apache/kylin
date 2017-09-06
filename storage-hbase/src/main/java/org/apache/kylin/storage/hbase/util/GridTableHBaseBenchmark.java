@@ -28,13 +28,13 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotFoundException;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.Bytes;
@@ -76,7 +76,7 @@ public class GridTableHBaseBenchmark {
         System.out.println("Testing grid table scanning, hit ratio " + hitRatio + ", index ratio " + indexRatio);
         StorageURL hbaseUrl = StorageURL.valueOf("default@hbase"); // use hbase-site.xml on classpath
 
-        Connection conn = HBaseConnection.get(hbaseUrl);
+        HConnection conn = HBaseConnection.get(hbaseUrl);
         createHTableIfNeeded(conn, TEST_TABLE);
         prepareData(conn);
 
@@ -92,10 +92,10 @@ public class GridTableHBaseBenchmark {
 
     }
 
-    private static void testColumnScan(Connection conn, List<Pair<Integer, Integer>> colScans) throws IOException {
+    private static void testColumnScan(HConnection conn, List<Pair<Integer, Integer>> colScans) throws IOException {
         Stats stats = new Stats("COLUMN_SCAN");
 
-        Table table = conn.getTable(TableName.valueOf(TEST_TABLE));
+        HTableInterface table = conn.getTable(TEST_TABLE);
         try {
             stats.markStart();
 
@@ -123,20 +123,20 @@ public class GridTableHBaseBenchmark {
         }
     }
 
-    private static void testRowScanNoIndexFullScan(Connection conn, boolean[] hits) throws IOException {
+    private static void testRowScanNoIndexFullScan(HConnection conn, boolean[] hits) throws IOException {
         fullScan(conn, hits, new Stats("ROW_SCAN_NO_IDX_FULL"));
     }
 
-    private static void testRowScanNoIndexSkipScan(Connection conn, boolean[] hits) throws IOException {
+    private static void testRowScanNoIndexSkipScan(HConnection conn, boolean[] hits) throws IOException {
         jumpScan(conn, hits, new Stats("ROW_SCAN_NO_IDX_SKIP"));
     }
 
-    private static void testRowScanWithIndex(Connection conn, boolean[] hits) throws IOException {
+    private static void testRowScanWithIndex(HConnection conn, boolean[] hits) throws IOException {
         jumpScan(conn, hits, new Stats("ROW_SCAN_IDX"));
     }
 
-    private static void fullScan(Connection conn, boolean[] hits, Stats stats) throws IOException {
-        Table table = conn.getTable(TableName.valueOf(TEST_TABLE));
+    private static void fullScan(HConnection conn, boolean[] hits, Stats stats) throws IOException {
+        HTableInterface table = conn.getTable(TEST_TABLE);
         try {
             stats.markStart();
 
@@ -157,11 +157,11 @@ public class GridTableHBaseBenchmark {
         }
     }
 
-    private static void jumpScan(Connection conn, boolean[] hits, Stats stats) throws IOException {
+    private static void jumpScan(HConnection conn, boolean[] hits, Stats stats) throws IOException {
 
         final int jumpThreshold = 6; // compensate for Scan() overhead, totally by experience
 
-        Table table = conn.getTable(TableName.valueOf(TEST_TABLE));
+        HTableInterface table = conn.getTable(TEST_TABLE);
         try {
 
             stats.markStart();
@@ -205,8 +205,8 @@ public class GridTableHBaseBenchmark {
         }
     }
 
-    private static void prepareData(Connection conn) throws IOException {
-        Table table = conn.getTable(TableName.valueOf(TEST_TABLE));
+    private static void prepareData(HConnection conn) throws IOException {
+        HTableInterface table = conn.getTable(TEST_TABLE);
 
         try {
             // check how many rows existing
@@ -259,8 +259,8 @@ public class GridTableHBaseBenchmark {
         return bytes;
     }
 
-    private static void createHTableIfNeeded(Connection conn, String tableName) throws IOException {
-        Admin hbase = conn.getAdmin();
+    private static void createHTableIfNeeded(HConnection conn, String tableName) throws IOException {
+        HBaseAdmin hbase = new HBaseAdmin(conn);
 
         try {
             boolean tableExist = false;

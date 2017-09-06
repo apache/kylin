@@ -31,10 +31,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceStoreTest;
@@ -125,16 +125,16 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
 
     private void createTestHTables() throws IOException {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        Admin hbaseAdmin = new HBaseAdmin(conf);
+        HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
         creatTable(hbaseAdmin, conf, aclTable, new String[] { AclConstant.ACL_INFO_FAMILY, AclConstant.ACL_ACES_FAMILY });
         creatTable(hbaseAdmin, conf, userTable, new String[] { AclConstant.USER_AUTHORITY_FAMILY });
     }
 
     private void addRecordsToTable() throws Exception {
-        Table htable = HBaseConnection.get(kylinConfig.getStorageUrl()).getTable(userTable);
+        HTable htable = new HTable(HBaseConnection.get(kylinConfig.getStorageUrl()).getConfiguration(),userTable);
         Pair<byte[], byte[]> pair = getRandomUserRecord();
         Put put = new Put(pair.getKey());
-        put.addColumn(Bytes.toBytes(AclConstant.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclConstant.USER_AUTHORITY_COLUMN), pair.getSecond());
+        put.add(Bytes.toBytes(AclConstant.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclConstant.USER_AUTHORITY_COLUMN), pair.getSecond());
         htable.put(put);
     }
 
@@ -159,7 +159,8 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
 
     private void dropTestHTables() throws IOException {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        Admin hbaseAdmin = new HBaseAdmin(conf);
+        HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
+
         if (hbaseAdmin.tableExists(aclTable)) {
             if (hbaseAdmin.isTableEnabled(aclTable))
                 hbaseAdmin.disableTable(aclTable);
@@ -172,7 +173,7 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
         }
     }
 
-    private void creatTable(Admin admin, Configuration conf, TableName tableName, String[] family) throws IOException {
+    private void creatTable(HBaseAdmin admin, Configuration conf, TableName tableName, String[] family) throws IOException {
         HTableDescriptor desc = new HTableDescriptor(tableName);
         for (int i = 0; i < family.length; i++) {
             desc.addFamily(new HColumnDescriptor(family[i]));
