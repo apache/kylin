@@ -35,10 +35,14 @@ import javax.annotation.Nullable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.AggregationGroup;
+import org.apache.kylin.cube.model.AggregationGroup.HierarchyMask;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.TooManyCuboidException;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -99,6 +103,31 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
     }
 
     public long findBestMatchCuboid1(long cuboid) {
+        if (isValid(cuboid)) {
+            return cuboid;
+        }
+
+        List<Long> onTreeCandidates = Lists.newArrayList();
+        for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
+            Long candidate = translateToOnTreeCuboid(agg, cuboid);
+            if (candidate != null) {
+                onTreeCandidates.add(candidate);
+            }
+        }
+
+        if (onTreeCandidates.size() == 0) {
+            return getBaseCuboidId();
+        }
+
+        long onTreeCandi = Collections.min(onTreeCandidates, Cuboid.cuboidSelectComparator);
+        if (isValid(onTreeCandi)) {
+            return onTreeCandi;
+        }
+
+        return doFindBestMatchCuboid1(onTreeCandi);
+    }
+
+    public long doFindBestMatchCuboid1(long cuboid) {
         long parent = getOnTreeParent(cuboid);
         while (parent > 0) {
             if (cubeDesc.getAllCuboids().contains(parent)) {
@@ -111,6 +140,83 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
             throw new IllegalStateException("Can't find valid parent for Cuboid " + cuboid);
         }
         return parent;
+    }
+
+    private static Long translateToOnTreeCuboid(AggregationGroup agg, long cuboidID) {
+        if ((cuboidID & ~agg.getPartialCubeFullMask()) > 0) {
+            //the partial cube might not contain all required dims
+            return null;
+        }
+
+        // add mandantory
+        cuboidID = cuboidID | agg.getMandatoryColumnMask();
+
+        // add hierarchy
+        for (HierarchyMask hierarchyMask : agg.getHierarchyMasks()) {
+            long fullMask = hierarchyMask.fullMask;
+            long intersect = cuboidID & fullMask;
+            if (intersect != 0 && intersect != fullMask) {
+
+                boolean startToFill = false;
+                for (int i = hierarchyMask.dims.length - 1; i >= 0; i--) {
+                    if (startToFill) {
+                        cuboidID |= hierarchyMask.dims[i];
+                    } else {
+                        if ((cuboidID & hierarchyMask.dims[i]) != 0) {
+                            startToFill = true;
+                            cuboidID |= hierarchyMask.dims[i];
+                        }
+                    }
+                }
+            }
+        }
+
+        // add joint dims
+        for (Long joint : agg.getJoints()) {
+            if (((cuboidID | joint) != cuboidID) && ((cuboidID & ~joint) != cuboidID)) {
+                cuboidID = cuboidID | joint;
+            }
+        }
+
+        if (!agg.isOnTree(cuboidID)) {
+            // no column, add one column
+            long nonJointDims = removeBits((agg.getPartialCubeFullMask() ^ agg.getMandatoryColumnMask()),
+                    agg.getJoints());
+            if (nonJointDims != 0) {
+                long nonJointNonHierarchy = removeBits(nonJointDims,
+                        Collections2.transform(agg.getHierarchyMasks(), new Function<HierarchyMask, Long>() {
+                            @Override
+                            public Long apply(HierarchyMask input) {
+                                return input.fullMask;
+                            }
+                        }));
+                if (nonJointNonHierarchy != 0) {
+                    //there exists dim that does not belong to any joint or any hierarchy, that's perfect
+                    return cuboidID | Long.lowestOneBit(nonJointNonHierarchy);
+                } else {
+                    //choose from a hierarchy that does not intersect with any joint dim, only check level 1
+                    long allJointDims = agg.getJointDimsMask();
+                    for (HierarchyMask hierarchyMask : agg.getHierarchyMasks()) {
+                        long dim = hierarchyMask.allMasks[0];
+                        if ((dim & allJointDims) == 0) {
+                            return cuboidID | dim;
+                        }
+                    }
+                }
+            }
+
+            cuboidID = cuboidID | Collections.min(agg.getJoints(), Cuboid.cuboidSelectComparator);
+            Preconditions.checkState(agg.isOnTree(cuboidID));
+        }
+        return cuboidID;
+    }
+
+    private static long removeBits(long original, Collection<Long> toRemove) {
+        long ret = original;
+        for (Long joint : toRemove) {
+            ret = ret & ~joint;
+        }
+        return ret;
     }
 
     private long getOnTreeParent(long child) {

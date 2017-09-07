@@ -307,14 +307,14 @@ public class CubeManager implements IRealizationProvider {
         // delete cube instance and cube desc
         CubeInstance cube = getCube(cubeName);
 
-        if (deleteDesc && cube.getDescriptor() != null) {
-            CubeDescManager.getInstance(config).removeCubeDesc(cube.getDescriptor());
-        }
-
         // remove cube and update cache
         getStore().deleteResource(cube.getResourcePath());
         cubeMap.remove(cube.getName());
         Cuboid.reloadCache(cube);
+
+        if (deleteDesc && cube.getDescriptor() != null) {
+            CubeDescManager.getInstance(config).removeCubeDesc(cube.getDescriptor());
+        }
 
         // delete cube from project
         ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
