@@ -128,7 +128,7 @@ public class DraftManager {
         ResourceStore store = getStore();
         store.putResource(draft.getResourcePath(), draft, DRAFT_SERIALIZER);
         
-        logger.info("Saved " + draft);
+        logger.trace("Saved " + draft);
     }
 
     public Draft load(String uuid) throws IOException {
