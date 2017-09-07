@@ -36,8 +36,9 @@ import com.google.common.collect.Maps;
 
 public class BadQueryDetector extends Thread {
 
-    public static final int ONE_MB = 1024 * 1024;
     private static final Logger logger = LoggerFactory.getLogger(BadQueryDetector.class);
+    public static final int ONE_MB = 1024 * 1024;
+
     private final ConcurrentMap<Thread, Entry> runningQueries = Maps.newConcurrentMap();
     private final long detectionInterval;
     private final int alertMB;
@@ -92,12 +93,15 @@ public class BadQueryDetector extends Thread {
         notifiers.add(notifier);
     }
 
-    private void notify(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
+    private void notify(String adj, Entry e) {
+        float runningSec = (float) (System.currentTimeMillis() - e.startTime) / 1000;
+
         for (Notifier notifier : notifiers) {
             try {
-                notifier.badQueryFound(adj, runningSec, startTime, project, sql, user, t);
-            } catch (Exception e) {
-                logger.error("", e);
+                notifier.badQueryFound(adj, runningSec, //
+                        e.startTime, e.sqlRequest.getProject(), e.sqlRequest.getSql(), e.user, e.thread);
+            } catch (Exception ex) {
+                logger.error("", ex);
             }
         }
     }
@@ -107,7 +111,14 @@ public class BadQueryDetector extends Thread {
     }
 
     public void queryEnd(Thread thread) {
-        runningQueries.remove(thread);
+        queryEnd(thread, null);
+    }
+
+    public void queryEnd(Thread thread, String badReason) {
+        Entry entry = runningQueries.remove(thread);
+        
+        if (badReason != null)
+            notify(badReason, entry);
     }
 
     public void run() {
@@ -137,7 +148,7 @@ public class BadQueryDetector extends Thread {
         for (Entry e : entries) {
             float runningSec = (float) (now - e.startTime) / 1000;
             if (runningSec >= alertRunningSec) {
-                notify("Slow", runningSec, e.startTime, e.sqlRequest.getProject(), e.sqlRequest.getSql(), e.user, e.thread);
+                notify(BadQueryEntry.ADJ_SLOW, e);
                 dumpStackTrace(e.thread);
             } else {
                 break; // entries are sorted by startTime
@@ -168,13 +179,16 @@ public class BadQueryDetector extends Thread {
     }
 
     public interface Notifier {
-        void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t);
+        void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user,
+                Thread t);
     }
 
     private class LoggerNotifier implements Notifier {
         @Override
-        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
-            logger.info("{} query has been running {} seconds (project:{}, thread: 0x{}, user:{}) -- {}", adj, runningSec, project, Long.toHexString(t.getId()), user, sql);
+        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user,
+                Thread t) {
+            logger.info("{} query has been running {} seconds (project:{}, thread: 0x{}, user:{}) -- {}", adj,
+                    runningSec, project, Long.toHexString(t.getId()), user, sql);
         }
     }
 
@@ -192,9 +206,11 @@ public class BadQueryDetector extends Thread {
         }
 
         @Override
-        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
+        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user,
+                Thread t) {
             try {
-                BadQueryEntry entry = new BadQueryEntry(sql, adj, startTime, runningSec, serverHostname, t.getName(), user);
+                BadQueryEntry entry = new BadQueryEntry(sql, adj, startTime, runningSec, serverHostname, t.getName(),
+                        user);
                 badQueryManager.upsertEntryToProject(entry, project);
             } catch (IOException e) {
                 logger.error("Error in bad query persistence.", e);

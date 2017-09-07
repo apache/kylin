@@ -68,6 +68,7 @@ import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.metadata.badquery.BadQueryEntry;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
@@ -172,14 +173,17 @@ public class QueryService extends BasicService {
     }
 
     public SQLResponse query(SQLRequest sqlRequest) throws Exception {
+        SQLResponse ret = null;
         try {
             final String user = SecurityContextHolder.getContext().getAuthentication().getName();
             badQueryDetector.queryStart(Thread.currentThread(), sqlRequest, user);
 
-            return queryWithSqlMassage(sqlRequest);
+            ret = queryWithSqlMassage(sqlRequest);
+            return ret;
 
         } finally {
-            badQueryDetector.queryEnd(Thread.currentThread());
+            String badReason = (ret != null && ret.isPushDown()) ? BadQueryEntry.ADJ_PUSHDOWN : null;
+            badQueryDetector.queryEnd(Thread.currentThread(), badReason);
         }
     }
 
@@ -550,7 +554,6 @@ public class QueryService extends BasicService {
         } finally {
             DBUtils.closeQuietly(conn);
         }
-
     }
 
     protected List<TableMeta> getMetadata(CubeManager cubeMgr, String project, boolean cubedOnly) throws SQLException {
@@ -854,7 +857,6 @@ public class QueryService extends BasicService {
         } finally {
             close(resultSet, stat, null); //conn is passed in, not my duty to close
         }
-
 
         return buildSqlResponse(isPushDown, results, columnMetas);
     }

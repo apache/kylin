@@ -29,6 +29,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class BadQueryEntry extends RootPersistentEntity implements Comparable<BadQueryEntry> {
+    
+    public static final String ADJ_SLOW = "Slow";
+    public static final String ADJ_PUSHDOWN = "Pushdown";
 
     @JsonProperty("adj")
     private String adj;

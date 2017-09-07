@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.metadata.badquery.BadQueryEntry;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.junit.After;
 import org.junit.Before;
@@ -68,13 +69,15 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
             // make sure bad query check happens twice
             Thread.sleep((alertRunningSec * 2 + 1) * 1000);
 
-            badQueryDetector.queryEnd(Thread.currentThread());
+            badQueryDetector.queryEnd(Thread.currentThread(), BadQueryEntry.ADJ_PUSHDOWN);
         }
 
         badQueryDetector.stop();
 
-        assertEquals(1, alerts.size());
+        assertEquals(2, alerts.size());
         // second check founds a Slow
-        assertArrayEquals(new String[] { "Slow", mockSql }, alerts.get(0));
+        assertArrayEquals(new String[] { BadQueryEntry.ADJ_SLOW, mockSql }, alerts.get(0));
+        // end notifies a Pushdown
+        assertArrayEquals(new String[] { BadQueryEntry.ADJ_PUSHDOWN, mockSql }, alerts.get(1));
     }
 }
