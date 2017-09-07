@@ -253,6 +253,10 @@ abstract public class KylinConfigBase implements Serializable {
         return StorageURL.valueOf(getOptional("kylin.metadata.url", "kylin_metadata@hbase"));
     }
 
+    public int getCacheSyncRetrys(){
+        return Integer.parseInt(getOptional("kylin.metadata.sync.retries","3"));
+    }
+
     // for test only
     public void setMetadataUrl(String metadataUrl) {
         setProperty("kylin.metadata.url", metadataUrl);
@@ -342,7 +346,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getSegmentAdvisor() {
         return getOptional("kylin.cube.segment-advisor", "org.apache.kylin.cube.CubeSegmentAdvisor");
     }
-    
+
     public double getJobCuboidSizeRatio() {
         return Double.parseDouble(getOptional("kylin.cube.size-estimate-ratio", "0.25"));
     }
