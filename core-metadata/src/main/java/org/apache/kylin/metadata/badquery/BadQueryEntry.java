@@ -26,6 +26,7 @@ import org.apache.kylin.common.util.DateFormat;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class BadQueryEntry extends RootPersistentEntity implements Comparable<BadQueryEntry> {
 
@@ -117,13 +118,11 @@ public class BadQueryEntry extends RootPersistentEntity implements Comparable<Ba
 
     @Override
     public int compareTo(BadQueryEntry obj) {
-        if (this.startTime == obj.startTime) {
-            return 0;
-        } else if (this.startTime > obj.startTime) {
-            return 1;
-        } else {
-            return -1;
-        }
+        int comp = Long.compare(this.startTime, obj.startTime);
+        if (comp != 0)
+            return comp;
+        else
+            return this.sql.compareTo(obj.sql);
     }
 
     @Override
@@ -140,10 +139,10 @@ public class BadQueryEntry extends RootPersistentEntity implements Comparable<Ba
 
         BadQueryEntry entry = (BadQueryEntry) o;
 
-        if (!sql.equals(entry.sql))
+        if (startTime != entry.startTime)
             return false;
 
-        if (startTime != entry.startTime)
+        if (!sql.equals(entry.sql))
             return false;
 
         return true;
