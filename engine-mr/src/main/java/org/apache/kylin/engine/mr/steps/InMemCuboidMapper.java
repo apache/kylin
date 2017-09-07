@@ -69,7 +69,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
     private Future<?> future;
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
 
         Configuration conf = context.getConfiguration();

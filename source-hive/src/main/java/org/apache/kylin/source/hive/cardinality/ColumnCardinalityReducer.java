@@ -44,7 +44,7 @@ public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWri
     private Map<Integer, HLLCounter> hllcMap = new HashMap<Integer, HLLCounter>();
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
     }
 

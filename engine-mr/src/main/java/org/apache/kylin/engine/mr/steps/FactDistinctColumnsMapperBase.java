@@ -66,7 +66,7 @@ abstract public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends Kyli
     protected Map<Integer, Integer> columnIndexToReducerBeginId = new HashMap<>();
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         bindCurrentConfiguration(conf);
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();

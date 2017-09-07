@@ -48,7 +48,7 @@ public class RowKeyDistributionCheckerMapper extends KylinMapper<Text, Text, Tex
     List<Text> keyList;
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
 
         rowKeyStatsFilePath = context.getConfiguration().get("rowKeyStatsFilePath");

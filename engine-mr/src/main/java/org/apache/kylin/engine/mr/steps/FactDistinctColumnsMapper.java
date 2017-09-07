@@ -82,8 +82,8 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
     private boolean isUsePutRowKeyToHllNewAlgorithm;
 
     @Override
-    protected void setup(Context context) throws IOException {
-        super.setup(context);
+    protected void doSetup(Context context) throws IOException {
+        super.doSetup(context);
         tmpbuf = ByteBuffer.allocate(4096);
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {

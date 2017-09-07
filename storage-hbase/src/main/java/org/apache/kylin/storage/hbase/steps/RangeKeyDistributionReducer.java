@@ -54,7 +54,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
     private String output = null;
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
 
         if (context.getConfiguration().get(BatchConstants.CFG_OUTPUT_PATH) != null) {

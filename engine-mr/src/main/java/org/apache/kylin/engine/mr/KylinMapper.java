@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +41,38 @@ public class KylinMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN,
     }
 
     @Override
-    final public void map(KEYIN key, VALUEIN value, Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
+    final protected void setup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
+            throws IOException, InterruptedException {
+        try {
+            logger.info("Do setup, available memory: {}m", MemoryBudgetController.getSystemAvailMB());
+            doSetup(context);
+        } catch (IOException ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        } catch (InterruptedException ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        } catch (RuntimeException ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        } catch (Error ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        }
+    }
+
+    protected void doSetup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
+            throws IOException, InterruptedException {
+        // NOTHING
+    }
+
+    @Override
+    final public void map(KEYIN key, VALUEIN value, Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
+            throws IOException, InterruptedException {
         try {
             if (mapCounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
                 logger.info("Accepting Mapper Key with ordinal: " + mapCounter);
+                logger.info("Do map, available memory: {}m", MemoryBudgetController.getSystemAvailMB());
             }
             doMap(key, value, context);
         } catch (IOException ex) { // KYLIN-2170
@@ -61,14 +90,18 @@ public class KylinMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN,
         }
     }
 
-    protected void doMap(KEYIN key, VALUEIN value, Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
+    protected void doMap(KEYIN key, VALUEIN value, Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
+            throws IOException, InterruptedException {
         super.map(key, value, context);
     }
 
     @Override
-    final protected void cleanup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
+    final protected void cleanup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
+            throws IOException, InterruptedException {
         try {
+            logger.info("Do cleanup, available memory: {}m", MemoryBudgetController.getSystemAvailMB());
             doCleanup(context);
+            logger.info("Total rows: {}", mapCounter);
         } catch (IOException ex) { // KYLIN-2170
             logger.error("", ex);
             throw ex;
@@ -84,6 +117,7 @@ public class KylinMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN,
         }
     }
 
-    protected void doCleanup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
+    protected void doCleanup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
+            throws IOException, InterruptedException {
     }
 }

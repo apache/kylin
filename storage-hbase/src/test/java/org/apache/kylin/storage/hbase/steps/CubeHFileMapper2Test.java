@@ -73,7 +73,7 @@ public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
         Context context = MockupMapContext.create(hconf, cubeName, outKV);
 
         CubeHFileMapper mapper = new CubeHFileMapper();
-        mapper.setup(context);
+        mapper.doSetup(context);
 
         Text key = new Text("not important");
         Text value = new Text(new byte[] { 2, 2, 51, -79, 1 });

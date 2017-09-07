@@ -39,7 +39,7 @@ public class RangeKeyDistributionMapper extends KylinMapper<Text, Text, Text, Lo
     private Text lastKey;
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
     }
 

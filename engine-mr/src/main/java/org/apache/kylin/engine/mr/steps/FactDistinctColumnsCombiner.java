@@ -29,7 +29,7 @@ import org.apache.kylin.engine.mr.KylinReducer;
 public class FactDistinctColumnsCombiner extends KylinReducer<SelfDefineSortableKey, Text, SelfDefineSortableKey, Text> {
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
     }
 

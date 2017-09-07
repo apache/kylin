@@ -50,7 +50,7 @@ public class HiveToBaseCuboidMapperPerformanceTest {
         HiveToBaseCuboidMapper mapper = new HiveToBaseCuboidMapper();
         Context context = MockupMapContext.create(hconf, metadataUrl, cubeName, null);
 
-        mapper.setup(context);
+        mapper.doSetup(context);
 
         Reader reader = new Reader(hconf, SequenceFile.Reader.file(srcPath));
         Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), hconf);

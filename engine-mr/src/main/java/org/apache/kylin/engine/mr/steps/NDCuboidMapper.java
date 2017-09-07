@@ -62,7 +62,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private NDCuboidBuilder ndCuboidBuilder;
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
 
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();

@@ -88,7 +88,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     private MultipleOutputs mos;
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
         Configuration conf = context.getConfiguration();
         mos = new MultipleOutputs(context);

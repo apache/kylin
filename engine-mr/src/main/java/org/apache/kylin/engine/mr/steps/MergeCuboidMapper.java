@@ -91,7 +91,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private Text outputValue;
 
     @Override
-    protected void setup(Context context) throws IOException, InterruptedException {
+    protected void doSetup(Context context) throws IOException, InterruptedException {
         super.bindCurrentConfiguration(context.getConfiguration());
 
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();

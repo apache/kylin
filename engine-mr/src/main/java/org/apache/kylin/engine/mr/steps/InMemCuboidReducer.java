@@ -55,7 +55,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
     private Text outputValue;
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 

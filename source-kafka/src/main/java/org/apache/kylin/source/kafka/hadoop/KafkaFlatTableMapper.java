@@ -33,7 +33,7 @@ public class KafkaFlatTableMapper extends KylinMapper<LongWritable, BytesWritabl
     private Text outValue = new Text();
 
     @Override
-    protected void setup(Context context) throws IOException {
+    protected void doSetup(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         bindCurrentConfiguration(conf);
     }
