@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.apache.kylin.rest.controller2.ModelControllerV2.VALID_MODELNAME;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +68,9 @@ import com.google.common.collect.Sets;
 public class ModelService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelService.class);
+
+    public static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+            .toCharArray();
 
     @Autowired
     @Qualifier("accessService")
