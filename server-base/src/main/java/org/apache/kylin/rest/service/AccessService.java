@@ -206,6 +206,43 @@ public class AccessService {
     }
 
     @Transactional
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
+    public Acl revoke(AclEntity ae, String username) {
+        Message msg = MsgPicker.getMsg();
+
+        if (ae == null)
+            throw new BadRequestException(msg.getACL_DOMAIN_NOT_FOUND());
+        if (username == null) {
+            throw new BadRequestException(msg.getACE_ID_REQUIRED());
+        }
+
+        ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
+        MutableAcl acl = (MutableAcl) aclService.readAclById(objectIdentity);
+        int indexOfAce = -1;
+
+        for (int i = 0; i < acl.getEntries().size(); i++) {
+            AccessControlEntry ace = acl.getEntries().get(i);
+            if (((PrincipalSid) ace.getSid()).getPrincipal().equals(username)) {
+                indexOfAce = i;
+                break;
+            }
+        }
+
+        if (indexOfAce != -1) {
+            secureOwner(acl, indexOfAce);
+
+            try {
+                acl.deleteAce(indexOfAce);
+                acl = aclService.updateAcl(acl);
+            } catch (NotFoundException e) {
+                //do nothing?
+            }
+        }
+
+        return acl;
+    }
+
+    @Transactional
     public void inherit(AclEntity ae, AclEntity parentAe) {
         Message msg = MsgPicker.getMsg();
 

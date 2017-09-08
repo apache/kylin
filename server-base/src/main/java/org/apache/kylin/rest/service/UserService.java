@@ -25,15 +25,22 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.security.ManagedUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.acls.domain.PrincipalSid;
+import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -58,6 +65,14 @@ public class UserService implements UserDetailsManager {
     protected ResourceStore aclStore;
 
     private boolean evictCacheFlag = false;
+
+    @Autowired
+    @Qualifier("accessService")
+    private AccessService accessService;
+
+    @Autowired
+    @Qualifier("projectService")
+    private ProjectService projectService;
 
     public boolean isEvictCacheFlag() {
         return evictCacheFlag;
@@ -98,6 +113,21 @@ public class UserService implements UserDetailsManager {
             throw new InternalErrorException("User " + userName + " is not allowed to be deleted.");
 
         try {
+            //revoke user's project permission
+            List<ProjectInstance> projectInstances = projectService.listProjects(null, null);
+            for (ProjectInstance pi : projectInstances) {
+                AclEntity ae = accessService.getAclEntity("ProjectInstance", pi.getUuid());
+                Acl acl = accessService.getAcl(ae);
+
+                if (acl != null) {
+                    for (AccessControlEntry ace : acl.getEntries()) {
+                        if (((PrincipalSid) ace.getSid()).getPrincipal().equals(userName)) {
+                            accessService.revoke(ae, userName);
+                        }
+                    }
+                }
+            }
+
             String id = getId(userName);
             aclStore.deleteResource(id);
             logger.trace("delete user : {}", userName);
