@@ -47,6 +47,6 @@ public class RealizationRegistryTest extends LocalFileMetadataTestCase {
     public void test() throws Exception {
         final RealizationRegistry registry = RealizationRegistry.getInstance(KylinConfig.getInstanceFromEnv());
         final Set<RealizationType> realizationTypes = registry.getRealizationTypes();
-        assertEquals(RealizationType.values().length - 2, realizationTypes.size());
+        assertEquals(RealizationType.values().length - 1, realizationTypes.size());
     }
 }
