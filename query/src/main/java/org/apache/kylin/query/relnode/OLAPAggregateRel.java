@@ -73,7 +73,7 @@ import com.google.common.collect.Sets;
 public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     private final static Map<String, String> AGGR_FUNC_MAP = new HashMap<String, String>();
-    private final static Map<String, Integer> AGGR_FUNC_PARAM_AS_MEASTURE_MAP = new HashMap<String, Integer>();
+    private final static Map<String, Integer> AGGR_FUNC_PARAM_AS_MEASURE_MAP = new HashMap<String, Integer>();
 
     static {
         AGGR_FUNC_MAP.put("SUM", "SUM");
@@ -91,7 +91,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         Map<String, Class<?>> udafs = MeasureTypeFactory.getUDAFs();
         for (String func : udafs.keySet()) {
             try {
-                AGGR_FUNC_PARAM_AS_MEASTURE_MAP.put(func, ((ParamAsMeasureCount) (udafs.get(func).newInstance())).getParamAsMeasureCount());
+                AGGR_FUNC_PARAM_AS_MEASURE_MAP.put(func, ((ParamAsMeasureCount) (udafs.get(func).newInstance())).getParamAsMeasureCount());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -110,7 +110,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         String sqlName = getSqlFuncName(aggCall);
         String funcName = AGGR_FUNC_MAP.get(sqlName);
         if (funcName == null) {
-            throw new IllegalStateException("Don't suppoprt aggregation " + sqlName);
+            throw new IllegalStateException("Don't support aggregation " + sqlName);
         }
         return funcName;
     }
@@ -254,8 +254,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 List<TblColRef> columns = Lists.newArrayList();
                 String funcName = getSqlFuncName(aggCall);
                 int columnsCount = aggCall.getArgList().size();
-                if (AGGR_FUNC_PARAM_AS_MEASTURE_MAP.containsKey(funcName)) {
-                    int asMeasureCnt = AGGR_FUNC_PARAM_AS_MEASTURE_MAP.get(funcName);
+                if (AGGR_FUNC_PARAM_AS_MEASURE_MAP.containsKey(funcName)) {
+                    int asMeasureCnt = AGGR_FUNC_PARAM_AS_MEASURE_MAP.get(funcName);
                     if (asMeasureCnt > 0) {
                         columnsCount = asMeasureCnt;
                     } else {
