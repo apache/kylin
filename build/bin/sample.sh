@@ -47,8 +47,7 @@ fi
 hadoop ${hadoop_conf_param} fs -put * ${hdfs_tmp_dir}/sample_cube/data/
 
 hive_client_mode=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.client`
-sample_database=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.database-for-flat-table`
-sample_database=${sample_database^^}
+sample_database=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.database-for-flat-table | tr [a-z] [A-Z]`
 echo "Going to create sample tables in hive to database "$sample_database" by "$hive_client_mode
 
 if [ "${hive_client_mode}" == "beeline" ]
