@@ -155,6 +155,10 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     private void waitForCounterAndClear(long count) {
         int retryTimes = 0;
         while ((!counter.compareAndSet(count, 0L))) {
+            // take into account wipe retry causing counter larger than count
+            if (counter.get() > count) {
+                counter.decrementAndGet();
+            }
             if (++retryTimes > 30) {
                 throw new RuntimeException("timeout");
             }
