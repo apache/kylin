@@ -51,11 +51,6 @@ abstract public class AbstractInMemCubeBuilder {
     protected int taskThreadCount = 1;
     protected int reserveMemoryMB = 100;
 
-    //    @Deprecated
-    //    public AbstractInMemCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
-    //        this(cubeDesc.getInitialCuboidScheduler(), cubeDesc, flatDesc, dictionaryMap);
-    //    }
-
     protected AbstractInMemCubeBuilder(CuboidScheduler cuboidScheduler, IJoinedFlatTableDesc flatDesc,
             Map<TblColRef, Dictionary<String>> dictionaryMap) {
         if (cuboidScheduler == null)

@@ -296,7 +296,7 @@ public class AggregationGroup implements Serializable {
         long combination = 1;
 
         if (this.getDimCap() > 0) {
-            DefaultCuboidScheduler cuboidScheduler = cubeDesc.getInitialCuboidScheduler();
+            DefaultCuboidScheduler cuboidScheduler = (DefaultCuboidScheduler) cubeDesc.getInitialCuboidScheduler();
             combination = cuboidScheduler.calculateCuboidsForAggGroup(this).size();
         } else {
             Set<String> includeDims = new TreeSet<>(Arrays.asList(includes));

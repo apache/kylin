@@ -163,7 +163,6 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     @Test
     public void testFindCuboidByIdWithSingleAggrGroup2() {
         CubeDesc cube = getTestKylinCubeWithSeller();
-        CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
         Cuboid cuboid;
 
         cuboid = Cuboid.findById(cube, 0);
@@ -191,7 +190,6 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     @Test
     public void testFindCuboidByIdWithMultiAggrGroup() {
         CubeDesc cube = getTestKylinCubeWithoutSellerLeftJoin();
-        CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
         Cuboid cuboid;
 
         cuboid = Cuboid.findById(cube, toLong("111111110"));

@@ -60,14 +60,14 @@ abstract public class CuboidScheduler {
     /** Returns the child cuboids of a parent. */
     abstract public List<Long> getSpanningCuboid(long parentCuboid);
     
-    /** Returns a cuboid on the tree that best matches the request cuboid. */
+    /** Returns a valid cuboid that best matches the request cuboid. */
     abstract public long findBestMatchCuboid(long requestCuboid);
 
-    /** Returns whether requestCuboid is valid or not*/
+    /** Checks whether a cuboid is valid or not. */
     abstract public boolean isValid(long requestCuboid);
 
-    /** Returns the key for what this cuboid scheduler responsible for*/
-    abstract public String getResponsibleKey();
+    /** Returns the key for what this cuboid scheduler responsible for. */
+    abstract public String getCuboidCacheKey();
 
     // ============================================================================
     

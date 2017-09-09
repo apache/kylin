@@ -102,7 +102,7 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         return findBestMatchCuboid1(cuboid);
     }
 
-    public long findBestMatchCuboid1(long cuboid) {
+    long findBestMatchCuboid1(long cuboid) {
         if (isValid(cuboid)) {
             return cuboid;
         }
@@ -127,7 +127,7 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         return doFindBestMatchCuboid1(onTreeCandi);
     }
 
-    public long doFindBestMatchCuboid1(long cuboid) {
+    private long doFindBestMatchCuboid1(long cuboid) {
         long parent = getOnTreeParent(cuboid);
         while (parent > 0) {
             if (cubeDesc.getAllCuboids().contains(parent)) {
@@ -466,7 +466,7 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         return Long.bitCount(cuboidID) <= dimCap;
     }
 
-    public long findBestMatchCuboid2(long cuboid) {
+    long findBestMatchCuboid2(long cuboid) {
         long bestParent = doFindBestMatchCuboid2(cuboid, Cuboid.getBaseCuboidId(cubeDesc));
         if (bestParent < -1) {
             throw new IllegalStateException("Cannot find the parent of the cuboid:" + cuboid);
@@ -499,7 +499,7 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         return (cuboidId & ~parentCuboid) == 0;
     }
 
-    public String getResponsibleKey() {
+    public String getCuboidCacheKey() {
         return CubeDesc.class.getName() + "-" + cubeDesc.getName();
     }
 }

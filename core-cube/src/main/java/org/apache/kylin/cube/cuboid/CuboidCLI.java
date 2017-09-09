@@ -88,28 +88,28 @@ public class CuboidCLI {
                 //check all valid and invalid
                 for (long i = 0; i < baseCuboid; ++i) {
                     if (cuboidSet.contains(i)) {
-                        if (!cubeDesc.getInitialCuboidScheduler().isValid(i)) {
+                        if (!scheduler.isValid(i)) {
                             throw new RuntimeException();
                         }
 
-                        if (cubeDesc.getInitialCuboidScheduler().findBestMatchCuboid(i) != i) {
+                        if (scheduler.findBestMatchCuboid(i) != i) {
                             throw new RuntimeException();
                         }
                     } else {
-                        if (cubeDesc.getInitialCuboidScheduler().isValid(i)) {
+                        if (scheduler.isValid(i)) {
                             throw new RuntimeException();
                         }
 
-                        long corrected = cubeDesc.getInitialCuboidScheduler().findBestMatchCuboid(i);
+                        long corrected = scheduler.findBestMatchCuboid(i);
                         if (corrected == i) {
                             throw new RuntimeException();
                         }
 
-                        if (!cubeDesc.getInitialCuboidScheduler().isValid(corrected)) {
+                        if (!scheduler.isValid(corrected)) {
                             throw new RuntimeException();
                         }
 
-                        if (cubeDesc.getInitialCuboidScheduler().findBestMatchCuboid(corrected) != corrected) {
+                        if (scheduler.findBestMatchCuboid(corrected) != corrected) {
                             throw new RuntimeException();
                         }
                     }
@@ -133,7 +133,7 @@ public class CuboidCLI {
     }
 
     public static int[] calculateAllLevelCount(CubeDesc cube) {
-        int levels = cube.getInitialBuildLevel();
+        int levels = cube.getInitialCuboidScheduler().getBuildLevel();
         int[] allLevelCounts = new int[levels + 1];
 
         CuboidScheduler scheduler = cube.getInitialCuboidScheduler();

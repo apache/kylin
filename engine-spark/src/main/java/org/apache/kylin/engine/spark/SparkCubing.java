@@ -377,8 +377,8 @@ public class SparkCubing extends AbstractApplication {
                 LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue();
                 System.out.println("load properties finished");
                 IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cubeSegment);
-                        AbstractInMemCubeBuilder inMemCubeBuilder = new DoggedCubeBuilder(
-                                cubeSegment.getCuboidScheduler(), flatDesc, dictionaryMap);
+                AbstractInMemCubeBuilder inMemCubeBuilder = new DoggedCubeBuilder(
+                        cubeSegment.getCuboidScheduler(), flatDesc, dictionaryMap);
                 final SparkCuboidWriter sparkCuboidWriter = new BufferedCuboidWriter(new DefaultTupleConverter(cubeInstance.getSegmentById(segmentId), columnLengthMap));
                 Executors.newCachedThreadPool().submit(inMemCubeBuilder.buildAsRunnable(blockingQueue, sparkCuboidWriter));
                 try {

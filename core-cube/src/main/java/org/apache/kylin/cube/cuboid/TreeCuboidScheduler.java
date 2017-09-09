@@ -316,7 +316,7 @@ public class TreeCuboidScheduler extends CuboidScheduler {
         }
     }
 
-    public String getResponsibleKey() {
+    public String getCuboidCacheKey() {
         return CubeInstance.class.getName() + "-" + cubeDesc.getName();
     }
 }

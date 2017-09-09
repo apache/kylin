@@ -18,9 +18,6 @@
 
 package org.apache.kylin.cube;
 
-import static org.apache.kylin.cube.cuboid.CuboidModeEnum.CURRENT;
-import static org.apache.kylin.cube.cuboid.CuboidModeEnum.RECOMMEND;
-
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +30,6 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.cube.cuboid.CuboidModeEnum;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -106,14 +102,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
 
-    @JsonProperty("cuboidBytes")
+    @JsonProperty("cuboid_bytes")
     private byte[] cuboidBytes;
 
     @JsonProperty("cuboid_bytes_recommend")
     private byte[] cuboidBytesRecommend;
 
-    @JsonProperty("last_optimized")
-    private long lastOptimized;
+    @JsonProperty("cuboid_last_optimized")
+    private long cuboidLastOptimized;
 
     // cuboid scheduler lazy built
     transient private CuboidScheduler cuboidScheduler;
@@ -332,36 +328,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         this.createTimeUTC = createTimeUTC;
     }
 
-    public Set<Long> getCuboidsByMode(String cuboidModeName) {
-        return getCuboidsByMode(cuboidModeName == null ? null : CuboidModeEnum.getByModeName(cuboidModeName));
-    }
-
-    public Set<Long> getCuboidsByMode(CuboidModeEnum cuboidMode) {
-        if (cuboidMode == null || cuboidMode == CURRENT) {
-            return getCuboidScheduler().getAllCuboidIds();
-        }
-        Set<Long> cuboidsRecommend = getCuboidsRecommend();
-        if (cuboidsRecommend == null || cuboidMode == RECOMMEND) {
-            return cuboidsRecommend;
-        }
-        Set<Long> currentCuboids = getCuboidScheduler().getAllCuboidIds();
-        switch (cuboidMode) {
-        case RECOMMEND_EXISTING:
-            cuboidsRecommend.retainAll(currentCuboids);
-            return cuboidsRecommend;
-        case RECOMMEND_MISSING:
-            cuboidsRecommend.removeAll(currentCuboids);
-            return cuboidsRecommend;
-        case RECOMMEND_MISSING_WITH_BASE:
-            cuboidsRecommend.removeAll(currentCuboids);
-            currentCuboids.add(getCuboidScheduler().getBaseCuboidId());
-            return cuboidsRecommend;
-        default:
-            return null;
-        }
-    }
-
-    public Map<Long, Long> getCuboids() {
+    Map<Long, Long> getCuboids() {
         if (cuboidBytes == null)
             return null;
         byte[] uncompressed;
@@ -377,7 +344,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
-    public void setCuboids(Map<Long, Long> cuboids) {
+    void setCuboids(Map<Long, Long> cuboids) {
         if (cuboids == null)
             return;
         if (cuboids.isEmpty()) {
@@ -394,7 +361,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
-    public Set<Long> getCuboidsRecommend() {
+    Set<Long> getCuboidsRecommend() {
         if (cuboidBytesRecommend == null)
             return null;
         byte[] uncompressed;
@@ -410,7 +377,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
-    public void setCuboidsRecommend(HashSet<Long> cuboids) {
+    void setCuboidsRecommend(HashSet<Long> cuboids) {
         if (cuboids == null)
             return;
         if (cuboids.isEmpty()) {

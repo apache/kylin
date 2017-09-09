@@ -45,7 +45,7 @@ import com.google.common.collect.Maps;
 @SuppressWarnings("serial")
 public class Cuboid implements Comparable<Cuboid>, Serializable {
 
-    //TODO Guava cache may be better
+    // TODO Should the cache be inside CuboidScheduler?
     private final static Map<String, Map<Long, Cuboid>> CUBOID_CACHE = Maps.newConcurrentMap();
 
     // smaller is better
@@ -88,11 +88,6 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
         return cuboidID;
     }
 
-    // for mandatory cuboid, no need to translate cuboid
-    public static Cuboid findForMandatory(CubeDesc cube, long cuboidID) {
-        return new Cuboid(cube, cuboidID, cuboidID);
-    }
-
     public static Cuboid findById(CuboidScheduler cuboidScheduler, byte[] cuboidID) {
         return findById(cuboidScheduler, Bytes.toLong(cuboidID));
     }
@@ -111,10 +106,10 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
     }
 
     public static Cuboid findById(CuboidScheduler cuboidScheduler, long cuboidID) {
-        Map<Long, Cuboid> cubeCache = CUBOID_CACHE.get(cuboidScheduler.getResponsibleKey());
+        Map<Long, Cuboid> cubeCache = CUBOID_CACHE.get(cuboidScheduler.getCuboidCacheKey());
         if (cubeCache == null) {
             cubeCache = Maps.newConcurrentMap();
-            CUBOID_CACHE.put(cuboidScheduler.getResponsibleKey(), cubeCache);
+            CUBOID_CACHE.put(cuboidScheduler.getCuboidCacheKey(), cubeCache);
         }
         Cuboid cuboid = cubeCache.get(cuboidID);
         if (cuboid == null) {
@@ -130,7 +125,19 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
     }
 
     public static Cuboid getBaseCuboid(CubeDesc cube) {
-        return findForMandatory(cube, getBaseCuboidId(cube));
+        return findById(cube.getInitialCuboidScheduler(), getBaseCuboidId(cube));
+    }
+
+    public static void clearCache() {
+        CUBOID_CACHE.clear();
+    }
+
+    public static void clearCache(CubeInstance cubeInstance) {
+        clearCache(cubeInstance.getCuboidScheduler());
+    }
+
+    private static void clearCache(CuboidScheduler cuboidScheduler) {
+        CUBOID_CACHE.remove(cuboidScheduler.getCuboidCacheKey());
     }
 
     // ============================================================================
@@ -224,18 +231,6 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
 
     public boolean requirePostAggregation() {
         return requirePostAggregation;
-    }
-
-    public static void clearCache() {
-        CUBOID_CACHE.clear();
-    }
-
-    public static void reloadCache(CubeInstance cubeInstance) {
-        reloadCache(cubeInstance.getCuboidScheduler());
-    }
-
-    private static void reloadCache(CuboidScheduler cuboidScheduler) {
-        CUBOID_CACHE.remove(cuboidScheduler.getResponsibleKey());
     }
 
     @Override

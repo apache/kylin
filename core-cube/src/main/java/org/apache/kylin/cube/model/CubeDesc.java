@@ -51,7 +51,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.cuboid.DefaultCuboidScheduler;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -168,15 +168,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("override_kylin_properties")
     private LinkedHashMap<String, String> overrideKylinProps = new LinkedHashMap<String, String>();
 
-    private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
-    private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
-    private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<>();
-
-    private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
-    private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
-
-    private Map<TblColRef, DeriveInfo> extendedColumnToHosts = Maps.newHashMap();
-
     @JsonProperty("partition_offset_start")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<Integer, Long> partitionOffsetStart = Maps.newHashMap();
@@ -188,6 +179,17 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("parent_forward")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private int parentForward = 3;
+
+    private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
+    private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
+    private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<>();
+
+    private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
+    private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
+
+    private Map<TblColRef, DeriveInfo> extendedColumnToHosts = Maps.newHashMap();
+    
+    transient private CuboidScheduler cuboidScheduler = null;
 
     public boolean isEnableSharding() {
         //in the future may extend to other storage that is shard-able
@@ -550,6 +552,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         hostToDerivedMap = Maps.newHashMap();
         extendedColumnToHosts = Maps.newHashMap();
         cuboidBlackSet = Sets.newHashSet();
+        cuboidScheduler = null;
     }
 
     public void init(KylinConfig config) {
@@ -607,16 +610,16 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         amendAllColumns();
     }
 
-    public DefaultCuboidScheduler getInitialCuboidScheduler() {
-        return new DefaultCuboidScheduler(this);
-    }
+    public CuboidScheduler getInitialCuboidScheduler() {
+        if (cuboidScheduler != null)
+            return cuboidScheduler;
 
-    /**
-     * Get cuboid level count except base cuboid
-     * @return
-     */
-    public int getInitialBuildLevel() {
-        return getInitialCuboidScheduler().getCuboidsByLayer().size() - 1;
+        synchronized (this) {
+            if (cuboidScheduler == null) {
+                cuboidScheduler = CuboidScheduler.getInstance(this);
+            }
+            return cuboidScheduler;
+        }
     }
 
     public boolean isBlackedCuboid(long cuboidID) {

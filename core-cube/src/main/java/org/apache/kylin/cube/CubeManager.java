@@ -310,7 +310,7 @@ public class CubeManager implements IRealizationProvider {
         // remove cube and update cache
         getStore().deleteResource(cube.getResourcePath());
         cubeMap.remove(cube.getName());
-        Cuboid.reloadCache(cube);
+        Cuboid.clearCache(cube);
 
         if (deleteDesc && cube.getDescriptor() != null) {
             CubeDescManager.getInstance(config).removeCubeDesc(cube.getDescriptor());
@@ -632,7 +632,7 @@ public class CubeManager implements IRealizationProvider {
      */
     public CubeInstance reloadCubeLocal(String cubeName) {
         CubeInstance cubeInstance = reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
-        Cuboid.reloadCache(cubeInstance);
+        Cuboid.clearCache(cubeInstance);
         return cubeInstance;
     }
 
@@ -643,7 +643,7 @@ public class CubeManager implements IRealizationProvider {
             for (CubeSegment segment : cube.getSegments()) {
                 usedStorageLocation.remove(segment.getUuid());
             }
-            Cuboid.reloadCache(cube);
+            Cuboid.clearCache(cube);
         }
     }
 
