@@ -57,7 +57,7 @@ public class CubingUtils {
     public static Map<Long, HLLCounter> sampling(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDescIn, Iterable<List<String>> streams) {
         final CubeJoinedFlatTableEnrich flatDesc = new CubeJoinedFlatTableEnrich(flatDescIn, cubeDesc);
         final int rowkeyLength = cubeDesc.getRowkey().getRowKeyColumns().length;
-        final Set<Long> allCuboidIds = cubeDesc.getCuboidScheduler().getAllCuboidIds();
+        final Set<Long> allCuboidIds = cubeDesc.getInitialCuboidScheduler().getAllCuboidIds();
         final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         final Map<Long, Integer[]> allCuboidsBitSet = Maps.newHashMap();
 

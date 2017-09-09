@@ -72,6 +72,10 @@ public class JsonUtil {
         return mapper.readValue(src, valueType);
     }
 
+    public static <T> T readValue(String content, TypeReference<T> valueTypeRef) throws IOException {
+        return mapper.readValue(content, valueTypeRef);
+    }
+
     public static Map<String, String> readValueAsMap(String content) throws IOException {
         TypeReference<HashMap<String, String>> typeRef = new TypeReference<HashMap<String, String>>() {
         };
