@@ -253,8 +253,8 @@ abstract public class KylinConfigBase implements Serializable {
         return StorageURL.valueOf(getOptional("kylin.metadata.url", "kylin_metadata@hbase"));
     }
 
-    public int getCacheSyncRetrys() {
-        return Integer.parseInt(getOptional("kylin.metadata.sync.retries", "3"));
+    public int getCacheSyncRetrys(){
+        return Integer.parseInt(getOptional("kylin.metadata.sync.retries","3"));
     }
 
     // for test only
