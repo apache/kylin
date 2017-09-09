@@ -22,6 +22,10 @@
 <configuration>
     <property>
         <name>session.timeout.ms</name>
-        <value>30000</value>
+        <value>10000</value>
+    </property>
+    <property>
+        <name>request.timeout.ms</name>
+        <value>20000</value>
     </property>
 </configuration>
