@@ -211,7 +211,7 @@ public class TableService extends BasicService {
         Map<String, String[]> result = new HashMap<String, String[]>();
 
         for (String tableName : tableNames) {
-            if (unLoadHiveTable(tableName, project)) {
+            if (unloadHiveTable(tableName, project)) {
                 unLoadSuccess.add(tableName);
             } else {
                 unLoadFail.add(tableName);
@@ -239,7 +239,7 @@ public class TableService extends BasicService {
      * @param project
      * @return
      */
-    public boolean unLoadHiveTable(String tableName, String project) throws IOException {
+    public boolean unloadHiveTable(String tableName, String project) throws IOException {
         aclEvaluate.checkProjectWritePermission(project);
         Message msg = MsgPicker.getMsg();
 
@@ -250,8 +250,10 @@ public class TableService extends BasicService {
         TableDesc desc = getMetadataManager().getTableDesc(tableName, project);
         
         // unload of legacy global table is not supported for now
-        if (desc == null || desc.getProject() == null)
+        if (desc == null || desc.getProject() == null) {
+            logger.warn("Unload Table {} in Project {} failed, could not find TableDesc or related Project", tableName, project);
             return false;
+        }
         
         tableType = desc.getSourceType();
 

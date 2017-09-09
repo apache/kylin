@@ -130,7 +130,7 @@ public class TableController extends BasicController {
         Map<String, String[]> result = new HashMap<String, String[]>();
         try {
             for (String tableName : tables.split(",")) {
-                if (tableService.unLoadHiveTable(tableName, project)) {
+                if (tableService.unloadHiveTable(tableName, project)) {
                     unLoadSuccess.add(tableName);
                 } else {
                     unLoadFail.add(tableName);
