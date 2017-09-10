@@ -171,15 +171,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("override_kylin_properties")
     private LinkedHashMap<String, String> overrideKylinProps = new LinkedHashMap<String, String>();
 
-    private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
-    private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
-    private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<>();
-
-    private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
-    private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
-
-    private Map<TblColRef, DeriveInfo> extendedColumnToHosts = Maps.newHashMap();
-
     @JsonProperty("partition_offset_start")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<Integer, Long> partitionOffsetStart = Maps.newHashMap();
@@ -192,6 +183,15 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private int parentForward = 3;
 
+    private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
+    private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
+    private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<>();
+
+    private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
+    private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
+
+    private Map<TblColRef, DeriveInfo> extendedColumnToHosts = Maps.newHashMap();
+    
     transient private CuboidScheduler cuboidScheduler = null;
 
     public boolean isEnableSharding() {
@@ -462,14 +462,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return true;
     }
 
-    /**
-     * Get cuboid level count except base cuboid
-     * @return
-     */
-    public int getBuildLevel() {
-        return getCuboidScheduler().getCuboidsByLayer().size() - 1;
-    }
-
     @Override
     public int hashCode() {
         int result = 0;
@@ -637,7 +629,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         amendAllColumns();
     }
 
-    public CuboidScheduler getCuboidScheduler() {
+    public CuboidScheduler getInitialCuboidScheduler() {
         if (cuboidScheduler != null)
             return cuboidScheduler;
 
@@ -1197,7 +1189,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public Set<Long> getAllCuboids() {
-        return getCuboidScheduler().getAllCuboidIds();
+        return getInitialCuboidScheduler().getAllCuboidIds();
     }
 
     public int getParentForward() {

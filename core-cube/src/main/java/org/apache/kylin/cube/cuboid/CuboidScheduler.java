@@ -61,15 +61,28 @@ abstract public class CuboidScheduler {
     /** Returns the child cuboids of a parent. */
     abstract public List<Long> getSpanningCuboid(long parentCuboid);
     
-    /** Returns a cuboid on the tree that best matches the request cuboid. */
+    /** Returns a valid cuboid that best matches the request cuboid. */
     abstract public long findBestMatchCuboid(long requestCuboid);
-    
-    /** (AggGroupScheduler) Calculate the cuboid set defined by an aggregation group. */
+
+    /** optional */
     abstract public Set<Long> calculateCuboidsForAggGroup(AggregationGroup agg);
 
     // ============================================================================
     
     private transient List<List<Long>> cuboidsByLayer;
+
+    public long getBaseCuboidId() {
+        return Cuboid.getBaseCuboidId(cubeDesc);
+    }
+
+    public CubeDesc getCubeDesc() {
+        return cubeDesc;
+    }
+
+    /** Checks whether a cuboid is valid or not. */
+    public boolean isValid(long requestCuboid) {
+        return getAllCuboidIds().contains(requestCuboid);
+    }
 
     /**
      * Get cuboids by layer. It's built from pre-expanding tree.
@@ -105,4 +118,17 @@ abstract public class CuboidScheduler {
         return cuboidsByLayer;
     }
 
+    /**
+     * Get cuboid level count except base cuboid
+     * @return
+     */
+    public int getBuildLevel() {
+        return getCuboidsByLayer().size() - 1;
+    }
+    
+    /** Returns the key for what this cuboid scheduler responsible for. */
+    public String getCuboidCacheKey() {
+        return CubeDesc.class.getSimpleName() + "-" + cubeDesc.getName();
+    }
+    
 }

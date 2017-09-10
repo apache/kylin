@@ -132,7 +132,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         Set<TblColRef> dimensionsD = new LinkedHashSet<TblColRef>();
         dimensionsD.addAll(groupsD);
         dimensionsD.addAll(otherDimsD);
-        Cuboid cuboid = findCuboid(cubeDesc, dimensionsD, metrics);
+        Cuboid cuboid = findCuboid(cubeInstance, dimensionsD, metrics);
         context.setCuboid(cuboid);
 
         // set whether to aggr at storage
@@ -174,8 +174,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     protected abstract String getGTStorage();
 
-    protected Cuboid findCuboid(CubeDesc cubeDesc, Set<TblColRef> dimensionsD, Set<FunctionDesc> metrics) {
-        return Cuboid.identifyCuboid(cubeDesc, dimensionsD, metrics);
+    protected Cuboid findCuboid(CubeInstance cubeInstance, Set<TblColRef> dimensionsD, Set<FunctionDesc> metrics) {
+        return Cuboid.identifyCuboid(cubeInstance, dimensionsD, metrics);
     }
 
     protected ITupleConverter newCubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid,

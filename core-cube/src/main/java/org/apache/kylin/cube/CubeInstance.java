@@ -19,13 +19,19 @@
 package org.apache.kylin.cube;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.CompressionUtils;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
+import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -50,6 +56,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
@@ -95,8 +102,39 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
 
+    @JsonProperty("cuboid_bytes")
+    private byte[] cuboidBytes;
+
+    @JsonProperty("cuboid_bytes_recommend")
+    private byte[] cuboidBytesRecommend;
+
+    @JsonProperty("cuboid_last_optimized")
+    private long cuboidLastOptimized;
+
+    // cuboid scheduler lazy built
+    transient private CuboidScheduler cuboidScheduler;
+
     // default constructor for jackson
     public CubeInstance() {
+    }
+
+    public CuboidScheduler getCuboidScheduler() {
+        if (cuboidScheduler != null)
+            return cuboidScheduler;
+
+        synchronized (this) {
+            if (cuboidScheduler == null) {
+                Map<Long, Long> cuboidsWithRowCnt = getCuboids();
+                if (cuboidsWithRowCnt == null) {
+                    cuboidScheduler = getDescriptor().getInitialCuboidScheduler();
+                } else {
+                    cuboidScheduler = new TreeCuboidScheduler(getDescriptor(),
+                            Lists.newArrayList(cuboidsWithRowCnt.keySet()),
+                            new TreeCuboidScheduler.CuboidCostComparator(cuboidsWithRowCnt));
+                }
+            }
+        }
+        return cuboidScheduler;
     }
 
     public Segments<CubeSegment> getBuildingSegments() {
@@ -129,7 +167,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     // in a temporary broken state, so that user can edit and fix it. Broken state is often due to
     // schema changes at source.
     public boolean allowBrokenDescriptor() {
-        return (getStatus() == RealizationStatusEnum.DISABLED || getStatus() == RealizationStatusEnum.DESCBROKEN) && segments.isEmpty();
+        return (getStatus() == RealizationStatusEnum.DISABLED || getStatus() == RealizationStatusEnum.DESCBROKEN)
+                && segments.isEmpty();
     }
 
     public String getResourcePath() {
@@ -289,6 +328,79 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         this.createTimeUTC = createTimeUTC;
     }
 
+    Map<Long, Long> getCuboids() {
+        if (cuboidBytes == null)
+            return null;
+        byte[] uncompressed;
+        try {
+            uncompressed = CompressionUtils.decompress(cuboidBytes);
+            String str = new String(uncompressed, "UTF-8");
+            TypeReference<Map<Long, Long>> typeRef = new TypeReference<Map<Long, Long>>() {
+            };
+            Map<Long, Long> cuboids = JsonUtil.readValue(str, typeRef);
+            return cuboids.isEmpty() ? null : cuboids;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    void setCuboids(Map<Long, Long> cuboids) {
+        if (cuboids == null)
+            return;
+        if (cuboids.isEmpty()) {
+            cuboidBytes = null;
+            return;
+        }
+
+        try {
+            String str = JsonUtil.writeValueAsString(cuboids);
+            byte[] compressed = CompressionUtils.compress(str.getBytes("UTF-8"));
+            cuboidBytes = compressed;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    Set<Long> getCuboidsRecommend() {
+        if (cuboidBytesRecommend == null)
+            return null;
+        byte[] uncompressed;
+        try {
+            uncompressed = CompressionUtils.decompress(cuboidBytesRecommend);
+            String str = new String(uncompressed, "UTF-8");
+            TypeReference<Set<Long>> typeRef = new TypeReference<Set<Long>>() {
+            };
+            Set<Long> cuboids = JsonUtil.readValue(str, typeRef);
+            return cuboids.isEmpty() ? null : cuboids;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    void setCuboidsRecommend(HashSet<Long> cuboids) {
+        if (cuboids == null)
+            return;
+        if (cuboids.isEmpty()) {
+            cuboidBytesRecommend = null;
+            return;
+        }
+        try {
+            String str = JsonUtil.writeValueAsString(cuboids);
+            byte[] compressed = CompressionUtils.compress(str.getBytes("UTF-8"));
+            cuboidBytesRecommend = compressed;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Get cuboid level count except base cuboid
+     * @return
+     */
+    public int getBuildLevel() {
+        return getCuboidScheduler().getCuboidsByLayer().size() - 1;
+    }
+
     @Override
     public CapabilityResult isCapable(SQLDigest digest) {
         CapabilityResult result = CubeCapabilityChecker.check(this, digest);
@@ -373,7 +485,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         if (!this.getDescriptor().getModel().getPartitionDesc().isPartitioned())
             return false;
 
-        return this.getDescriptor().getAutoMergeTimeRanges() != null && this.getDescriptor().getAutoMergeTimeRanges().length > 0;
+        return this.getDescriptor().getAutoMergeTimeRanges() != null
+                && this.getDescriptor().getAutoMergeTimeRanges().length > 0;
     }
 
     public SegmentRange autoMergeCubeSegments() throws IOException {

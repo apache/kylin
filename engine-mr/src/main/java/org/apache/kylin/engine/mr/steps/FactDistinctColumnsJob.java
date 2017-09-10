@@ -19,7 +19,7 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
@@ -81,7 +81,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             // add metadata to distributed cache
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            List<TblColRef> columnsNeedDict = cubeMgr.getAllDictColumnsOnFact(cube.getDescriptor());
+            Set<TblColRef> columnsNeedDict = cube.getDescriptor().getAllColumnsNeedDictionaryBuilt();
 
             int reducerCount = columnsNeedDict.size();
             int uhcReducerCount = cube.getConfig().getUHCReducerCount();

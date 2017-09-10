@@ -29,7 +29,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ClassUtil;
@@ -37,9 +36,6 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.IReadableTable.TableSignature;
@@ -272,17 +268,17 @@ public class DictionaryManager {
         }
     }
 
-    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, IReadableTable inpTable) throws IOException {
-        return buildDictionary(model, col, inpTable, null);
+    public DictionaryInfo buildDictionary(TblColRef col, IReadableTable inpTable) throws IOException {
+        return buildDictionary(col, inpTable, null);
     }
 
-    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, IReadableTable inpTable, String builderClass) throws IOException {
+    public DictionaryInfo buildDictionary(TblColRef col, IReadableTable inpTable, String builderClass) throws IOException {
         if (inpTable.exists() == false)
             return null;
 
         logger.info("building dictionary for " + col);
 
-        DictionaryInfo dictInfo = createDictionaryInfo(model, col, inpTable);
+        DictionaryInfo dictInfo = createDictionaryInfo(col, inpTable);
         String dupInfo = checkDupByInfo(dictInfo);
         if (dupInfo != null) {
             logger.info("Identical dictionary input " + dictInfo.getInput() + ", reuse existing dictionary at " + dupInfo);
@@ -316,8 +312,8 @@ public class DictionaryManager {
         return dictionary;
     }
 
-    public DictionaryInfo saveDictionary(DataModelDesc model, TblColRef col, IReadableTable inpTable, Dictionary<String> dictionary) throws IOException {
-        DictionaryInfo dictInfo = createDictionaryInfo(model, col, inpTable);
+    public DictionaryInfo saveDictionary(TblColRef col, IReadableTable inpTable, Dictionary<String> dictionary) throws IOException {
+        DictionaryInfo dictInfo = createDictionaryInfo(col, inpTable);
         String dupInfo = checkDupByInfo(dictInfo);
         if (dupInfo != null) {
             logger.info("Identical dictionary input " + dictInfo.getInput() + ", reuse existing dictionary at " + dupInfo);
@@ -327,49 +323,13 @@ public class DictionaryManager {
         return trySaveNewDict(dictionary, dictInfo);
     }
 
-    private DictionaryInfo createDictionaryInfo(DataModelDesc model, TblColRef col, IReadableTable inpTable) throws IOException {
-        TblColRef srcCol = decideSourceData(model, col);
+    private DictionaryInfo createDictionaryInfo(TblColRef col, IReadableTable inpTable) throws IOException {
         TableSignature inputSig = inpTable.getSignature();
         if (inputSig == null) // table does not exists
             throw new IllegalStateException("Input table does not exist: " + inpTable);
 
-        DictionaryInfo dictInfo = new DictionaryInfo(srcCol.getColumnDesc(), col.getDatatype(), inputSig);
+        DictionaryInfo dictInfo = new DictionaryInfo(col.getColumnDesc(), col.getDatatype(), inputSig);
         return dictInfo;
-    }
-
-    /**
-     * Decide a dictionary's source data, leverage PK-FK relationship.
-     */
-    public TblColRef decideSourceData(DataModelDesc model, TblColRef col) {
-        // Note FK on fact table is supported by scan the related PK on lookup table
-        // FK on fact table and join type is inner, use PK from lookup instead
-        if (model.isFactTable(col.getTable()) == false)
-            return col;
-
-        // find a lookup table that the col joins as FK
-        for (TableRef lookup : model.getLookupTables()) {
-            JoinDesc lookupJoin = model.getJoinByPKSide(lookup);
-            int find = ArrayUtils.indexOf(lookupJoin.getForeignKeyColumns(), col);
-            if (find < 0)
-                continue;
-
-            // make sure the joins are all inner up to the root
-            if (isAllInnerJoinsToRoot(model, lookupJoin))
-                return lookupJoin.getPrimaryKeyColumns()[find];
-        }
-
-        return col;
-    }
-
-    private boolean isAllInnerJoinsToRoot(DataModelDesc model, JoinDesc join) {
-        while (join != null) {
-            if (join.isInnerJoin() == false)
-                return false;
-
-            TableRef table = join.getFKSide();
-            join = model.getJoinByPKSide(table);
-        }
-        return true;
     }
 
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {

@@ -189,7 +189,7 @@ public class SparkCubing extends AbstractApplication {
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
         final HashMap<Integer, TblColRef> tblColRefMap = Maps.newHashMap();
         final CubeJoinedFlatTableEnrich flatDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(seg), cubeDesc);
-        final List<TblColRef> baseCuboidColumn = Cuboid.findById(cubeDesc, Cuboid.getBaseCuboidId(cubeDesc)).getColumns();
+        final List<TblColRef> baseCuboidColumn = Cuboid.findById(seg, Cuboid.getBaseCuboidId(cubeDesc)).getColumns();
         final long start = System.currentTimeMillis();
         final RowKeyDesc rowKey = cubeDesc.getRowkey();
         for (int i = 0; i < baseCuboidColumn.size(); i++) {
@@ -253,7 +253,7 @@ public class SparkCubing extends AbstractApplication {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
         CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
         CubeDesc cubeDesc = cubeInstance.getDescriptor();
-        CuboidScheduler cuboidScheduler = cubeDesc.getCuboidScheduler();
+        CuboidScheduler cuboidScheduler = cubeInstance.getCuboidScheduler();
         Set<Long> allCuboidIds = cuboidScheduler.getAllCuboidIds();
         final HashMap<Long, HLLCounter> zeroValue = Maps.newHashMap();
         for (Long id : allCuboidIds) {
@@ -335,7 +335,7 @@ public class SparkCubing extends AbstractApplication {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         CubeDesc cubeDesc = cubeInstance.getDescriptor();
         final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
-        List<TblColRef> baseCuboidColumn = Cuboid.findById(cubeDesc, Cuboid.getBaseCuboidId(cubeDesc)).getColumns();
+        List<TblColRef> baseCuboidColumn = Cuboid.findById(cubeSegment, Cuboid.getBaseCuboidId(cubeDesc)).getColumns();
         final Map<TblColRef, Integer> columnLengthMap = Maps.newHashMap();
         final CubeDimEncMap dimEncMap = cubeSegment.getDimensionEncodingMap();
         for (TblColRef tblColRef : baseCuboidColumn) {
@@ -377,7 +377,8 @@ public class SparkCubing extends AbstractApplication {
                 LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue();
                 System.out.println("load properties finished");
                 IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cubeSegment);
-                AbstractInMemCubeBuilder inMemCubeBuilder = new DoggedCubeBuilder(cubeInstance.getDescriptor(), flatDesc, dictionaryMap);
+                AbstractInMemCubeBuilder inMemCubeBuilder = new DoggedCubeBuilder(
+                        cubeSegment.getCuboidScheduler(), flatDesc, dictionaryMap);
                 final SparkCuboidWriter sparkCuboidWriter = new BufferedCuboidWriter(new DefaultTupleConverter(cubeInstance.getSegmentById(segmentId), columnLengthMap));
                 Executors.newCachedThreadPool().submit(inMemCubeBuilder.buildAsRunnable(blockingQueue, sparkCuboidWriter));
                 try {

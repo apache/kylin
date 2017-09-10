@@ -75,7 +75,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         cubeDesc = cube.getDescriptor();
         ndCuboidBuilder = new NDCuboidBuilder(cubeSegment);
         // initialize CubiodScheduler
-        cuboidScheduler = cubeDesc.getCuboidScheduler();
+        cuboidScheduler = cubeSegment.getCuboidScheduler();
         rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
     }
 
@@ -84,7 +84,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     @Override
     public void doMap(Text key, Text value, Context context) throws IOException, InterruptedException {
         long cuboidId = rowKeySplitter.split(key.getBytes());
-        Cuboid parentCuboid = Cuboid.findById(cubeDesc, cuboidId);
+        Cuboid parentCuboid = Cuboid.findById(cuboidScheduler, cuboidId);
 
         Collection<Long> myChildren = cuboidScheduler.getSpanningCuboid(cuboidId);
 
@@ -104,7 +104,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         }
 
         for (Long child : myChildren) {
-            Cuboid childCuboid = Cuboid.findById(cubeDesc, child);
+            Cuboid childCuboid = Cuboid.findById(cuboidScheduler, child);
             Pair<Integer, ByteArray> result = ndCuboidBuilder.buildKey(parentCuboid, childCuboid, rowKeySplitter.getSplitBuffers());
             outputKey.set(result.getSecond().array(), 0, result.getFirst());
             context.write(outputKey, value);

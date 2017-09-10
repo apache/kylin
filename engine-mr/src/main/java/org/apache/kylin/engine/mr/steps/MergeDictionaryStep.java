@@ -21,7 +21,6 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +36,6 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,33 +91,17 @@ public class MergeDictionaryStep extends AbstractExecutable {
     }
 
     /**
-     * For the new segment, we need to create dictionaries for it, too. For
-     * those dictionaries on fact table, create it by merging underlying
-     * dictionaries. For those dictionaries on lookup table, just copy them from
-     * the latest one of the merging segments( https://issues.apache.org/jira/browse/KYLIN-2457),
-     * which is reasonable under the assumption that lookup tables would be either static or incremental.
-     *
+     * For the new segment, we need to create new dimension dictionaries by merging underlying
+     * dictionaries. (https://issues.apache.org/jira/browse/KYLIN-2457, https://issues.apache.org/jira/browse/KYLIN-2800)
      * @param cube
      * @param newSeg
      * @throws IOException
      */
     private void makeDictForNewSegment(KylinConfig conf, CubeInstance cube, CubeSegment newSeg, List<CubeSegment> mergingSegments) throws IOException {
-        HashSet<TblColRef> colsNeedMeringDict = new HashSet<TblColRef>();
-        HashSet<TblColRef> colsNeedCopyDict = new HashSet<TblColRef>();
         DictionaryManager dictMgr = DictionaryManager.getInstance(conf);
-
         CubeDesc cubeDesc = cube.getDescriptor();
 
         for (TblColRef col : cubeDesc.getAllColumnsNeedDictionaryBuilt()) {
-            TableRef srcTable = dictMgr.decideSourceData(cubeDesc.getModel(), col).getTableRef();
-            if (cubeDesc.getModel().isFactTable(srcTable)) {
-                colsNeedMeringDict.add(col);
-            } else {
-                colsNeedCopyDict.add(col);
-            }
-        }
-
-        for (TblColRef col : colsNeedMeringDict) {
             logger.info("Merging fact table dictionary on : " + col);
             List<DictionaryInfo> dictInfos = new ArrayList<DictionaryInfo>();
             for (CubeSegment segment : mergingSegments) {
@@ -134,11 +116,6 @@ public class MergeDictionaryStep extends AbstractExecutable {
                 }
             }
             mergeDictionaries(dictMgr, newSeg, dictInfos, col);
-        }
-        CubeSegment lastSeg = mergingSegments.get(mergingSegments.size() - 1);
-        for (TblColRef col : colsNeedCopyDict) {
-            String path = lastSeg.getDictResPath(col);
-            newSeg.putDictResPath(col, path);
         }
     }
 

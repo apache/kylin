@@ -102,7 +102,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
 
         public Factory(KylinConfig config) {
             this.curator = getZKClient(config);
-            this.zkPathBase = fixSlash("/kylin/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix());
+            this.zkPathBase = fixSlash(config.getZookeeperBasePath() + "/" + config.getMetadataUrlPrefix());
         }
 
         @Override

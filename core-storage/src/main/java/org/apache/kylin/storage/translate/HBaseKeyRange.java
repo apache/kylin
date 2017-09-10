@@ -84,7 +84,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
     public HBaseKeyRange(Collection<TblColRef> dimensionColumns, Collection<ColumnValueRange> andDimensionRanges, CubeSegment cubeSeg, CubeDesc cubeDesc) {
         this.cubeSeg = cubeSeg;
         long cuboidId = this.calculateCuboidID(cubeDesc, dimensionColumns);
-        this.cuboid = Cuboid.findById(cubeDesc, cuboidId);
+        this.cuboid = Cuboid.findById(cubeSeg, cuboidId);
         this.flatOrAndFilter = Lists.newLinkedList();
         this.flatOrAndFilter.add(andDimensionRanges);
         init(andDimensionRanges);

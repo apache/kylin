@@ -21,6 +21,8 @@ package org.apache.kylin.cube.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,12 +30,15 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.cuboid.DefaultCuboidScheduler;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -295,7 +300,8 @@ public class AggregationGroup implements Serializable {
         long combination = 1;
 
         if (this.getDimCap() > 0) {
-            combination = cubeDesc.getCuboidScheduler().calculateCuboidsForAggGroup(this).size();
+            DefaultCuboidScheduler cuboidScheduler = (DefaultCuboidScheduler) cubeDesc.getInitialCuboidScheduler();
+            combination = cuboidScheduler.calculateCuboidsForAggGroup(this).size();
         } else {
             Set<String> includeDims = new TreeSet<>(Arrays.asList(includes));
             Set<String> mandatoryDims = new TreeSet<>(Arrays.asList(selectRule.mandatoryDims));
@@ -326,6 +332,82 @@ public class AggregationGroup implements Serializable {
         }
 
         return combination;
+    }
+
+    public Long translateToOnTreeCuboid(long cuboidID) {
+        if ((cuboidID & ~getPartialCubeFullMask()) > 0) {
+            //the partial cube might not contain all required dims
+            return null;
+        }
+
+        // add mandantory
+        cuboidID = cuboidID | getMandatoryColumnMask();
+
+        // add hierarchy
+        for (HierarchyMask hierarchyMask : getHierarchyMasks()) {
+            long fullMask = hierarchyMask.fullMask;
+            long intersect = cuboidID & fullMask;
+            if (intersect != 0 && intersect != fullMask) {
+
+                boolean startToFill = false;
+                for (int i = hierarchyMask.dims.length - 1; i >= 0; i--) {
+                    if (startToFill) {
+                        cuboidID |= hierarchyMask.dims[i];
+                    } else {
+                        if ((cuboidID & hierarchyMask.dims[i]) != 0) {
+                            startToFill = true;
+                            cuboidID |= hierarchyMask.dims[i];
+                        }
+                    }
+                }
+            }
+        }
+
+        // add joint dims
+        for (Long joint : getJoints()) {
+            if (((cuboidID | joint) != cuboidID) && ((cuboidID & ~joint) != cuboidID)) {
+                cuboidID = cuboidID | joint;
+            }
+        }
+
+        if (!isOnTree(cuboidID)) {
+            // no column, add one column
+            long nonJointDims = removeBits((getPartialCubeFullMask() ^ getMandatoryColumnMask()), getJoints());
+            if (nonJointDims != 0) {
+                long nonJointNonHierarchy = removeBits(nonJointDims,
+                        Collections2.transform(getHierarchyMasks(), new Function<HierarchyMask, Long>() {
+                            @Override
+                            public Long apply(HierarchyMask input) {
+                                return input.fullMask;
+                            }
+                        }));
+                if (nonJointNonHierarchy != 0) {
+                    //there exists dim that does not belong to any joint or any hierarchy, that's perfect
+                    return cuboidID | Long.lowestOneBit(nonJointNonHierarchy);
+                } else {
+                    //choose from a hierarchy that does not intersect with any joint dim, only check level 1
+                    long allJointDims = getJointDimsMask();
+                    for (HierarchyMask hierarchyMask : getHierarchyMasks()) {
+                        long dim = hierarchyMask.allMasks[0];
+                        if ((dim & allJointDims) == 0) {
+                            return cuboidID | dim;
+                        }
+                    }
+                }
+            }
+
+            cuboidID = cuboidID | Collections.min(getJoints(), Cuboid.cuboidSelectComparator);
+            Preconditions.checkState(isOnTree(cuboidID));
+        }
+        return cuboidID;
+    }
+
+    private long removeBits(long original, Collection<Long> toRemove) {
+        long ret = original;
+        for (Long joint : toRemove) {
+            ret = ret & ~joint;
+        }
+        return ret;
     }
 
     public boolean isOnTree(long cuboidID) {

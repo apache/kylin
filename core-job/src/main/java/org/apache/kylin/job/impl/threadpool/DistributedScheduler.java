@@ -82,7 +82,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     private String serverName;
 
     private final static String SEGMENT_ID = "segmentId";
-    public static final String ZOOKEEPER_LOCK_PATH = "/job_engine/lock"; // note ZookeeperDistributedLock will ensure zk path prefix: /kylin/metadata
+    public static final String ZOOKEEPER_LOCK_PATH = "/job_engine/lock"; // note ZookeeperDistributedLock will ensure zk path prefix: /${kylin.env.zookeeper-base-path}/metadata
 
     //only for it test
     public static DistributedScheduler getInstance(KylinConfig config) {

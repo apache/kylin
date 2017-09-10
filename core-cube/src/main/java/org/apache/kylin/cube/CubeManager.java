@@ -43,6 +43,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DictionaryDesc;
 import org.apache.kylin.dict.DictionaryInfo;
@@ -224,7 +225,7 @@ public class CubeManager implements IRealizationProvider {
             return null;
 
         String builderClass = cubeDesc.getDictionaryBuilderClass(col);
-        DictionaryInfo dictInfo = getDictionaryManager().buildDictionary(cubeDesc.getModel(), col, inpTable,
+        DictionaryInfo dictInfo = getDictionaryManager().buildDictionary(col, inpTable,
                 builderClass);
 
         saveDictionaryInfo(cubeSeg, col, dictInfo);
@@ -237,7 +238,7 @@ public class CubeManager implements IRealizationProvider {
         if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
             return null;
 
-        DictionaryInfo dictInfo = getDictionaryManager().saveDictionary(cubeDesc.getModel(), col, inpTable, dict);
+        DictionaryInfo dictInfo = getDictionaryManager().saveDictionary(col, inpTable, dict);
 
         saveDictionaryInfo(cubeSeg, col, dictInfo);
         return dictInfo;
@@ -301,13 +302,14 @@ public class CubeManager implements IRealizationProvider {
         // delete cube instance and cube desc
         CubeInstance cube = getCube(cubeName);
 
-        if (deleteDesc && cube.getDescriptor() != null) {
-            CubeDescManager.getInstance(config).removeCubeDesc(cube.getDescriptor());
-        }
-
         // remove cube and update cache
         getStore().deleteResource(cube.getResourcePath());
         cubeMap.remove(cube.getName());
+        Cuboid.clearCache(cube);
+
+        if (deleteDesc && cube.getDescriptor() != null) {
+            CubeDescManager.getInstance(config).removeCubeDesc(cube.getDescriptor());
+        }
 
         // delete cube from project
         ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
@@ -624,17 +626,20 @@ public class CubeManager implements IRealizationProvider {
      * @param cubeName
      */
     public CubeInstance reloadCubeLocal(String cubeName) {
-        return reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
+        CubeInstance cubeInstance = reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
+        Cuboid.clearCache(cubeInstance);
+        return cubeInstance;
     }
 
     public void removeCubeLocal(String cubeName) {
         CubeInstance cube = cubeMap.get(cubeName);
         if (cube != null) {
+            cubeMap.removeLocal(cubeName);
             for (CubeSegment segment : cube.getSegments()) {
                 usedStorageLocation.remove(segment.getUuid());
             }
+            Cuboid.clearCache(cube);
         }
-        cubeMap.removeLocal(cubeName);
     }
 
     public LookupStringTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {
@@ -854,24 +859,6 @@ public class CubeManager implements IRealizationProvider {
         this.listener = listener;
     }
 
-    /**
-     * Get the columns which need build the dictionary from fact table. (the column exists on fact and is not fk)
-     * @param cubeDesc
-     * @return
-     * @throws IOException
-     */
-    public List<TblColRef> getAllDictColumnsOnFact(CubeDesc cubeDesc) throws IOException {
-        List<TblColRef> factDictCols = new ArrayList<TblColRef>();
-        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-        for (TblColRef col : cubeDesc.getAllColumnsNeedDictionaryBuilt()) {
-
-            String scanTable = dictMgr.decideSourceData(cubeDesc.getModel(), col).getTable();
-            if (cubeDesc.getModel().isFactTable(scanTable)) {
-                factDictCols.add(col);
-            }
-        }
-        return factDictCols;
-    }
 
     /**
      * Calculate the holes (gaps) in segments.
@@ -917,8 +904,8 @@ public class CubeManager implements IRealizationProvider {
 
     //UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
     public int[] getUHCIndex(CubeDesc cubeDesc) throws IOException {
-        List<TblColRef> factDictCols = getAllDictColumnsOnFact(cubeDesc);
-        int[] uhcIndex = new int[factDictCols.size()];
+        List<TblColRef> dictCols = Lists.newArrayList(cubeDesc.getAllColumnsNeedDictionaryBuilt());
+        int[] uhcIndex = new int[dictCols.size()];
 
         //add GlobalDictionaryColumns
         List<DictionaryDesc> dictionaryDescList = cubeDesc.getDictionaries();
@@ -926,8 +913,8 @@ public class CubeManager implements IRealizationProvider {
             for (DictionaryDesc dictionaryDesc : dictionaryDescList) {
                 if (dictionaryDesc.getBuilderClass() != null
                         && dictionaryDesc.getBuilderClass().equalsIgnoreCase(GLOBAL_DICTIONNARY_CLASS)) {
-                    for (int i = 0; i < factDictCols.size(); i++) {
-                        if (factDictCols.get(i).equals(dictionaryDesc.getColumnRef())) {
+                    for (int i = 0; i < dictCols.size(); i++) {
+                        if (dictCols.get(i).equals(dictionaryDesc.getColumnRef())) {
                             uhcIndex[i] = 1;
                             break;
                         }
@@ -938,8 +925,8 @@ public class CubeManager implements IRealizationProvider {
 
         //add ShardByColumns
         Set<TblColRef> shardByColumns = cubeDesc.getShardByColumns();
-        for (int i = 0; i < factDictCols.size(); i++) {
-            if (shardByColumns.contains(factDictCols.get(i))) {
+        for (int i = 0; i < dictCols.size(); i++) {
+            if (shardByColumns.contains(dictCols.get(i))) {
                 uhcIndex[i] = 1;
             }
         }

@@ -83,14 +83,44 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         return Sets.newHashSet(allCuboidIds);
     }
 
-    /**
-     * Get the parent cuboid really on the spanning tree.
-     * @param child an on-tree cuboid
-     * @return
-     */
     @Override
-    public long findBestMatchCuboid(long child) {
-        long parent = getOnTreeParent(child);
+    public boolean isValid(long requestCuboid) {
+        return allCuboidIds.contains(requestCuboid);
+    }
+
+    /** Returns a valid cuboid that best matches the request cuboid. */
+    @Override
+    public long findBestMatchCuboid(long cuboid) {
+        return findBestMatchCuboid1(cuboid);
+    }
+
+    long findBestMatchCuboid1(long cuboid) {
+        if (isValid(cuboid)) {
+            return cuboid;
+        }
+
+        List<Long> onTreeCandidates = Lists.newArrayList();
+        for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
+            Long candidate = agg.translateToOnTreeCuboid(cuboid);
+            if (candidate != null) {
+                onTreeCandidates.add(candidate);
+            }
+        }
+
+        if (onTreeCandidates.size() == 0) {
+            return getBaseCuboidId();
+        }
+
+        long onTreeCandi = Collections.min(onTreeCandidates, Cuboid.cuboidSelectComparator);
+        if (isValid(onTreeCandi)) {
+            return onTreeCandi;
+        }
+
+        return doFindBestMatchCuboid1(onTreeCandi);
+    }
+
+    private long doFindBestMatchCuboid1(long cuboid) {
+        long parent = getOnTreeParent(cuboid);
         while (parent > 0) {
             if (cubeDesc.getAllCuboids().contains(parent)) {
                 break;
@@ -99,7 +129,7 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
         }
 
         if (parent <= 0) {
-            throw new IllegalStateException("Can't find valid parent for Cuboid " + child);
+            throw new IllegalStateException("Can't find valid parent for Cuboid " + cuboid);
         }
         return parent;
     }
@@ -259,7 +289,6 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
      * @param agg agg group
      * @return cuboidId list
      */
-    @Override
     public Set<Long> calculateCuboidsForAggGroup(AggregationGroup agg) {
         Set<Long> cuboidHolder = new HashSet<>();
 
@@ -350,6 +379,39 @@ public class DefaultCuboidScheduler extends CuboidScheduler {
             return true;
 
         return Long.bitCount(cuboidID) <= dimCap;
+    }
+
+    long findBestMatchCuboid2(long cuboid) {
+        long bestParent = doFindBestMatchCuboid2(cuboid, Cuboid.getBaseCuboidId(cubeDesc));
+        if (bestParent < -1) {
+            throw new IllegalStateException("Cannot find the parent of the cuboid:" + cuboid);
+        }
+        return bestParent;
+    }
+
+    private long doFindBestMatchCuboid2(long cuboid, long parent) {
+        if (!canDerive(cuboid, parent)) {
+            return -1;
+        }
+        List<Long> children = parent2child.get(parent);
+        List<Long> candidates = Lists.newArrayList();
+        if (children != null) {
+            for (long child : children) {
+                long candidate = doFindBestMatchCuboid2(cuboid, child);
+                if (candidate > 0) {
+                    candidates.add(candidate);
+                }
+            }
+        }
+        if (candidates.isEmpty()) {
+            candidates.add(parent);
+        }
+
+        return Collections.min(candidates, Cuboid.cuboidSelectComparator);
+    }
+
+    private boolean canDerive(long cuboidId, long parentCuboid) {
+        return (cuboidId & ~parentCuboid) == 0;
     }
 
 }

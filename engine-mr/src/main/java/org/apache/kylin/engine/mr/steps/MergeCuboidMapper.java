@@ -20,7 +20,6 @@ package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +50,6 @@ import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
@@ -79,7 +77,6 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private RowKeySplitter rowKeySplitter;
     private RowKeyEncoderProvider rowKeyEncoderProvider;
 
-    private HashMap<TblColRef, Boolean> dimensionsNeedDict = new HashMap<TblColRef, Boolean>();
 
     // for re-encode measures that use dictionary
     private List<Pair<Integer, MeasureIngester>> dictMeasures;
@@ -150,7 +147,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     @Override
     public void doMap(Text key, Text value, Context context) throws IOException, InterruptedException {
         long cuboidID = rowKeySplitter.split(key.getBytes());
-        Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidID);
+        Cuboid cuboid = Cuboid.findById(cube, cuboidID);
         RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(cuboid);
 
         SplittedBytes[] splittedByteses = rowKeySplitter.getSplitBuffers();
@@ -161,7 +158,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
             int useSplit = i + bodySplitOffset;
             TblColRef col = cuboid.getColumns().get(i);
 
-            if (this.checkNeedMerging(col)) {
+            if (cubeDesc.getRowkey().isUseDictionary(col)) {
                 // if dictionary on fact table column, needs rewrite
                 DictionaryManager dictMgr = DictionaryManager.getInstance(config);
                 Dictionary<String> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(col));
@@ -233,20 +230,5 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         }
 
         context.write(outputKey, value);
-    }
-
-    private Boolean checkNeedMerging(TblColRef col) throws IOException {
-        Boolean ret = dimensionsNeedDict.get(col);
-        if (ret != null)
-            return ret;
-        
-        ret = cubeDesc.getRowkey().isUseDictionary(col);
-        if (ret) {
-            TableRef srcTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), col).getTableRef();
-            ret = cubeDesc.getModel().isFactTable(srcTable);
-        }
-        
-        dimensionsNeedDict.put(col, ret);
-        return ret;
     }
 }

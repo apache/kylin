@@ -18,7 +18,11 @@
 
 package org.apache.kylin.cube.kv;
 
-import com.google.common.base.Preconditions;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -28,10 +32,7 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.base.Preconditions;
 
 public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Serializable {
 

@@ -18,7 +18,11 @@
 
 package org.apache.kylin.engine.mr.common;
 
-import com.google.common.collect.Sets;
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeSegment;
@@ -35,10 +39,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -88,8 +89,7 @@ public class BaseCuboidBuilder implements java.io.Serializable {
     }
 
     private void init() {
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+        baseCuboid = Cuboid.getBaseCuboid(cubeDesc);
         initNullBytes();
     }
 

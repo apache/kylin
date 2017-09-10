@@ -73,25 +73,26 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     public void testIsValid() {
 
         CubeDesc cube = getTestKylinCubeWithSeller();
+        CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
 
         // base
-        assertEquals(false, Cuboid.isValid(cube, 0));
-        assertEquals(true, Cuboid.isValid(cube, toLong("111111111")));
+        assertEquals(false, cuboidScheduler.isValid(0));
+        assertEquals(true, cuboidScheduler.isValid(toLong("111111111")));
 
         // mandatory column
-        assertEquals(false, Cuboid.isValid(cube, toLong("011111110")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("100000000")));
+        assertEquals(false, cuboidScheduler.isValid(toLong("011111110")));
+        assertEquals(false, cuboidScheduler.isValid(toLong("100000000")));
 
         // zero tail
-        assertEquals(true, Cuboid.isValid(cube, toLong("111111000")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("111111000")));
 
         // aggregation group & zero tail
-        assertEquals(true, Cuboid.isValid(cube, toLong("110000111")));
-        assertEquals(true, Cuboid.isValid(cube, toLong("110111000")));
-        assertEquals(true, Cuboid.isValid(cube, toLong("111110111")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("111110001")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("111110100")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("110000100")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("110000111")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("110111000")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("111110111")));
+        assertEquals(false, cuboidScheduler.isValid(toLong("111110001")));
+        assertEquals(false, cuboidScheduler.isValid(toLong("111110100")));
+        assertEquals(false, cuboidScheduler.isValid(toLong("110000100")));
     }
 
     @Test
@@ -124,36 +125,39 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     @Test
     public void testIsValid2() {
         CubeDesc cube = getTestKylinCubeWithoutSeller();
-        assertEquals(false, Cuboid.isValid(cube, toLong("111111111")));
+        CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
+
+        assertEquals(false, cuboidScheduler.isValid(toLong("111111111")));
 
         // base
-        assertEquals(false, Cuboid.isValid(cube, 0));
-        assertEquals(true, Cuboid.isValid(cube, toLong("11111111")));
+        assertEquals(false, cuboidScheduler.isValid(0));
+        assertEquals(true, cuboidScheduler.isValid(toLong("11111111")));
 
         // aggregation group & zero tail
-        assertEquals(true, Cuboid.isValid(cube, toLong("10000111")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("10001111")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("11001111")));
-        assertEquals(true, Cuboid.isValid(cube, toLong("10000001")));
-        assertEquals(true, Cuboid.isValid(cube, toLong("10000101")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("10000111")));
+        assertEquals(false, cuboidScheduler.isValid(toLong("10001111")));
+        assertEquals(false, cuboidScheduler.isValid(toLong("11001111")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("10000001")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("10000101")));
 
         // hierarchy
-        assertEquals(true, Cuboid.isValid(cube, toLong("10100000")));
-        assertEquals(true, Cuboid.isValid(cube, toLong("10110000")));
-        assertEquals(true, Cuboid.isValid(cube, toLong("10111000")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("10001000")));
-        assertEquals(false, Cuboid.isValid(cube, toLong("10011000")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("10100000")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("10110000")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("10111000")));
+        assertEquals(false, cuboidScheduler.isValid(toLong("10001000")));
+        assertEquals(false, cuboidScheduler.isValid(toLong("10011000")));
     }
 
     @Test
     public void testIsValid3() {
         CubeDesc cube = getSSBCubeDesc();
+        CuboidScheduler cuboidScheduler = cube.getInitialCuboidScheduler();
 
-        assertEquals(false, Cuboid.isValid(cube, toLong("10000000000")));
+        assertEquals(false, cuboidScheduler.isValid(toLong("10000000000")));
 
         // the 4th is mandatory and isMandatoryOnlyValid is true
-        assertEquals(true, Cuboid.isValid(cube, toLong("10000001000")));
-        assertEquals(true, Cuboid.isValid(cube, toLong("00000001000")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("10000001000")));
+        assertEquals(true, cuboidScheduler.isValid(toLong("00000001000")));
     }
 
     @Test
