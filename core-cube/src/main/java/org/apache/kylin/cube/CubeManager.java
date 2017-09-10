@@ -65,7 +65,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.IRealizationProvider;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -75,6 +74,7 @@ import org.apache.kylin.source.SourcePartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -683,8 +683,9 @@ public class CubeManager implements IRealizationProvider {
         return segment;
     }
 
-    private String generateStorageLocation() {
-        String namePrefix = IRealizationConstants.CubeHbaseStorageLocationPrefix;
+    @VisibleForTesting
+    /*private*/ String generateStorageLocation() {
+        String namePrefix = config.getHBaseTableNamePrefix();
         String tableName = "";
         Random ran = new Random();
         do {
@@ -695,7 +696,6 @@ public class CubeManager implements IRealizationProvider {
             }
             tableName = sb.toString();
         } while (this.usedStorageLocation.containsValue(tableName));
-
         return tableName;
     }
 

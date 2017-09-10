@@ -305,6 +305,14 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 8000);
     }
 
+    @Test
+    public void testGetCubeNameWithNamespace() {
+        CubeManager mgr = CubeManager.getInstance(getTestConfig());
+        String tablename = mgr.generateStorageLocation();
+        System.out.println(tablename);
+        assertTrue(tablename.startsWith("HELLO:WORLD"));
+    }
+
     public CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getTestConfig());
     }
