@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.cuboid.DefaultCuboidScheduler;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -300,7 +300,7 @@ public class AggregationGroup implements Serializable {
         long combination = 1;
 
         if (this.getDimCap() > 0) {
-            DefaultCuboidScheduler cuboidScheduler = (DefaultCuboidScheduler) cubeDesc.getInitialCuboidScheduler();
+            CuboidScheduler cuboidScheduler = cubeDesc.getInitialCuboidScheduler();
             combination = cuboidScheduler.calculateCuboidsForAggGroup(this).size();
         } else {
             Set<String> includeDims = new TreeSet<>(Arrays.asList(includes));
