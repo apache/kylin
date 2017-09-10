@@ -46,16 +46,14 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.kylin.common.KylinConfig;
-
 /**
- * @author yangli9
  */
 public class RestClient {
 
@@ -118,8 +116,8 @@ public class RestClient {
 
         final PoolingClientConnectionManager cm = new PoolingClientConnectionManager();
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        cm.setDefaultMaxPerRoute(config.getDefaultMaxPerRoute());
-        cm.setMaxTotal(config.getMaxTotal());
+        cm.setDefaultMaxPerRoute(config.getRestClientDefaultMaxPerRoute());
+        cm.setMaxTotal(config.getRestClientMaxTotal());
 
         client = new DefaultHttpClient(cm, httpParams);
 
