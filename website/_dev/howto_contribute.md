@@ -27,11 +27,12 @@ Check out [How to Write Document](/development/howto_docs.html).
 	* No strict code style at the moment, but the general rule is keep consistent with existing files. E.g. use 4-space indent for java files.
 	* Sufficient unit test and integration test is a mandatory part of code change.
 * [Run tests](/development/howto_test.html) to ensure your change is in good quality and does not break anything
-* Generate patch and attach it to relative JIRA. Please use `git format-patch` command to generate the patch, for a detail guide you can refer to [How to create and apply a patch with Git](https://ariejan.net/2009/10/26/how-to-create-and-apply-a-patch-with-git/)
+* Generate Pull Request or Patch and attach it to relative JIRA.
+    * Please use `git format-patch` command to generate the patch, for a detail guide you can refer to [How to create and apply a patch with Git](https://ariejan.net/2009/10/26/how-to-create-and-apply-a-patch-with-git/)
 
 
 ## Apply Patch
-* Committer will review all patches in terms of correctness, performance, design, coding style, test coverage
+* Committer will review Pull Requests and Patches in JIRA regarding correctness, performance, design, coding style, test coverage
 * Discuss and revise if necessary
 * Finally committer merge code into target branch
 	* We use `git rebase` to ensure the merged result is a streamline of commits.
