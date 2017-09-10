@@ -1207,6 +1207,18 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.web.cross-domain-enabled", "true"));
     }
 
+    // ============================================================================
+    // RESTCLIENT
+    // ============================================================================
+
+    public int getDefaultMaxPerRoute() {
+        return Integer.valueOf(this.getOptional("kylin.rest-client.connection.default-max-per-route", "20"));
+    }
+
+    public int getMaxTotal() {
+        return Integer.valueOf(this.getOptional("kylin.rest-client.connection.max-total", "200"));
+    }
+
     /**
      * metric
      */
