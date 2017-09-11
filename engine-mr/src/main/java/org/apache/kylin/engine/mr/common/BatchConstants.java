@@ -86,6 +86,7 @@ public interface BatchConstants {
     String ARG_HTABLE_NAME = "htablename";
     String ARG_INPUT_FORMAT = "inputformat";
     String ARG_LEVEL = "level";
+    String ARG_CONF = "conf";
 
     /**
      * logger and counter

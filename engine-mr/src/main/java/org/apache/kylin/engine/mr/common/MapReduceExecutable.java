@@ -22,17 +22,24 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.JobStatus;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.engine.mr.MRUtil;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -46,6 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -72,7 +80,10 @@ public class MapReduceExecutable extends AbstractExecutable {
                 return;
             }
             try {
+                String params = getMapReduceParams();
+                String[] args = params.trim().split("\\s+");
                 Configuration conf = HadoopUtil.getCurrentConfiguration();
+                overwriteJobConf(conf, executableContext.getConfig(), args);
                 Job job = new Cluster(conf).getJob(JobID.forName(mrJobId));
                 if (job == null || job.getJobState() == JobStatus.State.FAILED) {
                     //remove previous mr job info
@@ -80,7 +91,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                 } else {
                     getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
                 }
-            } catch (IOException e) {
+            } catch (IOException | ParseException e) {
                 logger.warn("error get hadoop status");
                 super.onExecuteStart(executableContext);
             } catch (InterruptedException e) {
@@ -102,24 +113,25 @@ public class MapReduceExecutable extends AbstractExecutable {
         try {
             Job job;
             ExecutableManager mgr = getManager();
+            String[] args = params.trim().split("\\s+");
+            Configuration conf = HadoopUtil.getCurrentConfiguration();
+            String[] jobArgs = overwriteJobConf(conf, context.getConfig(), args);
             final Map<String, String> extra = mgr.getOutput(getId()).getExtra();
             if (extra.containsKey(ExecutableConstants.MR_JOB_ID)) {
-                Configuration conf = HadoopUtil.getCurrentConfiguration();
                 job = new Cluster(conf).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
                 logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID) + " resumed");
             } else {
                 final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil.forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
                 final AbstractHadoopJob hadoopJob = constructor.newInstance();
-                hadoopJob.setConf(HadoopUtil.getCurrentConfiguration());
+                hadoopJob.setConf(conf);
                 hadoopJob.setAsync(true); // so the ToolRunner.run() returns right away
                 logger.info("parameters of the MapReduceExecutable: {}", params);
-                String[] args = params.trim().split("\\s+");
                 try {
                     //for async mr job, ToolRunner just return 0;
 
                     // use this method instead of ToolRunner.run() because ToolRunner.run() is not thread-sale
                     // Refer to: http://stackoverflow.com/questions/22462665/is-hadoops-toorunner-thread-safe
-                    MRUtil.runMRJob(hadoopJob, args);
+                    hadoopJob.run(jobArgs);
 
                     if (hadoopJob.isSkipped()) {
                         return new ExecuteResult(ExecuteResult.State.SUCCEED, "skipped");
@@ -245,5 +257,51 @@ public class MapReduceExecutable extends AbstractExecutable {
 
     public void setCounterSaveAs(String value) {
         setParam(KEY_COUNTER_SAVEAS, value);
+    }
+
+    private String[] overwriteJobConf(Configuration conf, KylinConfig config, String[] jobParams)
+            throws ParseException {
+        Options options = new Options();
+        options.addOption(AbstractHadoopJob.OPTION_JOB_CONF);
+        options.addOption(AbstractHadoopJob.OPTION_CUBE_NAME);
+        CustomParser parser = new CustomParser();
+        CommandLine commandLine = parser.parse(options, jobParams);
+        String fileName = commandLine.getOptionValue(BatchConstants.ARG_CONF);
+        String cubeName = commandLine.getOptionValue(BatchConstants.ARG_CUBE_NAME);
+        Preconditions.checkArgument(cubeName != null && fileName != null, "Can't get job config");
+        conf.addResource(fileName);
+        for (Map.Entry<String, String> entry : CubeManager.getInstance(config).getCube(cubeName).getConfig()
+                .getMRConfigOverride().entrySet()) {
+            conf.set(entry.getKey(), entry.getValue());
+        }
+        List<String> remainingArgs = parser.getRemainingArgs();
+        remainingArgs.add("-" + BatchConstants.ARG_CUBE_NAME);
+        remainingArgs.add(cubeName);
+        String[] result = new String[remainingArgs.size()];
+        return remainingArgs.toArray(result);
+    }
+
+    private static class CustomParser extends GnuParser {
+        private List<String> remainingArgs;
+
+        public CustomParser() {
+            this.remainingArgs = Lists.newArrayList();
+        }
+
+        @Override
+        protected void processOption(final String arg, final ListIterator iter) throws ParseException {
+            boolean hasOption = getOptions().hasOption(arg);
+
+            if (hasOption) {
+                super.processOption(arg, iter);
+            } else {
+                remainingArgs.add(arg);
+                remainingArgs.add(iter.next().toString());
+            }
+        }
+
+        public List<String> getRemainingArgs() {
+            return remainingArgs;
+        }
     }
 }

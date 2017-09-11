@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -113,6 +112,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_STATISTICS_SAMPLING_PERCENT = OptionBuilder
             .withArgName(BatchConstants.ARG_STATS_SAMPLING_PERCENT).hasArg().isRequired(false)
             .withDescription("Statistics sampling percentage").create(BatchConstants.ARG_STATS_SAMPLING_PERCENT);
+    protected static final Option OPTION_JOB_CONF = OptionBuilder.withArgName(BatchConstants.ARG_CONF).hasArg()
+            .isRequired(true).withDescription("MapReduce job config file").create(BatchConstants.ARG_CONF);
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 
@@ -264,15 +265,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         StringUtil.appendWithSeparator(kylinDependency, mrLibDir);
 
         setJobTmpJarsAndFiles(job, kylinDependency.toString());
-
-        overrideJobConfig(job.getConfiguration(), kylinConf.getMRConfigOverride());
     }
 
-    private void overrideJobConfig(Configuration jobConf, Map<String, String> override) {
-        for (Entry<String, String> entry : override.entrySet()) {
-            jobConf.set(entry.getKey(), entry.getValue());
-        }
-    }
+
 
     private String filterKylinHiveDependency(String kylinHiveDependency, KylinConfig config) {
         if (StringUtils.isBlank(kylinHiveDependency))
