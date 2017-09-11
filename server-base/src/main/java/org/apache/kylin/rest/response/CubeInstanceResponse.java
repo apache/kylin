@@ -67,7 +67,6 @@ public class CubeInstanceResponse extends CubeInstance {
 
     public CubeInstanceResponse(CubeInstance cubeInstance) {
         setUuid(cubeInstance.getUuid());
-        setLastModified(cubeInstance.getLastModified());
         setVersion(cubeInstance.getVersion());
         setName(cubeInstance.getName());
         setOwner(cubeInstance.getOwner());
