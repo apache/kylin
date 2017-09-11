@@ -254,7 +254,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getCacheSyncRetrys() {
-        return Integer.parseInt(getOptional("kylin.metadata.sync.retries", "3"));
+        return Integer.parseInt(getOptional("kylin.metadata.sync-retries", "3"));
     }
 
     // for test only
