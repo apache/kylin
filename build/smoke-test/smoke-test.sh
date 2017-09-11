@@ -62,6 +62,13 @@ ${KYLIN_HOME}/bin/sample.sh
 
 ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE
 
+# Enable query push down
+cd ${KYLIN_HOME}
+sed -i 's/#*\(kylin.query.pushdown.runner-class-name*\)/\1/' conf/kylin.properties
+sed -i 's/#*\(kylin.query.pushdown.jdbc.url*\)/\1/' conf/kylin.properties
+sed -i 's/#*\(kylin.query.pushdown.jdbc.driver*\)/\1/' conf/kylin.properties
+sed -i 's/#*\(kylin.query.pushdown.jdbc.username*\)/\1/' conf/kylin.properties
+
 ${KYLIN_HOME}/bin/kylin.sh start
 
 echo "Wait 3 minutes for service start."
