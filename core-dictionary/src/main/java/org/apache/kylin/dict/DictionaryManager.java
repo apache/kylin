@@ -115,6 +115,10 @@ public class DictionaryManager {
 
     public DictionaryInfo getDictionaryInfo(final String resourcePath) throws IOException {
         try {
+            //when all the value for this column is NULL, the resourcePath will be NULL
+            if (resourcePath == null) {
+                return NONE_INDICATOR;
+            }
             DictionaryInfo result = dictCache.get(resourcePath);
             if (result == NONE_INDICATOR) {
                 return null;

@@ -163,6 +163,11 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
                 DictionaryManager dictMgr = DictionaryManager.getInstance(config);
                 Dictionary<String> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(col));
 
+                // handle the dict of all merged segments is null
+                if (mergedDict == null) {
+                    continue;
+                }
+
                 Dictionary<String> sourceDict;
                 // handle the column that all records is null
                 if (sourceCubeSegment.getDictionary(col) == null) {
