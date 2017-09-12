@@ -201,7 +201,7 @@ public class QueryUtil {
         String sql1 = sql.toLowerCase();
         sql1 = removeCommentInSql(sql1);
         sql1 = sql1.trim();
-        return sql1.startsWith("select") || (sql1.startsWith("with") && sql1.contains("select"));
+        return sql1.startsWith("select") || (sql1.startsWith("with") && sql1.contains("select")) || (sql1.startsWith("explain") && sql1.contains("select"));
     }
 
     public static String removeCommentInSql(String sql1) {
