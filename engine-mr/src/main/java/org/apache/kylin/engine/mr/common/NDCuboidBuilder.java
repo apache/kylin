@@ -18,6 +18,8 @@
 
 package org.apache.kylin.engine.mr.common;
 
+import java.io.Serializable;
+
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SplittedBytes;
@@ -30,10 +32,9 @@ import org.apache.kylin.cube.kv.RowKeyEncoderProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
-
 /**
  */
+@SuppressWarnings("serial")
 public class NDCuboidBuilder implements Serializable {
 
     protected static final Logger logger = LoggerFactory.getLogger(NDCuboidBuilder.class);
@@ -84,9 +85,9 @@ public class NDCuboidBuilder implements Serializable {
 
         int fullKeySize = rowkeyEncoder.getBytesLength();
         while (newKeyBuf.array().length < fullKeySize) {
-            newKeyBuf.set(new byte[newKeyBuf.length() * 2]);
+            newKeyBuf = new ByteArray(newKeyBuf.length() * 2);
         }
-        newKeyBuf.set(0, fullKeySize);
+        newKeyBuf.setLength(fullKeySize);
 
         rowkeyEncoder.encode(new ByteArray(newKeyBodyBuf, 0, offset), newKeyBuf);
 

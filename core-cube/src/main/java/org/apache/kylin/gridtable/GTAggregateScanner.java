@@ -616,7 +616,7 @@ public class GTAggregateScanner implements IGTScanner, IGTBypassChecker {
                 for (int i = 0; i < dimensions.trueBitCount(); i++) {
                     int c = dimensions.trueBitAt(i);
                     final int columnLength = info.codeSystem.maxCodeLength(c);
-                    record.cols[c].set(key, offset, columnLength);
+                    record.cols[c].reset(key, offset, columnLength);
                     offset += columnLength;
                 }
 
@@ -629,7 +629,7 @@ public class GTAggregateScanner implements IGTScanner, IGTBypassChecker {
                 offset = 0;
                 for (int i = 0; i < value.length; i++) {
                     int col = metrics.trueBitAt(i);
-                    record.cols[col].set(bytes, offset, sizes[i]);
+                    record.cols[col].reset(bytes, offset, sizes[i]);
                     offset += sizes[i];
                 }
             }

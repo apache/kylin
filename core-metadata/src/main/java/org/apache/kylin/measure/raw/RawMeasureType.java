@@ -148,7 +148,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
                         newId = mergedDict.getIdFromValue(v);
                     }
                     BytesUtil.writeUnsigned(newId, newIdBuf, bufOffset, mergedDict.getSizeOfId());
-                    c.set(newIdBuf, bufOffset, mergedDict.getSizeOfId());
+                    c.reset(newIdBuf, bufOffset, mergedDict.getSizeOfId());
                     bufOffset += mergedDict.getSizeOfId();
                 }
                 return value;

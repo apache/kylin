@@ -33,12 +33,12 @@ public class GTRowBlock {
         GTRowBlock b = new GTRowBlock(info);
 
         byte[] array = new byte[info.getMaxColumnLength(info.primaryKey)];
-        b.primaryKey.set(array);
+        b.primaryKey.reset(array, 0, array.length);
 
         int maxRows = info.isRowBlockEnabled() ? info.rowBlockSize : 1;
         for (int i = 0; i < b.cellBlocks.length; i++) {
             array = new byte[info.getMaxColumnLength(info.colBlocks[i]) * maxRows];
-            b.cellBlocks[i].set(array);
+            b.cellBlocks[i].reset(array, 0, array.length);
         }
         return b;
     }
@@ -83,18 +83,6 @@ public class GTRowBlock {
             cellBlockBuffers = new ByteBuffer[info.colBlocks.length];
             for (int i = 0; i < cellBlockBuffers.length; i++) {
                 cellBlockBuffers[i] = cellBlocks[i].asBuffer();
-            }
-        }
-
-        public void copyFrom(GTRowBlock other) {
-            assert info == other.info;
-
-            seqId = other.seqId;
-            nRows = other.nRows;
-            primaryKey.copyFrom(other.primaryKey);
-            for (int i = 0; i < info.colBlocks.length; i++) {
-                cellBlockBuffers[i].clear();
-                cellBlockBuffers[i].put(other.cellBlocks[i].array(), other.cellBlocks[i].offset(), other.cellBlocks[i].length());
             }
         }
 
@@ -161,17 +149,6 @@ public class GTRowBlock {
             }
             cur++;
         }
-    }
-
-    public GTRowBlock copy() {
-        GTRowBlock copy = new GTRowBlock(info);
-
-        ByteBuffer buf = ByteBuffer.allocate(this.exportLength());
-        this.export(buf);
-        buf.clear();
-        copy.load(buf);
-
-        return copy;
     }
 
     public boolean isEmpty() {
@@ -253,25 +230,7 @@ public class GTRowBlock {
         byte[] data = result.array();
         int len = in.readInt();
         in.read(data, 0, len);
-        result.set(data, 0, len);
-    }
-
-    /** change pointers to point to data in given buffer, UNLIKE deserialize */
-    public void load(ByteBuffer buf) {
-        seqId = buf.getInt();
-        nRows = info.isRowBlockEnabled() ? buf.getInt() : 1;
-        load(primaryKey, buf);
-        for (int i = 0; i < info.colBlocks.length; i++) {
-            ByteArray cb = cellBlocks[i];
-            load(cb, buf);
-        }
-    }
-
-    private void load(ByteArray array, ByteBuffer buf) {
-        int len = buf.getInt();
-        int pos = buf.position();
-        array.set(buf.array(), buf.arrayOffset() + pos, len);
-        buf.position(pos + len);
+        result.setLength(len);
     }
 
 }

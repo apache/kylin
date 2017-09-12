@@ -120,7 +120,6 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.common.persistence.RootPersistentEntity.class);
         kyroClasses.add(org.apache.kylin.common.util.Array.class);
         kyroClasses.add(org.apache.kylin.common.util.ByteArray.class);
-        kyroClasses.add(org.apache.kylin.common.util.ByteArray.ImmutableByteArray.class);
         kyroClasses.add(org.apache.kylin.common.util.Dictionary.class);
         kyroClasses.add(org.apache.kylin.common.util.OrderedProperties.class);
         kyroClasses.add(org.apache.kylin.common.util.Pair.class);

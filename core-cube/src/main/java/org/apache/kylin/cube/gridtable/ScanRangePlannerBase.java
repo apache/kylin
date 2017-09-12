@@ -42,6 +42,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public abstract class ScanRangePlannerBase {
+    
+    private static final ByteArray EMPTY = new ByteArray();
 
     //GT 
     protected GTInfo gtInfo;
@@ -161,8 +163,8 @@ public abstract class ScanRangePlannerBase {
 
     public class ColumnRange {
         public TblColRef column;
-        public ByteArray begin = ByteArray.EMPTY;
-        public ByteArray end = ByteArray.EMPTY;
+        public ByteArray begin = EMPTY;
+        public ByteArray end = EMPTY;
         public Set<ByteArray> valueSet;
         public boolean isBoundryInclusive;
 
@@ -208,8 +210,8 @@ public abstract class ScanRangePlannerBase {
 
         private void refreshBeginEndFromEquals() {
             if (valueSet.isEmpty()) {
-                begin = ByteArray.EMPTY;
-                end = ByteArray.EMPTY;
+                begin = EMPTY;
+                end = EMPTY;
             } else {
                 begin = rangeStartComparator.comparator.min(valueSet);
                 end = rangeEndComparator.comparator.max(valueSet);

@@ -203,7 +203,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                         offset += dimensionEncodings[i].getLengthOfEncoding();
                     }
 
-                    c.getItem().set(newIdBuf, bufOffset, newKeyLength);
+                    c.getItem().reset(newIdBuf, bufOffset, newKeyLength);
                     bufOffset += newKeyLength;
                 }
                 return topNCounter;

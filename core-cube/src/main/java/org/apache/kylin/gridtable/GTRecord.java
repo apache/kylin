@@ -27,7 +27,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 
 import com.google.common.base.Preconditions;
 
-public class GTRecord implements Comparable<GTRecord>, Cloneable {
+public class GTRecord implements Comparable<GTRecord> {
 
     final transient GTInfo info;
     final ByteArray[] cols;
@@ -46,19 +46,10 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
         this.info = info;
     }
 
-    @Override
-    public GTRecord clone() { // deep copy
-        ByteArray[] cols = new ByteArray[this.cols.length];
-        for (int i = 0; i < cols.length; i++) {
-            cols[i] = this.cols[i].copy();
-        }
-        return new GTRecord(this.info, cols);
-    }
-
     public void shallowCopyFrom(GTRecord source) {
         assert info == source.info;
         for (int i = 0; i < cols.length; i++) {
-            cols[i].set(source.cols[i]);
+            cols[i].reset(source.cols[i].array(), source.cols[i].offset(), source.cols[i].length());
         }
     }
 
@@ -75,7 +66,7 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
     }
 
     public void set(int i, ByteArray data) {
-        cols[i].set(data.array(), data.offset(), data.length());
+        cols[i].reset(data.array(), data.offset(), data.length());
     }
 
     /** set record to the codes of specified values, new space allocated to hold the codes */
@@ -94,7 +85,7 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
             int c = selectedCols.trueBitAt(i);
             info.codeSystem.encodeColumnValue(c, values[i], buf);
             int newPos = buf.position();
-            cols[c].set(buf.array(), buf.arrayOffset() + pos, newPos - pos);
+            cols[c].reset(buf.array(), buf.arrayOffset() + pos, newPos - pos);
             pos = newPos;
         }
         return this;
@@ -138,26 +129,6 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
             size += cols[c].length();
         }
         return size;
-    }
-
-    public GTRecord copy() {
-        return copy(info.colAll);
-    }
-
-    public GTRecord copy(ImmutableBitSet selectedCols) {
-        int len = sizeOf(selectedCols);
-        byte[] space = new byte[len];
-
-        GTRecord copy = new GTRecord(info);
-        int pos = 0;
-        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
-            int c = selectedCols.trueBitAt(i);
-            System.arraycopy(cols[c].array(), cols[c].offset(), space, pos, cols[c].length());
-            copy.cols[c].set(space, pos, cols[c].length());
-            pos += cols[c].length();
-        }
-
-        return copy;
     }
 
     @Override
@@ -289,7 +260,7 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
         int pos = buf.position();
         for (int c : selectedCols) {
             int len = info.codeSystem.codeLength(c, buf);
-            cols[c].set(buf.array(), buf.arrayOffset() + pos, len);
+            cols[c].reset(buf.array(), buf.arrayOffset() + pos, len);
             pos += len;
             buf.position(pos);
         }
@@ -301,7 +272,7 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
     public void loadColumns(int selectedCol, ByteBuffer buf) {
         int pos = buf.position();
         int len = info.codeSystem.codeLength(selectedCol, buf);
-        cols[selectedCol].set(buf.array(), buf.arrayOffset() + pos, len);
+        cols[selectedCol].reset(buf.array(), buf.arrayOffset() + pos, len);
     }
 
     public void loadColumnsFromColumnBlocks(ImmutableBitSet[] selectedColumnBlocks, ImmutableBitSet selectedCols,
@@ -312,7 +283,7 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
                 int c = selectedColBlock.trueBitAt(i);
                 int len = info.codeSystem.codeLength(c, buf);
                 if (selectedCols.get(c)) {
-                    cols[c].set(buf.array(), buf.arrayOffset() + pos, len);
+                    cols[c].reset(buf.array(), buf.arrayOffset() + pos, len);
                 }
                 pos += len;
                 buf.position(pos);
