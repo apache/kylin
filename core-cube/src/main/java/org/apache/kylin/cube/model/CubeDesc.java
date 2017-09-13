@@ -607,6 +607,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 Class<?> hbaseMappingAdapterClass = Class.forName(hbaseMappingAdapterName);
                 Method initMethod = hbaseMappingAdapterClass.getMethod("initHBaseMapping", CubeDesc.class);
                 initMethod.invoke(null, this);
+                Method initMeasureReferenceToColumnFamilyMethod = hbaseMappingAdapterClass.getMethod("initMeasureReferenceToColumnFamilyWithChecking", CubeDesc.class);
+                initMeasureReferenceToColumnFamilyMethod.invoke(null, this);
             } catch (Exception e) {
                 logger.error("Wrong configuration for kylin.metadata.hbasemapping-adapter: class "
                         + hbaseMappingAdapterName + " not found. ");
@@ -614,10 +616,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         } else {
             if (hbaseMapping != null) {
                 hbaseMapping.init(this);
+                initMeasureReferenceToColumnFamily();
             }
-        }
-
-        initMeasureReferenceToColumnFamily();
+        }        
 
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived(true);
@@ -1010,24 +1011,16 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             measureIndexLookup.put(measures.get(i).getName(), i);
 
         BitSet checkEachMeasureExist = new BitSet();
-        Set<String> measureSet = Sets.newHashSet();
         for (HBaseColumnFamilyDesc cf : getHbaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc c : cf.getColumns()) {
                 String[] colMeasureRefs = c.getMeasureRefs();
                 MeasureDesc[] measureDescs = new MeasureDesc[colMeasureRefs.length];
                 int[] measureIndex = new int[colMeasureRefs.length];
-                int lastMeasureIndex = -1;
                 for (int i = 0; i < colMeasureRefs.length; i++) {
                     measureDescs[i] = measureLookup.get(colMeasureRefs[i]);
                     checkState(measureDescs[i] != null, "measure desc at (%s) is null", i);
                     measureIndex[i] = measureIndexLookup.get(colMeasureRefs[i]);
                     checkState(measureIndex[i] >= 0, "measure index at (%s) not positive", i);
-                    
-                    checkState(!measureSet.contains(colMeasureRefs[i]), "measure (%s) duplicates", colMeasureRefs[i]);
-                    measureSet.add(colMeasureRefs[i]);
-                    
-                    checkState(measureIndex[i] > lastMeasureIndex, "measure (%s) is not in order", colMeasureRefs[i]);
-                    lastMeasureIndex = measureIndex[i];
 
                     checkEachMeasureExist.set(measureIndex[i]);
                 }
