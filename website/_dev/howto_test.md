@@ -9,15 +9,16 @@ In general, there should be unit tests to cover individual classes; there must b
 
 ## Test v1.5 and above
 
-* `mvn test` to run unit tests, which has a limited test coverage.
+* `mvn clean test` runs unit tests, which has a limited test coverage.
     * Unit tests has no external dependency and can run on any machine.
     * The unit tests do not cover end-to-end scenarios like build, merge, and query.
     * The unit tests take a few minutes to complete.
-* `dev-support/test_all_against_hdp_2_2_4_2_2.sh` to run integration tests, which has the best test coverage.
+* `dev-support/test_all_against_hdp_2_4_0_0_169.sh` runs integration tests, which has the best test coverage.
     * Integration tests __better be run on a Hadoop sandbox__. We suggest to checkout a copy of code in your sandbox and direct run the test_all_against_hdp_2_2_4_2_2.sh in it. If you don't want to put codes on sandbox, refer to __More on v1.5 UT/IT separation__
     * As the name indicates, the script is only for hdp 2.2.4.2, but you get the idea of how integration test run from it.
     * The integration tests start from generate random data, then build cube, merge cube, and finally query the result and compare to H2 DB.
     * The integration tests take one to two hours to complete.
+* `nohup dev-support/test_all_against_hdp_2_4_0_0_169.sh < /dev/null 2>&1 > nohup.out` runs IT in an unattended mode.
 
 ## Test v1.3 and below
 
