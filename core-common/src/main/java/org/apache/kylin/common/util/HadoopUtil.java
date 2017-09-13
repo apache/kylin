@@ -160,4 +160,23 @@ public class HadoopUtil {
             return null;
         }
     }
+
+    public static Path[] getFilterPath(FileSystem fs, Path baseDir, final String filter) throws IOException {
+        if (fs.exists(baseDir) == false) {
+            return null;
+        }
+
+        FileStatus[] fileStatus = fs.listStatus(baseDir, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.getName().startsWith(filter);
+            }
+        });
+
+        Path[] result = new Path[fileStatus.length];
+        for (int i = 0; i < fileStatus.length; i++) {
+            result[i] = fileStatus[i].getPath();
+        }
+        return result;
+    }
 }

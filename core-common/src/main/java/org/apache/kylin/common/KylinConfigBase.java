@@ -1040,6 +1040,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.engine.mr.cuboid-number-per-stats-calculator", "100"));
     }
 
+    public int getFactDistinctJobPerReducerHLLCuboidNumber() {
+        return Integer.parseInt(getOptional("kylin.engine.mr.fact-distinct-per-reducer-hll-cuboid-number", "100"));
+    }
+
+    public int getFactDistinctJobHLLMaxReducerNumber() {
+        return Integer.parseInt(getOptional("kylin.engine.mr.fact-distinct-hll-max-reducer-number", "50"));
+    }
+
     //UHC: ultra high cardinality columns, contain the ShardByColumns and the GlobalDictionaryColumns
     public int getUHCReducerCount() {
         return Integer.parseInt(getOptional("kylin.engine.mr.uhc-reducer-count", "5"));

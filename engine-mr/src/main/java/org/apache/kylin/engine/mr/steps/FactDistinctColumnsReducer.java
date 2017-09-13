@@ -107,24 +107,38 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         uhcReducerCount = cube.getConfig().getUHCReducerCount();
         initReducerIdToColumnIndex(config);
 
-        if (collectStatistics && (taskId == numberOfTasks - 1)) {
-            // hll
-            isStatistics = true;
-            baseCuboidId = cube.getCuboidScheduler().getBaseCuboidId();
-            baseCuboidRowCountInMappers = Lists.newArrayList();
-            cuboidHLLMap = Maps.newHashMap();
-            samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
-            logger.info("Reducer " + taskId + " handling stats");
-        } else if (collectStatistics && (taskId == numberOfTasks - 2)) {
-            // partition col
-            isPartitionCol = true;
-            col = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
-            if (col == null) {
-                logger.info("No partition col. This reducer will do nothing");
-            } else {
-                logger.info("Reducer " + taskId + " handling partition col " + col.getIdentity());
+        boolean ifCol = true;
+        if (collectStatistics) {
+            int hllShardBase = conf.getInt(FactDistinctColumnPartitioner.HLL_SHARD_BASE_PROPERTY_NAME, 0);
+            if (hllShardBase <= 0) {
+                throw new IllegalArgumentException("In job configuration the value for property "
+                        + FactDistinctColumnPartitioner.HLL_SHARD_BASE_PROPERTY_NAME + " is " + hllShardBase
+                        + ". It should be set correctly!!!");
             }
-        } else {
+            ifCol = false;
+            if (taskId >= numberOfTasks - hllShardBase) {
+                // hll
+                isStatistics = true;
+                baseCuboidId = cube.getCuboidScheduler().getBaseCuboidId();
+                baseCuboidRowCountInMappers = Lists.newArrayList();
+                cuboidHLLMap = Maps.newHashMap();
+                samplingPercentage = Integer
+                        .parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
+                logger.info("Reducer " + taskId + " handling stats");
+            } else if (taskId == numberOfTasks - hllShardBase - 1) {
+                // partition col
+                isPartitionCol = true;
+                col = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
+                if (col == null) {
+                    logger.info("No partition col. This reducer will do nothing");
+                } else {
+                    logger.info("Reducer " + taskId + " handling partition col " + col.getIdentity());
+                }
+            } else {
+                ifCol = true;
+            }
+        }
+        if (ifCol) {
             // normal col
             col = columnList.get(reducerIdToColumnIndex.get(taskId));
             Preconditions.checkNotNull(col);
@@ -291,7 +305,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     }
 
     private void logMapperAndCuboidStatistics(List<Long> allCuboids) throws IOException {
-        logger.info("Total cuboid number: \t" + allCuboids.size());
+        logger.info("Cuboid number for task: " + taskId + "\t" + allCuboids.size());
         logger.info("Samping percentage: \t" + samplingPercentage);
         logger.info("The following statistics are collected based on sampling data.");
         logger.info("Number of Mappers: " + baseCuboidRowCountInMappers.size());
@@ -308,11 +322,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             logger.info("Cuboid " + i + " row count is: \t " + cuboidHLLMap.get(i).getCountEstimate());
         }
 
-        logger.info("Sum of all the cube segments (before merge) is: \t " + totalRowsBeforeMerge);
-        logger.info("After merge, the cube has row count: \t " + grantTotal);
-        if (grantTotal > 0) {
-            logger.info("The mapper overlap ratio is: \t" + totalRowsBeforeMerge / grantTotal);
-        }
+        logger.info("Sum of row counts (before merge) is: \t " + totalRowsBeforeMerge);
+        logger.info("After merge, the row count: \t " + grantTotal);
     }
 
 }

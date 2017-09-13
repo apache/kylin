@@ -19,24 +19,39 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.common.CubeStatsWriter;
 import org.apache.kylin.engine.mr.common.StatisticsDecisionUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.measure.hllc.HLLCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Save the cube segment statistic to Kylin metadata store
@@ -56,14 +71,79 @@ public class SaveStatisticsStep extends AbstractExecutable {
 
         ResourceStore rs = ResourceStore.getStore(kylinConf);
         try {
+
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
+            Configuration hadoopConf = HadoopUtil.getCurrentConfiguration();
             Path statisticsDir = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()));
-            FileSystem fs = HadoopUtil.getFileSystem(statisticsDir);
-            Path statisticsFilePath = HadoopUtil.getFilterOnlyPath(fs, statisticsDir, BatchConstants.CFG_OUTPUT_STATISTICS);
-            if (statisticsFilePath == null) {
+            Path[] statisticsFiles = HadoopUtil.getFilterPath(fs, statisticsDir, BatchConstants.CFG_OUTPUT_STATISTICS);
+            if (statisticsFiles == null) {
                 throw new IOException("fail to find the statistics file in base dir: " + statisticsDir);
             }
 
-            FSDataInputStream is = fs.open(statisticsFilePath);
+            Map<Long, HLLCounter> cuboidHLLMap = Maps.newHashMap();
+            long totalRowsBeforeMerge = 0;
+            long grantTotal = 0;
+            int samplingPercentage = -1;
+            int mapperNumber = -1;
+            for (Path item : statisticsFiles) {
+                int pSamplingPercentage = 0;
+                double pMapperOverlapRatio = 0;
+                int pMapperNumber = 0;
+                long pGrantTotal = 0;
+                try (SequenceFile.Reader reader = new SequenceFile.Reader(hadoopConf, SequenceFile.Reader.file(item))) {
+                    LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), hadoopConf);
+                    BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(),
+                            hadoopConf);
+                    while (reader.next(key, value)) {
+                        if (key.get() == 0L) {
+                            pSamplingPercentage = Bytes.toInt(value.getBytes());
+                        } else if (key.get() == -1L) {
+                            pMapperOverlapRatio = Bytes.toDouble(value.getBytes());
+                        } else if (key.get() == -2L) {
+                            pMapperNumber = Bytes.toInt(value.getBytes());
+                        } else {
+                            HLLCounter hll = new HLLCounter(kylinConf.getCubeStatsHLLPrecision());
+                            ByteArray byteArray = new ByteArray(value.getBytes());
+                            hll.readRegisters(byteArray.asBuffer());
+                            cuboidHLLMap.put(key.get(), hll);
+                            pGrantTotal += hll.getCountEstimate();
+                        }
+                    }
+                    totalRowsBeforeMerge += pGrantTotal * pMapperOverlapRatio;
+                    grantTotal += pGrantTotal;
+                    if (pMapperNumber > 0) {
+                        if (mapperNumber < 0) {
+                            mapperNumber = pMapperNumber;
+                        } else {
+                            throw new RuntimeException(
+                                    "Base cuboid has been distributed to multiple reducers at step FactDistinctColumnsReducer!!!");
+                        }
+                    }
+                    if (samplingPercentage < 0) {
+                        samplingPercentage = pSamplingPercentage;
+                    } else if (samplingPercentage != pSamplingPercentage) {
+                        throw new RuntimeException(
+                                "The sampling percentage should be same among all of the reducer of FactDistinctColumnsReducer!!!");
+                    }
+                }
+            }
+            if (samplingPercentage < 0) {
+                logger.warn("The sampling percentage should be set!!!");
+            }
+            if (mapperNumber < 0) {
+                logger.warn("The mapper number should be set!!!");
+            }
+
+            if (logger.isDebugEnabled()) {
+                logMapperAndCuboidStatistics(cuboidHLLMap, samplingPercentage, mapperNumber, grantTotal,
+                        totalRowsBeforeMerge);
+            }
+            double mapperOverlapRatio = grantTotal == 0 ? 0 : (double) totalRowsBeforeMerge / grantTotal;
+            CubeStatsWriter.writeCuboidStatistics(hadoopConf, statisticsDir, cuboidHLLMap, samplingPercentage,
+                    mapperNumber, mapperOverlapRatio);
+
+            Path statisticsFile = new Path(statisticsDir, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+            FSDataInputStream is = fs.open(statisticsFile);
             try {
                 // put the statistics to metadata store
                 String statisticsFileName = newSegment.getStatisticsResourcePath();
@@ -84,4 +164,23 @@ public class SaveStatisticsStep extends AbstractExecutable {
         }
     }
 
+    private void logMapperAndCuboidStatistics(Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage,
+            int mapperNumber, long grantTotal, long totalRowsBeforeMerge) throws IOException {
+        logger.debug("Total cuboid number: \t" + cuboidHLLMap.size());
+        logger.debug("Samping percentage: \t" + samplingPercentage);
+        logger.debug("The following statistics are collected based on sampling data.");
+        logger.debug("Number of Mappers: " + mapperNumber);
+
+        List<Long> allCuboids = Lists.newArrayList(cuboidHLLMap.keySet());
+        Collections.sort(allCuboids);
+        for (long i : allCuboids) {
+            logger.debug("Cuboid " + i + " row count is: \t " + cuboidHLLMap.get(i).getCountEstimate());
+        }
+
+        logger.debug("Sum of all the cube segments (before merge) is: \t " + totalRowsBeforeMerge);
+        logger.debug("After merge, the cube has row count: \t " + grantTotal);
+        if (grantTotal > 0) {
+            logger.debug("The mapper overlap ratio is: \t" + (double) totalRowsBeforeMerge / grantTotal);
+        }
+    }
 }

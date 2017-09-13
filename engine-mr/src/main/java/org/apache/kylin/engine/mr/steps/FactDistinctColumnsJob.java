@@ -117,7 +117,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             }
 
             setupMapper(segment);
-            setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? reducerCount + 2 : reducerCount);
+            setupReducer(output, segment, statistics_enabled, reducerCount);
 
             attachCubeMetadata(cube, job.getConfiguration());
 
@@ -136,6 +136,15 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
     }
 
+    private int getHLLShardBase(CubeSegment segment) {
+        int nCuboids = segment.getCuboidScheduler().getAllCuboidIds().size();
+        int shardBase = (nCuboids - 1) / segment.getConfig().getFactDistinctJobPerReducerHLLCuboidNumber() + 1;
+        if (shardBase > segment.getConfig().getFactDistinctJobHLLMaxReducerNumber()) {
+            shardBase = segment.getConfig().getFactDistinctJobHLLMaxReducerNumber();
+        }
+        return shardBase;
+    }
+
     private void setupMapper(CubeSegment cubeSeg) throws IOException {
         IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
         flatTableInputFormat.configureJob(job);
@@ -146,7 +155,14 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         job.setMapOutputValueClass(Text.class);
     }
 
-    private void setupReducer(Path output, int numberOfReducers) throws IOException {
+    private void setupReducer(Path output, CubeSegment cubeSeg, String statistics_enabled, int reducerCount)
+            throws IOException {
+        int numberOfReducers = reducerCount;
+        if ("true".equalsIgnoreCase(statistics_enabled)) {
+            int hllShardBase = getHLLShardBase(cubeSeg);
+            FactDistinctColumnPartitioner.setHLLShard(job.getConfiguration(), hllShardBase);
+            numberOfReducers += (1 + hllShardBase);
+        }
         job.setReducerClass(FactDistinctColumnsReducer.class);
         job.setPartitionerClass(FactDistinctColumnPartitioner.class);
         job.setNumReduceTasks(numberOfReducers);
