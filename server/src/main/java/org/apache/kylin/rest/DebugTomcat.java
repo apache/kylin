@@ -27,6 +27,7 @@ import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
 import org.apache.catalina.deploy.ErrorPage;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
@@ -48,8 +49,7 @@ public class DebugTomcat {
                 System.setProperty("catalina.home", ".");
 
             if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
-                System.err.println("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
-                System.exit(1);
+                System.setProperty("hdp.version", "2.4.0.0-169");
             }
 
             // workaround for job submission from win to linux -- https://issues.apache.org/jira/browse/MAPREDUCE-4052
@@ -101,16 +101,16 @@ public class DebugTomcat {
 
     public static void main(String[] args) throws Exception {
         setupDebugEnv();
-        
+
         int port = 7070;
         if (args.length >= 1) {
             port = Integer.parseInt(args[0]);
         }
 
-        String webBase = new File("../webapp/app").getAbsolutePath();
-        if (new File(webBase, "WEB-INF").exists() == false) {
-            throw new RuntimeException("In order to launch Kylin web app from IDE, please copy server/src/main/webapp/WEB-INF to  webapp/app/");
-        }
+        File webBase = new File("../webapp/app");
+        File webInfDir = new File(webBase, "WEB-INF");
+        FileUtils.deleteDirectory(webInfDir);
+        FileUtils.copyDirectoryToDirectory(new File("../server/src/main/webapp/WEB-INF"), webBase);
 
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(port);
@@ -121,7 +121,7 @@ public class DebugTomcat {
         AprLifecycleListener listener = new AprLifecycleListener();
         server.addLifecycleListener(listener);
 
-        Context webContext = tomcat.addWebapp("/kylin", webBase);
+        Context webContext = tomcat.addWebapp("/kylin", webBase.getAbsolutePath());
         ErrorPage notFound = new ErrorPage();
         notFound.setErrorCode(404);
         notFound.setLocation("/index.html");
