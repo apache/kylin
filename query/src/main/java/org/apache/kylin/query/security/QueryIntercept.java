@@ -23,8 +23,37 @@ import java.util.List;
 
 import org.apache.kylin.query.relnode.OLAPContext;
 
-public interface QueryIntercept {
-    void intercept(String project, String username, List<OLAPContext> contexts);
+public abstract class QueryIntercept {
 
-    Collection<String> getQueryIdentifiers(List<OLAPContext> contexts);
+    public void intercept(List<OLAPContext> contexts) {
+        Collection<String> userIdentifierBlackList = getIdentifierBlackList(contexts);
+        intercept(contexts, userIdentifierBlackList);
+    }
+
+    private void intercept(List<OLAPContext> contexts, Collection<String> blackList) {
+        if (blackList.isEmpty()) {
+            return;
+        }
+
+        Collection<String> queryCols = getQueryIdentifiers(contexts);
+        for (String id : blackList) {
+            if (queryCols.contains(id.toUpperCase())) {
+                throw new AccessDeniedException(getIdentifierType() + ":" + id);
+            }
+        }
+    }
+
+    protected abstract Collection<String> getQueryIdentifiers(List<OLAPContext> contexts);
+
+    protected abstract Collection<String> getIdentifierBlackList(List<OLAPContext> contexts);
+
+    protected abstract String getIdentifierType();
+
+    protected String getProject(List<OLAPContext> contexts) {
+        return contexts.get(0).olapSchema.getProjectName();
+    }
+
+    protected String getUser(List<OLAPContext> contexts) {
+        return contexts.get(0).olapAuthen.getUsername();
+    }
 }

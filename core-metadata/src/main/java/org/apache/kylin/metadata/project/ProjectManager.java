@@ -172,6 +172,15 @@ public class ProjectManager {
         return projectMap.get(projectName);
     }
 
+    public ProjectInstance getPrjByUuid(String uuid) {
+        Collection<ProjectInstance> copy = new ArrayList<ProjectInstance>(projectMap.values());
+        for (ProjectInstance prj : copy) {
+            if (uuid.equals(prj.getUuid()))
+                return prj;
+        }
+        return null;
+    }
+
     public ProjectInstance createProject(String projectName, String owner, String description,
             LinkedHashMap<String, String> overrideProps) throws IOException {
         logger.info("Creating project " + projectName);

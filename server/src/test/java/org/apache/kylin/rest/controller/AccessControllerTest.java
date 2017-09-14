@@ -50,8 +50,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class AccessControllerTest extends ServiceTestBase implements AclEntityType, AclPermissionType {
 
-    private AccessController accessController;
-
     private CubeController cubeController;
 
     private ProjectController projectController;
@@ -67,6 +65,10 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
     ProjectService projectService;
 
     @Autowired
+    @Qualifier("accessController")
+    AccessController accessController;
+
+    @Autowired
     @Qualifier("cubeMgmtService")
     CubeService cubeService;
 
@@ -77,8 +79,6 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
     @Before
     public void setup() throws Exception {
         super.setup();
-        accessController = new AccessController();
-        accessController.setAccessService(accessService);
         cubeController = new CubeController();
         cubeController.setCubeService(cubeService);
         projectController = new ProjectController();
@@ -115,6 +115,7 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         accessRequest = new AccessRequest();
         accessRequest.setAccessEntryId(aeId);
         accessRequest.setPermission(READ);
+        accessRequest.setSid("ADMIN");
         aes = accessController.revoke(CUBE_INSTANCE, "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
         assertEquals(0, aes.size());
 

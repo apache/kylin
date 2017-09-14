@@ -19,8 +19,9 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.kylin.metadata.acl.TableACL;
 import org.junit.Assert;
@@ -50,11 +51,11 @@ public class TableACLServiceTest extends ServiceTestBase {
         tableACLService.addToTableBlackList(PROJECT, "ANALYST", "DB.TABLE1");
         tableACLService.addToTableBlackList(PROJECT, "ANALYST", "DB.TABLE2");
         tableACLService.addToTableBlackList(PROJECT, "ANALYST", "DB.TABLE4");
-        List<String> tableBlackList = tableACLService.getBlockedUserByTable(PROJECT, "DB.TABLE1");
+        List<String> tableBlackList = tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.TABLE1");
         Assert.assertEquals(3, tableBlackList.size());
 
         //test get black/white list
-        List<String> allUsers = new ArrayList<>();
+        Set<String> allUsers = new HashSet<>();
         allUsers.add("ADMIN");
         allUsers.add("MODELER");
         allUsers.add("ANALYST");
@@ -62,25 +63,30 @@ public class TableACLServiceTest extends ServiceTestBase {
         allUsers.add("user5");
         allUsers.add("user6");
         allUsers.add("user7");
-        List<String> tableWhiteList = tableACLService.getTableWhiteListByTable(PROJECT, "DB.TABLE1", allUsers);
+
+        List<String> tableWhiteList = tableACLService.getUsersCanQueryTheTbl(PROJECT, "DB.TABLE1", allUsers);
         Assert.assertEquals(4, tableWhiteList.size());
 
-        List<String> emptyTableBlackList = tableACLService.getBlockedUserByTable(PROJECT, "DB.T");
+        List<String> emptyTableBlackList = tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.T");
         Assert.assertEquals(0, emptyTableBlackList.size());
 
-        List<String> tableWhiteList1 = tableACLService.getTableWhiteListByTable(PROJECT, "DB.T", allUsers);
+        List<String> tableWhiteList1 = tableACLService.getUsersCanQueryTheTbl(PROJECT, "DB.T", allUsers);
         Assert.assertEquals(7, tableWhiteList1.size());
 
         //test add
         tableACLService.addToTableBlackList(PROJECT, "user7", "DB.T7");
-        List<String> tableBlackList2 = tableACLService.getBlockedUserByTable(PROJECT, "DB.T7");
+        List<String> tableBlackList2 = tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.T7");
         Assert.assertTrue(tableBlackList2.contains("user7"));
 
         //test delete
         tableACLService.deleteFromTableBlackList(PROJECT, "user7", "DB.T7");
-        List<String> tableBlackList3 = tableACLService.getBlockedUserByTable(PROJECT, "DB.T7");
+        List<String> tableBlackList3 = tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.T7");
         Assert.assertFalse(tableBlackList3.contains("user7"));
 
+        //test delete
+        Assert.assertEquals(3, tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.TABLE1").size());
+        tableACLService.deleteFromTableBlackList(PROJECT, "ADMIN");
+        Assert.assertEquals(2, tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.TABLE1").size());
     }
 
 }

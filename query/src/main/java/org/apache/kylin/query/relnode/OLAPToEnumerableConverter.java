@@ -74,12 +74,10 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         // identify model & realization
         List<OLAPContext> contexts = listContextsHavingScan();
 
-        String project = getProject(contexts);
-        String user = getUser(contexts);
-
+        // intercept query
         List<QueryIntercept> intercepts = QueryInterceptUtil.getQueryIntercepts();
         for (QueryIntercept intercept : intercepts) {
-            intercept.intercept(project, user, contexts);
+            intercept.intercept(contexts);
         }
 
         RealizationChooser.selectRealization(contexts);
@@ -125,13 +123,5 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             OLAPContext.IAccessController accessController = (OLAPContext.IAccessController) ClassUtil.newInstance(controllerCls);
             accessController.check(contexts, config);
         }
-    }
-
-    public String getProject(List<OLAPContext> contexts) {
-        return contexts.get(0).olapSchema.getProjectName();
-    }
-
-    public String getUser(List<OLAPContext> contexts) {
-        return contexts.get(0).olapAuthen.getUsername();
     }
 }

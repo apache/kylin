@@ -21,16 +21,27 @@ package org.apache.kylin.rest.util;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.security.ManagedUser;
+import org.apache.kylin.rest.service.AccessService;
+import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.TableService;
 import org.apache.kylin.rest.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.acls.domain.PrincipalSid;
+import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Preconditions;
@@ -45,6 +56,14 @@ public class ValidateUtil {
     @Autowired
     @Qualifier("tableService")
     private TableService tableService;
+
+    @Autowired
+    @Qualifier("projectService")
+    private ProjectService projectService;
+
+    @Autowired
+    @Qualifier("accessService")
+    private AccessService accessService;
 
     public void validateUser(String username) {
         if (!userService.userExists(username)) {
@@ -90,16 +109,26 @@ public class ValidateUtil {
         return cols;
     }
 
-    public List<String > getAllUsers() throws IOException {
-        List<ManagedUser> managedUsers = userService.listUsers();
-        List<String> allUsers = new ArrayList<>();
-        for (ManagedUser managedUser : managedUsers) {
-            allUsers.add(managedUser.getUsername());
+    public Set<String> getAllUsers(String project) throws IOException {
+        Set<String> allUsers = new HashSet<>();
+        // add users that is global admin
+        for (ManagedUser managedUser : userService.listUsers()) {
+            if (managedUser.getAuthorities().contains(new SimpleGrantedAuthority(Constant.ROLE_ADMIN))) {
+                allUsers.add(managedUser.getUsername());
+            }
+        }
+
+        // add users that has project permission
+        ProjectInstance prj = projectService.getProjectManager().getProject(project);
+        AclEntity ae = accessService.getAclEntity("ProjectInstance", prj.getUuid());
+        Acl acl = accessService.getAcl(ae);
+        for (AccessControlEntry ace : acl.getEntries()) {
+            allUsers.add(((PrincipalSid) ace.getSid()).getPrincipal());
         }
         return allUsers;
     }
 
-    public void vaildateArgs(String... args) {
+    public void validateArgs(String... args) {
         for (String arg : args) {
             Preconditions.checkState(!StringUtils.isEmpty(arg));
         }

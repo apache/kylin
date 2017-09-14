@@ -24,8 +24,11 @@ import java.util.List;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
+import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermissionFactory;
 import org.apache.kylin.rest.service.AccessService;
+import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.service.TableACLService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.model.Acl;
@@ -49,6 +52,14 @@ public class AccessController extends BasicController {
     @Autowired
     @Qualifier("accessService")
     private AccessService accessService;
+
+    @Autowired
+    @Qualifier("projectService")
+    private ProjectService projectService;
+
+    @Autowired
+    @Qualifier("TableAclService")
+    private TableACLService tableACLService;
 
     /**
      * Get access entry list of a domain object
@@ -103,10 +114,16 @@ public class AccessController extends BasicController {
      * @param accessRequest
      */
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE }, produces = { "application/json" })
-    public List<AccessEntryResponse> revoke(@PathVariable String type, @PathVariable String uuid, AccessRequest accessRequest) {
+    public List<AccessEntryResponse> revoke(@PathVariable String type, @PathVariable String uuid, AccessRequest accessRequest) throws IOException {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.revoke(ae, accessRequest.getAccessEntryId());
-
+        if (AclEntityType.PROJECT_INSTANCE.equals(type)) {
+            String prj = projectService.getProjectManager().getPrjByUuid(uuid).getName();
+            String username = accessRequest.getSid();
+            if (tableACLService.exists(prj, username)) {
+                tableACLService.deleteFromTableBlackList(prj, username);
+            }
+        }
         return accessService.generateAceResponses(acl);
     }
 
