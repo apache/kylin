@@ -409,6 +409,7 @@ public class HBaseResourceStore extends ResourceStore {
     public Path bigCellHDFSPath(String resPath) {
         String hdfsWorkingDirectory = this.kylinConfig.getHdfsWorkingDirectory();
         Path redirectPath = new Path(hdfsWorkingDirectory, "resources" + resPath);
+        redirectPath =  Path.getPathWithoutSchemeAndAuthority(redirectPath);
         return redirectPath;
     }
 
