@@ -74,7 +74,7 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/query", method = RequestMethod.POST, produces = { "application/json" })
     @ResponseBody
-    public SQLResponse query(@RequestBody SQLRequest sqlRequest) {
+    public SQLResponse query(@RequestBody PrepareSqlRequest sqlRequest) {
         return queryService.doQueryWithCache(sqlRequest);
     }
 

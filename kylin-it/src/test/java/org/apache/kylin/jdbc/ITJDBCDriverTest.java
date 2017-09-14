@@ -230,7 +230,11 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
         ResultSet rs = statement.executeQuery();
 
-        Assert.assertFalse(rs.next());
+        Assert.assertTrue(rs.next());
+
+        String format_name = rs.getString(1);
+
+        Assert.assertTrue("FP-GTC".equals(format_name));
 
         rs.close();
         statement.close();

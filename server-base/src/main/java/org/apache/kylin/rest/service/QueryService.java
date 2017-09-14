@@ -804,14 +804,24 @@ public class QueryService extends BasicService {
 
         try {
 
-            // special case for prepare query. 
+            // special case for prepare query.
             if (BackdoorToggles.getPrepareOnly()) {
                 return getPrepareOnlySqlResponse(correctedSql, conn, isPushDown, results, columnMetas);
             }
 
-            stat = conn.createStatement();
-            processStatementAttr(stat, sqlRequest);
-            resultSet = stat.executeQuery(correctedSql);
+            if (isPrepareStatementWithParams(sqlRequest)) {
+
+                PreparedStatement preparedState = conn.prepareStatement(correctedSql);
+                processStatementAttr(preparedState, sqlRequest);
+                for (int i = 0; i < ((PrepareSqlRequest) sqlRequest).getParams().length; i++) {
+                    setParam(preparedState, i + 1, ((PrepareSqlRequest) sqlRequest).getParams()[i]);
+                }
+                resultSet = preparedState.executeQuery();
+            } else {
+                stat = conn.createStatement();
+                processStatementAttr(stat, sqlRequest);
+                resultSet = stat.executeQuery(correctedSql);
+            }
 
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columnCount = metaData.getColumnCount();
@@ -904,6 +914,13 @@ public class QueryService extends BasicService {
         }
 
         return buildSqlResponse(isPushDown, results, columnMetas);
+    }
+
+    private boolean isPrepareStatementWithParams(SQLRequest sqlRequest) {
+        if (sqlRequest instanceof PrepareSqlRequest && ((PrepareSqlRequest) sqlRequest).getParams() != null
+                && ((PrepareSqlRequest) sqlRequest).getParams().length > 0)
+            return true;
+        return false;
     }
 
     private SQLResponse buildSqlResponse(Boolean isPushDown, List<List<String>> results,
