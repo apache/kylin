@@ -42,9 +42,30 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
 
     @Override
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {
-        IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(seg);
         final SparkExecutable sparkExecutable = new SparkExecutable();
         sparkExecutable.setClassName(SparkCubingByLayer.class.getName());
+        configureSparkJob(seg, sparkExecutable, jobId, cuboidRootPath);
+        result.addTask(sparkExecutable);
+    }
+
+    @Override
+    protected void addInMemCubingSteps(final CubingJob result, String jobId, String cuboidRootPath) {
+
+    }
+
+    private static String findJar(String className, String perferLibraryName) {
+        try {
+            return ClassUtil.findContainingJar(Class.forName(className), perferLibraryName);
+        } catch (ClassNotFoundException e) {
+            logger.warn("failed to locate jar for class " + className + ", ignore it");
+        }
+
+        return "";
+    }
+
+    public static void configureSparkJob(final CubeSegment seg, final SparkExecutable sparkExecutable,
+            final String jobId, final String cuboidRootPath) {
+        IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(seg);
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_INPUT_TABLE.getOpt(),
@@ -64,28 +85,10 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
 
         StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
         sparkExecutable.setJars(jars.toString());
-
         sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE);
-        result.addTask(sparkExecutable);
     }
 
-    @Override
-    protected void addInMemCubingSteps(final CubingJob result, String jobId, String cuboidRootPath) {
-
-    }
-
-    private String findJar(String className, String perferLibraryName) {
-        try {
-            return ClassUtil.findContainingJar(Class.forName(className), perferLibraryName);
-        } catch (ClassNotFoundException e) {
-            logger.warn("failed to locate jar for class " + className + ", ignore it");
-        }
-
-        return "";
-    }
-
-    private String getSegmentMetadataUrl(KylinConfig kylinConfig, String segmentID) {
+    private static String getSegmentMetadataUrl(KylinConfig kylinConfig, String segmentID) {
         return kylinConfig.getHdfsWorkingDirectory() + "metadata/" + segmentID + "@hdfs";
     }
-
 }

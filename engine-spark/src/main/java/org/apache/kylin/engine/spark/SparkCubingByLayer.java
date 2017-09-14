@@ -143,7 +143,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         final Job job = Job.getInstance(confOverwrite);
 
         logger.info("RDD Output path: {}", outputPath);
-        setHadoopConf(job);
+        setHadoopConf(job, cubeSegment, metaUrl);
 
         int countMeasureIndex = 0;
         for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
@@ -189,7 +189,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         // aggregate to calculate base cuboid
         allRDDs[0] = encodedBaseRDD.reduceByKey(baseCuboidReducerFunction, partition).persist(storageLevel);
 
-        saveToHDFS(allRDDs[0], metaUrl, cubeName, cubeSegment, outputPath, 0, job);
+        saveToHDFS(allRDDs[0], metaUrl, cubeName, cubeSegment, outputPath, 0, job, envConfig);
 
         // aggregate to ND cuboids
         for (level = 1; level <= totalLevels; level++) {
@@ -199,7 +199,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             if (envConfig.isSparkSanityCheckEnabled() == true) {
                 sanityCheck(allRDDs[level], totalCount, level, cubeStatsReader, countMeasureIndex);
             }
-            saveToHDFS(allRDDs[level], metaUrl, cubeName, cubeSegment, outputPath, level, job);
+            saveToHDFS(allRDDs[level], metaUrl, cubeName, cubeSegment, outputPath, level, job, envConfig);
             allRDDs[level - 1].unpersist();
         }
         allRDDs[totalLevels].unpersist();
@@ -207,7 +207,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         deleteHDFSMeta(metaUrl);
     }
 
-    protected void setHadoopConf(Job job) throws Exception {
+    protected void setHadoopConf(Job job, CubeSegment segment, String metaUrl) throws Exception {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
     }
@@ -218,17 +218,24 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         int partition = (int) (baseCuboidSize / rddCut);
         partition = Math.max(kylinConfig.getSparkMinPartition(), partition);
         partition = Math.min(kylinConfig.getSparkMaxPartition(), partition);
+        logger.info("Partition for spark cubing: {}", partition);
         return partition;
     }
 
+    protected JavaPairRDD<ByteArray, Object[]> prepareOutput(JavaPairRDD<ByteArray, Object[]> rdd, KylinConfig config,
+            CubeSegment segment, int level) {
+        return rdd;
+    }
+
     protected void saveToHDFS(final JavaPairRDD<ByteArray, Object[]> rdd, final String metaUrl, final String cubeName,
-            final CubeSegment cubeSeg, final String hdfsBaseLocation, int level, Job job) throws Exception {
+            final CubeSegment cubeSeg, final String hdfsBaseLocation, final int level, final Job job,
+            final KylinConfig kylinConfig) throws Exception {
         final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(hdfsBaseLocation, level);
 
         IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(cubeSeg).getOuputFormat();
         outputFormat.configureJobOutput(job, cuboidOutputPath, cubeSeg, level);
 
-        rdd.mapToPair(
+        prepareOutput(rdd, kylinConfig, cubeSeg, level).mapToPair(
                 new PairFunction<Tuple2<ByteArray, Object[]>, org.apache.hadoop.io.Text, org.apache.hadoop.io.Text>() {
                     private volatile transient boolean initialized = false;
                     BufferedMeasureCodec codec;
