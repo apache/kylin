@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube.cuboid.algorithm;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -120,7 +121,8 @@ public class CuboidStats {
     private ImmutableMap<Long, Double> cuboidHitProbabilityMap;
     private ImmutableMap<Long, Long> cuboidScanCountMap;
 
-    private ImmutableMap<Long, Set<Long>> allDescendantsCache;
+    private ImmutableMap<Long, List<Long>> directChildrenCache;
+    private Map<Long, Set<Long>> allDescendantsCache;
 
     private CuboidStats(String key, long baseCuboidId, Set<Long> mandatoryCuboids, Map<Long, Long> statistics,
             Map<Long, Double> size, Map<Long, Long> hitFrequencyMap, Map<Long, Map<Long, Long>> scanCountSourceMap) {
@@ -187,8 +189,10 @@ public class CuboidStats {
         }
         this.cuboidScanCountMap = ImmutableMap.<Long, Long> builder().putAll(tmpCuboidScanCountMap).build();
 
-        this.allDescendantsCache = ImmutableMap.<Long, Set<Long>> builder()
-                .putAll(CuboidStatsUtil.createAllDescendantsCache(statistics.keySet())).build();
+        this.directChildrenCache = ImmutableMap.<Long, List<Long>> builder()
+                .putAll(CuboidStatsUtil.createDirectChildrenCache(statistics.keySet())).build();
+
+        this.allDescendantsCache = Maps.newConcurrentMap();
     }
 
     private long getExpScanCount(long sourceCuboid, Map<Long, Long> statistics,
@@ -216,9 +220,24 @@ public class CuboidStats {
     public Set<Long> getAllDescendants(long cuboid) {
         Set<Long> allDescendants = Sets.newLinkedHashSet();
         if (selectionCuboidSet.contains(cuboid)) {
-            return allDescendantsCache.get(cuboid);
+            if (allDescendantsCache.get(cuboid) != null) {
+                return allDescendantsCache.get(cuboid);
+            } else {
+                getAllDescendants(cuboid, allDescendants);
+                allDescendantsCache.put(cuboid, allDescendants);
+            }
         }
         return allDescendants;
+    }
+
+    private void getAllDescendants(long cuboid, Set<Long> allDescendants) {
+        if (allDescendants.contains(cuboid)) {
+            return;
+        }
+        allDescendants.add(cuboid);
+        for (Long directChild : directChildrenCache.get(cuboid)) {
+            getAllDescendants(directChild, allDescendants);
+        }
     }
 
     public Set<Long> getAllCuboidsForSelection() {

@@ -418,6 +418,10 @@ public class CubeManager implements IRealizationProvider {
             cube.setCost(update.getCost());
         }
 
+        if(update.getCuboids() != null){
+            cube.setCuboids(update.getCuboids());
+        }
+
         try {
             getStore().putResource(cube.getResourcePath(), cube, CUBE_SERIALIZER);
         } catch (IllegalStateException ise) {
