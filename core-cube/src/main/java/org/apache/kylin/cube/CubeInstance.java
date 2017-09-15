@@ -19,7 +19,6 @@
 package org.apache.kylin.cube;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +29,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.cube.cuboid.CuboidModeEnum;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -328,7 +328,36 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         this.createTimeUTC = createTimeUTC;
     }
 
-    Map<Long, Long> getCuboids() {
+    public Set<Long> getCuboidsByMode(String cuboidModeName) {
+        return getCuboidsByMode(CuboidModeEnum.getByModeName(cuboidModeName));
+    }
+
+    public Set<Long> getCuboidsByMode(CuboidModeEnum cuboidMode) {
+        if (cuboidMode == null || cuboidMode == CuboidModeEnum.CURRENT) {
+            return getCuboidScheduler().getAllCuboidIds();
+        }
+        Set<Long> cuboidsRecommend = getCuboidsRecommend();
+        if (cuboidsRecommend == null || cuboidMode == CuboidModeEnum.RECOMMEND) {
+            return cuboidsRecommend;
+        }
+        Set<Long> currentCuboids = getCuboidScheduler().getAllCuboidIds();
+        switch (cuboidMode) {
+        case RECOMMEND_EXISTING:
+            cuboidsRecommend.retainAll(currentCuboids);
+            return cuboidsRecommend;
+        case RECOMMEND_MISSING:
+            cuboidsRecommend.removeAll(currentCuboids);
+            return cuboidsRecommend;
+        case RECOMMEND_MISSING_WITH_BASE:
+            cuboidsRecommend.removeAll(currentCuboids);
+            currentCuboids.add(getCuboidScheduler().getBaseCuboidId());
+            return cuboidsRecommend;
+        default:
+            return null;
+        }
+    }
+
+    public Map<Long, Long> getCuboids() {
         if (cuboidBytes == null)
             return null;
         byte[] uncompressed;
@@ -344,7 +373,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
-    void setCuboids(Map<Long, Long> cuboids) {
+    public void setCuboids(Map<Long, Long> cuboids) {
         if (cuboids == null)
             return;
         if (cuboids.isEmpty()) {
@@ -361,7 +390,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
-    Set<Long> getCuboidsRecommend() {
+    public Set<Long> getCuboidsRecommend() {
         if (cuboidBytesRecommend == null)
             return null;
         byte[] uncompressed;
@@ -377,7 +406,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
-    void setCuboidsRecommend(HashSet<Long> cuboids) {
+    public void setCuboidsRecommend(Set<Long> cuboids) {
         if (cuboids == null)
             return;
         if (cuboids.isEmpty()) {

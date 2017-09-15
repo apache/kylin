@@ -19,14 +19,15 @@
 package org.apache.kylin.cube.cuboid.algorithm;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -122,16 +123,16 @@ public class CuboidStatsUtilTest {
     }
 
     @Test
-    public void createAllDescendantsCacheTest() {
+    public void createDirectChildrenCacheTest() {
         Set<Long> cuboidSet = generateCuboidSet();
-        Map<Long, Set<Long>> allDescendantsCache = CuboidStatsUtil.createAllDescendantsCache(cuboidSet);
+        Map<Long, List<Long>> directChildrenCache = CuboidStatsUtil.createDirectChildrenCache(cuboidSet);
 
-        Assert.assertTrue(allDescendantsCache.get(255L).containsAll(cuboidSet));
-
-        Assert.assertTrue(allDescendantsCache.get(239L).size() == 5);
-
-        Assert.assertTrue(allDescendantsCache.get(50L).containsAll(Sets.newHashSet(50L, 2L)));
-        Assert.assertTrue(!allDescendantsCache.get(50L).contains(4L));
+        Assert.assertTrue(directChildrenCache.get(255L).containsAll(Lists.newArrayList(239L, 159L, 50L)));
+        Assert.assertTrue(directChildrenCache.get(159L).contains(6L));
+        Assert.assertTrue(directChildrenCache.get(50L).contains(2L));
+        Assert.assertTrue(directChildrenCache.get(239L).contains(199L));
+        Assert.assertTrue(directChildrenCache.get(199L).contains(6L));
+        Assert.assertTrue(directChildrenCache.get(6L).containsAll(Lists.newArrayList(4L, 2L)));
     }
 
     private Set<Long> generateMassCuboidSet() {
@@ -144,18 +145,26 @@ public class CuboidStatsUtilTest {
     }
 
     @Test
-    public void createAllDescendantsCacheStressTest() {
+    public void createDirectChildrenCacheStressTest() {
         Stopwatch sw = new Stopwatch();
         sw.start();
         Set<Long> cuboidSet = generateMassCuboidSet();
-        System.out.println("Time elapsed for creating sorted cuboid list: " + sw.elapsed(TimeUnit.MILLISECONDS));
+        System.out.println("Time elapsed for creating sorted cuboid list: " + sw.elapsedMillis());
         sw.reset();
         sw.start();
-        CuboidStatsUtil.createAllDescendantsCache(cuboidSet);
-        System.out.println("Time elapsed for creating descendants cache: " + sw.elapsed(TimeUnit.MILLISECONDS));
-        sw.reset();
-        sw.start();
-        CuboidStatsUtil.createAllDescendantsCache2(cuboidSet);
-        System.out.println("Time elapsed for creating descendants cache2: " + sw.elapsed(TimeUnit.MILLISECONDS));
+        checkDirectChildrenCacheStressTest(CuboidStatsUtil.createDirectChildrenCache(cuboidSet));
+        System.out.println("Time elapsed for creating direct children cache: " + sw.elapsedMillis());
+        sw.stop();
+    }
+
+    private void checkDirectChildrenCacheStressTest(Map<Long, List<Long>> directChildrenCache) {
+        for (Map.Entry<Long, List<Long>> entry : directChildrenCache.entrySet()) {
+            if (Long.bitCount(entry.getKey()) == 1) {
+                Assert.assertTrue("Check for cuboid " + entry.getKey(), entry.getValue().size() == 0);
+            } else {
+                Assert.assertTrue("Check for cuboid " + entry.getKey(),
+                        Long.bitCount(entry.getKey()) == entry.getValue().size());
+            }
+        }
     }
 }

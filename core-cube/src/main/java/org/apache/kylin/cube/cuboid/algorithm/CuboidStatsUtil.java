@@ -20,13 +20,13 @@ package org.apache.kylin.cube.cuboid.algorithm;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -102,62 +102,102 @@ public class CuboidStatsUtil {
         }
     }
 
-    /** Using dynamic programming to use extra space to reduce repetitive computation*/
-    public static Map<Long, Set<Long>> createAllDescendantsCache(final Set<Long> cuboidSet) {
-        List<Long> latticeCuboidList = Lists.newArrayList(cuboidSet);
-        Collections.sort(latticeCuboidList);
-
-        Map<Long, Set<Long>> allDescendantsCache = Maps.newHashMap();
-        Set<Long> preNoneDescendants = Sets.newHashSet();
-        for (int i = 0; i < latticeCuboidList.size(); i++) {
-            Long currentCuboid = latticeCuboidList.get(i);
-            Set<Long> descendants = Sets.newHashSet(currentCuboid);
-            Set<Long> curNoneDescendants = Sets.newHashSet();
-            if (i > 0) {
-                long preCuboid = latticeCuboidList.get(i - 1);
-                if (isDescendant(preCuboid, currentCuboid)) {
-                    descendants.addAll(allDescendantsCache.get(preCuboid));
-                } else {
-                    curNoneDescendants.add(preCuboid);
-                    for (long cuboidToCheck : allDescendantsCache.get(preCuboid)) {
-                        if (isDescendant(cuboidToCheck, currentCuboid)) {
-                            descendants.addAll(allDescendantsCache.get(cuboidToCheck));
-                        }
-                    }
+    public static Map<Long, List<Long>> createDirectChildrenCache(final Set<Long> cuboidSet) {
+        /**
+         * Sort the list by ascending order:
+         * */
+        final List<Long> cuboidList = Lists.newArrayList(cuboidSet);
+        Collections.sort(cuboidList);
+        /**
+         * Sort the list by ascending order:
+         * 1. the more bit count of its value, the bigger
+         * 2. the larger of its value, the bigger
+         * */
+        List<Integer> layerIdxList = Lists.newArrayListWithExpectedSize(cuboidList.size());
+        for (int i = 0; i < cuboidList.size(); i++) {
+            layerIdxList.add(i);
+        }
+        Collections.sort(layerIdxList, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer i1, Integer i2) {
+                Long o1 = cuboidList.get(i1);
+                Long o2 = cuboidList.get(i2);
+                int nBitDiff = Long.bitCount(o1) - Long.bitCount(o2);
+                if (nBitDiff != 0) {
+                    return nBitDiff;
                 }
+                return Long.compare(o1, o2);
             }
-            for (long cuboidToCheck : preNoneDescendants) {
-                if (isDescendant(cuboidToCheck, currentCuboid)) {
-                    descendants.addAll(allDescendantsCache.get(cuboidToCheck));
-                } else {
-                    curNoneDescendants.add(cuboidToCheck);
-                }
-            }
-
-            allDescendantsCache.put(currentCuboid, descendants);
-            preNoneDescendants = curNoneDescendants;
+        });
+        /**
+         * Construct an index array for pointing the position in layerIdxList
+         * (layerCuboidList is for speeding up continuous iteration)
+         * */
+        int[] toLayerIdxArray = new int[layerIdxList.size()];
+        final List<Long> layerCuboidList = Lists.newArrayListWithExpectedSize(cuboidList.size());
+        for (int i = 0; i < layerIdxList.size(); i++) {
+            int cuboidIdx = layerIdxList.get(i);
+            toLayerIdxArray[cuboidIdx] = i;
+            layerCuboidList.add(cuboidList.get(cuboidIdx));
         }
 
-        return allDescendantsCache;
+        int[] previousLayerLastIdxArray = new int[layerIdxList.size()];
+        int currentBitCount = 0;
+        int previousLayerLastIdx = -1;
+        for (int i = 0; i < layerIdxList.size(); i++) {
+            int cuboidIdx = layerIdxList.get(i);
+            int nBits = Long.bitCount(cuboidList.get(cuboidIdx));
+            if (nBits > currentBitCount) {
+                currentBitCount = nBits;
+                previousLayerLastIdx = i - 1;
+            }
+            previousLayerLastIdxArray[i] = previousLayerLastIdx;
+        }
+
+        Map<Long, List<Long>> directChildrenCache = Maps.newHashMap();
+        for (int i = 0; i < cuboidList.size(); i++) {
+            Long currentCuboid = cuboidList.get(i);
+            LinkedList<Long> directChildren = Lists.newLinkedList();
+            int lastLayerIdx = previousLayerLastIdxArray[toLayerIdxArray[i]];
+            /**
+             * Choose one of the two scan strategies
+             * 1. cuboids are sorted by its value, like 1,2,3,4,...
+             * 2. cuboids are layered and sorted, like 1,2,4,8,...,3,5,...
+             * */
+            if (i - 1 <= lastLayerIdx) {
+                /**
+                 * 1. Adding cuboid by descending order
+                 * */
+                for (int j = i - 1; j >= 0; j--) {
+                    checkAndAddDirectChild(directChildren, currentCuboid, cuboidList.get(j));
+                }
+            } else {
+                /**
+                 * 1. Adding cuboid by descending order
+                 * 2. Check from lower cuboid layer
+                 * */
+                for (int j = lastLayerIdx; j >= 0; j--) {
+                    checkAndAddDirectChild(directChildren, currentCuboid, layerCuboidList.get(j));
+                }
+            }
+            directChildrenCache.put(currentCuboid, directChildren);
+        }
+        return directChildrenCache;
     }
 
-    @VisibleForTesting
-    static Map<Long, Set<Long>> createAllDescendantsCache2(final Set<Long> cuboidSet) {
-        List<Long> latticeCuboidList = Lists.newArrayList(cuboidSet);
-
-        Map<Long, Set<Long>> allDescendantsCache = Maps.newHashMap();
-        for (int i = 0; i < latticeCuboidList.size(); i++) {
-            Long currentCuboid = latticeCuboidList.get(i);
-            Set<Long> descendantSet = Sets.newHashSet(currentCuboid);
-            for (int j = 0; j < i; j++) {
-                Long checkCuboid = latticeCuboidList.get(j);
-                if (isDescendant(checkCuboid, currentCuboid)) {
-                    descendantSet.add(checkCuboid);
+    private static void checkAndAddDirectChild(List<Long> directChildren, Long currentCuboid, Long checkedCuboid) {
+        if (isDescendant(checkedCuboid, currentCuboid)) {
+            boolean ifDirectChild = true;
+            for (long directChild : directChildren) {
+                if (isDescendant(checkedCuboid, directChild)) {
+                    ifDirectChild = false;
+                    break;
                 }
             }
-            allDescendantsCache.put(currentCuboid, descendantSet);
+            if (ifDirectChild) {
+                directChildren.add(checkedCuboid);
+            }
         }
-        return allDescendantsCache;
     }
 
     public static boolean isDescendant(long cuboidToCheck, long parentCuboid) {
