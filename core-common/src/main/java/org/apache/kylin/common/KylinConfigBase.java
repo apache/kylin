@@ -720,10 +720,6 @@ abstract public class KylinConfigBase implements Serializable {
         return StorageURL.valueOf(url);
     }
 
-    public String getHBaseStorageNameSpace() {
-        return getOptional("kylin.storage.hbase.namespace", "default");
-    }
-
     public String getHBaseClusterFs() {
         return getOptional("kylin.storage.hbase.cluster-fs", "");
     }

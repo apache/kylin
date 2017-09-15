@@ -47,7 +47,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
         options.addOption(OPTION_CUBE_NAME);
         parseOptions(options, args);
 
-        String tableName = getOptionValue(OPTION_HTABLE_NAME);
+        String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
         // e.g
         // /tmp/kylin-3f150b00-3332-41ca-9d3d-652f67f044d7/test_kylin_cube_with_slr_ready_2_segments/hfile/
         // end with "/"

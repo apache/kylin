@@ -684,13 +684,11 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private String generateStorageLocation() {
-        String namespace = config.getHBaseStorageNameSpace();
         String namePrefix = IRealizationConstants.CubeHbaseStorageLocationPrefix;
         String tableName = "";
         Random ran = new Random();
         do {
             StringBuffer sb = new StringBuffer();
-            sb.append(namespace).append(":");
             sb.append(namePrefix);
             for (int i = 0; i < HBASE_TABLE_LENGTH; i++) {
                 sb.append(ALPHA_NUM.charAt(ran.nextInt(ALPHA_NUM.length())));
