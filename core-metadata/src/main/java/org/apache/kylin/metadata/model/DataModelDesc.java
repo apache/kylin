@@ -421,7 +421,7 @@ public class DataModelDesc extends RootPersistentEntity {
             throw new IllegalStateException("Root fact table does not exist:" + rootFactTable);
 
         TableDesc rootDesc = tables.get(rootFactTable);
-        rootFactTableRef = new TableRef(this, rootDesc.getName(), rootDesc);
+        rootFactTableRef = new TableRef(this, rootDesc.getName(), rootDesc, false);
 
         addAlias(rootFactTableRef);
         factTableRefs.add(rootFactTableRef);
@@ -440,7 +440,7 @@ public class DataModelDesc extends RootPersistentEntity {
             alias = alias.toUpperCase();
             join.setAlias(alias);
 
-            TableRef ref = new TableRef(this, alias, tableDesc);
+            TableRef ref = new TableRef(this, alias, tableDesc, true);
 
             join.setTableRef(ref);
             addAlias(ref);

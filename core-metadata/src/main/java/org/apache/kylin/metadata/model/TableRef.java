@@ -34,7 +34,7 @@ public class TableRef implements Serializable {
     final private Map<String, TblColRef> columns;
     final private String modelName;
 
-    TableRef(DataModelDesc model, String alias, TableDesc table) {
+    TableRef(DataModelDesc model, String alias, TableDesc table, boolean filterOutComputedColumns) {
         this.model = model;
         this.modelName = model.getName();
         this.alias = alias;
@@ -42,7 +42,9 @@ public class TableRef implements Serializable {
         this.columns = Maps.newLinkedHashMap();
 
         for (ColumnDesc col : table.getColumns()) {
-            columns.put(col.getName(), new TblColRef(this, col));
+            if (!filterOutComputedColumns || !col.isComputedColumnn()) {
+                columns.put(col.getName(), new TblColRef(this, col));
+            }
         }
     }
 

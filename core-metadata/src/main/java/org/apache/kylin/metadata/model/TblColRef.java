@@ -75,7 +75,7 @@ public class TblColRef implements Serializable {
     }
 
     public static TableRef tableForUnknownModel(String tempTableAlias, TableDesc table) {
-        return new TableRef(UNKNOWN_MODEL, tempTableAlias, table);
+        return new TableRef(UNKNOWN_MODEL, tempTableAlias, table, false);
     }
 
     public static TblColRef columnForUnknownModel(TableRef table, ColumnDesc colDesc) {
