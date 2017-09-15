@@ -92,7 +92,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
             attachCubeMetadata(cube, job.getConfiguration());
 
             Configuration hbaseConf = HBaseConfiguration.create(getConf());
-            HTable htable = new HTable(hbaseConf, getOptionValue(OPTION_HTABLE_NAME));
+            HTable htable = new HTable(hbaseConf, getOptionValue(OPTION_HTABLE_NAME).toUpperCase());
 
             // Automatic config !
             HFileOutputFormat.configureIncrementalLoad(job, htable);
