@@ -109,6 +109,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         SelfStopExecutable task1 = new SelfStopExecutable();
         job.addTask(task1);
         jobService.addJob(job);
+        Thread.sleep(1100);
         waitForJobStatus(job.getId(), ExecutableState.RUNNING, 500);
         jobService.discardJob(job.getId());
         waitForJobFinish(job.getId());
