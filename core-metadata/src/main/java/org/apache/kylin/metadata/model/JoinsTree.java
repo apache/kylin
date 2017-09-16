@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class JoinsTree implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -73,7 +74,8 @@ public class JoinsTree implements Serializable {
         return matchUp.size();
     }
 
-    private boolean matchInTree(Chain chain, JoinsTree another, Map<String, String> constraints, Map<String, String> matchUp) {
+    private boolean matchInTree(Chain chain, JoinsTree another, Map<String, String> constraints,
+            Map<String, String> matchUp) {
         String thisAlias = chain.table.getAlias();
         if (matchUp.containsKey(thisAlias))
             return true;
@@ -103,7 +105,8 @@ public class JoinsTree implements Serializable {
 
         boolean matches = false;
         if (chain.join == null) {
-            matches = anotherChain.join == null && chain.table.getTableDesc().getIdentity().equals(anotherChain.table.getTableDesc().getIdentity());
+            matches = anotherChain.join == null
+                    && chain.table.getTableDesc().getIdentity().equals(anotherChain.table.getTableDesc().getIdentity());
         } else {
             matches = chain.join.matches(anotherChain.join) && matchChain(chain.fkSide, anotherChain.fkSide, matchUp);
         }
@@ -122,6 +125,21 @@ public class JoinsTree implements Serializable {
             return chain.join;
     }
 
+    public List<Chain> unmatchedChain(JoinsTree another, Map<String, String> constraints) {
+        Map<String, String> matchUp = new HashMap<>();
+        List<Chain> unmatchedChainList = Lists.newArrayList();
+        for (Chain chain : tableChains.values()) {
+            if (matchInTree(chain, another, constraints, matchUp) == false)
+                unmatchedChainList.add(chain);
+        }
+
+        return unmatchedChainList;
+    }
+
+    public Map<String, Chain> getTableChains() {
+        return tableChains;
+    }
+
     public static class Chain implements Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -137,6 +155,18 @@ public class JoinsTree implements Serializable {
                 Preconditions.checkArgument(table == join.getPKSide());
                 Preconditions.checkArgument(fkSide.table == join.getFKSide());
             }
+        }
+
+        public JoinDesc getJoin() {
+            return join;
+        }
+
+        public TableRef getTable() {
+            return table;
+        }
+
+        public Chain getFkSide() {
+            return fkSide;
         }
     }
 

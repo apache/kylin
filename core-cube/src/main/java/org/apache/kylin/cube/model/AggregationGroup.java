@@ -122,7 +122,8 @@ public class AggregationGroup implements Serializable {
         // check no dup
         Set<String> set = new HashSet<>(Arrays.asList(names));
         if (set.size() < names.length)
-            throw new IllegalStateException("Columns in aggrgroup must not contain duplication: " + Arrays.asList(names));
+            throw new IllegalStateException(
+                    "Columns in aggrgroup must not contain duplication: " + Arrays.asList(names));
     }
 
     private void buildPartialCubeFullMask(RowKeyDesc rowKeyDesc) {
@@ -325,12 +326,16 @@ public class AggregationGroup implements Serializable {
             normalDims.removeAll(jointDims);
 
             combination = combination * (1L << normalDims.size());
+
             if (cubeDesc.getConfig().getCubeAggrGroupIsMandatoryOnlyValid() && !mandatoryDims.isEmpty()) {
                 combination += 1;
             }
             combination -= 1; // not include cuboid 0
         }
 
+        if (combination < 0) { // overflow
+            combination = Long.MAX_VALUE - 1;
+        }
         return combination;
     }
 

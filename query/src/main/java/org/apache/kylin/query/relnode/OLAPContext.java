@@ -41,6 +41,7 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 import org.apache.kylin.metadata.tuple.TupleInfo;
+import org.apache.kylin.query.routing.RealizationCheck;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hybrid.HybridInstance;
@@ -124,6 +125,7 @@ public class OLAPContext {
 
     // cube metadata
     public IRealization realization;
+    public RealizationCheck realizationCheck;
 
     public Set<TblColRef> allColumns = new HashSet<>();
     public List<TblColRef> groupByColumns = new ArrayList<>();
@@ -161,8 +163,7 @@ public class OLAPContext {
                     metricsColumns, aggregations, aggrSqlCalls, // aggregation
                     filterColumns, filter, havingFilter, // filter
                     sortColumns, sortOrders, limitPrecedesAggr, // sort & limit
-                    involvedMeasure
-            );
+                    involvedMeasure);
         return sqlDigest;
     }
 
@@ -180,7 +181,7 @@ public class OLAPContext {
                 return true;
             }
         }
-        
+
         return false;
     }
 

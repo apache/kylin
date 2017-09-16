@@ -96,8 +96,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
     }
 
-    public static final int MAX_ROWKEY_SIZE = 64;
-
     public enum DeriveType implements java.io.Serializable {
         LOOKUP, PK_FK, EXTENDED_COLUMN
     }
@@ -191,7 +189,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
 
     private Map<TblColRef, DeriveInfo> extendedColumnToHosts = Maps.newHashMap();
-    
+
     transient private CuboidScheduler cuboidScheduler = null;
 
     public boolean isEnableSharding() {
@@ -563,9 +561,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         checkArgument(StringUtils.isNotBlank(name), "CubeDesc name is blank");
         checkArgument(StringUtils.isNotBlank(modelName), "CubeDesc (%s) has blank model name", name);
-        checkArgument(this.rowkey.getRowKeyColumns().length < MAX_ROWKEY_SIZE,
-                "Too many rowkeys (%s) in CubeDesc, please try to reduce dimension number or adopt derived dimensions",
-                this.rowkey.getRowKeyColumns().length);
 
         // note CubeDesc.name == CubeInstance.name
         List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, name);
@@ -581,6 +576,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
 
         this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
+
+        checkArgument(this.rowkey.getRowKeyColumns().length <= this.config.getCubeRowkeyMaxSize(),
+                "Too many rowkeys (%s) in CubeDesc, please try to reduce dimension number or adopt derived dimensions",
+                this.rowkey.getRowKeyColumns().length);
 
         this.model = MetadataManager.getInstance(config).getDataModelDesc(modelName);
         checkNotNull(this.model, "DateModelDesc(%s) not found", modelName);
@@ -618,7 +617,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 hbaseMapping.init(this);
                 initMeasureReferenceToColumnFamily();
             }
-        }        
+        }
 
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived(true);

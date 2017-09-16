@@ -290,7 +290,7 @@ abstract public class KylinConfigBase implements Serializable {
                 "org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock$Factory");
         return (DistributedLockFactory) ClassUtil.newInstance(clsName);
     }
-    
+
     public String getHBaseMappingAdapter() {
         return getOptional("kylin.metadata.hbasemapping-adapter");
     }
@@ -346,7 +346,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getSegmentAdvisor() {
         return getOptional("kylin.cube.segment-advisor", "org.apache.kylin.cube.CubeSegmentAdvisor");
     }
-    
+
     public double getJobCuboidSizeRatio() {
         return Double.parseDouble(getOptional("kylin.cube.size-estimate-ratio", "0.25"));
     }
@@ -386,6 +386,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public boolean getCubeAggrGroupIsMandatoryOnlyValid() {
         return Boolean.parseBoolean(getOptional("kylin.cube.aggrgroup.is-mandatory-only-valid", "false"));
+    }
+
+    public int getCubeRowkeyMaxSize() {
+        return Integer.parseInt(getOptional("kylin.cube.rowkey.max-size", "63"));
     }
 
     public int getMaxBuildingSegments() {

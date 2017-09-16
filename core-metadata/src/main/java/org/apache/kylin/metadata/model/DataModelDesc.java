@@ -843,12 +843,10 @@ public class DataModelDesc extends RootPersistentEntity {
         return metrics;
     }
 
-    @Deprecated
     public void setDimensions(List<ModelDimensionDesc> dimensions) {
         this.dimensions = dimensions;
     }
 
-    @Deprecated
     public void setMetrics(String[] metrics) {
         this.metrics = metrics;
     }
@@ -873,9 +871,11 @@ public class DataModelDesc extends RootPersistentEntity {
         copy.dimensions = orig.dimensions;
         copy.metrics = orig.metrics;
         copy.filterCondition = orig.filterCondition;
-        copy.partitionDesc = PartitionDesc.getCopyOf(orig.getPartitionDesc());
         copy.capacity = orig.capacity;
         copy.computedColumnDescs = orig.computedColumnDescs;
+        if (orig.getPartitionDesc() != null) {
+            copy.partitionDesc = PartitionDesc.getCopyOf(orig.getPartitionDesc());
+        }
         copy.updateRandomUuid();
         return copy;
     }

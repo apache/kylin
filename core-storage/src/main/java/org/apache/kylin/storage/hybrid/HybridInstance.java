@@ -188,6 +188,8 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
                 result.capable = true;
                 result.cost = Math.min(result.cost, child.cost);
                 result.influences.addAll(child.influences);
+            } else {
+                result.incapableCause = child.incapableCause;
             }
         }
 
@@ -220,7 +222,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
         init();
         return allColumnDescs;
     }
-    
+
     @Override
     public List<MeasureDesc> getMeasures() {
         init();

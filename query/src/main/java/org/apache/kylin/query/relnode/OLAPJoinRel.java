@@ -90,7 +90,8 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         final JoinInfo joinInfo = JoinInfo.of(left, right, condition);
         assert joinInfo.isEqui();
         try {
-            return new OLAPJoinRel(getCluster(), traitSet, left, right, condition, joinInfo.leftKeys, joinInfo.rightKeys, variablesSet, joinType);
+            return new OLAPJoinRel(getCluster(), traitSet, left, right, condition, joinInfo.leftKeys,
+                    joinInfo.rightKeys, variablesSet, joinType);
         } catch (InvalidRelException e) {
             // Semantic error not possible. Must be a bug. Convert to internal error.
             throw new AssertionError(e);
@@ -175,11 +176,14 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
             this.context.allColumns.clear();
 
             // build JoinDesc
+            Preconditions.checkState(this.getCondition() instanceof RexCall, "Cartesian Join is not supported.");
+
             RexCall condition = (RexCall) this.getCondition();
             JoinDesc join = buildJoin(condition);
 
             JoinRelType joinRelType = this.getJoinType();
-            String joinType = joinRelType == JoinRelType.INNER ? "INNER" : joinRelType == JoinRelType.LEFT ? "LEFT" : null;
+            String joinType = joinRelType == JoinRelType.INNER ? "INNER"
+                    : joinRelType == JoinRelType.LEFT ? "LEFT" : null;
             join.setType(joinType);
 
             this.context.joins.add(join);
@@ -210,7 +214,8 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         columns.addAll(rightColumnRowType.getAllColumns());
 
         if (columns.size() != this.rowType.getFieldCount()) {
-            throw new IllegalStateException("RowType=" + this.rowType.getFieldCount() + ", ColumnRowType=" + columns.size());
+            throw new IllegalStateException(
+                    "RowType=" + this.rowType.getFieldCount() + ", ColumnRowType=" + columns.size());
         }
         return new ColumnRowType(columns);
     }
@@ -308,7 +313,8 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
         PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), pref.preferArray());
         RelOptTable factTable = context.firstTableScan.getTable();
-        MethodCallExpression exprCall = Expressions.call(factTable.getExpression(OLAPTable.class), "executeOLAPQuery", implementor.getRootExpression(), Expressions.constant(context.id));
+        MethodCallExpression exprCall = Expressions.call(factTable.getExpression(OLAPTable.class), "executeOLAPQuery",
+                implementor.getRootExpression(), Expressions.constant(context.id));
         return implementor.result(physType, Blocks.toBlock(exprCall));
     }
 

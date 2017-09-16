@@ -456,7 +456,7 @@ public class QueryService extends BasicService {
 
             } catch (Throwable e) { // calcite may throw AssertError
                 logger.error("Exception while executing query", e);
-                String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
+                String errMsg = makeErrorMsgUserFriendly(e);
 
                 sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
                 sqlResponse.setTotalScanCount(queryContext.getScannedRows());
@@ -869,6 +869,10 @@ public class QueryService extends BasicService {
         }
 
         return buildSqlResponse(isPushDown, results, columnMetas);
+    }
+
+    protected String makeErrorMsgUserFriendly(Throwable e) {
+        return QueryUtil.makeErrorMsgUserFriendly(e);
     }
 
     private SQLResponse getPrepareOnlySqlResponse(String correctedSql, Connection conn, Boolean isPushDown,

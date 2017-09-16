@@ -37,36 +37,44 @@ public class JoinTableDesc implements Serializable {
     @JsonProperty("kind")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private TableKind kind = TableKind.LOOKUP;
-    
+
     @JsonProperty("alias")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String alias;
-    
+
     @JsonProperty("join")
     private JoinDesc join;
-    
+
     private TableRef tableRef;
 
     public String getTable() {
         return table;
     }
 
-    void setTable(String table) {
+    public void setTable(String table) {
         this.table = table;
     }
 
     public TableKind getKind() {
         return kind;
     }
-    
-    void setAlias(String alias) {
+
+    public void setKind(TableKind kind) {
+        this.kind = kind;
+    }
+
+    public void setAlias(String alias) {
         this.alias = alias;
     }
-    
+
     public String getAlias() {
         return alias;
     }
-    
+
+    public void setJoin(JoinDesc join) {
+        this.join = join;
+    }
+
     public JoinDesc getJoin() {
         return join;
     }
@@ -79,4 +87,30 @@ public class JoinTableDesc implements Serializable {
         this.tableRef = ref;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        JoinTableDesc that = (JoinTableDesc) o;
+
+        if (table != null ? !table.equals(that.table) : that.table != null)
+            return false;
+        if (kind != that.kind)
+            return false;
+        if (alias != null ? !alias.equals(that.alias) : that.alias != null)
+            return false;
+        return join != null ? join.equals(that.join) : that.join == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = table != null ? table.hashCode() : 0;
+        result = 31 * result + (kind != null ? kind.hashCode() : 0);
+        result = 31 * result + (alias != null ? alias.hashCode() : 0);
+        result = 31 * result + (join != null ? join.hashCode() : 0);
+        return result;
+    }
 }

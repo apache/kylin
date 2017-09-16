@@ -186,10 +186,10 @@ public class QueryUtil {
             errorMsg = errorMsg.replaceAll("\\s", " ");
 
             // move cause to be ahead of sql, calcite creates the message pattern below
-            Pattern pattern = Pattern.compile("error while executing SQL \"(.*)\":(.*)");
+            Pattern pattern = Pattern.compile("Error while executing SQL \"(.*)\":(.*)");
             Matcher matcher = pattern.matcher(errorMsg);
             if (matcher.find()) {
-                return matcher.group(2).trim() + "\n" + "while executing SQL: \"" + matcher.group(1).trim() + "\"";
+                return matcher.group(2).trim() + "\nwhile executing SQL: \"" + matcher.group(1).trim() + "\"";
             } else
                 return errorMsg;
         } catch (Exception e) {
@@ -201,7 +201,8 @@ public class QueryUtil {
         String sql1 = sql.toLowerCase();
         sql1 = removeCommentInSql(sql1);
         sql1 = sql1.trim();
-        return sql1.startsWith("select") || (sql1.startsWith("with") && sql1.contains("select")) || (sql1.startsWith("explain") && sql1.contains("select"));
+        return sql1.startsWith("select") || (sql1.startsWith("with") && sql1.contains("select"))
+                || (sql1.startsWith("explain") && sql1.contains("select"));
     }
 
     public static String removeCommentInSql(String sql1) {
