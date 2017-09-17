@@ -44,6 +44,24 @@ public class TableACLTest {
     }
 
     @Test
+    public void testDelTableACLByTable() {
+        //delete specific table's ACL
+        TableACL tableACL = new TableACL();
+        tableACL.add("u1", "t1");
+        tableACL.add("u2", "t1");
+        tableACL.add("u2", "t2");
+        tableACL.add("u2", "t3");
+        tableACL.add("u3", "t3");
+        tableACL.deleteByTbl("t1");
+
+        TableACL expected = new TableACL();
+        expected.add("u2", "t2");
+        expected.add("u2", "t3");
+        expected.add("u3", "t3");
+        Assert.assertEquals(expected, tableACL);
+    }
+
+    @Test
     public void testDeleteToEmpty() {
         TableACL tableACL = new TableACL();
         tableACL.add("u1", "t1");

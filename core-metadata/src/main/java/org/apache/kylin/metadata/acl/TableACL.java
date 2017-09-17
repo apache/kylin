@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.acl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,6 +101,20 @@ public class TableACL extends RootPersistentEntity {
     public TableACL delete(String username) {
         checkUserHasACL(username);
         userTableBlackList.remove(username);
+        return this;
+    }
+
+    public TableACL deleteByTbl(String table) {
+        Iterator<Map.Entry<String, TableBlackList>> it = userTableBlackList.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, TableBlackList> entry = it.next();
+            TableBlackList tableBlackList = entry.getValue();
+            tableBlackList.removeTbl(table);
+            if (tableBlackList.isEmpty()) {
+                it.remove();
+            }
+        }
+
         return this;
     }
 

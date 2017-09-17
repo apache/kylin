@@ -122,7 +122,8 @@ public class PushDownUtil {
 
         if (isSelect) {
             runner.executeQuery(sql, returnRows, returnColumnMeta);
-        } else {
+        }
+        if (!isSelect && kylinConfig.isPushDownUpdateEnabled()) {
             runner.executeUpdate(sql);
         }
         return Pair.newPair(returnRows, returnColumnMeta);
@@ -130,12 +131,17 @@ public class PushDownUtil {
 
     private static boolean isExpectedCause(SQLException sqlException) {
         Preconditions.checkArgument(sqlException != null);
-
         Throwable rootCause = ExceptionUtils.getRootCause(sqlException);
-        return rootCause != null && //
-                (rootCause instanceof NoRealizationFoundException //
-                        || rootCause instanceof SqlValidatorException // 
-                        || rootCause instanceof RoutingIndicatorException);
+
+        boolean isPushDownUpdateEnabled = KylinConfig.getInstanceFromEnv().isPushDownUpdateEnabled();
+        if (!isPushDownUpdateEnabled) {
+            return rootCause != null && rootCause instanceof NoRealizationFoundException;
+        } else {
+            return (rootCause != null
+                    && (rootCause instanceof NoRealizationFoundException
+                    || rootCause instanceof SqlValidatorException
+                    || rootCause instanceof RoutingIndicatorException));
+        }
     }
 
     static String schemaCompletion(String inputSql, String schema) throws SqlParseException {

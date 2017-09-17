@@ -78,4 +78,9 @@ public class TableACLService extends BasicService {
         aclEvaluate.checkProjectAdminPermission(project);
         getTableACLManager().deleteTableACL(project, username);
     }
+
+    public void deleteFromTableBlackListByTbl(String project, String table) throws IOException {
+        aclEvaluate.checkProjectAdminPermission(project);
+        getTableACLManager().deleteTableACLByTbl(project, table);
+    }
 }

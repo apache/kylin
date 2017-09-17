@@ -45,7 +45,7 @@ public class MultiNodeManagerTestBase extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         staticCreateTestMetadata();
-
+        System.clearProperty("kylin.server.cluster-servers");
         int port = CheckUtil.randomAvailablePort(40000, 50000);
         logger.info("Chosen port for CacheServiceTest is " + port);
         configA = KylinConfig.getInstanceFromEnv();

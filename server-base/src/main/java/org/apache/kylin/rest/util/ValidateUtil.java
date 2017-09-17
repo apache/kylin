@@ -19,11 +19,11 @@
 package org.apache.kylin.rest.util;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.persistence.AclEntity;
@@ -73,7 +73,7 @@ public class ValidateUtil {
 
     public void validateTable(String project, String table) throws IOException {
         List<TableDesc> tableDescs = tableService.getTableDescByProject(project, false);
-        List<String> tables = new ArrayList<>();
+        Set<String> tables = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (TableDesc tableDesc : tableDescs) {
             tables.add(tableDesc.getDatabase() + "." + tableDesc.getName());
         }
@@ -85,7 +85,7 @@ public class ValidateUtil {
 
     public void validateColumn(String project, String table, Collection<String> columns) throws IOException {
         Preconditions.checkState(columns != null && columns.size() > 0);
-        List<String> cols = getAllColumns(project, table);
+        Set<String> cols = getAllColumns(project, table);
         for (String c : columns) {
             if (!cols.contains(c)) {
                 throw new RuntimeException("Operation failed, column:" + c + " not exists");
@@ -93,13 +93,13 @@ public class ValidateUtil {
         }
     }
 
-    private List<String> getAllColumns(String project, String table) throws IOException {
+    private Set<String> getAllColumns(String project, String table) throws IOException {
         List<TableDesc> tableDescByProject = tableService.getTableDescByProject(project, true);
-        List<String> cols = new ArrayList<>();
+        Set<String> cols = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
         for (TableDesc tableDesc : tableDescByProject) {
             String tbl = tableDesc.getDatabase() + "." + tableDesc.getName();
-            if (tbl.equals(table)) {
+            if (tbl.equalsIgnoreCase(table)) {
                 for (ColumnDesc column : tableDesc.getColumns()) {
                     cols.add(column.getName());
                 }

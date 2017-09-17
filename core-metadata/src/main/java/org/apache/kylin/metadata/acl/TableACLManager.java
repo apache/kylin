@@ -164,4 +164,11 @@ public class TableACLManager {
         getStore().putResource(path, tableACL, System.currentTimeMillis(), TABLE_ACL_SERIALIZER);
         tableACLMap.put(project, tableACL);
     }
+
+    public void deleteTableACLByTbl(String project, String table) throws IOException {
+        String path = DIR_PREFIX + project;
+        TableACL tableACL = getTableACL(project).deleteByTbl(table);
+        getStore().putResource(path, tableACL, System.currentTimeMillis(), TABLE_ACL_SERIALIZER);
+        tableACLMap.put(project, tableACL);
+    }
 }

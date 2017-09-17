@@ -1104,6 +1104,10 @@ abstract public class KylinConfigBase implements Serializable {
         return StringUtils.isNotEmpty(getPushDownRunnerClassName());
     }
 
+    public boolean isPushDownUpdateEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.query.pushdown.update-enabled", "false"));
+    }
+
     public String getPushDownRunnerClassName() {
         return getOptional("kylin.query.pushdown.runner-class-name", "");
     }

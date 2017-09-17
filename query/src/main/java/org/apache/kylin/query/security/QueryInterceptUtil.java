@@ -74,7 +74,6 @@ public class QueryInterceptUtil {
                 //computed column
                 if (columnDesc.isComputedColumnn()) {
                     allColWithTblAndSchema.addAll(getCCUsedCols(project, columnDesc));
-                    continue;
                 }
                 //normal column
                 allColWithTblAndSchema.add(tblColRef.getColumWithTableAndSchema());
