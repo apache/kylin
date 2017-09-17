@@ -32,6 +32,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
@@ -80,10 +81,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                 return;
             }
             try {
-                String params = getMapReduceParams();
-                String[] args = params.trim().split("\\s+");
-                Configuration conf = HadoopUtil.getCurrentConfiguration();
-                overwriteJobConf(conf, executableContext.getConfig(), args);
+                Configuration conf = new Configuration(HadoopUtil.getCurrentConfiguration());
+                overwriteJobConf(conf, executableContext.getConfig(), getMapReduceParams().trim().split("\\s+"));
                 Job job = new Cluster(conf).getJob(JobID.forName(mrJobId));
                 if (job == null || job.getJobState() == JobStatus.State.FAILED) {
                     //remove previous mr job info
@@ -107,15 +106,12 @@ public class MapReduceExecutable extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final String mapReduceJobClass = getMapReduceJobClass();
-        String params = getMapReduceParams();
         Preconditions.checkNotNull(mapReduceJobClass);
-        Preconditions.checkNotNull(params);
         try {
             Job job;
             ExecutableManager mgr = getManager();
-            String[] args = params.trim().split("\\s+");
-            Configuration conf = HadoopUtil.getCurrentConfiguration();
-            String[] jobArgs = overwriteJobConf(conf, context.getConfig(), args);
+            Configuration conf = new Configuration(HadoopUtil.getCurrentConfiguration());
+            String[] jobArgs = overwriteJobConf(conf, context.getConfig(), getMapReduceParams().trim().split("\\s+"));
             final Map<String, String> extra = mgr.getOutput(getId()).getExtra();
             if (extra.containsKey(ExecutableConstants.MR_JOB_ID)) {
                 job = new Cluster(conf).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
@@ -125,12 +121,9 @@ public class MapReduceExecutable extends AbstractExecutable {
                 final AbstractHadoopJob hadoopJob = constructor.newInstance();
                 hadoopJob.setConf(conf);
                 hadoopJob.setAsync(true); // so the ToolRunner.run() returns right away
-                logger.info("parameters of the MapReduceExecutable: {}", params);
+                logger.info("parameters of the MapReduceExecutable: {}", getMapReduceParams());
                 try {
-                    //for async mr job, ToolRunner just return 0;
 
-                    // use this method instead of ToolRunner.run() because ToolRunner.run() is not thread-sale
-                    // Refer to: http://stackoverflow.com/questions/22462665/is-hadoops-toorunner-thread-safe
                     hadoopJob.run(jobArgs);
 
                     if (hadoopJob.isSkipped()) {
@@ -150,14 +143,6 @@ public class MapReduceExecutable extends AbstractExecutable {
             final StringBuilder output = new StringBuilder();
             final HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(job, output);
 
-            //            final String restStatusCheckUrl = getRestStatusCheckUrl(job, context.getConfig());
-            //            if (restStatusCheckUrl == null) {
-            //                logger.error("restStatusCheckUrl is null");
-            //                return new ExecuteResult(ExecuteResult.State.ERROR, "restStatusCheckUrl is null");
-            //            }
-            //            String mrJobId = hadoopCmdOutput.getMrJobId();
-            //            boolean useKerberosAuth = context.getConfig().isGetJobStatusWithKerberos();
-            //            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output, useKerberosAuth);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
             while (!isDiscarded() && !isPaused()) {
 
@@ -269,7 +254,7 @@ public class MapReduceExecutable extends AbstractExecutable {
         String fileName = commandLine.getOptionValue(BatchConstants.ARG_CONF);
         String cubeName = commandLine.getOptionValue(BatchConstants.ARG_CUBE_NAME);
         Preconditions.checkArgument(cubeName != null && fileName != null, "Can't get job config");
-        conf.addResource(fileName);
+        conf.addResource(new Path(fileName));
         for (Map.Entry<String, String> entry : CubeManager.getInstance(config).getCube(cubeName).getConfig()
                 .getMRConfigOverride().entrySet()) {
             conf.set(entry.getKey(), entry.getValue());

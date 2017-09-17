@@ -76,4 +76,30 @@
         <description>Block replication</description>
     </property>
 
+    <!-- memory configuration for sandbox -->
+    <property>
+        <name>mapreduce.map.memory.mb</name>
+        <value>384</value>
+    </property>
+
+    <property>
+        <name>mapreduce.map.java.opts</name>
+        <value>-Xmx350m</value>
+    </property>
+
+    <property>
+        <name>mapreduce.task.io.sort.mb</name>
+        <value>30</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.memory.mb</name>
+        <value>384</value>
+    </property>
+
+    <property>
+        <name>mapreduce.reduce.java.opts</name>
+        <value>-Xmx350m</value>
+    </property>
+
 </configuration>
