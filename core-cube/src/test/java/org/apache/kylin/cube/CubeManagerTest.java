@@ -307,10 +307,14 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testGetCubeNameWithNamespace() {
-        CubeManager mgr = CubeManager.getInstance(getTestConfig());
-        String tablename = mgr.generateStorageLocation();
-        System.out.println(tablename);
-        assertTrue(tablename.startsWith("HELLO:WORLD"));
+        System.setProperty("kylin.storage.hbase.table-name-prefix", "HELLO_");
+        try {
+            CubeManager mgr = CubeManager.getInstance(getTestConfig());
+            String tablename = mgr.generateStorageLocation();
+            assertTrue(tablename.startsWith("HELLO_"));
+        } finally {
+            System.clearProperty("kylin.storage.hbase.table-name-prefix");
+        }
     }
 
     public CubeDescManager getCubeDescManager() {

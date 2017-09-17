@@ -46,15 +46,16 @@ public class StorageCleanJobHbaseUtil {
 
     public static void cleanUnusedHBaseTables(boolean delete, int deleteTimeout) throws IOException {
         Configuration conf = HBaseConfiguration.create();
-        CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
         // get all kylin hbase tables
         try (HBaseAdmin hbaseAdmin = new HBaseAdmin(conf)) {
-            String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;
+            String tableNamePrefix = kylinConfig.getHBaseTableNamePrefix();
             HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
             List<String> allTablesNeedToBeDropped = new ArrayList<String>();
             for (HTableDescriptor desc : tableDescriptors) {
                 String host = desc.getValue(IRealizationConstants.HTableTag);
-                if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
+                if (kylinConfig.getMetadataUrlPrefix().equalsIgnoreCase(host)) {
                     //only take care htables that belongs to self, and created more than 2 days
                     allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
                 }
