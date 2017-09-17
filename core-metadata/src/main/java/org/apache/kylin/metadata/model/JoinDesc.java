@@ -171,7 +171,12 @@ public class JoinDesc implements Serializable {
             return false;
         JoinDesc other = (JoinDesc) obj;
 
+
         // note pk/fk are sorted, sortByFK()
+        if (!Arrays.equals(foreignKey, other.foreignKey))
+            return false;
+        if (!Arrays.equals(primaryKey, other.primaryKey))
+            return false;
         if (!Arrays.equals(foreignKeyColumns, other.foreignKeyColumns))
             return false;
         if (!Arrays.equals(primaryKeyColumns, other.primaryKeyColumns))
