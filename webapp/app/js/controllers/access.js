@@ -107,7 +107,8 @@ KylinApp.controller('AccessCtrl', function ($scope, AccessService, MessageServic
       var revokeRequst = {
         type: type,
         uuid: entity.uuid,
-        accessEntryId: access.id
+        accessEntryId: access.id,
+        sid: access.sid.principal
       };
       AccessService.revoke(revokeRequst, function (accessEntities) {
         entity.accessEntities = accessEntities.accessEntryResponseList;
