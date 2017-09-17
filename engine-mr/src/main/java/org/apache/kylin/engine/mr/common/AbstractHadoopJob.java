@@ -112,8 +112,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_STATISTICS_SAMPLING_PERCENT = OptionBuilder
             .withArgName(BatchConstants.ARG_STATS_SAMPLING_PERCENT).hasArg().isRequired(false)
             .withDescription("Statistics sampling percentage").create(BatchConstants.ARG_STATS_SAMPLING_PERCENT);
-    protected static final Option OPTION_JOB_CONF = OptionBuilder.withArgName(BatchConstants.ARG_CONF).hasArg()
-            .isRequired(true).withDescription("MapReduce job config file").create(BatchConstants.ARG_CONF);
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 

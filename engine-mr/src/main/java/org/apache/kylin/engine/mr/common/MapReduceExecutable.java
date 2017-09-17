@@ -28,6 +28,8 @@ import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
@@ -244,26 +246,41 @@ public class MapReduceExecutable extends AbstractExecutable {
         setParam(KEY_COUNTER_SAVEAS, value);
     }
 
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_JOB_CONF = OptionBuilder.withArgName(BatchConstants.ARG_CONF).hasArg()
+            .isRequired(false).create(BatchConstants.ARG_CONF);
+
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_CUBE_NAME).hasArg()
+            .isRequired(false).create(BatchConstants.ARG_CUBE_NAME);
+
     private String[] overwriteJobConf(Configuration conf, KylinConfig config, String[] jobParams)
             throws ParseException {
         Options options = new Options();
-        options.addOption(AbstractHadoopJob.OPTION_JOB_CONF);
-        options.addOption(AbstractHadoopJob.OPTION_CUBE_NAME);
+        options.addOption(OPTION_JOB_CONF);
+        options.addOption(OPTION_CUBE_NAME);
         CustomParser parser = new CustomParser();
         CommandLine commandLine = parser.parse(options, jobParams);
-        String fileName = commandLine.getOptionValue(BatchConstants.ARG_CONF);
+        
+        String confFile = commandLine.getOptionValue(BatchConstants.ARG_CONF);
         String cubeName = commandLine.getOptionValue(BatchConstants.ARG_CUBE_NAME);
-        Preconditions.checkArgument(cubeName != null && fileName != null, "Can't get job config");
-        conf.addResource(new Path(fileName));
-        for (Map.Entry<String, String> entry : CubeManager.getInstance(config).getCube(cubeName).getConfig()
-                .getMRConfigOverride().entrySet()) {
-            conf.set(entry.getKey(), entry.getValue());
+        List<String> remainingArgs = Lists.newArrayList();
+        
+        if (StringUtils.isNotBlank(confFile)) {
+            conf.addResource(new Path(confFile));
         }
-        List<String> remainingArgs = parser.getRemainingArgs();
-        remainingArgs.add("-" + BatchConstants.ARG_CUBE_NAME);
-        remainingArgs.add(cubeName);
-        String[] result = new String[remainingArgs.size()];
-        return remainingArgs.toArray(result);
+        
+        if (StringUtils.isNotBlank(cubeName)) {
+            for (Map.Entry<String, String> entry : CubeManager.getInstance(config).getCube(cubeName).getConfig()
+                    .getMRConfigOverride().entrySet()) {
+                conf.set(entry.getKey(), entry.getValue());
+            }
+            remainingArgs.add("-" + BatchConstants.ARG_CUBE_NAME);
+            remainingArgs.add(cubeName);
+        }
+        
+        remainingArgs.addAll(parser.getRemainingArgs());
+        return (String[]) remainingArgs.toArray(new String[remainingArgs.size()]);
     }
 
     private static class CustomParser extends GnuParser {
