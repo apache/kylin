@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -264,15 +263,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         StringUtil.appendWithSeparator(kylinDependency, mrLibDir);
 
         setJobTmpJarsAndFiles(job, kylinDependency.toString());
-
-        overrideJobConfig(job.getConfiguration(), kylinConf.getMRConfigOverride());
     }
 
-    private void overrideJobConfig(Configuration jobConf, Map<String, String> override) {
-        for (Entry<String, String> entry : override.entrySet()) {
-            jobConf.set(entry.getKey(), entry.getValue());
-        }
-    }
+
 
     private String filterKylinHiveDependency(String kylinHiveDependency, KylinConfig config) {
         if (StringUtils.isBlank(kylinHiveDependency))

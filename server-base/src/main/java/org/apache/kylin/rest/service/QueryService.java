@@ -959,7 +959,6 @@ public class QueryService extends BasicService {
      * @param param
      * @throws SQLException
      */
-    @SuppressWarnings("unused")
     private void setParam(PreparedStatement preparedState, int index, PrepareSqlRequest.StateParam param)
             throws SQLException {
         boolean isNull = (null == param.getValue());

@@ -18,7 +18,6 @@
 package org.apache.kylin.rest.security;
 
 /**
- * Created by xiefan on 17-4-14.
  */
 public interface AclEntityType {
     static final String CUBE_INSTANCE = "CubeInstance";

@@ -76,8 +76,8 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
             Collection<FunctionDesc> metrics, TupleFilter havingFilter, StorageContext context) {
         this.context = context;
 
-        this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryStorageVisitScanRangeMax();
-        this.maxFuzzyKeys = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
+        this.maxScanRanges = cubeSegment.getConfig().getQueryStorageVisitScanRangeMax();
+        this.maxFuzzyKeys = cubeSegment.getConfig().getQueryScanFuzzyKeyMax();
 
         this.cubeSegment = cubeSegment;
         this.cubeDesc = cubeSegment.getCubeDesc();

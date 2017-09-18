@@ -112,6 +112,7 @@ public class Broadcaster {
 
     private Broadcaster(final KylinConfig config) {
         this.config = config;
+        final int retryLimitTimes = config.getCacheSyncRetrys();
 
         final String[] nodes = config.getRestServers();
         if (nodes == null || nodes.length < 1) {
@@ -129,6 +130,12 @@ public class Broadcaster {
                 while (true) {
                     try {
                         final BroadcastEvent broadcastEvent = broadcastEvents.takeFirst();
+                        broadcastEvent.setRetryTime(broadcastEvent.getRetryTime() + 1);
+                        if (broadcastEvent.getRetryTime() > retryLimitTimes) {
+                            logger.info("broadcastEvent retry up to limit times, broadcastEvent:{}", broadcastEvent);
+                            continue;
+                        }
+
                         String[] restServers = config.getRestServers();
                         logger.debug("Servers in the cluster: " + Arrays.toString(restServers));
                         for (final String node : restServers) {
@@ -146,7 +153,16 @@ public class Broadcaster {
                                         restClientMap.get(node).wipeCache(broadcastEvent.getEntity(),
                                                 broadcastEvent.getEvent(), broadcastEvent.getCacheKey());
                                     } catch (IOException e) {
-                                        logger.warn("Thread failed during wipe cache at " + broadcastEvent, e);
+                                        logger.warn("Thread failed during wipe cache at {}, error msg: {}",
+                                                broadcastEvent, e);
+                                        // when sync failed, put back to queue
+                                        try {
+                                            broadcastEvents.putLast(broadcastEvent);
+                                        } catch (InterruptedException ex) {
+                                            logger.warn(
+                                                    "error reentry failed broadcastEvent to queue, broacastEvent:{}, error: {} ",
+                                                    broadcastEvent, ex);
+                                        }
                                     }
                                 }
                             });
@@ -322,6 +338,7 @@ public class Broadcaster {
     }
 
     public static class BroadcastEvent {
+        private int retryTime;
         private String entity;
         private String event;
         private String cacheKey;
@@ -331,6 +348,14 @@ public class Broadcaster {
             this.entity = entity;
             this.event = event;
             this.cacheKey = cacheKey;
+        }
+
+        public int getRetryTime() {
+            return retryTime;
+        }
+
+        public void setRetryTime(int retryTime) {
+            this.retryTime = retryTime;
         }
 
         public String getEntity() {

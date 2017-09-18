@@ -96,6 +96,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
     }
 
+    public static final int MAX_ROWKEY_SIZE = 64;
+
     public enum DeriveType implements java.io.Serializable {
         LOOKUP, PK_FK, EXTENDED_COLUMN
     }
@@ -1010,16 +1012,24 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             measureIndexLookup.put(measures.get(i).getName(), i);
 
         BitSet checkEachMeasureExist = new BitSet();
+        Set<String> measureSet = Sets.newHashSet();
         for (HBaseColumnFamilyDesc cf : getHbaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc c : cf.getColumns()) {
                 String[] colMeasureRefs = c.getMeasureRefs();
                 MeasureDesc[] measureDescs = new MeasureDesc[colMeasureRefs.length];
                 int[] measureIndex = new int[colMeasureRefs.length];
+                int lastMeasureIndex = -1;
                 for (int i = 0; i < colMeasureRefs.length; i++) {
                     measureDescs[i] = measureLookup.get(colMeasureRefs[i]);
                     checkState(measureDescs[i] != null, "measure desc at (%s) is null", i);
                     measureIndex[i] = measureIndexLookup.get(colMeasureRefs[i]);
                     checkState(measureIndex[i] >= 0, "measure index at (%s) not positive", i);
+                    
+                    checkState(!measureSet.contains(colMeasureRefs[i]), "measure (%s) duplicates", colMeasureRefs[i]);
+                    measureSet.add(colMeasureRefs[i]);
+                    
+                    checkState(measureIndex[i] > lastMeasureIndex, "measure (%s) is not in order", colMeasureRefs[i]);
+                    lastMeasureIndex = measureIndex[i];
 
                     checkEachMeasureExist.set(measureIndex[i]);
                 }

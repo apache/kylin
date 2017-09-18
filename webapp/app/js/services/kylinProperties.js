@@ -107,5 +107,13 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     }
   }
 
+  this.isExternalAclEnabled = function() {
+    var status = this.getProperty("kylin.server.external-acl-provider").trim();
+    if (status == '') {
+      return false;
+    }
+    return true;
+  }
+
 });
 

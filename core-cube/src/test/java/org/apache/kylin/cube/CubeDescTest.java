@@ -43,6 +43,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.CubeDesc.DeriveType;
 import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.SelectRule;
 import org.apache.kylin.cube.model.TooManyCuboidException;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -318,6 +319,51 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
                 new String[] { META_CATEG_NAME, CATEG_LVL2_NAME } };
 
         cubeDesc.init(getTestConfig());
+    }
+
+    @Test
+    public void testBadInit13() throws Exception {
+        thrown.expect(IllegalStateException.class);
+        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
+        MeasureDesc measureForTransCnt = cubeDesc.getMeasures().get(3);
+        Assert.assertEquals(measureForTransCnt.getName(), "TRANS_CNT");
+        thrown.expectMessage("measure (" + measureForTransCnt.getName() + ") is not in order");
+        HBaseColumnDesc colDesc = new HBaseColumnDesc();
+        colDesc.setQualifier("M");
+        colDesc.setMeasureRefs(new String[] { "GMV_SUM", "GMV_MIN", "GMV_MAX", "ITEM_COUNT_SUM", "TRANS_CNT" });
+        cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0] = colDesc;
+        cubeDesc.initMeasureReferenceToColumnFamily();
+    }
+
+    @Test
+    public void testBadInit14() throws Exception {
+        thrown.expect(IllegalStateException.class);
+        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
+        MeasureDesc measureForTransCnt = cubeDesc.getMeasures().get(3);
+        Assert.assertEquals(measureForTransCnt.getName(), "TRANS_CNT");
+        String measureInfoForTransCnt = measureForTransCnt.toString();
+        thrown.expectMessage(
+                "measure (" + measureInfoForTransCnt + ") does not exist in column family, or measure duplicates");
+        HBaseColumnDesc colDesc = new HBaseColumnDesc();
+        colDesc.setQualifier("M");
+        colDesc.setMeasureRefs(new String[] { "GMV_SUM", "GMV_MIN", "GMV_MAX", "ITEM_COUNT_SUM" });
+        cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0] = colDesc;
+        cubeDesc.initMeasureReferenceToColumnFamily();
+    }
+
+    @Test
+    public void testBadInit15() throws Exception {
+        thrown.expect(IllegalStateException.class);
+        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
+        MeasureDesc measureForTransCnt = cubeDesc.getMeasures().get(3);
+        Assert.assertEquals(measureForTransCnt.getName(), "TRANS_CNT");
+        thrown.expectMessage("measure (" + measureForTransCnt.getName() + ") duplicates");
+        HBaseColumnDesc colDesc = new HBaseColumnDesc();
+        colDesc.setQualifier("M");
+        colDesc.setMeasureRefs(
+                new String[] { "GMV_SUM", "GMV_MIN", "GMV_MAX", "TRANS_CNT", "TRANS_CNT", "ITEM_COUNT_SUM" });
+        cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0] = colDesc;
+        cubeDesc.initMeasureReferenceToColumnFamily();
     }
 
     @Test

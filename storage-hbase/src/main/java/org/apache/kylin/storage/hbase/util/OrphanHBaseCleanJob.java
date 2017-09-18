@@ -56,10 +56,11 @@ public class OrphanHBaseCleanJob extends AbstractApplication {
     Set<String> metastoreWhitelistSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
     private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
-        Connection conn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl());
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        Connection conn = HBaseConnection.get(kylinConfig.getStorageUrl());
         // get all kylin hbase tables
         Admin hbaseAdmin = conn.getAdmin();
-        String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;
+        String tableNamePrefix = kylinConfig.getHBaseTableNamePrefix();
         HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
         for (HTableDescriptor desc : tableDescriptors) {

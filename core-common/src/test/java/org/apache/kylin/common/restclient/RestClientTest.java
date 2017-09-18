@@ -19,16 +19,23 @@
 package org.apache.kylin.common.restclient;
 
 import java.io.IOException;
+
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+public class RestClientTest extends LocalFileMetadataTestCase {
 
-public class RestClientTest {
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
+    }
 
-
-
-    private static final Logger logger = LoggerFactory.getLogger(RestClientTest.class);
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
 
     @SuppressWarnings("unused")
     @Test

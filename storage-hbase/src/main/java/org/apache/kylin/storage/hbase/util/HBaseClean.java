@@ -57,9 +57,10 @@ public class HBaseClean extends AbstractApplication {
     private void cleanUp() {
         try {
             // get all kylin hbase tables
-            Connection conn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl());
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            Connection conn = HBaseConnection.get(kylinConfig.getStorageUrl());
             Admin hbaseAdmin = conn.getAdmin();
-            String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;
+            String tableNamePrefix = kylinConfig.getHBaseTableNamePrefix();
             HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
             List<String> allTablesNeedToBeDropped = Lists.newArrayList();
             for (HTableDescriptor desc : tableDescriptors) {

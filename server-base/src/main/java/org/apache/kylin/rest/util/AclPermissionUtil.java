@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,26 +16,24 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.realization;
+package org.apache.kylin.rest.util;
 
-/**
- */
-public class IRealizationConstants {
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
-    /**
-     * For each cube htable, we leverage htable's metadata to keep track of
-     * which kylin server(represented by its kylin_metadata prefix) owns this htable
-     */
-    public final static String HTableTag = "KYLIN_HOST";
+import org.springframework.security.core.GrantedAuthority;
 
-    public final static String HTableOwner = "OWNER";
+public class AclPermissionUtil {
 
-    public final static String HTableUser = "USER";
-
-    public final static String HTableCreationTime = "CREATION_TIME";
-
-    public final static String HTableSegmentTag = "SEGMENT";
-
-    public final static String HTableGitTag = "GIT_COMMIT";
+    public static List<String> transformAuthorities(Collection<? extends GrantedAuthority> authorities) {
+        List<String> ret = new ArrayList<String>();
+        for (GrantedAuthority auth : authorities) {
+            if (!authorities.contains(auth.getAuthority())) {
+                ret.add(auth.getAuthority());
+            }
+        }
+        return ret;
+    }
 
 }

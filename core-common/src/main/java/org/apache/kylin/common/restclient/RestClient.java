@@ -41,10 +41,12 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +54,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * @author yangli9
  */
 public class RestClient {
 
@@ -113,7 +114,12 @@ public class RestClient {
         HttpConnectionParams.setSoTimeout(httpParams, HTTP_SOCKET_TIMEOUT_MS);
         HttpConnectionParams.setConnectionTimeout(httpParams, HTTP_CONNECTION_TIMEOUT_MS);
 
-        client = new DefaultHttpClient(httpParams);
+        final PoolingClientConnectionManager cm = new PoolingClientConnectionManager();
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        cm.setDefaultMaxPerRoute(config.getRestClientDefaultMaxPerRoute());
+        cm.setMaxTotal(config.getRestClientMaxTotal());
+
+        client = new DefaultHttpClient(cm, httpParams);
 
         if (userName != null && password != null) {
             CredentialsProvider provider = new BasicCredentialsProvider();

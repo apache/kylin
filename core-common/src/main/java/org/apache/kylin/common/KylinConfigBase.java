@@ -253,6 +253,10 @@ abstract public class KylinConfigBase implements Serializable {
         return StorageURL.valueOf(getOptional("kylin.metadata.url", "kylin_metadata@hbase"));
     }
 
+    public int getCacheSyncRetrys() {
+        return Integer.parseInt(getOptional("kylin.metadata.sync-retries", "3"));
+    }
+
     // for test only
     public void setMetadataUrl(String metadataUrl) {
         setProperty("kylin.metadata.url", metadataUrl);
@@ -290,7 +294,7 @@ abstract public class KylinConfigBase implements Serializable {
                 "org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock$Factory");
         return (DistributedLockFactory) ClassUtil.newInstance(clsName);
     }
-
+    
     public String getHBaseMappingAdapter() {
         return getOptional("kylin.metadata.hbasemapping-adapter");
     }
@@ -718,6 +722,10 @@ abstract public class KylinConfigBase implements Serializable {
             url = "default@hbase";
 
         return StorageURL.valueOf(url);
+    }
+
+    public String getHBaseTableNamePrefix() {
+        return getOptional("kylin.storage.hbase.table-name-prefix", "KYLIN_");
     }
 
     public String getHBaseClusterFs() {
@@ -1198,6 +1206,10 @@ abstract public class KylinConfigBase implements Serializable {
     public int getServerUserCacheMaxEntries() {
         return Integer.valueOf(this.getOptional("kylin.server.auth-user-cache.max-entries", "100"));
     }
+    
+    public String getExternalAclProvider() {
+        return getOptional("kylin.server.external-acl-provider", "");
+    }
 
     // ============================================================================
     // WEB
@@ -1209,6 +1221,18 @@ abstract public class KylinConfigBase implements Serializable {
 
     public boolean isWebCrossDomainEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.web.cross-domain-enabled", "true"));
+    }
+
+    // ============================================================================
+    // RESTCLIENT
+    // ============================================================================
+
+    public int getRestClientDefaultMaxPerRoute() {
+        return Integer.valueOf(this.getOptional("kylin.restclient.connection.default-max-per-route", "20"));
+    }
+
+    public int getRestClientMaxTotal() {
+        return Integer.valueOf(this.getOptional("kylin.restclient.connection.max-total", "200"));
     }
 
     /**
@@ -1230,4 +1254,5 @@ abstract public class KylinConfigBase implements Serializable {
     public String getPerfLoggerClassName() {
         return getOptional("kylin.metrics.perflogger-class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
     }
+
 }
