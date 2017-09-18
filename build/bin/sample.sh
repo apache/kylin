@@ -88,6 +88,13 @@ cp -rf ${KYLIN_HOME}/sample_cube/template/* ${KYLIN_HOME}/sample_cube/metadata
 sed -i "s/%default_storage_type%/${default_storage_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
 sed -i "s/%default_engine_type%/${default_engine_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
 
+#### Add version info into cubes
+kylin_version_str=`bash ${KYLIN_HOME}/bin/kylin.sh version | grep kylin.version`
+kylin_version=${kylin_version_str#*:}
+echo "kylin version is "$kylin_version
+sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
+sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_streaming_cube.json
+
 #### Replace the 'DEFAULT' with kylin.source.hive.database-for-flat-table
 sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
 sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/model_desc/kylin_sales_model.json

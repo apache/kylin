@@ -1,5 +1,6 @@
 {
   "uuid" : "901ed15e-7769-4c66-b7ae-fbdc971cd092",
+  "version": "%default_version%",
   "name" : "kylin_streaming_cube",
   "description" : "",
   "dimensions" : [ {
