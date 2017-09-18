@@ -59,8 +59,8 @@ public class SaveStatisticsStep extends AbstractExecutable {
 
         ResourceStore rs = ResourceStore.getStore(kylinConf);
         try {
-            FileSystem fs = HadoopUtil.getWorkingFileSystem();
             Path statisticsDir = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()));
+            FileSystem fs = HadoopUtil.getFileSystem(statisticsDir);
             Path statisticsFilePath = HadoopUtil.getFilterOnlyPath(fs, statisticsDir, BatchConstants.CFG_OUTPUT_STATISTICS);
             if (statisticsFilePath == null) {
                 throw new IOException("fail to find the statistics file in base dir: " + statisticsDir);

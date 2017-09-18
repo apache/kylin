@@ -275,7 +275,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         // note read-write separation, respect HBase FS here
         Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
-        FileSystem fs = HadoopUtil.getWorkingFileSystem(hbaseConf);
+        FileSystem fs = HadoopUtil.getFileSystem(outputFolder, hbaseConf);
         if (fs.exists(outputFolder) == false) {
             fs.mkdirs(outputFolder);
         }

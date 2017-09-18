@@ -22,11 +22,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.FileSystemCounter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskCounter;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsMapper.RawDataCounter;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
@@ -99,7 +99,7 @@ public class HadoopCmdOutput {
             mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
             rawInputBytesRead = String.valueOf(counters.findCounter(RawDataCounter.BYTES).getValue());
 
-            String fsScheme = HadoopUtil.getWorkingFileSystem().getScheme();
+            String fsScheme = FileSystem.get(job.getConfiguration()).getScheme();
             long bytesWritten = counters.findCounter(fsScheme, FileSystemCounter.BYTES_WRITTEN).getValue();
             if (bytesWritten == 0) {
                 bytesWritten = counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue();
