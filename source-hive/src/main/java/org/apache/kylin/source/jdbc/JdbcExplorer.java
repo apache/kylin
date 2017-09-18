@@ -287,6 +287,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
             columns.add(cdesc);
         }
         DBUtils.closeQuietly(rs);
+        DBUtils.closeQuietly(con);
 
         tableDesc.setColumns(columns.toArray(new ColumnDesc[columns.size()]));
 
