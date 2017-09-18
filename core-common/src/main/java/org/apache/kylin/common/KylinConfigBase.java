@@ -895,6 +895,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.storage.hbase.max-fuzzykey-scan", "200"));
     }
 
+    public int getQueryScanFuzzyKeySplitMax() {
+        return Integer.parseInt(this.getOptional("kylin.storage.hbase.max-fuzzykey-scan-split", "1"));
+    }
+
     public int getQueryStorageVisitScanRangeMax() {
         return Integer.valueOf(this.getOptional("kylin.storage.hbase.max-visit-scanrange", "1000000"));
     }
