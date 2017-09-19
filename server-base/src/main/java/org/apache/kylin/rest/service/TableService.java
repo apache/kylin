@@ -114,7 +114,7 @@ public class TableService extends BasicService {
     }
 
     public String[] loadHiveTablesToProject(String[] tables, String project) throws Exception {
-        aclEvaluate.checkProjectWritePermission(project);
+        aclEvaluate.checkProjectAdminPermission(project);
         // de-dup
         SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
         for (String fullTableName : tables) {
@@ -182,7 +182,7 @@ public class TableService extends BasicService {
     }
     
     public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile) throws Exception {
-        aclEvaluate.checkProjectWritePermission(project);
+        aclEvaluate.checkProjectAdminPermission(project);
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         Map<String, String[]> result = new HashMap<String, String[]>();
 
@@ -205,7 +205,7 @@ public class TableService extends BasicService {
     }
 
     public Map<String, String[]> unloadHiveTables(String[] tableNames, String project) throws IOException {
-        aclEvaluate.checkProjectWritePermission(project);
+        aclEvaluate.checkProjectAdminPermission(project);
         Set<String> unLoadSuccess = Sets.newHashSet();
         Set<String> unLoadFail = Sets.newHashSet();
         Map<String, String[]> result = new HashMap<String, String[]>();
@@ -240,7 +240,7 @@ public class TableService extends BasicService {
      * @return
      */
     public boolean unloadHiveTable(String tableName, String project) throws IOException {
-        aclEvaluate.checkProjectWritePermission(project);
+        aclEvaluate.checkProjectAdminPermission(project);
         Message msg = MsgPicker.getMsg();
 
         boolean rtn = false;
@@ -295,7 +295,7 @@ public class TableService extends BasicService {
      * @throws IOException
      */
     public void addStreamingTable(TableDesc desc, String project) throws IOException {
-        aclEvaluate.checkProjectWritePermission(project);
+        aclEvaluate.checkProjectAdminPermission(project);
         desc.setUuid(UUID.randomUUID().toString());
         getMetadataManager().saveSourceTable(desc, project);
         syncTableToProject(new String[] { desc.getIdentity() }, project);
