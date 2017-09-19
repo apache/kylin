@@ -33,7 +33,7 @@
     </parent>
 
     <properties>
-        <spring.framework.version>4.2.8.RELEASE</spring.framework.version>
+        <spring.framework.version>4.3.10.RELEASE</spring.framework.version>
     </properties>
 
     <dependencies>

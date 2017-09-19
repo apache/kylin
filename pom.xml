@@ -79,7 +79,7 @@
         <commons-cli.version>1.2</commons-cli.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-io.version>2.4</commons-io.version>
-        <commons-upload.version>1.3.1</commons-upload.version>
+        <commons-upload.version>1.3.3</commons-upload.version>
         <commons-math3.version>3.1.1</commons-math3.version>
         <commons-collections.version>3.2.2</commons-collections.version>
 
@@ -99,7 +99,7 @@
 
         <!-- Commons -->
         <commons-lang3.version>3.4</commons-lang3.version>
-        <commons-email.version>1.4</commons-email.version>
+        <commons-email.version>1.5</commons-email.version>
 
         <!-- Utility -->
         <log4j.version>1.2.17</log4j.version>
@@ -118,8 +118,8 @@
         <dropwizard.version>3.1.2</dropwizard.version>
         <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
         <spring.boot.version>1.3.8.RELEASE</spring.boot.version>
-        <spring.framework.version>4.2.8.RELEASE</spring.framework.version>
-        <spring.framework.security.version>4.0.4.RELEASE</spring.framework.security.version>
+        <spring.framework.version>4.3.10.RELEASE</spring.framework.version>
+        <spring.framework.security.version>4.2.3.RELEASE</spring.framework.security.version>
         <spring.framework.security.extensions.version>1.0.2.RELEASE</spring.framework.security.extensions.version>
         <opensaml.version>2.6.4</opensaml.version>
         <aspectj.version>1.8.9</aspectj.version>
