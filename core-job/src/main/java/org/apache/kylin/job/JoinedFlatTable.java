@@ -57,8 +57,9 @@ public class JoinedFlatTable {
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir) {
         return generateCreateTableStatement(flatDesc, storageDfsDir, "SEQUENCEFILE");
     }
-    
-    public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir, String format) {
+
+    public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir,
+            String format) {
         StringBuilder ddl = new StringBuilder();
 
         ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + flatDesc.getTableName() + "\n");
@@ -72,7 +73,7 @@ public class JoinedFlatTable {
             ddl.append(colName(col) + " " + getHiveDataType(col.getDatatype()) + "\n");
         }
         ddl.append(")" + "\n");
-        if ("TEXTFILE".equals(format)){
+        if ("TEXTFILE".equals(format)) {
             ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
         }
         ddl.append("STORED AS " + format + "\n");
@@ -98,31 +99,35 @@ public class JoinedFlatTable {
         if (kylinConfig.isAdvancedFlatTableUsed()) {
             try {
                 Class advancedFlatTable = Class.forName(kylinConfig.getAdvancedFlatTableClass());
-                Method method = advancedFlatTable.getMethod("generateInsertDataStatement", IJoinedFlatTableDesc.class, JobEngineConfig.class);
+                Method method = advancedFlatTable.getMethod("generateInsertDataStatement", IJoinedFlatTableDesc.class,
+                        JobEngineConfig.class);
                 return (String) method.invoke(null, flatDesc);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
 
-        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + ";\n";
+        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc)
+                + ";\n";
     }
 
-    public static String generateInsertPartialDataStatement(IJoinedFlatTableDesc flatDesc, String statement) {
-        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + statement + ";\n";
+    public static String generateInsertPartialDataStatement(IJoinedFlatTableDesc flatDesc) {
+        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc)
+                + ";\n";
     }
 
     public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc) {
         return generateSelectDataStatement(flatDesc, false, null);
     }
-    
-    public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc, boolean singleLine, String[] skipAs) {
+
+    public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc, boolean singleLine,
+            String[] skipAs) {
         final String sep = singleLine ? " " : "\n";
         final List<String> skipAsList = (skipAs == null) ? new ArrayList<String>() : Arrays.asList(skipAs);
-        
+
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT" + sep);
-        
+
         for (int i = 0; i < flatDesc.getAllColumns().size(); i++) {
             TblColRef col = flatDesc.getAllColumns().get(i);
             if (i > 0) {
@@ -144,11 +149,12 @@ public class JoinedFlatTable {
         final StringBuilder sql = new StringBuilder();
         final TableRef rootTbl = flatDesc.getDataModel().getRootFactTable();
         sql.append("dfs -mkdir -p " + outputDir + ";\n");
-        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + rootTbl.getTableIdentity() + " " + rootTbl.getAlias() + "\n");
+        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + rootTbl.getTableIdentity()
+                + " " + rootTbl.getAlias() + "\n");
         appendWhereStatement(flatDesc, sql);
         return sql.toString();
     }
-    
+
     public static void appendJoinStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine) {
         final String sep = singleLine ? " " : "\n";
         Set<TableRef> dimTableCache = new HashSet<>();
@@ -199,10 +205,10 @@ public class JoinedFlatTable {
     private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql) {
         appendWhereStatement(flatDesc, sql, false);
     }
-    
+
     private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine) {
         final String sep = singleLine ? " " : "\n";
-        
+
         boolean hasCondition = false;
         StringBuilder whereBuilder = new StringBuilder();
         whereBuilder.append("WHERE");
@@ -221,7 +227,8 @@ public class JoinedFlatTable {
 
                 if (segRange != null && !segRange.isInfinite()) {
                     whereBuilder.append(hasCondition ? " AND (" : " (");
-                    whereBuilder.append(partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, segRange));
+                    whereBuilder.append(
+                            partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, segRange));
                     whereBuilder.append(")" + sep);
                     hasCondition = true;
                 }
