@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -39,6 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.acls.domain.AccessControlEntryImpl;
 import org.springframework.security.acls.domain.AclAuthorizationStrategy;
 import org.springframework.security.acls.domain.AclImpl;
@@ -65,11 +69,14 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.google.common.base.Preconditions;
 
 @Component("aclService")
 public class AclService implements MutableAclService {
 
     private static final Logger logger = LoggerFactory.getLogger(AclService.class);
+
+    public static final String ACL_CACHE = "AclCache";
 
     private final Field fieldAces = FieldUtils.getField(AclImpl.class, "aces");
 
@@ -78,6 +85,9 @@ public class AclService implements MutableAclService {
     public static final String DIR_PREFIX = "/acl/";
 
     public static final Serializer<AclRecord> SERIALIZER = new JsonSerializer<>(AclRecord.class);
+
+    @Autowired
+    private CacheManager cacheManager;
 
     @Autowired
     protected PermissionGrantingStrategy permissionGrantingStrategy;
@@ -103,6 +113,11 @@ public class AclService implements MutableAclService {
         aclStore = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
     }
 
+    @PostConstruct
+    public void init() throws IOException {
+        Preconditions.checkNotNull(cacheManager, "cacheManager is not injected yet");
+    }
+
     @Override
     public List<ObjectIdentity> findChildren(ObjectIdentity parentIdentity) {
         List<ObjectIdentity> oids = new ArrayList<ObjectIdentity>();
@@ -124,14 +139,17 @@ public class AclService implements MutableAclService {
 
     @Override
     public Acl readAclById(ObjectIdentity object) throws NotFoundException {
-        Map<ObjectIdentity, Acl> aclsMap = readAclsById(Arrays.asList(object), null);
-        return aclsMap.get(object);
+        return readAclById(object, null);
     }
 
     @Override
     public Acl readAclById(ObjectIdentity object, List<Sid> sids) throws NotFoundException {
+        return readAclById(object, sids, KylinConfig.getInstanceFromEnv().isServerAclCacheEnabled());
+    }
+
+    public Acl readAclById(ObjectIdentity object, List<Sid> sids, boolean ifPutToCache) throws NotFoundException {
         Message msg = MsgPicker.getMsg();
-        Map<ObjectIdentity, Acl> aclsMap = readAclsById(Arrays.asList(object), sids);
+        Map<ObjectIdentity, Acl> aclsMap = readAclsById(Arrays.asList(object), sids, ifPutToCache);
         if (!aclsMap.containsKey(object)) {
             throw new BadRequestException(String.format(msg.getNO_ACL_ENTRY(), object));
         }
@@ -145,22 +163,43 @@ public class AclService implements MutableAclService {
 
     @Override
     public Map<ObjectIdentity, Acl> readAclsById(List<ObjectIdentity> oids, List<Sid> sids) throws NotFoundException {
+        return readAclsById(oids, sids, KylinConfig.getInstanceFromEnv().isServerAclCacheEnabled());
+    }
+
+    public Map<ObjectIdentity, Acl> readAclsById(List<ObjectIdentity> oids, List<Sid> sids, boolean ifCacheEnabled)
+            throws NotFoundException {
         Message msg = MsgPicker.getMsg();
         Map<ObjectIdentity, Acl> aclMaps = new HashMap<ObjectIdentity, Acl>();
         try {
             for (ObjectIdentity oid : oids) {
-                AclRecord record = aclStore.getResource(getQueryKeyById(String.valueOf(oid.getIdentifier())),
-                        AclRecord.class, SERIALIZER);
+                String aclKey = getQueryKeyById(oid);
+
+                AclRecord record = null;
+                if (ifCacheEnabled) {
+                    Cache.ValueWrapper aclCacheValue = cacheManager.getCache(ACL_CACHE).get(aclKey);
+                    if (aclCacheValue != null) {
+                        record = (AclRecord) aclCacheValue.get();
+                    }
+                }
+                if (record == null) {
+                    record = aclStore.getResource(aclKey, AclRecord.class, SERIALIZER);
+                }
+
                 if (record != null && record.getOwnerInfo() != null) {
+                    if (ifCacheEnabled) {
+                        cacheManager.getCache(ACL_CACHE).put(aclKey, record);
+                    }
+
                     SidInfo owner = record.getOwnerInfo();
-                    Sid ownerSid = owner.isPrincipal() ? new PrincipalSid(owner.getSid()) : new GrantedAuthoritySid(owner.getSid());
+                    Sid ownerSid = owner.isPrincipal() ? new PrincipalSid(owner.getSid())
+                            : new GrantedAuthoritySid(owner.getSid());
                     boolean entriesInheriting = record.isEntriesInheriting();
 
                     Acl parentAcl = null;
                     DomainObjectInfo parent = record.getParentDomainObjectInfo();
                     if (parent != null) {
                         ObjectIdentity parentObject = new ObjectIdentityImpl(parent.getType(), parent.getId());
-                        parentAcl = readAclById(parentObject, null);
+                        parentAcl = readAclById(parentObject, null, ifCacheEnabled);
                     }
 
                     AclImpl acl = new AclImpl(oid, oid.getIdentifier(), aclAuthorizationStrategy, permissionGrantingStrategy, parentAcl, null, entriesInheriting, ownerSid);
@@ -193,7 +232,7 @@ public class AclService implements MutableAclService {
         PrincipalSid sid = new PrincipalSid(auth);
         try {
             AclRecord record = new AclRecord(new DomainObjectInfo(objectIdentity), null, new SidInfo(sid), true, null);
-            aclStore.putResource(getQueryKeyById(String.valueOf(objectIdentity.getIdentifier())), record, 0,
+            aclStore.putResource(getQueryKeyById(objectIdentity), record, 0,
                     SERIALIZER);
             logger.debug("ACL of " + objectIdentity + " created successfully.");
         } catch (IOException e) {
@@ -213,7 +252,9 @@ public class AclService implements MutableAclService {
             for (ObjectIdentity oid : children) {
                 deleteAcl(oid, deleteChildren);
             }
-            aclStore.deleteResource(getQueryKeyById(String.valueOf(objectIdentity.getIdentifier())));
+            String aclKey = getQueryKeyById(objectIdentity);
+            aclStore.deleteResource(aclKey);
+            cacheManager.getCache(ACL_CACHE).evict(aclKey);
             logger.debug("ACL of " + objectIdentity + " deleted successfully.");
         } catch (IOException e) {
             throw new InternalErrorException(e);
@@ -224,13 +265,13 @@ public class AclService implements MutableAclService {
     public MutableAcl updateAcl(MutableAcl mutableAcl) throws NotFoundException {
         Message msg = MsgPicker.getMsg();
         try {
-            readAclById(mutableAcl.getObjectIdentity());
+            readAclById(mutableAcl.getObjectIdentity(), null, false);
         } catch (NotFoundException e) {
             throw e;
         }
 
         try {
-            String id = getQueryKeyById(String.valueOf(mutableAcl.getObjectIdentity().getIdentifier()));
+            String id = getQueryKeyById(mutableAcl.getObjectIdentity());
             AclRecord record = aclStore.getResource(id, AclRecord.class, SERIALIZER);
             if (mutableAcl.getParentAcl() != null) {
                 record.setParentDomainObjectInfo(new DomainObjectInfo(mutableAcl.getParentAcl().getObjectIdentity()));
@@ -252,6 +293,7 @@ public class AclService implements MutableAclService {
                 allAceInfo.put(String.valueOf(aceInfo.getSidInfo().getSid()), aceInfo);
             }
             aclStore.putResourceWithoutCheck(id, record, System.currentTimeMillis(), SERIALIZER);
+            cacheManager.getCache(ACL_CACHE).evict(id);
             logger.debug("ACL of " + mutableAcl.getObjectIdentity() + " updated successfully.");
         } catch (IOException e) {
             throw new InternalErrorException(e);
@@ -302,6 +344,10 @@ public class AclService implements MutableAclService {
         } catch (IllegalAccessException e) {
             throw new IllegalStateException("Could not set AclImpl entries", e);
         }
+    }
+
+    private static String getQueryKeyById(ObjectIdentity oid) {
+        return getQueryKeyById(String.valueOf(oid.getIdentifier()));
     }
 
     public static String getQueryKeyById(String id) {

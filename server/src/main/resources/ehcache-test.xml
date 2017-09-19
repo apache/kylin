@@ -12,12 +12,26 @@
   limitations under the License. See accompanying LICENSE file.
 -->
 
-<ehcache maxBytesLocalHeap="256M">>
+<ehcache maxBytesLocalHeap="256M">
     <cache name="StorageCache"
            eternal="false"
            timeToIdleSeconds="86400"
            memoryStoreEvictionPolicy="LRU"
-            >
+    >
+        <persistence strategy="none"/>
+    </cache>
+    <cache name="UserCache"
+           eternal="false"
+           timeToLiveSeconds="10800"
+           memoryStoreEvictionPolicy="LRU"
+    >
+        <persistence strategy="none"/>
+    </cache>
+    <cache name="AclCache"
+           eternal="false"
+           timeToLiveSeconds="86400"
+           memoryStoreEvictionPolicy="LRU"
+    >
         <persistence strategy="none"/>
     </cache>
 </ehcache>

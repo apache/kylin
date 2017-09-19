@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.Serializable;
+
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Sid;
@@ -25,7 +27,7 @@ import org.springframework.security.acls.model.Sid;
 /**
  * Created by xiefan on 17-5-2.
  */
-class SidInfo {
+class SidInfo implements Serializable {
     private String sid;
     private boolean isPrincipal;
 

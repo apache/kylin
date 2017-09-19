@@ -18,12 +18,14 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.Serializable;
+
 import org.springframework.security.acls.model.AccessControlEntry;
 
 /**
  * Created by xiefan on 17-5-2.
  */
-class AceInfo {
+class AceInfo implements Serializable {
     private SidInfo sidInfo;
     private int permissionMask;
 

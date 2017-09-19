@@ -1504,6 +1504,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.security.acl.admin-role", "");
     }
 
+    public boolean isServerAclCacheEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.server.acl-cache-enabled", "true"));
+    }
+
     // ============================================================================
     // WEB
     // ============================================================================

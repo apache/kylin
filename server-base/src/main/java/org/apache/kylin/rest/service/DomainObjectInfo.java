@@ -18,10 +18,12 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.Serializable;
+
 import org.springframework.security.acls.model.ObjectIdentity;
 
 
-class DomainObjectInfo {
+class DomainObjectInfo implements Serializable {
     private String id;
     private String type;
 

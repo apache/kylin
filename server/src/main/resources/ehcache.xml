@@ -17,7 +17,21 @@
            eternal="false"
            timeToIdleSeconds="86400"
            memoryStoreEvictionPolicy="LRU"
-            >
+    >
+        <persistence strategy="none"/>
+    </cache>
+    <cache name="UserCache"
+           eternal="false"
+           timeToIdleSeconds="86400"
+           memoryStoreEvictionPolicy="LRU"
+    >
+        <persistence strategy="none"/>
+    </cache>
+    <cache name="AclCache"
+           eternal="false"
+           timeToIdleSeconds="86400"
+           memoryStoreEvictionPolicy="LRU"
+    >
         <persistence strategy="none"/>
     </cache>
 </ehcache>
