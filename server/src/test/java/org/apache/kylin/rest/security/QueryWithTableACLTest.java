@@ -18,6 +18,9 @@
 
 package org.apache.kylin.rest.security;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.acl.TableACLManager;
@@ -29,9 +32,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.io.IOException;
-import java.sql.SQLException;
 
 public class QueryWithTableACLTest extends LocalFileMetadataTestCase {
     private static final String PROJECT = "DEFAULT";
@@ -63,6 +63,18 @@ public class QueryWithTableACLTest extends LocalFileMetadataTestCase {
         thrown.expectCause(CoreMatchers.isA(AccessDeniedException.class));
         thrown.expectMessage(CoreMatchers.containsString("Query failed.Access table:DEFAULT.STREAMING_TABLE denied"));
         QuerACLTestUtil.mockQuery(PROJECT, "select * from STREAMING_TABLE");
+    }
+
+    @Test
+    public void testFailQueryWithCountStar() throws SQLException, IOException {
+        QuerACLTestUtil.setUser(MODELER);
+        QuerACLTestUtil.mockQuery(PROJECT, "select count(*) from STREAMING_TABLE");
+
+        QuerACLTestUtil.setUser(ADMIN);
+        TableACLManager.getInstance(KylinConfig.getInstanceFromEnv()).addTableACL(PROJECT, "ADMIN", STREAMING_TABLE);
+        thrown.expectCause(CoreMatchers.isA(AccessDeniedException.class));
+        thrown.expectMessage(CoreMatchers.containsString("Query failed.Access table:DEFAULT.STREAMING_TABLE denied"));
+        QuerACLTestUtil.mockQuery(PROJECT, "select count(*) from STREAMING_TABLE");
     }
 
     @After

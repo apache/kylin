@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -38,6 +39,7 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OLAPTableScan;
 
 import com.google.common.base.Preconditions;
 
@@ -66,7 +68,7 @@ public class QueryInterceptUtil {
 
     public static Set<String> getAllColsWithTblAndSchema(String project, List<OLAPContext> contexts) {
         // all columns with table and DB. Like DB.TABLE.COLUMN
-        Set<String> allColWithTblAndSchema = new HashSet<>();
+        Set<String> allColWithTblAndSchema = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
         for (OLAPContext context : contexts) {
             for (TblColRef tblColRef : context.allColumns) {
@@ -156,12 +158,11 @@ public class QueryInterceptUtil {
     }
 
     public static Set<String> getAllTblsWithSchema(List<OLAPContext> contexts) {
-        // all tables with DB, Like DB.TABLE, may have same table, so use set.
-        Set<String> tableWithSchema = new HashSet<>();
+        // all tables with DB, Like DB.TABLE
+        Set<String> tableWithSchema = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (OLAPContext context : contexts) {
-            Set<TblColRef> allColumns = context.allColumns;
-            for (TblColRef tblColRef : allColumns) {
-                tableWithSchema.add(tblColRef.getTableWithSchema());
+            for (OLAPTableScan tableScan : context.allTableScans) {
+                tableWithSchema.add(tableScan.getTableRef().getTableIdentity());
             }
         }
         return tableWithSchema;
