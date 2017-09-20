@@ -464,7 +464,7 @@ public class QueryService extends BasicService {
 
             sqlResponse.setDuration(System.currentTimeMillis() - startTime);
             sqlResponse.setTraceUrl(traceUrl);
-            logQuery(sqlRequest, sqlResponse);
+            logQuery(queryContext.getQueryId(), sqlRequest, sqlResponse);
             try {
                 recordMetric(sqlRequest, sqlResponse);
             } catch (Throwable th) {
@@ -477,7 +477,7 @@ public class QueryService extends BasicService {
 
         } finally {
             BackdoorToggles.cleanToggles();
-            QueryContext.reset();
+            QueryContextManager.resetCurrent();
             if (scope != null) {
                 scope.close();
             }
@@ -487,6 +487,7 @@ public class QueryService extends BasicService {
     private SQLResponse queryAndUpdateCache(SQLRequest sqlRequest, long startTime, boolean queryCacheEnabled) {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         Message msg = MsgPicker.getMsg();
+        final QueryContext queryContext = QueryContextManager.current();
 
         SQLResponse sqlResponse = null;
         try {
@@ -530,13 +531,15 @@ public class QueryService extends BasicService {
             Trace.addTimelineAnnotation("response from execution");
 
         } catch (Throwable e) { // calcite may throw AssertError
+            queryContext.stop(e);
+
             logger.error("Exception while executing query", e);
             String errMsg = makeErrorMsgUserFriendly(e);
 
             sqlResponse = new SQLResponse(null, null, null, 0, true, errMsg, false, false);
-            QueryContext queryContext = QueryContext.current();
             sqlResponse.setTotalScanCount(queryContext.getScannedRows());
             sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
+            sqlResponse.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
 
             if (queryCacheEnabled && e.getCause() != null
                     && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
@@ -1046,6 +1049,8 @@ public class QueryService extends BasicService {
         QueryContext queryContext = QueryContextManager.current();
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
+                String realizationName = "NULL";
+                int realizationType = -1;
                 if (ctx.realization != null) {
                     isPartialResult |= ctx.storageContext.isPartialResultReturned();
                     if (cubeSb.length() > 0) {
@@ -1053,6 +1058,9 @@ public class QueryService extends BasicService {
                     }
                     cubeSb.append(ctx.realization.getCanonicalName());
                     logSb.append(ctx.storageContext.getProcessedRowCount()).append(" ");
+
+                    realizationName = ctx.realization.getName();
+                    realizationType = ctx.realization.getStorageType();
                 }
                 queryContext.setContextRealization(ctx.id, realizationName, realizationType);
             }

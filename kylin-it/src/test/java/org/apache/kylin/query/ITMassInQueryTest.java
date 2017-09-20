@@ -118,7 +118,7 @@ public class ITMassInQueryTest extends KylinTestBase {
             // execute Kylin
             logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-            ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
+            ITable kylinTable = execQueryUsingKylin(kylinConn, queryName, sql, needSort);
             printResult(kylinTable);
 
         }
@@ -139,7 +139,7 @@ public class ITMassInQueryTest extends KylinTestBase {
             // execute Kylin
             logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-            ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
+            ITable kylinTable = execQueryUsingKylin(kylinConn, queryName, sql, needSort);
 
             // execute H2
             sql = sql.replace("massin(test_kylin_fact.SELLER_ID,'vip_customers')", "test_kylin_fact.SELLER_ID in ( " + org.apache.commons.lang.StringUtils.join(vipSellers, ",") + ")");
