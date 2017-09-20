@@ -132,12 +132,12 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
         CUBOID_CACHE.clear();
     }
 
-    public static void clearCache(CubeInstance cubeInstance) {
-        clearCache(cubeInstance.getCuboidScheduler());
+    public static void clearCache(String cacheKey) {
+        CUBOID_CACHE.remove(cacheKey);
     }
-
-    private static void clearCache(CuboidScheduler cuboidScheduler) {
-        CUBOID_CACHE.remove(cuboidScheduler.getCuboidCacheKey());
+    
+    public static void clearCache(CubeInstance cubeInstance) {
+        CUBOID_CACHE.remove(cubeInstance.getCuboidScheduler().getCuboidCacheKey());
     }
 
     // ============================================================================

@@ -166,6 +166,7 @@ public class CubeDescManager {
         CubeDesc ndesc = loadCubeDesc(CubeDesc.concatResourcePath(name), false);
 
         cubeDescMap.putLocal(ndesc.getName(), ndesc);
+        Cuboid.clearCache(ndesc.getName()); // avoid calling CubeDesc.getInitialCuboidScheduler() for late initializing CuboidScheduler
 
         // if related cube is in DESCBROKEN state before, change it back to DISABLED
         CubeManager cubeManager = CubeManager.getInstance(config);
@@ -291,11 +292,13 @@ public class CubeDescManager {
         String path = cubeDesc.getResourcePath();
         getStore().deleteResource(path);
         cubeDescMap.remove(cubeDesc.getName());
+        Cuboid.clearCache(cubeDesc.getName()); // avoid calling CubeDesc.getInitialCuboidScheduler() for late initializing CuboidScheduler
     }
 
     // remove cubeDesc
     public void removeLocalCubeDesc(String name) throws IOException {
         cubeDescMap.removeLocal(name);
+        Cuboid.clearCache(name);
     }
 
     private void reloadAllCubeDesc() throws IOException {
