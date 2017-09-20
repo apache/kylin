@@ -58,6 +58,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContextManager;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
 import org.apache.kylin.common.htrace.HtraceInit;
@@ -273,7 +274,7 @@ public class QueryService extends BasicService {
         return queries;
     }
 
-    public void logQuery(final SQLRequest request, final SQLResponse response) {
+    public void logQuery(final String queryId, final SQLRequest request, final SQLResponse response) {
         final String user = aclEvaluate.getCurrentUserName();
         final List<String> realizationNames = new LinkedList<>();
         final Set<Long> cuboidIds = new HashSet<Long>();
@@ -305,7 +306,7 @@ public class QueryService extends BasicService {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
-        stringBuilder.append("Query Id: ").append(QueryContext.current().getQueryId()).append(newLine);
+        stringBuilder.append("Query Id: ").append(queryId).append(newLine);
         stringBuilder.append("SQL: ").append(request.getSql()).append(newLine);
         stringBuilder.append("User: ").append(user).append(newLine);
         stringBuilder.append("Success: ").append((null == response.getExceptionMessage())).append(newLine);
@@ -407,7 +408,7 @@ public class QueryService extends BasicService {
         if (sqlRequest.getBackdoorToggles() != null)
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
 
-        final QueryContext queryContext = QueryContext.current();
+        final QueryContext queryContext = QueryContextManager.current();
 
         TraceScope scope = null;
         if (kylinConfig.isHtraceTracingEveryQuery() || BackdoorToggles.getHtraceEnabled()) {
@@ -504,7 +505,7 @@ public class QueryService extends BasicService {
             long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
             long scanCountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
             long scanBytesThreshold = kylinConfig.getQueryScanBytesCacheThreshold();
-            sqlResponse.setDuration(System.currentTimeMillis() - startTime);
+            sqlResponse.setDuration(queryContext.getAccumulatedMillis());
             logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
                     String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()),
                     String.valueOf(sqlResponse.getTotalScanCount()));
@@ -620,7 +621,7 @@ public class QueryService extends BasicService {
             conn = QueryConnection.getConnection(sqlRequest.getProject());
 
             String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
-            QueryContext context = QueryContext.current();
+            QueryContext context = QueryContextManager.current();
             context.setUsername(userInfo);
             context.setGroups(AclPermissionUtil.getCurrentUserGroups());
             final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext()
@@ -1042,6 +1043,7 @@ public class QueryService extends BasicService {
         boolean isPartialResult = false;
         StringBuilder cubeSb = new StringBuilder();
         StringBuilder logSb = new StringBuilder("Processed rows for each storageContext: ");
+        QueryContext queryContext = QueryContextManager.current();
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
                 if (ctx.realization != null) {
@@ -1052,14 +1054,16 @@ public class QueryService extends BasicService {
                     cubeSb.append(ctx.realization.getCanonicalName());
                     logSb.append(ctx.storageContext.getProcessedRowCount()).append(" ");
                 }
+                queryContext.setContextRealization(ctx.id, realizationName, realizationType);
             }
         }
         logger.info(logSb.toString());
 
         SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, false, null, isPartialResult,
                 isPushDown);
-        response.setTotalScanCount(QueryContext.current().getScannedRows());
-        response.setTotalScanBytes(QueryContext.current().getScannedBytes());
+        response.setTotalScanCount(queryContext.getScannedRows());
+        response.setTotalScanBytes(queryContext.getScannedBytes());
+        response.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
         return response;
     }
 
