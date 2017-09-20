@@ -156,7 +156,7 @@ public class ITKylinQueryTest extends KylinTestBase {
         String sql = getTextFromFile(sqlFile);
         IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
 
-        executeQuery(kylinConn, queryFileName, sql, true);
+        execQueryUsingKylin(kylinConn, queryFileName, sql, true);
     }
 
     @Ignore
@@ -403,7 +403,7 @@ public class ITKylinQueryTest extends KylinTestBase {
         // execute Kylin
         logger.info("Query Result from Kylin - " + queryName);
         IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-        ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
+        ITable kylinTable = execQueryUsingKylin(kylinConn, queryName, sql, false);
         String queriedVersion = String.valueOf(kylinTable.getValue(0, "version"));
 
         // compare the result
