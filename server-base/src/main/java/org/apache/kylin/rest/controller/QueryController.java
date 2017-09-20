@@ -29,6 +29,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContextManager;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -170,6 +172,29 @@ public class QueryController extends BasicController {
         } catch (SQLException e) {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
+    }
+
+    /**
+     *
+     * @param runTimeMoreThan in seconds
+     * @return
+     */
+    @RequestMapping(value = "/query/runningQueries", method = RequestMethod.GET)
+    @ResponseBody
+    public List<QueryContext> getRunningQueries(@RequestParam(value = "runTimeMoreThan", required = false, defaultValue = "-1") int runTimeMoreThan) {
+        if (runTimeMoreThan == -1) {
+            return QueryContextManager.getAllRunningQueries();
+        }else {
+            return QueryContextManager.getLongRunningQueries(runTimeMoreThan * 1000);
+        }
+    }
+
+    @RequestMapping(value = "/query/{queryId}/stop", method = RequestMethod.PUT)
+    @ResponseBody
+    public void stopQuery(@PathVariable String queryId) {
+        final String user = SecurityContextHolder.getContext().getAuthentication().getName();
+        logger.info("{} stop the query: {}", new Object[] { user, queryId });
+        QueryContextManager.stopQuery(queryId, "stopped by " + user);
     }
 
     public void setQueryService(QueryService queryService) {

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
@@ -39,37 +40,30 @@ public class QueryContext {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryContext.class);
 
-    private static final ThreadLocal<QueryContext> contexts = new ThreadLocal<QueryContext>() {
-        @Override
-        protected QueryContext initialValue() {
-            return new QueryContext();
-        }
-    };
+    public interface QueryStopListener {
+        void stop(QueryContext query);
+    }
 
     private long queryStartMillis;
     private long deadline = Long.MAX_VALUE;
 
-    private String queryId;
+    private final String queryId;
     private String username;
     private Set<String> groups;
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong scannedBytes = new AtomicLong();
 
+    private AtomicBoolean isRunning = new AtomicBoolean(true);
+    private volatile Throwable throwable;
+    private String stopReason;
+    private List<QueryStopListener> stopListeners = Lists.newCopyOnWriteArrayList();
+
     private List<RPCStatistics> rpcStatisticsList = Lists.newCopyOnWriteArrayList();
     private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
 
-    private QueryContext() {
-        // use QueryContext.current() instead
-        queryStartMillis = System.currentTimeMillis();
+    QueryContext() {
         queryId = UUID.randomUUID().toString();
-    }
-
-    public static QueryContext current() {
-        return contexts.get();
-    }
-
-    public static void reset() {
-        contexts.remove();
+        queryStartMillis = System.currentTimeMillis();
     }
 
     public long getQueryStartMillis() {
@@ -102,8 +96,8 @@ public class QueryContext {
         return queryId == null ? "" : queryId;
     }
 
-    public void setQueryId(String queryId) {
-        this.queryId = queryId;
+    public long getAccumulatedMillis() {
+        return System.currentTimeMillis() - queryStartMillis;
     }
 
     public String getUsername() {
@@ -136,6 +130,48 @@ public class QueryContext {
 
     public long addAndGetScannedBytes(long deltaBytes) {
         return scannedBytes.addAndGet(deltaBytes);
+    }
+
+    public void addQueryStopListener(QueryStopListener listener) {
+        this.stopListeners.add(listener);
+    }
+
+    public boolean isStopped() {
+        return !isRunning.get();
+    }
+
+    public String getStopReason() {
+        return stopReason;
+    }
+
+    /**
+     * stop the whole query and related sub threads
+     */
+    public void stop(Throwable t) {
+        stopQuery(t, t.getMessage());
+    }
+
+    /**
+     * stop the whole query by rest call
+     */
+    public void stopEarly(String reason) {
+        stopQuery(null, reason);
+    }
+
+    private void stopQuery(Throwable t, String reason) {
+        if (isStopped()) {
+            return;
+        }
+        isRunning.set(false);
+        this.throwable = t;
+        this.stopReason = reason;
+        for (QueryStopListener stopListener : stopListeners) {
+            stopListener.stop(this);
+        }
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
     }
 
     public void addContext(int ctxId, String type, boolean ifCube) {
