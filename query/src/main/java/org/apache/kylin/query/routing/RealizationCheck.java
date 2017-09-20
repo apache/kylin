@@ -86,12 +86,15 @@ public class RealizationCheck {
             List<IncapableReason> reasons = Lists.newArrayList(reason);
             modelIncapableReasons.put(modelDesc, reasons);
         } else {
-            modelIncapableReasons.get(modelDesc).add(reason);
+            List<IncapableReason> incapableReasons = modelIncapableReasons.get(modelDesc);
+            if (!incapableReasons.contains(reason))
+                incapableReasons.add(reason);
         }
     }
 
     public void addCapableModel(DataModelDesc modelDesc) {
-        this.capableModels.add(modelDesc);
+        if (!this.capableModels.contains(modelDesc))
+            this.capableModels.add(modelDesc);
     }
 
     public void addModelIncapableReason(DataModelDesc modelDesc, List<IncapableReason> reasons) {
@@ -237,6 +240,46 @@ public class RealizationCheck {
 
         public Collection<OLAPTableScan> getNotFoundTables() {
             return notFoundTables;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+
+            IncapableReason that = (IncapableReason) o;
+
+            if (incapableType != that.incapableType)
+                return false;
+            if (notFoundColumns != null ? !notFoundColumns.equals(that.notFoundColumns) : that.notFoundColumns != null)
+                return false;
+            if (notFoundDimensions != null ? !notFoundDimensions.equals(that.notFoundDimensions)
+                    : that.notFoundDimensions != null)
+                return false;
+            if (notFoundMeasures != null ? !notFoundMeasures.equals(that.notFoundMeasures)
+                    : that.notFoundMeasures != null)
+                return false;
+            if (unmatchedDimensions != null ? !unmatchedDimensions.equals(that.unmatchedDimensions)
+                    : that.unmatchedDimensions != null)
+                return false;
+            if (unmatchedAggregations != null ? !unmatchedAggregations.equals(that.unmatchedAggregations)
+                    : that.unmatchedAggregations != null)
+                return false;
+            return notFoundTables != null ? notFoundTables.equals(that.notFoundTables) : that.notFoundTables == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = incapableType != null ? incapableType.hashCode() : 0;
+            result = 31 * result + (notFoundColumns != null ? notFoundColumns.hashCode() : 0);
+            result = 31 * result + (notFoundDimensions != null ? notFoundDimensions.hashCode() : 0);
+            result = 31 * result + (notFoundMeasures != null ? notFoundMeasures.hashCode() : 0);
+            result = 31 * result + (unmatchedDimensions != null ? unmatchedDimensions.hashCode() : 0);
+            result = 31 * result + (unmatchedAggregations != null ? unmatchedAggregations.hashCode() : 0);
+            result = 31 * result + (notFoundTables != null ? notFoundTables.hashCode() : 0);
+            return result;
         }
     }
 }

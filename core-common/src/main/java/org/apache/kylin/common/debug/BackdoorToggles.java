@@ -97,6 +97,10 @@ public class BackdoorToggles {
         return getString(DEBUG_TOGGLE_DUMPED_PARTITION_DIR);
     }
 
+    public static boolean getCheckAllModels(){
+        return getBoolean(DEBUG_TOGGLE_CHECK_ALL_MODELS);
+    }
+
     public static int getQueryTimeout() {
         String v = getString(DEBUG_TOGGLE_QUERY_TIMEOUT);
         if (v == null)
@@ -271,4 +275,14 @@ public class BackdoorToggles {
      }
      */
     public final static String ATTR_STATEMENT_MAX_ROWS = "ATTR_STATEMENT_MAX_ROWS";
+
+    /**
+     * set DEBUG_TOGGLE_CHECK_ALL_MODELS="true" to check all OlapContexts when selecting realization
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_CHECK_ALL_MODELS": "true"
+     }
+     */
+    public final static String DEBUG_TOGGLE_CHECK_ALL_MODELS = "DEBUG_TOGGLE_CHECK_ALL_MODELS";
 }

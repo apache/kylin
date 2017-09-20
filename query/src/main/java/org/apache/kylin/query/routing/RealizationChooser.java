@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -67,6 +68,19 @@ public class RealizationChooser {
 
         if (modelMap.size() == 0) {
             throw new NoRealizationFoundException("No model found for " + toErrorMsg(context));
+        }
+
+        //check all models to collect error message, just for check
+        if (BackdoorToggles.getCheckAllModels()) {
+            for (Map.Entry<DataModelDesc, Set<IRealization>> entry : modelMap.entrySet()) {
+                final DataModelDesc model = entry.getKey();
+                final Map<String, String> aliasMap = matches(model, context);
+                if (aliasMap != null) {
+                    fixModel(context, model, aliasMap);
+                    QueryRouter.selectRealization(context, entry.getValue());
+                    unfixModel(context);
+                }
+            }
         }
 
         for (Map.Entry<DataModelDesc, Set<IRealization>> entry : modelMap.entrySet()) {
