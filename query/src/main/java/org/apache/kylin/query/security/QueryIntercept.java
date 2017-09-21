@@ -26,6 +26,9 @@ import org.apache.kylin.query.relnode.OLAPContext;
 public abstract class QueryIntercept {
 
     public void intercept(List<OLAPContext> contexts) {
+        if (!isEnabled()) {
+            return;
+        }
         Collection<String> userIdentifierBlackList = getIdentifierBlackList(contexts);
         intercept(contexts, userIdentifierBlackList);
     }
@@ -42,6 +45,8 @@ public abstract class QueryIntercept {
             }
         }
     }
+
+    protected abstract boolean isEnabled();
 
     protected abstract Collection<String> getQueryIdentifiers(List<OLAPContext> contexts);
 

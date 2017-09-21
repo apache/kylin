@@ -30,6 +30,11 @@ import org.apache.kylin.query.security.QueryInterceptUtil;
 public class TableIntercept extends QueryIntercept{
 
     @Override
+    protected boolean isEnabled() {
+        return KylinConfig.getInstanceFromEnv().isTableACLEnabled();
+    }
+
+    @Override
     public Set<String> getQueryIdentifiers(List<OLAPContext> contexts) {
         return QueryInterceptUtil.getAllTblsWithSchema(contexts);
     }
