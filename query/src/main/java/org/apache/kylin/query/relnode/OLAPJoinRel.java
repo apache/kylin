@@ -173,7 +173,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         }
 
         if (!this.hasSubQuery) {
-            this.context.allColumns.clear();
+//            this.context.allColumns.clear();
 
             // build JoinDesc
             Preconditions.checkState(this.getCondition() instanceof RexCall, "Cartesian Join is not supported.");

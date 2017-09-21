@@ -249,7 +249,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
      *      * OLAPToEnumerableConverter and OLAPUnionRel -> require column collection
      */
     private boolean needCollectionColumns(OLAPImplementor implementor) {
-        Stack<RelNode> allParents = implementor.getParentStack();
+        Stack<RelNode> allParents = implementor.getParentNodeStack();
         int index = allParents.size() - 1;
 
         while (index >= 0) {
@@ -262,6 +262,11 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
                 return true;
             }
 
+            OLAPRel olapParent = (OLAPRel) allParents.get(index);
+            if (olapParent.getContext() != null && olapParent.getContext() != this.context) {
+                // if the whole context has not projection, let table scan take care of itself
+                break;
+            }
             index--;
         }
 
