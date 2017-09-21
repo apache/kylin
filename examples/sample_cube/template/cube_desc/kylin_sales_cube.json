@@ -175,7 +175,11 @@
           "next_parameter" : null
         }
       },
-      "returntype" : "topn(100, 6)"
+      "returntype" : "topn(100)",
+      "configuration": {
+        "topn.encoding.KYLIN_SALES.SELLER_ID": "dict",
+        "topn.encoding_version.KYLIN_SALES.SELLER_ID": "1"
+      }
     }
   } ],
   "rowkey" : {
