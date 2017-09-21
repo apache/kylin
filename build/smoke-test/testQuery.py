@@ -21,6 +21,7 @@ import unittest
 import requests
 import json
 import glob
+import time
 
 
 class testQuery(unittest.TestCase):
@@ -101,18 +102,18 @@ class testQuery(unittest.TestCase):
 
             actual_result = json.loads(response.text)
             print actual_result
-            print 'Query duration: ' + str(actual_result['data']['duration']) + 'ms'
-            del actual_result['data']['duration']
-            del actual_result['data']['hitExceptionCache']
-            del actual_result['data']['storageCacheUsed']
-            del actual_result['data']['totalScanCount']
-            del actual_result['data']['totalScanBytes']
-            del actual_result['data']['columnMetas']
+            print 'Query duration: ' + str(actual_result['duration']) + 'ms'
+            del actual_result['duration']
+            del actual_result['hitExceptionCache']
+            del actual_result['storageCacheUsed']
+            del actual_result['totalScanCount']
+            del actual_result['totalScanBytes']
+            del actual_result['columnMetas']
 
             expect_result = json.loads(open(sql_file[:-4] + '.json').read().strip())
-            del expect_result['data']['columnMetas']
-            expect_result['data']['cube'] = ''
-            expect_result['data']['pushDown'] = True
+            del expect_result['columnMetas']
+            expect_result['cube'] = ''
+            expect_result['pushDown'] = True
             self.assertEqual(actual_result, expect_result, 'Query pushdown\'s result does not equal with expected result.')
 
 
