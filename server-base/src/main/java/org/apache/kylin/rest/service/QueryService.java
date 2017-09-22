@@ -373,6 +373,7 @@ public class QueryService extends BasicService {
 
     public SQLResponse doQueryWithCache(SQLRequest sqlRequest) {
         Message msg = MsgPicker.getMsg();
+        sqlRequest.setUsername(getUserName());
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String serverMode = kylinConfig.getServerMode();
@@ -483,6 +484,14 @@ public class QueryService extends BasicService {
             BackdoorToggles.cleanToggles();
             QueryContext.reset();
         }
+    }
+
+    private String getUserName() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (StringUtils.isEmpty(username)) {
+            username = "";
+        }
+        return username;
     }
 
     public SQLResponse searchQueryInCache(SQLRequest sqlRequest) {

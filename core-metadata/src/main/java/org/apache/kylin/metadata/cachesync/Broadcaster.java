@@ -65,6 +65,7 @@ public class Broadcaster {
     public static final String SYNC_ALL = "all"; // the special entity to indicate clear all
     public static final String SYNC_PRJ_SCHEMA = "project_schema"; // the special entity to indicate project schema has change, e.g. table/model/cube_desc update
     public static final String SYNC_PRJ_DATA = "project_data"; // the special entity to indicate project data has change, e.g. cube/raw_table update
+    public static final String SYNC_PRJ_ACL = "project_acl"; // the special entity to indicate query ACL has change, e.g. table_acl/learn_kylin update
 
     // static cached instances
     private static final ConcurrentMap<KylinConfig, Broadcaster> CACHE = new ConcurrentHashMap<KylinConfig, Broadcaster>();
@@ -199,6 +200,7 @@ public class Broadcaster {
             addListener(lmap, SYNC_ALL, listener);
             addListener(lmap, SYNC_PRJ_SCHEMA, listener);
             addListener(lmap, SYNC_PRJ_DATA, listener);
+            addListener(lmap, SYNC_PRJ_ACL, listener);
         }
     }
 
@@ -221,6 +223,10 @@ public class Broadcaster {
 
     public void notifyProjectDataUpdate(String project) throws IOException {
         notifyListener(SYNC_PRJ_DATA, Event.UPDATE, project);
+    }
+
+    public void notifyProjectACLUpdate(String project) throws IOException {
+        notifyListener(SYNC_PRJ_ACL, Event.UPDATE, project);
     }
 
     public void notifyListener(String entity, Event event, String cacheKey) throws IOException {
@@ -266,6 +272,12 @@ public class Broadcaster {
             ProjectManager.getInstance(config).clearL2Cache(); // cube's first becoming ready leads to schema change too
             for (Listener l : list) {
                 l.onProjectDataChange(this, cacheKey);
+            }
+            break;
+        case SYNC_PRJ_ACL:
+            ProjectManager.getInstance(config).clearL2Cache();
+            for (Listener l : list) {
+                l.onProjectQueryACLChange(this, cacheKey);
             }
             break;
         default:
@@ -330,6 +342,9 @@ public class Broadcaster {
         }
 
         public void onProjectDataChange(Broadcaster broadcaster, String project) throws IOException {
+        }
+
+        public void onProjectQueryACLChange(Broadcaster broadcaster, String project) throws IOException {
         }
 
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)

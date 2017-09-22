@@ -100,6 +100,7 @@ public class TableACLManager {
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey) throws IOException {
             reloadTableACL(cacheKey);
+            broadcaster.notifyProjectACLUpdate(cacheKey);
         }
     }
 

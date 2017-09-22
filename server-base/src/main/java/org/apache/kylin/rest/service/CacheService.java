@@ -71,6 +71,11 @@ public class CacheService extends BasicService implements InitializingBean {
         }
 
         @Override
+        public void onProjectQueryACLChange(Broadcaster broadcaster, String project) throws IOException {
+            cleanDataCache(project);
+        }
+
+        @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             if ("cube".equals(entity) && event == Event.UPDATE) {
                 final String cubeName = cacheKey;
