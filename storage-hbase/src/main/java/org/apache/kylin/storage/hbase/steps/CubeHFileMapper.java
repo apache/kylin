@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
@@ -41,9 +40,7 @@ import com.google.common.collect.Lists;
  * @author George Song (ysong1)
  * 
  */
-public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWritable, KeyValue> {
-
-    ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
+public class CubeHFileMapper extends KylinMapper<Text, Text, RowKeyWritable, KeyValue> {
 
     String cubeName;
     CubeDesc cubeDesc;
@@ -51,6 +48,8 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
     MeasureCodec inputCodec;
     Object[] inputMeasures;
     List<KeyValueCreator> keyValueCreators;
+
+    private RowKeyWritable rowKeyWritable = new RowKeyWritable();
 
     @Override
     protected void doSetup(Context context) throws IOException {
@@ -75,14 +74,14 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
 
     @Override
     public void doMap(Text key, Text value, Context context) throws IOException, InterruptedException {
-        outputKey.set(key.getBytes(), 0, key.getLength());
         KeyValue outputValue;
 
         int n = keyValueCreators.size();
         if (n == 1 && keyValueCreators.get(0).isFullCopy) { // shortcut for simple full copy
 
             outputValue = keyValueCreators.get(0).create(key, value.getBytes(), 0, value.getLength());
-            context.write(outputKey, outputValue);
+            rowKeyWritable.set(outputValue.createKeyOnly(false).getKey());
+            context.write(rowKeyWritable, outputValue);
 
         } else { // normal (complex) case that distributes measures to multiple HBase columns
 
@@ -90,7 +89,8 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
 
             for (int i = 0; i < n; i++) {
                 outputValue = keyValueCreators.get(i).create(key, inputMeasures);
-                context.write(outputKey, outputValue);
+                rowKeyWritable.set(outputValue.createKeyOnly(false).getKey());
+                context.write(rowKeyWritable, outputValue);
             }
         }
     }

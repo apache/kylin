@@ -25,8 +25,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.mapreduce.KeyValueSortReducer;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
@@ -39,6 +40,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.storage.hbase.HBaseConnection;
@@ -81,10 +83,6 @@ public class CubeHFileJob extends AbstractHadoopJob {
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
             FileOutputFormat.setOutputPath(job, output);
 
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-            job.setMapperClass(CubeHFileMapper.class);
-            job.setReducerClass(KeyValueSortReducer.class);
-
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             // add metadata to distributed cache
@@ -97,6 +95,13 @@ public class CubeHFileJob extends AbstractHadoopJob {
             HFileOutputFormat3.configureIncrementalLoad(job, htable);
             reconfigurePartitions(hbaseConf, partitionFilePath);
 
+            job.setInputFormatClass(SequenceFileInputFormat.class);
+            job.setMapperClass(CubeHFileMapper.class);
+            job.setReducerClass(KeyValueReducer.class);
+            job.setMapOutputKeyClass(RowKeyWritable.class);
+            job.setMapOutputValueClass(KeyValue.class);
+            job.setSortComparatorClass(RowKeyWritable.RowKeyComparator.class);
+
             // set block replication to 3 for hfiles
             hbaseConf.set(DFSConfigKeys.DFS_REPLICATION_KEY, "3");
 
@@ -106,6 +111,17 @@ public class CubeHFileJob extends AbstractHadoopJob {
         } finally {
             if (job != null)
                 cleanupTempConfFile(job.getConfiguration());
+        }
+    }
+
+    private static class KeyValueReducer extends KylinReducer<RowKeyWritable, KeyValue, ImmutableBytesWritable, KeyValue> {
+        private ImmutableBytesWritable immutableBytesWritable = new ImmutableBytesWritable();
+        @Override
+        public void doReduce(RowKeyWritable row, Iterable<KeyValue> kvs, Context context) throws java.io.IOException, InterruptedException {
+            for (KeyValue kv : kvs) {
+                immutableBytesWritable.set(kv.getKey());
+                context.write(immutableBytesWritable, kv);
+            }
         }
     }
 
