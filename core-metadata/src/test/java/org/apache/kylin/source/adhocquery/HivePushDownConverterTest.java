@@ -68,6 +68,17 @@ public class HivePushDownConverterTest extends TestCase {
     }
 
     @Test
+    public void testSubqueryReplace4() {
+        String originString = "select t.TRANS_ID from (\n" +
+                "    select * from test_kylin_fact s inner join TEST_ACCOUNT a \n" +
+                "        on s.BUYER_ID = a.ACCOUNT_ID inner join TEST_COUNTRY c on c.COUNTRY = a.ACCOUNT_COUNTRY\n" +
+                "    )t\n" +
+                "LIMIT 50000";
+        String replacedString = HivePushDownConverter.subqueryReplace(originString);
+        assertEquals(originString, replacedString);
+    }
+
+    @Test
     public void testConcatReplace() {
         String originString = "select count(*) as cnt from test_kylin_fact where lstg_format_name||'a'='ABINa'";
         String replacedString = HivePushDownConverter.concatReplace(originString);

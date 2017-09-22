@@ -38,7 +38,7 @@ public class HivePushDownConverter implements IPushDownConverter {
             Pattern.CASE_INSENSITIVE);
     private static final Pattern FROM_PATTERN = Pattern.compile("\\s+from\\s+(\\()\\s*select\\s",
             Pattern.CASE_INSENSITIVE);
-    private static final Pattern ALIAS_PATTERN = Pattern.compile("\\s+([`'_a-z0-9A-Z]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ALIAS_PATTERN = Pattern.compile("\\s*([`'_a-z0-9A-Z]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern CAST_PATTERN = Pattern.compile("CAST\\((.*?) (?i)AS\\s*(.*?)\\s*\\)",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern CONCAT_PATTERN = Pattern.compile("(['_a-z0-9A-Z]+)\\|\\|(['_a-z0-9A-Z]+)",
