@@ -811,12 +811,13 @@ public class QueryService extends BasicService {
 
             if (isPrepareStatementWithParams(sqlRequest)) {
 
-                PreparedStatement preparedState = conn.prepareStatement(correctedSql);
-                processStatementAttr(preparedState, sqlRequest);
+                stat = conn.prepareStatement(correctedSql); // to be closed in the finally
+                PreparedStatement prepared = (PreparedStatement) stat;
+                processStatementAttr(prepared, sqlRequest);
                 for (int i = 0; i < ((PrepareSqlRequest) sqlRequest).getParams().length; i++) {
-                    setParam(preparedState, i + 1, ((PrepareSqlRequest) sqlRequest).getParams()[i]);
+                    setParam(prepared, i + 1, ((PrepareSqlRequest) sqlRequest).getParams()[i]);
                 }
-                resultSet = preparedState.executeQuery();
+                resultSet = prepared.executeQuery();
             } else {
                 stat = conn.createStatement();
                 processStatementAttr(stat, sqlRequest);
