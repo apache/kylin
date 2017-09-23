@@ -140,7 +140,7 @@ public class CubeStatsReader {
         return tempFile;
     }
 
-    public Map<Long, HLLCounter> getCuboidRowEstimatesHLLOrigin() {
+    public Map<Long, HLLCounter> getCuboidRowHLLCounters() {
         return this.cuboidRowEstimatesHLL;
     }
 

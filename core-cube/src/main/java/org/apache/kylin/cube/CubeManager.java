@@ -418,7 +418,7 @@ public class CubeManager implements IRealizationProvider {
             cube.setCost(update.getCost());
         }
 
-        if(update.getCuboids() != null){
+        if (update.getCuboids() != null) {
             cube.setCuboids(update.getCuboids());
         }
 

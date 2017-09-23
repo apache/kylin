@@ -75,7 +75,7 @@ public class CuboidStatsReaderUtil {
         Map<Long, Double> sizeMapMerged = Maps.newHashMapWithExpectedSize(cuboidSet.size());
         for (CubeSegment pSegment : segmentList) {
             CubeStatsReader pReader = new CubeStatsReader(pSegment, pSegment.getConfig());
-            Map<Long, HLLCounter> pHLLMap = pReader.getCuboidRowEstimatesHLLOrigin();
+            Map<Long, HLLCounter> pHLLMap = pReader.getCuboidRowHLLCounters();
             if (pHLLMap == null || pHLLMap.isEmpty()) {
                 logger.info("Cuboid Statistics for segment " + pSegment.getName() + " is not enabled.");
                 nSegment--;

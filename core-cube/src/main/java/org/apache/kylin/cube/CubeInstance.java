@@ -29,7 +29,6 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.cube.cuboid.CuboidModeEnum;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -326,35 +325,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     public void setCreateTimeUTC(long createTimeUTC) {
         this.createTimeUTC = createTimeUTC;
-    }
-
-    public Set<Long> getCuboidsByMode(String cuboidModeName) {
-        return getCuboidsByMode(CuboidModeEnum.getByModeName(cuboidModeName));
-    }
-
-    public Set<Long> getCuboidsByMode(CuboidModeEnum cuboidMode) {
-        if (cuboidMode == null || cuboidMode == CuboidModeEnum.CURRENT) {
-            return getCuboidScheduler().getAllCuboidIds();
-        }
-        Set<Long> cuboidsRecommend = getCuboidsRecommend();
-        if (cuboidsRecommend == null || cuboidMode == CuboidModeEnum.RECOMMEND) {
-            return cuboidsRecommend;
-        }
-        Set<Long> currentCuboids = getCuboidScheduler().getAllCuboidIds();
-        switch (cuboidMode) {
-        case RECOMMEND_EXISTING:
-            cuboidsRecommend.retainAll(currentCuboids);
-            return cuboidsRecommend;
-        case RECOMMEND_MISSING:
-            cuboidsRecommend.removeAll(currentCuboids);
-            return cuboidsRecommend;
-        case RECOMMEND_MISSING_WITH_BASE:
-            cuboidsRecommend.removeAll(currentCuboids);
-            currentCuboids.add(getCuboidScheduler().getBaseCuboidId());
-            return cuboidsRecommend;
-        default:
-            return null;
-        }
     }
 
     public Map<Long, Long> getCuboids() {

@@ -90,6 +90,10 @@ public class StatisticsDecisionUtil {
 
     public static void optimizeCubingPlan(CubeSegment segment) throws IOException {
         CubeInstance cube = segment.getCubeInstance();
+        
+        if (cube.getConfig().isCubePlannerEnabled() == false)
+            return;
+        
         List<CubeSegment> readySegments = cube.getSegments(SegmentStatusEnum.READY);
         if (readySegments.size() == 0 || (cube.getConfig().isCubePlannerEnabledForExistingCube()
                 && readySegments.size() == 1 && (readySegments.get(0).getSegRange().equals(segment.getSegRange())))) {
