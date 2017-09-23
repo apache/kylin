@@ -35,7 +35,7 @@ import org.junit.Test;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class AlgorithmTestBase {
+public class ITAlgorithmTestBase {
 
     public CuboidStats cuboidStats;
 

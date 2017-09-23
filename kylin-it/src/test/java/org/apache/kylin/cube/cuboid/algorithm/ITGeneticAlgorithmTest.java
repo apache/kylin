@@ -20,15 +20,15 @@ package org.apache.kylin.cube.cuboid.algorithm;
 
 import java.util.List;
 
-import org.apache.kylin.cube.cuboid.algorithm.greedy.GreedyAlgorithm;
+import org.apache.kylin.cube.cuboid.algorithm.generic.GeneticAlgorithm;
 import org.junit.Test;
 
-public class GreedyAlgorithmTest extends AlgorithmTestBase {
+public class ITGeneticAlgorithmTest extends ITAlgorithmTestBase {
 
     @Test
     public void testBPUSCalculator() {
         BenefitPolicy benefitPolicy = new BPUSCalculator(cuboidStats);
-        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, cuboidStats);
+        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
 
         List<Long> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by BPUSCalculator: " + recommendList);
@@ -38,7 +38,7 @@ public class GreedyAlgorithmTest extends AlgorithmTestBase {
     @Test
     public void testPBPUSCalculator() {
         BenefitPolicy benefitPolicy = new PBPUSCalculator(cuboidStats);
-        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, cuboidStats);
+        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
 
         List<Long> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by PBPUSCalculator:" + recommendList);
@@ -48,11 +48,10 @@ public class GreedyAlgorithmTest extends AlgorithmTestBase {
     @Test
     public void testSPBPUSCalculator() {
         BenefitPolicy benefitPolicy = new SPBPUSCalculator(cuboidStats);
-        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, cuboidStats);
+        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
 
         List<Long> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by SPBPUSCalculator:" + recommendList);
         System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
     }
-
 }

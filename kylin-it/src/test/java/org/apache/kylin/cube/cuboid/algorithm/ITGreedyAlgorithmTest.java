@@ -20,17 +20,15 @@ package org.apache.kylin.cube.cuboid.algorithm;
 
 import java.util.List;
 
-import org.apache.kylin.cube.cuboid.algorithm.generic.GeneticAlgorithm;
-import org.junit.Ignore;
+import org.apache.kylin.cube.cuboid.algorithm.greedy.GreedyAlgorithm;
 import org.junit.Test;
 
-@Ignore("testBPUSCalculator() is unsable; whole test takes too long")
-public class GeneticAlgorithmTest extends AlgorithmTestBase {
+public class ITGreedyAlgorithmTest extends ITAlgorithmTestBase {
 
     @Test
     public void testBPUSCalculator() {
         BenefitPolicy benefitPolicy = new BPUSCalculator(cuboidStats);
-        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
+        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, cuboidStats);
 
         List<Long> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by BPUSCalculator: " + recommendList);
@@ -40,7 +38,7 @@ public class GeneticAlgorithmTest extends AlgorithmTestBase {
     @Test
     public void testPBPUSCalculator() {
         BenefitPolicy benefitPolicy = new PBPUSCalculator(cuboidStats);
-        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
+        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, cuboidStats);
 
         List<Long> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by PBPUSCalculator:" + recommendList);
@@ -50,10 +48,11 @@ public class GeneticAlgorithmTest extends AlgorithmTestBase {
     @Test
     public void testSPBPUSCalculator() {
         BenefitPolicy benefitPolicy = new SPBPUSCalculator(cuboidStats);
-        GeneticAlgorithm algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
+        GreedyAlgorithm algorithm = new GreedyAlgorithm(-1, benefitPolicy, cuboidStats);
 
         List<Long> recommendList = algorithm.recommend(10);
         System.out.println("recommendList by SPBPUSCalculator:" + recommendList);
         System.out.println("Cost evaluated for each query: " + getQueryCostRatio(cuboidStats, recommendList));
     }
+
 }
