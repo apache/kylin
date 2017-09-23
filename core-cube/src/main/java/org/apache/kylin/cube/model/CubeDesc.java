@@ -660,6 +660,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                             + ". Use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.";
                     throw new TooManyCuboidException(msg);
                 }
+            } catch (TooManyCuboidException e) {
+                throw e;
             } catch (Exception e) {
                 throw new IllegalStateException("Unknown error while calculating cuboid number for " + //
                         "Aggregation group " + index + " of Cube Desc " + this.name, e);
