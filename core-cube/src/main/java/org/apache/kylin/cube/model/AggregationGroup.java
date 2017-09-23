@@ -41,6 +41,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.math.LongMath;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -300,42 +301,48 @@ public class AggregationGroup implements Serializable {
     public long calculateCuboidCombination() {
         long combination = 1;
 
-        if (this.getDimCap() > 0) {
-            CuboidScheduler cuboidScheduler = cubeDesc.getInitialCuboidScheduler();
-            combination = cuboidScheduler.calculateCuboidsForAggGroup(this).size();
-        } else {
-            Set<String> includeDims = new TreeSet<>(Arrays.asList(includes));
-            Set<String> mandatoryDims = new TreeSet<>(Arrays.asList(selectRule.mandatoryDims));
-
-            Set<String> hierarchyDims = new TreeSet<>();
-            for (String[] ss : selectRule.hierarchyDims) {
-                hierarchyDims.addAll(Arrays.asList(ss));
-                combination = combination * (ss.length + 1);
+        try {
+            if (this.getDimCap() > 0) {
+                CuboidScheduler cuboidScheduler = cubeDesc.getInitialCuboidScheduler();
+                combination = cuboidScheduler.calculateCuboidsForAggGroup(this).size();
+            } else {
+                Set<String> includeDims = new TreeSet<>(Arrays.asList(includes));
+                Set<String> mandatoryDims = new TreeSet<>(Arrays.asList(selectRule.mandatoryDims));
+    
+                Set<String> hierarchyDims = new TreeSet<>();
+                for (String[] ss : selectRule.hierarchyDims) {
+                    hierarchyDims.addAll(Arrays.asList(ss));
+                    combination = LongMath.checkedMultiply(combination, (ss.length + 1));
+                }
+    
+                Set<String> jointDims = new TreeSet<>();
+                for (String[] ss : selectRule.jointDims) {
+                    jointDims.addAll(Arrays.asList(ss));
+                }
+                combination = LongMath.checkedMultiply(combination, (1L << selectRule.jointDims.length));
+    
+                Set<String> normalDims = new TreeSet<>();
+                normalDims.addAll(includeDims);
+                normalDims.removeAll(mandatoryDims);
+                normalDims.removeAll(hierarchyDims);
+                normalDims.removeAll(jointDims);
+    
+                combination = LongMath.checkedMultiply(combination, (1L << normalDims.size()));
+    
+                if (cubeDesc.getConfig().getCubeAggrGroupIsMandatoryOnlyValid() && !mandatoryDims.isEmpty()) {
+                    combination += 1;
+                }
+                combination -= 1; // not include cuboid 0
             }
-
-            Set<String> jointDims = new TreeSet<>();
-            for (String[] ss : selectRule.jointDims) {
-                jointDims.addAll(Arrays.asList(ss));
-                combination = combination * 2;
-            }
-
-            Set<String> normalDims = new TreeSet<>();
-            normalDims.addAll(includeDims);
-            normalDims.removeAll(mandatoryDims);
-            normalDims.removeAll(hierarchyDims);
-            normalDims.removeAll(jointDims);
-
-            combination = combination * (1L << normalDims.size());
-
-            if (cubeDesc.getConfig().getCubeAggrGroupIsMandatoryOnlyValid() && !mandatoryDims.isEmpty()) {
-                combination += 1;
-            }
-            combination -= 1; // not include cuboid 0
+            
+            if (combination < 0)
+                throw new ArithmeticException();
+            
+        } catch (ArithmeticException ae) {
+            // long overflow, give max value
+            combination = Long.MAX_VALUE;
         }
 
-        if (combination < 0) { // overflow
-            combination = Long.MAX_VALUE - 1;
-        }
         return combination;
     }
 
