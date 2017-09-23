@@ -19,7 +19,6 @@
 package org.apache.kylin.cube;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -328,7 +327,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         this.createTimeUTC = createTimeUTC;
     }
 
-    Map<Long, Long> getCuboids() {
+    public Map<Long, Long> getCuboids() {
         if (cuboidBytes == null)
             return null;
         byte[] uncompressed;
@@ -344,7 +343,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
-    void setCuboids(Map<Long, Long> cuboids) {
+    public void setCuboids(Map<Long, Long> cuboids) {
         if (cuboids == null)
             return;
         if (cuboids.isEmpty()) {
@@ -361,7 +360,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
-    Set<Long> getCuboidsRecommend() {
+    public Set<Long> getCuboidsRecommend() {
         if (cuboidBytesRecommend == null)
             return null;
         byte[] uncompressed;
@@ -377,7 +376,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
-    void setCuboidsRecommend(HashSet<Long> cuboids) {
+    public void setCuboidsRecommend(Set<Long> cuboids) {
         if (cuboids == null)
             return;
         if (cuboids.isEmpty()) {

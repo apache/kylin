@@ -131,8 +131,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         logger.info((rowkeyList.size() + 1) + " regions");
         logger.info(rowkeyList.size() + " splits");
-        for (byte[] split : rowkeyList) {
-            logger.info(StringUtils.byteToHexString(split));
+        if (logger.isTraceEnabled()) {
+            for (byte[] split : rowkeyList) {
+                logger.trace(StringUtils.byteToHexString(split));
+            }
         }
 
         byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);

@@ -359,7 +359,7 @@
   "dictionaries": [
     {
       "column": "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP",
-      "builder": "org.apache.kylin.dict.GlobalDictionaryBuilder"
+      "builder": "org.apache.kylin.dict.global.SegmentAppendTrieDictBuilder"
     }
   ],
   "rowkey": {

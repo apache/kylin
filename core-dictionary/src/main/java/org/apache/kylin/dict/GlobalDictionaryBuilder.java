@@ -44,16 +44,13 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
 
     @Override
     public void init(DictionaryInfo dictInfo, int baseId) throws IOException {
-        if (dictInfo == null) {
-            throw new IllegalArgumentException("GlobalDictinaryBuilder must used with an existing DictionaryInfo");
-        }
-
         sourceColumn = dictInfo.getSourceTable() + "_" + dictInfo.getSourceColumn();
         lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
         lock.lock(getLockPath(sourceColumn), Long.MAX_VALUE);
 
         int maxEntriesPerSlice = KylinConfig.getInstanceFromEnv().getAppendDictEntrySize();
-        this.builder = new AppendTrieDictionaryBuilder(dictInfo.getResourceDir(), maxEntriesPerSlice);
+        String baseDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/GlobalDict" + dictInfo.getResourceDir() + "/";
+        this.builder = new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, true);
         this.baseId = baseId;
     }
 
@@ -96,5 +93,4 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
     private String getLockPath(String pathName) {
         return "/dict/" + pathName + "/lock";
     }
-
 }

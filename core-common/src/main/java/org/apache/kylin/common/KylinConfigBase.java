@@ -409,6 +409,38 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
+    // Cube Planner
+    // ============================================================================
+    
+    public boolean isCubePlannerEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", "false"));
+    }
+    
+    public boolean isCubePlannerEnabledForExistingCube() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled-for-existing-cube", "false"));
+    }
+
+    public double getCubePlannerExpansionRateThreshold() {
+        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.expansion-threshold", "15.0"));
+    }
+
+    public int getCubePlannerRecommendCuboidCacheMaxSize() {
+        return Integer.parseInt(getOptional("kylin.cube.cubeplanner.recommend-cache-max-size", "200"));
+    }
+
+    public long getCubePlannerMandatoryRollUpThreshold() {
+        return Long.parseLong(getOptional("kylin.cube.cubeplanner.mandatory-rollup-threshold", "1000"));
+    }
+
+    public int getCubePlannerAgreedyAlgorithmAutoThreshold() {
+        return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-greedy", "10"));
+    }
+
+    public int getCubePlannerGeneticAlgorithmAutoThreshold() {
+        return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-genetic", "23"));
+    }
+
+    // ============================================================================
     // JOB
     // ============================================================================
 

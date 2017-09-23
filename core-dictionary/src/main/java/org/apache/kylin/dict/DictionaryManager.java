@@ -218,6 +218,16 @@ public class DictionaryManager {
         if (dicts.size() == 1)
             return dicts.get(0);
 
+        /**
+         * AppendTrieDictionary needn't merge
+         * more than one AppendTrieDictionary will generate when user use {@link SegmentAppendTrieDictBuilder}
+         */
+        for (DictionaryInfo dict: dicts) {
+            if (dict.getDictionaryClass().equals(AppendTrieDictionary.class.getName())) {
+                return dict;
+            }
+        }
+
         DictionaryInfo firstDictInfo = null;
         int totalSize = 0;
         for (DictionaryInfo info : dicts) {

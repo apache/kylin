@@ -17,6 +17,7 @@
  */
 package org.apache.kylin.cube.model;
 
+@SuppressWarnings("serial")
 public class TooManyCuboidException extends RuntimeException {
 
     public TooManyCuboidException(String message) {

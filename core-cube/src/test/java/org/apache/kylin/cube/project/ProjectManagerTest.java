@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.Set;
 
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -85,7 +84,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         Set<IRealization> realizations = proMgr.listAllRealizations("alien");
         assertTrue(realizations.contains(createdCube));
 
-        System.out.println(JsonUtil.writeValueAsIndentString(createdCube));
+        //System.out.println(JsonUtil.writeValueAsIndentString(createdCube));
 
         assertTrue(prjMgr.listAllProjects().size() == originalProjectCount + 1);
         assertTrue(prjMgr.listAllRealizations("ALIEN").iterator().next().getName().equalsIgnoreCase("CUBE_IN_ALIEN_PROJECT"));
@@ -129,7 +128,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         CubeInstance createdCube = cubeMgr.createCube("new_cube_in_default", ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
         assertTrue(createdCube == cubeMgr.getCube("new_cube_in_default"));
 
-        System.out.println(JsonUtil.writeValueAsIndentString(createdCube));
+        //System.out.println(JsonUtil.writeValueAsIndentString(createdCube));
 
         assertTrue(prjMgr.listAllProjects().size() == originalProjectCount);
         assertTrue(cubeMgr.listAllCubes().size() == originalCubeCount + 1);

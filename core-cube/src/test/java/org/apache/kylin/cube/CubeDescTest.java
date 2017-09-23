@@ -400,7 +400,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     public void testSerialize() throws Exception {
         CubeDesc desc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         String str = JsonUtil.writeValueAsIndentString(desc);
-        System.out.println(str);
+        //System.out.println(str);
         @SuppressWarnings("unused")
         CubeDesc desc2 = JsonUtil.readValue(str, CubeDesc.class);
     }
@@ -435,7 +435,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
         String mapStr = JsonUtil.writeValueAsString(map);
 
-        System.out.println(mapStr);
+        //System.out.println(mapStr);
 
         Map<?, ?> map2 = JsonUtil.readValue(mapStr, HashMap.class);
 

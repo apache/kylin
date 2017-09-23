@@ -18,7 +18,6 @@
 
 package org.apache.kylin.dict.global;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.AppendTrieDictionary;
 import org.apache.kylin.dict.BytesConverter;
@@ -35,6 +34,7 @@ public class AppendTrieDictionaryBuilder {
     private final String baseDir;
     private final String workingDir;
     private final int maxEntriesPerSlice;
+    private final boolean isAppendDictGlobal;
 
     private GlobalDictStore store;
     private int maxId;
@@ -46,20 +46,21 @@ public class AppendTrieDictionaryBuilder {
     private AppendDictSliceKey curKey;
     private AppendDictNode curNode;
 
-    public AppendTrieDictionaryBuilder(String resourceDir, int maxEntriesPerSlice) throws IOException {
-        this.baseDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/GlobalDict" + resourceDir + "/";
-        this.workingDir = this.baseDir + "/working";
+    public AppendTrieDictionaryBuilder(String baseDir, int maxEntriesPerSlice, boolean isAppendDictGlobal) throws IOException {
+        this.baseDir = baseDir;
+        this.workingDir = baseDir + "working";
         this.maxEntriesPerSlice = maxEntriesPerSlice;
+        this.isAppendDictGlobal = isAppendDictGlobal;
         init();
     }
 
     public synchronized void init() throws IOException {
         this.store = new GlobalDictHDFSStore(baseDir);
-        store.prepareForWrite(workingDir);
+        store.prepareForWrite(workingDir, isAppendDictGlobal);
 
         Long[] versions = store.listAllVersions();
 
-        if (versions.length == 0) { // build dict for the first time
+        if (versions.length == 0 || !isAppendDictGlobal) { // build dict for the first time
             this.maxId = 0;
             this.maxValueLength = 0;
             this.nValues = 0;
@@ -122,7 +123,7 @@ public class AppendTrieDictionaryBuilder {
         }
 
         GlobalDictMetadata metadata = new GlobalDictMetadata(baseId, this.maxId, this.maxValueLength, this.nValues, this.bytesConverter, sliceFileMap);
-        store.commit(workingDir, metadata);
+        store.commit(workingDir, metadata, isAppendDictGlobal);
 
         AppendTrieDictionary dict = new AppendTrieDictionary();
         dict.init(this.baseDir);

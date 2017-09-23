@@ -110,7 +110,8 @@ KylinApp.constant('cubeConfig', {
   ],
   statusNeedNofity:['ERROR', 'DISCARDED', 'SUCCEED'],
   buildDictionaries:[
-    {name:"Global Dictionary", value:"org.apache.kylin.dict.GlobalDictionaryBuilder"}
+    {name:"Global Dictionary", value:"org.apache.kylin.dict.GlobalDictionaryBuilder"},
+    {name:"Segment Dictionary", value:"org.apache.kylin.dict.global.SegmentAppendTrieDictBuilder"}
   ],
   needSetLengthEncodingList:['fixed_length','fixed_length_hex','int','integer']
 });

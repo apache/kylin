@@ -1442,6 +1442,8 @@
 
                                 <!--Test Data-->
                                 <exclude>**/src/test/resources/**</exclude>
+                                <exclude>examples/sample_cube/template/**</exclude>
+                                <exclude>examples/test_case_data/localmeta/**</exclude>
 
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
@@ -1484,8 +1486,7 @@
                                 <!-- MIT license -->
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
                                 <exclude>webapp/app/css/messenger-theme-ice.css</exclude>
-                                <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js
-                                </exclude>
+                                <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js</exclude>
                                 <exclude>webapp/app/js/directives/angular-tree-control.js</exclude>
                                 <exclude>webapp/app/js/directives/datetimepicker.js</exclude>
                                 <exclude>webapp/app/js/directives/select.js</exclude>

@@ -141,10 +141,10 @@ public class NumberDictionaryTest extends LocalFileMetadataTestCase {
 
         // test exact match
         NumberDictionary<String> dict = builder.build(0);
-        for (int i = 0; i < sorted.size(); i++) {
-            String dictNum = dict.getValueFromId(i);
-            System.out.println(sorted.get(i) + "\t" + dictNum);
-        }
+//        for (int i = 0; i < sorted.size(); i++) {
+//            String dictNum = dict.getValueFromId(i);
+//            System.out.println(sorted.get(i) + "\t" + dictNum);
+//        }
 
         for (int i = 0; i < sorted.size(); i++) {
             String dictNum = dict.getValueFromId(i);

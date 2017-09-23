@@ -18,6 +18,15 @@
 
 package org.apache.kylin.dict.global;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -32,15 +41,6 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.dict.BytesConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 
 public class GlobalDictHDFSStore extends GlobalDictStore {
 
@@ -59,13 +59,6 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         this.basePath = new Path(baseDir);
         this.conf = HadoopUtil.getCurrentConfiguration();
         this.fileSystem = HadoopUtil.getFileSystem(baseDir);
-
-        if (!fileSystem.exists(basePath)) {
-            logger.info("Global dict at {} doesn't exist, create a new one", basePath);
-            fileSystem.mkdirs(basePath);
-        }
-
-        migrateOldLayout();
     }
 
     // Previously we put slice files and index file directly in base directory,
@@ -111,18 +104,25 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
     }
 
     @Override
-    void prepareForWrite(String workingDir) throws IOException {
-        // TODO create lock file
+    void prepareForWrite(String workingDir, boolean isGlobal) throws IOException {
+        if (!fileSystem.exists(basePath)) {
+            logger.info("Global dict at {} doesn't exist, create a new one", basePath);
+            fileSystem.mkdirs(basePath);
+        }
+
+        migrateOldLayout();
+
+        logger.trace("Prepare to write Global dict at {}, isGlobal={}", workingDir, isGlobal);
         Path working = new Path(workingDir);
 
         if (fileSystem.exists(working)) {
             fileSystem.delete(working, true);
-            logger.info("Working directory {} exits, delete it first", working);
+            logger.trace("Working directory {} exits, delete it first", working);
         }
 
         // when build dict, copy all data into working dir and work on it, avoiding suddenly server crash made data corrupt
         Long[] versions = listAllVersions();
-        if (versions.length > 0) {
+        if (versions.length > 0 && isGlobal) {
             Path latestVersion = getVersionDir(versions[versions.length - 1]);
             FileUtil.copy(fileSystem, latestVersion, fileSystem, working, false, true, conf);
         } else {
@@ -132,6 +132,10 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
 
     @Override
     public Long[] listAllVersions() throws IOException {
+        if (!fileSystem.exists(basePath)) {
+            return new Long[0];  // for the removed SegmentAppendTrieDictBuilder
+        }
+
         FileStatus[] versionDirs = fileSystem.listStatus(basePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
@@ -178,7 +182,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
     @Override
     public AppendDictSlice readSlice(String directory, String sliceFileName) throws IOException {
         Path path = new Path(directory, sliceFileName);
-        logger.info("read slice from {}", path);
+        logger.trace("read slice from {}", path);
         try (FSDataInputStream input = fileSystem.open(path, BUFFER_SIZE)) {
             return AppendDictSlice.deserializeFrom(input);
         }
@@ -190,7 +194,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         String sliceFile = IndexFormatV2.sliceFileName(key);
         Path path = new Path(workingDir, sliceFile);
 
-        logger.info("write slice with key {} into file {}", key, path);
+        logger.trace("write slice with key {} into file {}", key, path);
         try (FSDataOutputStream out = fileSystem.create(path, true, BUFFER_SIZE)) {
             byte[] bytes = slice.buildTrieBytes();
             out.write(bytes);
@@ -201,14 +205,14 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
     @Override
     public void deleteSlice(String workingDir, String sliceFileName) throws IOException {
         Path path = new Path(workingDir, sliceFileName);
-        logger.info("delete slice at {}", path);
+        logger.trace("delete slice at {}", path);
         if (fileSystem.exists(path)) {
             fileSystem.delete(path, false);
         }
     }
 
     @Override
-    public void commit(String workingDir, GlobalDictMetadata metadata) throws IOException {
+    public void commit(String workingDir, GlobalDictMetadata metadata, boolean isAppendDictGlobal) throws IOException {
         Path workingPath = new Path(workingDir);
 
         // delete v1 index file
@@ -225,22 +229,38 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         Path newVersionPath = new Path(basePath, VERSION_PREFIX + System.currentTimeMillis());
         fileSystem.rename(workingPath, newVersionPath);
 
-        cleanUp();
+        cleanUp(isAppendDictGlobal);
     }
 
     // Check versions count, delete expired versions
-    private void cleanUp() throws IOException {
-        Long[] versions = listAllVersions();
+    private void cleanUp(boolean isAppendDictGlobal) throws IOException {
         long timestamp = System.currentTimeMillis();
-        for (int i = 0; i < versions.length - maxVersions; i++) {
-            if (versions[i] + versionTTL < timestamp) {
-                fileSystem.delete(getVersionDir(versions[i]), true);
+        if (isAppendDictGlobal) {
+            Long[] versions = listAllVersions();
+            for (int i = 0; i < versions.length - maxVersions; i++) {
+                if (versions[i] + versionTTL < timestamp) {
+                    fileSystem.delete(getVersionDir(versions[i]), true);
+                }
+            }
+        } else {
+            FileStatus[] segmentDictDirs = fileSystem.listStatus(basePath.getParent());
+            for (FileStatus fileStatus : segmentDictDirs) {
+                String filePath = fileStatus.getPath().getName();
+                Long version = Long.parseLong(filePath.split("_")[1]);
+                if (version + versionTTL < timestamp) {
+                    fileSystem.delete(new Path(basePath.getParent() + "/" + filePath), true);
+                }
             }
         }
     }
 
     @Override
     public String copyToAnotherMeta(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
+        if (baseDir.contains("resources/SegmentDict")) {
+            logger.info("SegmentAppendTrieDict needn't to copy");
+            return baseDir;
+        }
+
         checkArgument(baseDir.startsWith(srcConfig.getHdfsWorkingDirectory()), "Please check why current directory {} doesn't belong to source working directory {}", baseDir, srcConfig.getHdfsWorkingDirectory());
 
         final String dstBaseDir = baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory());

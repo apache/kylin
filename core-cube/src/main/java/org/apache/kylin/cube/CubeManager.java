@@ -314,9 +314,6 @@ public class CubeManager implements IRealizationProvider {
         // delete cube from project
         ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
 
-        if (listener != null)
-            listener.afterCubeDelete(cube);
-
         return cube;
     }
 
@@ -332,9 +329,6 @@ public class CubeManager implements IRealizationProvider {
         updateCubeWithRetry(new CubeUpdate(cube), 0);
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
 
-        if (listener != null)
-            listener.afterCubeCreate(cube);
-
         return cube;
     }
 
@@ -348,18 +342,11 @@ public class CubeManager implements IRealizationProvider {
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cube.getName(), projectName,
                 owner);
 
-        if (listener != null)
-            listener.afterCubeCreate(cube);
-
         return cube;
     }
 
     public CubeInstance updateCube(CubeUpdate update) throws IOException {
         CubeInstance cube = updateCubeWithRetry(update, 0);
-
-        if (listener != null)
-            listener.afterCubeUpdate(cube);
-
         return cube;
     }
 
@@ -416,6 +403,10 @@ public class CubeManager implements IRealizationProvider {
 
         if (update.getCost() > 0) {
             cube.setCost(update.getCost());
+        }
+
+        if (update.getCuboids() != null) {
+            cube.setCuboids(update.getCuboids());
         }
 
         try {
@@ -842,23 +833,6 @@ public class CubeManager implements IRealizationProvider {
     public IRealization getRealization(String name) {
         return getCube(name);
     }
-
-    // ============================================================================
-
-    public interface CubeChangeListener {
-        void afterCubeCreate(CubeInstance cube);
-
-        void afterCubeUpdate(CubeInstance cube);
-
-        void afterCubeDelete(CubeInstance cube);
-    }
-
-    private CubeChangeListener listener;
-
-    public void setCubeChangeListener(CubeChangeListener listener) {
-        this.listener = listener;
-    }
-
 
     /**
      * Calculate the holes (gaps) in segments.
