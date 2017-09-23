@@ -303,6 +303,13 @@ public class CubeService extends BasicService implements InitializingBean {
         Message msg = MsgPicker.getMsg();
 
         String cubeName = cube.getName();
+
+        final List<CubingJob> cubingJobs = jobService.listJobsByRealizationName(cubeName, null, EnumSet
+                .of(ExecutableState.READY, ExecutableState.RUNNING, ExecutableState.ERROR, ExecutableState.STOPPED));
+        if (!cubingJobs.isEmpty()) {
+            throw new BadRequestException(String.format(msg.getDISCARD_JOB_FIRST(), cubeName));
+        }
+
         RealizationStatusEnum ostatus = cube.getStatus();
         if (null != ostatus && !RealizationStatusEnum.DISABLED.equals(ostatus)) {
             throw new BadRequestException(String.format(msg.getPURGE_NOT_DISABLED_CUBE(), cubeName, ostatus));
