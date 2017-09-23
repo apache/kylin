@@ -44,7 +44,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
     public void testCIConfigured() throws IOException {
         DataModelDesc model = getModel("ci_inner_join_model");
         ModelDataGenerator gen = new ModelDataGenerator(model, 100);
-        gen.outprint = true;
+        gen.outprint = false;
         
         gen.generate();
     }
@@ -53,7 +53,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
     public void testSSBNoConfig() throws IOException {
         DataModelDesc model = getModel("ssb");
         ModelDataGenerator gen = new ModelDataGenerator(model, 100);
-        gen.outprint = true;
+        gen.outprint = false;
         
         gen.generate();
     }

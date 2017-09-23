@@ -75,7 +75,7 @@ public class NumberDictionaryForestTest {
             b.addValue(value);
         }
         TrieDictionaryForest<String> dict = b.build();
-        dict.dump(System.out);
+        //dict.dump(System.out);
         
         ArrayList<Integer> resultIds = new ArrayList<>();
         for (int i = 0; i < keyList.size(); i++) {
@@ -117,7 +117,7 @@ public class NumberDictionaryForestTest {
             b.addValue(str);
         TrieDictionaryForest<String> dict = b.build();
         dict = testSerialize(dict);
-        dict.dump(System.out);
+        //dict.dump(System.out);
         for (String str : testData) {
             assertEquals(str, dict.getValueFromId(dict.getIdFromValue(str)));
         }
@@ -134,13 +134,13 @@ public class NumberDictionaryForestTest {
         for (String str : testData)
             b.addValue(str);
         TrieDictionaryForest<String> dict = b.build();
-        dict.dump(System.out);
+        //dict.dump(System.out);
 
         NumberDictionaryBuilder b2 = new NumberDictionaryBuilder();
         for (String str : testData)
             b2.addValue(str);
         NumberDictionary<String> dict2 = b2.build(0);
-        dict2.dump(System.out);
+        //dict2.dump(System.out);
 
     }
 
@@ -188,7 +188,7 @@ public class NumberDictionaryForestTest {
         for (String str : testData)
             b.addValue(str);
         TrieDictionaryForest<String> dict = b.build();
-        dict.dump(System.out);
+        //dict.dump(System.out);
     }
 
     private static TrieDictionaryForest<String> testSerialize(TrieDictionaryForest<String> dict) {
@@ -272,13 +272,6 @@ public class NumberDictionaryForestTest {
             keyList.add(sortableKey);
         }
         return keyList;
-    }
-
-    private String printKey(SelfDefineSortableKey key) {
-        Text data = key.getText();
-        String fieldValue = Bytes.toString(data.getBytes(), 1, data.getLength() - 1);
-        System.out.println("type flag:" + key.getTypeId() + " fieldValue:" + fieldValue);
-        return fieldValue;
     }
 
     private String getFieldValue(SelfDefineSortableKey key) {

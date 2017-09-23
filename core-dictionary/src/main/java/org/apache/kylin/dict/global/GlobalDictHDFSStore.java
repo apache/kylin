@@ -18,6 +18,15 @@
 
 package org.apache.kylin.dict.global;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -32,15 +41,6 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.dict.BytesConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 
 public class GlobalDictHDFSStore extends GlobalDictStore {
 
@@ -112,12 +112,12 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
 
         migrateOldLayout();
 
-        logger.info("Prepare to write Global dict at {}, isGlobal={}", workingDir, isGlobal);
+        logger.trace("Prepare to write Global dict at {}, isGlobal={}", workingDir, isGlobal);
         Path working = new Path(workingDir);
 
         if (fileSystem.exists(working)) {
             fileSystem.delete(working, true);
-            logger.info("Working directory {} exits, delete it first", working);
+            logger.trace("Working directory {} exits, delete it first", working);
         }
 
         // when build dict, copy all data into working dir and work on it, avoiding suddenly server crash made data corrupt
@@ -182,7 +182,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
     @Override
     public AppendDictSlice readSlice(String directory, String sliceFileName) throws IOException {
         Path path = new Path(directory, sliceFileName);
-        logger.info("read slice from {}", path);
+        logger.trace("read slice from {}", path);
         try (FSDataInputStream input = fileSystem.open(path, BUFFER_SIZE)) {
             return AppendDictSlice.deserializeFrom(input);
         }
@@ -194,7 +194,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         String sliceFile = IndexFormatV2.sliceFileName(key);
         Path path = new Path(workingDir, sliceFile);
 
-        logger.info("write slice with key {} into file {}", key, path);
+        logger.trace("write slice with key {} into file {}", key, path);
         try (FSDataOutputStream out = fileSystem.create(path, true, BUFFER_SIZE)) {
             byte[] bytes = slice.buildTrieBytes();
             out.write(bytes);
@@ -205,7 +205,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
     @Override
     public void deleteSlice(String workingDir, String sliceFileName) throws IOException {
         Path path = new Path(workingDir, sliceFileName);
-        logger.info("delete slice at {}", path);
+        logger.trace("delete slice at {}", path);
         if (fileSystem.exists(path)) {
             fileSystem.delete(path, false);
         }

@@ -17,11 +17,15 @@
 */
 package org.apache.kylin.dict;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
@@ -32,14 +36,12 @@ import org.apache.kylin.dict.global.GlobalDictMetadata;
 import org.apache.kylin.dict.global.GlobalDictStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.TreeMap;
-import java.util.concurrent.ExecutionException;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
@@ -91,7 +93,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
             @Override
             public AppendDictSlice load(AppendDictSliceKey key) throws Exception {
                 AppendDictSlice slice = globalDictStore.readSlice(latestVersionPath.toString(), metadata.sliceFileMap.get(key));
-                logger.info("Load slice with key {} and value {}", key, slice);
+                logger.trace("Load slice with key {} and value {}", key, slice);
                 return slice;
             }
         });

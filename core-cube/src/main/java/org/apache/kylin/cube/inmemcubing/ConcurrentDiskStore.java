@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 public class ConcurrentDiskStore implements IGTStore, Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(MemDiskStore.class);
-    private static final boolean debug = true;
+    private static final boolean debug = false;
 
     private static final int STREAM_BUFFER_SIZE = 8192;
 
