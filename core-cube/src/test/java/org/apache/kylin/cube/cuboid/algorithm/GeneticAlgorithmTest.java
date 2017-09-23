@@ -21,8 +21,10 @@ package org.apache.kylin.cube.cuboid.algorithm;
 import java.util.List;
 
 import org.apache.kylin.cube.cuboid.algorithm.generic.GeneticAlgorithm;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore("testBPUSCalculator() is unsable; whole test takes too long")
 public class GeneticAlgorithmTest extends AlgorithmTestBase {
 
     @Test
