@@ -18,13 +18,13 @@
 
 package org.apache.kylin.dict.global;
 
+import java.io.IOException;
+import java.util.UUID;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.IDictionaryBuilder;
-
-import java.io.IOException;
-import java.util.UUID;
 
 /**
  * SegmentAppendTrieDictBuilder based on one segment.
@@ -41,14 +41,11 @@ public class SegmentAppendTrieDictBuilder implements IDictionaryBuilder {
     public void init(DictionaryInfo dictInfo, int baseId) throws IOException {
         sourceColumn = dictInfo.getSourceTable() + "." + dictInfo.getSourceColumn();
 
-        int maxEntriesPerSlice = KylinConfig.getInstanceFromEnv().getAppendDictEntrySize();
-        if (hdfsDir == null) {
-            //build in Kylin job server
-            hdfsDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
-        }
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        int maxEntriesPerSlice = config.getAppendDictEntrySize();
         //use UUID to make each segment dict in different HDFS dir and support concurrent build
         //use timestamp to make the segment dict easily to delete
-        String baseDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/SegmentDict" + dictInfo.getResourceDir() + "/" + UUID.randomUUID().toString() + "_" + System.currentTimeMillis()+ "/";
+        String baseDir = config.getHdfsWorkingDirectory() + "resources/SegmentDict" + dictInfo.getResourceDir() + "/" + UUID.randomUUID().toString() + "_" + System.currentTimeMillis()+ "/";
 
         this.builder = new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, false);
         this.baseId = baseId;
