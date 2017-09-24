@@ -43,27 +43,27 @@ import org.apache.kylin.query.relnode.OLAPTableScan;
 
 import com.google.common.base.Preconditions;
 
-public class QueryInterceptUtil {
-    private static List<QueryIntercept> queryIntercepts = new ArrayList<>();
+public class QueryInterceptorUtil {
+    private static List<QueryInterceptor> queryInterceptors = new ArrayList<>();
 
-    private static void setQueryIntercept() {
-        if (queryIntercepts.size() > 0) {
+    private static void setQueryInterceptor() {
+        if (queryInterceptors.size() > 0) {
             return;
         }
-        String[] classes = KylinConfig.getInstanceFromEnv().getQueryIntercept();
+        String[] classes = KylinConfig.getInstanceFromEnv().getQueryInterceptors();
         for (String clz : classes) {
             try {
-                QueryIntercept i = (QueryIntercept) ClassUtil.newInstance(clz);
-                queryIntercepts.add(i);
+                QueryInterceptor i = (QueryInterceptor) ClassUtil.newInstance(clz);
+                queryInterceptors.add(i);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to load query intercept", e);
+                throw new RuntimeException("Failed to load query interceptors", e);
             }
         }
     }
 
-    public static List<QueryIntercept> getQueryIntercepts() {
-        setQueryIntercept();
-        return queryIntercepts;
+    public static List<QueryInterceptor> getQueryInterceptors() {
+        setQueryInterceptor();
+        return queryInterceptors;
     }
 
     public static Set<String> getAllColsWithTblAndSchema(String project, List<OLAPContext> contexts) {

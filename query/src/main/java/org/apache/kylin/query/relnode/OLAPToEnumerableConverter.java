@@ -35,8 +35,8 @@ import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.query.routing.RealizationChooser;
-import org.apache.kylin.query.security.QueryIntercept;
-import org.apache.kylin.query.security.QueryInterceptUtil;
+import org.apache.kylin.query.security.QueryInterceptor;
+import org.apache.kylin.query.security.QueryInterceptorUtil;
 
 import com.google.common.collect.Lists;
 
@@ -75,8 +75,8 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         List<OLAPContext> contexts = listContextsHavingScan();
 
         // intercept query
-        List<QueryIntercept> intercepts = QueryInterceptUtil.getQueryIntercepts();
-        for (QueryIntercept intercept : intercepts) {
+        List<QueryInterceptor> intercepts = QueryInterceptorUtil.getQueryInterceptors();
+        for (QueryInterceptor intercept : intercepts) {
             intercept.intercept(contexts);
         }
 

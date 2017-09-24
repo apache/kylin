@@ -24,10 +24,10 @@ import java.util.Set;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.acl.TableACLManager;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.security.QueryIntercept;
-import org.apache.kylin.query.security.QueryInterceptUtil;
+import org.apache.kylin.query.security.QueryInterceptor;
+import org.apache.kylin.query.security.QueryInterceptorUtil;
 
-public class TableIntercept extends QueryIntercept{
+public class TableInterceptor extends QueryInterceptor {
 
     @Override
     protected boolean isEnabled() {
@@ -36,7 +36,7 @@ public class TableIntercept extends QueryIntercept{
 
     @Override
     public Set<String> getQueryIdentifiers(List<OLAPContext> contexts) {
-        return QueryInterceptUtil.getAllTblsWithSchema(contexts);
+        return QueryInterceptorUtil.getAllTblsWithSchema(contexts);
     }
 
     @Override

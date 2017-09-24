@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.kylin.query.relnode.OLAPContext;
 
-public abstract class QueryIntercept {
+public abstract class QueryInterceptor {
 
     public void intercept(List<OLAPContext> contexts) {
         if (!isEnabled()) {

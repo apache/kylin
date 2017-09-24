@@ -52,7 +52,7 @@ public class TableACL extends RootPersistentEntity {
 
     public Set<String> getTableBlackList(String username) {
         TableBlackList tableBlackList = userTableBlackList.get(username);
-        //table intercept will use this, return an empty set then null
+        //table interceptor will use this, return an empty set then null
         if (tableBlackList == null) {
             tableBlackList = new TableBlackList();
         }

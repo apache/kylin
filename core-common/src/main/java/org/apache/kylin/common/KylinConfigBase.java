@@ -1090,8 +1090,8 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptionalStringArray("kylin.query.transformers", new String[0]);
     }
 
-    public String[] getQueryIntercept() {
-        return getOptionalStringArray("kylin.query.intercepts", new String[0]);
+    public String[] getQueryInterceptors() {
+        return getOptionalStringArray("kylin.query.interceptors", new String[0]);
     }
 
     public long getQueryDurationCacheThreshold() {
@@ -1190,7 +1190,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isTableACLEnabled() {
-        return Boolean.valueOf(this.getOptional("kylin.query.acl.table-acl-enabled", "true"));
+        return Boolean.valueOf(this.getOptional("kylin.query.security.table-acl-enabled", "true"));
+    }
+
+    public boolean isEscapeDefaultKeywordEnabled() {
+        return Boolean.valueOf(this.getOptional("kylin.query.escape-default-keyword", "false"));
     }
 
     // ============================================================================

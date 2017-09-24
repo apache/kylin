@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.util;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
@@ -91,6 +92,7 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     @Test
     public void testKeywordDefaultDirtyHack() {
         {
+            KylinConfig.getInstanceFromEnv().setProperty("kylin.query.escape-default-keyword", "true");
             String sql = "select * from DEFAULT.TEST_KYLIN_FACT";
             String s = QueryUtil.massageSql(sql, null, 0, 0, "DEFAULT");
             Assert.assertEquals("select * from \"DEFAULT\".TEST_KYLIN_FACT", s);
