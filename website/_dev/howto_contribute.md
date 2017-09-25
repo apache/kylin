@@ -7,17 +7,24 @@ permalink: /development/howto_contribute.html
 
 Apache Kylin is always looking for contributions of not only code, but also usage document, performance report, Q&A etc. All kinds of contributions pave the way towards a Kylin Committer. There is opportunity for everyone, especially for those come from analysis and solution background, due to the lacking of content from user and solution perspective.
 
-## Source Branches
 
+## Source Branches
 Both code and document are under Git source control. Note the purpose of different branches.
 
 * `master`: Main development branch for new features
 * `2.0.x`: Maintenance branch for a certain release
 * `document`: Document branch
 
-## Making Document Changes
 
-Check out [How to Write Document](/development/howto_docs.html).
+## Pick an Open Task
+There are open tasks waiting to be done, tracked by JIRA. To make it easier to search, there are a few JIRA filters.
+
+* [A list of tasks](https://issues.apache.org/jira/issues/?filter=12339895) managed by Yang Li.
+* [A list of tasks](https://issues.apache.org/jira/issues/?filter=12341496) opened by Ted Yu, important small bugs and some are easy fixes.
+* Also you can search for tag "newbie" in Kylin JIRA.
+
+Do not forget to discuss in [mailing list](/community/index.html) before working on a big task.
+
 
 ## Making Code Changes
 * [Setup dev env](/development/dev_env.html)
@@ -37,13 +44,7 @@ Check out [How to Write Document](/development/howto_docs.html).
 * Finally committer merge code into target branch
 	* We use `git rebase` to ensure the merged result is a streamline of commits.
 
-## Pick an Open Task
 
-There are open tasks waiting to be done, tracked by JIRA. To make it easier to search, there are a few JIRA filters.
-
-* [A list of tasks](https://issues.apache.org/jira/issues/?filter=12339895) managed by Yang Li.
-* [A list of tasks](https://issues.apache.org/jira/issues/?filter=12341496) opened by Ted Yu, important small bugs and some are easy fixes.
-* Also you can search for tag "newbie" in Kylin JIRA.
-
-Do not forget to discuss in [mailing list](/community/index.html) before working on a big task.
+## Making Document Changes
+Check out [How to Write Document](/development/howto_docs.html).
 
