@@ -54,7 +54,7 @@ public class BeanTest {
         } catch (IntrospectionException e) {
         }
 
-        new SQLResponse(null, null, null, 0, true, null, false, false);
+        new SQLResponse(null, null, 0, true, null);
 
         SelectedColumnMeta coulmnMeta = new SelectedColumnMeta(false, false, false, false, 0, false, 0, null, null,
                 null, null, null, 0, 0, 0, null, false, false, false);
