@@ -76,6 +76,8 @@ public class SQLResponse implements Serializable {
     
     protected String traceUrl = null;
 
+    protected long signature = 0L;
+
     public SQLResponse() {
     }
 
@@ -89,7 +91,8 @@ public class SQLResponse implements Serializable {
     }
 
     public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
-            int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial, boolean isPushDown) {
+            int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial, boolean isPushDown,
+            long signature) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;
@@ -98,6 +101,7 @@ public class SQLResponse implements Serializable {
         this.exceptionMessage = exceptionMessage;
         this.isPartial = isPartial;
         this.queryPushDown = isPushDown;
+        this.signature = signature;
     }
 
     public List<SelectedColumnMeta> getColumnMetas() {
@@ -205,7 +209,15 @@ public class SQLResponse implements Serializable {
     public void setTraceUrl(String traceUrl) {
         this.traceUrl = traceUrl;
     }
-    
+
+    public long getSignature() {
+        return signature;
+    }
+
+    public void setSignature(long signature) {
+        this.signature = signature;
+    }
+
     @JsonIgnore
     public List<QueryContext.CubeSegmentStatisticsResult> getCubeSegmentStatisticsList() {
         try {
