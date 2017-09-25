@@ -137,8 +137,7 @@ import com.google.common.collect.Lists;
 @Component("queryService")
 public class QueryService extends BasicService {
 
-    public static final String SUCCESS_QUERY_CACHE = "StorageCache";
-    public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";
+    public static final String QUERY_CACHE = "StorageCache";
     public static final String QUERY_STORE_PATH_PREFIX = "/query/";
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
     final BadQueryDetector badQueryDetector = new BadQueryDetector();
@@ -532,7 +531,7 @@ public class QueryService extends BasicService {
                     && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(),
                             "query response is too large: {} ({})", sqlResponse.getResults().size(),
                             kylinConfig.getLargeQueryThreshold())) {
-                cacheManager.getCache(SUCCESS_QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
+                cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
             }
             Trace.addTimelineAnnotation("response from execution");
 
@@ -547,7 +546,7 @@ public class QueryService extends BasicService {
 
             if (queryCacheEnabled && e.getCause() != null
                     && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
-                Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+                Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
                 exceptionCache.put(sqlRequest.getCacheKey(), sqlResponse);
             }
             Trace.addTimelineAnnotation("error response");
@@ -597,59 +596,51 @@ public class QueryService extends BasicService {
     }
 
     public SQLResponse searchQueryInCache(SQLRequest sqlRequest) {
-        String[] cacheTypes = new String[] { EXCEPTION_QUERY_CACHE, SUCCESS_QUERY_CACHE };
-        for (String cacheType : cacheTypes) {
-            Cache cache = cacheManager.getCache(cacheType);
-            Cache.ValueWrapper wrapper = cache.get(sqlRequest.getCacheKey());
-            if (wrapper == null) {
-                continue;
-            }
-            SQLResponse response = (SQLResponse) wrapper.get();
-            if (response == null) {
-                return null;
-            }
-            logger.info("The sqlResponse is found in " + cacheType);
-            if (response.getSignature() <= CODE_BAR) {
-                logger.info("The sqlResponse is found in " + cacheType
-                        + " but not cube or hybrid, will not use it. Remove it from " + cacheType + ".");
-                cache.evict(sqlRequest.getCacheKey());
-                return null;
-            }
-
-            String cubes = response.getCube();
-            if (Strings.isNullOrEmpty(cubes)) {
-                logger.warn("The cube info in sqlResponse is null. Remove it from " + cacheType + ".");
-                cache.evict(sqlRequest.getCacheKey());
-                return null;
-            }
-            long signatureTime = RealizationTimeSignatureUtil.getTimeSignature(cubes.split(","));
-            if (signatureTime < CODE_BAR) {
-                logger.info("The related cubes in sqlResponse are not found or disabled, will skip query cache.");
-                cache.evict(sqlRequest.getCacheKey());
-                return null;
-            } else if (signatureTime == CODE_BAR) {
-                logger.info("The sqlResponse is not from cube or hybrid, will not use it.");
-                cache.evict(sqlRequest.getCacheKey());
-                return null;
-            } else if (signatureTime != response.getSignature()) {
-                logger.info("The sqlResponse is stale, will not use it. Remove it from " + cacheType
-                        + ". signatureTime = " + signatureTime + ", cached signatureTime :" + response.getSignature());
-                cache.evict(sqlRequest.getCacheKey());
-                return null;
-            } else {
-                switch (cacheType) {
-                case EXCEPTION_QUERY_CACHE:
-                    response.setHitExceptionCache(true);
-                    break;
-                case SUCCESS_QUERY_CACHE:
-                    response.setStorageCacheUsed(true);
-                    break;
-                default:
-                }
-            }
-            return response;
+        Cache queryCache = cacheManager.getCache(QUERY_CACHE);
+        Cache.ValueWrapper wrapper = queryCache.get(sqlRequest.getCacheKey());
+        if (wrapper == null) {
+            return null;
         }
-        return null;
+        SQLResponse response = (SQLResponse) wrapper.get();
+        if (response == null) {
+            return null;
+        }
+        logger.info("The sqlResponse is found in QUERY_CACHE");
+        if (response.getSignature() <= CODE_BAR) {
+            logger.info(
+                    "The sqlResponse is found in QUERY_CACHE but not cube or hybrid, will not use it. Remove it from QUERY_CACHE.");
+            queryCache.evict(sqlRequest.getCacheKey());
+            return null;
+        }
+
+        String cubes = response.getCube();
+        if (Strings.isNullOrEmpty(cubes)) {
+            logger.warn("The cube info in sqlResponse is null. Remove it from QUERY_CACHE.");
+            queryCache.evict(sqlRequest.getCacheKey());
+            return null;
+        }
+        long signatureTime = RealizationTimeSignatureUtil.getTimeSignature(cubes.split(","));
+        if (signatureTime < CODE_BAR) {
+            logger.info("The related cubes in sqlResponse are not found or disabled, will skip query queryCache.");
+            queryCache.evict(sqlRequest.getCacheKey());
+            return null;
+        } else if (signatureTime == CODE_BAR) {
+            logger.info("The sqlResponse is not from cube or hybrid, will not use it.");
+            queryCache.evict(sqlRequest.getCacheKey());
+            return null;
+        } else if (signatureTime != response.getSignature()) {
+            logger.info("The sqlResponse is stale, will not use it. Remove it from QUERY_CACHE. signatureTime = "
+                    + signatureTime + ", cached signatureTime :" + response.getSignature());
+            queryCache.evict(sqlRequest.getCacheKey());
+            return null;
+        } else {
+            if (response.getIsException()) {
+                response.setHitExceptionCache(true);
+            } else {
+                response.setStorageCacheUsed(true);
+            }
+        }
+        return response;
     }
 
     protected void checkQueryAuth(SQLResponse sqlResponse, String project) throws AccessDeniedException {
