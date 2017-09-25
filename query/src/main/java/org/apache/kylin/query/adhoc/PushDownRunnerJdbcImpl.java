@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.adhoc;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -27,7 +26,6 @@ import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -35,24 +33,14 @@ import org.apache.kylin.source.adhocquery.IPushDownRunner;
 
 public class PushDownRunnerJdbcImpl implements IPushDownRunner {
 
-    private static org.apache.kylin.query.adhoc.JdbcConnectionPool pool = null;
+    private JdbcPushDownConnectionManager manager = null;
 
     @Override
     public void init(KylinConfig config) {
-        if (pool == null) {
-            pool = new JdbcConnectionPool();
-            JdbcConnectionFactory factory = new JdbcConnectionFactory(config.getJdbcUrl(), config.getJdbcDriverClass(),
-                    config.getJdbcUsername(), config.getJdbcPassword());
-            GenericObjectPool.Config poolConfig = new GenericObjectPool.Config();
-            poolConfig.maxActive = config.getPoolMaxTotal();
-            poolConfig.maxIdle = config.getPoolMaxIdle();
-            poolConfig.minIdle = config.getPoolMinIdle();
-
-            try {
-                pool.createPool(factory, poolConfig);
-            } catch (IOException e) {
-                throw new RuntimeException(e.getMessage(), e);
-            }
+        try {
+            manager = JdbcPushDownConnectionManager.getConnectionManager();
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
@@ -60,7 +48,7 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
     public void executeQuery(String query, List<List<String>> results, List<SelectedColumnMeta> columnMetas)
             throws Exception {
         Statement statement = null;
-        Connection connection = this.getConnection();
+        Connection connection = manager.getConnection();
         ResultSet resultSet = null;
 
         //extract column metadata
@@ -81,55 +69,38 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
                         metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i),
                         metaData.getColumnTypeName(i), metaData.isReadOnly(i), false, false));
             }
-        } catch (SQLException sqlException) {
-            throw sqlException;
         } finally {
             DBUtils.closeQuietly(resultSet);
             DBUtils.closeQuietly(statement);
-            closeConnection(connection);
+            manager.close(connection);
         }
     }
 
     @Override
     public void executeUpdate(String sql) throws Exception {
         Statement statement = null;
-        Connection connection = this.getConnection();
+        Connection connection = manager.getConnection();
 
         try {
             statement = connection.createStatement();
             statement.execute(sql);
-        } catch (SQLException sqlException) {
-            throw sqlException;
         } finally {
             DBUtils.closeQuietly(statement);
-            closeConnection(connection);
+            manager.close(connection);
         }
     }
 
-    private Connection getConnection() {
-        return pool.getConnection();
-    }
-
-    private void closeConnection(Connection connection) {
-        pool.returnConnection(connection);
-    }
-
-    static void extractResults(ResultSet resultSet, List<List<String>> results) throws SQLException {
+    private void extractResults(ResultSet resultSet, List<List<String>> results) throws SQLException {
         List<String> oneRow = new LinkedList<String>();
 
-        try {
-            while (resultSet.next()) {
-                //logger.debug("resultSet value: " + resultSet.getString(1));
-                for (int i = 0; i < resultSet.getMetaData().getColumnCount(); i++) {
-                    oneRow.add((resultSet.getString(i + 1)));
-                }
-
-                results.add(new LinkedList<String>(oneRow));
-                oneRow.clear();
+        while (resultSet.next()) {
+            //logger.debug("resultSet value: " + resultSet.getString(1));
+            for (int i = 0; i < resultSet.getMetaData().getColumnCount(); i++) {
+                oneRow.add((resultSet.getString(i + 1)));
             }
-        } catch (SQLException sqlException) {
-            throw sqlException;
+
+            results.add(new LinkedList<String>(oneRow));
+            oneRow.clear();
         }
     }
-
 }
