@@ -187,8 +187,6 @@ public class MetadataManager {
         if (tableName.indexOf(".") < 0)
             tableName = "DEFAULT." + tableName;
 
-        tableName.toUpperCase();
-
         TableDesc result = srcTableMap.get(mapKey(tableName, prj));
         if (result == null)
             result = srcTableMap.get(mapKey(tableName, null));
