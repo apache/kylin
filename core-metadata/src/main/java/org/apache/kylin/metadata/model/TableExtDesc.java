@@ -138,7 +138,18 @@ public class TableExtDesc extends RootPersistentEntity {
         }
         return cardinality.toString();
     }
-
+	
+    public String resetCardinality(){
+        StringBuffer cardinality = new StringBuffer();
+        int columnSize=this.columnStats.size();
+        this.columnStats.clear();
+        for (int i = 0;i < columnSize; i++){
+            ColumnStats columnStat = new ColumnStats();
+            this.columnStats.add(columnStat);
+        }
+        return cardinality.toString();
+    }
+	
     public void setCardinality(String cardinality) {
         if (null == cardinality)
             return;

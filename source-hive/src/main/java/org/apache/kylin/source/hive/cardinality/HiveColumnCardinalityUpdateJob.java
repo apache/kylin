@@ -122,6 +122,10 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
             tableExt.setCardinality(scardi);
             metaMgr.saveTableExt(tableExt, prj);
         } else {
+            MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+            TableExtDesc tableExt = metaMgr.getTableExt(tableName);
+            tableExt.resetCardinality();
+            metaMgr.saveTableExt(tableExt);		
             throw new IllegalArgumentException("No cardinality data is collected for table " + tableName);
         }
     }
