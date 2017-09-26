@@ -83,6 +83,18 @@ public class ModelService extends BasicService {
     @Autowired
     private AclEvaluate aclEvaluate;
 
+    public boolean isModelNameValidate(final String modelName) {
+        if (StringUtils.isEmpty(modelName) || !StringUtils.containsOnly(modelName, VALID_MODELNAME)) {
+            return false;
+        }
+        for (DataModelDesc model : getMetadataManager().getModels()) {
+            if (modelName.equalsIgnoreCase(model.getName())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public List<DataModelDesc> listAllModels(final String modelName, final String projectName, boolean exactMatch)
             throws IOException {
         List<DataModelDesc> models;

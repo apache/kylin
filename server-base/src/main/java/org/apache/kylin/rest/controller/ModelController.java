@@ -34,6 +34,8 @@ import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.ModelRequest;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
@@ -72,6 +74,12 @@ public class ModelController extends BasicController {
     @Autowired
     @Qualifier("projectService")
     private ProjectService projectService;
+
+    @RequestMapping(value = "/validate/{modelName}", method = RequestMethod.GET, produces = { "application/json" })
+    @ResponseBody
+    public EnvelopeResponse<Boolean> validateModelName(@PathVariable String modelName) {
+        return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS, modelService.isModelNameValidate(modelName), "");
+    }
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody

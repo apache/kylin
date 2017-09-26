@@ -103,6 +103,18 @@ public class CubeService extends BasicService implements InitializingBean {
     @Autowired
     private AclEvaluate aclEvaluate;
 
+    public boolean isCubeNameVaildate(final String cubeName) {
+        if (StringUtils.isEmpty(cubeName) || !StringUtils.containsOnly(cubeName, VALID_CUBENAME)) {
+            return false;
+        }
+        for (CubeInstance cubeInstance : getCubeManager().listAllCubes()) {
+            if (cubeName.equalsIgnoreCase(cubeInstance.getName())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName,
             boolean exactMatch) {
         List<CubeInstance> cubeInstances = null;
