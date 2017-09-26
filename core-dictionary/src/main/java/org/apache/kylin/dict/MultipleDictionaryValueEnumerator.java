@@ -33,13 +33,16 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
     private int curDictIndex = 0;
     private Dictionary<String> curDict;
     private int curKey;
+    private List<Integer> curKeys = Lists.newArrayList();
     private String curValue = null;
     private List<Dictionary<String>> dictionaryList;
 
     public MultipleDictionaryValueEnumerator(List<DictionaryInfo> dictionaryInfoList) {
         dictionaryList = Lists.newArrayListWithCapacity(dictionaryInfoList.size());
         for (DictionaryInfo dictInfo : dictionaryInfoList) {
+            Dictionary<String> dictionary = (Dictionary<String>) dictInfo.getDictionaryObject();
             dictionaryList.add((Dictionary<String>) dictInfo.getDictionaryObject());
+            curKeys.add(dictionary.getMinId());
         }
         if (!dictionaryList.isEmpty()) {
             curDict = dictionaryList.get(0);
@@ -54,22 +57,34 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
 
     @Override
     public boolean moveNext() throws IOException {
-        while (curDictIndex < dictionaryList.size()) {
-            if (curKey <= curDict.getMaxId()) {
-                curValue = curDict.getValueFromId(curKey);
-                curKey ++;
-
-                return true;
+        //initialize the minValue as the first available value in the dictionary list
+        String minValue = null;
+        int curDictIndex = 0;
+        for (int i = 0; i < dictionaryList.size(); i++) {
+            if (dictionaryList.get(i) == null || curKeys.get(i) >= dictionaryList.get(i).getSize()) {
+                continue;
             }
-
-            // move to next dict if exists
-            if (++curDictIndex < dictionaryList.size()) {
-                curDict = dictionaryList.get(curDictIndex);
-                curKey = curDict.getMinId();
+            minValue = dictionaryList.get(i).getValueFromId(curKeys.get(i));
+            curDictIndex = i;
+            break;
+        }
+        if (minValue == null) {
+            curValue = null;
+            return false;
+        }
+        // multi-merge dictionary forest
+        for (int i = 0; i < dictionaryList.size(); i++) {
+            if (dictionaryList.get(i) == null || curKeys.get(i) >= dictionaryList.get(i).getSize()) {
+                continue;
+            }
+            if (minValue.compareTo(dictionaryList.get(i).getValueFromId(curKeys.get(i))) > 0) {
+                minValue = dictionaryList.get(i).getValueFromId(curKeys.get(i));
+                curDictIndex = i;
             }
         }
-        curValue = null;
-        return false;
+        curValue = minValue;
+        curKeys.set(curDictIndex, curKeys.get(curDictIndex) + 1);
+        return true;
     }
 
     @Override
