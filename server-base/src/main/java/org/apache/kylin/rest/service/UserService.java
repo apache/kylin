@@ -30,6 +30,7 @@ import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
@@ -69,10 +70,6 @@ public class UserService implements UserDetailsManager {
     @Autowired
     @Qualifier("accessService")
     private AccessService accessService;
-
-    @Autowired
-    @Qualifier("projectService")
-    private ProjectService projectService;
 
     public boolean isEvictCacheFlag() {
         return evictCacheFlag;
@@ -114,7 +111,7 @@ public class UserService implements UserDetailsManager {
 
         try {
             //revoke user's project permission
-            List<ProjectInstance> projectInstances = projectService.listProjects(null, null);
+            List<ProjectInstance> projectInstances = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects();
             for (ProjectInstance pi : projectInstances) {
                 AclEntity ae = accessService.getAclEntity("ProjectInstance", pi.getUuid());
                 Acl acl = accessService.getAcl(ae);

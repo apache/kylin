@@ -20,10 +20,12 @@ package org.apache.kylin.rest.util;
 
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+@Lazy
 @Component("aclUtil")
 public class AclUtil {
     String getCurrentUserName() {
