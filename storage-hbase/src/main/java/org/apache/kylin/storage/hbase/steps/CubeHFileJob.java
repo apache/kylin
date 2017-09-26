@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat;
 import org.apache.hadoop.hbase.mapreduce.KeyValueSortReducer;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.io.SequenceFile;
@@ -94,7 +95,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
             HTable htable = new HTable(hbaseConf, getOptionValue(OPTION_HTABLE_NAME).toUpperCase());
 
             // Automatic config !
-            HFileOutputFormat3.configureIncrementalLoad(job, htable);
+            HFileOutputFormat.configureIncrementalLoad(job, htable);
             reconfigurePartitions(hbaseConf, partitionFilePath);
 
             // set block replication to 3 for hfiles
