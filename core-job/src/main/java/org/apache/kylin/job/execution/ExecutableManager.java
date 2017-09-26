@@ -109,8 +109,11 @@ public class ExecutableManager {
     public void addJob(AbstractExecutable executable) {
         try {
             executable.initConfig(config);
-            executableDao.addJob(parse(executable));
+            if (executableDao.getJob(executable.getId()) != null) {
+                throw new IllegalArgumentException("job id:" + executable.getId() + " already exists");
+            }
             addJobOutput(executable);
+            executableDao.addJob(parse(executable));
         } catch (PersistentException e) {
             logger.error("fail to submit job:" + executable.getId(), e);
             throw new RuntimeException(e);
