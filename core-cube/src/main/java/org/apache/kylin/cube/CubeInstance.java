@@ -383,6 +383,12 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         this.createTimeUTC = createTimeUTC;
     }
 
+    public void clearCuboids() {
+        cuboidBytes = null;
+        cuboidBytesRecommend = null;
+        cuboidLastOptimized = 0L;
+    }
+
     public Set<Long> getCuboidsByMode(String cuboidModeName) {
         return getCuboidsByMode(cuboidModeName == null ? null : CuboidModeEnum.getByModeName(cuboidModeName));
     }
