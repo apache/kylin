@@ -413,7 +413,7 @@ public class QueryService extends BasicService {
                 if (null == sqlResponse) {
                     if (isSelect) {
                         sqlResponse = query(sqlRequest);
-                    } else if (kylinConfig.isPushDownEnabled()) {
+                    } else if (kylinConfig.isPushDownEnabled() && kylinConfig.isPushDownUpdateEnabled()) {
                         sqlResponse = update(sqlRequest);
                     } else {
                         logger.debug(
