@@ -24,6 +24,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,12 +32,6 @@ import org.slf4j.LoggerFactory;
  */
 public class FactDistinctColumnPartitioner extends Partitioner<SelfDefineSortableKey, Text> implements Configurable {
     private static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnPartitioner.class);
-
-    public static final String HLL_SHARD_BASE_PROPERTY_NAME = "mapreduce.partition.factdistinctcolumnpartitioner.hll.shard.base";
-
-    public static void setHLLShard(Configuration conf, int hllShardBase) {
-        conf.setInt(HLL_SHARD_BASE_PROPERTY_NAME, hllShardBase);
-    }
 
     private Configuration conf;
     private int hllShardBase = 1;
@@ -60,12 +55,14 @@ public class FactDistinctColumnPartitioner extends Partitioner<SelfDefineSortabl
         }
     }
 
+    @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        hllShardBase = conf.getInt(HLL_SHARD_BASE_PROPERTY_NAME, 1);
+        hllShardBase = conf.getInt(BatchConstants.CFG_HLL_SHARD_BASE, 1);
         logger.info("shard base for hll is " + hllShardBase);
     }
 
+    @Override
     public Configuration getConf() {
         return conf;
     }

@@ -109,11 +109,11 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
 
         boolean ifCol = true;
         if (collectStatistics) {
-            int hllShardBase = conf.getInt(FactDistinctColumnPartitioner.HLL_SHARD_BASE_PROPERTY_NAME, 0);
+            int hllShardBase = conf.getInt(BatchConstants.CFG_HLL_SHARD_BASE, 0);
             if (hllShardBase <= 0) {
-                throw new IllegalArgumentException("In job configuration the value for property "
-                        + FactDistinctColumnPartitioner.HLL_SHARD_BASE_PROPERTY_NAME + " is " + hllShardBase
-                        + ". It should be set correctly!!!");
+                throw new IllegalArgumentException(
+                        "In job configuration the value for property " + BatchConstants.CFG_HLL_SHARD_BASE
+                        + " is " + hllShardBase + ". It should be set correctly!!!");
             }
             ifCol = false;
             if (taskId >= numberOfTasks - hllShardBase) {

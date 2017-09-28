@@ -42,6 +42,7 @@ import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.common.MapReduceUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,15 +137,6 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
     }
 
-    private int getHLLShardBase(CubeSegment segment) {
-        int nCuboids = segment.getCuboidScheduler().getAllCuboidIds().size();
-        int shardBase = (nCuboids - 1) / segment.getConfig().getFactDistinctJobPerReducerHLLCuboidNumber() + 1;
-        if (shardBase > segment.getConfig().getFactDistinctJobHLLMaxReducerNumber()) {
-            shardBase = segment.getConfig().getFactDistinctJobHLLMaxReducerNumber();
-        }
-        return shardBase;
-    }
-
     private void setupMapper(CubeSegment cubeSeg) throws IOException {
         IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
         flatTableInputFormat.configureJob(job);
@@ -159,8 +151,8 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             throws IOException {
         int numberOfReducers = reducerCount;
         if ("true".equalsIgnoreCase(statistics_enabled)) {
-            int hllShardBase = getHLLShardBase(cubeSeg);
-            FactDistinctColumnPartitioner.setHLLShard(job.getConfiguration(), hllShardBase);
+            int hllShardBase = MapReduceUtil.getHLLShardBase(cubeSeg);
+            job.getConfiguration().setInt(BatchConstants.CFG_HLL_SHARD_BASE, hllShardBase);
             numberOfReducers += (1 + hllShardBase);
         }
         job.setReducerClass(FactDistinctColumnsReducer.class);

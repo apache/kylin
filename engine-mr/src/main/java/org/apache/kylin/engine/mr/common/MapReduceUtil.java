@@ -35,6 +35,20 @@ public class MapReduceUtil {
     private static final Logger logger = LoggerFactory.getLogger(MapReduceUtil.class);
 
     /**
+     * @return reducer number for calculating hll
+     */
+    public static int getHLLShardBase(CubeSegment segment) {
+        int nCuboids = segment.getCuboidScheduler().getAllCuboidIds().size();
+        int shardBase = (nCuboids - 1) / segment.getConfig().getHadoopJobPerReducerHLLCuboidNumber() + 1;
+
+        int hllMaxReducerNumber = segment.getConfig().getHadoopJobHLLMaxReducerNumber();
+        if (shardBase > hllMaxReducerNumber) {
+            shardBase = hllMaxReducerNumber;
+        }
+        return shardBase;
+    }
+
+    /**
      * @param cuboidScheduler specified can provide more flexibility
      * */
     public static int getLayeredCubingReduceTaskNum(CubeSegment cubeSegment, CuboidScheduler cuboidScheduler,
