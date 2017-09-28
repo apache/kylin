@@ -289,6 +289,75 @@
               </div>
           </div>
         </div>
+        <!--Eidt Mandatory Cuboids-->
+        <div class="form-group large-popover" ng-if="state.mode=='edit' || (cubeMetaFrame.mandatory_dimension_set_list.length > 0 && state.mode!=='edit')">
+          <h3 style="margin-left:42px">Mandatory Cuboids</h3>
+          <div style="margin-left:42px;">
+            <div class="box-body">
+              <!-- view mode-->
+              <table ng-if="cubeMetaFrame.mandatory_dimension_set_list.length > 0 && state.mode!=='edit'" class="table table-hover table-bordered list" style="table-layout: fixed;margin-left:42px;width:92%;">
+                <thead>
+                  <tr>
+                    <th>Cuboids</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="dimensionSet in cubeMetaFrame.mandatory_dimension_set_list">
+                    <td>
+                      <p>{{dimensionSet}}</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- edit mode-->
+              <table ng-if="state.mode=='edit'" class="table table-hover table-bordered list" style="table-layout: fixed;margin-left:42px;width:92%;">
+                <thead>
+                  <tr>
+                    <th>Cuboids</th>
+                    <th style="width:5%"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="dimensionSet in cubeMetaFrame.mandatory_dimension_set_list">
+                    <td>
+                      <ui-select multiple ng-model="dimensionSet" theme="bootstrap" sortable="true" close-on-select="false" class="form-control">
+                        <ui-select-match placeholder="Select Dimension...">{{$item.column}}</ui-select-match>
+                        <ui-select-choices repeat="dimension.column as dimension in cubeMetaFrame.rowkey.rowkey_columns | filter:$select.search">
+                          <div ng-bind-html="dimension.column | highlight: $select.search"></div>
+                        </ui-select-choices>
+                      </ui-select>
+                    </td>
+                    <td>
+                      <button class="btn btn-xs btn-info" ng-click="removeDimensionSet($index)"><i class="fa fa-minus"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <ui-select multiple ng-model="mandatoryDimensionSet.select" theme="bootstrap" sortable="true" close-on-select="false" class="form-control">
+                        <ui-select-match placeholder="Select Dimension...">{{$item.column}}</ui-select-match>
+                        <ui-select-choices repeat="dimension.column as dimension in cubeMetaFrame.rowkey.rowkey_columns | filter:$select.search">
+                          <div ng-bind-html="dimension.column | highlight: $select.search"></div>
+                        </ui-select-choices>
+                      </ui-select>
+                    </td>
+                    <td>
+                      <button class="btn btn-xs btn-info" ng-click="addDimensionSet()"><i class="fa fa-plus"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2">
+                      <label>Import cuboids from file:</label>
+                      <input type="file" name="cuboids" id="cuboids" style="display: inline;"/>
+                      <button class="btn btn-xs btn-info" ng-click="uploadMandatoryDimensionSetList()">Upload</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
         <!--Cube Engine-->
         <div class="form-group large-popover" style="margin-bottom:30px;">
           <h3 style="margin-left:42px;margin-bottom:30px;">Cube Engine  <i kylinpopover placement="right" title="Cube Engine" template="CubeEngineTip.html" class="fa fa-info-circle"></i></h3>

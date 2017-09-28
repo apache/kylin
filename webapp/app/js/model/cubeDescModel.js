@@ -44,8 +44,8 @@ KylinApp.service('CubeDescModel', function (kylinConfig) {
       "rowkey": {
         "rowkey_columns": []
       },
-      "aggregation_groups": []
-      ,
+      "aggregation_groups": [],
+      "mandatory_dimension_set_list": [],
       "partition_date_start":0,
       "partition_date_end":undefined,
       "notify_list": [],

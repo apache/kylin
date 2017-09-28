@@ -154,6 +154,17 @@
             </div>
             <div class="row">
                 <div class="col-sm-12">
+                    <div class="dropup pull-right" style="margin-left: 10px;" ng-if="recommendData">
+                        <button class="btn btn-default dropdown-toggle" type="button" id="export" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Export
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="export">
+                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=10" target="_blank" >Top 10</a></li>
+                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=50" target="_blank" >Top 50</a></li>
+                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=100" target="_blank" >Top 100</a></li>
+                        </ul>
+                    </div>
                     <button class="btn btn-success btn-next pull-right" ng-click="optimizeCuboids(cube)" ng-if="recommendData">
                         Optimize
                     </button>

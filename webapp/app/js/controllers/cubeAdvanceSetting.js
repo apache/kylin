@@ -382,4 +382,58 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     }
   };
 
+  $scope.mandatoryDimensionSet = {
+    select: []
+  };
+
+  $scope.uploadMandatoryDimensionSetList = function() {
+    var file = document.getElementById('cuboids').files[0];
+    if (file) {
+      var reader = new FileReader();
+      reader.onload = function(event) {
+        var dimensionSetList = JSON.parse(event.target.result);
+        $scope.cubeMetaFrame.mandatory_dimension_set_list = dimensionSetList;
+        $scope.$apply();
+        // TODO add verify dimension set
+      };
+      reader.readAsText(file);
+    } else {
+      swal('Oops...', 'Please choose your file first.', 'warning');
+    }
+  };
+
+  $scope.removeDimensionSet = function(index) {
+    $scope.cubeMetaFrame.mandatory_dimension_set_list.splice(index, 1);
+  };
+
+  $scope.addDimensionSet = function() {
+    if ($scope.mandatoryDimensionSet.select.length) {
+      // validate the dimension set existed
+      var existed = false;
+      var selectedDimension = _.clone($scope.mandatoryDimensionSet.select).sort(function (dimensionA, dimensionB) {
+        if (dimensionA < dimensionB) return 1;
+        if (dimensionB < dimensionA) return -1;
+        return 0;
+      });
+      angular.forEach($scope.cubeMetaFrame.mandatory_dimension_set_list, function(dimensionSet, index) {
+        var dimensionSetSorted = _.clone(dimensionSet).sort(function (dimensionA, dimensionB) {
+          if (dimensionA < dimensionB) return 1;
+          if (dimensionB < dimensionA) return -1;
+          return 0;
+        });
+        if (angular.equals(dimensionSet, selectedDimension)) {
+          existed = true;
+        };
+      });
+      if (!existed) {
+        $scope.cubeMetaFrame.mandatory_dimension_set_list.push($scope.mandatoryDimensionSet.select);
+        $scope.mandatoryDimensionSet.select = [];
+      } else {
+        swal('Oops...', 'Dimension set already existed', 'warning');
+      }
+    } else {
+      swal('Oops...', 'Dimension set should not be empty', 'warning');
+    }
+  };
+
 });
