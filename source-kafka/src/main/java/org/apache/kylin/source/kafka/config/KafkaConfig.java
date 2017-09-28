@@ -59,8 +59,8 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("parserName")
     private String parserName;
 
-    @JsonProperty("parserTimeStampField")
-    private String parserTimeStampField;
+    @JsonProperty("timestampField")
+    private String timestampField;
 
     @Deprecated
     @JsonProperty("margin")
@@ -124,12 +124,12 @@ public class KafkaConfig extends RootPersistentEntity {
         this.margin = margin;
     }
 
-    public void setParserTimeStampField(String parserTimeStampField) {
-        this.parserTimeStampField = parserTimeStampField;
+    public void setTimestampField(String timestampField) {
+        this.timestampField = timestampField;
     }
 
-    public String getParserTimeStampField() {
-        return this.parserTimeStampField;
+    public String getTimestampField() {
+        return this.timestampField;
     }
 
     public String getParserProperties() {
@@ -142,8 +142,8 @@ public class KafkaConfig extends RootPersistentEntity {
 
     public String getAllParserProperties() {
         StringBuilder sb = new StringBuilder();
-        if (parserTimeStampField != null) {
-            sb.append(TimedJsonStreamParser.PROPERTY_TS_COLUMN_NAME + "=" + parserTimeStampField);
+        if (timestampField != null) {
+            sb.append(TimedJsonStreamParser.PROPERTY_TS_COLUMN_NAME + "=" + timestampField);
             sb.append(";");
         }
         if (parserProperties != null)
