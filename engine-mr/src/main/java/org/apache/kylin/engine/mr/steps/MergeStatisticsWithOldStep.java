@@ -63,7 +63,6 @@ public class MergeStatisticsWithOldStep extends AbstractExecutable {
         final CubeManager mgr = CubeManager.getInstance(context.getConfig());
         final CubeInstance cube = mgr.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
         final CubeSegment optimizeSegment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
-        final String statsInputPath = CubingExecutableUtil.getStatisticsPath(this.getParams());
 
         CubeSegment oldSegment = optimizeSegment.getCubeInstance().getOriginalSegmentToOptimize(optimizeSegment);
         Preconditions.checkNotNull(oldSegment,
@@ -76,16 +75,28 @@ public class MergeStatisticsWithOldStep extends AbstractExecutable {
 
         try {
             //1. Add statistics from optimized segment
-            Path statisticsFilePath = new Path(statsInputPath,
-                    BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+            Path statisticsDirPath = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()));
             FileSystem hdfs = FileSystem.get(conf);
-            if (!hdfs.exists(statisticsFilePath))
-                throw new IOException("File " + statisticsFilePath + " does not exists");
+            if (!hdfs.exists(statisticsDirPath)) {
+                throw new IOException("StatisticsFilePath " + statisticsDirPath + " does not exists");
+            }
 
-            CubeStatsReader optimizeSegmentStatsReader = new CubeStatsReader(optimizeSegment, null,
-                    optimizeSegment.getConfig(), statisticsFilePath);
-            averageSamplingPercentage += optimizeSegmentStatsReader.getSamplingPercentage();
-            addFromCubeStatsReader(optimizeSegmentStatsReader);
+            if (!hdfs.isDirectory(statisticsDirPath)) {
+                throw new IOException("StatisticsFilePath " + statisticsDirPath + " is not a directory");
+            }
+
+            Path[] statisticsFiles = HadoopUtil.getFilterPath(hdfs, statisticsDirPath,
+                    BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+            if (statisticsFiles == null) {
+                throw new IOException("fail to find the statistics file in base dir: " + statisticsDirPath);
+            }
+
+            for (Path item : statisticsFiles) {
+                CubeStatsReader optimizeSegmentStatsReader = new CubeStatsReader(optimizeSegment, null,
+                        optimizeSegment.getConfig(), item);
+                averageSamplingPercentage += optimizeSegmentStatsReader.getSamplingPercentage();
+                addFromCubeStatsReader(optimizeSegmentStatsReader);
+            }
 
             //2. Add statistics from old segment
             CubeStatsReader oldSegmentStatsReader = new CubeStatsReader(oldSegment, null, oldSegment.getConfig());

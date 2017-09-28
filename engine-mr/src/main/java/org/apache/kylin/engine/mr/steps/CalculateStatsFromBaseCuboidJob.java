@@ -35,6 +35,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.common.MapReduceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +78,7 @@ public class CalculateStatsFromBaseCuboidJob extends AbstractHadoopJob {
             setJobClasspath(job, cube.getConfig());
 
             setupMapper(input);
-            setupReducer(output, 1);
+            setupReducer(output, cubeSegment);
 
             attachSegmentMetadataWithDict(cubeSegment, job.getConfiguration());
 
@@ -101,12 +102,15 @@ public class CalculateStatsFromBaseCuboidJob extends AbstractHadoopJob {
         job.setMapOutputValueClass(Text.class);
     }
 
-    private void setupReducer(Path output, int numberOfReducers) throws IOException {
+    private void setupReducer(Path output, CubeSegment cubeSeg) throws IOException {
+        int hllShardBase = MapReduceUtil.getHLLShardBase(cubeSeg);
+        job.getConfiguration().setInt(BatchConstants.CFG_HLL_SHARD_BASE, hllShardBase);
+
         job.setReducerClass(CalculateStatsFromBaseCuboidReducer.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         job.setOutputKeyClass(NullWritable.class);
         job.setOutputValueClass(Text.class);
-        job.setNumReduceTasks(numberOfReducers);
+        job.setNumReduceTasks(hllShardBase);
 
         FileOutputFormat.setOutputPath(job, output);
         job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());

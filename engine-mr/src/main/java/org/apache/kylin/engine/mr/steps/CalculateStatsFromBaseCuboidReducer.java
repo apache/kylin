@@ -55,6 +55,8 @@ public class CalculateStatsFromBaseCuboidReducer extends KylinReducer<Text, Text
     private String output = null;
     private int samplingPercentage;
 
+    private int taskId;
+
     @Override
     protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
@@ -72,6 +74,7 @@ public class CalculateStatsFromBaseCuboidReducer extends KylinReducer<Text, Text
         samplingPercentage = Integer
                 .parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
 
+        taskId = context.getTaskAttemptID().getTaskID().getId();
         cuboidHLLMap = Maps.newHashMap();
     }
 
@@ -106,7 +109,7 @@ public class CalculateStatsFromBaseCuboidReducer extends KylinReducer<Text, Text
         }
         double mapperOverlapRatio = grandTotal == 0 ? 0 : (double) totalRowsBeforeMerge / grandTotal;
 
-        CubeStatsWriter.writeCuboidStatistics(context.getConfiguration(), new Path(output), //
-                cuboidHLLMap, samplingPercentage, baseCuboidRowCountInMappers.size(), mapperOverlapRatio);
+        CubeStatsWriter.writePartialCuboidStatistics(context.getConfiguration(), new Path(output), //
+                cuboidHLLMap, samplingPercentage, baseCuboidRowCountInMappers.size(), mapperOverlapRatio, taskId);
     }
 }
