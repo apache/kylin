@@ -72,7 +72,8 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     public JobStep getRunningStep() {
         for (JobStep step : this.getSteps()) {
-            if (step.getStatus().equals(JobStepStatusEnum.RUNNING) || step.getStatus().equals(JobStepStatusEnum.WAITING)) {
+            if (step.getStatus().equals(JobStepStatusEnum.RUNNING)
+                    || step.getStatus().equals(JobStepStatusEnum.WAITING)) {
                 return step;
             }
         }
@@ -302,7 +303,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         private long execWaitTime;
 
         @JsonProperty("step_status")
-        private JobStepStatusEnum status;
+        private JobStepStatusEnum status = JobStepStatusEnum.PENDING;
 
         @JsonProperty("cmd_type")
         private JobStepCmdTypeEnum cmdType = JobStepCmdTypeEnum.SHELL_CMD_HADOOP;

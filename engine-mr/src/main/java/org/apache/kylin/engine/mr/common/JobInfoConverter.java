@@ -30,15 +30,32 @@ import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
-
-import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JobInfoConverter {
-    public static JobInstance parseToJobInstance(AbstractExecutable job, Map<String, Output> outputs) {
-        if (job == null) {
+    private static final Logger logger = LoggerFactory.getLogger(JobInfoConverter.class);
+
+    public static JobInstance parseToJobInstanceQuietly(AbstractExecutable job, Map<String, Output> outputs) {
+        try {
+            return parseToJobInstance(job, outputs);
+        } catch (Exception e) {
+            logger.error("Failed to parse job instance: uuid={}", job, e);
             return null;
         }
-        Preconditions.checkState(job instanceof CubingJob, "illegal job type, id:" + job.getId());
+    }
+
+    public static JobInstance parseToJobInstance(AbstractExecutable job, Map<String, Output> outputs) {
+        if (job == null) {
+            logger.warn("job is null.");
+            return null;
+        }
+
+        if (!(job instanceof CubingJob)) {
+            logger.warn("illegal job type, id:" + job.getId());
+            return null;
+        }
+
         CubingJob cubeJob = (CubingJob) job;
         Output output = outputs.get(job.getId());
         final JobInstance result = new JobInstance();
@@ -54,7 +71,8 @@ public class JobInfoConverter {
         result.setExecStartTime(AbstractExecutable.getStartTime(output));
         result.setExecEndTime(AbstractExecutable.getEndTime(output));
         result.setExecInterruptTime(AbstractExecutable.getInterruptTime(output));
-        result.setDuration(AbstractExecutable.getDuration(result.getExecStartTime(), result.getExecEndTime(), result.getExecInterruptTime()) / 1000);
+        result.setDuration(AbstractExecutable.getDuration(result.getExecStartTime(), result.getExecEndTime(),
+                result.getExecInterruptTime()) / 1000);
         for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
             AbstractExecutable task = cubeJob.getTasks().get(i);
             result.addStep(parseToJobStep(task, i, outputs.get(task.getId())));
@@ -69,7 +87,7 @@ public class JobInfoConverter {
         result.setSequenceID(i);
 
         if (stepOutput == null) {
-            result.setStatus(JobStepStatusEnum.ERROR);
+            logger.warn("Cannot found output for task: id={}", task.getId());
             return result;
         }
 
@@ -86,7 +104,9 @@ public class JobInfoConverter {
         }
         if (task instanceof MapReduceExecutable) {
             result.setExecCmd(((MapReduceExecutable) task).getMapReduceParams());
-            result.setExecWaitTime(AbstractExecutable.getExtraInfoAsLong(stepOutput, MapReduceExecutable.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
+            result.setExecWaitTime(
+                    AbstractExecutable.getExtraInfoAsLong(stepOutput, MapReduceExecutable.MAP_REDUCE_WAIT_TIME, 0L)
+                            / 1000);
         }
         if (task instanceof HadoopShellExecutable) {
             result.setExecCmd(((HadoopShellExecutable) task).getJobParams());
