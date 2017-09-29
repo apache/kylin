@@ -86,6 +86,9 @@ class testQuery(unittest.TestCase):
 
         self.assertEqual(status_code, 200, 'Disable cube failed.')
 
+        # Sleep 3 seconds to ensure cache wiped while do query pushdown
+        time.sleep(3)
+
         query_url = testQuery.base_url + "/query"
         for sql_file in sql_files:
             index += 1
