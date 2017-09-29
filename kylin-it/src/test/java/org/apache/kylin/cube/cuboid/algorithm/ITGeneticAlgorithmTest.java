@@ -25,7 +25,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore("testBPUSCalculator() is unsable; whole test takes too long")
-public class GeneticAlgorithmTest extends AlgorithmTestBase {
+public class ITGeneticAlgorithmTest extends ITAlgorithmTestBase {
 
     @Test
     public void testBPUSCalculator() {

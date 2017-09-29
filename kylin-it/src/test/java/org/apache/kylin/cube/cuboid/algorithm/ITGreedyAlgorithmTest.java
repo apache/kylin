@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.kylin.cube.cuboid.algorithm.greedy.GreedyAlgorithm;
 import org.junit.Test;
 
-public class GreedyAlgorithmTest extends AlgorithmTestBase {
+public class ITGreedyAlgorithmTest extends ITAlgorithmTestBase {
 
     @Test
     public void testBPUSCalculator() {

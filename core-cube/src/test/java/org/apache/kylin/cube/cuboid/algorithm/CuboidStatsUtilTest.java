@@ -137,7 +137,7 @@ public class CuboidStatsUtilTest {
 
     private Set<Long> generateMassCuboidSet() {
         Set<Long> cuboidSet = Sets.newHashSet();
-        long maxCuboid = (1L << 16);
+        long maxCuboid = (1L << 15);
         for (long i = 1; i < maxCuboid; i++) {
             cuboidSet.add(i);
         }
