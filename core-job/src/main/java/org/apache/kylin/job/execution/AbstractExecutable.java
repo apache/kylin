@@ -24,12 +24,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.EmailTemplateEnum;
+import org.apache.kylin.common.util.EmailTemplateFactory;
 import org.apache.kylin.common.util.MailService;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
@@ -64,16 +68,16 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     public AbstractExecutable() {
         setId(UUID.randomUUID().toString());
     }
-    
+
     protected void initConfig(KylinConfig config) {
         Preconditions.checkState(this.config == null || this.config == config);
         this.config = config;
     }
-    
+
     protected KylinConfig getConfig() {
         return config;
     }
-    
+
     protected ExecutableManager getManager() {
         return ExecutableManager.getInstance(config);
     }
@@ -82,6 +86,35 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         Map<String, String> info = Maps.newHashMap();
         info.put(START_TIME, Long.toString(System.currentTimeMillis()));
         getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
+    }
+
+    private void onExecuteFinishedWithRetry(ExecuteResult result, ExecutableContext executableContext) {
+        Throwable exception;
+        int nRetry = 0;
+        do {
+            nRetry++;
+            exception = null;
+            try {
+                onExecuteFinished(result, executableContext);
+            } catch (Exception e) {
+                logger.error(nRetry + "th retries for onExecuteFinished fails due to {}", e);
+                if (isMetaDataPersistException(e)) {
+                    exception = e;
+                    try {
+                        Thread.sleep(1000L * (long) Math.pow(4, nRetry));
+                    } catch (InterruptedException exp) {
+                        throw new RuntimeException(exp);
+                    }
+                } else {
+                    throw e;
+                }
+            }
+        } while (exception != null && nRetry <= executableContext.getConfig().getJobMetadataPersistRetry());
+
+        if (exception != null) {
+            handleMetadataPersistException(executableContext, exception);
+            throw new RuntimeException(exception);
+        }
     }
 
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
@@ -114,48 +147,62 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         logger.info("Executing AbstractExecutable (" + this.getName() + ")");
 
         Preconditions.checkArgument(executableContext instanceof DefaultContext);
+
+        onExecuteStart(executableContext);
+
         ExecuteResult result = null;
-
-        try {
-            onExecuteStart(executableContext);
-            Throwable exception;
-            do {
-                if (retry > 0) {
-                    logger.info("Retry " + retry);
-                }
-                exception = null;
-                result = null;
-                try {
-                    result = doWork(executableContext);
-                } catch (Throwable e) {
-                    logger.error("error running Executable: " + this.toString());
-                    exception = e;
-                }
-                retry++;
-            } while (needRetry(result, exception));
-
-            //check exception in result to avoid retry on ChainedExecutable(only need retry on subtask actually)
-            if (exception != null || result.getThrowable() != null) {
-                onExecuteError(exception, executableContext);
-                throw new ExecuteException(exception);
+        Throwable exception;
+        do {
+            if (retry > 0) {
+                logger.info("Retry " + retry);
             }
+            exception = null;
+            result = null;
+            try {
+                result = doWork(executableContext);
+            } catch (Throwable e) {
+                logger.error("error running Executable: " + this.toString());
+                exception = e;
+            }
+            retry++;
+        } while (needRetry(result, exception));
 
-            onExecuteFinished(result, executableContext);
-        } catch (Exception e) {
-            if (isMetaDataPersistException(e)) {
-                handleMetaDataPersistException(e);
-            }
-            if (e instanceof ExecuteException) {
-                throw e;
-            } else {
-                throw new ExecuteException(e);
-            }
+        if (exception != null) {
+            onExecuteError(exception, executableContext);
+            throw new ExecuteException(exception);
         }
+
+        onExecuteFinishedWithRetry(result, executableContext);
         return result;
     }
 
-    protected void handleMetaDataPersistException(Exception e) {
-        // do nothing.
+    protected void handleMetadataPersistException(ExecutableContext context, Throwable exception) {
+        List<String> users = Lists.newArrayList();
+        final String[] adminDls = context.getConfig().getAdminDls();
+        if (adminDls != null) {
+            for (String adminDl : adminDls) {
+                users.add(adminDl);
+            }
+        }
+        if (users.isEmpty()) {
+            logger.warn("no need to send email, user list is empty");
+            return;
+        }
+
+        Map<String, Object> dataMap = Maps.newHashMap();
+        dataMap.put("job_name", getName());
+        dataMap.put("env_name", context.getConfig().getDeployEnv());
+        dataMap.put("submitter", StringUtil.noBlank(getSubmitter(), "missing submitter"));
+        dataMap.put("job_engine", EmailTemplateFactory.getLocalHostName());
+        dataMap.put("error_log",
+                Matcher.quoteReplacement(StringUtil.noBlank(exception.getMessage(), "no error message")));
+
+        String content = EmailTemplateFactory.getInstance().buildEmailContent(EmailTemplateEnum.METADATA_PERSIST_FAIL,
+                dataMap);
+        String title = EmailTemplateFactory.getEmailTitle("METADATA PERSIST", "FAIL",
+                context.getConfig().getDeployEnv());
+
+        new MailService(context.getConfig()).sendMail(users, title, content);
     }
 
     private boolean isMetaDataPersistException(Exception e) {
@@ -335,7 +382,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     public static long getEndTime(Output output) {
         return getExtraInfoAsLong(output, END_TIME, 0L);
     }
-    
+
     public static long getInterruptTime(Output output) {
         return getExtraInfoAsLong(output, INTERRUPT_TIME, 0L);
     }
@@ -437,8 +484,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         if (retryableEx == null || retryableEx.length == 0) {
             return true;
         }
-        if ((result != null && isRetryableExecutionResult(result))
-                || e != null && isRetrableException(e)) {
+        if ((result != null && isRetryableExecutionResult(result)) || e != null && isRetrableException(e)) {
             return true;
         }
         return false;
@@ -446,6 +492,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", getStatus()).toString();
+        return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", getStatus())
+                .toString();
     }
 }
