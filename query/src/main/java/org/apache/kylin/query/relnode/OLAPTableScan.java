@@ -278,7 +278,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     }
 
     private ColumnRowType buildColumnRowType() {
-        this.alias = Integer.toHexString(System.identityHashCode(this));
+        this.alias = context.allTableScans.size() + "_" + Integer.toHexString(System.identityHashCode(this));
         TableRef tableRef = TblColRef.tableForUnknownModel(this.alias, olapTable.getSourceTable());
 
         List<TblColRef> columns = new ArrayList<TblColRef>();
