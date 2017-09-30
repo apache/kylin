@@ -21,7 +21,8 @@ package org.apache.kylin.common.util;
 import com.google.common.base.Strings;
 
 public enum EmailTemplateEnum {
-    JOB_DISCARD("JOB_DISCARD"), JOB_ERROR("JOB_ERROR"), JOB_SUCCEED("JOB_SUCCEED");
+    JOB_DISCARD("JOB_DISCARD"), JOB_ERROR("JOB_ERROR"), JOB_SUCCEED("JOB_SUCCEED"), //
+    METADATA_PERSIST_FAIL("METADATA_PERSIST_FAIL");
 
     private final String templateName;
 

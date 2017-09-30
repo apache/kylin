@@ -90,7 +90,6 @@ public class EmailTemplateFactory {
     }
 
     private Template getTemplate(EmailTemplateEnum state) throws Throwable {
-
         if (state == null) {
             return null;
         }
