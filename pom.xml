@@ -115,6 +115,7 @@
         <cors.version>2.5</cors.version>
         <tomcat.version>7.0.82</tomcat.version>
         <t-digest.version>3.1</t-digest.version>
+        <freemarker.version>2.3.23</freemarker.version>
         <!--metric-->
         <dropwizard.version>3.1.2</dropwizard.version>
         <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
@@ -650,6 +651,11 @@
                 <groupId>commons-validator</groupId>
                 <artifactId>commons-validator</artifactId>
                 <version>${commons-validator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.freemarker</groupId>
+                <artifactId>freemarker</artifactId>
+                <version>${freemarker.version}</version>
             </dependency>
 
             <!-- Logging -->
