@@ -27,11 +27,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.EmailTemplateEnum;
+import org.apache.kylin.common.util.EmailTemplateFactory;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -47,12 +50,15 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.metrics.JobMetricsFacade;
+import org.apache.kylin.job.util.ExecutableStateUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 
 /**
  */
@@ -195,51 +201,60 @@ public class CubingJob extends DefaultChainedExecutable {
         CubeInstance cubeInstance = CubeManager.getInstance(context.getConfig())
                 .getCube(CubingExecutableUtil.getCubeName(this.getParams()));
         final Output output = getManager().getOutput(getId());
-        String logMsg;
         state = output.getState();
         if (state != ExecutableState.ERROR
                 && !cubeInstance.getDescriptor().getStatusNeedNotify().contains(state.toString())) {
             logger.info("state:" + state + " no need to notify users");
             return null;
         }
-        switch (state) {
-        case ERROR:
-            logMsg = output.getVerboseMsg();
-            break;
-        case DISCARDED:
-            logMsg = "job has been discarded";
-            break;
-        case SUCCEED:
-            logMsg = "job has succeeded";
-            break;
-        default:
+
+        EmailTemplateEnum templateEnum = ExecutableStateUtil.getEmailTemplateEnum(state);
+        if (templateEnum == null) {
+            logger.info("Cannot find email template for job state: " + state);
             return null;
         }
-        String content = ExecutableConstants.NOTIFY_EMAIL_TEMPLATE;
-        content = content.replaceAll("\\$\\{job_name\\}", getName());
-        content = content.replaceAll("\\$\\{result\\}", state.toString());
-        content = content.replaceAll("\\$\\{env_name\\}", getDeployEnvName());
-        content = content.replaceAll("\\$\\{project_name\\}", getProjectName());
-        content = content.replaceAll("\\$\\{cube_name\\}", CubingExecutableUtil.getCubeName(this.getParams()));
-        content = content.replaceAll("\\$\\{source_records_count\\}", String.valueOf(findSourceRecordCount()));
-        content = content.replaceAll("\\$\\{start_time\\}", new Date(getStartTime()).toString());
-        content = content.replaceAll("\\$\\{duration\\}", getDuration() / 60000 + "mins");
-        content = content.replaceAll("\\$\\{mr_waiting\\}", getMapReduceWaitTime() / 60000 + "mins");
-        content = content.replaceAll("\\$\\{last_update_time\\}", new Date(getLastModified()).toString());
-        content = content.replaceAll("\\$\\{submitter\\}", StringUtil.noBlank(getSubmitter(), "missing submitter"));
-        content = content.replaceAll("\\$\\{error_log\\}",
-                Matcher.quoteReplacement(StringUtil.noBlank(logMsg, "no error message")));
 
-        try {
-            InetAddress inetAddress = InetAddress.getLocalHost();
-            content = content.replaceAll("\\$\\{job_engine\\}", inetAddress.getCanonicalHostName());
-        } catch (UnknownHostException e) {
-            logger.warn(e.getLocalizedMessage(), e);
+        Map<String, Object> dataMap = Maps.newHashMap();
+        dataMap.put("job_name", getName());
+        dataMap.put("env_name", getDeployEnvName());
+        dataMap.put("submitter", StringUtil.noBlank(getSubmitter(), "missing submitter"));
+        dataMap.put("job_engine", EmailTemplateFactory.getLocalHostName());
+        dataMap.put("project_name", getProjectName());
+        dataMap.put("cube_name", cubeInstance.getName());
+        dataMap.put("source_records_count", String.valueOf(findSourceRecordCount()));
+        dataMap.put("start_time", new Date(getStartTime()).toString());
+        dataMap.put("duration", getDuration() / 60000 + "mins");
+        dataMap.put("mr_waiting", getMapReduceWaitTime() / 60000 + "mins");
+        dataMap.put("last_update_time", new Date(getLastModified()).toString());
+
+        if (state == ExecutableState.ERROR) {
+            AbstractExecutable errorTask = null;
+            Output errorOutput = null;
+            for (AbstractExecutable task : getTasks()) {
+                errorOutput = getManager().getOutput(task.getId());
+                if (errorOutput.getState() == ExecutableState.ERROR) {
+                    errorTask = task;
+                    break;
+                }
+            }
+            Preconditions.checkNotNull(errorTask,
+                    "None of the sub tasks of cubing job " + getId() + " is error and this job should become success.");
+
+            dataMap.put("error_step", errorTask.getName());
+            if (errorTask instanceof MapReduceExecutable) {
+                final String mrJobId = errorOutput.getExtra().get(ExecutableConstants.MR_JOB_ID);
+                dataMap.put("mr_job_id", StringUtil.noBlank(mrJobId, "Not initialized"));
+            } else {
+                dataMap.put("mr_job_id", EmailTemplateFactory.NA);
+            }
+            dataMap.put("error_log",
+                    Matcher.quoteReplacement(StringUtil.noBlank(output.getVerboseMsg(), "no error message")));
         }
 
-        String title = "[" + state.toString() + "] - [" + getDeployEnvName() + "] - [" + getProjectName() + "] - "
-                + CubingExecutableUtil.getCubeName(this.getParams());
-
+        String content = EmailTemplateFactory.getInstance()
+                .buildEmailContent(ExecutableStateUtil.getEmailTemplateEnum(state), dataMap);
+        String title = EmailTemplateFactory.getEmailTitle("JOB", state.toString(), getDeployEnvName(), getProjectName(),
+                cubeInstance.getName());
         return Pair.of(title, content);
     }
 
