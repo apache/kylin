@@ -122,8 +122,10 @@ public class ValidateUtil {
         ProjectInstance prj = projectService.getProjectManager().getProject(project);
         AclEntity ae = accessService.getAclEntity("ProjectInstance", prj.getUuid());
         Acl acl = accessService.getAcl(ae);
-        for (AccessControlEntry ace : acl.getEntries()) {
-            allUsers.add(((PrincipalSid) ace.getSid()).getPrincipal());
+        if (acl != null && acl.getEntries() != null) {
+            for (AccessControlEntry ace : acl.getEntries()) {
+                allUsers.add(((PrincipalSid) ace.getSid()).getPrincipal());
+            }
         }
         return allUsers;
     }
