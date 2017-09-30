@@ -661,6 +661,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.job.tracking-url-pattern", "");
     }
 
+    public int getJobMetadataPersistRetry() {
+        return Integer.parseInt(this.getOptional("kylin.job.metadata-persist-retry", "5"));
+    }
+
     // ============================================================================
     // SOURCE.HIVE
     // ============================================================================

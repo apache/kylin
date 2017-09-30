@@ -27,6 +27,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
+
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 
@@ -50,14 +52,7 @@ public class EmailTemplateFactory {
     }
 
     public static String getEmailTitle(String... titleParts) {
-        StringBuilder sb = new StringBuilder();
-        for (String part : titleParts) {
-            if (sb.length() > 0) {
-                sb.append("-");
-            }
-            sb.append("[" + part + "]");
-        }
-        return sb.toString();
+        return "[" + Joiner.on("]-[").join(titleParts).toString() + "]";
     }
 
     private static EmailTemplateFactory instance = new EmailTemplateFactory();
