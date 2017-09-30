@@ -126,6 +126,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.kylin.cache.cachemanager.CacheConstants.QUERY_CACHE;
 import static org.apache.kylin.common.util.CheckUtil.checkCondition;
 import static org.apache.kylin.rest.util.RealizationTimeSignatureUtil.CODE_BAR;
 
@@ -135,7 +136,6 @@ import static org.apache.kylin.rest.util.RealizationTimeSignatureUtil.CODE_BAR;
 @Component("queryService")
 public class QueryService extends BasicService {
 
-    public static final String QUERY_CACHE = "StorageCache";
     public static final String QUERY_STORE_PATH_PREFIX = "/query/";
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
     final BadQueryDetector badQueryDetector = new BadQueryDetector();
