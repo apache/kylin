@@ -216,9 +216,9 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
             implementor.allocateContext();
         }
 
-        columnRowType = buildColumnRowType();
         context = implementor.getContext();
         context.allTableScans.add(this);
+        columnRowType = buildColumnRowType();
 
         if (context.olapSchema == null) {
             OLAPSchema schema = olapTable.getSchema();
