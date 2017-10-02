@@ -32,8 +32,9 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.cube.model.v1_4_0.CubeDesc;
 import org.apache.kylin.cube.model.v1_4_0.DimensionDesc;
 import org.apache.kylin.cube.upgrade.common.CubeMetadataUpgrade;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
@@ -82,8 +83,8 @@ public class CubeMetadataUpgrade_v_1_4_0 extends CubeMetadataUpgrade {
     }
 
     private DataModelDesc getDataModelDesc(String modelName) {
-        MetadataManager.clearCache();
-        return MetadataManager.getInstance(config).getDataModelDesc(modelName);
+        DataModelManager.clearCache();
+        return DataModelManager.getInstance(config).getDataModelDesc(modelName);
     }
 
     public void dowork() {
@@ -91,7 +92,7 @@ public class CubeMetadataUpgrade_v_1_4_0 extends CubeMetadataUpgrade {
         for (String path : paths) {
             logger.info("CubeMetadataUpgrade_v_1_4_0 handling in dowork {}", path);
             CubeDesc cubeDesc = loadOldCubeDesc(path);
-            cubeDesc.init(config, MetadataManager.getInstance(config).getAllTablesMap(cubeDesc.getProject()));
+            cubeDesc.init(config, TableMetadataManager.getInstance(config).getAllTablesMap(cubeDesc.getProject()));
 
             upgradeDataModelDesc(cubeDesc);
             upgradeCubeDesc(cubeDesc);
@@ -144,7 +145,7 @@ public class CubeMetadataUpgrade_v_1_4_0 extends CubeMetadataUpgrade {
             }
 
             if (upgrade) {
-                store.putResource(modelDesc.getResourcePath(), modelDesc, MetadataManager.MODELDESC_SERIALIZER);
+                store.putResource(modelDesc.getResourcePath(), modelDesc, DataModelManager.getInstance(config).getDataModelSerializer());
                 updatedResources.add(modelDesc.getResourcePath());
             }
         } catch (Exception e) {

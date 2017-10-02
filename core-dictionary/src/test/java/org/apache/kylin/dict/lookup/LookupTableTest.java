@@ -28,7 +28,7 @@ import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.dict.TrieDictionaryForest;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.junit.After;
 import org.junit.Assert;
@@ -121,7 +121,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
     public LookupTable<String> initLookupTable() throws Exception {
 
-        MetadataManager metaMgr = MetadataManager.getInstance(config);
+        TableMetadataManager metaMgr = TableMetadataManager.getInstance(config);
 
         String tableName = "EDW.TEST_CAL_DT";
         String[] pkCols = new String[] { "CAL_DT" };

@@ -56,7 +56,6 @@ import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -65,6 +64,7 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -583,7 +583,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 "Too many rowkeys (%s) in CubeDesc, please try to reduce dimension number or adopt derived dimensions",
                 this.rowkey.getRowKeyColumns().length);
 
-        this.model = MetadataManager.getInstance(config).getDataModelDesc(modelName);
+        this.model = DataModelManager.getInstance(config).getDataModelDesc(modelName);
         checkNotNull(this.model, "DateModelDesc(%s) not found", modelName);
 
         for (DimensionDesc dim : dimensions) {

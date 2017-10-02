@@ -24,10 +24,11 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.execution.ExecutableManager;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.acl.TableACLManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.draft.DraftManager;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
@@ -45,8 +46,12 @@ public abstract class BasicService {
         return kylinConfig;
     }
 
-    public MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(getConfig());
+    public TableMetadataManager getTableManager() {
+        return TableMetadataManager.getInstance(getConfig());
+    }
+    
+    public DataModelManager getDataModelManager() {
+        return DataModelManager.getInstance(getConfig());
     }
 
     public CubeManager getCubeManager() {

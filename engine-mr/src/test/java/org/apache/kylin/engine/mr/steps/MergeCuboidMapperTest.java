@@ -39,9 +39,9 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.source.IReadableTable.TableSignature;
@@ -90,7 +90,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         logger.info("The metadataUrl is : " + getTestConfig());
 
-        MetadataManager.clearCache();
+        DataModelManager.clearCache();
         CubeManager.clearCache();
         ProjectManager.clearCache();
         DictionaryManager.clearCache();

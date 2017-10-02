@@ -34,8 +34,8 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.IReadableTable.TableSignature;
@@ -176,7 +176,7 @@ public class DictionaryManager {
     }
 
     private String checkDupByContent(DictionaryInfo dictInfo, Dictionary<String> dict) throws IOException {
-        ResourceStore store = MetadataManager.getInstance(config).getStore();
+        ResourceStore store = DataModelManager.getInstance(config).getStore();
         NavigableSet<String> existings = store.listResources(dictInfo.getResourceDir());
         if (existings == null)
             return null;
@@ -343,7 +343,7 @@ public class DictionaryManager {
     }
 
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {
-        final ResourceStore store = MetadataManager.getInstance(config).getStore();
+        final ResourceStore store = DataModelManager.getInstance(config).getStore();
         final List<DictionaryInfo> allResources = store.getAllResources(dictInfo.getResourceDir(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         TableSignature input = dictInfo.getInput();
@@ -357,7 +357,7 @@ public class DictionaryManager {
     }
 
     private DictionaryInfo findLargestDictInfo(DictionaryInfo dictInfo) throws IOException {
-        final ResourceStore store = MetadataManager.getInstance(config).getStore();
+        final ResourceStore store = DataModelManager.getInstance(config).getStore();
         final List<DictionaryInfo> allResources = store.getAllResources(dictInfo.getResourceDir(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         DictionaryInfo largestDict = null;
@@ -376,7 +376,7 @@ public class DictionaryManager {
 
     public void removeDictionary(String resourcePath) throws IOException {
         logger.info("Remvoing dict: " + resourcePath);
-        ResourceStore store = MetadataManager.getInstance(config).getStore();
+        ResourceStore store = DataModelManager.getInstance(config).getStore();
         store.deleteResource(resourcePath);
         dictCache.invalidate(resourcePath);
     }
@@ -386,7 +386,7 @@ public class DictionaryManager {
         info.setSourceTable(srcTable);
         info.setSourceColumn(srcCol);
 
-        ResourceStore store = MetadataManager.getInstance(config).getStore();
+        ResourceStore store = DataModelManager.getInstance(config).getStore();
         NavigableSet<String> existings = store.listResources(info.getResourceDir());
         if (existings == null)
             return;
@@ -396,7 +396,7 @@ public class DictionaryManager {
     }
 
     void save(DictionaryInfo dict) throws IOException {
-        ResourceStore store = MetadataManager.getInstance(config).getStore();
+        ResourceStore store = DataModelManager.getInstance(config).getStore();
         String path = dict.getResourcePath();
         logger.info("Saving dictionary at " + path);
 
@@ -412,7 +412,7 @@ public class DictionaryManager {
     }
 
     DictionaryInfo load(String resourcePath, boolean loadDictObj) throws IOException {
-        ResourceStore store = MetadataManager.getInstance(config).getStore();
+        ResourceStore store = DataModelManager.getInstance(config).getStore();
 
         logger.info("DictionaryManager(" + System.identityHashCode(this) + ") loading DictionaryInfo(loadDictObj:" + loadDictObj + ") at " + resourcePath);
         DictionaryInfo info = store.getResource(resourcePath, DictionaryInfo.class, loadDictObj ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);

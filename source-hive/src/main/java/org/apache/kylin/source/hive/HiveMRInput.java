@@ -48,7 +48,7 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.JoinTableDesc;
@@ -195,7 +195,7 @@ public class HiveMRInput implements IMRInput {
             step.setName(ExecutableConstants.STEP_NAME_MATERIALIZE_HIVE_VIEW_IN_LOOKUP);
 
             KylinConfig kylinConfig = ((CubeSegment) flatDesc.getSegment()).getConfig();
-            MetadataManager metadataManager = MetadataManager.getInstance(kylinConfig);
+            TableMetadataManager metadataManager = TableMetadataManager.getInstance(kylinConfig);
             final Set<TableDesc> lookupViewsTables = Sets.newHashSet();
 
             String prj = flatDesc.getDataModel().getProject();

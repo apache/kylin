@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.junit.After;
@@ -41,7 +41,7 @@ public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.clearCache();
+        DataModelManager.clearCache();
         CubeManager.clearCache();
         ProjectManager.clearCache();
         cubeManager = CubeManager.getInstance(getTestConfig());

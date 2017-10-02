@@ -39,7 +39,7 @@ import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,7 +117,7 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
         String scardi = cardi.toString();
         if (scardi.length() > 0) {
             scardi = scardi.substring(0, scardi.length() - 1);
-            MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+            TableMetadataManager metaMgr = TableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
             TableExtDesc tableExt = metaMgr.getTableExt(tableName, prj);
             tableExt.setCardinality(scardi);
             metaMgr.saveTableExt(tableExt, prj);

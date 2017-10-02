@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 
 public class ColumnGenConfig {
@@ -103,7 +103,7 @@ public class ColumnGenConfig {
         
         KylinConfig kylinConfig = modelGen.getModle().getConfig();
         String project = modelGen.getModle().getProject();
-        ColumnDesc pkcol = MetadataManager.getInstance(kylinConfig)//
+        ColumnDesc pkcol = TableMetadataManager.getInstance(kylinConfig)//
                 .getTableDesc(pkTableName, project).findColumnByName(pkColName);
         return modelGen.getPkValues(pkcol);
     }

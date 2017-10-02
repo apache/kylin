@@ -41,8 +41,9 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.streaming.StreamDataLoader;
 import org.apache.kylin.job.streaming.StreamingTableDataGenerator;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ISampleDataDeployer;
@@ -127,7 +128,7 @@ public class DeployUtil {
             System.out.println("build cube with random dataset");
 
             // data is generated according to cube descriptor and saved in resource store
-            MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+            DataModelManager mgr = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
             ModelDataGenerator gen = new ModelDataGenerator(mgr.getDataModelDesc(modelName), 10000);
             gen.generate();
         } else {
@@ -190,8 +191,9 @@ public class DeployUtil {
 
     private static void deployTables(String modelName) throws Exception {
 
-        MetadataManager metaMgr = MetadataManager.getInstance(config());
-        DataModelDesc model = metaMgr.getDataModelDesc(modelName);
+        TableMetadataManager metaMgr = TableMetadataManager.getInstance(config());
+        DataModelManager modelMgr = DataModelManager.getInstance(config());
+        DataModelDesc model = modelMgr.getDataModelDesc(modelName);
 
         Set<TableRef> tables = model.getAllTables();
         Set<String> TABLE_NAMES = new HashSet<String>();

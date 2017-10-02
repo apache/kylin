@@ -26,8 +26,8 @@ import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
@@ -161,7 +161,7 @@ public class ModelController extends BasicController {
     @RequestMapping(value = "/{modelName}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
     public void deleteModel(@PathVariable String modelName) {
-        DataModelDesc desc = modelService.getMetadataManager().getDataModelDesc(modelName);
+        DataModelDesc desc = modelService.getDataModelManager().getDataModelDesc(modelName);
         if (null == desc) {
             throw new NotFoundException("Data Model with name " + modelName + " not found..");
         }
@@ -177,7 +177,7 @@ public class ModelController extends BasicController {
     @ResponseBody
     public ModelRequest cloneModel(@PathVariable String modelName, @RequestBody ModelRequest modelRequest) {
         String project = modelRequest.getProject();
-        MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelManager metaManager = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc modelDesc = metaManager.getDataModelDesc(modelName);
         String newModelName = modelRequest.getModelName();
 

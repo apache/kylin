@@ -34,7 +34,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
@@ -312,16 +312,15 @@ public class ProjectManager {
         }
     }
 
-    private ProjectInstance addModelToProject(String modelName, String project) throws IOException {
-        String newProjectName = ProjectInstance.getNormalizedProjectName(project);
-        ProjectInstance newProject = getProject(newProjectName);
-        if (newProject == null) {
-            throw new IllegalArgumentException("Project " + newProjectName + " does not exist.");
+    private ProjectInstance addModelToProject(String modelName, String prjName) throws IOException {
+        ProjectInstance prj = getProject(prjName);
+        if (prj == null) {
+            throw new IllegalArgumentException("Project " + prjName + " does not exist.");
         }
-        newProject.addModel(modelName);
-        updateProject(newProject);
+        prj.addModel(modelName);
+        updateProject(prj);
 
-        return newProject;
+        return prj;
     }
 
     public ProjectInstance moveRealizationToProject(RealizationType type, String realizationName, String newProjectName,
@@ -357,7 +356,7 @@ public class ProjectManager {
     }
 
     public ProjectInstance addTableDescToProject(String[] tableIdentities, String projectName) throws IOException {
-        MetadataManager metaMgr = getMetadataManager();
+        TableMetadataManager metaMgr = getTableManager();
         ProjectInstance projectInstance = getProject(projectName);
         for (String tableId : tableIdentities) {
             TableDesc table = metaMgr.getTableDesc(tableId, projectName);
@@ -372,7 +371,7 @@ public class ProjectManager {
     }
 
     public void removeTableDescFromProject(String tableIdentities, String projectName) throws IOException {
-        MetadataManager metaMgr = getMetadataManager();
+        TableMetadataManager metaMgr = getTableManager();
         ProjectInstance projectInstance = getProject(projectName);
         TableDesc table = metaMgr.getTableDesc(tableIdentities, projectName);
         if (table == null) {
@@ -384,7 +383,7 @@ public class ProjectManager {
     }
 
     public ProjectInstance addExtFilterToProject(String[] filters, String projectName) throws IOException {
-        MetadataManager metaMgr = getMetadataManager();
+        TableMetadataManager metaMgr = getTableManager();
         ProjectInstance projectInstance = getProject(projectName);
         for (String filterName : filters) {
             ExternalFilterDesc extFilter = metaMgr.getExtFilterDesc(filterName);
@@ -399,7 +398,7 @@ public class ProjectManager {
     }
 
     public void removeExtFilterFromProject(String filterName, String projectName) throws IOException {
-        MetadataManager metaMgr = getMetadataManager();
+        TableMetadataManager metaMgr = getTableManager();
         ProjectInstance projectInstance = getProject(projectName);
         ExternalFilterDesc filter = metaMgr.getExtFilterDesc(filterName);
         if (filter == null) {
@@ -527,8 +526,8 @@ public class ProjectManager {
         return ResourceStore.getStore(this.config);
     }
 
-    MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(config);
+    TableMetadataManager getTableManager() {
+        return TableMetadataManager.getInstance(config);
     }
 
     private String norm(String project) {

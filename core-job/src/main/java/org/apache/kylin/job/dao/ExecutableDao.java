@@ -31,7 +31,7 @@ import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.job.exception.PersistentException;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +73,7 @@ public class ExecutableDao {
 
     private ExecutableDao(KylinConfig config) {
         logger.info("Using metadata url: " + config);
-        this.store = MetadataManager.getInstance(config).getStore();
+        this.store = DataModelManager.getInstance(config).getStore();
     }
 
     private String pathOfJob(ExecutablePO job) {

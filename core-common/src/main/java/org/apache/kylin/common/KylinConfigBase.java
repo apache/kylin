@@ -275,7 +275,15 @@ abstract public class KylinConfigBase implements Serializable {
         r.putAll(getPropertiesByPrefix("kylin.metadata.resource-store-provider.")); // note the naming convention -- http://kylin.apache.org/development/coding_naming_convention.html
         return r;
     }
+    
+    public String getDataModelImpl() {
+        return getOptional("kylin.metadata.data-model-impl", null);
+    }
 
+    public String getDataModelManagerImpl() {
+        return getOptional("kylin.metadata.data-model-manager-impl", null);
+    }
+    
     public String[] getRealizationProviders() {
         return getOptionalStringArray("kylin.metadata.realization-providers", //
                 new String[] { "org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager" });

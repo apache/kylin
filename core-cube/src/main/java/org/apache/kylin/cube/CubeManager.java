@@ -51,7 +51,7 @@ import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
@@ -183,7 +183,6 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public CubeInstance getCube(String cubeName) {
-        cubeName = cubeName.toUpperCase();
         return cubeMap.get(cubeName);
     }
 
@@ -205,7 +204,6 @@ public class CubeManager implements IRealizationProvider {
      */
     public List<CubeInstance> getCubesByDesc(String descName) {
 
-        descName = descName.toUpperCase();
         List<CubeInstance> list = listAllCubes();
         List<CubeInstance> result = new ArrayList<CubeInstance>();
         Iterator<CubeInstance> it = list.iterator();
@@ -279,7 +277,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable) throws IOException {
-        MetadataManager metaMgr = getMetadataManager();
+        TableMetadataManager metaMgr = getTableManager();
         SnapshotManager snapshotMgr = getSnapshotManager();
 
         TableDesc tableDesc = new TableDesc(metaMgr.getTableDesc(lookupTable, cubeSeg.getProject()));
@@ -644,7 +642,7 @@ public class CubeManager implements IRealizationProvider {
 
         try {
             SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
-            TableDesc tableDesc = getMetadataManager().getTableDesc(tableName, cubeSegment.getProject());
+            TableDesc tableDesc = getTableManager().getTableDesc(tableName, cubeSegment.getProject());
             return new LookupStringTable(tableDesc, pkCols, snapshot);
         } catch (IOException e) {
             throw new IllegalStateException(
@@ -808,10 +806,10 @@ public class CubeManager implements IRealizationProvider {
                         && (cubeName.startsWith("test_kylin_cube") || cubeName.startsWith("test_streaming"));
     }
 
-    private MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(config);
+    private TableMetadataManager getTableManager() {
+        return TableMetadataManager.getInstance(config);
     }
-
+    
     private DictionaryManager getDictionaryManager() {
         return DictionaryManager.getInstance(config);
     }

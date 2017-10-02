@@ -26,8 +26,8 @@ import java.io.IOException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.After;
 import org.junit.Before;
@@ -50,7 +50,7 @@ public class DictionaryManagerTest extends LocalFileMetadataTestCase {
     public void testBuildSaveDictionary() throws IOException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-        MetadataManager metaMgr = MetadataManager.getInstance(config);
+        DataModelManager metaMgr = DataModelManager.getInstance(config);
         DataModelDesc model = metaMgr.getDataModelDesc("test_kylin_inner_join_model_desc");
         TblColRef col = model.findColumn("lstg_format_name");
 

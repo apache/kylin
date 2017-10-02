@@ -35,9 +35,9 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.After;
 import org.junit.Before;
@@ -65,7 +65,7 @@ public class MeasureTypeOnlyAggrInBaseTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.clearCache();
+        DataModelManager.clearCache();
 
         cube = getTestKylinCubeWithSeller();
         cubeDesc = cube.getDescriptor();

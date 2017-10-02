@@ -38,12 +38,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
@@ -307,7 +307,7 @@ public class ModelDataGenerator {
         String outputDir = args.length > 2 ? args[2] : null;
         
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
-        DataModelDesc model = MetadataManager.getInstance(conf).getDataModelDesc(modelName);
+        DataModelDesc model = DataModelManager.getInstance(conf).getDataModelDesc(modelName);
         ResourceStore store = outputDir == null ? ResourceStore.getStore(conf) : ResourceStore.getStore(mockup(outputDir));
         
         ModelDataGenerator gen = new ModelDataGenerator(model, nRows, store);

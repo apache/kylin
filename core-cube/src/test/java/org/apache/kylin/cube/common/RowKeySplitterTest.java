@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +33,7 @@ public class RowKeySplitterTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.clearCache();
+        DataModelManager.clearCache();
     }
 
     @After

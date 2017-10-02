@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.IReadableTable.TableSignature;
@@ -116,7 +116,7 @@ public class SnapshotManager {
     }
 
     public void removeSnapshot(String resourcePath) throws IOException {
-        ResourceStore store = MetadataManager.getInstance(this.config).getStore();
+        ResourceStore store = DataModelManager.getInstance(this.config).getStore();
         store.deleteResource(resourcePath);
         snapshotCache.invalidate(resourcePath);
     }
@@ -171,7 +171,7 @@ public class SnapshotManager {
     }
 
     private String checkDupByInfo(SnapshotTable snapshot) throws IOException {
-        ResourceStore store = MetadataManager.getInstance(this.config).getStore();
+        ResourceStore store = DataModelManager.getInstance(this.config).getStore();
         String resourceDir = snapshot.getResourceDir();
         NavigableSet<String> existings = store.listResources(resourceDir);
         if (existings == null)
@@ -189,7 +189,7 @@ public class SnapshotManager {
     }
 
     private String checkDupByContent(SnapshotTable snapshot) throws IOException {
-        ResourceStore store = MetadataManager.getInstance(this.config).getStore();
+        ResourceStore store = DataModelManager.getInstance(this.config).getStore();
         String resourceDir = snapshot.getResourceDir();
         NavigableSet<String> existings = store.listResources(resourceDir);
         if (existings == null)
@@ -205,14 +205,14 @@ public class SnapshotManager {
     }
 
     private void save(SnapshotTable snapshot) throws IOException {
-        ResourceStore store = MetadataManager.getInstance(this.config).getStore();
+        ResourceStore store = DataModelManager.getInstance(this.config).getStore();
         String path = snapshot.getResourcePath();
         store.putResource(path, snapshot, SnapshotTableSerializer.FULL_SERIALIZER);
     }
 
     private SnapshotTable load(String resourcePath, boolean loadData) throws IOException {
         logger.info("Loading snapshotTable from " + resourcePath + ", with loadData: " + loadData);
-        ResourceStore store = MetadataManager.getInstance(this.config).getStore();
+        ResourceStore store = DataModelManager.getInstance(this.config).getStore();
 
         SnapshotTable table = store.getResource(resourcePath, SnapshotTable.class, loadData ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
 

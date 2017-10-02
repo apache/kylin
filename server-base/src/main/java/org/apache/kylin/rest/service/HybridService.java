@@ -130,7 +130,7 @@ public class HybridService extends BasicService {
             }
         }
 
-        DataModelDesc model = (null != modelName) ? getMetadataManager().getDataModelDesc(modelName) : null;
+        DataModelDesc model = (null != modelName) ? getDataModelManager().getDataModelDesc(modelName) : null;
         if (StringUtils.isEmpty(modelName)) {
             return hybridsInProject;
         } else if (model == null) {

@@ -37,7 +37,7 @@ import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HLLCounter;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 
@@ -63,7 +63,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
 
         String project = conf.get(BatchConstants.CFG_PROJECT_NAME);
         String tableName = conf.get(BatchConstants.CFG_TABLE_NAME);
-        tableDesc = MetadataManager.getInstance(config).getTableDesc(tableName, project);
+        tableDesc = TableMetadataManager.getInstance(config).getTableDesc(tableName, project);
         tableInputFormat = MRUtil.getTableInputFormat(tableDesc);
     }
 

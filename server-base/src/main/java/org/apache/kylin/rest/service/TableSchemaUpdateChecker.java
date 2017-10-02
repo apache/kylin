@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -41,7 +41,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class TableSchemaUpdateChecker {
-    private final MetadataManager metadataManager;
+    private final TableMetadataManager metadataManager;
     private final CubeManager cubeManager;
 
     static class CheckResult {
@@ -81,7 +81,7 @@ public class TableSchemaUpdateChecker {
         }
     }
 
-    TableSchemaUpdateChecker(MetadataManager metadataManager, CubeManager cubeManager) {
+    TableSchemaUpdateChecker(TableMetadataManager metadataManager, CubeManager cubeManager) {
         this.metadataManager = checkNotNull(metadataManager, "metadataManager is null");
         this.cubeManager = checkNotNull(cubeManager, "cubeManager is null");
     }

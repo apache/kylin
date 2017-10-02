@@ -92,13 +92,6 @@ public class ProjectInstance extends RootPersistentEntity {
         return ResourceStore.PROJECT_RESOURCE_ROOT + "/" + projectName + ".json";
     }
 
-    public static String getNormalizedProjectName(String project) {
-        if (project == null)
-            throw new IllegalStateException("Trying to normalized a project name which is null");
-
-        return project.toUpperCase();
-    }
-
     public static ProjectInstance create(String name, String owner, String description, LinkedHashMap<String, String> overrideProps, List<RealizationEntry> realizationEntries, List<String> models) {
         ProjectInstance projectInstance = new ProjectInstance();
 

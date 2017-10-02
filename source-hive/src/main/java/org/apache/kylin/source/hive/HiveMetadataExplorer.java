@@ -25,7 +25,7 @@ import java.util.UUID;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -49,7 +49,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
     @Override
     public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String tableName, String prj) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        MetadataManager metaMgr = MetadataManager.getInstance(config);
+        TableMetadataManager metaMgr = TableMetadataManager.getInstance(config);
 
         HiveTableMeta hiveTableMeta;
         try {

@@ -20,7 +20,6 @@ package org.apache.kylin.metadata;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,7 +41,6 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
-import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -57,41 +55,33 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- * Serves (and caches) metadata for Kylin instance.
- * <p/>
- * Also provides a ResourceStore for general purpose data persistence. 
- * Metadata is serialized as JSON and stored in ResourceStore.
- * 
- * @author yangli9
  */
-public class MetadataManager {
+public class TableMetadataManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(MetadataManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(TableMetadataManager.class);
 
     public static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
     public static final Serializer<TableExtDesc> TABLE_EXT_SERIALIZER = new JsonSerializer<TableExtDesc>(
             TableExtDesc.class);
-    public static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(
-            DataModelDesc.class);
     public static final Serializer<ExternalFilterDesc> EXTERNAL_FILTER_DESC_SERIALIZER = new JsonSerializer<ExternalFilterDesc>(
             ExternalFilterDesc.class);
 
     // static cached instances
-    private static final ConcurrentMap<KylinConfig, MetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, MetadataManager>();
+    private static final ConcurrentMap<KylinConfig, TableMetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, TableMetadataManager>();
 
-    public static MetadataManager getInstance(KylinConfig config) {
-        MetadataManager r = CACHE.get(config);
+    public static TableMetadataManager getInstance(KylinConfig config) {
+        TableMetadataManager r = CACHE.get(config);
         if (r != null) {
             return r;
         }
 
-        synchronized (MetadataManager.class) {
+        synchronized (TableMetadataManager.class) {
             r = CACHE.get(config);
             if (r != null) {
                 return r;
             }
             try {
-                r = new MetadataManager(config);
+                r = new TableMetadataManager(config);
                 CACHE.put(config, r);
                 if (CACHE.size() > 1) {
                     logger.warn("More than one singleton exist, current keys: {}", StringUtils
@@ -106,7 +96,7 @@ public class MetadataManager {
 
                 return r;
             } catch (IOException e) {
-                throw new IllegalStateException("Failed to init MetadataManager from " + config, e);
+                throw new IllegalStateException("Failed to init TableMetadataManager from " + config, e);
             }
         }
     }
@@ -120,28 +110,13 @@ public class MetadataManager {
     private KylinConfig config;
     // table name ==> SourceTable
     private CaseInsensitiveStringCache<TableDesc> srcTableMap;
-    // name => value
+    // name => SourceTableExt
     private CaseInsensitiveStringCache<TableExtDesc> srcTableExtMap;
-    // name => DataModelDesc
-    private CaseInsensitiveStringCache<DataModelDesc> dataModelDescMap;
     // name => External Filter Desc
     private CaseInsensitiveStringCache<ExternalFilterDesc> extFilterMap;
 
-    private MetadataManager(KylinConfig config) throws IOException {
+    private TableMetadataManager(KylinConfig config) throws IOException {
         init(config);
-    }
-
-    /**
-     * Tell MetadataManager that the instance has changed. The cube info will
-     * be stored Reload the cube desc and source table A broadcast must be sent
-     * out
-     * 
-     * @return
-     * @throws IOException
-     */
-    public void reload() {
-        clearCache();
-        getInstance(config);
     }
 
     public KylinConfig getConfig() {
@@ -150,10 +125,6 @@ public class MetadataManager {
 
     public ResourceStore getStore() {
         return ResourceStore.getStore(this.config);
-    }
-
-    public List<DataModelDesc> listDataModels() {
-        return Lists.newArrayList(this.dataModelDescMap.values());
     }
 
     public List<TableDesc> listAllTables(String prj) {
@@ -314,18 +285,15 @@ public class MetadataManager {
         this.config = config;
         this.srcTableMap = new CaseInsensitiveStringCache<>(config, "table");
         this.srcTableExtMap = new CaseInsensitiveStringCache<>(config, "table_ext");
-        this.dataModelDescMap = new CaseInsensitiveStringCache<>(config, "data_model");
         this.extFilterMap = new CaseInsensitiveStringCache<>(config, "external_filter");
 
         reloadAllSourceTable();
         reloadAllTableExt();
-        reloadAllDataModel();
         reloadAllExternalFilter();
 
         // touch lower level metadata before registering my listener
         Broadcaster.getInstance(config).registerListener(new SrcTableSyncListener(), "table");
         Broadcaster.getInstance(config).registerListener(new SrcTableExtSyncListener(), "table_ext");
-        Broadcaster.getInstance(config).registerListener(new DataModelSyncListener(), "data_model");
         Broadcaster.getInstance(config).registerListener(new ExtFilterSyncListener(), "external_filter");
     }
 
@@ -370,33 +338,6 @@ public class MetadataManager {
                 srcTableExtMap.removeLocal(cacheKey);
             else
                 reloadTableExtAt(TableExtDesc.concatRawResourcePath(cacheKey));
-        }
-    }
-
-    private class DataModelSyncListener extends Broadcaster.Listener {
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
-
-        @Override
-        public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
-            for (String model : ProjectManager.getInstance(config).getProject(project).getModels()) {
-                reloadDataModelDescAt(DataModelDesc.concatResourcePath(model));
-            }
-        }
-
-        @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
-            if (event == Event.DROP)
-                dataModelDescMap.removeLocal(cacheKey);
-            else
-                reloadDataModelDescAt(DataModelDesc.concatResourcePath(cacheKey));
-
-            for (ProjectInstance prj : ProjectManager.getInstance(config).findProjectsByModel(cacheKey)) {
-                broadcaster.notifyProjectSchemaUpdate(prj.getName());
-            }
         }
     }
 
@@ -550,157 +491,4 @@ public class MetadataManager {
         reloadExternalFilterAt(ExternalFilterDesc.concatResourcePath(extFilterName));
     }
 
-    public DataModelDesc getDataModelDesc(String name) {
-        return dataModelDescMap.get(name);
-    }
-
-    public List<DataModelDesc> getModels() {
-        return new ArrayList<>(dataModelDescMap.values());
-    }
-
-    public List<DataModelDesc> getModels(String projectName) {
-        ProjectInstance projectInstance = ProjectManager.getInstance(config).getProject(projectName);
-        ArrayList<DataModelDesc> ret = new ArrayList<>();
-
-        if (projectInstance != null && projectInstance.getModels() != null) {
-            for (String modelName : projectInstance.getModels()) {
-                DataModelDesc model = getDataModelDesc(modelName);
-                if (null != model) {
-                    ret.add(model);
-                } else {
-                    logger.error("Failed to load model " + modelName);
-                }
-            }
-        }
-
-        return ret;
-    }
-
-    // within a project, find models that use the specified table
-    public List<String> getModelsUsingTable(TableDesc table, String project) throws IOException {
-        List<String> models = new ArrayList<>();
-        for (DataModelDesc modelDesc : getModels(project)) {
-            if (modelDesc.containsTable(table))
-                models.add(modelDesc.getName());
-        }
-        return models;
-    }
-
-    public boolean isTableInAnyModel(TableDesc table) {
-        for (DataModelDesc modelDesc : getModels()) {
-            if (modelDesc.containsTable(table))
-                return true;
-        }
-        return false;
-    }
-
-    private void reloadAllDataModel() throws IOException {
-        ResourceStore store = getStore();
-        logger.debug("Reloading DataModel from folder "
-                + store.getReadableResourcePath(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT));
-
-        dataModelDescMap.clear();
-
-        List<String> paths = store.collectResourceRecursively(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
-        for (String path : paths) {
-
-            try {
-                logger.info("Reloading data model at " + path);
-                reloadDataModelDescAt(path);
-            } catch (IllegalStateException e) {
-                logger.error("Error to load DataModel at " + path, e);
-                continue;
-            }
-        }
-
-        logger.debug("Loaded " + dataModelDescMap.size() + " DataModel(s)");
-    }
-
-    public DataModelDesc reloadDataModelDescAt(String path) {
-        ResourceStore store = getStore();
-        try {
-            DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
-            String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
-
-            if (!dataModelDesc.isDraft())
-                dataModelDesc.init(config, this.getAllTablesMap(prj), listDataModels());
-
-            dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
-            return dataModelDesc;
-        } catch (Exception e) {
-            throw new IllegalStateException("Error to load " + path, e);
-        }
-    }
-
-    // sync on update
-    public DataModelDesc dropModel(DataModelDesc desc) throws IOException {
-        logger.info("Dropping model '" + desc.getName() + "'");
-        ResourceStore store = getStore();
-        store.deleteResource(desc.getResourcePath());
-        // delete model from project
-        ProjectManager.getInstance(config).removeModelFromProjects(desc.getName());
-        // clean model cache
-        this.afterModelDropped(desc);
-        return desc;
-    }
-
-    private void afterModelDropped(DataModelDesc desc) {
-        removeModelCache(desc.getName());
-    }
-
-    public void removeModelCache(String modelName) {
-        dataModelDescMap.remove(modelName);
-    }
-
-    public DataModelDesc createDataModelDesc(DataModelDesc desc, String projectName, String owner) throws IOException {
-        String name = desc.getName();
-        if (dataModelDescMap.containsKey(name))
-            throw new IllegalArgumentException("DataModelDesc '" + name + "' already exists");
-
-        ProjectManager prjMgr = ProjectManager.getInstance(config);
-        ProjectInstance prj = prjMgr.getProject(projectName);
-        if (prj.containsModel(name))
-            throw new IllegalStateException("project " + projectName + " already contains model " + name);
-
-        try {
-            // Temporarily register model under project, because we want to 
-            // update project formally after model is saved.
-            prj.getModels().add(name);
-
-            desc.setOwner(owner);
-            desc = saveDataModelDesc(desc);
-
-        } finally {
-            prj.getModels().remove(name);
-        }
-
-        // now that model is saved, update project formally
-        prjMgr.updateModelToProject(name, projectName);
-
-        return desc;
-    }
-
-    public DataModelDesc updateDataModelDesc(DataModelDesc desc) throws IOException {
-        String name = desc.getName();
-        if (!dataModelDescMap.containsKey(name)) {
-            throw new IllegalArgumentException("DataModelDesc '" + name + "' does not exist.");
-        }
-
-        return saveDataModelDesc(desc);
-    }
-
-    private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-
-        String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
-
-        if (!dataModelDesc.isDraft())
-            dataModelDesc.init(config, this.getAllTablesMap(prj), listDataModels());
-
-        String path = dataModelDesc.getResourcePath();
-        getStore().putResource(path, dataModelDesc, MODELDESC_SERIALIZER);
-        dataModelDescMap.put(dataModelDesc.getName(), dataModelDesc);
-
-        return dataModelDesc;
-    }
 }

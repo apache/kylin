@@ -41,10 +41,10 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -72,7 +72,7 @@ public class ExtendCubeToHybridCLI {
     private KylinConfig kylinConfig;
     private CubeManager cubeManager;
     private CubeDescManager cubeDescManager;
-    private MetadataManager metadataManager;
+    private DataModelManager metadataManager;
     private ResourceStore store;
 
     public ExtendCubeToHybridCLI() {
@@ -80,7 +80,7 @@ public class ExtendCubeToHybridCLI {
         this.store = ResourceStore.getStore(kylinConfig);
         this.cubeManager = CubeManager.getInstance(kylinConfig);
         this.cubeDescManager = CubeDescManager.getInstance(kylinConfig);
-        this.metadataManager = MetadataManager.getInstance(kylinConfig);
+        this.metadataManager = DataModelManager.getInstance(kylinConfig);
     }
 
     public static void main(String[] args) throws Exception {

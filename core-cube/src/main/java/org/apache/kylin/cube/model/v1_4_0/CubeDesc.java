@@ -43,13 +43,13 @@ import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -454,7 +454,7 @@ public class CubeDesc extends RootPersistentEntity {
             this.addError("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
         }
 
-        this.model = MetadataManager.getInstance(config).getDataModelDesc(this.modelName);
+        this.model = DataModelManager.getInstance(config).getDataModelDesc(this.modelName);
 
         if (this.model == null) {
             this.addError("No data model found with name '" + modelName + "'.");

@@ -50,7 +50,7 @@ public class CubeServiceTest extends ServiceTestBase {
     public void testBasics() throws JsonProcessingException, JobException, UnknownHostException, SQLException {
         Assert.assertNotNull(cubeService.getConfig());
         Assert.assertNotNull(cubeService.getConfig());
-        Assert.assertNotNull(cubeService.getMetadataManager());
+        Assert.assertNotNull(cubeService.getDataModelManager());
         Assert.assertNotNull(QueryConnection.getConnection(ProjectInstance.DEFAULT_PROJECT_NAME));
 
         List<CubeInstance> cubes = cubeService.listAllCubes(null, null, null, true);

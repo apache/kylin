@@ -57,7 +57,7 @@ public class JobServiceTest extends ServiceTestBase {
     public void testBasics() throws JobException, IOException, SQLException {
         Assert.assertNotNull(jobService.getConfig());
         Assert.assertNotNull(jobService.getConfig());
-        Assert.assertNotNull(jobService.getMetadataManager());
+        Assert.assertNotNull(jobService.getDataModelManager());
         Assert.assertNotNull(QueryConnection.getConnection(ProjectInstance.DEFAULT_PROJECT_NAME));
         Assert.assertNull(jobService.getJobInstance("job_not_exist"));
         Assert.assertNotNull(jobService.searchJobs(null, null, null, 0, 0, JobTimeFilterEnum.ALL));

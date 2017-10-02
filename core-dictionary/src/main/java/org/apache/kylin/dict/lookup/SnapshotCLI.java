@@ -21,7 +21,7 @@ package org.apache.kylin.dict.lookup;
 import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.SourceFactory;
 
@@ -35,7 +35,7 @@ public class SnapshotCLI {
 
     private static void rebuild(String table, String overwriteUUID, String project) throws IOException {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
-        MetadataManager metaMgr = MetadataManager.getInstance(conf);
+        TableMetadataManager metaMgr = TableMetadataManager.getInstance(conf);
         SnapshotManager snapshotMgr = SnapshotManager.getInstance(conf);
 
         TableDesc tableDesc = metaMgr.getTableDesc(table, project);

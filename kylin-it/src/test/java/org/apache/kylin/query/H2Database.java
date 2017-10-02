@@ -31,7 +31,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
@@ -79,7 +79,7 @@ public class H2Database {
     }
 
     private void loadH2Table(String tableName) throws SQLException {
-        MetadataManager metaMgr = MetadataManager.getInstance(config);
+        TableMetadataManager metaMgr = TableMetadataManager.getInstance(config);
         TableDesc tableDesc = metaMgr.getTableDesc(tableName.toUpperCase(), project);
         File tempFile = null;
 

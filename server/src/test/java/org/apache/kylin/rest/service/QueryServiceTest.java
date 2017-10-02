@@ -48,7 +48,7 @@ public class QueryServiceTest extends ServiceTestBase {
     public void testBasics() throws JobException, IOException, SQLException {
         Assert.assertNotNull(queryService.getConfig());
         Assert.assertNotNull(queryService.getConfig());
-        Assert.assertNotNull(queryService.getMetadataManager());
+        Assert.assertNotNull(queryService.getDataModelManager());
         Assert.assertNotNull(QueryConnection.getConnection(ProjectInstance.DEFAULT_PROJECT_NAME));
 
         //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);

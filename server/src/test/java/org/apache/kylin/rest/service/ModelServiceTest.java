@@ -23,12 +23,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.List;
 
+import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.job.exception.JobException;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.junit.Assert;
@@ -49,77 +47,19 @@ public class ModelServiceTest extends ServiceTestBase {
 
     @Test
     public void testSuccessModelUpdate() throws IOException, JobException {
+        Serializer<DataModelDesc> serializer = modelService.getDataModelManager().getDataModelSerializer();
+        
         List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_inner_join_model", "default", true);
         Assert.assertTrue(dataModelDescs.size() == 1);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        MetadataManager.MODELDESC_SERIALIZER.serialize(dataModelDescs.get(0), new DataOutputStream(baos));
+        serializer.serialize(dataModelDescs.get(0), new DataOutputStream(baos));
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        DataModelDesc deserialize = MetadataManager.MODELDESC_SERIALIZER.deserialize(new DataInputStream(bais));
+        DataModelDesc deserialize = serializer.deserialize(new DataInputStream(bais));
 
         deserialize.setOwner("somebody");
         DataModelDesc dataModelDesc = modelService.updateModelAndDesc("default", deserialize);
         Assert.assertTrue(dataModelDesc.getOwner().equals("somebody"));
-    }
-
-    @Test
-    public void testSuccessModelUpdateOnComputedColumn()
-            throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
-
-        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
-        Assert.assertTrue(dataModelDescs.size() == 1);
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        MetadataManager.MODELDESC_SERIALIZER.serialize(dataModelDescs.get(0), new DataOutputStream(baos));
-        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        DataModelDesc deserialize = MetadataManager.MODELDESC_SERIALIZER.deserialize(new DataInputStream(bais));
-
-        Field field = ComputedColumnDesc.class.getDeclaredField("comment");
-        field.setAccessible(true);
-        field.set(deserialize.getComputedColumnDescs().get(0), "change on comment is okay");
-        DataModelDesc dataModelDesc = modelService.updateModelAndDesc("default", deserialize);
-    }
-
-    @Test
-    public void testFailureModelUpdateDueToComputedColumnConflict()
-            throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage(
-                "Column name for computed column DEFAULT.TEST_KYLIN_FACT.DEAL_AMOUNT is already used in model ci_inner_join_model, you should apply the same expression ' PRICE * ITEM_COUNT ' here, or use a different column name.");
-
-        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
-        Assert.assertTrue(dataModelDescs.size() == 1);
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        MetadataManager.MODELDESC_SERIALIZER.serialize(dataModelDescs.get(0), new DataOutputStream(baos));
-        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        DataModelDesc deserialize = MetadataManager.MODELDESC_SERIALIZER.deserialize(new DataInputStream(bais));
-
-        Field field = ComputedColumnDesc.class.getDeclaredField("expression");
-        field.setAccessible(true);
-        field.set(deserialize.getComputedColumnDescs().get(0), "another expression");
-        DataModelDesc dataModelDesc = modelService.updateModelAndDesc("default", deserialize);
-    }
-
-    @Test
-    public void testFailureModelUpdateDueToComputedColumnConflict2()
-            throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage(
-                "There is already a column named cal_dt on table DEFAULT.TEST_KYLIN_FACT, please change your computed column name");
-
-        List<DataModelDesc> dataModelDescs = modelService.listAllModels("ci_left_join_model", "default", true);
-        Assert.assertTrue(dataModelDescs.size() == 1);
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        MetadataManager.MODELDESC_SERIALIZER.serialize(dataModelDescs.get(0), new DataOutputStream(baos));
-        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        DataModelDesc deserialize = MetadataManager.MODELDESC_SERIALIZER.deserialize(new DataInputStream(bais));
-
-        Field field = ComputedColumnDesc.class.getDeclaredField("columnName");
-        field.setAccessible(true);
-        field.set(deserialize.getComputedColumnDescs().get(0), "cal_dt");
-        DataModelDesc dataModelDesc = modelService.updateModelAndDesc("default", deserialize);
     }
 
     @Test
@@ -136,7 +76,7 @@ public class ModelServiceTest extends ServiceTestBase {
 
         expectedEx.expect(org.apache.kylin.rest.exception.BadRequestException.class);
         expectedEx.expectMessage(
-                "Measure: TEST_KYLIN_FACT.DEAL_AMOUNT can't be removed, It is referred in Cubes: [ci_left_join_cube]");
+                "Measure: TEST_KYLIN_FACT.ITEM_COUNT can't be removed, It is referred in Cubes: [ci_left_join_cube]");
         modelService.updateModelToResourceStore(revisableModel, "default");
     }
 
@@ -148,13 +88,14 @@ public class ModelServiceTest extends ServiceTestBase {
         DataModelDesc revisableModel = dataModelDescs.get(0);
 
         List<ModelDimensionDesc> originDims = revisableModel.getDimensions();
-        String[] reviseDims = cutItems(originDims.get(0).getColumns(), 2);
+        String[] reviseDims = cutItems(originDims.get(0).getColumns(), 1);
         originDims.get(0).setColumns(reviseDims);
         revisableModel.setDimensions(originDims);
 
+        // actually the TEST_COUNT_DISTINCT_BITMAP was defined in dimension (not measure)
         expectedEx.expect(org.apache.kylin.rest.exception.BadRequestException.class);
         expectedEx.expectMessage(
-                "Dimension: TEST_KYLIN_FACT.SELLER_ID_AND_COUNTRY_NAME can't be removed, It is referred in Cubes: [ci_left_join_cube]");
+                "Measure: TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP can't be removed, It is referred in Cubes: [ci_left_join_cube]");
         modelService.updateModelToResourceStore(revisableModel, "default");
     }
 

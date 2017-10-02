@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -51,7 +51,7 @@ public class StreamingTableDataGenerator {
         Preconditions.checkArgument(recordCount > 0);
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(tableName, prj);
+        TableDesc tableDesc = TableMetadataManager.getInstance(kylinConfig).getTableDesc(tableName, prj);
 
         SortedMultiset<Long> times = TreeMultiset.create();
         Random r = new Random();

@@ -21,8 +21,8 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,7 +48,7 @@ public class ModelDescController extends BasicController {
     @RequestMapping(value = "/{model_name}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public DataModelDesc getModel(@PathVariable String model_name) {
-        MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelManager metaManager = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc modeDesc = metaManager.getDataModelDesc(model_name);
         return modeDesc;
 

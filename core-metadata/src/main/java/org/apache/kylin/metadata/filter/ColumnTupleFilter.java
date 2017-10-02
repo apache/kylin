@@ -26,9 +26,9 @@ import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -134,7 +134,7 @@ public class ColumnTupleFilter extends TupleFilter {
             String col = BytesUtil.readUTFString(buffer);
             
             KylinConfig config = KylinConfig.getInstanceFromEnv();
-            DataModelDesc modelDesc = MetadataManager.getInstance(config).getDataModelDesc(model);
+            DataModelDesc modelDesc = DataModelManager.getInstance(config).getDataModelDesc(model);
             this.columnRef = modelDesc.findColumn(alias, col);
             
         } else {

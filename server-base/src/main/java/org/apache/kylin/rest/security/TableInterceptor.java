@@ -20,12 +20,13 @@ package org.apache.kylin.rest.security;
 
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.acl.TableACLManager;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.query.security.QueryInterceptor;
-import org.apache.kylin.query.security.QueryInterceptorUtil;
 
 public class TableInterceptor extends QueryInterceptor {
 
@@ -36,7 +37,7 @@ public class TableInterceptor extends QueryInterceptor {
 
     @Override
     public Set<String> getQueryIdentifiers(List<OLAPContext> contexts) {
-        return QueryInterceptorUtil.getAllTblsWithSchema(contexts);
+        return getAllTblsWithSchema(contexts);
     }
 
     @Override
@@ -54,4 +55,16 @@ public class TableInterceptor extends QueryInterceptor {
     protected String getIdentifierType() {
         return "table";
     }
+    
+    protected Set<String> getAllTblsWithSchema(List<OLAPContext> contexts) {
+        // all tables with DB, Like DB.TABLE
+        Set<String> tableWithSchema = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (OLAPContext context : contexts) {
+            for (OLAPTableScan tableScan : context.allTableScans) {
+                tableWithSchema.add(tableScan.getTableRef().getTableIdentity());
+            }
+        }
+        return tableWithSchema;
+    }
+
 }

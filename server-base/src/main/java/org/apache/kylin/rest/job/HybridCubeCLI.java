@@ -33,8 +33,8 @@ import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -70,7 +70,7 @@ public class HybridCubeCLI extends AbstractApplication {
     private KylinConfig kylinConfig;
     private CubeManager cubeManager;
     private HybridManager hybridManager;
-    private MetadataManager metadataManager;
+    private DataModelManager metadataManager;
     private ResourceStore store;
 
     public HybridCubeCLI() {
@@ -85,7 +85,7 @@ public class HybridCubeCLI extends AbstractApplication {
         this.store = ResourceStore.getStore(kylinConfig);
         this.cubeManager = CubeManager.getInstance(kylinConfig);
         this.hybridManager = HybridManager.getInstance(kylinConfig);
-        this.metadataManager = MetadataManager.getInstance(kylinConfig);
+        this.metadataManager = DataModelManager.getInstance(kylinConfig);
     }
 
     public static void main(String[] args) {

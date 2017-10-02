@@ -621,7 +621,7 @@ public class CubeService extends BasicService implements InitializingBean {
         }
 
         if (!isDraft) {
-            DataModelDesc modelDesc = modelService.getMetadataManager().getDataModelDesc(desc.getModelName());
+            DataModelDesc modelDesc = modelService.getDataModelManager().getDataModelDesc(desc.getModelName());
             if (modelDesc == null) {
                 throw new BadRequestException(String.format(msg.getMODEL_NOT_FOUND(), desc.getModelName()));
             }

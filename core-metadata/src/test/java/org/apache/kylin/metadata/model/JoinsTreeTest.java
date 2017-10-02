@@ -25,7 +25,6 @@ import java.util.Map.Entry;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.JoinsTree.Chain;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +46,7 @@ public class JoinsTreeTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() {
-        MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelManager mgr = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc model = mgr.getDataModelDesc("ci_left_join_model");
         JoinsTree joinsTree = model.getJoinsTree();
         
@@ -62,7 +61,7 @@ public class JoinsTreeTest extends LocalFileMetadataTestCase {
     
     @Test
     public void testMatch() {
-        MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelManager mgr = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc model = mgr.getDataModelDesc("ci_inner_join_model");
         JoinsTree joinsTree = model.getJoinsTree();
 

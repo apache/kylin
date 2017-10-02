@@ -25,7 +25,6 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.QueryDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +143,6 @@ public class CacheService extends BasicService implements InitializingBean {
         if (StringUtils.isEmpty(project))
             throw new IllegalArgumentException("removeOLAPDataSource: project name not given");
 
-        project = ProjectInstance.getNormalizedProjectName(project);
         queryDataSource.removeCache(project);
     }
 
@@ -156,9 +154,6 @@ public class CacheService extends BasicService implements InitializingBean {
 
     @Deprecated
     public DataSource getOLAPDataSource(String project) {
-
-        project = ProjectInstance.getNormalizedProjectName(project);
-
         DataSource ret = queryDataSource.get(project, getConfig());
         return ret;
     }

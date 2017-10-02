@@ -29,7 +29,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
@@ -64,8 +64,8 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
         CubeManager.getInstance(config);
         CubeDescManager.clearCache();
         CubeDescManager.getInstance(config);
-        MetadataManager.clearCache();
-        MetadataManager.getInstance(config);
+        DataModelManager.clearCache();
+        DataModelManager.getInstance(config);
         ProjectManager.clearCache();
         ProjectManager.getInstance(config);
     }

@@ -22,8 +22,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListMap;
 
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
@@ -52,7 +53,7 @@ class ProjectL2Cache {
     private static final Logger logger = LoggerFactory.getLogger(ProjectL2Cache.class);
 
     private ProjectManager mgr;
-    private Map<String, ProjectCache> projectCaches = Maps.newConcurrentMap();
+    private Map<String, ProjectCache> projectCaches = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
 
     ProjectL2Cache(ProjectManager mgr) {
         this.mgr = mgr;
@@ -178,7 +179,6 @@ class ProjectL2Cache {
     // ----------------------------------------------------------------------------
 
     private ProjectCache getCache(String project) {
-        project = ProjectInstance.getNormalizedProjectName(project);
         ProjectCache result = projectCaches.get(project);
         if (result == null) {
             result = loadCache(project);
@@ -196,7 +196,7 @@ class ProjectL2Cache {
         if (pi == null)
             throw new IllegalArgumentException("Project '" + project + "' does not exist;");
 
-        MetadataManager metaMgr = mgr.getMetadataManager();
+        TableMetadataManager metaMgr = mgr.getTableManager();
 
         for (String tableName : pi.getTables()) {
             TableDesc tableDesc = metaMgr.getTableDesc(tableName, project);
@@ -248,7 +248,7 @@ class ProjectL2Cache {
         if (realization == null)
             return false;
 
-        MetadataManager metaMgr = mgr.getMetadataManager();
+        TableMetadataManager metaMgr = mgr.getTableManager();
 
         Set<TblColRef> allColumns = realization.getAllColumns();
         if (allColumns == null || allColumns.isEmpty()) {

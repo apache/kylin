@@ -39,9 +39,9 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -105,7 +105,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private static final Option OPTION_INCLUDE_SEGMENT_DETAILS = OptionBuilder.withArgName("includeSegmentDetails").hasArg().isRequired(false).withDescription("set this to true if want to extract segment details too, such as dict, tablesnapshot. Default false").create("includeSegmentDetails");
 
     private KylinConfig kylinConfig;
-    private MetadataManager metadataManager;
+    private DataModelManager metadataManager;
     private ProjectManager projectManager;
     private HybridManager hybridManager;
     private CubeManager cubeManager;
@@ -157,7 +157,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         engineType = optionsHelper.hasOption(OPTION_ENGINE_TYPE) ? optionsHelper.getOptionValue(OPTION_ENGINE_TYPE) : null;
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
-        metadataManager = MetadataManager.getInstance(kylinConfig);
+        metadataManager = DataModelManager.getInstance(kylinConfig);
         projectManager = ProjectManager.getInstance(kylinConfig);
         hybridManager = HybridManager.getInstance(kylinConfig);
         cubeManager = CubeManager.getInstance(kylinConfig);

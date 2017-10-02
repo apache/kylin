@@ -35,7 +35,7 @@ import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +108,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
         logger.info("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
 
-        TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(table, project);
+        TableDesc tableDesc = TableMetadataManager.getInstance(kylinConfig).getTableDesc(table, project);
         attachTableMetadata(tableDesc, job.getConfiguration());
         int result = waitForCompletion(job);
 

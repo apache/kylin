@@ -38,7 +38,7 @@ import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -105,7 +105,7 @@ public class TableService extends BasicService {
 
     public TableDesc getTableDescByName(String tableName, boolean withExt, String prj) {
         aclEvaluate.checkProjectReadPermission(prj);
-        TableDesc table = getMetadataManager().getTableDesc(tableName, prj);
+        TableDesc table = getTableManager().getTableDesc(tableName, prj);
         if (withExt) {
             aclEvaluate.checkProjectWritePermission(prj);
             table = cloneTableDesc(table, prj);
@@ -137,8 +137,8 @@ public class TableService extends BasicService {
         }
 
         // do schema check
-        MetadataManager metaMgr = MetadataManager.getInstance(getConfig());
-        CubeManager cubeMgr = CubeManager.getInstance(getConfig());
+        TableMetadataManager metaMgr = getTableManager();
+        CubeManager cubeMgr = getCubeManager();
         TableSchemaUpdateChecker checker = new TableSchemaUpdateChecker(metaMgr, cubeMgr);
         for (Pair<TableDesc, TableExtDesc> pair : allMeta) {
             TableDesc tableDesc = pair.getFirst();
@@ -247,7 +247,7 @@ public class TableService extends BasicService {
         int tableType = 0;
 
         tableName = normalizeHiveTableName(tableName);
-        TableDesc desc = getMetadataManager().getTableDesc(tableName, project);
+        TableDesc desc = getTableManager().getTableDesc(tableName, project);
         
         // unload of legacy global table is not supported for now
         if (desc == null || desc.getProject() == null) {
@@ -266,7 +266,7 @@ public class TableService extends BasicService {
         }
         
         // it is a project local table, ready to remove since no model is using it within the project
-        MetadataManager metaMgr = MetadataManager.getInstance(getConfig());
+        TableMetadataManager metaMgr = getTableManager();
         metaMgr.removeTableExt(tableName, project);
         metaMgr.removeSourceTable(tableName, project);
 
@@ -297,7 +297,7 @@ public class TableService extends BasicService {
     public void addStreamingTable(TableDesc desc, String project) throws IOException {
         aclEvaluate.checkProjectAdminPermission(project);
         desc.setUuid(UUID.randomUUID().toString());
-        getMetadataManager().saveSourceTable(desc, project);
+        getTableManager().saveSourceTable(desc, project);
         syncTableToProject(new String[] { desc.getIdentity() }, project);
     }
 
@@ -323,7 +323,7 @@ public class TableService extends BasicService {
     }
 
     private TableDescResponse cloneTableDesc(TableDesc table, String prj) {
-        TableExtDesc tableExtDesc = getMetadataManager().getTableExt(table.getIdentity(), prj);
+        TableExtDesc tableExtDesc = getTableManager().getTableExt(table.getIdentity(), prj);
 
         // Clone TableDesc
         TableDescResponse rtableDesc = new TableDescResponse(table);
@@ -362,7 +362,7 @@ public class TableService extends BasicService {
     }
 
     public void calculateCardinalityIfNotPresent(String[] tables, String submitter, String prj) throws Exception {
-        MetadataManager metaMgr = getMetadataManager();
+        TableMetadataManager metaMgr = getTableManager();
         ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
         for (String table : tables) {
             TableExtDesc tableExtDesc = metaMgr.getTableExt(table, prj);
@@ -384,8 +384,8 @@ public class TableService extends BasicService {
         Message msg = MsgPicker.getMsg();
 
         tableName = normalizeHiveTableName(tableName);
-        TableDesc table = getMetadataManager().getTableDesc(tableName, prj);
-        final TableExtDesc tableExt = getMetadataManager().getTableExt(tableName, prj);
+        TableDesc table = getTableManager().getTableDesc(tableName, prj);
+        final TableExtDesc tableExt = getTableManager().getTableExt(tableName, prj);
         if (table == null) {
             BadRequestException e = new BadRequestException(String.format(msg.getTABLE_DESC_NOT_FOUND(), tableName));
             logger.error("Cannot find table descriptor " + tableName, e);
@@ -416,7 +416,7 @@ public class TableService extends BasicService {
         step2.setParam("segmentId", tableName);
         job.addTask(step2);
         tableExt.setJodID(job.getId());
-        getMetadataManager().saveTableExt(tableExt, prj);
+        getTableManager().saveTableExt(tableExt, prj);
 
         getExecutableManager().addJob(job);
     }

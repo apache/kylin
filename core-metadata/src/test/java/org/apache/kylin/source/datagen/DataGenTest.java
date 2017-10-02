@@ -22,8 +22,8 @@ import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +59,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
     }
 
     private DataModelDesc getModel(String name) {
-        MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelManager mgr = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc model = mgr.getDataModelDesc(name);
         return model;
     }
