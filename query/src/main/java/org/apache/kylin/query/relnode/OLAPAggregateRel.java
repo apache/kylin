@@ -388,6 +388,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         return !this.context.hasPrecalculatedFields() || !RewriteImplementor.needRewrite(this.context);
     }
 
+    @SuppressWarnings("deprecation")
     private AggregateCall rewriteAggregateCall(AggregateCall aggCall, FunctionDesc func) {
 
         // if it's not a cube, then the "needRewriteField func" should not resort to any rewrite fields, which do not exist at all
@@ -400,6 +401,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         String callName = getSqlFuncName(aggCall);
         RelDataType fieldType = aggCall.getType();
         SqlAggFunction newAgg = aggCall.getAggregation();
+        
         Map<String, Class<?>> udafMap = func.getMeasureType().getRewriteCalciteAggrFunctions();
         if (func.isCount()) {
             newAgg = SqlStdOperatorTable.SUM0;
@@ -423,8 +425,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         }
 
         // rebuild aggregate call
-        @SuppressWarnings("deprecation")
         AggregateCall newAggCall = new AggregateCall(newAgg, false, newArgList, fieldType, callName);
+
         return newAggCall;
     }
 

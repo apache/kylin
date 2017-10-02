@@ -26,7 +26,7 @@ import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({ "rawtypes", "serial" })
 public class BasicMeasureType extends MeasureType {
 
     public static class Factory extends MeasureTypeFactory {
@@ -141,6 +141,6 @@ public class BasicMeasureType extends MeasureType {
 
     @Override
     public boolean needRewrite() {
-        return !isSum();
+        return true;
     }
 }

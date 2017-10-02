@@ -115,8 +115,8 @@ public class ColumnDesc implements Serializable {
         type = DataType.getType(datatype);
     }
 
-    public void setUpgradedType(String datatype) {
-        this.upgradedType = DataType.getType(datatype);
+    public void setUpgradedType(DataType upgradedType) {
+        this.upgradedType = upgradedType;
     }
 
     public DataType getUpgradedType() {
