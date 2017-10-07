@@ -9,19 +9,19 @@ Kylin v2.0 introduces the Spark cube engine, it uses Apache Spark to replace Map
 **Please note, this toturial is based on Kylin 2.0 + Spark 1.6; Now Kylin v2.1 has upgraded Spark to 2.1.1. This document is out of date but the main steps are very similar.**
 
 ## Preparation
-To finish this tutorial, you need a Hadoop environment which has Kylin v2.0.0 or above installed. Here we will use Hortonworks HDP 2.4 Sandbox VM, the Hadoop components as well as Hive/HBase has already been started. 
+To finish this tutorial, you need a Hadoop environment which has Kylin v2.1.0 or above installed. Here we will use Hortonworks HDP 2.4 Sandbox VM, the Hadoop components as well as Hive/HBase has already been started. 
 
 ## Install Kylin v2.0.0
 
-Download the Kylin v2.0.0 for HBase 1.x from Kylin's download page, and then uncompress the tar ball into */usr/local/* folder:
+Download the Kylin v2.1.0 for HBase 1.x from Kylin's download page, and then uncompress the tar ball into */usr/local/* folder:
 
 {% highlight Groff markup %}
 
-wget http://www-us.apache.org/dist/kylin/apache-kylin-2.0.0/apache-kylin-2.0.0-bin-hbase1x.tar.gz -P /tmp
+wget http://www-us.apache.org/dist/kylin/apache-kylin-2.1.0/apache-kylin-2.1.0-bin-hbase1x.tar.gz -P /tmp
 
-tar -zxvf /tmp/apache-kylin-2.0.0-bin-hbase1x.tar.gz -C /usr/local/
+tar -zxvf /tmp/apache-kylin-2.1.0-bin-hbase1x.tar.gz -C /usr/local/
 
-export KYLIN_HOME=/usr/local/apache-kylin-2.0.0-bin
+export KYLIN_HOME=/usr/local/apache-kylin-2.1.0-bin
 {% endhighlight %}
 
 ## Prepare "kylin.env.hadoop-conf-dir"
@@ -43,14 +43,14 @@ vi $KYLIN_HOME/hadoop-conf/hive-site.xml (change "hive.execution.engine" value f
 Now, let Kylin know this directory with property "kylin.env.hadoop-conf-dir" in kylin.properties:
 
 {% highlight Groff markup %}
-kylin.env.hadoop-conf-dir=/usr/local/apache-kylin-2.0.0-bin/hadoop-conf
+kylin.env.hadoop-conf-dir=/usr/local/apache-kylin-2.1.0-bin/hadoop-conf
 {% endhighlight %}
 
 If this property isn't set, Kylin will use the directory that "hive-site.xml" locates in; while that folder may have no "hbase-site.xml", will get HBase/ZK connection error in Spark.
 
 ## Check Spark configuration
 
-Kylin embedes a Spark binary (v1.6.3) in $KYLIN_HOME/spark, all the Spark configurations can be managed in $KYLIN_HOME/conf/kylin.properties with prefix *"kylin.engine.spark-conf."*. These properties will be extracted and applied when runs submit Spark job; E.g, if you configure "kylin.engine.spark-conf.spark.executor.memory=4G", Kylin will use "--conf spark.executor.memory=4G" as parameter when execute "spark-submit".
+Kylin embedes a Spark binary (v2.1.0) in $KYLIN_HOME/spark, all the Spark configurations can be managed in $KYLIN_HOME/conf/kylin.properties with prefix *"kylin.engine.spark-conf."*. These properties will be extracted and applied when runs submit Spark job; E.g, if you configure "kylin.engine.spark-conf.spark.executor.memory=4G", Kylin will use "--conf spark.executor.memory=4G" as parameter when execute "spark-submit".
 
 Before you run Spark cubing, suggest take a look on these configurations and do customization according to your cluster. Below is the default configurations, which is also the minimal config for a sandbox (1 executor with 1GB memory); usually in a normal cluster, need much more executors and each has at least 4GB memory and 2 cores:
 
@@ -64,7 +64,7 @@ kylin.engine.spark-conf.spark.executor.instances=1
 kylin.engine.spark-conf.spark.eventLog.enabled=true
 kylin.engine.spark-conf.spark.eventLog.dir=hdfs\:///kylin/spark-history
 kylin.engine.spark-conf.spark.history.fs.logDirectory=hdfs\:///kylin/spark-history
-#kylin.engine.spark-conf.spark.yarn.jar=hdfs://namenode:8020/kylin/spark/spark-assembly-1.6.3-hadoop2.6.0.jar
+
 #kylin.engine.spark-conf.spark.io.compression.codec=org.apache.spark.io.SnappyCompressionCodec
 
 ## uncomment for HDP
@@ -76,16 +76,17 @@ kylin.engine.spark-conf.spark.history.fs.logDirectory=hdfs\:///kylin/spark-histo
 
 For running on Hortonworks platform, need specify "hdp.version" as Java options for Yarn containers, so please uncommment the last three lines in kylin.properties. 
 
-Besides, in order to avoid repeatedly uploading Spark assembly jar to Yarn, you can manually do that once, and then configure the jar's HDFS location; Please note, the HDFS location need be full qualified name.
+Besides, in order to avoid repeatedly uploading Spark jars to Yarn, you can manually do that once, and then configure the jar's HDFS location; Please note, the HDFS location need be full qualified name.
 
 {% highlight Groff markup %}
+jar cv0f spark-libs.jar -C $KYLIN_HOME/spark/jars/ .
 hadoop fs -mkdir -p /kylin/spark/
-hadoop fs -put $KYLIN_HOME/spark/lib/spark-assembly-1.6.3-hadoop2.6.0.jar /kylin/spark/
+hadoop fs -put spark-libs.jar /kylin/spark/
 {% endhighlight %}
 
 After do that, the config in kylin.properties will be:
 {% highlight Groff markup %}
-kylin.engine.spark-conf.spark.yarn.jar=hdfs://sandbox.hortonworks.com:8020/kylin/spark/spark-assembly-1.6.3-hadoop2.6.0.jar
+kylin.engine.spark-conf.spark.yarn.archive=hdfs://sandbox.hortonworks.com:8020/kylin/spark/spark-libs.jar
 kylin.engine.spark-conf.spark.driver.extraJavaOptions=-Dhdp.version=current
 kylin.engine.spark-conf.spark.yarn.am.extraJavaOptions=-Dhdp.version=current
 kylin.engine.spark-conf.spark.executor.extraJavaOptions=-Dhdp.version=current

@@ -17,13 +17,13 @@ since: v2.1
 
 2. 在配置文件`kylin.properties`添加如下配置项。若不设置，将使用默认配置项。请不要忘记将"hiveserver"和"10000"替换成环境中Hive运行的主机和端口。
 
-    - *kylin.query.pushdown.jdbc.url*：Hive Jdbc的url，默认值为`jdbc:hive2://hiveserver:10000/default`
+    - *kylin.query.pushdown.jdbc.url*：Hive JDBC的URL.
 
-    - *kylin.query.pushdown.jdbc.driver*：Hive Jdbc的driver类名，默认值为`org.apache.hive.jdbc.HiveDriver`
-    
-    - *kylin.query.pushdown.jdbc.username*：Hive Jdbc对应数据库的用户名，默认值为`hive`
+    - *kylin.query.pushdown.jdbc.driver*：Hive Jdbc的driver类名
+        
+    - *kylin.query.pushdown.jdbc.username*：Hive Jdbc对应数据库的用户名
 
-    - *kylin.query.pushdown.jdbc.password*：Hive Jdbc对应数据库的密码，默认为空字符串
+    - *kylin.query.pushdown.jdbc.password*：Hive Jdbc对应数据库的密码
 
     - *kylin.query.pushdown.jdbc.pool-max-total*：Hive Jdbc连接池的最大连接数，默认值为8
 
@@ -31,6 +31,11 @@ since: v2.1
     
     - *kylin.query.pushdown.jdbc.pool-min-idle*：Hive Jdbc连接池的最小连接数，默认值为0
 
+下面是一个样例设置; 请记得将主机名"hiveserver"以及端口"10000"修改为您的集群设置。
+
+{% highlight Groff markup %} kylin.query.pushdown.runner-class-name=org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl kylin.query.pushdown.jdbc.url=jdbc:hive2://hiveserver:10000/default kylin.query.pushdown.jdbc.driver=org.apache.hive.jdbc.HiveDriver kylin.query.pushdown.jdbc.username=hive kylin.query.pushdown.jdbc.password= kylin.query.pushdown.jdbc.pool-max-total=8 kylin.query.pushdown.jdbc.pool-max-idle=8 kylin.query.pushdown.jdbc.pool-min-idle=0
+
+{% endhighlight %}
 
 3. 重启Kylin
 

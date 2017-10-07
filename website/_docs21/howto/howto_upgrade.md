@@ -35,6 +35,12 @@ After the migration finished, you can delete the legacy "kylin_metadata_user" an
 
 3) Spark is upgraded from v1.6.3 to v2.1.1, if you customized Spark configurations in kylin.properties, please upgrade them as well by referring to [Spark documentation](https://spark.apache.org/docs/2.1.0/).
 
+4) If you are running Kylin with two clusters (compute/query separated), need copy the big metadata files (which are persisted in HDFS instead of HBase) from the Hadoop cluster to HBase cluster.
+```
+hadoop distcp hdfs://compute-cluster:8020/kylin/kylin_default_instance/resources hdfs://query-cluster:8020/kylin/kylin_default_instance/resources
+```
+
+
 ## Upgrade from v1.6.0 to v2.0.0
 
 Kylin v2.0.0 can read v1.6.0 metadata directly. Please follow the common upgrade steps above.
