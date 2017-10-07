@@ -6,7 +6,6 @@ permalink: /docs21/tutorial/cube_spark.html
 ---
 Kylin v2.0 introduces the Spark cube engine, it uses Apache Spark to replace MapReduce in the build cube step; You can check [this blog](/blog/2017/02/23/by-layer-spark-cubing/) for an overall picture. The current document uses the sample cube to demo how to try the new engine.
 
-**Please note, this toturial is based on Kylin 2.0 + Spark 1.6; Now Kylin v2.1 has upgraded Spark to 2.1.1. This document is out of date but the main steps are very similar.**
 
 ## Preparation
 To finish this tutorial, you need a Hadoop environment which has Kylin v2.1.0 or above installed. Here we will use Hortonworks HDP 2.4 Sandbox VM, the Hadoop components as well as Hive/HBase has already been started. 
