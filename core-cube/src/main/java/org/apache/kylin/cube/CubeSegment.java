@@ -122,7 +122,7 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     private Map<Long, Short> cuboidBaseShards = Maps.newConcurrentMap(); // cuboid id ==> base(starting) shard for this cuboid
     
     // lazy init
-    transient ISegmentAdvisor advisor = null;
+    transient volatile ISegmentAdvisor advisor = null;
 
     public CubeDesc getCubeDesc() {
         return getCubeInstance().getDescriptor();

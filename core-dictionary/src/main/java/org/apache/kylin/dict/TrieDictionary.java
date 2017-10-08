@@ -152,7 +152,7 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
         int seq = lookupSeqNoFromValue(headSize, value, offset, offset + len, roundingFlag);
         int id = calcIdFromSeqNo(seq);
         if (id < 0)
-            logger.error("Not a valid value: " + bytesConvert.convertFromBytes(value, offset, len));
+            logger.debug("Not a valid value: " + bytesConvert.convertFromBytes(value, offset, len));
         return id;
     }
 

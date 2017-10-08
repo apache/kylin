@@ -192,7 +192,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     private Map<TblColRef, DeriveInfo> extendedColumnToHosts = Maps.newHashMap();
 
-    transient private CuboidScheduler cuboidScheduler = null;
+    transient volatile private CuboidScheduler cuboidScheduler = null;
 
     public boolean isEnableSharding() {
         //in the future may extend to other storage that is shard-able

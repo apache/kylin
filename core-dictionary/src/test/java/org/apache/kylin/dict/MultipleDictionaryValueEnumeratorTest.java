@@ -56,52 +56,63 @@ public class MultipleDictionaryValueEnumeratorTest {
     @Test
     public void testNormalDicts() throws IOException {
         List<DictionaryInfo> dictionaryInfoList = new ArrayList<>(2);
-        dictionaryInfoList.add(createDictInfo(new int[]{0, 1, 2}));
-        dictionaryInfoList.add(createDictInfo(new int[]{4, 5, 6}));
+        dictionaryInfoList.add(createDictInfo(new int[] { 0, 1, 2 }));
+        dictionaryInfoList.add(createDictInfo(new int[] { 4, 5, 6 }));
 
         Integer[] values = enumerateDictInfoList(dictionaryInfoList);
         assertEquals(6, values.length);
-        assertArrayEquals(new Integer[]{0, 1, 2, 4, 5, 6}, values);
+        assertArrayEquals(new Integer[] { 0, 1, 2, 4, 5, 6 }, values);
     }
 
     @Test
     public void testFirstEmptyDicts() throws IOException {
         List<DictionaryInfo> dictionaryInfoList = new ArrayList<>(2);
-        dictionaryInfoList.add(createDictInfo(new int[]{}));
-        dictionaryInfoList.add(createDictInfo(new int[]{4, 5, 6}));
+        dictionaryInfoList.add(createDictInfo(new int[] {}));
+        dictionaryInfoList.add(createDictInfo(new int[] { 4, 5, 6 }));
 
         Integer[] values = enumerateDictInfoList(dictionaryInfoList);
         assertEquals(3, values.length);
-        assertArrayEquals(new Integer[]{4, 5, 6}, values);
+        assertArrayEquals(new Integer[] { 4, 5, 6 }, values);
     }
 
     @Test
     public void testMiddleEmptyDicts() throws IOException {
         List<DictionaryInfo> dictionaryInfoList = new ArrayList<>(3);
-        dictionaryInfoList.add(createDictInfo(new int[]{0, 1, 2}));
-        dictionaryInfoList.add(createDictInfo(new int[]{}));
-        dictionaryInfoList.add(createDictInfo(new int[]{7, 8, 9}));
+        dictionaryInfoList.add(createDictInfo(new int[] { 0, 1, 2 }));
+        dictionaryInfoList.add(createDictInfo(new int[] {}));
+        dictionaryInfoList.add(createDictInfo(new int[] { 7, 8, 9 }));
 
         Integer[] values = enumerateDictInfoList(dictionaryInfoList);
         assertEquals(6, values.length);
-        assertArrayEquals(new Integer[]{0, 1, 2, 7, 8, 9}, values);
+        assertArrayEquals(new Integer[] { 0, 1, 2, 7, 8, 9 }, values);
     }
 
     @Test
     public void testLastEmptyDicts() throws IOException {
         List<DictionaryInfo> dictionaryInfoList = new ArrayList<>(3);
-        dictionaryInfoList.add(createDictInfo(new int[]{0, 1, 2}));
-        dictionaryInfoList.add(createDictInfo(new int[]{6, 7, 8}));
-        dictionaryInfoList.add(createDictInfo(new int[]{}));
+        dictionaryInfoList.add(createDictInfo(new int[] { 0, 1, 2 }));
+        dictionaryInfoList.add(createDictInfo(new int[] { 6, 7, 8 }));
+        dictionaryInfoList.add(createDictInfo(new int[] {}));
 
         Integer[] values = enumerateDictInfoList(dictionaryInfoList);
         assertEquals(6, values.length);
-        assertArrayEquals(new Integer[]{0, 1, 2, 6, 7, 8}, values);
+        assertArrayEquals(new Integer[] { 0, 1, 2, 6, 7, 8 }, values);
+    }
+
+    @Test
+    public void testUnorderedDicts() throws IOException {
+        List<DictionaryInfo> dictionaryInfoList = new ArrayList<>(3);
+        dictionaryInfoList.add(createDictInfo(new int[] { 0, 1, 6 }));
+        dictionaryInfoList.add(createDictInfo(new int[] { 3, 7, 8 }));
+        dictionaryInfoList.add(createDictInfo(new int[] { 2, 7, 9 }));
+        Integer[] values = enumerateDictInfoList(dictionaryInfoList);
+        assertEquals(9, values.length);
+        assertArrayEquals(new Integer[] { 0, 1, 2, 3, 6, 7, 7, 8, 9 }, values);
     }
 
     public static class MockDictionary extends Dictionary<String> {
         private static final long serialVersionUID = 1L;
-        
+
         public int[] values;
 
         @Override
@@ -111,7 +122,7 @@ public class MultipleDictionaryValueEnumeratorTest {
 
         @Override
         public int getMaxId() {
-            return values.length-1;
+            return values.length - 1;
         }
 
         @Override
@@ -134,16 +145,17 @@ public class MultipleDictionaryValueEnumeratorTest {
             return "" + values[id];
         }
 
+        @Override
+        public void dump(PrintStream out) {
+        }
 
         @Override
-        public void dump(PrintStream out) {}
+        public void write(DataOutput out) throws IOException {
+        }
 
         @Override
-        public void write(DataOutput out) throws IOException {}
-
-        @Override
-        public void readFields(DataInput in) throws IOException {}
-
+        public void readFields(DataInput in) throws IOException {
+        }
 
         @Override
         public boolean contains(Dictionary another) {
