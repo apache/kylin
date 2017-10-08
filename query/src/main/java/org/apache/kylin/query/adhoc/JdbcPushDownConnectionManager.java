@@ -26,7 +26,7 @@ import org.apache.kylin.common.KylinConfig;
 
 public class JdbcPushDownConnectionManager {
 
-    private static JdbcPushDownConnectionManager manager = null;
+    private volatile static JdbcPushDownConnectionManager manager = null;
 
     static JdbcPushDownConnectionManager getConnectionManager() throws ClassNotFoundException {
         if (manager == null) {
