@@ -99,6 +99,20 @@ public class MultipleDictionaryValueEnumeratorTest {
         assertArrayEquals(new Integer[]{0, 1, 2, 6, 7, 8}, values);
     }
 
+    @Test
+    public void testUnorderedDicts() throws IOException {
+        List<DictionaryInfo> dictionaryInfoList = new ArrayList<>(3);
+        dictionaryInfoList.add(createDictInfo(new int[]{0, 1, 6}));
+        dictionaryInfoList.add(createDictInfo(new int[]{3, 7, 8}));
+        dictionaryInfoList.add(createDictInfo(new int[]{2, 7, 9}));
+        Integer[] values = enumerateDictInfoList(dictionaryInfoList);
+        assertEquals(9, values.length);
+        assertArrayEquals(new Integer[]{0, 1, 2, 3, 6, 7, 7, 8, 9}, values);
+    }
+
+
+
+
     public static class MockDictionary extends Dictionary<String> {
         private static final long serialVersionUID = 1L;
         
