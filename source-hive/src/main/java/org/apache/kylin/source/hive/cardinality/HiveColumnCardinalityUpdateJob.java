@@ -122,11 +122,11 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
             tableExt.setCardinality(scardi);
             metaMgr.saveTableExt(tableExt, prj);
         } else {
+            // it gets here when ColumnCardinalityReducer output no record, which means empty table
             MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-            TableExtDesc tableExt = metaMgr.getTableExt(tableName);
+            TableExtDesc tableExt = metaMgr.getTableExt(tableName, prj);
             tableExt.resetCardinality();
-            metaMgr.saveTableExt(tableExt);		
-            throw new IllegalArgumentException("No cardinality data is collected for table " + tableName);
+            metaMgr.saveTableExt(tableExt, prj);
         }
     }
 
