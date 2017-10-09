@@ -28,10 +28,10 @@ KylinApp.controller('streamingConfigCtrl', function ($scope,StreamingService, $q
   }
 
   if($scope.state.mode=='edit'&& $scope.state.target=='kfkConfig' && $scope.state.tableName){
-    StreamingService.getConfig({table:$scope.state.tableName}, function (configs) {
+    StreamingService.getConfig({table:$scope.state.tableName, project: ProjectModel.selectedProject}, function (configs) {
       if(!!configs[0]&&configs[0].name.toUpperCase() == $scope.state.tableName.toUpperCase()){
         $scope.updateStreamingMeta(configs[0]);
-        StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
+        StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name, project: ProjectModel.selectedProject}, function (streamings) {
           if(!!streamings[0]&&streamings[0].name.toUpperCase() == $scope.state.tableName.toUpperCase()){
             $scope.updateKafkaMeta(streamings[0]);
           }
@@ -121,10 +121,10 @@ KylinApp.controller('streamingConfigCtrl', function ($scope,StreamingService, $q
     var streamingName = table.database+"."+table.name;
     $scope.streamingMeta = {};
     $scope.kafkaMeta = {};
-    StreamingService.getConfig({table:streamingName}, function (configs) {
+    StreamingService.getConfig({table:streamingName, project: ProjectModel.selectedProject}, function (configs) {
       if(!!configs[0]&&configs[0].name.toUpperCase() == streamingName.toUpperCase()){
         $scope.streamingMeta = configs[0];
-        StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
+        StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name, project: ProjectModel.selectedProject}, function (streamings) {
           if(!!streamings[0]&&streamings[0].name.toUpperCase() == streamingName.toUpperCase()){
             $scope.kafkaMeta = streamings[0];
           }
