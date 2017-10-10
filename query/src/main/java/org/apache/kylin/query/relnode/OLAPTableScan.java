@@ -25,6 +25,7 @@ import java.util.Stack;
 
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
+import org.apache.calcite.adapter.enumerable.JavaRowFormat;
 import org.apache.calcite.adapter.enumerable.PhysType;
 import org.apache.calcite.adapter.enumerable.PhysTypeImpl;
 import org.apache.calcite.linq4j.tree.Blocks;
@@ -334,7 +335,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         context.setReturnTupleInfo(rowType, columnRowType);
         String execFunction = genExecFunc();
 
-        PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), this.rowType, pref.preferArray());
+        PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), JavaRowFormat.ARRAY);
         MethodCallExpression exprCall = Expressions.call(table.getExpression(OLAPTable.class), execFunction,
                 implementor.getRootExpression(), Expressions.constant(context.id));
         return implementor.result(physType, Blocks.toBlock(exprCall));
