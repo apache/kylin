@@ -27,10 +27,11 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 
-import org.apache.commons.lang3.tuple.Pair;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.EmailTemplateEnum;
 import org.apache.kylin.common.util.EmailTemplateFactory;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -251,7 +252,7 @@ public class CubingJob extends DefaultChainedExecutable {
                 .buildEmailContent(ExecutableStateUtil.getEmailTemplateEnum(state), dataMap);
         String title = EmailTemplateFactory.getEmailTitle("JOB", state.toString(), getDeployEnvName(), getProjectName(),
                 cubeInstance.getName());
-        return Pair.of(title, content);
+        return Pair.newPair(title, content);
     }
 
     @Override

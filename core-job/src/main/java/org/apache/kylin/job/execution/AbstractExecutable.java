@@ -28,12 +28,12 @@ import java.util.regex.Matcher;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.EmailTemplateEnum;
 import org.apache.kylin.common.util.EmailTemplateFactory;
 import org.apache.kylin.common.util.MailService;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
@@ -346,7 +346,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         logger.info("job name:" + getName());
         logger.info("submitter:" + getSubmitter());
         logger.info("notify list:" + users);
-        new MailService(kylinConfig).sendMail(users, email.getLeft(), email.getRight());
+        new MailService(kylinConfig).sendMail(users, email.getFirst(), email.getSecond());
     }
 
     protected void sendMail(Pair<String, String> email) {
