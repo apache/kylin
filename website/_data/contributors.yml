@@ -121,12 +121,32 @@
   org: 
   role: committer
 - name: Yanghong Zhong (钟阳红)
-  apacheId: 
+  apacheId: nju_yaho
   githubId: kyotoYaho
   org: eBay
   role: committer
 - name: Billy Liu (刘一鸣)
   apacheId: billyliu
   githubId: yiming187
+  org: Kyligence Inc.
+  role: committer
+- name: Kaisen Kang (康凯森)
+  apacheId: kangkaisen
+  githubId: kangkaisen
+  org: Meituan
+  role: committer
+- name: Alberto Ramón
+  apacheId: alb
+  githubId: albertoRamon
+  org: 
+  role: committer
+- name: Roger Shi (施继承)
+  apacheId: sjc
+  githubId: rogercloud
+  org: Kyligence Inc.
+  role: committer
+- name: Zhixiong Chen (陈志雄)
+  apacheId: chen
+  githubId: chenzhx
   org: Kyligence Inc.
   role: committer
