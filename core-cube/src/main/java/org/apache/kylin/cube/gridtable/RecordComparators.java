@@ -25,15 +25,27 @@ public class RecordComparators {
 
     public static RecordComparator getRangeStartComparator(final IGTComparator comp) {
         return new RecordComparator(new ComparatorEx<ByteArray>() {
+            boolean isMinNull(byte[] array) {
+                if (array == null) {
+                    return true;
+                }
+                for (int i = 0; i < array.length; i++) {
+                    if (array[i] != 0) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
             @Override
             public int compare(ByteArray a, ByteArray b) {
-                if (a.array() == null) {
-                    if (b.array() == null) {
+                if (isMinNull(a.array())) {
+                    if (isMinNull(b.array())) {
                         return 0;
                     } else {
                         return -1;
                     }
-                } else if (b.array() == null) {
+                } else if (isMinNull(b.array())) {
                     return 1;
                 } else {
                     return comp.compare(a, b);
