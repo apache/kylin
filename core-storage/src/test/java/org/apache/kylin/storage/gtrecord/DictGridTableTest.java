@@ -81,6 +81,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     private CompareTupleFilter timeComp4;
     private CompareTupleFilter timeComp5;
     private CompareTupleFilter timeComp6;
+    private CompareTupleFilter timeComp7;
     private CompareTupleFilter ageComp1;
     private CompareTupleFilter ageComp2;
     private CompareTupleFilter ageComp3;
@@ -107,6 +108,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         timeComp4 = compare(info.colRef(0), FilterOperatorEnum.EQ, enc(info, 0, "2015-01-15"));
         timeComp5 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-15"));
         timeComp6 = compare(info.colRef(0), FilterOperatorEnum.EQ, enc(info, 0, "2015-01-14"));
+        timeComp7 = compare(info.colRef(0), FilterOperatorEnum.EQ, enc(info, 0, "1970-01-01"));
         ageComp1 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "10"));
         ageComp2 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "20"));
         ageComp3 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "30"));
@@ -163,6 +165,12 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
             assertEquals("[1421193600000, 10]-[null, 10]", r.get(0).toString());
             assertEquals("[[null, 10, null, null, null], [1421193600000, 10, null, null, null]]",
                     r.get(0).fuzzyKeys.toString());
+        }
+        {
+            LogicalTupleFilter filter = or(and(timeComp3, ageComp3), and(timeComp7, ageComp1));
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, null, null, filter);
+            List<GTScanRange> r = planner.planScanRanges();
+            assertEquals("[[0, 10]-[1421280000000, 30]]", r.toString());
         }
         {
             LogicalTupleFilter filter = or(timeComp2, timeComp1, timeComp6);
