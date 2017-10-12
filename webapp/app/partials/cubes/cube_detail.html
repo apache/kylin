@@ -29,10 +29,10 @@
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">
             <a href="" ng-click="cube.visiblePage='json';">JSON(Cube)</a>
         </li>
-        <li class="{{cube.visiblePage=='access'? 'active':''}}"
-            ng-if="!kylinConfig.isExternalAclEnabled()">
-            <a href="" ng-click="cube.visiblePage='access';listAccess(cube, 'CubeInstance');">Access</a>
-        </li>
+        <!--<li class="{{cube.visiblePage=='access'? 'active':''}}"-->
+            <!--ng-if="!kylinConfig.isExternalAclEnabled()">-->
+            <!--<a href="" ng-click="cube.visiblePage='access';listAccess(cube, 'CubeInstance');">Access</a>-->
+        <!--</li>-->
         <li class="{{cube.visiblePage=='notification'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">
             <a href="" ng-click="cube.visiblePage='notification';getNotifyListString(cube);">Notification</a>
@@ -69,15 +69,15 @@
     <!--<div ng-show="cube.visiblePage=='graph'" id="cube_graph_{{cube.name}}" class="cube-detail cube_graph">-->
     <!--</div>-->
 
-    <div class="cube-detail" ng-if="cube.visiblePage=='access'">
-        <div class="row">
-            <div class="col-xs-1"></div>
-            <div class="col-xs-10">
-                <div ng-include src="'partials/common/access.html'" ng-init="entity=cube;type='CubeInstance';"></div>
-            </div>
-            <div class="col-xs-1"></div>
-        </div>
-    </div>
+    <!--<div class="cube-detail" ng-if="cube.visiblePage=='access'">-->
+        <!--<div class="row">-->
+            <!--<div class="col-xs-1"></div>-->
+            <!--<div class="col-xs-10">-->
+                <!--<div ng-include src="'partials/common/access.html'" ng-init="entity=cube;type='CubeInstance';"></div>-->
+            <!--</div>-->
+            <!--<div class="col-xs-1"></div>-->
+        <!--</div>-->
+    <!--</div>-->
 
     <div class="cube-detail" ng-show="cube.visiblePage=='notification'">
         <div style="margin: 15px;">
