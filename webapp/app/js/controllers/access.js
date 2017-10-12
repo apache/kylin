@@ -21,11 +21,11 @@
 KylinApp.controller('AccessCtrl', function ($scope, AccessService, MessageService, AuthenticationService, SweetAlert) {
 
   $scope.accessTooltip = "<div style='text-align: left'>" +
-  "<label>What does access mean to cube?</label>" +
-  "<ul><li>CUBE QUERY: Access to query cube</li>" +
-  "<li>CUBE OPERATION: Access to rebuild, resume and cancel jobs. Also include access of CUBE QUERY.</li>" +
-  "<li>CUBE MANAGEMENT: Access to edit/delete cube. Also include access of CUBE OPERATION.</li>" +
-  "<li>CUBE ADMIN: Full access to cube and jobs, including access management.</li></ul></div>";
+  "<label>What does access mean to project?</label>" +
+  "<ul><li>QUERY: Access to query cube</li>" +
+  "<li>OPERATION: Access to rebuild, resume and cancel jobs. Also include access of CUBE QUERY.</li>" +
+  "<li>MANAGEMENT: Access to edit/delete cube. Also include access of CUBE OPERATION.</li>" +
+  "<li>ADMIN: Full access to cube and jobs, including access management.</li></ul></div>";
 
   $scope.authorities = null;
   AuthenticationService.authorities({}, function (authorities) {
