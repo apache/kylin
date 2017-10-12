@@ -19,24 +19,15 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-import org.apache.kylin.common.util.Dictionary;
-import org.apache.kylin.cube.cuboid.CuboidScheduler;
-import org.apache.kylin.cube.inmemcubing.AbstractInMemCubeBuilder;
-import org.apache.kylin.cube.inmemcubing.DoggedCubeBuilder;
+import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
 import org.apache.kylin.cube.inmemcubing.InputConverterUnit;
 import org.apache.kylin.cube.inmemcubing.InputConverterUnitForRawData;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.MRUtil;
-import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class InMemCuboidMapper<KEYIN>
         extends InMemCuboidMapperBase<KEYIN, Object, ByteArrayWritable, ByteArrayWritable, String[]> {
@@ -63,15 +54,7 @@ public class InMemCuboidMapper<KEYIN>
     }
 
     @Override
-    protected Future getCubingThreadFuture(Context context, Map<TblColRef, Dictionary<String>> dictionaryMap,
-            int reserveMemoryMB, CuboidScheduler cuboidScheduler) {
-        AbstractInMemCubeBuilder cubeBuilder = new DoggedCubeBuilder(cuboidScheduler, flatDesc, dictionaryMap);
-        cubeBuilder.setReserveMemoryMB(reserveMemoryMB);
-        cubeBuilder.setConcurrentThreads(taskThreadCount);
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor(
-                new ThreadFactoryBuilder().setDaemon(true).setNameFormat("inmemory-cube-building-mapper-%d").build());
-        return executorService.submit(cubeBuilder.buildAsRunnable(queue, inputConverterUnit,
-                new MapContextGTRecordWriter(context, cubeDesc, cubeSegment)));
+    protected ICuboidWriter getCuboidWriter(Context context) {
+        return new MapContextGTRecordWriter(context, cubeDesc, cubeSegment);
     }
 }

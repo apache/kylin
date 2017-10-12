@@ -32,6 +32,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -98,6 +99,11 @@ public class ITDoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
     class NoopWriter implements ICuboidWriter {
         @Override
         public void write(long cuboidId, GTRecord record) throws IOException {
+        }
+
+        @Override
+        public void write(long cuboidId, GridTable table) throws IOException {
+
         }
 
         @Override

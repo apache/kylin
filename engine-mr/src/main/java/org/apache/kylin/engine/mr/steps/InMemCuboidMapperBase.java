@@ -21,10 +21,13 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
@@ -33,7 +36,10 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
+import org.apache.kylin.cube.inmemcubing.AbstractInMemCubeBuilder;
 import org.apache.kylin.cube.inmemcubing.ConsumeBlockingQueueController;
+import org.apache.kylin.cube.inmemcubing.DoggedCubeBuilder;
+import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
 import org.apache.kylin.cube.inmemcubing.InputConverterUnit;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
@@ -74,10 +80,9 @@ public abstract class InMemCuboidMapperBase<KEYIN, VALUEIN, KEYOUT, VALUEOUT, T>
 
     protected abstract InputConverterUnit<T> getInputConverterUnit(Context context);
 
-    protected abstract Future getCubingThreadFuture(Context context, Map<TblColRef, Dictionary<String>> dictionaryMap,
-            int reserveMemoryMB, CuboidScheduler cuboidScheduler);
-
     protected abstract T getRecordFromKeyValue(KEYIN key, VALUEIN value);
+
+    protected abstract ICuboidWriter getCuboidWriter(Context context);
 
     @Override
     protected void doSetup(Context context) throws IOException {
@@ -106,7 +111,24 @@ public abstract class InMemCuboidMapperBase<KEYIN, VALUEIN, KEYOUT, VALUEOUT, T>
         taskThreadCount = config.getCubeAlgorithmInMemConcurrentThreads();
         reserveMemoryMB = calculateReserveMB(conf);
         inputConverterUnit = getInputConverterUnit(context);
-        future = getCubingThreadFuture(context, dictionaryMap, reserveMemoryMB, cuboidScheduler);
+
+        AbstractInMemCubeBuilder cubeBuilder;
+        try {
+            cubeBuilder = (AbstractInMemCubeBuilder) Class.forName(cubeSegment.getConfig().getCubeInMemBuilderClass())
+                    .getConstructor(CuboidScheduler.class, IJoinedFlatTableDesc.class, Map.class)
+                    .newInstance(cuboidScheduler, flatDesc, dictionaryMap);
+        } catch (Exception e) {
+            logger.warn("Fail to initialize cube builder by class name "
+                    + cubeSegment.getConfig().getCubeInMemBuilderClass() + " due to " + e);
+            cubeBuilder = new DoggedCubeBuilder(cuboidScheduler, flatDesc, dictionaryMap);
+        }
+        cubeBuilder.setReserveMemoryMB(reserveMemoryMB);
+        cubeBuilder.setConcurrentThreads(taskThreadCount);
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor(
+                new ThreadFactoryBuilder().setDaemon(true).setNameFormat("inmemory-cube-building-mapper-%d").build());
+        future = executorService
+                .submit(cubeBuilder.buildAsRunnable(queue, inputConverterUnit, getCuboidWriter(context)));
     }
 
     private int calculateReserveMB(Configuration configuration) {

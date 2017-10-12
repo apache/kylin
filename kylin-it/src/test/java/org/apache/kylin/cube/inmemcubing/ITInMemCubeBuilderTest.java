@@ -45,6 +45,7 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
@@ -273,6 +274,12 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         public void write(long cuboidId, GTRecord record) throws IOException {
             if (verbose)
                 System.out.println(record.toString());
+        }
+
+        @Override
+        public void write(long cuboidId, GridTable table) throws IOException {
+            if (verbose)
+                System.out.println(table.toString());
         }
 
         @Override
