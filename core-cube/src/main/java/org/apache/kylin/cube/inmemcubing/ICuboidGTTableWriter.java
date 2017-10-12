@@ -16,51 +16,32 @@
  * limitations under the License.
 */
 
+
 package org.apache.kylin.cube.inmemcubing;
 
 import java.io.IOException;
 
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.GridTable;
+import org.apache.kylin.gridtable.IGTScanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- */
-public class CompoundCuboidWriter implements ICuboidWriter {
-
-    private Iterable<ICuboidWriter> cuboidWriters;
-
-    public CompoundCuboidWriter(Iterable<ICuboidWriter> cuboidWriters) {
-        this.cuboidWriters = cuboidWriters;
-
-    }
-
-    @Override
-    public void write(long cuboidId, GTRecord record) throws IOException {
-        for (ICuboidWriter writer : cuboidWriters) {
-            writer.write(cuboidId, record);
-        }
-    }
+public abstract class ICuboidGTTableWriter implements ICuboidWriter{
+    
+    private static Logger logger = LoggerFactory.getLogger(ICuboidGTTableWriter.class);
     
     @Override
-    public void write(long cuboidId, GridTable table) throws IOException {
-        for (ICuboidWriter writer : cuboidWriters) {
-            writer.write(cuboidId, table);
+    public void write(long cuboidId, GridTable gridTable) throws IOException {
+        long startTime = System.currentTimeMillis();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(gridTable.getInfo()).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest();
+        IGTScanner scanner = gridTable.scan(req);
+        for (GTRecord record : scanner) {
+            write(cuboidId, record);
         }
-    }
-
-    @Override
-    public void flush() throws IOException {
-        for (ICuboidWriter writer : cuboidWriters) {
-            writer.flush();
-        }
-
-    }
-
-    @Override
-    public void close() throws IOException {
-        for (ICuboidWriter writer : cuboidWriters) {
-            writer.close();
-        }
-
+        scanner.close();
+        logger.info("Cuboid " + cuboidId + " output takes " + (System.currentTimeMillis() - startTime) + "ms");
     }
 }

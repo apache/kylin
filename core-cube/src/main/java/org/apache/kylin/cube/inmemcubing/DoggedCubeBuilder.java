@@ -24,9 +24,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.PriorityQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentNavigableMap;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Dictionary;
@@ -181,7 +181,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
         final RecordConsumeBlockingQueueController<?> inputController;
         final InMemCubeBuilder builder;
 
-        ConcurrentNavigableMap<Long, CuboidResult> buildResult;
+        NavigableMap<Long, CuboidResult> buildResult;
         RuntimeException exception;
 
         public SplitThread(final int num, final RecordConsumeBlockingQueueController<?> inputController) {

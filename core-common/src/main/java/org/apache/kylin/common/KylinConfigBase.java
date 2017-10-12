@@ -808,6 +808,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.job.cube-auto-ready-enabled", TRUE));
     }
 
+    public String getCubeInMemBuilderClass() {
+        return getOptional("kylin.job.cube-inmem-builder-class", "org.apache.kylin.cube.inmemcubing.DoggedCubeBuilder");
+    }
+
     // ============================================================================
     // SOURCE.HIVE
     // ============================================================================
