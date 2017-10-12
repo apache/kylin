@@ -245,6 +245,18 @@ abstract public class KylinConfigBase implements Serializable {
         throw new RuntimeException("Please set 'kylin.env.zookeeper-connect-string' in kylin.properties");
     }
 
+    public boolean isZookeeperAclEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.env.zookeeper-acl-enabled", "false"));
+    }
+
+    public String getZKAuths() {
+        return getOptional("kylin.env.zookeeper.zk-auth", "digest:ADMIN:KYLIN");
+    }
+
+    public String getZKAcls() {
+        return getOptional("kylin.env.zookeeper.zk-acl", "world:anyone:rwcda");
+    }
+
     // ============================================================================
     // METADATA
     // ============================================================================
