@@ -80,6 +80,12 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             intercept.intercept(contexts);
         }
 
+        if (System.getProperty("calcite.debug") != null) {
+            String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
+            System.out.println("EXECUTION PLAN AFTER OLAPCONTEXT IS SET");
+            System.out.println(dumpPlan);
+        }
+
         RealizationChooser.selectRealization(contexts);
 
         doAccessControl(contexts);

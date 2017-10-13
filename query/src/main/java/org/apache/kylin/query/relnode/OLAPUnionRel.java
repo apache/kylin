@@ -69,9 +69,12 @@ public class OLAPUnionRel extends Union implements OLAPRel {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).itemIf("all", all, true);
-    }
+        boolean contextNotNull = context != null;
 
+        return super.explainTerms(pw)
+                .item("ctx", context == null ? "" : String.valueOf(context.id) + "@" + context.realization)
+                .itemIf("all", all, true);
+    }
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
         // Always create new OlapContext to combine columns from all children contexts.
