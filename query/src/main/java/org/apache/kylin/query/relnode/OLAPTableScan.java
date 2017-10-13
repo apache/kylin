@@ -203,7 +203,10 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("fields", Primitive.asList(fields));
+
+        return super.explainTerms(pw)
+                .item("ctx", context == null ? "" : String.valueOf(context.id) + "@" + context.realization)
+                .item("fields", Primitive.asList(fields));
     }
 
     @Override

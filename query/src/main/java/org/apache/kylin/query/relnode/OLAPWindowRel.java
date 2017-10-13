@@ -65,7 +65,9 @@ public class OLAPWindowRel extends Window implements OLAPRel {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw) //
+
+        return super.explainTerms(pw)
+                .item("ctx", context == null ? "" : String.valueOf(context.id) + "@" + context.realization)//
                 .itemIf("constants", constants, !constants.isEmpty()) //
                 .itemIf("groups", groups, !groups.isEmpty());
     }

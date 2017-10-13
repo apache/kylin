@@ -31,6 +31,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexNode;
@@ -147,4 +148,9 @@ public class OLAPSortRel extends Sort implements OLAPRel {
         return oldTraitSet;
     }
 
+    @Override
+    public RelWriter explainTerms(RelWriter pw) {
+        return super.explainTerms(pw).item("ctx",
+                context == null ? "" : String.valueOf(context.id) + "@" + context.realization);
+    }
 }
