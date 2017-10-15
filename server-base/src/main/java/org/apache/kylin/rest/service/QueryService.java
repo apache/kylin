@@ -910,6 +910,10 @@ public class QueryService extends BasicService {
 
                     RelDataTypeField field = fieldList.get(i);
                     String columnName = field.getKey();
+
+                    if (columnName.startsWith("_KY_")) {
+                        continue;
+                    }
                     BasicSqlType basicSqlType = (BasicSqlType) field.getValue();
 
                     columnMetas.add(new SelectedColumnMeta(false, config.caseSensitive(), false, false,
