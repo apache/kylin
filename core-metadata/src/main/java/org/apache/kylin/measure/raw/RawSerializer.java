@@ -90,8 +90,7 @@ public class RawSerializer extends DataTypeSerializer<List<ByteArray>> {
 
     @Override
     public List<ByteArray> deserialize(ByteBuffer in) {
-        List<ByteArray> values = current();
-        values.clear();
+        List<ByteArray> values = new ArrayList<>();
         int size = BytesUtil.readVInt(in);
         if (size >= 0) {
             for (int i = 0; i < size; i++) {

@@ -68,7 +68,7 @@ public class PercentileSerializer extends DataTypeSerializer<PercentileCounter> 
 
     @Override
     public PercentileCounter deserialize(ByteBuffer in) {
-        PercentileCounter counter = current();
+        PercentileCounter counter = new PercentileCounter(compression);
         counter.readRegisters(in);
         return counter;
     }
