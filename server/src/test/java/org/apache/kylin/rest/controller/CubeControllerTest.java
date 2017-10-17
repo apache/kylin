@@ -124,7 +124,7 @@ public class CubeControllerTest extends ServiceTestBase {
         List<CubeInstanceResponse> cubeInstances = cubeController.getCubes(newCubeName, cube.getModelName(), "default",
                 1, 0);
 
-        CubeInstance cubeInstance = cubeInstances.get(0);
+        CubeInstance cubeInstance = cubeController.getCube(cubeInstances.get(0).getName());
         Assert.assertTrue(cubeInstance.getDescriptor().getNotifyList().contains("john@example.com"));
         Assert.assertTrue(cubeInstance.getCost() == 80);
         cubeController.deleteCube(newCubeName);
