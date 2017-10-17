@@ -42,6 +42,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -55,6 +56,7 @@ import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
+import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.security.AclPermission;
@@ -69,6 +71,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
@@ -446,7 +449,7 @@ public class CubeService extends BasicService implements InitializingBean {
         if ("hbase".equals(getConfig().getMetadataUrl().getScheme())) {
             try {
                 logger.debug("Loading HTable info " + cubeName + ", " + tableName);
-                
+
                 // use reflection to isolate NoClassDef errors when HBase is not available
                 hr = (HBaseResponse) Class.forName("org.apache.kylin.rest.service.HBaseInfoUtil")//
                         .getMethod("getHBaseInfo", new Class[] { String.class, KylinConfig.class })//
@@ -458,6 +461,28 @@ public class CubeService extends BasicService implements InitializingBean {
 
         htableInfoCache.put(key, hr);
         return hr;
+    }
+
+    public CubeInstanceResponse createCubeInstanceResponse(CubeInstance cube) {
+        Preconditions.checkState(!cube.getDescriptor().isDraft());
+
+        CubeInstanceResponse r = new CubeInstanceResponse(cube);
+
+        CubeDesc cubeDesc = cube.getDescriptor();
+        DataModelDesc modelDesc = cubeDesc.getModel();
+        r.setModel(cubeDesc.getModelName());
+        r.setLastModified(cubeDesc.getLastModified());
+        r.setPartitionDateStart(cubeDesc.getPartitionDateStart());
+        // cuz model doesn't have a state the label a model is broken,
+        // so in some case the model can not be loaded due to some check failed,
+        // but the cube in this model can still be loaded.
+        if (modelDesc != null) {
+            r.setPartitionDateColumn(modelDesc.getPartitionDesc().getPartitionDateColumn());
+            r.setIs_streaming(modelDesc.getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
+        }
+        r.setProject(cube.getProject());
+
+        return r;
     }
 
     public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException {

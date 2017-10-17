@@ -52,6 +52,7 @@ import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.request.JobBuildRequest2;
+import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
@@ -109,26 +110,34 @@ public class CubeController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName,
+    public List<CubeInstanceResponse> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName,
             @RequestParam(value = "modelName", required = false) String modelName,
             @RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", required = false) Integer offset) {
-        List<CubeInstance> cubes;
-        cubes = cubeService.listAllCubes(cubeName, projectName, modelName, true);
+        List<CubeInstance> cubes = cubeService.listAllCubes(cubeName, projectName, modelName, true);
 
-        int climit = (null == limit) ? cubes.size() : limit;
+        List<CubeInstanceResponse> response = Lists.newArrayListWithExpectedSize(cubes.size());
+        for (CubeInstance cube : cubes) {
+            try {
+                response.add(cubeService.createCubeInstanceResponse(cube));
+            } catch (Exception e) {
+                logger.error("Error creating cube instance response, skipping.", e);
+            }
+        }
+
+        int climit = (null == limit) ? response.size() : limit;
         int coffset = (null == offset) ? 0 : offset;
 
-        if (cubes.size() <= coffset) {
+        if (response.size() <= coffset) {
             return Collections.emptyList();
         }
 
-        if ((cubes.size() - coffset) < climit) {
-            return cubes.subList(coffset, cubes.size());
+        if ((response.size() - coffset) < climit) {
+            return response.subList(coffset, response.size());
         }
 
-        return cubes.subList(coffset, coffset + climit);
+        return response.subList(coffset, coffset + climit);
     }
 
     @RequestMapping(value = "validEncodings", method = { RequestMethod.GET }, produces = { "application/json" })
@@ -280,7 +289,7 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest req) {
-        return buildInternal(cubeName, new TSRange(req.getStartTime(), req.getEndTime()), null, null, null, 
+        return buildInternal(cubeName, new TSRange(req.getStartTime(), req.getEndTime()), null, null, null,
                 req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment());
     }
 
@@ -746,5 +755,4 @@ public class CubeController extends BasicController {
     public void setJobService(JobService jobService) {
         this.jobService = jobService;
     }
-
 }

@@ -18,10 +18,18 @@
 
 package org.apache.kylin.rest.controller;
 
+import static junit.framework.TestCase.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
+import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermissionType;
 import org.apache.kylin.rest.service.AccessService;
@@ -37,13 +45,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.io.IOException;
-import java.util.List;
-
-import static junit.framework.TestCase.fail;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author xduo
@@ -88,7 +89,8 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
     @Test
     public void testBasics() throws IOException {
         swichToAdmin();
-        List<AccessEntryResponse> aes = accessController.getAccessEntities(CUBE_INSTANCE, "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
+        List<AccessEntryResponse> aes = accessController.getAccessEntities(CUBE_INSTANCE,
+                "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
         Assert.assertTrue(aes.size() == 0);
 
         AccessRequest accessRequest = getAccessRequest(MODELER, ADMINISTRATION);
@@ -151,7 +153,7 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
     @Test
     public void testAuthInCubeLevel() throws Exception {
         swichToAdmin();
-        List<CubeInstance> cubes = cubeController.getCubes(null, null, null, 100000, 0);
+        List<CubeInstanceResponse> cubes = cubeController.getCubes(null, null, null, 100000, 0);
         assertTrue(cubes.size() > 0);
         CubeInstance cube = cubes.get(0);
         swichToAnalyst();
@@ -173,7 +175,8 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         }
         swichToAdmin();
         List<ProjectInstance> projects = projectController.getProjects(10000, 0);
-        List<AccessEntryResponse> aes = accessController.grant(PROJECT_INSTANCE, projects.get(0).getUuid(), accessRequest);
+        List<AccessEntryResponse> aes = accessController.grant(PROJECT_INSTANCE, projects.get(0).getUuid(),
+                accessRequest);
         Assert.assertTrue(aes.size() == 1);
         swichToAnalyst();
         cubes = cubeController.getCubes(null, null, "default", 100000, 0);
