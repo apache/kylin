@@ -160,11 +160,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     });
 
-    // ~ public methods
-    $scope.filterProj = function(project){
-        return $scope.userService.hasRole('ROLE_ADMIN') || $scope.hasPermission(project,$scope.permissions.ADMINISTRATION.mask);
-    };
-
 
     $scope.removeElement = function (arr, element) {
         var index = arr.indexOf(element);
