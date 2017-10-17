@@ -19,7 +19,7 @@
 <div ng-controller="AccessCtrl">
     <div class="space-4"></div>
     <div class="pull-right">
-        <button class="btn btn-primary btn-xs" ng-click="renewAccess(entity)" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(entity, 16) && !newAccess"><i
+        <button class="btn btn-primary btn-xs" ng-click="renewAccess(entity)" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, 16) && !newAccess"><i
                 class="fa fa-plus"></i> Grant
         </button>
         <button class="btn btn-primary btn-xs" ng-click="resetNewAcess()" ng-if="newAccess"><i
@@ -72,8 +72,8 @@
                 <th>Name</th>
                 <th>Type</th>
                 <th>Access</th>
-                <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(entity, 16)">Update</th>
-                <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(entity, 16)">Revoke</th>
+                <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, 16)">Update</th>
+                <th ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, 16)">Revoke</th>
             </tr>
         </thead>
         <tbody>
@@ -92,7 +92,7 @@
                     <span ng-if="accessEntity.permission.mask == 64">CUBE OPERATION</span>
                     <span ng-if="accessEntity.permission.mask == 16">CUBE ADMIN</span>
                 </td>
-                <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(entity, 16)">
+                <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, 16)">
                     <select ng-model="accessEntity.newPermission"  ng-init="newAccess.permission=permissions.READ.value"
                             ng-options="permission.value as permission.name for (name, permission) in permissions">
                         <option value="">-- select access --</option>
@@ -101,7 +101,7 @@
                             ng-click="update(type, entity, accessEntity, accessEntity.newPermission)">Update
                     </button>
                 </td>
-                <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(entity, 16)">
+                <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, 16)">
                     <button class="btn btn-default btn-xs" ng-click="revoke(type, accessEntity, entity)">Revoke</button>
                 </td>
             </tr>

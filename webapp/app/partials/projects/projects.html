@@ -58,10 +58,10 @@
                 <td>{{ project.create_time_utc | utcToConfigTimeZone}}</td>
                 <td>
                     <button class="btn btn-xs btn-info" ng-click="toEdit(project)" tooltip="Edit"
-                            ng-disabled="!(userService.hasRole('ROLE_ADMIN') || hasPermission(project, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">
+                            ng-disabled="!(userService.hasRole('ROLE_ADMIN') || hasPermission('project',project, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">
                         <i class="fa fa-pencil"></i></button>
                     <button class="btn btn-xs btn-danger" ng-click="delete(project)" tooltip="Delete"
-                            ng-disabled="!(userService.hasRole('ROLE_ADMIN') || hasPermission(project, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"
+                            ng-disabled="!(userService.hasRole('ROLE_ADMIN') || hasPermission('project',project, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"
                             ><i class="fa fa-trash-o"></i></button>
                 </td>
             </tr>
