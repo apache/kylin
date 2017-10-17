@@ -56,7 +56,7 @@ public class HLLCSerializer extends DataTypeSerializer<HLLCounter> {
 
     @Override
     public HLLCounter deserialize(ByteBuffer in) {
-        HLLCounter hllc = current();
+        HLLCounter hllc = new HLLCounter(precision);
         try {
             hllc.readRegisters(in);
         } catch (IOException e) {
