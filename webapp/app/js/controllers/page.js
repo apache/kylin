@@ -105,7 +105,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
     if (accessType === 'cube') {
       project = entity.project
     } else if (accessType === 'project') {
-      project = entity.name
+      project = entity && entity.name || entity.selectedProject
     } else if (accessType === 'model') {
       project =  ProjectModel.getProjectByCubeModel(entity.name)
     }

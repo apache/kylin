@@ -71,7 +71,7 @@
         </div>
         <div class="box-body">
             <p>
-                <a href="models/add" ng-if="userService.hasRole('ROLE_MODELER')">Click here to create your model</a>
+                <a href="models/add" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">Click here to create your model</a>
             </p>
         </div><!-- /.box-body -->
     </div>

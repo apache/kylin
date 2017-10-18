@@ -20,15 +20,15 @@
     <div class="row">
       <div class="col-xs-12" style="margin-top:10px;">
         <!--<i class="fa fa-plus fa-2x" style="color:green;"> New</i>-->
-        <a ng-if="userService.hasRole('ROLE_MODELER')" class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="true">
+        <a ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)" class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="true">
           <i class="fa fa-plus fa-2x" style="color:#2e8965;"> New<span class="caret"></span></i>
           <!--<i> New </i> <span class="caret"></span>-->
         </a>
         <ul class="dropdown-menu">
-          <li ng-if="userService.hasRole('ROLE_MODELER')">
-            <a href="models/add"><i class="fa fa-star"></i>New Model</a>
+           <li  ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
+             <a href="models/add"><i class="fa fa-star"></i>New Model</a>
           </li>
-          <li ng-if="userService.hasRole('ROLE_MODELER')">
+          <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
             <a href="cubes/add"><i class="fa fa-cube"></i>New Cube</a>
           </li>
 
@@ -52,7 +52,7 @@
                 <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" ng-click="listModelAccess(model)">
                   Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                 </button>
-                <ul class="dropdown-menu" role="menu" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('model',model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">
+                <ul class="dropdown-menu" role="menu" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('model',model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
                   <li><a ng-click="editModel(model, false)"  title="Edit Model" style="cursor:pointer;margin-right: 8px;" >Edit</a></li>
                   <li><a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" >Clone </a></li>
                   <li><a ng-click="dropModel(model)" title="Drop Model"  style="cursor:pointer;margin-right: 8px;">Drop</a></li>

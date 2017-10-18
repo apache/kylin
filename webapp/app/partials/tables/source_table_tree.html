@@ -25,9 +25,9 @@
         <!--button-->
         <div class="col-xs-5" style="padding-left: 0px;margin-top: 20px;">
             <div class="pull-right">
-              <a class="btn btn-xs btn-primary" tooltip="Load Hive Table"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openModal()"><i class="fa fa-download"></i></a>
-              <a class="btn btn-xs btn-info" tooltip="Load Hive Table From Tree"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openTreeModal()"><i class="fa fa-download"></i></a>
-              <a class="btn btn-xs btn-primary" tooltip="Add Streaming Table"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openStreamingSourceModal()"><i class="fa fa-area-chart"></i></a>
+              <a class="btn btn-xs btn-primary" tooltip="Load Hive Table"  ng-if="userService.hasRole('ROLE_ADMIN')|| hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)"  ng-click="openModal()"><i class="fa fa-download"></i></a>
+              <a class="btn btn-xs btn-info" tooltip="Load Hive Table From Tree"  ng-if="userService.hasRole('ROLE_ADMIN')|| hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)"  ng-click="openTreeModal()"><i class="fa fa-download"></i></a>
+              <a class="btn btn-xs btn-primary" tooltip="Add Streaming Table"  ng-if="userService.hasRole('ROLE_ADMIN')|| hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)"  ng-click="openStreamingSourceModal()"><i class="fa fa-area-chart"></i></a>
             </div>
         </div>
 
