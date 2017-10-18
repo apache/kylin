@@ -57,6 +57,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
@@ -452,7 +453,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
             logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            kylinConfig.setMetadataUrl(metaDir.getAbsolutePath());
+            Map<String, String> paramsMap = new HashMap<>();
+            paramsMap.put("path", metaDir.getAbsolutePath());
+            StorageURL storageURL = new StorageURL(kylinConfig.getMetadataUrl().getIdentifier(), "ifile", paramsMap);
+            kylinConfig.setMetadataUrl(storageURL.toString());
             return kylinConfig;
         } else {
             return KylinConfig.getInstanceFromEnv();
@@ -469,8 +473,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         logger.info("Ready to load KylinConfig from uri: {}", uri);
         KylinConfig config;
         FileSystem fs;
-        int cut = uri.indexOf('@');
-        String realHdfsPath = uri.substring(0, cut) + "/" + KylinConfig.KYLIN_CONF_PROPERTIES_FILE;
+        String realHdfsPath = StorageURL.valueOf(uri).getParameter("path") + "/" + KylinConfig.KYLIN_CONF_PROPERTIES_FILE;
         try {
             fs = HadoopUtil.getFileSystem(realHdfsPath);
             InputStream is = fs.open(new Path(realHdfsPath));

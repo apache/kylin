@@ -45,10 +45,14 @@ public class FileResourceStore extends ResourceStore {
 
     public FileResourceStore(KylinConfig kylinConfig) {
         super(kylinConfig);
-        root = new File(kylinConfig.getMetadataUrl().getIdentifier()).getAbsoluteFile();
+        root = new File(getPath(kylinConfig)).getAbsoluteFile();
         if (root.exists() == false)
             throw new IllegalArgumentException(
                     "File not exist by '" + kylinConfig.getMetadataUrl() + "': " + root.getAbsolutePath());
+    }
+
+    protected String getPath(KylinConfig kylinConfig) {
+        return kylinConfig.getMetadataUrl().getIdentifier();
     }
 
     @Override
