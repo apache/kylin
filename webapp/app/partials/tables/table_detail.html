@@ -19,8 +19,8 @@
 <div ng-controller="SourceMetaCtrl" class="nav-tabs-custom">
   <div class="col-xs-12" ng-show="tableModel.selectedSrcDb&&tableModel.selectedSrcTable.name">
     <h3 class="text-info">Table Schema:{{ tableModel.selectedSrcTable.name}}</h3>
-    <a class="btn btn-primary pull-right" ng-if="userService.hasRole('ROLE_ADMIN')" ng-click="unloadTable(tableModel.selectedSrcTable.database+'.'+tableModel.selectedSrcTable.name)" style="margin-left:10px;" ><span class="fa fa-remove"></span>&nbsp;Unload Table</a>
-    <a class="btn btn-success pull-right" ng-if="tableModel.selectedSrcTable.source_type==0&&userService.hasRole('ROLE_ADMIN')"  ng-click="reloadTable(tableModel.selectedSrcTable.database+'.'+tableModel.selectedSrcTable.name)" style="margin-left:10px;" ><span class="fa fa-download"></span>&nbsp;Reload Table</a>
+    <a class="btn btn-primary pull-right" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)" ng-click="unloadTable(tableModel.selectedSrcTable.database+'.'+tableModel.selectedSrcTable.name)" style="margin-left:10px;" ><span class="fa fa-remove"></span>&nbsp;Unload Table</a>
+    <a class="btn btn-success pull-right" ng-if="tableModel.selectedSrcTable.source_type==0&&(userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask))"  ng-click="reloadTable(tableModel.selectedSrcTable.database+'.'+tableModel.selectedSrcTable.name)" style="margin-left:10px;" ><span class="fa fa-download"></span>&nbsp;Reload Table</a>
     <div class="tabbable nav-tabs-custom">
       <ul class="nav nav-tabs">
         <li class="active">
@@ -185,7 +185,7 @@
       </div>
       <div class="box-body">
         <div>
-          <a tooltip="Load Hive Table" href="javascript:void(0);" ng-if="userService.hasRole('ROLE_MODELER')"
+          <a tooltip="Load Hive Table" href="javascript:void(0);" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)"
              ng-click="openModal()">Click here to load your hive table</a>
         </div>
       </div>
