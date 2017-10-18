@@ -864,8 +864,9 @@ public class QueryService extends BasicService {
                 r = PushDownUtil.tryPushDownSelectQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(),
                         sqlException);
             } catch (Exception e2) {
-                //exception in pushdown engine will be printed, but we'll not re-throw it, we'll 
-                logger.info("pushdown engine failed current query too", e2);
+                logger.error("pushdown engine failed current query too", e2);
+                //exception in pushdown, throw it instead of exception in calcite
+                throw e2;
             }
 
             if (r == null)
