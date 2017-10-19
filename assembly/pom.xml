@@ -193,10 +193,6 @@
                                     <shadedPattern>${shadeBase}.com.tdunning</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.fasterxml.jackson</pattern>
-                                    <shadedPattern>${shadeBase}.com.fasterxml.jackson</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>org.apache.commons.codec</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.codec</shadedPattern>
                                 </relocation>
@@ -211,6 +207,10 @@
                                 <relocation>
                                     <pattern>org.roaringbitmap</pattern>
                                     <shadedPattern>${shadeBase}.org.roaringbitmap</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.dbcp</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.dbcp</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
