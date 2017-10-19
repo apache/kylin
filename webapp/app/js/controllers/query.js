@@ -22,6 +22,7 @@ KylinApp
     .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService, SweetAlert, VdmUtil) {
         $scope.mainPanel = 'query';
         $scope.rowsPerPage = 50000;
+        $scope.hasLimit = true;
         $scope.base64 = $base64;
         $scope.queryString = "";
         $scope.queries = [];
@@ -111,8 +112,16 @@ KylinApp
         }
 
         $scope.checkLimit = function () {
-            if (!$scope.rowsPerPage) {
-                $scope.rowsPerPage = 50000;
+          if (!$scope.rowsPerPage) {
+            $scope.rowsPerPage = 50000;
+          }
+        }
+
+        $scope.changeLimit = function () {
+            if ($scope.hasLimit) {
+              $scope.rowsPerPage = 50000;
+            } else {
+              $scope.rowsPerPage = 0
             }
         }
 

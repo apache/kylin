@@ -67,8 +67,9 @@
                         </h4>
                     </div>
                     <div class="pull-right">
+                        <input type="checkbox" ng-model="hasLimit" ng-change="changeLimit()">
                         <label>LIMIT</label>
-                        <input type="text" style="width:100px;" class="inline form-control" ng-model="rowsPerPage" ng-pattern="/^\d+$/" ng-blur="checkLimit()" />
+                        <input type="text" style="width:100px;" class="inline form-control" ng-model="rowsPerPage" ng-pattern="/^\d+$/" ng-blur="checkLimit()" ng-disabled="!hasLimit" />
                         <button class="btn btn-sm btn-primary" ng-click="submitQuery()" ng-disabled="query_panel.$invalid">
                             Submit
                         </button>
