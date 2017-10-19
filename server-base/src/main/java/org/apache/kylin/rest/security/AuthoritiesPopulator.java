@@ -49,7 +49,7 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
      */
     public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole, String defaultRole) {
         super(contextSource, groupSearchBase);
-        this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole);
+        this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole.toUpperCase()); // spring will convert group names to uppercase by default
 
         String[] defaultRoles = StringUtils.split(defaultRole, ",");
         if (ArrayUtils.contains(defaultRoles, Constant.ROLE_MODELER)) {
