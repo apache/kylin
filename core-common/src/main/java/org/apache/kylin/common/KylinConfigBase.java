@@ -1295,9 +1295,9 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.valueOf(this.getOptional("kylin.restclient.connection.max-total", "200"));
     }
 
-    /**
-     * metric
-     */
+    // ============================================================================
+    // Metrics
+    // ============================================================================
     public String getCoadhaleMetricsReportClassesNames() {
         return getOptional("kylin.metrics.reporter-classes",
                 "org.apache.kylin.common.metrics.metrics2.JsonFileMetricsReporter,org.apache.kylin.common.metrics.metrics2.JmxMetricsReporter");
@@ -1315,4 +1315,8 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.metrics.perflogger-class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
     }
 
+    public String getMetricsActiveReservoirDefaultClass() {
+        return getOptional("kylin.metrics.active-reservoir-default-class",
+                "org.apache.kylin.metrics.lib.impl.StubReservoir");
+    }
 }
