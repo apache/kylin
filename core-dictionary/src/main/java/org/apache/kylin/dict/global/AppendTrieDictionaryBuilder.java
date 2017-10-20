@@ -278,7 +278,7 @@ public class AppendTrieDictionaryBuilder {
     }
 
     // Only used for test
-    void setMaxId(int id) {
+    public void setMaxId(int id) {
         this.maxId = id;
     }
 }

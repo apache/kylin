@@ -16,12 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.dict.global;
+package org.apache.kylin.dict;
 
 import static org.apache.kylin.dict.global.GlobalDictHDFSStore.V2_INDEX_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
@@ -44,14 +45,16 @@ import java.util.Random;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.dict.AppendTrieDictionary;
-import org.apache.kylin.dict.BytesConverter;
-import org.apache.kylin.dict.StringBytesConverter;
+import org.apache.kylin.dict.global.AppendDictSliceKey;
+import org.apache.kylin.dict.global.AppendTrieDictionaryBuilder;
+import org.apache.kylin.dict.global.GlobalDictHDFSStore;
+import org.apache.kylin.dict.global.GlobalDictMetadata;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -84,7 +87,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         }
     }
 
-    private static final String[] words = new String[] { "paint", "par", "part", "parts", "partition", "partitions", "party", "partie", "parties", "patient", "taste", "tar", "trie", "try", "tries", "字典", "字典树", "字母", // non-ascii characters
+    private static final String[] words = new String[]{"paint", "par", "part", "parts", "partition", "partitions", "party", "partie", "parties", "patient", "taste", "tar", "trie", "try", "tries", "字典", "字典树", "字母", // non-ascii characters
             "", // empty
             "paiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii", "paiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiipaiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
             "paintjkjdfklajkdljfkdsajklfjklsadjkjekjrklewjrklewjklrjklewjkljkljkljkljweklrjewkljrklewjrlkjewkljrkljkljkjlkjjkljkljkljkljlkjlkjlkjljdfadfads" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
@@ -92,10 +95,9 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
             "paint", "tar", "try", // some dup
     };
 
-    private AppendTrieDictionaryBuilder createBuilder(String resourceDir) throws IOException {
+    private AppendTrieDictionaryBuilder createBuilder() throws IOException {
         int maxEntriesPerSlice = KylinConfig.getInstanceFromEnv().getAppendDictEntrySize();
-        String baseDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict" + resourceDir +  "/";
-        return new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, true);
+        return new AppendTrieDictionaryBuilder(BASE_DIR, maxEntriesPerSlice, true);
     }
 
     @Test
@@ -148,7 +150,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
     @Ignore("need huge key set")
     @Test
     public void testHugeKeySet() throws IOException {
-        AppendTrieDictionaryBuilder builder = createBuilder(RESOURCE_DIR);
+        AppendTrieDictionaryBuilder builder = createBuilder();
 
         AppendTrieDictionary<String> dict = null;
 
@@ -178,7 +180,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         }
         BytesConverter converter = new StringBytesConverter();
 
-        AppendTrieDictionaryBuilder b = createBuilder(RESOURCE_DIR);
+        AppendTrieDictionaryBuilder b = createBuilder();
 
         TreeMap<Integer, String> checkMap = new TreeMap<>();
         int firstAppend = rnd.nextInt(strList.size() / 2);
@@ -201,7 +203,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         }
 
         // reopen dict and append
-        b = createBuilder(RESOURCE_DIR);
+        b = createBuilder();
 
         for (; appendIndex < secondAppend; appendIndex++) {
             b.addValue(strList.get(appendIndex));
@@ -226,7 +228,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         }
 
         // reopen dict and append rest str
-        b = createBuilder(RESOURCE_DIR);
+        b = createBuilder();
 
         for (; appendIndex < strList.size(); appendIndex++) {
             b.addValue(strList.get(appendIndex));
@@ -285,7 +287,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testMaxInteger() throws IOException {
-        AppendTrieDictionaryBuilder builder = createBuilder(RESOURCE_DIR);
+        AppendTrieDictionaryBuilder builder = createBuilder();
         builder.setMaxId(Integer.MAX_VALUE - 2);
         builder.addValue("a");
         builder.addValue("ab");
@@ -301,7 +303,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
     @Ignore("Only occurred when value is very long (>8000 bytes)")
     @Test
     public void testSuperLongValue() throws IOException {
-        AppendTrieDictionaryBuilder builder = createBuilder(RESOURCE_DIR);
+        AppendTrieDictionaryBuilder builder = createBuilder();
         String value = "a";
         for (int i = 0; i < 10000; i++) {
             value += "a";
@@ -340,10 +342,60 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         createAppendTrieDict(new ArrayList<String>());
     }
 
+    @Test
+    public void testSerialize() throws IOException {
+        AppendTrieDictionaryBuilder builder = createBuilder();
+        AppendTrieDictionary dict = builder.build(0);
+        
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        DataOutputStream dataout = new DataOutputStream(bout);
+        dict.write(dataout);
+        dataout.close();
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        DataInputStream datain = new DataInputStream(bin);
+        
+        assertNull(new Path(datain.readUTF()).toUri().getScheme());
+        datain.close();
+    }
+
+    @Test
+    public void testDeserialize() throws IOException {
+        AppendTrieDictionaryBuilder builder = createBuilder();
+        builder.setMaxId(Integer.MAX_VALUE - 2);
+        builder.addValue("a");
+        builder.addValue("ab");
+        List<String> strList = Lists.newArrayList("a", "ab");
+        AppendTrieDictionary dict = builder.build(0);
+        TreeMap checkMap = new TreeMap();
+        BytesConverter converter = new StringBytesConverter();
+        for (String str: strList) {
+            byte[] bytes = converter.convertToBytes(str);
+            int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
+            checkMap.put(id, str);
+        }
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        DataOutputStream dataout = new DataOutputStream(bout);
+        dict.setSaveAbsolutePath(true);
+        dict.write(dataout);
+        dataout.close();
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        DataInputStream datain = new DataInputStream(bin);
+        AppendTrieDictionary<String> r = new AppendTrieDictionary<String>();
+        r.readFields(datain);
+        datain.close();
+
+        for (String str : strList) {
+            byte[] bytes = converter.convertToBytes(str);
+            int id = r.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
+            assertNotEquals(String.format("Value %s not exist", str), -1, id);
+            assertEquals("Except id " + id + " for " + str + " but " + checkMap.get(id), str, checkMap.get(id));
+        }
+    }
+
     private void createAppendTrieDict(List<String> valueList) throws IOException {
         KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.append-entry-size", "1");
 
-        AppendTrieDictionaryBuilder builder = createBuilder(RESOURCE_DIR);
+        AppendTrieDictionaryBuilder builder = createBuilder();
 
         for (String value : valueList) {
             builder.addValue(value);
@@ -370,7 +422,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
     public void testMultiVersions() throws IOException, InterruptedException {
         KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.append-entry-size", "4");
 
-        AppendTrieDictionaryBuilder builder = createBuilder(RESOURCE_DIR);
+        AppendTrieDictionaryBuilder builder = createBuilder();
         builder.addValue("a");
         builder.addValue("b");
         builder.addValue("c");
@@ -382,7 +434,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         assertEquals(2, dict.getIdFromValue("b"));
 
         // re-open dict, append new data
-        builder = createBuilder(RESOURCE_DIR);
+        builder = createBuilder();
         builder.addValue("g");
 
         // new data is not visible
@@ -413,7 +465,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.append-max-versions", "1");
         KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.append-version-ttl", "1000");
 
-        AppendTrieDictionaryBuilder builder = createBuilder(RESOURCE_DIR);
+        AppendTrieDictionaryBuilder builder = createBuilder();
         builder.addValue("a");
 
         //version 1
@@ -427,7 +479,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         Thread.sleep(1200);
 
         //version 2
-        builder = createBuilder(RESOURCE_DIR);
+        builder = createBuilder();
         builder.addValue("");
         builder.build(0);
 
@@ -439,7 +491,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
     public void testOldDirFormat() throws IOException {
         KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.append-entry-size", "4");
 
-        AppendTrieDictionaryBuilder builder = createBuilder(RESOURCE_DIR);
+        AppendTrieDictionaryBuilder builder = createBuilder();
         builder.addValue("a");
         builder.addValue("b");
         builder.addValue("c");
@@ -455,7 +507,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         assertEquals(3, dir.listFiles(new CachedFileFilter()).length);
 
         //convert older format to new format when builder init
-        builder = createBuilder(RESOURCE_DIR);
+        builder = createBuilder();
         builder.build(0);
 
         assertEquals(1, dir.listFiles(new VersionFilter()).length);
@@ -479,7 +531,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
     public void testOldIndexFormat() throws IOException {
         KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.append-entry-size", "4");
 
-        AppendTrieDictionaryBuilder builder = createBuilder(RESOURCE_DIR);
+        AppendTrieDictionaryBuilder builder = createBuilder();
         builder.addValue("a");
         builder.addValue("b");
         builder.addValue("c");
@@ -490,7 +542,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
 
         convertIndexToOldFormat(BASE_DIR);
 
-        builder = createBuilder(RESOURCE_DIR);
+        builder = createBuilder();
         builder.addValue("g");
         builder.addValue("h");
         builder.addValue("i");

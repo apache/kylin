@@ -58,7 +58,7 @@ public class HDFSResourceStore extends ResourceStore {
         StorageURL metadataUrl = kylinConfig.getMetadataUrl();
         Preconditions.checkState(HDFS_SCHEME.equals(metadataUrl.getScheme()));
         
-        String path = metadataUrl.getIdentifier();
+        String path = metadataUrl.getParameter("path");
         fs = HadoopUtil.getFileSystem(path);
         Path metadataPath = new Path(path);
         if (fs.exists(metadataPath) == false) {

@@ -29,12 +29,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.ZooKeeperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,7 +205,7 @@ abstract public class KylinConfigBase implements Serializable {
 
         // make sure path is qualified
         try {
-            FileSystem fs = path.getFileSystem(new Configuration());
+            FileSystem fs = path.getFileSystem(HadoopUtil.getCurrentConfiguration());
             path = fs.makeQualified(path);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -272,6 +272,7 @@ abstract public class KylinConfigBase implements Serializable {
         r.put("", "org.apache.kylin.common.persistence.FileResourceStore");
         r.put("hbase", "org.apache.kylin.storage.hbase.HBaseResourceStore");
         r.put("hdfs", "org.apache.kylin.storage.hdfs.HDFSResourceStore");
+        r.put("ifile", "org.apache.kylin.storage.hdfs.IdentifierFileResourceStore");
         r.putAll(getPropertiesByPrefix("kylin.metadata.resource-store-provider.")); // note the naming convention -- http://kylin.apache.org/development/coding_naming_convention.html
         return r;
     }
