@@ -314,7 +314,17 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         } finally {
             System.clearProperty("kylin.storage.hbase.table-name-prefix");
         }
+
+        System.setProperty("kylin.storage.hbase.namespace", "MYSPACE");
+        try {
+            CubeManager mgr = CubeManager.getInstance(getTestConfig());
+            String tablename = mgr.generateStorageLocation();
+            assertTrue(tablename.startsWith("MYSPACE:"));
+        } finally {
+            System.clearProperty("kylin.storage.hbase.namespace");
+        }
     }
+
 
     public CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getTestConfig());

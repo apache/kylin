@@ -679,7 +679,9 @@ public class CubeManager implements IRealizationProvider {
         Random ran = new Random();
         do {
             StringBuffer sb = new StringBuffer();
-            sb.append(namespace).append(":");
+            if ((namespace.equals("default") || namespace.equals("")) == false) {
+                sb.append(namespace).append(":");
+            }
             sb.append(namePrefix);
             for (int i = 0; i < HBASE_TABLE_LENGTH; i++) {
                 sb.append(ALPHA_NUM.charAt(ran.nextInt(ALPHA_NUM.length())));
