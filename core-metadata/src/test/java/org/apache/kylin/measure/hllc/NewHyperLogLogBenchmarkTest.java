@@ -22,11 +22,11 @@ import static org.junit.Assert.assertEquals;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
+import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- * Created by xiefan on 16-12-12.
  */
 @Ignore("Save UT time")
 @SuppressWarnings("deprecation")
@@ -263,6 +263,38 @@ public class NewHyperLogLogBenchmarkTest {
             System.out.println("new serialize time : " + newTime);
         }
         HLLCounter.OVERFLOW_FACTOR = oldFactor;
+    }
+
+    // Test the performance impact of KYLIN-2944.
+    // The result shows returning a shared object or not DON'T impact performance.
+    @Test
+    public void generalDeserializeBenchmark() throws Exception {
+        final HLLCSerializer ser = new HLLCSerializer(DataType.getType("hllc(15)"));
+        final ByteBuffer buf = ByteBuffer.allocate(1024 * 1024);
+        
+        for (int r = 0; r < 5; r++) {
+            final int p = 15;
+            final int m = 1 << p;
+            System.out.println("generalDeserializeBenchmark()");
+            System.out.println("----------------------------");
+
+            for (int cardinality : getTestDataDivide(m)) {
+                final HLLCounter newCounter = getRandNewCounter(p, cardinality);
+                buf.clear();
+                ser.serialize(newCounter, buf);
+
+                long time = runTestCase(new TestCase() {
+                    @Override
+                    public void run() throws Exception {
+                        for (int i = 0; i < testTimes; i++) {
+                            buf.flip();
+                            ser.deserialize(buf);
+                        }
+                    }
+                });
+                System.out.println("cardinality : " + cardinality + ", deserialize time : " + time);
+            }
+        }
     }
 
     interface TestCase {
