@@ -159,6 +159,14 @@ public class PartitionDesc implements Serializable {
     public void setCubePartitionType(PartitionType partitionType) {
         this.partitionType = partitionType;
     }
+    
+    public String getPartitionConditionBuilderClz() {
+        return partitionConditionBuilderClz;
+    }
+
+    public void setPartitionConditionBuilderClz(String partitionConditionBuilderClz) {
+        this.partitionConditionBuilderClz = partitionConditionBuilderClz;
+    }
 
     public IPartitionConditionBuilder getPartitionConditionBuilder() {
         return partitionConditionBuilder;
@@ -175,13 +183,13 @@ public class PartitionDesc implements Serializable {
     // ============================================================================
 
     public static interface IPartitionConditionBuilder {
-        String buildDateRangeCondition(PartitionDesc partDesc, SegmentRange segRange);
+        String buildDateRangeCondition(PartitionDesc partDesc, ISegment seg, SegmentRange segRange);
     }
 
     public static class DefaultPartitionConditionBuilder implements IPartitionConditionBuilder, Serializable {
 
         @Override
-        public String buildDateRangeCondition(PartitionDesc partDesc, SegmentRange segRange) {
+        public String buildDateRangeCondition(PartitionDesc partDesc, ISegment seg, SegmentRange segRange) {
             long startInclusive = (Long) segRange.start.v;
             long endExclusive = (Long) segRange.end.v;
 
@@ -292,7 +300,7 @@ public class PartitionDesc implements Serializable {
     public static class YearMonthDayPartitionConditionBuilder implements IPartitionConditionBuilder {
 
         @Override
-        public String buildDateRangeCondition(PartitionDesc partDesc, SegmentRange segRange) {
+        public String buildDateRangeCondition(PartitionDesc partDesc, ISegment seg, SegmentRange segRange) {
             long startInclusive = (Long) segRange.start.v;
             long endExclusive = (Long) segRange.end.v;
 

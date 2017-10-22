@@ -19,61 +19,100 @@
 package org.apache.kylin.rest.response;
 
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Created by luwei on 17-4-17.
  */
 @SuppressWarnings("serial")
 public class CubeInstanceResponse extends CubeInstance {
-
-    public void setProject(String project) {
-        this.project = project;
-    }
-
-    public void setModel(String model) {
-        this.model = model;
-    }
-
-    public void setIs_streaming(boolean is_streaming) {
-        this.is_streaming = is_streaming;
-    }
-
-    public void setDraft(boolean isDraft) {
-        this.isDraft = isDraft;
-    }
-
-    public void setPartitionDateColumn(String partitionDateColumn) {
-        this.partitionDateColumn = partitionDateColumn;
-    }
-
-    public void setPartitionDateStart(long partitionDateStart) {
-        this.partitionDateStart = partitionDateStart;
-    }
 
     @JsonProperty("project")
     private String project;
     @JsonProperty("model")
     private String model;
     @JsonProperty("is_streaming")
-    private boolean is_streaming;
-    @JsonProperty("is_draft")
-    private boolean isDraft;
+    private boolean isStreaming;
     @JsonProperty("partitionDateColumn")
     private String partitionDateColumn;
     @JsonProperty("partitionDateStart")
     private long partitionDateStart;
+    @JsonProperty("size_kb")
+    private long sizeKB;
+    @JsonProperty("input_records_count")
+    private long inputRecordCnt;
+    @JsonProperty("input_records_size")
+    private long inputRecordSizeMB;
 
-    public CubeInstanceResponse(CubeInstance cubeInstance) {
-        setUuid(cubeInstance.getUuid());
-        setVersion(cubeInstance.getVersion());
-        setName(cubeInstance.getName());
-        setOwner(cubeInstance.getOwner());
-        setDescName(cubeInstance.getDescName());
-        setCost(cubeInstance.getCost());
-        setStatus(cubeInstance.getStatus());
-        setSegments(cubeInstance.getSegments());
-        setCreateTimeUTC(cubeInstance.getCreateTimeUTC());
+    public CubeInstanceResponse(CubeInstance cube, String project) {
+
+        this.project = project;
+
+        if (cube == null)
+            return;
+
+        setUuid(cube.getUuid());
+        setVersion(cube.getVersion());
+        setName(cube.getName());
+        setOwner(cube.getOwner());
+        setDescName(cube.getDescName());
+        setCost(cube.getCost());
+        setStatus(cube.getStatus());
+        setSegments(cube.getSegments());
+        setCreateTimeUTC(cube.getCreateTimeUTC());
+        setLastModified(cube.getLastModified());
+
+        this.model = cube.getDescriptor().getModelName();
+        this.partitionDateStart = cube.getDescriptor().getPartitionDateStart();
+        // cuz model doesn't have a state to label a model is broken,
+        // so in some case the model can not be loaded due to some check failed,
+        // but the cube in this model can still be loaded.
+        if (cube.getModel() != null) {
+            this.partitionDateColumn = cube.getModel().getPartitionDesc().getPartitionDateColumn();
+            this.isStreaming = cube.getModel().getRootFactTable().getTableDesc()
+                    .getSourceType() == ISourceAware.ID_STREAMING;
+        }
+
+        initSizeKB();
+        initInputRecordCount();
+        initInputRecordSizeMB();
     }
+
+    protected void setModel(String model) {
+        this.model = model;
+    }
+
+    protected void initSizeKB() {
+        long sizeKb = 0L;
+
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
+            sizeKb += cubeSegment.getSizeKB();
+        }
+
+        this.sizeKB = sizeKb;
+    }
+
+    protected void initInputRecordCount() {
+        long inputRecordCount = 0L;
+
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
+            inputRecordCount += cubeSegment.getInputRecords();
+        }
+
+        this.inputRecordCnt = inputRecordCount;
+    }
+
+    protected void initInputRecordSizeMB() {
+        long inputRecordSize = 0L;
+
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
+            inputRecordSize += cubeSegment.getInputRecordsSize();
+        }
+
+        this.inputRecordSizeMB = inputRecordSize;
+    }
+
 }

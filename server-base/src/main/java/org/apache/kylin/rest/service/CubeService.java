@@ -42,7 +42,6 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -71,7 +70,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
@@ -94,6 +92,10 @@ public class CubeService extends BasicService implements InitializingBean {
     @Autowired
     @Qualifier("accessService")
     private AccessService accessService;
+
+    @Autowired
+    @Qualifier("projectService")
+    private ProjectService projectService;
 
     @Autowired
     @Qualifier("jobService")
@@ -365,19 +367,13 @@ public class CubeService extends BasicService implements InitializingBean {
         }
     }
 
-    /**
-     * Update a cube status from disable to ready.
-     *
-     * @return
-     * @throws IOException
-     */
-    public CubeInstance enableCube(CubeInstance cube) throws IOException {
+    public void checkEnableCubeCondition(CubeInstance cube) {
         aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
         Message msg = MsgPicker.getMsg();
-
         String cubeName = cube.getName();
 
         RealizationStatusEnum ostatus = cube.getStatus();
+
         if (!cube.getStatus().equals(RealizationStatusEnum.DISABLED)) {
             throw new BadRequestException(String.format(msg.getENABLE_NOT_DISABLED_CUBE(), cubeName, ostatus));
         }
@@ -386,16 +382,20 @@ public class CubeService extends BasicService implements InitializingBean {
             throw new BadRequestException(String.format(msg.getNO_READY_SEGMENT(), cubeName));
         }
 
-        final List<CubingJob> cubingJobs = jobService.listJobsByRealizationName(cube.getName(), null,
-                EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
-        if (!cubingJobs.isEmpty()) {
-            throw new BadRequestException(msg.getENABLE_WITH_RUNNING_JOB());
-        }
         if (!cube.getDescriptor().checkSignature()) {
             throw new BadRequestException(
                     String.format(msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
         }
+    }
 
+    /**
+     * Update a cube status from disable to ready.
+     *
+     * @return
+     * @throws IOException
+     */
+    public CubeInstance enableCube(CubeInstance cube) throws IOException {
+        RealizationStatusEnum ostatus = cube.getStatus();
         try {
             CubeUpdate cubeBuilder = new CubeUpdate(cube);
             cubeBuilder.setStatus(RealizationStatusEnum.READY);
@@ -461,28 +461,6 @@ public class CubeService extends BasicService implements InitializingBean {
 
         htableInfoCache.put(key, hr);
         return hr;
-    }
-
-    public CubeInstanceResponse createCubeInstanceResponse(CubeInstance cube) {
-        Preconditions.checkState(!cube.getDescriptor().isDraft());
-
-        CubeInstanceResponse r = new CubeInstanceResponse(cube);
-
-        CubeDesc cubeDesc = cube.getDescriptor();
-        DataModelDesc modelDesc = cubeDesc.getModel();
-        r.setModel(cubeDesc.getModelName());
-        r.setLastModified(cubeDesc.getLastModified());
-        r.setPartitionDateStart(cubeDesc.getPartitionDateStart());
-        // cuz model doesn't have a state the label a model is broken,
-        // so in some case the model can not be loaded due to some check failed,
-        // but the cube in this model can still be loaded.
-        if (modelDesc != null) {
-            r.setPartitionDateColumn(modelDesc.getPartitionDesc().getPartitionDateColumn());
-            r.setIs_streaming(modelDesc.getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
-        }
-        r.setProject(cube.getProject());
-
-        return r;
     }
 
     public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException {
@@ -781,5 +759,9 @@ public class CubeService extends BasicService implements InitializingBean {
                     htableInfoCache.invalidate(k);
             }
         }
+    }
+
+    public CubeInstanceResponse createCubeInstanceResponse(CubeInstance cube) {
+        return new CubeInstanceResponse(cube, projectService.getProjectOfCube(cube.getName()));
     }
 }

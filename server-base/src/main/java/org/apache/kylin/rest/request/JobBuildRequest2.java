@@ -18,12 +18,12 @@
 
 package org.apache.kylin.rest.request;
 
-import com.google.common.collect.Maps;
-
 import java.util.Map;
 
-public class JobBuildRequest2 {
+import com.google.common.collect.Maps;
 
+public class JobBuildRequest2 {
+    
     private long sourceOffsetStart;
 
     private long sourceOffsetEnd;

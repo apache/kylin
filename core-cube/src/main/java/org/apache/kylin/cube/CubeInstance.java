@@ -185,39 +185,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     // ============================================================================
 
-    @JsonProperty("size_kb")
-    public long getSizeKB() {
-        long sizeKb = 0L;
-
-        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeKb += cubeSegment.getSizeKB();
-        }
-
-        return sizeKb;
-    }
-
-    @JsonProperty("input_records_count")
-    public long getInputRecordCount() {
-        long sizeRecordCount = 0L;
-
-        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeRecordCount += cubeSegment.getInputRecords();
-        }
-
-        return sizeRecordCount;
-    }
-
-    @JsonProperty("input_records_size")
-    public long getInputRecordSize() {
-        long sizeRecordSize = 0L;
-
-        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeRecordSize += cubeSegment.getInputRecordsSize();
-        }
-
-        return sizeRecordSize;
-    }
-
     @Override
     public KylinConfig getConfig() {
         return config;

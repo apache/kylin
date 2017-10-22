@@ -1206,6 +1206,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.valueOf(this.getOptional("kylin.query.escape-default-keyword", "false"));
     }
 
+    public String getQueryRealizationFilter() {
+        return getOptional("kylin.query.realization-filter", null);
+    }
+    
     // ============================================================================
     // SERVER
     // ============================================================================

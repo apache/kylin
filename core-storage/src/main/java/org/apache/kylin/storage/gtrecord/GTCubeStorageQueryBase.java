@@ -66,8 +66,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     private static final Logger logger = LoggerFactory.getLogger(GTCubeStorageQueryBase.class);
 
-    protected final CubeInstance cubeInstance;
-    protected final CubeDesc cubeDesc;
+    protected CubeInstance cubeInstance;
+    protected CubeDesc cubeDesc;
 
     public GTCubeStorageQueryBase(CubeInstance cube) {
         this.cubeInstance = cube;
@@ -229,36 +229,18 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     }
 
     @SuppressWarnings("unchecked")
-    private Set<TblColRef> findSingleValueColumns(TupleFilter filter) {
-        Collection<? extends TupleFilter> toCheck;
-        if (filter instanceof CompareTupleFilter) {
-            toCheck = Collections.singleton(filter);
-        } else if (filter instanceof LogicalTupleFilter && filter.getOperator() == FilterOperatorEnum.AND) {
-            toCheck = filter.getChildren();
-        } else {
-            return (Set<TblColRef>) Collections.EMPTY_SET;
-        }
-
-        Set<TblColRef> result = Sets.newHashSet();
-        for (TupleFilter f : toCheck) {
-            if (f instanceof CompareTupleFilter) {
-                CompareTupleFilter compFilter = (CompareTupleFilter) f;
-                // is COL=const ?
-                if (compFilter.getOperator() == FilterOperatorEnum.EQ && compFilter.getValues().size() == 1
-                        && compFilter.getColumn() != null) {
-                    result.add(compFilter.getColumn());
-                }
-            }
-        }
+    protected Set<TblColRef> findSingleValueColumns(TupleFilter filter) {
+        Set<CompareTupleFilter> compareTupleFilterSet = findSingleValuesCompFilters(filter);
 
         // expand derived
         Set<TblColRef> resultD = Sets.newHashSet();
-        for (TblColRef col : result) {
-            if (cubeDesc.isExtendedColumn(col)) {
-                throw new CubeDesc.CannotFilterExtendedColumnException(col);
+        for (CompareTupleFilter compFilter : compareTupleFilterSet) {
+            TblColRef tblColRef = compFilter.getColumn();
+            if (cubeDesc.isExtendedColumn(tblColRef)) {
+                throw new CubeDesc.CannotFilterExtendedColumnException(tblColRef);
             }
-            if (cubeDesc.isDerived(col)) {
-                DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
+            if (cubeDesc.isDerived(compFilter.getColumn())) {
+                DeriveInfo hostInfo = cubeDesc.getHostInfo(tblColRef);
                 if (hostInfo.isOneToOne) {
                     for (TblColRef hostCol : hostInfo.columns) {
                         resultD.add(hostCol);
@@ -266,10 +248,35 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 }
                 //if not one2one, it will be pruned
             } else {
-                resultD.add(col);
+                resultD.add(compFilter.getColumn());
             }
         }
         return resultD;
+    }
+
+    // FIXME should go into nested AND expression
+    protected Set<CompareTupleFilter> findSingleValuesCompFilters(TupleFilter filter) {
+        Collection<? extends TupleFilter> toCheck;
+        if (filter instanceof CompareTupleFilter) {
+            toCheck = Collections.singleton(filter);
+        } else if (filter instanceof LogicalTupleFilter && filter.getOperator() == FilterOperatorEnum.AND) {
+            toCheck = filter.getChildren();
+        } else {
+            return (Set<CompareTupleFilter>) Collections.EMPTY_SET;
+        }
+
+        Set<CompareTupleFilter> result = Sets.newHashSet();
+        for (TupleFilter f : toCheck) {
+            if (f instanceof CompareTupleFilter) {
+                CompareTupleFilter compFilter = (CompareTupleFilter) f;
+                // is COL=const ?
+                if (compFilter.getOperator() == FilterOperatorEnum.EQ && compFilter.getValues().size() == 1
+                        && compFilter.getColumn() != null) {
+                    result.add(compFilter);
+                }
+            }
+        }
+        return result;
     }
 
     public boolean isNeedStorageAggregation(Cuboid cuboid, Collection<TblColRef> groupD,

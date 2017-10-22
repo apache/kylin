@@ -30,7 +30,7 @@ public class JobBuildRequest {
 
     @Deprecated
     private boolean forceMergeEmptySegment = false;
-
+    
     public long getStartTime() {
         return startTime;
     }

@@ -227,8 +227,8 @@ public class JoinedFlatTable {
 
                 if (segRange != null && !segRange.isInfinite()) {
                     whereBuilder.append(hasCondition ? " AND (" : " (");
-                    whereBuilder.append(
-                            partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, segRange));
+                    whereBuilder.append(partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc,
+                            flatDesc.getSegment(), segRange));
                     whereBuilder.append(")" + sep);
                     hasCondition = true;
                 }

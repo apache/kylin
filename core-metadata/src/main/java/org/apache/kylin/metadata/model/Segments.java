@@ -55,7 +55,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         super();
     }
 
-    public Segments(Segments<T> copy) {
+    public Segments(List<T> copy) {
         super(copy);
     }
     
@@ -446,5 +446,20 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             endFit = true;
 
         return Pair.newPair(startFit, endFit);
+    }
+    
+    // given all segments in cube, checks whether specified segment is operative (not under processing)
+    public boolean isOperative(ISegment seg) {
+        if (seg.getStatus() != SegmentStatusEnum.READY)
+            return false;
+        
+        for (ISegment other : this) {
+            if (other == seg)
+                continue;
+            
+            if (other.getSegRange().overlaps(seg.getSegRange()))
+                return false;
+        }
+        return true;
     }
 }

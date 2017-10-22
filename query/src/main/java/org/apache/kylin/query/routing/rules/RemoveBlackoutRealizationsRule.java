@@ -21,29 +21,55 @@ package org.apache.kylin.query.routing.rules;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealizationFilter;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.RoutingRule;
 
 import com.google.common.collect.Sets;
 
 /**
- * for IT use, exclude some cubes 
  */
 public class RemoveBlackoutRealizationsRule extends RoutingRule {
     public static Set<String> blackList = Sets.newHashSet();
     public static Set<String> whiteList = Sets.newHashSet();
+    
+    private static ConcurrentHashMap<KylinConfig, IRealizationFilter> filters = new ConcurrentHashMap<>();
 
     public static boolean accept(IRealization real) {
-        if (blackList.contains(real.getCanonicalName()))
+        String canonicalName = real.getCanonicalName();
+        if (blackList.contains(canonicalName))
             return false;
-        if (!whiteList.isEmpty() && !whiteList.contains(real.getCanonicalName()))
+        if (!whiteList.isEmpty() && !whiteList.contains(canonicalName))
             return false;
+        
+        String filterClz = real.getConfig().getQueryRealizationFilter();
+        if (filterClz != null) {
+            if (!getFilterImpl(real.getConfig()).accept(real))
+                return false;
+        }
         
         return true;
     }
     
+    private static IRealizationFilter getFilterImpl(KylinConfig conf) {
+        IRealizationFilter filter = filters.get(conf);
+        if (filter == null) {
+            try {
+                Class<? extends IRealizationFilter> clz = ClassUtil.forName(conf.getQueryRealizationFilter(), IRealizationFilter.class);
+                filter = clz.getConstructor(KylinConfig.class).newInstance(conf);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            filters.put(conf, filter);
+        }
+        return filter;
+    }
+
     @Override
     public void apply(List<Candidate> candidates) {
         for (Iterator<Candidate> iterator = candidates.iterator(); iterator.hasNext();) {

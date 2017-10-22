@@ -104,7 +104,6 @@ public class JobBuilderSupport {
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
         CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
 
-
         return result;
     }
 

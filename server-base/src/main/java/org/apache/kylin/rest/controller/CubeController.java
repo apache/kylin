@@ -431,6 +431,8 @@ public class CubeController extends BasicController {
                 throw new InternalErrorException("Cannot find cube " + cubeName);
             }
 
+            cubeService.checkEnableCubeCondition(cube);
+
             return cubeService.enableCube(cube);
         } catch (Exception e) {
             String message = "Failed to enable cube: " + cubeName;
