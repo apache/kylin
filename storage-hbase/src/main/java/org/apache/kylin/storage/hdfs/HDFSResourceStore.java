@@ -59,6 +59,12 @@ public class HDFSResourceStore extends ResourceStore {
         Preconditions.checkState(HDFS_SCHEME.equals(metadataUrl.getScheme()));
         
         String path = metadataUrl.getParameter("path");
+        if (path == null) {
+            // missing path is not expected, but don't fail it
+            path = kylinConfig.getHdfsWorkingDirectory() + "tmp_metadata";
+            logger.warn("Missing path, fall back to " + path);
+        }
+        
         fs = HadoopUtil.getFileSystem(path);
         Path metadataPath = new Path(path);
         if (fs.exists(metadataPath) == false) {
