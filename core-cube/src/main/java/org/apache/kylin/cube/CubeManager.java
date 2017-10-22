@@ -833,26 +833,6 @@ public class CubeManager implements IRealizationProvider {
 
     // ============================================================================
 
-
-    /**
-     * Get the columns which need build the dictionary from fact table. (the column exists on fact and is not fk)
-     * @param cubeDesc
-     * @return
-     * @throws IOException
-     */
-    public List<TblColRef> getAllDictColumnsOnFact(CubeDesc cubeDesc) throws IOException {
-        List<TblColRef> factDictCols = new ArrayList<TblColRef>();
-        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-        for (TblColRef col : cubeDesc.getAllColumnsNeedDictionaryBuilt()) {
-
-            String scanTable = dictMgr.decideSourceData(cubeDesc.getModel(), col).getTable();
-            if (cubeDesc.getModel().isFactTable(scanTable)) {
-                factDictCols.add(col);
-            }
-        }
-        return factDictCols;
-    }
-
     public List<TblColRef> getAllGlobalDictColumns(CubeDesc cubeDesc) {
         List<TblColRef> globalDictCols = new ArrayList<TblColRef>();
         List<DictionaryDesc> dictionaryDescList = cubeDesc.getDictionaries();
@@ -874,19 +854,11 @@ public class CubeManager implements IRealizationProvider {
         List<TblColRef> uhcColumns = new ArrayList<TblColRef>();
         uhcColumns.addAll(getAllGlobalDictColumns(cubeDesc));
         uhcColumns.addAll(cubeDesc.getShardByColumns());
-
-        //handle PK-FK, see getAllDictColumnsOnFact
-        try {
-            uhcColumns.retainAll(getAllDictColumnsOnFact(cubeDesc));
-        } catch (IOException e) {
-            throw new RuntimeException("Get all dict columns on fact failed");
-        }
-
         return uhcColumns;
     }
 
     public int[] getUHCIndex(CubeDesc cubeDesc) throws IOException {
-        List<TblColRef> factDictCols = getAllDictColumnsOnFact(cubeDesc);
+        List<TblColRef> factDictCols = Lists.newArrayList(cubeDesc.getAllColumnsNeedDictionaryBuilt());
         List<TblColRef> uhcColumns = getAllUHCColumns(cubeDesc);
         int[] uhcIndex = new int[factDictCols.size()];
 
