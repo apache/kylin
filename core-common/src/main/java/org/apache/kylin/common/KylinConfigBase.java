@@ -271,8 +271,8 @@ abstract public class KylinConfigBase implements Serializable {
         // ref constants in ISourceAware
         r.put("", "org.apache.kylin.common.persistence.FileResourceStore");
         r.put("hbase", "org.apache.kylin.storage.hbase.HBaseResourceStore");
-        r.put("hdfs", "org.apache.kylin.storage.hdfs.HDFSResourceStore");
-        r.put("ifile", "org.apache.kylin.storage.hdfs.IdentifierFileResourceStore");
+        r.put("hdfs", "org.apache.kylin.common.persistence.HDFSResourceStore");
+        r.put("ifile", "org.apache.kylin.common.persistence.IdentifierFileResourceStore");
         r.putAll(getPropertiesByPrefix("kylin.metadata.resource-store-provider.")); // note the naming convention -- http://kylin.apache.org/development/coding_naming_convention.html
         return r;
     }

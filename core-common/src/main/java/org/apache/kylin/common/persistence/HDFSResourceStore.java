@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.storage.hdfs;
+package org.apache.kylin.common.persistence;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -34,8 +34,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
-import org.apache.kylin.common.persistence.RawResource;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+// TODO needs refactor, the module of this class is apparently wrong
 public class HDFSResourceStore extends ResourceStore {
 
     private static final Logger logger = LoggerFactory.getLogger(HDFSResourceStore.class);
@@ -54,16 +53,25 @@ public class HDFSResourceStore extends ResourceStore {
     private static final String HDFS_SCHEME = "hdfs";
 
     public HDFSResourceStore(KylinConfig kylinConfig) throws Exception {
+        this(kylinConfig, kylinConfig.getMetadataUrl());
+    }
+    
+    public HDFSResourceStore(KylinConfig kylinConfig, StorageURL metadataUrl) throws Exception {
         super(kylinConfig);
-        StorageURL metadataUrl = kylinConfig.getMetadataUrl();
         Preconditions.checkState(HDFS_SCHEME.equals(metadataUrl.getScheme()));
         
         String path = metadataUrl.getParameter("path");
+        if (path == null) {
+            // missing path is not expected, but don't fail it
+            path = kylinConfig.getHdfsWorkingDirectory() + "tmp_metadata";
+            logger.warn("Missing path, fall back to " + path);
+        }
+        
         fs = HadoopUtil.getFileSystem(path);
         Path metadataPath = new Path(path);
         if (fs.exists(metadataPath) == false) {
             logger.warn("Path not exist in HDFS, create it: " + path);
-            createMetaFolder(metadataPath, kylinConfig);
+            createMetaFolder(metadataPath);
         }
 
         hdfsMetaPath = metadataPath;
@@ -71,7 +79,7 @@ public class HDFSResourceStore extends ResourceStore {
 
     }
 
-    private void createMetaFolder(Path metaDirName, KylinConfig kylinConfig) throws Exception {
+    private void createMetaFolder(Path metaDirName) throws Exception {
         //create hdfs meta path
         if (!fs.exists(metaDirName)) {
             fs.mkdirs(metaDirName);
@@ -161,9 +169,9 @@ public class HDFSResourceStore extends ResourceStore {
 
     @Override
     protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
-        logger.info("res path : " + resPath);
+        logger.trace("res path : " + resPath);
         Path p = getRealHDFSPath(resPath);
-        logger.info("put resource : " + p.toUri());
+        logger.trace("put resource : " + p.toUri());
         FSDataOutputStream out = null;
         try {
             out = fs.create(p, true);

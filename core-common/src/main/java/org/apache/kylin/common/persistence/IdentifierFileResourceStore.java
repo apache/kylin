@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.storage.hdfs;
+package org.apache.kylin.common.persistence;
 
-import com.google.common.base.Preconditions;
+import java.io.File;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
-import org.apache.kylin.common.persistence.FileResourceStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import com.google.common.base.Preconditions;
 
 /**
  * it need identifier to transfer relative path to absolute path when building cube like reading global dict and
@@ -32,6 +32,7 @@ import java.io.File;
  * saved in params.
  *
  */
+@SuppressWarnings("unused")
 public class IdentifierFileResourceStore extends FileResourceStore {
     private static final Logger logger = LoggerFactory.getLogger(IdentifierFileResourceStore.class);
 
