@@ -256,6 +256,12 @@ public class TableExtDesc extends RootPersistentEntity {
         @JsonProperty("null_count")
         private long nullCount;
 
+        @JsonProperty("exceed_precision_count")
+        private long exceedPrecisionCount;
+
+        @JsonProperty("exceed_precision_max_length_value")
+        private String exceedPrecisionMaxLengthValue;
+
         @JsonProperty("cardinality")
         private long cardinality;
 
@@ -268,6 +274,22 @@ public class TableExtDesc extends RootPersistentEntity {
         }
 
         public ColumnStats() {
+        }
+
+        public void setExceedPrecisionMaxLengthValue(String value) {
+            this.exceedPrecisionMaxLengthValue = value;
+        }
+
+        public String getExceedPrecisionMaxLengthValue() {
+            return this.exceedPrecisionMaxLengthValue;
+        }
+
+        public void setExceedPrecisionCount(long exceedPrecisionCount) {
+            this.exceedPrecisionCount = exceedPrecisionCount;
+        }
+
+        public long getExceedPrecisionCount() {
+            return this.exceedPrecisionCount;
         }
 
         public void setColumnName(String columnName) {
