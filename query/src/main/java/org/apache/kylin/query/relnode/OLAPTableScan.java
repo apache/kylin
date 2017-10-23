@@ -318,6 +318,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     public void unfixColumnRowTypeWithModel() {
         this.alias = this.backupAlias;
+        this.backupAlias = null;
 
         for (TblColRef col : columnRowType.getAllColumns()) {
             TblColRef.unfixUnknownModel(col);

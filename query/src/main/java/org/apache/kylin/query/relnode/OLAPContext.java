@@ -32,6 +32,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
@@ -126,6 +127,7 @@ public class OLAPContext {
     // cube metadata
     public IRealization realization;
     public RealizationCheck realizationCheck;
+    public boolean fixedModel;
 
     public Set<TblColRef> allColumns = new HashSet<>();
     public List<TblColRef> groupByColumns = new ArrayList<>();
@@ -203,6 +205,25 @@ public class OLAPContext {
         }
     }
 
+    public void fixModel(DataModelDesc model, Map<String, String> aliasMap) {
+        if (fixedModel)
+            return;
+
+        for (OLAPTableScan tableScan : this.allTableScans) {
+            tableScan.fixColumnRowTypeWithModel(model, aliasMap);
+        }
+        fixedModel = true;
+    }
+
+    public void unfixModel() {
+        if (!fixedModel)
+            return;
+
+        for (OLAPTableScan tableScan : this.allTableScans) {
+            tableScan.unfixColumnRowTypeWithModel();
+        }
+        fixedModel = false;
+    }
     // ============================================================================
 
     public interface IAccessController {

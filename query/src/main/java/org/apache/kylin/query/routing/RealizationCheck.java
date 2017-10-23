@@ -38,7 +38,7 @@ public class RealizationCheck {
     private Map<DataModelDesc, List<IncapableReason>> modelIncapableReasons = Maps.newHashMap();
     private Map<CubeDesc, IncapableReason> cubeIncapableReasons = Maps.newHashMap();
     private Map<CubeDesc, Boolean> cubeCapabilities = Maps.newHashMap();
-    private List<DataModelDesc> capableModels = Lists.newArrayList();
+    private Map<DataModelDesc, Map<String, String>> capableModels = Maps.newHashMap();
 
     public Map<DataModelDesc, List<IncapableReason>> getModelIncapableReasons() {
         return modelIncapableReasons;
@@ -77,7 +77,7 @@ public class RealizationCheck {
         }
     }
 
-    public List<DataModelDesc> getCapableModels() {
+    public Map<DataModelDesc, Map<String, String>> getCapableModels() {
         return capableModels;
     }
 
@@ -92,9 +92,9 @@ public class RealizationCheck {
         }
     }
 
-    public void addCapableModel(DataModelDesc modelDesc) {
-        if (!this.capableModels.contains(modelDesc))
-            this.capableModels.add(modelDesc);
+    public void addCapableModel(DataModelDesc modelDesc, Map<String, String> aliasMap) {
+        if (!this.capableModels.containsKey(modelDesc))
+            this.capableModels.put(modelDesc, aliasMap);
     }
 
     public void addModelIncapableReason(DataModelDesc modelDesc, List<IncapableReason> reasons) {

@@ -101,6 +101,10 @@ public class BackdoorToggles {
         return getBoolean(DEBUG_TOGGLE_CHECK_ALL_MODELS);
     }
 
+    public static boolean getDisabledRawQueryLastHacker() {
+        return getBoolean(DISABLE_RAW_QUERY_HACKER);
+    }
+    
     public static int getQueryTimeout() {
         String v = getString(DEBUG_TOGGLE_QUERY_TIMEOUT);
         if (v == null)
@@ -285,4 +289,14 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_CHECK_ALL_MODELS = "DEBUG_TOGGLE_CHECK_ALL_MODELS";
+
+    /**
+     * set DISABLE_RAW_QUERY_HACKER="true" to disable RawQueryLastHacker.hackNoAggregations()
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DISABLE_RAW_QUERY_HACKER": "true"
+     }
+     */
+    public final static String DISABLE_RAW_QUERY_HACKER = "DISABLE_RAW_QUERY_HACKER";
 }

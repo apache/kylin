@@ -81,7 +81,8 @@ public class DimensionDesc implements java.io.Serializable {
             }
         }
         if (derived != null && join == null) {
-            throw new IllegalStateException("Derived can only be defined on lookup table, cube " + cubeDesc + ", " + this);
+            throw new IllegalStateException(
+                    "Derived can only be defined on lookup table, cube " + cubeDesc + ", " + this);
         }
 
     }
@@ -140,7 +141,8 @@ public class DimensionDesc implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("name", name).add("table", table).add("column", column).add("derived", Arrays.toString(derived)).add("join", join).toString();
+        return Objects.toStringHelper(this).add("name", name).add("table", table).add("column", column)
+                .add("derived", Arrays.toString(derived)).add("join", join).toString();
     }
 
     @Override
@@ -181,7 +183,7 @@ public class DimensionDesc implements java.io.Serializable {
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((column == null) ? 0 : column.hashCode());
         result = prime * result + ((table == null) ? 0 : table.hashCode());
-        result = prime * result + ((derived == null) ? 0 : derived.hashCode());
+        result = prime * result + ((derived == null) ? 0 : Arrays.hashCode(derived));
         return result;
     }
 }

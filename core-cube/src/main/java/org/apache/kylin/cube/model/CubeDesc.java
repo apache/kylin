@@ -1024,10 +1024,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     checkState(measureDescs[i] != null, "measure desc at (%s) is null", i);
                     measureIndex[i] = measureIndexLookup.get(colMeasureRefs[i]);
                     checkState(measureIndex[i] >= 0, "measure index at (%s) not positive", i);
-                    
+
                     checkState(!measureSet.contains(colMeasureRefs[i]), "measure (%s) duplicates", colMeasureRefs[i]);
                     measureSet.add(colMeasureRefs[i]);
-                    
+
                     checkState(measureIndex[i] > lastMeasureIndex, "measure (%s) is not in order", colMeasureRefs[i]);
                     lastMeasureIndex = measureIndex[i];
 
@@ -1043,7 +1043,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             checkState(checkEachMeasureExist.get(i),
                     "measure (%s) does not exist in column family, or measure duplicates", measures.get(i));
         }
-        
+
     }
 
     private void initDictionaryDesc() {
