@@ -16,5 +16,5 @@
 -- limitations under the License.
 --
 
-select seller_id, percentile(price, 0.5) from test_kylin_fact
+select seller_id, percentile_approx(price, 0.5) from test_kylin_fact
 group by seller_id
