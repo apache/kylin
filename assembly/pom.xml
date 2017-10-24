@@ -212,6 +212,14 @@
                                     <pattern>org.apache.commons.dbcp</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.dbcp</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.pool</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.pool</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.jocl</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.jocl</shadedPattern>
+                                </relocation>
                             </relocations>
                             <filters>
                                 <filter>
