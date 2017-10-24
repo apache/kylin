@@ -82,7 +82,7 @@ public class SortedMultipleDictionaryValueEnumerator implements IDictionaryValue
                 }
             }
         }
-        
+
         if (minValue == null) {
             curValue = null;
             return false;
