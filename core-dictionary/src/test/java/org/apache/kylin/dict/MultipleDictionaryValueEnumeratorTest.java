@@ -23,12 +23,18 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -44,8 +50,17 @@ public class MultipleDictionaryValueEnumeratorTest {
         return info;
     }
 
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
+        System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);
+    }
+
     private static Integer[] enumerateDictInfoList(List<DictionaryInfo> dictionaryInfoList) throws IOException {
-        MultipleDictionaryValueEnumerator enumerator = new MultipleDictionaryValueEnumerator(dictionaryInfoList);
+        IDictionaryBuilder newDictionaryBuilder = DictionaryGenerator.newDictionaryBuilder(DataType.getType("int"));
+        newDictionaryBuilder.init(new DictionaryInfo(), 0, null);
+        DictionaryValueEnumeratorProxy enumerator = new DictionaryValueEnumeratorProxy(dictionaryInfoList,
+                newDictionaryBuilder);
         List<Integer> values = new ArrayList<>();
         while (enumerator.moveNext()) {
             values.add(Integer.parseInt(enumerator.current()));
@@ -56,12 +71,12 @@ public class MultipleDictionaryValueEnumeratorTest {
     @Test
     public void testNormalDicts() throws IOException {
         List<DictionaryInfo> dictionaryInfoList = new ArrayList<>(2);
-        dictionaryInfoList.add(createDictInfo(new int[] { 0, 1, 2 }));
+        dictionaryInfoList.add(createDictInfo(new int[] { 0, 11, 21 }));
         dictionaryInfoList.add(createDictInfo(new int[] { 4, 5, 6 }));
 
         Integer[] values = enumerateDictInfoList(dictionaryInfoList);
         assertEquals(6, values.length);
-        assertArrayEquals(new Integer[] { 0, 1, 2, 4, 5, 6 }, values);
+        assertArrayEquals(new Integer[] { 0, 4, 5, 6, 11, 21 }, values);
     }
 
     @Test

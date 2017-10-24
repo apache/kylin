@@ -30,16 +30,20 @@ import com.google.common.collect.Lists;
  */
 @SuppressWarnings("rawtypes")
 public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumerator {
-    private List<Integer> curKeys = Lists.newArrayList();
+    private int curDictIndex = 0;
+    private Dictionary<String> curDict;
+    private int curKey;
     private String curValue = null;
     private List<Dictionary<String>> dictionaryList;
 
     public MultipleDictionaryValueEnumerator(List<DictionaryInfo> dictionaryInfoList) {
         dictionaryList = Lists.newArrayListWithCapacity(dictionaryInfoList.size());
         for (DictionaryInfo dictInfo : dictionaryInfoList) {
-            Dictionary<String> dictionary = (Dictionary<String>) dictInfo.getDictionaryObject();
             dictionaryList.add((Dictionary<String>) dictInfo.getDictionaryObject());
-            curKeys.add(dictionary.getMinId());
+        }
+        if (!dictionaryList.isEmpty()) {
+            curDict = dictionaryList.get(0);
+            curKey = curDict.getMinId();
         }
     }
 
@@ -50,34 +54,22 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
 
     @Override
     public boolean moveNext() throws IOException {
-        String minValue = null;
-        int curDictIndex = 0;
-        
-        // multi-merge dictionary forest
-        for (int i = 0; i < dictionaryList.size(); i++) {
-            Dictionary<String> dict = dictionaryList.get(i);
-            if (dict == null)
-                continue;
-            
-            int curKey = curKeys.get(i);
-            if (curKey > dict.getMaxId())
-                continue;
-            
-            String curValue = dict.getValueFromId(curKey);
-            if (minValue == null || minValue.compareTo(curValue) > 0) {
-                minValue = curValue;
-                curDictIndex = i;
+        while (curDictIndex < dictionaryList.size()) {
+            if (curKey <= curDict.getMaxId()) {
+                curValue = curDict.getValueFromId(curKey);
+                curKey ++;
+
+                return true;
+            }
+
+            // move to next dict if exists
+            if (++curDictIndex < dictionaryList.size()) {
+                curDict = dictionaryList.get(curDictIndex);
+                curKey = curDict.getMinId();
             }
         }
-        
-        if (minValue == null) {
-            curValue = null;
-            return false;
-        }
-        
-        curValue = minValue;
-        curKeys.set(curDictIndex, curKeys.get(curDictIndex) + 1);
-        return true;
+        curValue = null;
+        return false;
     }
 
     @Override
