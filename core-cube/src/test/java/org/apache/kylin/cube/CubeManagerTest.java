@@ -305,6 +305,90 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testAutoMergeWithVolatileRange() throws Exception {
+        CubeManager mgr = CubeManager.getInstance(getTestConfig());
+        CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
+
+        cube.getDescriptor().setAutoMergeTimeRanges(new long[] { 2000, 6000 });
+
+        mgr.updateCube(new CubeUpdate(cube));
+
+        assertTrue(cube.needAutoMerge());
+
+        // no segment at first
+        assertEquals(0, cube.getSegments().size());
+
+        // append first
+        CubeSegment seg1 = mgr.appendSegment(cube, new TSRange(0L, 1000L));
+        seg1.setStatus(SegmentStatusEnum.READY);
+
+        CubeSegment seg3 = mgr.appendSegment(cube, new TSRange(2000L, 4000L));
+        seg3.setStatus(SegmentStatusEnum.READY);
+
+        assertEquals(2, cube.getSegments().size());
+
+        SegmentRange mergedSeg = cube.autoMergeCubeSegments();
+
+        assertTrue(mergedSeg == null);
+
+        assertEquals(2, cube.getSegments().size());
+
+        // append a new seg
+
+        CubeSegment seg4 = mgr.appendSegment(cube, new TSRange(4000L, 8000L));
+        seg4.setStatus(SegmentStatusEnum.READY);
+
+        assertEquals(3, cube.getSegments().size());
+
+        cube.getDescriptor().setVolatileRange(10000);
+
+        mergedSeg = cube.autoMergeCubeSegments();
+
+        assertTrue(mergedSeg == null);
+
+        //will merge after change the volatile_range
+
+        cube.getDescriptor().setVolatileRange(0);
+
+        mergedSeg = cube.autoMergeCubeSegments();
+
+        assertTrue(mergedSeg != null);
+
+        assertTrue((Long) mergedSeg.start.v == 2000 && (Long) mergedSeg.end.v == 8000);
+
+        // fill the gap
+
+        CubeSegment seg2 = mgr.appendSegment(cube, new TSRange(1000L, 2000L));
+        seg2.setStatus(SegmentStatusEnum.READY);
+
+        assertEquals(4, cube.getSegments().size());
+
+        cube.getDescriptor().setVolatileRange(10000);
+
+        mergedSeg = cube.autoMergeCubeSegments();
+
+        assertTrue(mergedSeg == null);
+
+        //will merge after change the volatile_range
+        cube.getDescriptor().setVolatileRange(0);
+
+        mergedSeg = cube.autoMergeCubeSegments();
+
+        assertTrue(mergedSeg != null);
+
+        assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 8000);
+
+        cube.getDescriptor().setVolatileRange(1000);
+
+        mergedSeg = cube.autoMergeCubeSegments();
+
+        assertTrue(mergedSeg != null);
+
+        assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 2000);
+
+    }
+
+    @Test
     public void testGetCubeNameWithNamespace() {
         System.setProperty("kylin.storage.hbase.table-name-prefix", "HELLO_");
         try {
