@@ -243,7 +243,7 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         return cubeInstance;
     }
 
-    void setCubeInstance(CubeInstance cubeInstance) {
+    public void setCubeInstance(CubeInstance cubeInstance) {
         this.cubeInstance = cubeInstance;
     }
 
