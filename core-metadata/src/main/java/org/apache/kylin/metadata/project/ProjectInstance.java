@@ -27,6 +27,8 @@ import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -48,6 +50,7 @@ import com.google.common.collect.Lists;
 public class ProjectInstance extends RootPersistentEntity {
 
     public static final String DEFAULT_PROJECT_NAME = "default";
+    private KylinConfigExt config;
 
     @JsonProperty("name")
     private String name;
@@ -101,11 +104,8 @@ public class ProjectInstance extends RootPersistentEntity {
         projectInstance.setDescription(description);
         projectInstance.setStatus(ProjectStatusEnum.ENABLED);
         projectInstance.setCreateTimeUTC(System.currentTimeMillis());
-        if (overrideProps != null) {
-            projectInstance.setOverrideKylinProps(overrideProps);
-        } else {
-            projectInstance.setOverrideKylinProps(new LinkedHashMap<String, String>());
-        }
+        projectInstance.setOverrideKylinProps(overrideProps);
+
         if (realizationEntries != null)
             projectInstance.setRealizationEntries(realizationEntries);
         else
@@ -115,6 +115,10 @@ public class ProjectInstance extends RootPersistentEntity {
         else
             projectInstance.setModels(new ArrayList<String>());
         return projectInstance;
+    }
+
+    public void initConfig() {
+        this.config = KylinConfigExt.createInstance(KylinConfig.getInstanceFromEnv(), this.overrideKylinProps);
     }
 
     // ============================================================================
@@ -294,7 +298,19 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
+        if (overrideKylinProps == null) {
+            overrideKylinProps = new LinkedHashMap<>();
+        }
         this.overrideKylinProps = overrideKylinProps;
+        initConfig();
+    }
+
+    public KylinConfig getConfig() {
+        return config;
+    }
+
+    public void setConfig(KylinConfigExt config) {
+        this.config = config;
     }
 
     public void init() {
@@ -311,6 +327,8 @@ public class ProjectInstance extends RootPersistentEntity {
         if (overrideKylinProps == null) {
             overrideKylinProps = new LinkedHashMap<>();
         }
+
+        initConfig();
 
         if (StringUtils.isBlank(this.name))
             throw new IllegalStateException("Project name must not be blank");
