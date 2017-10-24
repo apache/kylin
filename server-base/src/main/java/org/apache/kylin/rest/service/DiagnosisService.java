@@ -21,11 +21,15 @@ package org.apache.kylin.rest.service;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.badquery.BadQueryEntry;
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
@@ -36,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 @Component("diagnosisService")
@@ -58,7 +63,8 @@ public class DiagnosisService extends BasicService {
 
         File[] files = destDir.listFiles();
         if (files == null) {
-            throw new BadRequestException(String.format(msg.getDIAG_PACKAGE_NOT_AVAILABLE(), destDir.getAbsolutePath()));
+            throw new BadRequestException(
+                    String.format(msg.getDIAG_PACKAGE_NOT_AVAILABLE(), destDir.getAbsolutePath()));
         }
         for (File subDir : files) {
             if (subDir.isDirectory()) {
@@ -88,7 +94,7 @@ public class DiagnosisService extends BasicService {
     public String dumpJobDiagnosisInfo(String jobId) throws IOException {
         aclEvaluate.checkProjectOperationPermission(jobService.getJobInstance(jobId));
         File exportPath = getDumpDir();
-        String[] args = {jobId, exportPath.getAbsolutePath()};
+        String[] args = { jobId, exportPath.getAbsolutePath() };
         runDiagnosisCLI(args);
         return getDiagnosisPackageName(exportPath);
     }
@@ -112,6 +118,40 @@ public class DiagnosisService extends BasicService {
         if (cmdOutput.getKey() != 0) {
             throw new BadRequestException(msg.getGENERATE_DIAG_PACKAGE_FAIL());
         }
+    }
+
+    public List<BadQueryEntry> getQueriesByType(List<BadQueryEntry> allBadEntries, String queryType)
+            throws IOException {
+
+        List<BadQueryEntry> filteredEntries = Lists.newArrayList();
+        for (BadQueryEntry entry : allBadEntries) {
+            if (null != entry && entry.getAdj().equals(queryType)) {
+                filteredEntries.add(entry);
+            }
+        }
+        return filteredEntries;
+    }
+
+    public Map<String, Object> getQueries(Integer pageOffset, Integer pageSize, String queryType,
+            List<BadQueryEntry> allBadEntries) throws IOException {
+        HashMap<String, Object> data = new HashMap<>();
+        List<BadQueryEntry> filteredEntries = getQueriesByType(allBadEntries, queryType);
+
+        int offset = pageOffset * pageSize;
+        int limit = pageSize;
+
+        if (filteredEntries.size() <= offset) {
+            offset = filteredEntries.size();
+            limit = 0;
+        }
+
+        if ((filteredEntries.size() - offset) < limit) {
+            limit = filteredEntries.size() - offset;
+        }
+
+        data.put("badQueries", filteredEntries.subList(offset, offset + limit));
+        data.put("size", filteredEntries.size());
+        return data;
     }
 
 }

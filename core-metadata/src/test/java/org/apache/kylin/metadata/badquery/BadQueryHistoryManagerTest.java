@@ -44,16 +44,17 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() throws Exception {
-        BadQueryHistory history = BadQueryHistoryManager.getInstance(getTestConfig()).getBadQueriesForProject("default");
+        BadQueryHistory history = BadQueryHistoryManager.getInstance(getTestConfig())
+                .getBadQueriesForProject("default");
         System.out.println(JsonUtil.writeValueAsIndentString(history));
 
         NavigableSet<BadQueryEntry> entries = history.getEntries();
-        assertEquals(2, entries.size());
+        assertEquals(3, entries.size());
 
         BadQueryEntry entry1 = entries.first();
-        assertEquals("Slow", entry1.getAdj());
+        assertEquals("Pushdown", entry1.getAdj());
         assertEquals("sandbox.hortonworks.com", entry1.getServer());
-        assertEquals("select count(*) from test_kylin_fact", entry1.getSql());
+        assertEquals("select * from test_kylin_fact limit 10", entry1.getSql());
 
         entries.pollFirst();
         BadQueryEntry entry2 = entries.first();
@@ -67,7 +68,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         BadQueryEntry entry = new BadQueryEntry("sql", "adj", 1459362239992L, 100, "server", "t-0", "user");
         BadQueryHistory history = manager.upsertEntryToProject(entry, "default");
         NavigableSet<BadQueryEntry> entries = history.getEntries();
-        assertEquals(3, entries.size());
+        assertEquals(4, entries.size());
 
         BadQueryEntry newEntry = entries.last();
 
@@ -91,11 +92,14 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         KylinConfig kylinConfig = getTestConfig();
         BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
 
-        manager.upsertEntryToProject(new BadQueryEntry("sql", "adj", 1459362239000L, 100, "server", "t-0", "user"), "default");
-        BadQueryHistory history = manager.upsertEntryToProject(new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user"), "default");
+        manager.upsertEntryToProject(new BadQueryEntry("sql", "adj", 1459362239000L, 100, "server", "t-0", "user"),
+                "default");
+        BadQueryHistory history = manager.upsertEntryToProject(
+                new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user"), "default");
 
         NavigableSet<BadQueryEntry> entries = history.getEntries();
-        BadQueryEntry newEntry = entries.floor(new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user"));
+        BadQueryEntry newEntry = entries
+                .floor(new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user"));
         System.out.println(newEntry);
         assertEquals("adj2", newEntry.getAdj());
         assertEquals("server2", newEntry.getServer());
