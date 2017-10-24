@@ -53,7 +53,7 @@
                    class="fa fa-sort-desc"></i>
             </th>
             <th>Actions</th>
-            <th ng-if="userService.hasRole('ROLE_ADMIN')">Admins</th>
+            <th>Admins</th>
         </tr>
         </thead>
         <!--Body-->
@@ -106,8 +106,8 @@
                     </ul>
                 </div>
             </td>
-            <td ng-if="userService.hasRole('ROLE_ADMIN')">
-                <div ng-click="$event.stopPropagation();" class="btn-group">
+            <td >
+                <div ng-click="$event.stopPropagation();" class="btn-group" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
                     <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" ng-click="listAccess(cube, 'CubeInstance')">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>

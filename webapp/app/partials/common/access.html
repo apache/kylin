@@ -50,7 +50,7 @@
                 <td >
                     <label><b>Permission&nbsp;</b> </label>
                     <select ng-model="newAccess.permission" ng-init="newAccess.permission=permissions.READ.value"
-                            ng-options="permission.value as permission.name for (name, permission) in permissions">
+                            ng-options="permission.value as permission.name for (name, permission) in permissionsSorted">
                             <option value=""></option>
                             </select>
                 </td>
@@ -87,14 +87,14 @@
                     <span ng-if="accessEntity.sid.grantedAuthority">Role</span>
                 </td>
                 <td>
-                    <span ng-if="accessEntity.permission.mask == 1">CUBE QUERY</span>
-                    <span ng-if="accessEntity.permission.mask == 32">CUBE EDIT</span>
-                    <span ng-if="accessEntity.permission.mask == 64">CUBE OPERATION</span>
-                    <span ng-if="accessEntity.permission.mask == 16">CUBE ADMIN</span>
+                  <span ng-if="accessEntity.permission.mask == 1">QUERY</span>
+                  <span ng-if="accessEntity.permission.mask == 64">OPERATION</span>
+                  <span ng-if="accessEntity.permission.mask == 32">MANAGEMENT</span>
+                  <span ng-if="accessEntity.permission.mask == 16">ADMIN</span>
                 </td>
                 <td ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',entity, 16)">
                     <select ng-model="accessEntity.newPermission"  ng-init="newAccess.permission=permissions.READ.value"
-                            ng-options="permission.value as permission.name for (name, permission) in permissions">
+                            ng-options="permission.value as permission.name for (name, permission) in permissionsSorted">
                         <option value="">-- select access --</option>
                     </select>
                     <button class="btn btn-default btn-xs" ng-disabled="!accessEntity.newPermission"

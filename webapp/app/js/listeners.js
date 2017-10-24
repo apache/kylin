@@ -17,14 +17,18 @@
  */
 
 KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService, $cookieStore, ProjectService, ProjectModel, AccessService, SweetAlert, loadingRequest) {
-
   $rootScope.permissions = {
-    READ: {name: 'CUBE QUERY', value: 'READ', mask: 1},
-    MANAGEMENT: {name: 'CUBE EDIT', value: 'MANAGEMENT', mask: 32},
-    OPERATION: {name: 'CUBE OPERATION', value: 'OPERATION', mask: 64},
-    ADMINISTRATION: {name: 'CUBE ADMIN', value: 'ADMINISTRATION', mask: 16}
+    READ: {name: 'QUERY', value: 'READ', mask: 1},
+    MANAGEMENT: {name: 'MANAGEMENT', value: 'MANAGEMENT', mask: 32},
+    OPERATION: {name: 'OPERATION', value: 'OPERATION', mask: 64},
+    ADMINISTRATION: {name: 'ADMIN', value: 'ADMINISTRATION', mask: 16}
   };
-
+  $rootScope.permissionsSorted = [
+    {name: 'QUERY', value: 'READ', mask: 1},
+    {name: 'OPERATION', value: 'OPERATION', mask: 64},
+    {name: 'MANAGEMENT', value: 'MANAGEMENT', mask: 32},
+    {name: 'ADMIN', value: 'ADMINISTRATION', mask: 16}
+  ];
   $rootScope.$on("$routeChangeStart", function () {
     AuthenticationService.ping(function (data) {
       UserService.setCurUser(data);
