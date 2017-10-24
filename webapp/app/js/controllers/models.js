@@ -132,7 +132,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     var modelstate=false;
     var i=0;
 
-    CubeService.list({modelName:model.name}, function (_cubes) {
+    CubeService.list({modelName:model.name,projectName:$scope.projectModel.selectedProject}, function (_cubes) {
       model.cubes = _cubes;
 
       if (model.cubes.length != 0) {
