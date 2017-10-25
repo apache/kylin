@@ -44,6 +44,7 @@ import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -483,14 +484,17 @@ public class CubeService extends BasicService implements InitializingBean {
         aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
         Message msg = MsgPicker.getMsg();
 
-        if (!segmentName.equals(cube.getSegments().get(0).getName())
-                && !segmentName.equals(cube.getSegments().get(cube.getSegments().size() - 1).getName())) {
+        Segments<CubeSegment> existing = cube.getSegments();
+        if (existing.size() > 0 && !segmentName.equals(existing.get(0).getName())
+                && !segmentName.equals(existing.get(existing.size() - 1).getName())) {
             throw new BadRequestException(String.format(msg.getDELETE_NOT_FIRST_LAST_SEG(), segmentName));
         }
+        
         CubeSegment toDelete = null;
-        for (CubeSegment seg : cube.getSegments()) {
+        for (CubeSegment seg : existing) {
             if (seg.getName().equals(segmentName)) {
                 toDelete = seg;
+                break;
             }
         }
 

@@ -253,7 +253,7 @@ public class Broadcaster {
         if (list.isEmpty())
             return;
 
-        logger.debug("Broadcasting" + event + ", " + entity + ", " + cacheKey);
+        logger.debug("Broadcasting " + event + ", " + entity + ", " + cacheKey);
 
         switch (entity) {
         case SYNC_ALL:

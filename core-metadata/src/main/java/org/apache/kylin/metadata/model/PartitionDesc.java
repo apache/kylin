@@ -218,21 +218,17 @@ public class PartitionDesc implements Serializable {
         private static void buildSingleColumnRangeCondAsTimeMillis(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive) {
             String partitionColumnName = partitionColumn.getIdentity();
-            if (startInclusive > 0) {
-                builder.append(partitionColumnName + " >= " + startInclusive);
-                builder.append(" AND ");
-            }
+            builder.append(partitionColumnName + " >= " + startInclusive);
+            builder.append(" AND ");
             builder.append(partitionColumnName + " < " + endExclusive);
         }
 
         private static void buildSingleColumnRangeCondAsYmdInt(StringBuilder builder, TblColRef partitionColumn,
                 long startInclusive, long endExclusive) {
             String partitionColumnName = partitionColumn.getIdentity();
-            if (startInclusive > 0) {
-                builder.append(partitionColumnName + " >= "
-                        + DateFormat.formatToDateStr(startInclusive, DateFormat.COMPACT_DATE_PATTERN));
-                builder.append(" AND ");
-            }
+            builder.append(partitionColumnName + " >= "
+                    + DateFormat.formatToDateStr(startInclusive, DateFormat.COMPACT_DATE_PATTERN));
+            builder.append(" AND ");
             builder.append(partitionColumnName + " < "
                     + DateFormat.formatToDateStr(endExclusive, DateFormat.COMPACT_DATE_PATTERN));
         }
@@ -246,11 +242,9 @@ public class PartitionDesc implements Serializable {
                 return;
             }
 
-            if (startInclusive > 0) {
-                builder.append(partitionColumnName + " >= '"
-                        + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'");
-                builder.append(" AND ");
-            }
+            builder.append(partitionColumnName + " >= '"
+                    + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'");
+            builder.append(" AND ");
             builder.append(partitionColumnName + " < '"
                     + DateFormat.formatToDateStr(endExclusive, partitionColumnDateFormat) + "'");
         }
@@ -260,22 +254,20 @@ public class PartitionDesc implements Serializable {
                 String partitionColumnTimeFormat) {
             String partitionDateColumnName = partitionDateColumn.getIdentity();
             String partitionTimeColumnName = partitionTimeColumn.getIdentity();
-            if (startInclusive > 0) {
-                builder.append("(");
-                builder.append("(");
-                builder.append(partitionDateColumnName + " = '"
-                        + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'").append(" AND ")
-                        .append(partitionTimeColumnName + " >= '"
-                                + DateFormat.formatToDateStr(startInclusive, partitionColumnTimeFormat) + "'");
-                builder.append(")");
-                builder.append(" OR ");
-                builder.append("(");
-                builder.append(partitionDateColumnName + " > '"
-                        + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'");
-                builder.append(")");
-                builder.append(")");
-                builder.append(" AND ");
-            }
+            builder.append("(");
+            builder.append("(");
+            builder.append(partitionDateColumnName + " = '"
+                    + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'").append(" AND ")
+                    .append(partitionTimeColumnName + " >= '"
+                            + DateFormat.formatToDateStr(startInclusive, partitionColumnTimeFormat) + "'");
+            builder.append(")");
+            builder.append(" OR ");
+            builder.append("(");
+            builder.append(partitionDateColumnName + " > '"
+                    + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'");
+            builder.append(")");
+            builder.append(")");
+            builder.append(" AND ");
 
             builder.append("(");
             builder.append("(");
