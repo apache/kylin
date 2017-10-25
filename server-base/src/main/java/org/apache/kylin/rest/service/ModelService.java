@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.ModifiedOrder;
 import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
@@ -110,6 +112,8 @@ public class ModelService extends BasicService {
                 filterModels.add(modelDesc);
             }
         }
+
+        Collections.sort(filterModels, new ModifiedOrder());
 
         return filterModels;
     }

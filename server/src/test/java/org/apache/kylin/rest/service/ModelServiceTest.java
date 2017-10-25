@@ -121,6 +121,18 @@ public class ModelServiceTest extends ServiceTestBase {
         //It should pass without any exceptions.
     }
 
+    @Test
+    public void testModelOrder() throws IOException {
+        List<DataModelDesc> dataModelDescs = modelService.listAllModels(null, "default", true);
+        long oldLastModified = Long.MAX_VALUE;
+
+        for (DataModelDesc dataModelDesc : dataModelDescs) {
+            Assert.assertTrue(dataModelDesc.getLastModified() <= oldLastModified);
+            oldLastModified = dataModelDesc.getLastModified();
+        }
+    }
+
+
     private String[] cutItems(String[] origin, int count) {
         if (origin == null)
             return null;
