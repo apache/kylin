@@ -43,7 +43,7 @@ public class HivePushDownConverter implements IPushDownConverter {
             Pattern.CASE_INSENSITIVE);
     private static final Pattern CONCAT_PATTERN = Pattern.compile("(['_a-z0-9A-Z]+)\\|\\|(['_a-z0-9A-Z]+)",
             Pattern.CASE_INSENSITIVE);
-    private static final Pattern TIMESTAMPADD_PATTERN = Pattern.compile("timestampadd\\s*\\(\\s*(.*?)\\s*,",
+    private static final Pattern TIMESTAMP_ADD_DIFF_PATTERN = Pattern.compile("timestamp(add|diff)\\s*\\(\\s*(.*?)\\s*,",
             Pattern.CASE_INSENSITIVE);
     private static final ImmutableSet<String> sqlKeyWordsExceptAS = ImmutableSet.of("A", "ABS", "ABSOLUTE", "ACTION",
             "ADA", "ADD", "ADMIN", "AFTER", "ALL", "ALLOCATE", "ALLOW", "ALTER", "ALWAYS", "AND", "ANY", "APPLY", "ARE",
@@ -213,12 +213,12 @@ public class HivePushDownConverter implements IPushDownConverter {
         return replacedString;
     }
 
-    public static String timestampaddReplace(String originString) {
-        Matcher timestampaddMatcher = TIMESTAMPADD_PATTERN.matcher(originString);
+    public static String timestampAddDiffReplace(String originString) {
+        Matcher timestampaddMatcher = TIMESTAMP_ADD_DIFF_PATTERN.matcher(originString);
         String replacedString = originString;
 
         while (timestampaddMatcher.find()) {
-            String interval = timestampaddMatcher.group(1);
+            String interval = timestampaddMatcher.group(2);
             String timestampaddStr = replaceString(timestampaddMatcher.group(), interval, "'" + interval + "'");
             replacedString = replaceString(replacedString, timestampaddMatcher.group(), timestampaddStr);
         }
@@ -260,7 +260,7 @@ public class HivePushDownConverter implements IPushDownConverter {
         convertedSql = concatReplace(convertedSql);
 
         // Step7.Add quote for interval in timestampadd
-        convertedSql = timestampaddReplace(convertedSql);
+        convertedSql = timestampAddDiffReplace(convertedSql);
 
         // Step8.Replace integer with int
         convertedSql = replaceString(convertedSql, "INTEGER", "INT");
