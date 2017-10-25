@@ -20,6 +20,7 @@ package org.apache.kylin.query.adhoc;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.Types;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -66,7 +67,7 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
                 columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), false,
                         metaData.isCurrency(i), metaData.isNullable(i), false, metaData.getColumnDisplaySize(i),
                         metaData.getColumnLabel(i), metaData.getColumnName(i), null, null, null,
-                        metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i),
+                        metaData.getPrecision(i), metaData.getScale(i), typeToSqlType(metaData.getColumnTypeName(i)),
                         metaData.getColumnTypeName(i), metaData.isReadOnly(i), false, false));
             }
         } finally {
@@ -74,6 +75,47 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
             DBUtils.closeQuietly(statement);
             manager.close(connection);
         }
+    }
+
+    public static int typeToSqlType(String type) throws SQLException {
+        if ("string".equalsIgnoreCase(type)) {
+            return Types.VARCHAR;
+        } else if ("varchar".equalsIgnoreCase(type)) {
+            return Types.VARCHAR;
+        } else if ("char".equalsIgnoreCase(type)) {
+            return Types.CHAR;
+        } else if ("float".equalsIgnoreCase(type)) {
+            return Types.FLOAT;
+        } else if ("real".equalsIgnoreCase(type)) {
+            return Types.REAL;
+        } else if ("double".equalsIgnoreCase(type)) {
+            return Types.DOUBLE;
+        } else if ("boolean".equalsIgnoreCase(type)) {
+            return Types.BOOLEAN;
+        } else if ("tinyint".equalsIgnoreCase(type)) {
+            return Types.TINYINT;
+        } else if ("smallint".equalsIgnoreCase(type)) {
+            return Types.SMALLINT;
+        } else if ("int".equalsIgnoreCase(type)) {
+            return Types.INTEGER;
+        } else if ("bigint".equalsIgnoreCase(type)) {
+            return Types.BIGINT;
+        } else if ("date".equalsIgnoreCase(type)) {
+            return Types.DATE;
+        } else if ("timestamp".equalsIgnoreCase(type)) {
+            return Types.TIMESTAMP;
+        } else if ("decimal".equalsIgnoreCase(type)) {
+            return Types.DECIMAL;
+        } else if ("binary".equalsIgnoreCase(type)) {
+            return Types.BINARY;
+        } else if ("map".equalsIgnoreCase(type)) {
+            return Types.JAVA_OBJECT;
+        } else if ("array".equalsIgnoreCase(type)) {
+            return Types.ARRAY;
+        } else if ("struct".equalsIgnoreCase(type)) {
+            return Types.STRUCT;
+        }
+        throw new SQLException("Unrecognized column type: " + type);
     }
 
     @Override
