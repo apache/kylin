@@ -56,6 +56,7 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
@@ -216,7 +217,8 @@ public class CubeMigrationCLI {
         }
     }
 
-    protected void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists, boolean copyAcl) throws IOException {
+    protected void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists, boolean copyAcl)
+            throws IOException {
 
         List<String> metaItems = new ArrayList<String>();
         Set<String> dictAndSnapshot = new HashSet<String>();
@@ -565,7 +567,10 @@ public class CubeMigrationCLI {
     private String renameTableWithinProject(String srcItem) {
         if (dstProject != null && srcItem.contains(ResourceStore.TABLE_RESOURCE_ROOT)) {
             String tableIdentity = TableDesc.parseResourcePath(srcItem).getFirst();
-            return TableDesc.concatResourcePath(tableIdentity, dstProject);
+            if (srcItem.contains(ResourceStore.TABLE_EXD_RESOURCE_ROOT))
+                return TableExtDesc.concatResourcePath(tableIdentity, dstProject);
+            else
+                return TableDesc.concatResourcePath(tableIdentity, dstProject);
         }
         return srcItem;
     }
