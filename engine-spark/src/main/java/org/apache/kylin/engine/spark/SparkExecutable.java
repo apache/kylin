@@ -154,7 +154,7 @@ public class SparkExecutable extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, patternedLogger.getBufferedLog());
         } catch (Exception e) {
             logger.error("error run spark job:", e);
-            return new ExecuteResult(e, e.getLocalizedMessage());
+            return ExecuteResult.createError(e);
         }
     }
 

@@ -24,6 +24,8 @@ import java.util.List;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
@@ -31,8 +33,7 @@ import com.google.common.collect.Lists;
 public class SQLResponse implements Serializable {
     protected static final long serialVersionUID = 1L;
 
-    // private static final Logger logger =
-    // LoggerFactory.getLogger(SQLResponse.class);
+    private static final Logger logger = LoggerFactory.getLogger(SQLResponse.class);
 
     // the data type for each column
     protected List<SelectedColumnMeta> columnMetas;
@@ -211,7 +212,7 @@ public class SQLResponse implements Serializable {
             return queryStatistics == null ? Lists.<QueryContext.CubeSegmentStatisticsResult> newArrayList()
                     : (List<QueryContext.CubeSegmentStatisticsResult>) SerializationUtils.deserialize(queryStatistics);
         } catch (Exception e) { // deserialize exception should not block query
-            System.out.println("Error while deserialize queryStatistics due to " + e);
+            logger.warn("Error while deserialize queryStatistics due to " + e);
             return Lists.newArrayList();
         }
     }
@@ -222,7 +223,7 @@ public class SQLResponse implements Serializable {
             this.queryStatistics = cubeSegmentStatisticsList == null ? null
                     : SerializationUtils.serialize((Serializable) cubeSegmentStatisticsList);
         } catch (Exception e) { // serialize exception should not block query
-            System.out.println("Error while serialize queryStatistics due to " + e);
+            logger.warn("Error while serialize queryStatistics due to " + e);
             this.queryStatistics = null;
         }
     }

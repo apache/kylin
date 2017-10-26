@@ -91,7 +91,7 @@ public class CubingJob extends DefaultChainedExecutable {
     }
 
     //32MB per block created by the first step
-    public static final long MIN_SOURCE_SIZE = 33554432L;
+    private static final long MIN_SOURCE_SIZE = 33554432L;
 
     // KEYS of Output.extraInfo map, info passed across job steps
     public static final String SOURCE_RECORD_COUNT = "sourceRecordCount";
