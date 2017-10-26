@@ -52,7 +52,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
 
         CubeSegment mergedSegment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
         if (mergedSegment == null) {
-            return new ExecuteResult(ExecuteResult.State.FAILED, new SegmentNotFoundException(
+            return ExecuteResult.createFailed(new SegmentNotFoundException(
                     "there is no segment with id:" + CubingExecutableUtil.getSegmentId(this.getParams())));
         }
 
@@ -62,8 +62,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         // collect source statistics
         List<String> mergingSegmentIds = CubingExecutableUtil.getMergingSegmentIds(this.getParams());
         if (mergingSegmentIds.isEmpty()) {
-            return new ExecuteResult(ExecuteResult.State.FAILED,
-                    new SegmentNotFoundException("there are no merging segments"));
+            return ExecuteResult.createFailed(new SegmentNotFoundException("there are no merging segments"));
         }
         long sourceCount = 0L;
         long sourceSize = 0L;
@@ -85,7 +84,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.SUCCEED);
         } catch (IOException e) {
             logger.error("fail to update cube after merge", e);
-            return new ExecuteResult(e, e.getLocalizedMessage());
+            return ExecuteResult.createError(e);
         }
     }
 

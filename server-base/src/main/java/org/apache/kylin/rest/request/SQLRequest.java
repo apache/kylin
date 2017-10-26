@@ -53,7 +53,7 @@ public class SQLRequest implements Serializable {
     }
 
     public String getProject() {
-        return norm(project);
+        return project;
     }
 
     public void setProject(String project) {
@@ -112,13 +112,6 @@ public class SQLRequest implements Serializable {
                 , backdoorToggles //
                 , username);
         return cacheKey;
-    }
-
-    public static String norm(String str) {
-        if (str == null) {
-            return null;
-        }
-        return str.toUpperCase();
     }
 
     @Override

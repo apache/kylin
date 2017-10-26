@@ -70,13 +70,13 @@ public class HadoopShellExecutable extends AbstractExecutable {
             }
             log.append("result code:").append(result);
             return result == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, log.toString())
-                    : new ExecuteResult(ExecuteResult.State.FAILED, new HadoopShellException(log.toString()));
+                    : ExecuteResult.createFailed(new HadoopShellException(log.toString()));
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
-            return new ExecuteResult(e, e.getLocalizedMessage());
+            return ExecuteResult.createError(e);
         } catch (Exception e) {
             logger.error("error execute " + this.toString(), e);
-            return new ExecuteResult(e, e.getLocalizedMessage());
+            return ExecuteResult.createError(e);
         }
     }
 

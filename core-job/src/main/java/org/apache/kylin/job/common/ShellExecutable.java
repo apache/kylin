@@ -47,11 +47,11 @@ public class ShellExecutable extends AbstractExecutable {
             final PatternedLogger patternedLogger = new PatternedLogger(logger);
             final Pair<Integer, String> result = context.getConfig().getCliCommandExecutor().execute(getCmd(), patternedLogger);
             getManager().addJobInfo(getId(), patternedLogger.getInfo());
-            return new ExecuteResult(result.getFirst() == 0 ? ExecuteResult.State.SUCCEED : ExecuteResult.State.FAILED,
-                    new ShellException(result.getSecond()));
+            return result.getFirst() == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, result.getSecond())
+                    : ExecuteResult.createFailed(new ShellException(result.getSecond()));
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
-            return new ExecuteResult(e, e.getLocalizedMessage());
+            return ExecuteResult.createError(e);
         }
     }
 

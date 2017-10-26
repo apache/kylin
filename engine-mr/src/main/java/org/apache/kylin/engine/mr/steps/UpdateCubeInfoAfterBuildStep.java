@@ -76,7 +76,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to update cube after build", e);
-            return new ExecuteResult(e, e.getLocalizedMessage());
+            return ExecuteResult.createError(e);
         }
     }
 

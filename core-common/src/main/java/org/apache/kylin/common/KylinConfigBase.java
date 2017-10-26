@@ -1337,7 +1337,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isKylinMetricsReporterForJobEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.core.metrics.reporter-job-enabled", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.core.metrics.reporter-job-enabled", "false"));
     }
 
     public String getKylinMetricsActiveReservoirDefaultClass() {
@@ -1351,11 +1351,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getKylinMetricsSubjectSuffix() {
-        String suffix = getOptional("kylin.core.metric.subject-suffix", null);
-        if (suffix != null) {
-            return suffix;
-        }
-        return getDeployEnv();
+        return getOptional("kylin.core.metric.subject-suffix", getDeployEnv());
     }
 
     public String getKylinMetricsSubjectJob() {
