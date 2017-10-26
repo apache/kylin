@@ -72,9 +72,12 @@ public class SegmentGTStartAndEnd {
             value = DateFormat.formatToTimeWithoutMilliStr(ts);
         } else if (partitionColType.isStringFamily() || partitionColType.isIntegerFamily()) {//integer like 20160101
             String partitionDateFormat = segment.getModel().getPartitionDesc().getPartitionDateFormat();
-            if (StringUtils.isEmpty(partitionDateFormat))
+            if (StringUtils.isEmpty(partitionDateFormat)) {
+                value = "" + ts;
+            } else {
                 partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
-            value = DateFormat.formatToDateStr(ts, partitionDateFormat);
+                value = DateFormat.formatToDateStr(ts, partitionDateFormat);
+            }
         } else {
             throw new RuntimeException("Type " + partitionColType + " is not valid partition column type");
         }

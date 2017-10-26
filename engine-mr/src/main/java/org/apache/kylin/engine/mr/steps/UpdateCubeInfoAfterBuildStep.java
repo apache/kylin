@@ -111,6 +111,6 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         }
         
         logger.info("updateTimeRange step. minValue:" + minValue + " maxValue:" + maxValue);
-        segment.setTSRange(new TSRange(minValue, maxValue));
+        segment.setTSRange(new TSRange(minValue, maxValue + 1));
     }
 }
