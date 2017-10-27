@@ -34,6 +34,7 @@ import org.apache.kylin.cube.RawQueryLastHacker;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
+import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.gridtable.StorageLimitLevel;
 import org.apache.kylin.measure.MeasureType;
@@ -150,6 +151,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         TupleFilter filterD = translateDerived(filter, loosenedColumnD);
         groupsD.addAll(loosenedColumnD);
         TupleFilter.collectColumns(filterD, filterColumnD);
+        context.setFilterMask(getQueryFilterMask(filterColumnD));
 
         // set limit push down
         enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filterD, loosenedColumnD,
@@ -270,6 +272,22 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             }
         }
         return resultD;
+    }
+
+    private long getQueryFilterMask(Set<TblColRef> filterColumnD) {
+        long filterMask = 0;
+
+        logger.info("Filter column set for query: " + filterColumnD.toString());
+        if (filterColumnD.size() != 0) {
+            RowKeyColDesc[] allColumns = cubeDesc.getRowkey().getRowKeyColumns();
+            for (int i = 0; i < allColumns.length; i++) {
+                if (filterColumnD.contains(allColumns[i].getColRef())) {
+                    filterMask |= 1L << allColumns[i].getBitIndex();
+                }
+            }
+        }
+        logger.info("Filter mask is: " + filterMask);
+        return filterMask;
     }
 
     public boolean isNeedStorageAggregation(Cuboid cuboid, Collection<TblColRef> groupD,

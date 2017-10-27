@@ -148,7 +148,7 @@ public class MetricsSystem extends MetricRegistry {
             return activeReservoir;
         } else {
             String defaultActiveReservoirClass = KylinConfig.getInstanceFromEnv()
-                    .getMetricsActiveReservoirDefaultClass();
+                    .getKylinMetricsActiveReservoirDefaultClass();
             try {
                 activeReservoir = (ActiveReservoir) Class.forName(defaultActiveReservoirClass).getConstructor()
                         .newInstance();

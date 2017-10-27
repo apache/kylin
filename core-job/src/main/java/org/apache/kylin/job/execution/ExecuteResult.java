@@ -30,15 +30,35 @@ public final class ExecuteResult {
 
     private final State state;
     private final String output;
+    private final Throwable throwable;
 
     public ExecuteResult(State state) {
         this(state, "");
     }
 
     public ExecuteResult(State state, String output) {
+        this(state, output, null);
+    }
+
+    public ExecuteResult(State state, String output, Throwable throwable) {
         Preconditions.checkArgument(state != null, "state cannot be null");
         this.state = state;
         this.output = output;
+        this.throwable = throwable;
+    }
+
+    public static ExecuteResult createSucceed() {
+        return new ExecuteResult(State.SUCCEED, "succeed");
+    }
+
+    public static ExecuteResult createError(Throwable throwable) {
+        Preconditions.checkArgument(throwable != null, "throwable cannot be null");
+        return new ExecuteResult(State.ERROR, throwable.getLocalizedMessage(), throwable);
+    }
+
+    public static ExecuteResult createFailed(Throwable throwable) {
+        Preconditions.checkArgument(throwable != null, "throwable cannot be null");
+        return new ExecuteResult(State.FAILED, throwable.getLocalizedMessage(), throwable);
     }
 
     public State state() {
@@ -51,5 +71,9 @@ public final class ExecuteResult {
 
     public String output() {
         return output;
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
     }
 }

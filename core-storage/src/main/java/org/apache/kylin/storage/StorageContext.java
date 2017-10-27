@@ -37,6 +37,8 @@ import com.google.common.collect.Range;
 public class StorageContext {
     private static final Logger logger = LoggerFactory.getLogger(StorageContext.class);
 
+    public final int ctxId;
+
     private StorageURL connUrl;
     private int limit = Integer.MAX_VALUE;
     private boolean overlookOuterLimit = false;
@@ -58,6 +60,24 @@ public class StorageContext {
     private boolean partialResultReturned = false;
 
     private Range<Long> reusedPeriod;
+
+    private long filterMask;
+
+    public StorageContext() {
+        this(0);
+    }
+
+    public StorageContext(int ctxId) {
+        this.ctxId = ctxId;
+    }
+
+    public long getFilterMask() {
+        return filterMask;
+    }
+
+    public void setFilterMask(long filterMask) {
+        this.filterMask = filterMask;
+    }
 
     public StorageURL getConnUrl() {
         return connUrl;

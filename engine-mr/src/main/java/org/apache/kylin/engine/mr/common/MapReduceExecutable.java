@@ -43,6 +43,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.engine.mr.exception.MapReduceException;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -138,7 +139,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                     ex.printStackTrace(new PrintWriter(stringWriter));
                     log.append(stringWriter.toString()).append("\n");
                     log.append("result code:").append(2);
-                    return new ExecuteResult(ExecuteResult.State.ERROR, log.toString());
+                    return new ExecuteResult(ExecuteResult.State.ERROR, log.toString(), ex);
                 }
                 job = hadoopJob.getJob();
             }
@@ -167,7 +168,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                     if (status == JobStepStatusEnum.FINISHED) {
                         return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
                     } else {
-                        return new ExecuteResult(ExecuteResult.State.FAILED, output.toString());
+                        return ExecuteResult.createFailed(new MapReduceException(output.toString()));
                     }
                 }
                 Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000L);
@@ -190,10 +191,10 @@ public class MapReduceExecutable extends AbstractExecutable {
 
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
-            return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+            return ExecuteResult.createError(e);
         } catch (Exception e) {
             logger.error("error execute " + this.toString(), e);
-            return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+            return ExecuteResult.createError(e);
         }
     }
 
