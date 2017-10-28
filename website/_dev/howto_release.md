@@ -85,7 +85,7 @@ In the "servers" section, make sure the following servers be added, and replace 
       <username>#YOUR_APACHE_ID#</username>
       <password>#YOUR_APACHE_PWD#</password>
     </server>
-
+    
     <!-- To publish a website of some part of Maven -->
     <server>
       <id>apache.website</id>
@@ -97,7 +97,7 @@ In the "servers" section, make sure the following servers be added, and replace 
       <filePermissions>664</filePermissions>
       <directoryPermissions>775</directoryPermissions>
     </server>
-
+    
     <!-- To stage a website of some part of Maven -->
     <server>
       <id>stagingSite</id> 
@@ -124,7 +124,7 @@ $ mvn clean
 
 # Make sure all unit tests are passed
 $ mvn test
- 
+
 # Check the `org.apache.kylin.common.KylinVersion` class, ensure the value of `CURRENT_KYLIN_VERSION` is the release version. 
 
 # Fix any license issues as reported by target/rat.txt
@@ -133,7 +133,7 @@ $ mvn -Papache-release -DskipTests -Dgpg.passphrase=${GPG_PASSPHRASE} install
 
 Optionally, when the dry-run has succeeded, change install to deploy:
 {% highlight bash %}
-$ mvn -Papache-release -Dgpg.passphrase=${GPG_PASSPHRASE} deploy
+$ mvn -Papache-release -DskipTests -Dgpg.passphrase=${GPG_PASSPHRASE} deploy
 {% endhighlight %}
 
 __Prepare and dry run a release__
@@ -157,7 +157,7 @@ $ git clean -xf
 $ mvn clean
 
 # Optionally, do a dry run of the release:prepare step, which sets version numbers.
-$ mvn -DdryRun=true -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}" release:prepare 2>&1 | tee /tmp/prepare-dry.log
+$ mvn -DdryRun=true -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:prepare 2>&1 | tee /tmp/prepare-dry.log
 {% endhighlight %}
 
 __Check the dry run output:__
@@ -424,13 +424,13 @@ After publish the release, you need generate the binary packages and then put th
 * Git checkout the tag for current release; 
 * Make a binary package by refering to [this doc](howto_package.html);
 * Sign the generated binary package with gpg, e.g,:
-{% highlight bash %}
-gpg --armor --output apache-kylin-1.5.0-bin.tar.gz.asc --detach-sig apache-kylin-1.5.0-bin.tar.gz
-{% endhighlight %}
+  {% highlight bash %}
+  gpg --armor --output apache-kylin-1.5.0-bin.tar.gz.asc --detach-sig apache-kylin-1.5.0-bin.tar.gz
+  {% endhighlight %}
 * Generate the md5 file for the binary package, e.g,:
-{% highlight bash %}
-md5sum < apache-kylin-1.5.0-bin.tar.gz > apache-kylin-1.5.0-bin.tar.gz.md5
-{% endhighlight %}
+  {% highlight bash %}
+  md5sum < apache-kylin-1.5.0-bin.tar.gz > apache-kylin-1.5.0-bin.tar.gz.md5
+  {% endhighlight %}
 * Push the binary package, the signature file and the md5 file to the svn __dev__ repo, then run `svn mv <files-in-dev> <files-in-release>` to move them to svn __release__ repo.
 * For different Hadoop/HBase version, you may need repeat the above steps;
 * Add the files and then commit the svn changes. 
@@ -450,7 +450,7 @@ Send one mail with subject like "[Announce] Apache Kylin x.y.z released" to foll
 * Apache Kylin Dev mailing list: dev@kylin.apache.org
 * Apache Kylin User mailing list: user@kylin.apache.org
 * Apache Announce mailing list: announce@apache.org
-Please notice to always use your Apache mail address to send this;
+  Please notice to always use your Apache mail address to send this;
 
 Here is a sample of announcement email (by studying Kafka's):
 
