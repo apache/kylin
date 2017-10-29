@@ -5,6 +5,7 @@ categories: docs
 permalink: /docs21/index.html
 ---
 
+
 Welcome to Apache Kylin™: Extreme OLAP Engine for Big Data
 ------------  
 
@@ -16,6 +17,7 @@ Document of prior versions:
 * [v1.6.x document](/docs16/)
 * [v1.5.x document](/docs15/)
 
+
 Installation & Setup
 ------------  
 1. [Hadoop Env](install/hadoop_env.html)
@@ -25,15 +27,16 @@ Installation & Setup
 5. [Run Kylin with Docker](install/kylin_docker.html)
 
 
+
 Tutorial
 ------------  
 1. [Quick Start with Sample Cube](tutorial/kylin_sample.html)
 2. [Web Interface](tutorial/web.html)
 3. [Cube Wizard](tutorial/create_cube.html)
-3. [Cube Build and Job Monitoring](tutorial/cube_build_job.html)
+4. [Cube Build and Job Monitoring](tutorial/cube_build_job.html)
 5. [SQL reference: by Apache Calcite](http://calcite.apache.org/docs/reference.html)
 6. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
-7. [Build Cube with Spark Engine (beta)](tutorial/cube_spark.html)
+7. [Build Cube with Spark Engine](tutorial/cube_spark.html)
 8. [Cube Build Tuning](tutorial/cube_build_performance.html)
 9. [Enable Query Pushdown](tutorial/query_pushdown.html)
 
@@ -52,6 +55,7 @@ Connectivity and APIs
 9. [Connect from SQuirreL](tutorial/squirrel.html)
 10. [Connect from Apache Flink](tutorial/flink.html)
 11. [Connect from Apache Hue](tutorial/hue.html)
+
 
 Operations
 ------------  
