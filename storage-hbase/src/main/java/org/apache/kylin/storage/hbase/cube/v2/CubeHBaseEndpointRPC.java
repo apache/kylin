@@ -214,7 +214,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                                 cuboid.getId(), storageContext.getFilterMask(), rpcException,
                                                 stats.getServiceEndTime() - stats.getServiceStartTime(), 0,
                                                 stats.getScannedRowCount(),
-                                                stats.getScannedRowCount() - stats.getAggregatedRowCount(),
+                                                stats.getScannedRowCount() - stats.getAggregatedRowCount()
+                                                        - stats.getFilteredRowCount(),
                                                 stats.getAggregatedRowCount(), stats.getScannedBytes());
 
                                         // if any other region has responded with error, skip further processing
@@ -309,7 +310,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         sb.append("Endpoint RPC returned from HTable ").append(cubeSeg.getStorageLocationIdentifier()).append(" Shard ").append(BytesUtil.toHex(region)).append(" on host: ").append(stats.getHostname()).append(".");
         sb.append("Total scanned row: ").append(stats.getScannedRowCount()).append(". ");
         sb.append("Total scanned bytes: ").append(stats.getScannedBytes()).append(". ");
-        sb.append("Total filtered/aggred row: ").append(stats.getAggregatedRowCount()).append(". ");
+        sb.append("Total filtered row: ").append(stats.getFilteredRowCount()).append(". ");
+        sb.append("Total aggred row: ").append(stats.getAggregatedRowCount()).append(". ");
         sb.append("Time elapsed in EP: ").append(stats.getServiceEndTime() - stats.getServiceStartTime()).append("(ms). ");
         sb.append("Server CPU usage: ").append(stats.getSystemCpuLoad()).append(", server physical mem left: ").append(stats.getFreePhysicalMemorySize()).append(", server swap mem left:").append(stats.getFreeSwapSpaceSize()).append(".");
         sb.append("Etc message: ").append(stats.getEtcMsg()).append(".");

@@ -48,6 +48,7 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.gridtable.GTAggregateScanner;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
@@ -310,7 +311,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             ByteBuffer buffer = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);//ByteArrayOutputStream will auto grow
-            int finalRowCount = 0;
+            long finalRowCount = 0L;
 
             try {
                 for (GTRecord oneRecord : finalScanner) {
@@ -349,6 +350,10 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 finalScanner.close();
             }
 
+            long rowCountBeforeAggr = finalScanner instanceof GTAggregateScanner
+                    ? ((GTAggregateScanner) finalScanner).getInputRowCount()
+                    : finalRowCount;
+
             appendProfileInfo(sb, "agg done", serviceStartTime);
             logger.info("Total scanned {} rows and {} bytes", cellListIterator.getTotalScannedRowCount(),
                     cellListIterator.getTotalScannedRowBytes());
@@ -385,7 +390,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             done.run(responseBuilder.//
                     setCompressedRows(HBaseZeroCopyByteString.wrap(compressedAllRows)).//too many array copies 
                     setStats(CubeVisitProtos.CubeVisitResponse.Stats.newBuilder()
-                            .setAggregatedRowCount(cellListIterator.getTotalScannedRowCount() - finalRowCount)
+                            .setFilteredRowCount(cellListIterator.getTotalScannedRowCount() - rowCountBeforeAggr)
+                            .setAggregatedRowCount(rowCountBeforeAggr - finalRowCount)
                             .setScannedRowCount(cellListIterator.getTotalScannedRowCount())
                             .setScannedBytes(cellListIterator.getTotalScannedRowBytes())
                             .setServiceStartTime(serviceStartTime).setServiceEndTime(System.currentTimeMillis())
