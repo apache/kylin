@@ -18,45 +18,34 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import java.nio.ByteBuffer;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-import org.apache.kylin.common.util.BytesUtil;
+public class DataTypeTest extends LocalFileMetadataTestCase {
 
-/**
- */
-@SuppressWarnings("serial")
-public class Int4Serializer extends DataTypeSerializer<Integer> {
-
-    public Int4Serializer(DataType type) {
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
     }
 
-    @Override
-    public void serialize(Integer value, ByteBuffer out) {
-        BytesUtil.writeUnsigned(value, 4, out);
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
     }
 
-    @Override
-    public Integer deserialize(ByteBuffer in) {
-        return BytesUtil.readUnsigned(in, 4);
-    }
-
-    @Override
-    public int peekLength(ByteBuffer in) {
-        return 4;
-    }
-
-    @Override
-    public int maxLength() {
-        return 4;
-    }
-
-    @Override
-    public int getStorageBytesEstimate() {
-        return 4;
-    }
-
-    @Override
-    public Integer valueOf(String str) {
-        return Integer.parseInt(str);
+    @Test
+    public void testBasics() {
+        {
+            DataType t = DataType.getType("char(2)");
+            Assert.assertEquals("char", t.getName());
+            Assert.assertEquals(2, t.getPrecision());
+        }
+        {
+            DataType t = DataType.getType("string");
+            Assert.assertEquals("varchar", t.getName());
+        }
     }
 }
