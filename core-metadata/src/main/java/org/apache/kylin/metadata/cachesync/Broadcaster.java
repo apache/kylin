@@ -287,7 +287,7 @@ public class Broadcaster {
             break;
         }
 
-        logger.debug("Done broadcasting" + event + ", " + entity + ", " + cacheKey);
+        logger.debug("Done broadcasting " + event + ", " + entity + ", " + cacheKey);
     }
 
     /**

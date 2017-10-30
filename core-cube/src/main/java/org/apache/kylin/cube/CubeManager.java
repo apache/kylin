@@ -223,8 +223,7 @@ public class CubeManager implements IRealizationProvider {
             return null;
 
         String builderClass = cubeDesc.getDictionaryBuilderClass(col);
-        DictionaryInfo dictInfo = getDictionaryManager().buildDictionary(col, inpTable,
-                builderClass);
+        DictionaryInfo dictInfo = getDictionaryManager().buildDictionary(col, inpTable, builderClass);
 
         saveDictionaryInfo(cubeSeg, col, dictInfo);
         return dictInfo;
@@ -324,7 +323,7 @@ public class CubeManager implements IRealizationProvider {
         CubeInstance cube = CubeInstance.create(cubeName, desc);
         cube.setOwner(owner);
         updateCubeWithRetry(new CubeUpdate(cube), 0);
-        
+
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
 
         return cube;
@@ -336,7 +335,7 @@ public class CubeManager implements IRealizationProvider {
         // save cube resource
         cube.setOwner(owner);
         updateCubeWithRetry(new CubeUpdate(cube), 0);
-        
+
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cube.getName(), projectName,
                 owner);
 
@@ -484,8 +483,7 @@ public class CubeManager implements IRealizationProvider {
         return newSegment;
     }
 
-    public CubeSegment refreshSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange)
-            throws IOException {
+    public CubeSegment refreshSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange) throws IOException {
         checkInputRanges(tsRange, segRange);
         checkBuildingSegment(cube);
 
@@ -587,10 +585,11 @@ public class CubeManager implements IRealizationProvider {
 
         return newSegment;
     }
-    
+
     private void checkInputRanges(TSRange tsRange, SegmentRange segRange) {
         if (tsRange != null && segRange != null) {
-            throw new IllegalArgumentException("Build or refresh cube segment either by TSRange or by SegmentRange, not both.");
+            throw new IllegalArgumentException(
+                    "Build or refresh cube segment either by TSRange or by SegmentRange, not both.");
         }
     }
 
@@ -616,7 +615,8 @@ public class CubeManager implements IRealizationProvider {
      */
     public CubeInstance reloadCubeLocal(String cubeName) {
         CubeInstance cubeInstance = reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
-        Cuboid.clearCache(cubeInstance);
+        if (cubeInstance != null)
+            Cuboid.clearCache(cubeInstance);
         return cubeInstance;
     }
 
@@ -656,11 +656,11 @@ public class CubeManager implements IRealizationProvider {
         segment.setName(CubeSegment.makeSegmentName(tsRange, segRange));
         segment.setCreateTimeUTC(System.currentTimeMillis());
         segment.setCubeInstance(cube);
-        
+
         // let full build range be backward compatible
         if (tsRange == null && segRange == null)
             tsRange = new TSRange(0L, Long.MAX_VALUE);
-        
+
         segment.setTSRange(tsRange);
         segment.setSegRange(segRange);
         segment.setStatus(SegmentStatusEnum.NEW);
@@ -761,7 +761,9 @@ public class CubeManager implements IRealizationProvider {
 
         try {
             cube = store.getResource(path, CubeInstance.class, CUBE_SERIALIZER);
-            checkNotNull(cube, "cube (at %s) not found", path);
+            if (cube == null) {
+                return cube;
+            }
 
             String cubeName = cube.getName();
             checkState(StringUtils.isNotBlank(cubeName), "cube (at %s) name must not be blank", path);
@@ -799,7 +801,7 @@ public class CubeManager implements IRealizationProvider {
     private TableMetadataManager getTableManager() {
         return TableMetadataManager.getInstance(config);
     }
-    
+
     private DictionaryManager getDictionaryManager() {
         return DictionaryManager.getInstance(config);
     }
@@ -843,7 +845,7 @@ public class CubeManager implements IRealizationProvider {
             CubeSegment second = segments.get(i + 1);
             if (first.getSegRange().connects(second.getSegRange()))
                 continue;
-            
+
             if (first.getSegRange().apartBefore(second.getSegRange())) {
                 CubeSegment hole = new CubeSegment();
                 hole.setCubeInstance(cube);
