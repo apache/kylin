@@ -103,9 +103,6 @@ public class TrieDictionaryForestBuilder<T> {
             reset();
         }
     }
-    public byte[] convertValue(T value){
-        return bytesConverter.convertToBytes(value);
-    }
 
     public TrieDictionaryForest<T> build() {
         if (trieBuilder.isHasValue()) { //last tree

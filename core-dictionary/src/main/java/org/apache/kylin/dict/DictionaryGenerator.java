@@ -101,7 +101,7 @@ public class DictionaryGenerator {
     }
 
     public static Dictionary mergeDictionaries(DataType dataType, List<DictionaryInfo> sourceDicts) throws IOException {
-        return buildDictionary(dataType, new DictionaryValueEnumeratorProxy(sourceDicts,newDictionaryBuilder(dataType)));
+        return buildDictionary(dataType, new MultipleDictionaryValueEnumerator(sourceDicts));
     }
 
     private static class DateDictBuilder implements IDictionaryBuilder {
@@ -196,7 +196,7 @@ public class DictionaryGenerator {
         }
     }
     
-    private static class StringTrieDictForestBuilder implements IDictionaryBuilder,IForestTreeDictionaryBuilder {
+    private static class StringTrieDictForestBuilder implements IDictionaryBuilder {
         TrieDictionaryForestBuilder builder;
 
         @Override
@@ -216,10 +216,6 @@ public class DictionaryGenerator {
         @Override
         public Dictionary<String> build() throws IOException {
             return builder.build();
-        }
-        @Override
-        public byte[] convertValue(String value) {
-            return builder.convertValue(value);
         }
     }
 
@@ -249,7 +245,7 @@ public class DictionaryGenerator {
         }
     }
     
-    private static class NumberTrieDictForestBuilder implements IDictionaryBuilder,IForestTreeDictionaryBuilder {
+    private static class NumberTrieDictForestBuilder implements IDictionaryBuilder {
         NumberDictionaryForestBuilder builder;
 
         @Override
@@ -269,10 +265,6 @@ public class DictionaryGenerator {
         @Override
         public Dictionary<String> build() throws IOException {
             return builder.build();
-        }
-        @Override
-        public byte[] convertValue(String value) {
-            return builder.convertValue(value);
         }
     }
 
