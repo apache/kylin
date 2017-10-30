@@ -52,6 +52,7 @@ KylinApp.service('CubeDescModel', function (kylinConfig) {
       "hbase_mapping": {
         "column_family": []
       },
+      "volatile_range": "0",
       "retention_range": "0",
       "status_need_notify":['ERROR', 'DISCARDED', 'SUCCEED'],
       "auto_merge_time_ranges": [604800000, 2419200000],

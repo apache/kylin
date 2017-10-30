@@ -479,7 +479,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public SegmentRange autoMergeCubeSegments() throws IOException {
-        return segments.autoMergeCubeSegments(needAutoMerge(), getName(), getDescriptor().getAutoMergeTimeRanges());
+        return segments.autoMergeCubeSegments(needAutoMerge(), getName(), getDescriptor().getAutoMergeTimeRanges(), getDescriptor().getVolatileRange());
     }
 
     public Segments calculateToBeSegments(CubeSegment newSegment) {

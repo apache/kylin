@@ -77,10 +77,10 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 IOUtils.closeStream(is);
             }
 
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+            return ExecuteResult.createSucceed();
         } catch (IOException e) {
             logger.error("fail to save cuboid statistics", e);
-            return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+            return ExecuteResult.createError(e);
         }
     }
 

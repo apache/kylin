@@ -162,6 +162,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     private long partitionDateEnd = 3153600000000L;
     @JsonProperty("auto_merge_time_ranges")
     private long[] autoMergeTimeRanges;
+    @JsonProperty("volatile_range")
+    private long volatileRange = 0;
     @JsonProperty("retention_range")
     private long retentionRange = 0;
     @JsonProperty("engine_type")
@@ -1101,6 +1103,14 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return result;
     }
 
+    public long getVolatileRange() {
+        return volatileRange;
+    }
+
+    public void setVolatileRange(long volatileRange) {
+        this.volatileRange = volatileRange;
+    }
+
     public long getRetentionRange() {
         return retentionRange;
     }
@@ -1338,6 +1348,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setAutoMergeTimeRanges(cubeDesc.getAutoMergeTimeRanges());
         newCubeDesc.setPartitionDateStart(cubeDesc.getPartitionDateStart());
         newCubeDesc.setPartitionDateEnd(cubeDesc.getPartitionDateEnd());
+        newCubeDesc.setVolatileRange(cubeDesc.getVolatileRange());
         newCubeDesc.setRetentionRange(cubeDesc.getRetentionRange());
         newCubeDesc.setEngineType(cubeDesc.getEngineType());
         newCubeDesc.setStorageType(cubeDesc.getStorageType());

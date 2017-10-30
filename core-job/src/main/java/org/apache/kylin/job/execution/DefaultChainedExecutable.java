@@ -64,7 +64,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 return subTask.execute(context);
             }
         }
-        return new ExecuteResult(ExecuteResult.State.SUCCEED, null);
+        return new ExecuteResult(ExecuteResult.State.SUCCEED);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     @Override
     protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
         super.onExecuteError(exception, executableContext);
-        notifyUserStatusChange(executableContext, ExecutableState.ERROR);
+        onStatusChange(executableContext, ExecuteResult.createError(exception), ExecutableState.ERROR);
     }
 
     @Override
@@ -91,10 +91,10 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         
         if (isDiscarded()) {
             setEndTime(System.currentTimeMillis());
-            notifyUserStatusChange(executableContext, ExecutableState.DISCARDED);
+            onStatusChange(executableContext, result, ExecutableState.DISCARDED);
         } else if (isPaused()) {
             setEndTime(System.currentTimeMillis());
-            notifyUserStatusChange(executableContext, ExecutableState.STOPPED);
+            onStatusChange(executableContext, result, ExecutableState.STOPPED);
         } else if (result.succeed()) {
             List<? extends Executable> jobs = getTasks();
             boolean allSucceed = true;
@@ -119,11 +119,11 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             if (allSucceed) {
                 setEndTime(System.currentTimeMillis());
                 mgr.updateJobOutput(getId(), ExecutableState.SUCCEED, null, null);
-                notifyUserStatusChange(executableContext, ExecutableState.SUCCEED);
+                onStatusChange(executableContext, result, ExecutableState.SUCCEED);
             } else if (hasError) {
                 setEndTime(System.currentTimeMillis());
                 mgr.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
-                notifyUserStatusChange(executableContext, ExecutableState.ERROR);
+                onStatusChange(executableContext, result, ExecutableState.ERROR);
             } else if (hasRunning) {
                 mgr.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
             } else if (hasDiscarded) {
@@ -135,8 +135,12 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         } else {
             setEndTime(System.currentTimeMillis());
             mgr.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
-            notifyUserStatusChange(executableContext, ExecutableState.ERROR);
+            onStatusChange(executableContext, result, ExecutableState.ERROR);
         }
+    }
+
+    protected void onStatusChange(ExecutableContext context, ExecuteResult result, ExecutableState state) {
+        notifyUserStatusChange(context, state);
     }
 
     @Override
