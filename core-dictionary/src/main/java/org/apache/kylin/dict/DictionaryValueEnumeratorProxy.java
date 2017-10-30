@@ -21,6 +21,7 @@ package org.apache.kylin.dict;
 import java.io.IOException;
 import java.util.List;
 
+
 /**
  * @author leontong
  *
@@ -31,8 +32,7 @@ public class DictionaryValueEnumeratorProxy implements IDictionaryValueEnumerato
 
     public DictionaryValueEnumeratorProxy(List<DictionaryInfo> dictionaryInfoList, IDictionaryBuilder dictionaryBuilder) {
         if (dictionaryBuilder instanceof IForestTreeDictionaryBuilder) {
-            internal = new SortedMultipleDictionaryValueEnumerator(dictionaryInfoList,
-                    (IForestTreeDictionaryBuilder) dictionaryBuilder);
+            internal = new SortedMultipleDictionaryValueEnumerator(dictionaryInfoList, (IForestTreeDictionaryBuilder) dictionaryBuilder);
         } else {
             internal = new MultipleDictionaryValueEnumerator(dictionaryInfoList);
         }

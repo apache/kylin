@@ -89,8 +89,7 @@ public class TrieDictionaryForestBuilder<T> {
                 logger.info("values not in ascending order, previous '{}', current '{}'", previousValue, valueByteArray);
                 isOrdered = false;
                 if (trees.size() > 0) {
-                    throw new IllegalStateException(
-                            "Invalid input data. Unordered data cannot be split into multi trees");
+                    throw new IllegalStateException("Invalid input data. Unordered data cannot be split into multi trees");
                 }
             }
         }
@@ -104,8 +103,7 @@ public class TrieDictionaryForestBuilder<T> {
             reset();
         }
     }
-
-    public byte[] convertValue(T value) {
+    public byte[] convertValue(T value){
         return bytesConverter.convertToBytes(value);
     }
 
@@ -115,8 +113,7 @@ public class TrieDictionaryForestBuilder<T> {
             addTree(tree);
             reset();
         }
-        TrieDictionaryForest<T> forest = new TrieDictionaryForest<T>(this.trees, this.valueDivide, this.accuOffset,
-                this.bytesConverter, baseId);
+        TrieDictionaryForest<T> forest = new TrieDictionaryForest<T>(this.trees, this.valueDivide, this.accuOffset, this.bytesConverter, baseId);
         // if input values are not in ascending order and tree num>1,TrieDictionaryForest can not work correctly.
         if (forest.getTrees().size() > 1 && !isOrdered) {
             throw new IllegalStateException("Invalid input data. Unordered data can not be split into multi trees");
