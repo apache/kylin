@@ -159,7 +159,7 @@ public class PartitionDesc implements Serializable {
     public void setCubePartitionType(PartitionType partitionType) {
         this.partitionType = partitionType;
     }
-    
+
     public String getPartitionConditionBuilderClz() {
         return partitionConditionBuilderClz;
     }
@@ -195,6 +195,7 @@ public class PartitionDesc implements Serializable {
 
             TblColRef partitionDateColumn = partDesc.getPartitionDateColumnRef();
             TblColRef partitionTimeColumn = partDesc.getPartitionTimeColumnRef();
+
             StringBuilder builder = new StringBuilder();
 
             if (partDesc.partitionColumnIsYmdInt()) {
@@ -242,11 +243,19 @@ public class PartitionDesc implements Serializable {
                 return;
             }
 
-            builder.append(partitionColumnName + " >= '"
-                    + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'");
+            String startInc = null;
+            String endInc = null;
+            if (StringUtils.isBlank(partitionColumnDateFormat)) {
+                startInc = String.valueOf(startInclusive);
+                endInc = String.valueOf(endExclusive);
+            } else {
+                startInc = DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat);
+                endInc = DateFormat.formatToDateStr(endExclusive, partitionColumnDateFormat);
+            }
+
+            builder.append(partitionColumnName + " >= '" + startInc + "'");
             builder.append(" AND ");
-            builder.append(partitionColumnName + " < '"
-                    + DateFormat.formatToDateStr(endExclusive, partitionColumnDateFormat) + "'");
+            builder.append(partitionColumnName + " < '" + endInc + "'");
         }
 
         private static void buildMultipleColumnRangeCondition(StringBuilder builder, TblColRef partitionDateColumn,

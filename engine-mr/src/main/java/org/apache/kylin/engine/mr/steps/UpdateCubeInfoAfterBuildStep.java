@@ -46,6 +46,9 @@ import org.slf4j.LoggerFactory;
 public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(UpdateCubeInfoAfterBuildStep.class);
 
+    private long timeMaxValue = Long.MIN_VALUE;
+    private long timeMinValue = Long.MAX_VALUE;
+
     public UpdateCubeInfoAfterBuildStep() {
         super();
     }
@@ -89,7 +92,8 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
         Path colDir = new Path(factColumnsInputPath, partitionCol.getIdentity());
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
-        Path outputFile = HadoopUtil.getFilterOnlyPath(fs, colDir, partitionCol.getName() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
+        Path outputFile = HadoopUtil.getFilterOnlyPath(fs, colDir,
+                partitionCol.getName() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
         if (outputFile == null) {
             throw new IOException("fail to find the partition file in base dir: " + colDir);
         }
@@ -109,8 +113,10 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             IOUtils.closeQuietly(isr);
             IOUtils.closeQuietly(bufferedReader);
         }
-        
+
         logger.info("updateTimeRange step. minValue:" + minValue + " maxValue:" + maxValue);
-        segment.setTSRange(new TSRange(minValue, maxValue + 1));
+        if (minValue != timeMinValue && maxValue != timeMaxValue) {
+            segment.setTSRange(new TSRange(minValue, maxValue + 1));
+        }
     }
 }
