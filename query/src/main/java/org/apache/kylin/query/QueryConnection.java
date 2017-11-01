@@ -29,7 +29,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 
 public class QueryConnection {
-    
+
     private static Boolean isRegister = false;
 
     public static Connection getConnection(String project) throws SQLException {
@@ -40,6 +40,7 @@ public class QueryConnection {
         File olapTmp = OLAPSchemaFactory.createTempOLAPJson(project, KylinConfig.getInstanceFromEnv());
         Properties info = new Properties();
         info.put("model", olapTmp.getAbsolutePath());
+        info.put("typeSystem", "org.apache.kylin.query.calcite.KylinRelDataTypeSystem");
         return DriverManager.getConnection("jdbc:calcite:", info);
     }
 }

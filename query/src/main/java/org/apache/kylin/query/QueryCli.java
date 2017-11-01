@@ -35,10 +35,12 @@ import org.apache.kylin.common.util.DBUtils;
 public class QueryCli {
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_METADATA = OptionBuilder.withArgName("metadata url").hasArg().isRequired().withDescription("Metadata URL").create("metadata");
+    private static final Option OPTION_METADATA = OptionBuilder.withArgName("metadata url").hasArg().isRequired()
+            .withDescription("Metadata URL").create("metadata");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_SQL = OptionBuilder.withArgName("input sql").hasArg().isRequired().withDescription("SQL").create("sql");
+    private static final Option OPTION_SQL = OptionBuilder.withArgName("input sql").hasArg().isRequired()
+            .withDescription("SQL").create("sql");
 
     public static void main(String[] args) throws Exception {
 
@@ -55,7 +57,7 @@ public class QueryCli {
         Statement stmt = null;
         ResultSet rs = null;
         try {
-            conn = QueryDataSource.create(null, config).getConnection();
+            conn = QueryConnection.getConnection(null);
 
             stmt = conn.createStatement();
             rs = stmt.executeQuery(sql);

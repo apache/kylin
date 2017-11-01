@@ -698,7 +698,7 @@ public class KylinTestBase {
 
         //setup cube conn
         String project = ProjectInstance.DEFAULT_PROJECT_NAME;
-        cubeConnection = QueryDataSource.create(project, config).getConnection();
+        cubeConnection = QueryConnection.getConnection(project);
 
         //setup h2
         h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++) + ";CACHE_SIZE=32072", "sa",

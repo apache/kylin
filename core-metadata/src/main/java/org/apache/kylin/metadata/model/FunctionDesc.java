@@ -146,12 +146,23 @@ public class FunctionDesc implements Serializable {
     }
 
     public DataType getRewriteFieldType() {
-        if (isMax() || isMin())
-            return parameter.getColRefs().get(0).getType();
-        else if (getMeasureType() instanceof BasicMeasureType)
-            return returnDataType;
-        else
+        if (getMeasureType() instanceof BasicMeasureType) {
+            if (isMax() || isMin()) {
+                return parameter.getColRefs().get(0).getType();
+            } else if (isSum()) {
+                if (parameter.getColRefs().get(0).getType().getName().equals(returnDataType.getName())) {
+                    return returnDataType;
+                } else {
+                    return parameter.getColRefs().get(0).getType();
+                }
+            } else if (isCount()) {
+                return DataType.getType("bigint");
+            } else {
+                throw new IllegalArgumentException("unknown measure type " + getMeasureType());
+            }
+        } else {
             return DataType.ANY;
+        }
     }
 
     public ColumnDesc newFakeRewriteColumn(TableDesc sourceTable) {
@@ -306,7 +317,8 @@ public class FunctionDesc implements Serializable {
 
     @Override
     public String toString() {
-        return "FunctionDesc [expression=" + expression + ", parameter=" + parameter + ", returnType=" + returnType + "]";
+        return "FunctionDesc [expression=" + expression + ", parameter=" + parameter + ", returnType=" + returnType
+                + "]";
     }
 
 }

@@ -47,14 +47,10 @@ import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.enumerator.OLAPQuery.EnumeratorTypeEnum;
 import org.apache.kylin.query.relnode.OLAPTableScan;
@@ -194,42 +190,6 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             }
         }
 
-        //if exist sum(x), where x is integer/short/byte
-        //to avoid overflow we upgrade x's type to long
-        HashSet<ColumnDesc> upgraded = new HashSet<>();
-        
-        //this includes checking two parts:
-        //1. sum measures in cubes:
-        for (MeasureDesc m : mgr.listEffectiveMeasures(olapSchema.getProjectName(), sourceTable.getIdentity())) {
-            if (m.getFunction().isSum()) {
-                FunctionDesc func = m.getFunction();
-                ColumnDesc col = func.getParameter().getColRefs().get(0).getColumnDesc();
-                if (col.getType() != func.getReturnDataType()) {
-                    if (upgraded.contains(col) == false) {
-                        upgradeColumnType(tableColumns, col, func.getReturnDataType());
-                        upgraded.add(col);
-                    }
-                }
-            }
-        }
-        //2. All integer measures in non-cube realizations
-        for (IRealization realization : mgr.listAllRealizations(olapSchema.getProjectName())) {
-            if (realization.getType() == RealizationType.INVERTED_INDEX && realization.isReady()
-                    && realization.getModel().isFactTable(sourceTable.getIdentity())) {
-                DataModelDesc model = realization.getModel();
-                for (String metricColumn : model.getMetrics()) {
-                    TblColRef col = model.findColumn(metricColumn);
-                    if (col.getTable().equals(sourceTable.getIdentity()) && col.getType().isIntegerFamily()
-                            && !col.getType().isBigInt()) {
-                        if (upgraded.contains(col.getColumnDesc()) == false) {
-                            upgradeColumnType(tableColumns, col.getColumnDesc(), DataType.getType("bigint"));
-                            upgraded.add(col.getColumnDesc());
-                        }
-                    }
-                }
-            }
-        }
-
         Collections.sort(tableColumns, new Comparator<ColumnDesc>() {
             @Override
             public int compare(ColumnDesc o1, ColumnDesc o2) {
@@ -237,16 +197,6 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             }
         });
         return Lists.newArrayList(Iterables.concat(tableColumns, metricColumns));
-    }
-
-    private void upgradeColumnType(List<ColumnDesc> tableColumns, ColumnDesc upgrade, DataType newType) {
-        int index = tableColumns.indexOf(upgrade);
-        if (index < 0) {
-            throw new IllegalStateException("Metric column " + upgrade + " is not found in the the project's columns");
-        }
-        tableColumns.get(index).setUpgradedType(newType);
-        logger.info("To avoid overflow, upgraded {}'s type from {} to {}", tableColumns.get(index),
-                tableColumns.get(index).getType(), tableColumns.get(index).getUpgradedType());
     }
 
     @Override
