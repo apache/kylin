@@ -27,6 +27,7 @@ import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.CapabilityResult.DimensionAsMeasure;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.slf4j.Logger;

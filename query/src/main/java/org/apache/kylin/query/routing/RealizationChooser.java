@@ -36,6 +36,7 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
