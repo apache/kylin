@@ -19,10 +19,7 @@
 package org.apache.kylin.query.schema;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +29,6 @@ import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaFactory;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.model.DatabaseDesc;
@@ -56,6 +52,8 @@ public class OLAPSchemaFactory implements SchemaFactory {
         Schema newSchema = new OLAPSchema(project, schemaName, false);
         return newSchema;
     }
+
+    private static Map<String, File> cachedJsons = Maps.newConcurrentMap();
 
     public static File createTempOLAPJson(String project, KylinConfig config) {
 
@@ -81,46 +79,54 @@ public class OLAPSchemaFactory implements SchemaFactory {
         }
 
         try {
-            File tmp = File.createTempFile("olap_model_", ".json");
 
-            FileWriter out = new FileWriter(tmp);
-            out.write("{\n");
-            out.write("    \"version\": \"1.0\",\n");
-            out.write("    \"defaultSchema\": \"" + majoritySchemaName + "\",\n");
-            out.write("    \"schemas\": [\n");
+            StringBuilder out = new StringBuilder();
+            out.append("{\n");
+            out.append("    \"version\": \"1.0\",\n");
+            out.append("    \"defaultSchema\": \"" + majoritySchemaName + "\",\n");
+            out.append("    \"schemas\": [\n");
 
             int counter = 0;
             for (String schemaName : schemaCounts.keySet()) {
-                out.write("        {\n");
-                out.write("            \"type\": \"custom\",\n");
-                out.write("            \"name\": \"" + schemaName + "\",\n");
-                out.write("            \"factory\": \"org.apache.kylin.query.schema.OLAPSchemaFactory\",\n");
-                out.write("            \"operand\": {\n");
-                out.write("                \"" + SCHEMA_PROJECT + "\": \"" + project + "\"\n");
-                out.write("            },\n");
+                out.append("        {\n");
+                out.append("            \"type\": \"custom\",\n");
+                out.append("            \"name\": \"" + schemaName + "\",\n");
+                out.append("            \"factory\": \"org.apache.kylin.query.schema.OLAPSchemaFactory\",\n");
+                out.append("            \"operand\": {\n");
+                out.append("                \"" + SCHEMA_PROJECT + "\": \"" + project + "\"\n");
+                out.append("            },\n");
                 createOLAPSchemaFunctions(out);
-                out.write("        }\n");
+                out.append("        }\n");
 
                 if (++counter != schemaCounts.size()) {
-                    out.write(",\n");
+                    out.append(",\n");
                 }
             }
 
-            out.write("    ]\n");
-            out.write("}\n");
-            out.close();
-            tmp.deleteOnExit();
+            out.append("    ]\n");
+            out.append("}\n");
 
-            logger.info("Schema json:" + StringUtils.join(FileUtils.readLines(tmp, Charset.defaultCharset()), "\n"));
+            String jsonContent = out.toString();
+            File file = cachedJsons.get(jsonContent);
+            if (file == null) {
+                file = File.createTempFile("olap_model_", ".json");
+                file.deleteOnExit();
+                FileUtils.writeStringToFile(file, jsonContent);
 
-            return tmp;
+                logger.debug("adding a new json file to cache");
+                cachedJsons.put(jsonContent, file);
+            }
+
+            logger.debug("Schema json:" + FileUtils.readFileToString(file));
+
+            return file;
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static void createOLAPSchemaFunctions(Writer out) throws IOException {
+    private static void createOLAPSchemaFunctions(StringBuilder out) throws IOException {
         Map<String, String> udfs = Maps.newHashMap();
         udfs.putAll(KylinConfig.getInstanceFromEnv().getUDFs());
         for (Entry<String, Class<?>> entry : MeasureTypeFactory.getUDAFs().entrySet()) {
@@ -128,20 +134,20 @@ public class OLAPSchemaFactory implements SchemaFactory {
         }
 
         int index = 0;
-        out.write("            \"functions\": [\n");
+        out.append("            \"functions\": [\n");
         for (Map.Entry<String, String> udf : udfs.entrySet()) {
             String udfName = udf.getKey().trim().toUpperCase();
             String udfClassName = udf.getValue().trim();
-            out.write("               {\n");
-            out.write("                   name: '" + udfName + "',\n");
-            out.write("                   className: '" + udfClassName + "'\n");
+            out.append("               {\n");
+            out.append("                   name: '" + udfName + "',\n");
+            out.append("                   className: '" + udfClassName + "'\n");
             if (index < udfs.size() - 1) {
-                out.write("               },\n");
+                out.append("               },\n");
             } else {
-                out.write("               }\n");
+                out.append("               }\n");
             }
             index++;
         }
-        out.write("            ]\n");
+        out.append("            ]\n");
     }
 }
