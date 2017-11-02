@@ -18,17 +18,28 @@
 
 package org.apache.kylin.tool.metrics.systemcube;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metrics.lib.SinkTool;
 import org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,23 +49,46 @@ import com.google.common.collect.Sets;
 
 public class SCCreatorTest extends LocalFileMetadataTestCase {
 
+    private File tempMetadataDir;
+
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
+
+        File tempDir = File.createTempFile(getClass().getName(), "system");
+        FileUtils.forceDelete(tempDir);
+        tempMetadataDir = new File(tempDir, "meta");
     }
 
     @After
     public void after() throws Exception {
-        this.cleanupTestMetadata();
+        if (tempMetadataDir != null && tempMetadataDir.exists()) {
+            FileUtils.forceDelete(tempMetadataDir.getParentFile());
+        }
+        staticCleanupTestMetadata();
     }
 
     @Test
     public void testExecute() throws Exception {
-        String outputPath = "../examples/system";
+        String metadataPath = tempMetadataDir.getPath();
+
         String inputPath = "src/main/resources/SCSinkTools.json";
 
         SCCreator cli = new SCCreator();
-        cli.execute("ADMIN", outputPath, inputPath);
+        cli.execute("ADMIN", metadataPath, inputPath);
+        Assert.assertTrue(tempMetadataDir.isDirectory());
+
+        KylinConfig local = KylinConfig.createKylinConfig(KylinConfig.getInstanceFromEnv());
+        local.setMetadataUrl(metadataPath);
+
+        CubeManager cubeManager = CubeManager.getInstance(local);
+        List<CubeInstance> cubeList = cubeManager.listAllCubes();
+        System.out.println("System cubes: " + cubeList);
+        assertEquals(cubeList.size(), 5);
+
+        for (CubeInstance cube : cubeList) {
+            Assert.assertTrue(cube.getStatus() != RealizationStatusEnum.DESCBROKEN);
+        }
     }
 
     @Test
@@ -65,25 +99,36 @@ public class SCCreatorTest extends LocalFileMetadataTestCase {
         HiveSinkTool hiveSinkTool = new HiveSinkTool();
         hiveSinkTool.setCubeDescOverrideProperties(cubeDescOverrideProperties);
 
-        try (BufferedOutputStream os = new BufferedOutputStream(
-                new FileOutputStream("src/test/resources/SCSinkTools.json"))) {
+        String outputPath = "src/test/resources/SCSinkTools.json";
+        try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(outputPath))) {
             ObjectMapper mapper = new ObjectMapper();
             mapper.enableDefaultTyping();
             mapper.writeValue(os, Sets.newHashSet(hiveSinkTool));
+        }
+
+        Set<SinkTool> sinkToolSet = readSinkToolsJson(outputPath);
+        for (SinkTool entry : sinkToolSet) {
+            Map<String, String> props = entry.getCubeDescOverrideProperties();
+            for (String key : cubeDescOverrideProperties.keySet()) {
+                assertEquals(props.get(key), cubeDescOverrideProperties.get(key));
+            }
         }
     }
 
     @Test
     public void testReadSinkToolsJson() throws Exception {
-        try (BufferedInputStream is = new BufferedInputStream(
-                new FileInputStream("src/main/resources/SCSinkTools.json"))) {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.enableDefaultTyping();
-            Set<HiveSinkTool> sinkToolSet = mapper.readValue(is, HashSet.class);
-            for (HiveSinkTool entry : sinkToolSet) {
-                System.out.println(entry.getCubeDescOverrideProperties());
-            }
+        Set<SinkTool> sinkToolSet = readSinkToolsJson("src/main/resources/SCSinkTools.json");
+        for (SinkTool entry : sinkToolSet) {
+            Map<String, String> props = entry.getCubeDescOverrideProperties();
+            assertEquals(props.get("kylin.cube.algorithm"), "INMEM");
         }
     }
 
+    private Set<SinkTool> readSinkToolsJson(String jsonPath) throws Exception {
+        try (BufferedInputStream is = new BufferedInputStream(new FileInputStream(jsonPath))) {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.enableDefaultTyping();
+            return mapper.readValue(is, HashSet.class);
+        }
+    }
 }
