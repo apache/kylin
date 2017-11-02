@@ -113,11 +113,10 @@ public class OLAPSchemaFactory implements SchemaFactory {
                 file.deleteOnExit();
                 FileUtils.writeStringToFile(file, jsonContent);
 
-                logger.debug("adding a new json file to cache");
+                logger.debug("Adding new schema file {} to cache", file.getName());
+                logger.debug("Schema json: " + jsonContent);
                 cachedJsons.put(jsonContent, file);
             }
-
-            logger.debug("Schema json:" + FileUtils.readFileToString(file));
 
             return file;
 
