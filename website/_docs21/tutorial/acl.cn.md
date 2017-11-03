@@ -7,7 +7,7 @@ version: v1.2
 since: v0.7.1
 ---
 
-  
+> 从v2.2.0版本开始，Cube ACL功能已经移除, 请使用[Project level ACL](/docs21/tutorial/project_level_acl.html)进行权限管理。
 
 在`Cubes`页面，双击cube行查看详细信息。在这里我们关注`Access`标签。
 点击`+Grant`按钮进行授权。
