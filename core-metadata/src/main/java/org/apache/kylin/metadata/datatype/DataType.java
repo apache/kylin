@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.datatype;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 
@@ -194,6 +196,23 @@ public class DataType implements Serializable {
             }
         }
 
+    }
+
+    public int compare(String value1, String value2) {
+        if (isDateTimeFamily()) {
+            Long millis1 = DateFormat.stringToMillis(value1);
+            Long millis2 = DateFormat.stringToMillis(value2);
+            return millis1.compareTo(millis2);
+        } else if (isIntegerFamily()) {
+            Long l1 = new Long(value1);
+            Long l2 = new Long(value2);
+            return l1.compareTo(l2);
+        } else if (isNumberFamily()) {
+            BigDecimal bigDecimal1 = new BigDecimal(value1);
+            BigDecimal bigDecimal2 = new BigDecimal(value2);
+            return bigDecimal1.compareTo(bigDecimal2);
+        }
+        return value1.compareTo(value2);
     }
 
     private String replaceLegacy(String str) {

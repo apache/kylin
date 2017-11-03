@@ -101,7 +101,7 @@ public class DictionaryGenerator {
     }
 
     public static Dictionary mergeDictionaries(DataType dataType, List<DictionaryInfo> sourceDicts) throws IOException {
-        return buildDictionary(dataType, new MultipleDictionaryValueEnumerator(sourceDicts));
+        return buildDictionary(dataType, new MultipleDictionaryValueEnumerator(dataType, sourceDicts));
     }
 
     private static class DateDictBuilder implements IDictionaryBuilder {
