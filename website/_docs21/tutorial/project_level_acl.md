@@ -39,6 +39,7 @@ Once project-level access permission has been set for a user, access permission 
 | Check system page                        | Yes          | No            | No         | No        | No    |
 | Reload metadata, disable cache, set config, diagnosis | Yes          | No            | No         | No        | No    |
 
+
 Additionally, when Query Pushdown is enabled, QUERY access permission on a project allows users to issue push down queries on all tables in the project even though no cube could serve them. It's impossible if a user is not yet granted QUERY permission at project-level.
 
 ### Manage Access Permission at Project-level

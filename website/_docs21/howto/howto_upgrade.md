@@ -19,6 +19,14 @@ Running as a Hadoop client, Apache Kylin's metadata and Cube data are persistend
 
 Below are versions specific guides:
 
+
+## Upgrade from v2.1.0 to v2.2.0
+
+Kylin v2.2.0 cube metadata is compitable with v2.1.0, but you need aware the following changes:
+
+* Cube ACL is removed, use Project Level ACL instead. You need to manually configure Project Permissions to migrate your existing Cube Permissions. Please refer to [Project Level ACL](/docs21/tutorial/project_level_acl.html).
+
+
 ## Upgrade from v2.0.0 to v2.1.0
 
 Kylin v2.1.0 cube metadata is compitable with v2.0.0, but you need aware the following changes. 
