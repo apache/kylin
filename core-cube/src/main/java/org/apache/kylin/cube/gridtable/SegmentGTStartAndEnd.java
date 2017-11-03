@@ -75,7 +75,6 @@ public class SegmentGTStartAndEnd {
             if (StringUtils.isEmpty(partitionDateFormat)) {
                 value = "" + ts;
             } else {
-                partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
                 value = DateFormat.formatToDateStr(ts, partitionDateFormat);
             }
         } else {
