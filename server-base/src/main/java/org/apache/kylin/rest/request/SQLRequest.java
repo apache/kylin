@@ -104,7 +104,7 @@ public class SQLRequest implements Serializable {
         if (cacheKey != null)
             return cacheKey;
 
-        cacheKey = Lists.newArrayList(sql.replaceAll("\\s+", "") //
+        cacheKey = Lists.newArrayList(sql.replaceAll("[ ]", " ") //
                 , project //
                 , offset //
                 , limit //
