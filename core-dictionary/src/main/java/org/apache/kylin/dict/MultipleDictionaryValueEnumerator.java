@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.metadata.datatype.DataType;
 
 import com.google.common.collect.Lists;
 
@@ -33,8 +34,10 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
     private List<Integer> curKeys = Lists.newArrayList();
     private String curValue = null;
     private List<Dictionary<String>> dictionaryList;
+    private DataType dataType;
 
-    public MultipleDictionaryValueEnumerator(List<DictionaryInfo> dictionaryInfoList) {
+    public MultipleDictionaryValueEnumerator(DataType dataType, List<DictionaryInfo> dictionaryInfoList) {
+        this.dataType = dataType;
         dictionaryList = Lists.newArrayListWithCapacity(dictionaryInfoList.size());
         for (DictionaryInfo dictInfo : dictionaryInfoList) {
             Dictionary<String> dictionary = (Dictionary<String>) dictInfo.getDictionaryObject();
@@ -52,29 +55,29 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
     public boolean moveNext() throws IOException {
         String minValue = null;
         int curDictIndex = 0;
-        
+
         // multi-merge dictionary forest
         for (int i = 0; i < dictionaryList.size(); i++) {
             Dictionary<String> dict = dictionaryList.get(i);
             if (dict == null)
                 continue;
-            
+
             int curKey = curKeys.get(i);
             if (curKey > dict.getMaxId())
                 continue;
-            
+
             String curValue = dict.getValueFromId(curKey);
-            if (minValue == null || minValue.compareTo(curValue) > 0) {
+            if (minValue == null || dataType.compare(minValue, curValue) > 0) {
                 minValue = curValue;
                 curDictIndex = i;
             }
         }
-        
+
         if (minValue == null) {
             curValue = null;
             return false;
         }
-        
+
         curValue = minValue;
         curKeys.set(curDictIndex, curKeys.get(curDictIndex) + 1);
         return true;
