@@ -78,6 +78,7 @@ public class JoinedFlatTable {
         }
         ddl.append("STORED AS " + format + "\n");
         ddl.append("LOCATION '" + getTableDir(flatDesc, storageDfsDir) + "';").append("\n");
+        ddl.append("ALTER TABLE " + flatDesc.getTableName() + " SET TBLPROPERTIES('auto.purge'='true');\n");
         return ddl.toString();
     }
 
