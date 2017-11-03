@@ -178,9 +178,6 @@ public class Message {
         return "Invalid Model name '%s', only letters, numbers and underline supported.";
     }
 
-    public String getDUPLICATE_MODEL_NAME() {
-        return "Model name '%s' is duplicated, could not be created.";
-    }
 
     public String getDROP_REFERENCED_MODEL() {
         return "Model is referenced by Cube '%s' , could not dropped";
