@@ -12,8 +12,10 @@ permalink: /cn/docs21/index.html
 Apache Kylin™是一个开源的分布式分析引擎，提供Hadoop之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc.开发并贡献至开源社区。
 
 查看旧版本文档: 
-* [v2.0](/cn/docs20/)
-* [v1.6](/cn/docs16/)
+* [v2.1.x and v2.2.x document](/docs21/)
+* [v2.0.x document](/docs20/)
+* [v1.6.x document](/docs16/)
+* [v1.5.x document](/docs15/)
 
 安装 
 ------------  
