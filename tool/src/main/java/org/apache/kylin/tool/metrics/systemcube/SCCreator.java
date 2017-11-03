@@ -255,8 +255,8 @@ public class SCCreator extends AbstractApplication {
             parentDir.mkdirs();
         }
 
-        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName));
-        bufferedWriter.append(contents);
-        bufferedWriter.close();
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName))) {
+            bufferedWriter.append(contents);
+        }
     }
 }
