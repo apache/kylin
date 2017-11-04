@@ -25,6 +25,7 @@ Below are versions specific guides:
 Kylin v2.2.0 cube metadata is compitable with v2.1.0, but you need aware the following changes:
 
 * Cube ACL is removed, use Project Level ACL instead. You need to manually configure Project Permissions to migrate your existing Cube Permissions. Please refer to [Project Level ACL](/docs21/tutorial/project_level_acl.html).
+* Update HBase coprocessor. The HBase tables for existing cubes need be updated to the latest coprocessor. Follow [this guide](/docs21/howto/howto_update_coprocessor.html) to update.
 
 
 ## Upgrade from v2.0.0 to v2.1.0
