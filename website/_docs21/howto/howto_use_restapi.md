@@ -18,9 +18,10 @@ This page lists the major RESTful APIs provided by Kylin.
    * [Get cube descriptor (dimension, measure info, etc)](#get-cube-descriptor)
    * [Get data model (fact and lookup table info)](#get-data-model)
    * [Build cube](#build-cube)
+   * [Enable cube](#enable-cube)
    * [Disable cube](#disable-cube)
    * [Purge cube](#purge-cube)
-   * [Enable cube](#enable-cube)
+   * [Delete segment](#delete-segment)
 * JOB
    * [Resume job](#resume-job)
    * [Pause job](#pause-job)
@@ -795,6 +796,10 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 
 #### Response Sample
 (Same as "Enable Cube")
+
+
+## Delete Segment
+`DELETE /kylin/api/cubes/{cubeName}/segs/{segmentName}`
 
 ***
 
