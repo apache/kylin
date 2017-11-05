@@ -100,21 +100,20 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         cubeDesc = cube.getDescriptor();
         columnList = Lists.newArrayList(cubeDesc.getAllColumnsNeedDictionaryBuilt());
 
-        boolean collectStatistics = Boolean.parseBoolean(conf.get(BatchConstants.CFG_STATISTICS_ENABLED));
         int numberOfTasks = context.getNumReduceTasks();
         taskId = context.getTaskAttemptID().getTaskID().getId();
 
         uhcReducerCount = cube.getConfig().getUHCReducerCount();
         initReducerIdToColumnIndex(config);
 
-        if (collectStatistics && (taskId == numberOfTasks - 1)) {
+        if (taskId == numberOfTasks - 1) {
             // hll
             isStatistics = true;
             baseCuboidRowCountInMappers = Lists.newArrayList();
             cuboidHLLMap = Maps.newHashMap();
             samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
             logger.info("Reducer " + taskId + " handling stats");
-        } else if (collectStatistics && (taskId == numberOfTasks - 2)) {
+        } else if (taskId == numberOfTasks - 2) {
             // partition col
             isPartitionCol = true;
             col = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();

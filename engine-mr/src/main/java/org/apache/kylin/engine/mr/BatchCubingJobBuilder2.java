@@ -57,7 +57,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         inputSide.addStepPhase1_CreateFlatTable(result);
 
         // Phase 2: Build Dictionary
-        result.addTask(createFactDistinctColumnsStepWithStats(jobId));
+        result.addTask(createFactDistinctColumnsStep(jobId));
         result.addTask(createBuildDictionaryStep(jobId));
         result.addTask(createSaveStatisticsStep(jobId));
         outputSide.addStepPhase2_BuildDictionary(result);

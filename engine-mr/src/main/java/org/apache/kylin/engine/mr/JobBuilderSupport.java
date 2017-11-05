@@ -55,14 +55,6 @@ public class JobBuilderSupport {
     }
 
     public MapReduceExecutable createFactDistinctColumnsStep(String jobId) {
-        return createFactDistinctColumnsStep(jobId, false);
-    }
-
-    public MapReduceExecutable createFactDistinctColumnsStepWithStats(String jobId) {
-        return createFactDistinctColumnsStep(jobId, true);
-    }
-
-    private MapReduceExecutable createFactDistinctColumnsStep(String jobId, boolean withStats) {
         MapReduceExecutable result = new MapReduceExecutable();
         result.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
         result.setMapReduceJobClass(FactDistinctColumnsJob.class);
@@ -71,7 +63,6 @@ public class JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, getFactDistinctColumnsPath(jobId));
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
-        appendExecCmdParameters(cmd, BatchConstants.ARG_STATS_ENABLED, String.valueOf(withStats));
         appendExecCmdParameters(cmd, BatchConstants.ARG_STATS_OUTPUT, getStatisticsPath(jobId));
         appendExecCmdParameters(cmd, BatchConstants.ARG_STATS_SAMPLING_PERCENT, String.valueOf(config.getConfig().getCubingInMemSamplingPercent()));
         appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Fact_Distinct_Columns_" + seg.getRealization().getName() + "_Step");
@@ -146,10 +137,6 @@ public class JobBuilderSupport {
 
     public String getCuboidRootPath(CubeSegment seg) {
         return getCuboidRootPath(seg.getLastBuildJobID());
-    }
-
-    public String getSecondaryIndexPath(String jobId) {
-        return getRealizationRootPath(jobId) + "/secondary_index/";
     }
 
     public void appendMapReduceParameters(StringBuilder buf) {

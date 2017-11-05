@@ -105,9 +105,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_HTABLE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_HTABLE_NAME)
             .hasArg().isRequired(true).withDescription("HTable name").create(BatchConstants.ARG_HTABLE_NAME);
 
-    protected static final Option OPTION_STATISTICS_ENABLED = OptionBuilder
-            .withArgName(BatchConstants.ARG_STATS_ENABLED).hasArg().isRequired(false)
-            .withDescription("Statistics enabled").create(BatchConstants.ARG_STATS_ENABLED);
     protected static final Option OPTION_STATISTICS_OUTPUT = OptionBuilder.withArgName(BatchConstants.ARG_STATS_OUTPUT)
             .hasArg().isRequired(false).withDescription("Statistics output").create(BatchConstants.ARG_STATS_OUTPUT);
     protected static final Option OPTION_STATISTICS_SAMPLING_PERCENT = OptionBuilder

@@ -19,7 +19,6 @@
 package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -30,13 +29,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
@@ -77,11 +71,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
         options.addOption(OPTION_CUBE_NAME);
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_PARTITION_FILE_PATH);
-        options.addOption(OPTION_STATISTICS_ENABLED);
         parseOptions(options, args);
 
         partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
-        boolean statsEnabled = Boolean.parseBoolean(getOptionValue(OPTION_STATISTICS_ENABLED));
 
         String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -91,55 +83,15 @@ public class CreateHTableJob extends AbstractHadoopJob {
         segmentID = getOptionValue(OPTION_SEGMENT_ID);
         CubeSegment cubeSegment = cube.getSegmentById(segmentID);
 
-        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-
         byte[][] splitKeys;
-        if (statsEnabled) {
-            final Map<Long, Double> cuboidSizeMap = new CubeStatsReader(cubeSegment, kylinConfig).getCuboidSizeMap();
-            splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment, partitionFilePath.getParent());
-        } else {
-            splitKeys = getRegionSplits(conf, partitionFilePath);
-        }
+        final Map<Long, Double> cuboidSizeMap = new CubeStatsReader(cubeSegment, kylinConfig).getCuboidSizeMap();
+        splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment,
+                partitionFilePath.getParent());
 
         CubeHTableUtil.createHTable(cubeSegment, splitKeys);
         return 0;
     }
 
-    @SuppressWarnings("deprecation")
-    public byte[][] getRegionSplits(Configuration conf, Path path) throws Exception {
-        FileSystem fs = path.getFileSystem(conf);
-        if (fs.exists(path) == false) {
-            System.err.println("Path " + path + " not found, no region split, HTable will be one region");
-            return null;
-        }
-
-        List<byte[]> rowkeyList = new ArrayList<byte[]>();
-        SequenceFile.Reader reader = null;
-        try {
-            reader = new SequenceFile.Reader(fs, path, conf);
-            Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-            Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-            while (reader.next(key, value)) {
-                rowkeyList.add(((Text) key).copyBytes());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        } finally {
-            IOUtils.closeStream(reader);
-        }
-
-        logger.info((rowkeyList.size() + 1) + " regions");
-        logger.info(rowkeyList.size() + " splits");
-        if (logger.isTraceEnabled()) {
-            for (byte[] split : rowkeyList) {
-                logger.trace(StringUtils.byteToHexString(split));
-            }
-        }
-
-        byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
-        return retValue.length == 0 ? null : retValue;
-    }
 
     //one region for one shard
     private static byte[][] getSplitsByRegionCount(int regionCount) {
