@@ -154,7 +154,6 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.cube.model.RowKeyColDesc.class);
         kyroClasses.add(org.apache.kylin.cube.model.RowKeyDesc.class);
         kyroClasses.add(org.apache.kylin.cube.model.SelectRule.class);
-        kyroClasses.add(org.apache.kylin.cube.model.v1_4_0.CubeDesc.class);
         kyroClasses.add(org.apache.kylin.dict.AppendTrieDictionary.class);
         kyroClasses.add(org.apache.kylin.dict.CacheDictionary.class);
         kyroClasses.add(org.apache.kylin.dict.DateStrDictionary.class);

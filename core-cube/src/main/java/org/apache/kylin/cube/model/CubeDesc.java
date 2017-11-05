@@ -165,7 +165,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("retention_range")
     private long retentionRange = 0;
     @JsonProperty("engine_type")
-    private int engineType = IEngineAware.ID_MR_V1;
+    private int engineType = IEngineAware.ID_MR_V2;
     @JsonProperty("storage_type")
     private int storageType = IStorageAware.ID_HBASE;
     @JsonProperty("override_kylin_properties")
