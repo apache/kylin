@@ -42,7 +42,7 @@ Do not forget to discuss in [mailing list](/community/index.html) before working
 * Using `submit-patch.py` (recommended) to create patches, upload to jira and optionally create/update reviews on Review Board. Patch name is automatically formatted as (JIRA).(branch name).(patch number).patch to follow Yetus' naming rules. 
 
 ```
-$ ./dev-support/submit-patch.py -jid KYLIN-xxxxx
+$ ./dev-support/submit-patch.py -jid KYLIN-xxxxx -b master -srb
 ```
 
 * Use -h flag for this script to know detailed usage information. Most useful options are:
