@@ -21,7 +21,6 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.rest.service.CubeService.VALID_CUBENAME;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -154,12 +153,37 @@ public class CubeController extends BasicController {
         return cube;
     }
 
+
     /**
-     * Get hive SQL of the cube
+     * Get SQL of a Cube
      *
      * @param cubeName Cube Name
      * @return
-     * @throws UnknownHostException
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/sql", method = { RequestMethod.GET }, produces = {
+            "application/json" })
+    @ResponseBody
+    public GeneralResponse getSql(@PathVariable String cubeName) {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (cube == null) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+        IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
+        String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
+
+        GeneralResponse response = new GeneralResponse();
+        response.setProperty("sql", sql);
+
+        return response;
+    }
+
+    /**
+     * Get SQL of a Cube segment
+     *
+     * @param cubeName Cube Name
+     * @param segmentName Segment Name
+     * @return
      * @throws IOException
      */
     @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = { RequestMethod.GET }, produces = {
@@ -167,7 +191,15 @@ public class CubeController extends BasicController {
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName, @PathVariable String segmentName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
+        if (cube == null) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+
+        CubeSegment segment = cube.getSegment(segmentName, null);
+        if (segment == null) {
+            throw new InternalErrorException("Cannot find segment " + segmentName);
+        }
+        IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(segment);
         String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
 
         GeneralResponse response = new GeneralResponse();
