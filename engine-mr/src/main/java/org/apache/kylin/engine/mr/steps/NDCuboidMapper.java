@@ -86,7 +86,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     @Override
     public void doMap(Text key, Text value, Context context) throws IOException, InterruptedException {
         long cuboidId = rowKeySplitter.split(key.getBytes());
-        Cuboid parentCuboid = Cuboid.findById(cuboidScheduler, cuboidId);
+        Cuboid parentCuboid = Cuboid.findForMandatory(cubeDesc, cuboidId);
 
         Collection<Long> myChildren = cuboidScheduler.getSpanningCuboid(cuboidId);
 

@@ -147,7 +147,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     @Override
     public void doMap(Text key, Text value, Context context) throws IOException, InterruptedException {
         long cuboidID = rowKeySplitter.split(key.getBytes());
-        Cuboid cuboid = Cuboid.findById(cube, cuboidID);
+        Cuboid cuboid = Cuboid.findForMandatory(cubeDesc, cuboidID);
         RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(cuboid);
 
         SplittedBytes[] splittedByteses = rowKeySplitter.getSplitBuffers();

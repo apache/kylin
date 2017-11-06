@@ -18,9 +18,13 @@
 
 package org.apache.kylin.cube;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -46,12 +50,12 @@ public class CubeInstanceTest {
         Map<Long, Long> cuboidsWithRowCnt = cubeInstance.getCuboids();
         TreeCuboidScheduler.CuboidTree.createFromCuboids(Lists.newArrayList(cuboidsWithRowCnt.keySet()),
                 new TreeCuboidScheduler.CuboidCostComparator(cuboidsWithRowCnt));
-    }
 
-    public void printMap(Map<Long, Long> map) {
-        System.out.println("size: " + map.size());
-        for (Map.Entry<Long, Long> entry : map.entrySet()) {
-            System.out.println(entry.getKey() + ":" + entry.getValue());
+        List<Long> cuboids = Lists.newArrayList(cuboidsWithRowCnt.keySet());
+        Collections.sort(cuboids);
+        for (Long cuboid : cuboids) {
+            System.out.println(cuboid + ":" + cuboidsWithRowCnt.get(cuboid));
         }
+        assertNotNull(cuboidsWithRowCnt.get(255L));
     }
 }

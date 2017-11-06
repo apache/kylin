@@ -93,16 +93,9 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
         return new Cuboid(cube, cuboidID, cuboidID);
     }
 
-    public static Cuboid findById(CuboidScheduler cuboidScheduler, byte[] cuboidID) {
-        return findById(cuboidScheduler, Bytes.toLong(cuboidID));
-    }
-
+    @Deprecated
     public static Cuboid findById(CubeSegment cubeSegment, long cuboidID) {
         return findById(cubeSegment.getCuboidScheduler(), cuboidID);
-    }
-
-    public static Cuboid findById(CubeInstance cubeInstance, long cuboidID) {
-        return findById(cubeInstance.getCuboidScheduler(), cuboidID);
     }
 
     @VisibleForTesting
