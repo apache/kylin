@@ -762,9 +762,9 @@ public class GTAggregateScanner implements IGTScanner, IGTBypassChecker {
             private void enqueueFromDump(int index) {
                 if (dumpIterators.get(index) != null && dumpIterators.get(index).hasNext()) {
                     Pair<byte[], byte[]> pair = dumpIterators.get(index).next();
-                    minHeap.offer(new SimpleEntry(pair.getKey(), index));
+                    minHeap.offer(new SimpleEntry(pair.getFirst(), index));
                     Object[] metricValues = new Object[metrics.trueBitCount()];
-                    measureCodec.decode(ByteBuffer.wrap(pair.getValue()), metricValues);
+                    measureCodec.decode(ByteBuffer.wrap(pair.getSecond()), metricValues);
                     dumpCurrentValues.set(index, metricValues);
                 }
             }

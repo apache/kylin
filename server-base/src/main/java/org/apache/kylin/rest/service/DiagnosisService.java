@@ -115,7 +115,7 @@ public class DiagnosisService extends BasicService {
         CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
         Pair<Integer, String> cmdOutput = executor.execute(diagCmd);
 
-        if (cmdOutput.getKey() != 0) {
+        if (cmdOutput.getFirst() != 0) {
             throw new BadRequestException(msg.getGENERATE_DIAG_PACKAGE_FAIL());
         }
     }
