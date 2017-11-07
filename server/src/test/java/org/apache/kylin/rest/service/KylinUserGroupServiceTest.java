@@ -21,21 +21,22 @@ package org.apache.kylin.rest.service;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.rest.security.ManagedUser;
-import org.springframework.security.provisioning.UserDetailsManager;
+import org.junit.Assert;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-public interface UserService extends UserDetailsManager {
+import com.google.common.collect.Lists;
 
-    boolean isEvictCacheFlag();
+public class KylinUserGroupServiceTest extends ServiceTestBase {
 
-    void setEvictCacheFlag(boolean evictCacheFlag);
+    @Autowired
+    @Qualifier("userGroupService")
+    KylinUserGroupService userGroupService;
 
-    List<ManagedUser> listUsers() throws IOException;
-
-    List<String> listAdminUsers() throws IOException;
-
-    //For performance consideration, list all users may be incomplete(eg. not load user's authorities until authorities has benn used).
-    //So it's an extension point that can complete user's information latter.
-    //loadUserByUsername() has guarantee that the return user is complete.
-    void completeUserInfo(ManagedUser user);
+    @Test
+    public void testGetAllUserAuthorities() throws IOException {
+        List<String> allUserAuthorities = userGroupService.getAllUserAuthorities();
+        Assert.assertEquals(Lists.newArrayList("ROLE_ADMIN", "ROLE_ANALYST", "ROLE_MODELER"), allUserAuthorities);
+    }
 }

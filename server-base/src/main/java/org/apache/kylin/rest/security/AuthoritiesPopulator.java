@@ -33,6 +33,8 @@ import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopul
  * @author xduo
  * 
  */
+@Deprecated
+//this class should be replaced by LDAPAuthoritiesPopulator
 public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
 
     SimpleGrantedAuthority adminRoleAsAuthority;

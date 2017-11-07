@@ -1291,6 +1291,18 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.server.external-acl-provider", "");
     }
 
+    public String getLDAPUserSearchBase() {
+        return getOptional("kylin.security.ldap.user-search-base", "");
+    }
+
+    public String getLDAPGroupSearchBase() {
+        return getOptional("kylin.security.ldap.user-group-search-base", "");
+    }
+
+    public String getLDAPAdminRole() {
+        return getOptional("kylin.security.acl.admin-role", "");
+    }
+
     // ============================================================================
     // WEB
     // ============================================================================

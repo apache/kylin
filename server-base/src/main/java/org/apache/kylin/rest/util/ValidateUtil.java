@@ -32,7 +32,6 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.security.ManagedUser;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.service.ProjectService;
@@ -45,7 +44,6 @@ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Preconditions;
@@ -87,13 +85,13 @@ public class ValidateUtil {
     public Set<String> getAllIdentifiers(String project, String type) throws IOException {
         List<Sid> allSids = getAllSids(project);
         if (type.equalsIgnoreCase(MetadataConstants.TYPE_USER)) {
-            return getAllUsers(allSids);
+            return getUsersInPrj(allSids);
         } else {
-            return getAllAuthorities(allSids);
+            return getAuthoritiesInPrj(allSids);
         }
     }
 
-    private Set<String> getAllAuthorities(List<Sid> allSids) {
+    private Set<String> getAuthoritiesInPrj(List<Sid> allSids) {
         Set<String> allAuthorities = new TreeSet<>();
         allAuthorities.add(Constant.ROLE_ADMIN);
         for (Sid sid : allSids) {
@@ -104,15 +102,9 @@ public class ValidateUtil {
         return allAuthorities;
     }
 
-    private Set<String> getAllUsers(List<Sid> allSids) throws IOException {
+    private Set<String> getUsersInPrj(List<Sid> allSids) throws IOException {
         Set<String> allUsers = new TreeSet<>();
-        // add users that is global admin
-        for (ManagedUser managedUser : userService.listUsers()) {
-            if (managedUser.getAuthorities().contains(new SimpleGrantedAuthority(Constant.ROLE_ADMIN))) {
-                allUsers.add(managedUser.getUsername());
-            }
-        }
-
+        allUsers.addAll(userService.listAdminUsers());
         for (Sid sid : allSids) {
             if (sid instanceof PrincipalSid) {
                 allUsers.add(((PrincipalSid) sid).getPrincipal());

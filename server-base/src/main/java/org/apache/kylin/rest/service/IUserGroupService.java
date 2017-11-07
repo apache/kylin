@@ -21,21 +21,10 @@ package org.apache.kylin.rest.service;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.rest.security.ManagedUser;
-import org.springframework.security.provisioning.UserDetailsManager;
+public interface IUserGroupService {
+    //need project to indicate user's permission.only global admin and project admin can get.
+    List<String> listAllAuthorities(String project) throws IOException;
 
-public interface UserService extends UserDetailsManager {
+    boolean exists(String name) throws IOException;
 
-    boolean isEvictCacheFlag();
-
-    void setEvictCacheFlag(boolean evictCacheFlag);
-
-    List<ManagedUser> listUsers() throws IOException;
-
-    List<String> listAdminUsers() throws IOException;
-
-    //For performance consideration, list all users may be incomplete(eg. not load user's authorities until authorities has benn used).
-    //So it's an extension point that can complete user's information latter.
-    //loadUserByUsername() has guarantee that the return user is complete.
-    void completeUserInfo(ManagedUser user);
 }

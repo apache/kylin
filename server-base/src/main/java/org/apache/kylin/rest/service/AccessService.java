@@ -19,11 +19,18 @@
 package org.apache.kylin.rest.service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
@@ -31,6 +38,7 @@ import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclEntityFactory;
+import org.apache.kylin.rest.security.AclEntityType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,9 +55,12 @@ import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.base.Preconditions;
 
 /**
  * @author xduo
@@ -61,10 +72,6 @@ public class AccessService {
     @Autowired
     @Qualifier("aclService")
     private AclService aclService;
-
-    @Autowired
-    @Qualifier("userService")
-    UserService userService;
 
     // ~ Methods to manage acl life circle of domain objects ~
 
@@ -179,66 +186,34 @@ public class AccessService {
         if (accessEntryId == null)
             throw new BadRequestException(msg.getACE_ID_REQUIRED());
 
-        ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
-        MutableAcl acl = (MutableAcl) aclService.readAclById(objectIdentity);
-        int indexOfAce = -1;
-
-        for (int i = 0; i < acl.getEntries().size(); i++) {
-            AccessControlEntry ace = acl.getEntries().get(i);
-            if (((Long) ace.getId()).equals(accessEntryId)) {
-                indexOfAce = i;
-                break;
-            }
-        }
-
-        if (indexOfAce != -1) {
-            secureOwner(acl, indexOfAce);
-
-            try {
-                acl.deleteAce(indexOfAce);
-                acl = aclService.updateAcl(acl);
-            } catch (NotFoundException e) {
-                //do nothing?
-            }
-        }
-
+        MutableAcl acl = (MutableAcl) getAcl(ae);
+        int indexOfAce = getIndexOfAce(accessEntryId, acl);
+        acl = deleteAndUpdate(acl, indexOfAce);
         return acl;
     }
 
-    @Transactional
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
-    public Acl revoke(AclEntity ae, String username) {
-        Message msg = MsgPicker.getMsg();
-
-        if (ae == null)
-            throw new BadRequestException(msg.getACL_DOMAIN_NOT_FOUND());
-        if (username == null) {
-            throw new BadRequestException(msg.getACE_ID_REQUIRED());
-        }
-
-        ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
-        MutableAcl acl = (MutableAcl) aclService.readAclById(objectIdentity);
+    private int getIndexOfAce(Long accessEntryId, MutableAcl acl) {
         int indexOfAce = -1;
-
-        for (int i = 0; i < acl.getEntries().size(); i++) {
-            AccessControlEntry ace = acl.getEntries().get(i);
-            if (((PrincipalSid) ace.getSid()).getPrincipal().equals(username)) {
+        List<AccessControlEntry> aces = acl.getEntries();
+        for (int i = 0; i < aces.size(); i++) {
+            if (aces.get(i).getId().equals(accessEntryId)) {
                 indexOfAce = i;
                 break;
             }
         }
+        return indexOfAce;
+    }
 
+    private MutableAcl deleteAndUpdate(MutableAcl acl, int indexOfAce) {
         if (indexOfAce != -1) {
             secureOwner(acl, indexOfAce);
-
             try {
                 acl.deleteAce(indexOfAce);
                 acl = aclService.updateAcl(acl);
             } catch (NotFoundException e) {
-                //do nothing?
+                throw new RuntimeException("Revoke acl fail." + e.getMessage());
             }
         }
-
         return acl;
     }
 
@@ -379,5 +354,139 @@ public class AccessService {
         }
 
         return result;
+    }
+
+    public void revokeProjectPermission(String name, String type) {
+        //revoke user's project permission
+        List<ProjectInstance> projectInstances = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllProjects();
+        for (ProjectInstance pi : projectInstances) {
+            // after KYLIN-2760, only project ACL will work, so entity type is always ProjectInstance.
+            AclEntity ae = getAclEntity("ProjectInstance", pi.getUuid());
+
+            MutableAcl acl = (MutableAcl) getAcl(ae);
+            if (acl == null) {
+                return;
+            }
+            List<AccessControlEntry> aces = acl.getEntries();
+            if (aces == null) {
+                return;
+            }
+
+            int indexOfAce = -1;
+            for (int i = 0; i < aces.size(); i++) {
+                if (needRevoke(aces.get(i).getSid(), name, type)) {
+                    indexOfAce = i;
+                    break;
+                }
+            }
+            deleteAndUpdate(acl, indexOfAce);
+        }
+    }
+
+    public String getUserPermissionInPrj(String project) {
+        String grantedPermission = "";
+        List<String> groups = getGroupsFromCurrentUser();
+        if (groups.contains(Constant.ROLE_ADMIN)) {
+            return "GLOBAL_ADMIN";
+        }
+
+        // {user/group:permission}
+        Map<String, Integer> projectPermissions = getProjectPermission(project);
+        Integer greaterPermission = projectPermissions.get(SecurityContextHolder.getContext().getAuthentication().getName());
+        for (String group : groups) {
+            Integer groupPerm = projectPermissions.get(group);
+            greaterPermission = Preconditions.checkNotNull(getGreaterPerm(groupPerm, greaterPermission));
+        }
+
+        switch (greaterPermission) {
+            case 16:
+                grantedPermission = "ADMINISTRATION";
+                break;
+            case 32:
+                grantedPermission = "MANAGEMENT";
+                break;
+            case 64:
+                grantedPermission = "OPERATION";
+                break;
+            case 1:
+                grantedPermission = "READ";
+                break;
+            case 0:
+                grantedPermission = "EMPTY";
+                break;
+            default:
+                throw new RuntimeException("invalid permission state:" + greaterPermission);
+        }
+        return grantedPermission;
+    }
+
+    private Map<String, Integer> getProjectPermission(String project) {
+        Map<String, Integer> SidWithPermission = new HashMap<>();
+
+        String uuid = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project).getUuid();
+        AclEntity ae = getAclEntity(AclEntityType.PROJECT_INSTANCE, uuid);
+        Acl acl = getAcl(ae);
+        if (acl != null && acl.getEntries() != null) {
+            List<AccessControlEntry> aces = acl.getEntries();
+            for (AccessControlEntry ace : aces) {
+                Sid sid = ace.getSid();
+                if (sid instanceof PrincipalSid) {
+                    String principal = ((PrincipalSid) sid).getPrincipal();
+                    SidWithPermission.put(principal, ace.getPermission().getMask());
+                }
+                if (sid instanceof GrantedAuthoritySid) {
+                    String grantedAuthority = ((GrantedAuthoritySid) sid).getGrantedAuthority();
+                    SidWithPermission.put(grantedAuthority, ace.getPermission().getMask());
+                }
+            }
+        }
+        return SidWithPermission;
+    }
+
+    private List<String> getGroupsFromCurrentUser() {
+        List<String> groups = new ArrayList<>();
+        Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+
+        for (GrantedAuthority auth : authorities) {
+            groups.add(auth.getAuthority());
+        }
+        return groups;
+    }
+
+    private Integer getGreaterPerm(Integer mask1, Integer mask2) {
+        if (mask1 == null && mask2 == null) {
+            return 0;
+        }
+        if (mask1 != null && mask2 == null) {
+            return mask1;
+        }
+
+        if (mask1 == null && mask2 != null) {
+            return mask2;
+        }
+
+        if (mask1 == 16 || mask2 == 16) { //ADMIN
+            return 16;
+        }
+        if (mask1 == 32 || mask2 == 32) { //MANAGEMENT
+            return 32;
+        }
+        if (mask1 == 64 || mask2 == 64) { //OPERATOR
+            return 64;
+        }
+        if (mask1 == 1 || mask2 == 1) { // READ
+            return 64;
+        }
+        return null;
+    }
+
+    private boolean needRevoke(Sid sid, String name, String type) {
+        if (type.equals(MetadataConstants.TYPE_USER) && sid instanceof PrincipalSid) {
+            return ((PrincipalSid) sid).getPrincipal().equals(name);
+        } else if (type.equals(MetadataConstants.TYPE_GROUP) && sid instanceof GrantedAuthoritySid) {
+            return ((GrantedAuthoritySid) sid).getGrantedAuthority().equals(name);
+        } else {
+            return false;
+        }
     }
 }
