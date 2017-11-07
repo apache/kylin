@@ -207,6 +207,11 @@ public class ProjectManager {
             throw new IllegalStateException("The project named " + projectName + " does not exist");
         }
 
+        if (projectInstance.getModels().size() != 0) {
+            throw new IllegalStateException("The project named " + projectName
+                    + " can not be deleted because there's still model in it. Delete them first.");
+        }
+
         if (projectInstance.getRealizationCount(null) != 0) {
             throw new IllegalStateException("The project named " + projectName
                     + " can not be deleted because there's still realizations in it. Delete them first.");
