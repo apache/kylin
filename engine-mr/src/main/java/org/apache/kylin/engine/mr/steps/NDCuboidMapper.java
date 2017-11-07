@@ -103,6 +103,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
         if (handleCounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
             logger.info("Handling record with ordinal: " + handleCounter);
+            logger.info("Parent cuboid: " + parentCuboid.getId() + "; Children: " + myChildren);
         }
 
         for (Long child : myChildren) {

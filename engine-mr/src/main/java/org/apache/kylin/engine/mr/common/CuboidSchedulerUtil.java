@@ -19,36 +19,36 @@
 package org.apache.kylin.engine.mr.common;
 
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidModeEnum;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
-import org.apache.kylin.cube.cuboid.DefaultCuboidScheduler;
-import org.apache.kylin.cube.cuboid.TreeCuboidSchedulerManager;
+import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
+
+import com.google.common.collect.Lists;
 
 public class CuboidSchedulerUtil {
 
     public static CuboidScheduler getCuboidSchedulerByMode(CubeSegment segment, String cuboidModeName) {
-        return getCuboidSchedulerByMode(segment, segment.getCubeInstance().getCuboidsByMode(cuboidModeName));
+        return getCuboidSchedulerByMode(segment, CuboidModeEnum.getByModeName(cuboidModeName));
     }
 
     public static CuboidScheduler getCuboidSchedulerByMode(CubeSegment segment, CuboidModeEnum cuboidMode) {
-        return getCuboidSchedulerByMode(segment, segment.getCubeInstance().getCuboidsByMode(cuboidMode));
+        return getCuboidScheduler(segment, segment.getCubeInstance().getCuboidsByMode(cuboidMode));
     }
 
-    public static CuboidScheduler getCuboidSchedulerByMode(CubeSegment segment, Set<Long> cuboidSet) {
-        CuboidScheduler cuboidScheduler;
+    public static CuboidScheduler getCuboidScheduler(CubeSegment segment, Set<Long> cuboidSet) {
         try {
-            cuboidScheduler = TreeCuboidSchedulerManager.getInstance().getTreeCuboidScheduler(segment.getCubeDesc(), //
-                    CuboidStatsReaderUtil.readCuboidStatsFromSegment(cuboidSet, segment));
+            Map<Long, Long> cuboidsWithRowCnt = CuboidStatsReaderUtil.readCuboidStatsFromSegment(cuboidSet, segment);
+            Comparator<Long> comparator = cuboidsWithRowCnt == null ? Cuboid.cuboidSelectComparator
+                    : new TreeCuboidScheduler.CuboidCostComparator(cuboidsWithRowCnt);
+            return new TreeCuboidScheduler(segment.getCubeDesc(), Lists.newArrayList(cuboidSet), comparator);
         } catch (IOException e) {
             throw new RuntimeException("Fail to cube stats for segment" + segment + " due to " + e);
         }
-
-        if (cuboidScheduler == null) {
-            cuboidScheduler = new DefaultCuboidScheduler(segment.getCubeDesc());
-        }
-        return cuboidScheduler;
     }
 }

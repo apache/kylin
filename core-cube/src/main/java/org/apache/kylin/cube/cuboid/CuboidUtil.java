@@ -18,7 +18,17 @@
 
 package org.apache.kylin.cube.cuboid;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.kylin.cube.cuboid.algorithm.CuboidStatsUtil;
+
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class CuboidUtil {
 
@@ -44,5 +54,32 @@ public class CuboidUtil {
             }
         }
         return allCuboidsBitSet;
+    }
+
+    public static int getLongestDepth(Set<Long> cuboidSet) {
+        Map<Long, List<Long>> directChildrenCache = CuboidStatsUtil.createDirectChildrenCache(cuboidSet);
+        List<Long> cuboids = Lists.newArrayList(cuboidSet);
+        Collections.sort(cuboids, new Comparator<Long>() {
+            @Override
+            public int compare(Long o1, Long o2) {
+                return -Long.compare(o1, o2);
+            }
+        });
+
+        int longestDepth = 0;
+        Map<Long, Integer> cuboidDepthMap = Maps.newHashMap();
+        for (Long cuboid : cuboids) {
+            int parentDepth = cuboidDepthMap.get(cuboid) == null ? 0 : cuboidDepthMap.get(cuboid);
+            for (Long childCuboid : directChildrenCache.get(cuboid)) {
+                if (cuboidDepthMap.get(childCuboid) == null || cuboidDepthMap.get(childCuboid) < parentDepth + 1) {
+                    cuboidDepthMap.put(childCuboid, parentDepth + 1);
+                    if (longestDepth < parentDepth + 1) {
+                        longestDepth = parentDepth + 1;
+                    }
+                }
+            }
+        }
+
+        return longestDepth;
     }
 }

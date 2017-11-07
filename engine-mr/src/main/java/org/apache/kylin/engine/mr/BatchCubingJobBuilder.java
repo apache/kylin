@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr;
 
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidUtil;
 import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
 import org.apache.kylin.engine.mr.IMROutput.IMRBatchCubingOutputSide;
@@ -64,7 +65,7 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
 
         // Phase 3: Build Cube
         RowKeyDesc rowKeyDesc = seg.getCubeDesc().getRowkey();
-        final int groupRowkeyColumnsCount = seg.getCuboidScheduler().getBuildLevel();
+        final int groupRowkeyColumnsCount = CuboidUtil.getLongestDepth(seg.getCuboidScheduler().getAllCuboidIds());
         // base cuboid step
         result.addTask(createBaseCuboidStep(getCuboidOutputPathsByLevel(cuboidRootPath, 0), jobId));
         // n dim cuboid steps

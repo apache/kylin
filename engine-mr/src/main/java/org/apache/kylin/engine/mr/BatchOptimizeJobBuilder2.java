@@ -20,6 +20,7 @@ package org.apache.kylin.engine.mr;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidModeEnum;
+import org.apache.kylin.cube.cuboid.CuboidUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
@@ -151,14 +152,14 @@ public class BatchOptimizeJobBuilder2 extends JobBuilderSupport {
     private void addLayerCubingSteps(final CubingJob result, final String jobId, final CuboidModeEnum cuboidMode,
             final String cuboidRootPath) {
         // Don't know statistics so that tree cuboid scheduler is not determined. Determine the maxLevel at runtime
-        final int maxLevel = seg.getCubeDesc().getRowkey().getRowKeyColumns().length;
+        final int maxLevel = CuboidUtil.getLongestDepth(seg.getCubeInstance().getCuboidsByMode(cuboidMode));
         // Don't need to build base cuboid
         // n dim cuboid steps
         for (int i = 1; i <= maxLevel; i++) {
             String parentCuboidPath = i == 1 ? getBaseCuboidPath(cuboidRootPath)
                     : getCuboidOutputPathsByLevel(cuboidRootPath, i - 1);
-            result.addTask(createNDimensionCuboidStep(parentCuboidPath,
-                    getCuboidOutputPathsByLevel(cuboidRootPath, i), i, jobId, cuboidMode));
+            result.addTask(createNDimensionCuboidStep(parentCuboidPath, getCuboidOutputPathsByLevel(cuboidRootPath, i),
+                    i, jobId, cuboidMode));
         }
     }
 
