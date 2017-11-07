@@ -139,29 +139,29 @@ public class TableACLManager {
     private TableACL getTableACL(String project) throws IOException {
         String path = DIR_PREFIX + project;
         TableACL tableACLRecord = getStore().getResource(path, TableACL.class, TABLE_ACL_SERIALIZER);
-        if (tableACLRecord == null || tableACLRecord.getUserTableBlackList() == null) {
+        if (tableACLRecord == null) {
             return new TableACL();
         }
         return tableACLRecord;
     }
 
-    public void addTableACL(String project, String username, String table) throws IOException {
+    public void addTableACL(String project, String name, String table, String type) throws IOException {
         String path = DIR_PREFIX + project;
-        TableACL tableACL = getTableACL(project).add(username, table);
+        TableACL tableACL = getTableACL(project).add(name, table, type);
         getStore().putResource(path, tableACL, System.currentTimeMillis(), TABLE_ACL_SERIALIZER);
         tableACLMap.put(project, tableACL);
     }
 
-    public void deleteTableACL(String project, String username, String table) throws IOException {
+    public void deleteTableACL(String project, String name, String table, String type) throws IOException {
         String path = DIR_PREFIX + project;
-        TableACL tableACL = getTableACL(project).delete(username, table);
+        TableACL tableACL = getTableACL(project).delete(name, table, type);
         getStore().putResource(path, tableACL, System.currentTimeMillis(), TABLE_ACL_SERIALIZER);
         tableACLMap.put(project, tableACL);
     }
 
-    public void deleteTableACL(String project, String username) throws IOException {
+    public void deleteTableACL(String project, String name, String type) throws IOException {
         String path = DIR_PREFIX + project;
-        TableACL tableACL = getTableACL(project).delete(username);
+        TableACL tableACL = getTableACL(project).delete(name, type);
         getStore().putResource(path, tableACL, System.currentTimeMillis(), TABLE_ACL_SERIALIZER);
         tableACLMap.put(project, tableACL);
     }

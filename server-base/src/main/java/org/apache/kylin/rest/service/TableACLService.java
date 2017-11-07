@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -37,49 +36,41 @@ public class TableACLService extends BasicService {
     @Autowired
     private AclEvaluate aclEvaluate;
 
-    // cuz in the frontend shows user can visit the table, but in the backend stored user that can not visit the table
-    public List<String> getUsersCanQueryTheTbl(String project, String table, Set<String> allUsers)
-            throws IOException {
-        List<String> blockedUsers = getUsersCannotQueryTheTbl(project, table);
-        List<String> whiteUsers = new ArrayList<>();
-        for (String u : allUsers) {
-            if (!blockedUsers.contains(u)) {
-                whiteUsers.add(u);
-            }
-        }
-        return whiteUsers;
-    }
-
-    TableACL getTableACLByProject(String project) throws IOException {
+    private TableACL getTableACLByProject(String project) throws IOException {
         return getTableACLManager().getTableACLByCache(project);
     }
 
-    public boolean exists(String project, String username) throws IOException {
+    public boolean exists(String project, String name, String type) throws IOException {
         aclEvaluate.checkProjectWritePermission(project);
-        return getTableACLByProject(project).getUserTableBlackList().containsKey(username);
+        return getTableACLByProject(project).contains(name, type);
     }
 
-    public List<String> getUsersCannotQueryTheTbl(String project, String table) throws IOException {
+    public List<String> getNoAccessList(String project, String table, String type) throws IOException {
         aclEvaluate.checkProjectWritePermission(project);
-        return getTableACLByProject(project).getUsersCannotQueryTheTbl(table);
+        return getTableACLByProject(project).getNoAccessList(table, type);
     }
 
-    public void addToTableBlackList(String project, String username, String table) throws IOException {
+    public List<String> getCanAccessList(String project, String table, Set<String> allIdentifiers, String type) throws IOException {
+        aclEvaluate.checkProjectWritePermission(project);
+        return getTableACLByProject(project).getCanAccessList(table, allIdentifiers, type);
+    }
+
+    public void addToTableACL(String project, String name, String table, String type) throws IOException {
         aclEvaluate.checkProjectAdminPermission(project);
-        getTableACLManager().addTableACL(project, username, table);
+        getTableACLManager().addTableACL(project, name, table, type);
     }
 
-    public void deleteFromTableBlackList(String project, String username, String table) throws IOException {
+    public void deleteFromTableACL(String project, String name, String table, String type) throws IOException {
         aclEvaluate.checkProjectAdminPermission(project);
-        getTableACLManager().deleteTableACL(project, username, table);
+        getTableACLManager().deleteTableACL(project, name, table, type);
     }
 
-    public void deleteFromTableBlackList(String project, String username) throws IOException {
+    public void deleteFromTableACL(String project, String name, String type) throws IOException {
         aclEvaluate.checkProjectAdminPermission(project);
-        getTableACLManager().deleteTableACL(project, username);
+        getTableACLManager().deleteTableACL(project, name, type);
     }
 
-    public void deleteFromTableBlackListByTbl(String project, String table) throws IOException {
+    public void deleteFromTableACLByTbl(String project, String table) throws IOException {
         aclEvaluate.checkProjectAdminPermission(project);
         getTableACLManager().deleteTableACLByTbl(project, table);
     }

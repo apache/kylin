@@ -98,6 +98,7 @@ import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
@@ -528,6 +529,7 @@ public class QueryService extends BasicService {
             String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
             QueryContext context = QueryContext.current();
             context.setUsername(userInfo);
+            context.setGroups(AclPermissionUtil.getCurrentUserGroups());
             final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext()
                     .getAuthentication().getAuthorities();
             for (GrantedAuthority grantedAuthority : grantedAuthorities) {

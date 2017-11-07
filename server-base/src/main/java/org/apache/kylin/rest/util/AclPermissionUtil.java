@@ -20,9 +20,13 @@ package org.apache.kylin.rest.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 public class AclPermissionUtil {
 
@@ -36,4 +40,16 @@ public class AclPermissionUtil {
         return ret;
     }
 
+    public static Set<String> getCurrentUserGroups() {
+        Set<String> groups = new HashSet<>();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return groups;
+        }
+        Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
+        for (GrantedAuthority authority : authorities) {
+            groups.add(authority.getAuthority());
+        }
+        return groups;
+    }
 }

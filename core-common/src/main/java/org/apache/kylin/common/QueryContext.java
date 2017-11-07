@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common;
 
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -35,6 +36,7 @@ public class QueryContext {
 
     private String queryId;
     private String username;
+    private Set<String> groups;
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong scannedBytes = new AtomicLong();
 
@@ -66,6 +68,14 @@ public class QueryContext {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public Set<String> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(Set<String> groups) {
+        this.groups = groups;
     }
 
     public long getScannedRows() {

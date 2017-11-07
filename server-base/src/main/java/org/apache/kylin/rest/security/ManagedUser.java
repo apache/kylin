@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.rest.service.UserGrantedAuthority;
 import org.springframework.security.core.GrantedAuthority;
@@ -147,6 +148,18 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
         for (GrantedAuthority grantedAuthority : grantedAuthorities) {
             this.authorities.add(new SimpleGrantedAuthority(grantedAuthority.getAuthority()));
         }
+    }
+
+    public void addAuthoritie(String auth) {
+        if (this.authorities == null) {
+            this.authorities = Lists.newArrayList();
+        }
+        authorities.add(new SimpleGrantedAuthority(auth));
+    }
+
+    public void removeAuthoritie(String auth) {
+        Preconditions.checkNotNull(this.authorities == null);
+        authorities.remove(new SimpleGrantedAuthority(auth));
     }
 
     public boolean isDisabled() {

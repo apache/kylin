@@ -27,6 +27,7 @@ import org.apache.kylin.metadata.acl.TableACLManager;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.query.security.QueryInterceptor;
+import org.apache.kylin.rest.util.AclPermissionUtil;
 
 public class TableInterceptor extends QueryInterceptor {
 
@@ -48,7 +49,7 @@ public class TableInterceptor extends QueryInterceptor {
         return TableACLManager
                 .getInstance(KylinConfig.getInstanceFromEnv())
                 .getTableACLByCache(project)
-                .getTableBlackList(username);
+                .getTableBlackList(username, AclPermissionUtil.getCurrentUserGroups());
     }
 
     @Override
@@ -56,7 +57,7 @@ public class TableInterceptor extends QueryInterceptor {
         return "table";
     }
     
-    protected Set<String> getAllTblsWithSchema(List<OLAPContext> contexts) {
+    private Set<String> getAllTblsWithSchema(List<OLAPContext> contexts) {
         // all tables with DB, Like DB.TABLE
         Set<String> tableWithSchema = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (OLAPContext context : contexts) {

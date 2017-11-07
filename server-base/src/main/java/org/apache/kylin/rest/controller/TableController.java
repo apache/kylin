@@ -135,7 +135,7 @@ public class TableController extends BasicController {
         Map<String, String[]> result = new HashMap<String, String[]>();
         try {
             for (String tableName : tables.split(",")) {
-                tableACLService.deleteFromTableBlackListByTbl(project, tableName);
+                tableACLService.deleteFromTableACLByTbl(project, tableName);
                 if (tableService.unloadHiveTable(tableName, project)) {
                     unLoadSuccess.add(tableName);
                 } else {

@@ -23,6 +23,7 @@ import java.sql.SQLException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.acl.TableACLManager;
 import org.apache.kylin.query.security.AccessDeniedException;
 import org.apache.kylin.query.security.QuerACLTestUtil;
@@ -32,6 +33,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 public class QueryWithTableACLTest extends LocalFileMetadataTestCase {
     private static final String PROJECT = "DEFAULT";
@@ -44,6 +47,7 @@ public class QueryWithTableACLTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setUp() {
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(false, null));
         this.createTestMetadata();
     }
 
@@ -59,7 +63,7 @@ public class QueryWithTableACLTest extends LocalFileMetadataTestCase {
         QuerACLTestUtil.mockQuery(PROJECT, "select * from STREAMING_TABLE");
 
         QuerACLTestUtil.setUser(ADMIN);
-        TableACLManager.getInstance(KylinConfig.getInstanceFromEnv()).addTableACL(PROJECT, "ADMIN", STREAMING_TABLE);
+        TableACLManager.getInstance(KylinConfig.getInstanceFromEnv()).addTableACL(PROJECT, "ADMIN", STREAMING_TABLE, MetadataConstants.TYPE_USER);
         thrown.expectCause(CoreMatchers.isA(AccessDeniedException.class));
         thrown.expectMessage(CoreMatchers.containsString("Query failed.Access table:DEFAULT.STREAMING_TABLE denied"));
         QuerACLTestUtil.mockQuery(PROJECT, "select * from STREAMING_TABLE");
@@ -71,7 +75,7 @@ public class QueryWithTableACLTest extends LocalFileMetadataTestCase {
         QuerACLTestUtil.mockQuery(PROJECT, "select count(*) from STREAMING_TABLE");
 
         QuerACLTestUtil.setUser(ADMIN);
-        TableACLManager.getInstance(KylinConfig.getInstanceFromEnv()).addTableACL(PROJECT, "ADMIN", STREAMING_TABLE);
+        TableACLManager.getInstance(KylinConfig.getInstanceFromEnv()).addTableACL(PROJECT, "ADMIN", STREAMING_TABLE, MetadataConstants.TYPE_USER);
         thrown.expectCause(CoreMatchers.isA(AccessDeniedException.class));
         thrown.expectMessage(CoreMatchers.containsString("Query failed.Access table:DEFAULT.STREAMING_TABLE denied"));
         QuerACLTestUtil.mockQuery(PROJECT, "select count(*) from STREAMING_TABLE");
@@ -79,6 +83,7 @@ public class QueryWithTableACLTest extends LocalFileMetadataTestCase {
 
     @After
     public void after() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(null);
         this.cleanupTestMetadata();
     }
 }

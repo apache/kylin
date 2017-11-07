@@ -18,10 +18,16 @@
 
 package org.apache.kylin.common.util;
 
-import java.util.TreeMap;
+import java.util.Set;
+import java.util.TreeSet;
 
-public class CaseInsensitiveStringMap<T> extends TreeMap<String, T> {
-    public CaseInsensitiveStringMap() {
+public class CaseInsensitiveStringSet extends TreeSet<String> {
+    public CaseInsensitiveStringSet() {
         super(String.CASE_INSENSITIVE_ORDER);
+    }
+
+    public CaseInsensitiveStringSet(Set<String> ori) {
+        super(String.CASE_INSENSITIVE_ORDER);
+        super.addAll(ori);
     }
 }
