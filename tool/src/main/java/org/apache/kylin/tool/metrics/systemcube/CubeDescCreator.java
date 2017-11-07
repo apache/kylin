@@ -75,7 +75,7 @@ public class CubeDescCreator {
         List<Pair<String, String>> measureTypeList = HiveTableCreator.getHiveColumnsForMetricsQuery();
         Map<String, String> measureTypeMap = Maps.newHashMapWithExpectedSize(measureTypeList.size());
         for (Pair<String, String> entry : measureTypeList) {
-            measureTypeMap.put(entry.getKey(), entry.getValue());
+            measureTypeMap.put(entry.getFirst(), entry.getSecond());
         }
         measureDescList.add(getMeasureCount());
         measureDescList.add(getMeasureMin(QueryPropertyEnum.TIME_COST.toString(),
@@ -157,7 +157,7 @@ public class CubeDescCreator {
         List<Pair<String, String>> measureTypeList = HiveTableCreator.getHiveColumnsForMetricsQueryCube();
         Map<String, String> measureTypeMap = Maps.newHashMapWithExpectedSize(measureTypeList.size());
         for (Pair<String, String> entry : measureTypeList) {
-            measureTypeMap.put(entry.getKey(), entry.getValue());
+            measureTypeMap.put(entry.getFirst(), entry.getSecond());
         }
         measureDescList.add(getMeasureCount());
         for (String measure : measures) {
@@ -242,7 +242,7 @@ public class CubeDescCreator {
         List<Pair<String, String>> measureTypeList = HiveTableCreator.getHiveColumnsForMetricsQueryRPC();
         Map<String, String> measureTypeMap = Maps.newHashMapWithExpectedSize(measureTypeList.size());
         for (Pair<String, String> entry : measureTypeList) {
-            measureTypeMap.put(entry.getKey(), entry.getValue());
+            measureTypeMap.put(entry.getFirst(), entry.getSecond());
         }
         measureDescList.add(getMeasureCount());
         for (String measure : measures) {
@@ -319,7 +319,7 @@ public class CubeDescCreator {
         List<Pair<String, String>> measureTypeList = HiveTableCreator.getHiveColumnsForMetricsJob();
         Map<String, String> measureTypeMap = Maps.newHashMapWithExpectedSize(measureTypeList.size());
         for (Pair<String, String> entry : measureTypeList) {
-            measureTypeMap.put(entry.getKey(), entry.getValue());
+            measureTypeMap.put(entry.getFirst(), entry.getSecond());
         }
         measureDescList.add(getMeasureCount());
         for (String measure : measures) {

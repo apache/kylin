@@ -94,14 +94,14 @@ public class MetricsManager {
             sourceReporterBindProps.put(activeReservoir, values);
             for (Pair<String, Properties> entry : sourceReporterBindProperties.get(activeReservoir)) {
                 try {
-                    Class clz = Class.forName(entry.getKey());
+                    Class clz = Class.forName(entry.getFirst());
                     if (ActiveReservoirReporter.class.isAssignableFrom(clz)) {
-                        values.add(new Pair(clz, entry.getValue()));
+                        values.add(new Pair(clz, entry.getSecond()));
                     } else {
                         logger.warn("The class " + clz + " is not a sub class of " + ActiveReservoir.class);
                     }
                 } catch (ClassNotFoundException e) {
-                    logger.warn("Cannot find class " + entry.getKey());
+                    logger.warn("Cannot find class " + entry.getFirst());
                 }
             }
         }
@@ -119,12 +119,12 @@ public class MetricsManager {
                         .get(activeReservoir);
                 for (Pair<Class<? extends ActiveReservoirReporter>, Properties> subEntry : reportProps) {
                     try {
-                        Method method = subEntry.getKey().getMethod(METHOD_FOR_REGISTRY, ActiveReservoir.class);
-                        ((ReporterBuilder) method.invoke(null, activeReservoir)).setConfig(subEntry.getValue()).build()
+                        Method method = subEntry.getFirst().getMethod(METHOD_FOR_REGISTRY, ActiveReservoir.class);
+                        ((ReporterBuilder) method.invoke(null, activeReservoir)).setConfig(subEntry.getSecond()).build()
                                 .start();
                     } catch (Exception e) {
-                        logger.warn("Cannot initialize ActiveReservoirReporter: Builder class - " + subEntry.getKey()
-                                + ", Properties - " + subEntry.getValue());
+                        logger.warn("Cannot initialize ActiveReservoirReporter: Builder class - " + subEntry.getFirst()
+                                + ", Properties - " + subEntry.getSecond());
                     }
                 }
                 Metrics.register(registerName, activeReservoir);
