@@ -35,6 +35,10 @@ public class DefaultQueryTransformer implements IQueryTransformer {
             Pattern.CASE_INSENSITIVE);
     private static final Pattern PTN_SUM_1 = Pattern.compile(S0 + "SUM" + S0 + "[(]" + S0 + "[1]" + S0 + "[)]" + S0,
             Pattern.CASE_INSENSITIVE);
+    private static final Pattern PTN_MIN_1 = Pattern.compile(S0 + "MIN" + S0 + "[(]" + S0 + "[1]" + S0 + "[)]" + S0,
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern PTN_MAX_1 = Pattern.compile(S0 + "MAX" + S0 + "[(]" + S0 + "[1]" + S0 + "[)]" + S0,
+            Pattern.CASE_INSENSITIVE);
     private static final Pattern PTN_NOT_EQ = Pattern.compile(S0 + "!=" + S0, Pattern.CASE_INSENSITIVE);
     private static final Pattern PTN_INTERVAL = Pattern.compile(
             "interval" + SM + "(floor\\()([\\d\\.]+)(\\))" + SM + "(second|minute|hour|day|month|year)",
@@ -70,6 +74,21 @@ public class DefaultQueryTransformer implements IQueryTransformer {
             if (!m.find())
                 break;
             sql = sql.substring(0, m.start()) + " COUNT(1) " + sql.substring(m.end());
+        }
+
+        // Case: MIN(1) or MAX(1)
+        // Replace it with 1
+        while (true) {
+            m = PTN_MIN_1.matcher(sql);
+            if (!m.find())
+                break;
+            sql = sql.substring(0, m.start()) + " 1 " + sql.substring(m.end());
+        }
+        while (true) {
+            m = PTN_MAX_1.matcher(sql);
+            if (!m.find())
+                break;
+            sql = sql.substring(0, m.start()) + " 1 " + sql.substring(m.end());
         }
 
         // Case: !=
