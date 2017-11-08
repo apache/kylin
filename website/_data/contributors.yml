@@ -129,7 +129,7 @@
   apacheId: billyliu
   githubId: yiming187
   org: Kyligence Inc.
-  role: committer
+  role: PMC
 - name: Kaisen Kang (康凯森)
   apacheId: kangkaisen
   githubId: kangkaisen
@@ -150,3 +150,14 @@
   githubId: chenzhx
   org: Kyligence Inc.
   role: committer
+- name: Cheng Wang (王成)
+  apacheId: wormhole
+  githubId: wormholer
+  org: Kyligence Inc.
+  role: committer
+- name: Guosheng Lu (陆国圣)
+  apacheId: boblu
+  githubId: luguosheng1314
+  org: Kyligence Inc.
+  role: committer
+

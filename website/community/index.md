@@ -36,7 +36,7 @@ The official Kylin Twitter account: [@ApacheKylin](https://twitter.com/ApacheKyl
 ## Apache Kylin Team
 A successful project requires many people to play many roles. Some members write code, provide project mentorship, or author documentation. Others are valuable as testers, submitting patches and suggestions.
 
-### PMC Members
+### PMC Members & Committer
 
 | Name  | Apache ID    | Github    |  Role |
 |:----- |:-------------|:----------|:------|
