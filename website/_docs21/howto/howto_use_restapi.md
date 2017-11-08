@@ -31,7 +31,6 @@ This page lists the major RESTful APIs provided by Kylin.
    * [Get job list](#get-job-list)
 * Metadata
    * [Get Hive Table](#get-hive-table)
-   * [Get Hive Table (Extend Info)](#get-hive-table-extend-info)
    * [Get Hive Tables](#get-hive-tables)
    * [Load Hive Tables](#load-hive-tables)
 * Cache
@@ -972,9 +971,10 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 ***
 
 ## Get Hive Table
-`GET /kylin/api/tables/{tableName}`
+`GET /kylin/api/tables/{project}/{tableName}`
 
 #### Request Parameters
+* project - `required` `string` project name
 * tableName - `required` `string` table name to find.
 
 #### Response Sample
@@ -1001,33 +1001,6 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
     }],
     database: "DEFAULT",
     last_modified: 1419330476755
-}
-```
-
-## Get Hive Table (Extend Info)
-`GET /kylin/api/tables/{tableName}/exd-map`
-
-#### Request Parameters
-* tableName - `optional` `string` table name to find.
-
-#### Response Sample
-```
-{
-    "minFileSize": "46055",
-    "totalNumberFiles": "1",
-    "location": "hdfs://sandbox.hortonworks.com:8020/apps/hive/warehouse/sample_07",
-    "lastAccessTime": "1418374103365",
-    "lastUpdateTime": "1398176493340",
-    "columns": "struct columns { string code, string description, i32 total_emp, i32 salary}",
-    "partitionColumns": "",
-    "EXD_STATUS": "true",
-    "maxFileSize": "46055",
-    "inputformat": "org.apache.hadoop.mapred.TextInputFormat",
-    "partitioned": "false",
-    "tableName": "sample_07",
-    "owner": "hue",
-    "totalFileSize": "46055",
-    "outputformat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
 }
 ```
 
