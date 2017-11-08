@@ -61,6 +61,7 @@ import org.apache.kylin.job.lock.JobLock;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
@@ -232,6 +233,12 @@ public class JobService extends BasicService implements InitializingBean {
         }
 
         checkCubeDescSignature(cube);
+        checkAllowBuilding(cube);
+
+        if (buildType == CubeBuildTypeEnum.BUILD || buildType == CubeBuildTypeEnum.REFRESH) {
+            checkAllowParallelBuilding(cube);
+        }
+
         DefaultChainedExecutable job;
 
         CubeSegment newSeg = null;
@@ -416,7 +423,30 @@ public class JobService extends BasicService implements InitializingBean {
                     String.format(msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
     }
 
+    private void checkAllowBuilding(CubeInstance cube) {
+        Segments<CubeSegment> readyPendingSegments = cube.getSegments(SegmentStatusEnum.READY_PENDING);
+        if (readyPendingSegments.size() > 0) {
+            throw new BadRequestException("The cube " + cube.getName() + " has READY_PENDING segments "
+                    + readyPendingSegments + ". It's not allowed for building");
+        }
+    }
+
+    private void checkAllowParallelBuilding(CubeInstance cube) {
+        if (cube.getCuboids() == null) {
+            Segments<CubeSegment> cubeSegments = cube.getSegments();
+            if (cubeSegments.size() > 0 && cubeSegments.getSegments(SegmentStatusEnum.READY).size() <= 0) {
+                throw new BadRequestException("The cube " + cube.getName() + " has segments " + cubeSegments
+                        + ", but none of them is READY. It's not allowed for parallel building");
+            }
+        }
+    }
+
     private void checkAllowOptimization(CubeInstance cube, Set<Long> cuboidsRecommend) {
+        Segments<CubeSegment> buildingSegments = cube.getBuildingSegments();
+        if (buildingSegments.size() > 0) {
+            throw new BadRequestException("The cube " + cube.getName() + " has building segments " + buildingSegments
+                    + ". It's not allowed for optimization");
+        }
         long baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
         if (!cuboidsRecommend.contains(baseCuboid)) {
             throw new BadRequestException("The recommend cuboids should contain the base cuboid " + baseCuboid);
