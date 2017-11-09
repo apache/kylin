@@ -21,6 +21,7 @@ package org.apache.kylin.common;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -39,6 +40,7 @@ import org.apache.kylin.common.util.ZooKeeperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -1029,6 +1031,30 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
     // QUERY
     // ============================================================================
+
+    /**
+     * Rule is usually singleton as static field, the configuration of this property is like:
+     * RuleClassName1#FieldName1,RuleClassName2#FieldName2,...
+     */
+    public List<String> getCalciteAddRule() {
+        String rules = getOptional("kylin.query.calcite.add-rule");
+        if (rules == null) {
+            return Lists.newArrayList();
+        }
+        return Lists.newArrayList(rules.split(","));
+    }
+
+    /**
+     * Rule is usually singleton as static field, the configuration of this property is like:
+     * RuleClassName1#FieldName1,RuleClassName2#FieldName2,...
+     */
+    public List<String> getCalciteRemoveRule() {
+        String rules = getOptional("kylin.query.calcite.remove-rule");
+        if (rules == null) {
+            return Lists.newArrayList();
+        }
+        return Lists.newArrayList(rules.split(","));
+    }
 
     //check KYLIN-1684, in most cases keep the default value
     public boolean isSkippingEmptySegments() {

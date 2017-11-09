@@ -207,6 +207,7 @@ import com.google.common.collect.Maps;
  * - isTrimUnusedFields(), override to false
  * - AggConverter.translateAgg(...), skip column reading for COUNT(COL), for https://jirap.corp.ebay.com/browse/KYLIN-104
  * - convertQuery(), call hackSelectStar() at the end
+ * - createJoin() check cast operation
  */
 
 /**
@@ -2468,6 +2469,7 @@ public class SqlToRelConverter {
       return corr;
     }
 
+    // OVERRIDE POINT
     if (containOnlyCast(joinCond)) {
       joinCond = convertCastCondition(joinCond);
     }
@@ -2479,6 +2481,7 @@ public class SqlToRelConverter {
     return RelOptUtil.pushDownJoinConditions(originalJoin);
   }
 
+  // OVERRIDE POINT
   private boolean containOnlyCast(RexNode node) {
     boolean result = true;
     switch (node.getKind()) {
@@ -2502,8 +2505,12 @@ public class SqlToRelConverter {
     return result;
   }
 
+  // OVERRIDE POINT
   private static RexNode convertCastCondition(RexNode node) {
     switch (node.getKind()) {
+      case IS_NULL:
+      case IS_NOT_NULL:
+      case OR:
       case AND:
       case EQUALS:
         RexCall call = (RexCall) node;
