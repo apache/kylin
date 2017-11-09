@@ -76,6 +76,7 @@ public class InMemCuboidFromBaseCuboidJob extends AbstractHadoopJob {
             options.addOption(OPTION_CUBING_JOB_ID);
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_CUBOID_MODE);
+            options.addOption(OPTION_NEED_UPDATE_BASE_CUBOID_SHARD);
             parseOptions(options, args);
 
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
@@ -90,6 +91,10 @@ public class InMemCuboidFromBaseCuboidJob extends AbstractHadoopJob {
             String cuboidModeName = getOptionValue(OPTION_CUBOID_MODE);
             if (cuboidModeName == null) {
                 cuboidModeName = CuboidModeEnum.CURRENT.toString();
+            }
+            String ifNeedUpdateBaseCuboidShard = getOptionValue(OPTION_NEED_UPDATE_BASE_CUBOID_SHARD);
+            if (ifNeedUpdateBaseCuboidShard == null) {
+                ifNeedUpdateBaseCuboidShard = "false";
             }
 
             CuboidScheduler cuboidScheduler = CuboidSchedulerUtil.getCuboidSchedulerByMode(cubeSeg, cuboidModeName);
@@ -111,6 +116,7 @@ public class InMemCuboidFromBaseCuboidJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
             job.getConfiguration().set(BatchConstants.CFG_CUBOID_MODE, cuboidModeName);
+            job.getConfiguration().set(BatchConstants.CFG_UPDATE_SHARD, ifNeedUpdateBaseCuboidShard);
 
             String input = getOptionValue(OPTION_INPUT_PATH);
             FileInputFormat.setInputPaths(job, new Path(input));

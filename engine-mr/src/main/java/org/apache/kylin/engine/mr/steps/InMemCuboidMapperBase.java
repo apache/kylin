@@ -73,10 +73,10 @@ public abstract class InMemCuboidMapperBase<KEYIN, VALUEIN, KEYOUT, VALUEOUT, T>
     protected InputConverterUnit<T> inputConverterUnit;
     private Future<?> future;
 
-    protected abstract InputConverterUnit<T> getInputConverterUnit();
+    protected abstract InputConverterUnit<T> getInputConverterUnit(Context context);
 
-    protected abstract Future getCubingThreadFuture(Context context, Map<TblColRef, Dictionary<String>> dictionaryMap, int reserveMemoryMB, //
-                                                    CuboidScheduler cuboidScheduler, InputConverterUnit<T> inputConverterUnit);
+    protected abstract Future getCubingThreadFuture(Context context, Map<TblColRef, Dictionary<String>> dictionaryMap,
+            int reserveMemoryMB, CuboidScheduler cuboidScheduler);
 
     protected abstract T getRecordFromKeyValue(KEYIN key, VALUEIN value);
 
@@ -116,8 +116,8 @@ public abstract class InMemCuboidMapperBase<KEYIN, VALUEIN, KEYOUT, VALUEOUT, T>
 
         taskThreadCount = config.getCubeAlgorithmInMemConcurrentThreads();
         reserveMemoryMB = calculateReserveMB(conf);
-        inputConverterUnit = getInputConverterUnit();
-        future = getCubingThreadFuture(context, dictionaryMap, reserveMemoryMB, cuboidScheduler, inputConverterUnit);
+        inputConverterUnit = getInputConverterUnit(context);
+        future = getCubingThreadFuture(context, dictionaryMap, reserveMemoryMB, cuboidScheduler);
     }
 
     private int calculateReserveMB(Configuration configuration) {
@@ -145,7 +145,7 @@ public abstract class InMemCuboidMapperBase<KEYIN, VALUEIN, KEYOUT, VALUEOUT, T>
         }
 
         if (counter % unitRows == 0 && shouldCutSplit(nSplit, countOfLastSplit)) {
-            if (offer(context, inputConverterUnit.getCutUnit(), 1, TimeUnit.MINUTES, 60)) {
+            if (offer(context, inputConverterUnit.getCutRow(), 1, TimeUnit.MINUTES, 60)) {
                 countOfLastSplit = 0;
             } else {
                 throw new IOException("Failed to offer row to internal queue due to queue full!");
@@ -159,7 +159,7 @@ public abstract class InMemCuboidMapperBase<KEYIN, VALUEIN, KEYOUT, VALUEOUT, T>
         logger.info("Totally handled " + mapCounter + " records!");
 
         while (!future.isDone()) {
-            if (queue.offer(inputConverterUnit.getEmptyUnit(), 1, TimeUnit.SECONDS)) {
+            if (queue.offer(inputConverterUnit.getEndRow(), 1, TimeUnit.SECONDS)) {
                 break;
             }
         }

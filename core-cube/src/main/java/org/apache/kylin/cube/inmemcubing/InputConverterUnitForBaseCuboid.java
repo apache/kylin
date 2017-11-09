@@ -23,27 +23,42 @@ import org.apache.kylin.gridtable.GTRecord;
 
 public class InputConverterUnitForBaseCuboid implements InputConverterUnit<ByteArray> {
 
-    public static final ByteArray EMPTY_ROW = new ByteArray();
+    public static final ByteArray END_ROW = new ByteArray();
     public static final ByteArray CUT_ROW = new ByteArray(0);
 
+    private final boolean ifChange;
+
+    public InputConverterUnitForBaseCuboid(boolean ifChange) {
+        this.ifChange = ifChange;
+    }
+
+    @Override
     public void convert(ByteArray currentObject, GTRecord record) {
         record.loadColumns(currentObject.asBuffer());
     }
 
+    @Override
     public boolean ifEnd(ByteArray currentObject) {
-        return currentObject == EMPTY_ROW;
+        return currentObject == END_ROW;
     }
 
-    public ByteArray getEmptyUnit() {
-        return EMPTY_ROW;
+    @Override
+    public ByteArray getEndRow() {
+        return END_ROW;
     }
 
-    public ByteArray getCutUnit() {
+    @Override
+    public ByteArray getCutRow() {
         return CUT_ROW;
     }
 
     @Override
     public boolean ifCut(ByteArray currentObject) {
         return currentObject == CUT_ROW;
+    }
+
+    @Override
+    public boolean ifChange() {
+        return ifChange;
     }
 }

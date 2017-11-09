@@ -41,7 +41,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 public class InMemCuboidMapper<KEYIN>
         extends InMemCuboidMapperBase<KEYIN, Object, ByteArrayWritable, ByteArrayWritable, String[]> {
 
-
     private IMRInput.IMRTableInputFormat flatTableInputFormat;
 
     @Override
@@ -52,7 +51,7 @@ public class InMemCuboidMapper<KEYIN>
     }
 
     @Override
-    protected InputConverterUnit<String[]> getInputConverterUnit() {
+    protected InputConverterUnit<String[]> getInputConverterUnit(Context context) {
         Preconditions.checkNotNull(cubeDesc);
         Preconditions.checkNotNull(dictionaryMap);
         return new InputConverterUnitForRawData(cubeDesc, flatDesc, dictionaryMap);
@@ -65,7 +64,7 @@ public class InMemCuboidMapper<KEYIN>
 
     @Override
     protected Future getCubingThreadFuture(Context context, Map<TblColRef, Dictionary<String>> dictionaryMap,
-            int reserveMemoryMB, CuboidScheduler cuboidScheduler, InputConverterUnit<String[]> inputConverterUnit) {
+            int reserveMemoryMB, CuboidScheduler cuboidScheduler) {
         AbstractInMemCubeBuilder cubeBuilder = new DoggedCubeBuilder(cuboidScheduler, flatDesc, dictionaryMap);
         cubeBuilder.setReserveMemoryMB(reserveMemoryMB);
         cubeBuilder.setConcurrentThreads(taskThreadCount);

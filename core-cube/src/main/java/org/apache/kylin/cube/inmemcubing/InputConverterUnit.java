@@ -21,13 +21,22 @@ package org.apache.kylin.cube.inmemcubing;
 import org.apache.kylin.gridtable.GTRecord;
 
 public interface InputConverterUnit<T> {
+
+    /** Convert currentObject to a GTRecord*/
     public void convert(T currentObject, GTRecord record);
 
+    /** Check if currentObject is for indicating the end of the data stream*/
     public boolean ifEnd(T currentObject);
 
+    /** Check if currentObject is for cutting the data stream*/
     public boolean ifCut(T currentObject);
 
-    public T getEmptyUnit();
+    /** Get the object indicating the end of the data stream*/
+    public T getEndRow();
 
-    public T getCutUnit();
+    /** Get the object for cutting the data stream*/
+    public T getCutRow();
+
+    /** Get whether the input source is different from the final output cuboid*/
+    public boolean ifChange();
 }

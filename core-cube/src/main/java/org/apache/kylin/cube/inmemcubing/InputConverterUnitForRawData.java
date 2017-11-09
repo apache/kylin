@@ -44,7 +44,7 @@ public class InputConverterUnitForRawData implements InputConverterUnit<String[]
     private static final Logger logger = LoggerFactory.getLogger(InputConverterUnitForRawData.class);
     
     public static final byte[] HIVE_NULL = Bytes.toBytes("\\N");
-    public static final String[] EMPTY_ROW = new String[0];
+    public static final String[] END_ROW = new String[0];
     public static final String[] CUT_ROW = { "" };
 
     private final CubeJoinedFlatTableEnrich flatDesc;
@@ -64,6 +64,7 @@ public class InputConverterUnitForRawData implements InputConverterUnit<String[]
         initNullBytes(cubeDesc);
     }
 
+    @Override
     public final void convert(String[] row, GTRecord record) {
         Object[] dimensions = buildKey(row);
         Object[] metricsValues = buildValue(row);
@@ -73,19 +74,23 @@ public class InputConverterUnitForRawData implements InputConverterUnit<String[]
         record.setValues(recordValues);
     }
 
+    @Override
     public boolean ifEnd(String[] currentObject) {
-        return currentObject == EMPTY_ROW;
+        return currentObject == END_ROW;
     }
 
+    @Override
     public boolean ifCut(String[] currentObject) {
         return currentObject == CUT_ROW;
     }
 
-    public String[] getEmptyUnit() {
-        return EMPTY_ROW;
+    @Override
+    public String[] getEndRow() {
+        return END_ROW;
     }
 
-    public String[] getCutUnit() {
+    @Override
+    public String[] getCutRow() {
         return CUT_ROW;
     }
 
@@ -101,6 +106,11 @@ public class InputConverterUnitForRawData implements InputConverterUnit<String[]
         }
 
         return key;
+    }
+
+    @Override
+    public boolean ifChange() {
+        return true;
     }
 
     private Object[] buildValue(String[] row) {

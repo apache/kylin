@@ -118,6 +118,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             .withDescription("Statistics sampling percentage").create(BatchConstants.ARG_STATS_SAMPLING_PERCENT);
     protected static final Option OPTION_CUBOID_MODE = OptionBuilder.withArgName(BatchConstants.ARG_CUBOID_MODE)
             .hasArg().isRequired(false).withDescription("Cuboid Mode").create(BatchConstants.ARG_CUBOID_MODE);
+    protected static final Option OPTION_NEED_UPDATE_BASE_CUBOID_SHARD = OptionBuilder
+            .withArgName(BatchConstants.ARG_UPDATE_SHARD).hasArg().isRequired(false)
+            .withDescription("If need to update base cuboid shard").create(BatchConstants.ARG_UPDATE_SHARD);
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 

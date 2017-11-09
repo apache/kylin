@@ -186,7 +186,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
             }
             queue.put(row);
         }
-        queue.put(InputConverterUnitForRawData.EMPTY_ROW);
+        queue.put(InputConverterUnitForRawData.END_ROW);
     }
 
     static Map<TblColRef, Dictionary<String>> getDictionaryMap(CubeInstance cube, String flatTable) throws IOException {

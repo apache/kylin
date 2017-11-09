@@ -40,6 +40,7 @@ import org.apache.kylin.cube.inmemcubing.InputConverterUnit;
 import org.apache.kylin.cube.inmemcubing.InputConverterUnitForBaseCuboid;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -64,13 +65,18 @@ public class InMemCuboidFromBaseCuboidMapper
     }
 
     @Override
-    protected InputConverterUnit<ByteArray> getInputConverterUnit() {
-        return new InputConverterUnitForBaseCuboid();
+    protected InputConverterUnit<ByteArray> getInputConverterUnit(Context context) {
+        String updateShard = context.getConfiguration().get(BatchConstants.CFG_UPDATE_SHARD);
+        if (updateShard == null || updateShard.equalsIgnoreCase("false")) {
+            return new InputConverterUnitForBaseCuboid(false);
+        } else {
+            return new InputConverterUnitForBaseCuboid(true);
+        }
     }
 
     @Override
     protected Future getCubingThreadFuture(Context context, Map<TblColRef, Dictionary<String>> dictionaryMap,
-            int reserveMemoryMB, CuboidScheduler cuboidScheduler, InputConverterUnit<ByteArray> inputConverterUnit) {
+            int reserveMemoryMB, CuboidScheduler cuboidScheduler) {
         AbstractInMemCubeBuilder cubeBuilder = new DoggedCubeBuilder(cuboidScheduler, flatDesc, dictionaryMap);
         cubeBuilder.setReserveMemoryMB(reserveMemoryMB);
         cubeBuilder.setConcurrentThreads(taskThreadCount);
