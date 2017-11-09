@@ -53,3 +53,5 @@ __Companies & Organizations__
     * Apache Kylin is used as a OLAP engine at Wuba’s big data platform, powering data analysis for recommend engine, search engine, advertisement engine, BI, etc. More than 100 Cubes are daily built under crontab; the query statistics shows that more than 95% queries could get response in less than one second, which provides better user experience than traditional tools. And the resource bottleneck could be simply solved by adding machines, which is especial friendly to administrator.
 * [4399.com](http://www.4399.com/)
     * Apache Kylin is used at 4399.com for Big Data Analytics on Hadoop, which let us query massive data set at sub-second latency.
+* [zte中兴](http://www.zte.com.cn/)
+    * Apache Kylin is one of the foundational components of ZTE's Big Data Platform. ZTE uses Apache Kylin to provide OLAP capabilities to customers in the  telecom, government, banking, finance and other industries.
