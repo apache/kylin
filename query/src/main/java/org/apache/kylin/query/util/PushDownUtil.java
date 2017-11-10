@@ -61,16 +61,16 @@ public class PushDownUtil {
 
     public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownSelectQuery(String project, String sql,
             String defaultSchema, SQLException sqlException) throws Exception {
-        return tryPushDownQuery(project, sql, defaultSchema, sqlException, true);
+        return tryPushDownQuery(project, sql, defaultSchema, sqlException, true, false);
     }
 
     public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String project,
-            String sql, String defaultSchema) throws Exception {
-        return tryPushDownQuery(project, sql, defaultSchema, null, false);
+            String sql, String defaultSchema, boolean isPrepare) throws Exception {
+        return tryPushDownQuery(project, sql, defaultSchema, null, false, isPrepare);
     }
 
     private static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownQuery(String project, String sql,
-            String defaultSchema, SQLException sqlException, boolean isSelect) throws Exception {
+            String defaultSchema, SQLException sqlException, boolean isSelect, boolean isPrepare) throws Exception {
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
@@ -123,7 +123,7 @@ public class PushDownUtil {
         if (isSelect) {
             runner.executeQuery(sql, returnRows, returnColumnMeta);
         }
-        if (!isSelect && kylinConfig.isPushDownUpdateEnabled()) {
+        if (!isSelect && !isPrepare && kylinConfig.isPushDownUpdateEnabled()) {
             runner.executeUpdate(sql);
         }
         return Pair.newPair(returnRows, returnColumnMeta);

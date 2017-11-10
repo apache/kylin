@@ -193,8 +193,8 @@ public class QueryService extends BasicService {
         Connection conn = null;
         try {
             conn = QueryConnection.getConnection(sqlRequest.getProject());
-            Pair<List<List<String>>, List<SelectedColumnMeta>> r = PushDownUtil
-                    .tryPushDownNonSelectQuery(sqlRequest.getProject(), sqlRequest.getSql(), conn.getSchema());
+            Pair<List<List<String>>, List<SelectedColumnMeta>> r = PushDownUtil.tryPushDownNonSelectQuery(
+                    sqlRequest.getProject(), sqlRequest.getSql(), conn.getSchema(), BackdoorToggles.getPrepareOnly());
 
             List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
             columnMetas.add(new SelectedColumnMeta(false, false, false, false, 1, false, Integer.MAX_VALUE, "c0", "c0",
