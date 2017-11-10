@@ -35,6 +35,7 @@ import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
@@ -299,9 +300,15 @@ public class JobService extends BasicService implements InitializingBean {
         }
 
         CubingJob cubeJob = (CubingJob) job;
+        CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
-        result.setRelatedCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        if (cube != null) {
+            result.setRelatedCube(cube.getDisplayName());
+        } else {
+            result.setRelatedCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        }
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
         result.setLastModified(cubeJob.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());

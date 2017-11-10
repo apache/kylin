@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -71,6 +72,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         cubeInstance.setConfig((KylinConfigExt) cubeDesc.getConfig());
         cubeInstance.setName(cubeName);
+        cubeInstance.setDisplayName(cubeName);
         cubeInstance.setDescName(cubeDesc.getName());
         cubeInstance.setCreateTimeUTC(System.currentTimeMillis());
         cubeInstance.setSegments(new Segments<CubeSegment>());
@@ -88,6 +90,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     private String owner;
     @JsonProperty("descriptor")
     private String descName;
+    @JsonProperty("display_name")
+    private String displayName;
     // Mark cube priority for query
     @JsonProperty("cost")
     private int cost = 50;
@@ -231,6 +235,17 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     public void setDescName(String descName) {
         this.descName = descName;
+    }
+
+    public String getDisplayName() {
+        if (StringUtils.isBlank(displayName)) {
+            displayName = name;
+        }
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public int getCost() {

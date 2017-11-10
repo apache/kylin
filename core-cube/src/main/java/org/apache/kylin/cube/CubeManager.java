@@ -558,6 +558,13 @@ public class CubeManager implements IRealizationProvider {
 
         CubeSegment first = mergingSegments.get(0);
         CubeSegment last = mergingSegments.get(mergingSegments.size() - 1);
+        if (force == false) {
+            for (int i = 0; i < mergingSegments.size() - 1; i++) {
+                if (!mergingSegments.get(i).getSegRange().connects(mergingSegments.get(i + 1).getSegRange()))
+                    throw new IllegalStateException("Merging segments must not have gaps between "
+                            + mergingSegments.get(i) + " and " + mergingSegments.get(i + 1));
+            }
+        }
         if (first.isOffsetCube()) {
             newSegment.setSegRange(new SegmentRange(first.getSegRange().start, last.getSegRange().end));
             newSegment.setSourcePartitionOffsetStart(first.getSourcePartitionOffsetStart());

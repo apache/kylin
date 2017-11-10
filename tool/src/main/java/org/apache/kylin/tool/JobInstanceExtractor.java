@@ -26,6 +26,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
@@ -122,10 +124,17 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
     }
 
     private JobInstance parseToJobInstance(CubingJob cubeJob, Map<String, Output> outputs) {
+        CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+
         Output output = outputs.get(cubeJob.getId());
         final JobInstance result = new JobInstance();
         result.setName(cubeJob.getName());
-        result.setRelatedCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        if (cube != null) {
+            result.setRelatedCube(cube.getDisplayName());
+        } else {
+            result.setRelatedCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        }
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
         result.setLastModified(output.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
