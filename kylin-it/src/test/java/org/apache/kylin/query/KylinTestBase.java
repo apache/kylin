@@ -261,8 +261,9 @@ public class KylinTestBase {
 
             return output(resultSet, needDisplay);
         } catch (SQLException sqlException) {
-            Pair<List<List<String>>, List<SelectedColumnMeta>> result = PushDownUtil
-                    .tryPushDownSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", sqlException);
+            Pair<List<List<String>>, List<SelectedColumnMeta>> result = PushDownUtil.tryPushDownSelectQuery(
+                    ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", sqlException,
+                    BackdoorToggles.getPrepareOnly());
             if (result == null) {
                 throw sqlException;
             }
@@ -288,7 +289,8 @@ public class KylinTestBase {
     protected Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownSelectQuery(String sql) throws Exception {
         SQLException mockException = new SQLException("", new NoRealizationFoundException(""));
 
-        return PushDownUtil.tryPushDownSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", mockException);
+        return PushDownUtil.tryPushDownSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", mockException,
+                BackdoorToggles.getPrepareOnly());
     }
 
     protected Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String sql, boolean isPrepare)
