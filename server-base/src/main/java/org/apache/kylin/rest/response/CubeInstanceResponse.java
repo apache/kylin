@@ -40,6 +40,8 @@ public class CubeInstanceResponse extends CubeInstance {
     private String partitionDateColumn;
     @JsonProperty("partitionDateStart")
     private long partitionDateStart;
+    @JsonProperty("isStandardPartitioned")
+    private boolean isStandardPartitioned;
     @JsonProperty("size_kb")
     private long sizeKB;
     @JsonProperty("input_records_count")
@@ -72,6 +74,7 @@ public class CubeInstanceResponse extends CubeInstance {
         // but the cube in this model can still be loaded.
         if (cube.getModel() != null) {
             this.partitionDateColumn = cube.getModel().getPartitionDesc().getPartitionDateColumn();
+            this.isStandardPartitioned = cube.getModel().isStandardPartitionedDateColumn();
             this.isStreaming = cube.getModel().getRootFactTable().getTableDesc()
                     .getSourceType() == ISourceAware.ID_STREAMING;
         }
