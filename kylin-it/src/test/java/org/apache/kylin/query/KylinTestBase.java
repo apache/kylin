@@ -49,8 +49,8 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.dbunit.DatabaseUnitException;
@@ -289,11 +289,6 @@ public class KylinTestBase {
         SQLException mockException = new SQLException("", new NoRealizationFoundException(""));
 
         return PushDownUtil.tryPushDownSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", mockException);
-    }
-
-    protected Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String sql, boolean isPrepare)
-            throws Exception {
-        return PushDownUtil.tryPushDownNonSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", isPrepare);
     }
 
     protected ITable executeDynamicQuery(IDatabaseConnection dbConn, String queryName, String sql,
