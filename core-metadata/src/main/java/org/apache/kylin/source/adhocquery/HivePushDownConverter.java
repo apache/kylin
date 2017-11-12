@@ -43,9 +43,7 @@ public class HivePushDownConverter implements IPushDownConverter {
             Pattern.CASE_INSENSITIVE);
     private static final Pattern CONCAT_PATTERN = Pattern.compile("(['_a-z0-9A-Z]+)\\|\\|(['_a-z0-9A-Z]+)",
             Pattern.CASE_INSENSITIVE);
-    private static final Pattern TIMESTAMP_ADD_DIFF_PATTERN = Pattern
-            .compile("timestamp(add|diff)\\s*\\(\\s*(.*?)\\s*,", Pattern.CASE_INSENSITIVE);
-    private static final Pattern SELECT_ADD_LIMIT_PATTERN = Pattern.compile("^select[\\s\\S]*(limit\\s+[0-9;]+)$",
+    private static final Pattern TIMESTAMP_ADD_DIFF_PATTERN = Pattern.compile("timestamp(add|diff)\\s*\\(\\s*(.*?)\\s*,",
             Pattern.CASE_INSENSITIVE);
     private static final ImmutableSet<String> sqlKeyWordsExceptAS = ImmutableSet.of("A", "ABS", "ABSOLUTE", "ACTION",
             "ADA", "ADD", "ADMIN", "AFTER", "ALL", "ALLOCATE", "ALLOW", "ALTER", "ALWAYS", "AND", "ANY", "APPLY", "ARE",
@@ -242,22 +240,7 @@ public class HivePushDownConverter implements IPushDownConverter {
         return replacedString;
     }
 
-    public static String addLimit(String originString) {
-        Matcher selectAndLimitMatcher = SELECT_ADD_LIMIT_PATTERN.matcher(originString);
-        String replacedString = originString;
-
-        if (!selectAndLimitMatcher.find()) {
-            if (originString.endsWith(";")) {
-                replacedString = originString.replaceAll(";+$", "");
-            }
-
-            replacedString = replacedString.concat(" limit 1");
-        }
-
-        return replacedString;
-    }
-
-    public static String doConvert(String originStr, boolean isPrepare) {
+    public static String doConvert(String originStr) {
         // Step1.Replace " with `
         String convertedSql = replaceString(originStr, "\"", "`");
 
@@ -282,11 +265,6 @@ public class HivePushDownConverter implements IPushDownConverter {
         // Step8.Replace integer with int
         convertedSql = replaceString(convertedSql, "INTEGER", "INT");
         convertedSql = replaceString(convertedSql, "integer", "int");
-
-        // Step9.Add limit 1 for prepare select sql to speed up
-        if (isPrepare) {
-            convertedSql = addLimit(convertedSql);
-        }
 
         return convertedSql;
     }
@@ -317,7 +295,7 @@ public class HivePushDownConverter implements IPushDownConverter {
     }
 
     @Override
-    public String convert(String originSql, String project, String defaultSchema, boolean isPrepare) {
-        return doConvert(originSql, isPrepare);
+    public String convert(String originSql, String project, String defaultSchema) {
+        return doConvert(originSql);
     }
 }
