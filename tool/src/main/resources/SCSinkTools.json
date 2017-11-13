@@ -6,7 +6,8 @@
       "cube_desc_override_properties": [
         "java.util.HashMap",
         {
-          "kylin.cube.algorithm": "INMEM"
+          "kylin.cube.algorithm": "INMEM",
+          "kylin.cube.max-building-segments": "1"
         }
       ]
     }
