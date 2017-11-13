@@ -322,7 +322,7 @@
     {
       "name": "GVM_PERCENTILE",
       "function": {
-        "expression": "PERCENTILE",
+        "expression": "PERCENTILE_APPROX",
         "parameter": {
           "type": "column",
           "value": "TEST_KYLIN_FACT.PRICE"

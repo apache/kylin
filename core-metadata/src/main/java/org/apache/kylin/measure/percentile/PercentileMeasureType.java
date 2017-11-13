@@ -52,7 +52,7 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
 
         @Override
         public String getAggrFunctionName() {
-            return FUNC_PERCENTILE;
+            return FUNC_PERCENTILE_APPROX;
         }
 
         @Override

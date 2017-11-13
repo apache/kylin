@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.basic.BasicMeasureType;
+import org.apache.kylin.measure.percentile.PercentileMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -88,6 +89,10 @@ public class FunctionDesc implements Serializable {
 
     public void init(DataModelDesc model) {
         expression = expression.toUpperCase();
+        if (expression.equals(PercentileMeasureType.FUNC_PERCENTILE)) {
+            expression = PercentileMeasureType.FUNC_PERCENTILE_APPROX; // for backward compatibility
+        }
+
         returnDataType = DataType.getType(returnType);
 
         for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
@@ -260,6 +265,10 @@ public class FunctionDesc implements Serializable {
 
     public void setReturnType(String returnType) {
         this.returnType = returnType;
+    }
+
+    public void setExpression(String expression) {
+        this.expression = expression;
     }
 
     public DataType getReturnDataType() {
