@@ -52,6 +52,7 @@ If using HDFS as Kylin working directory, you can leave configurations unchanged
 ```
 kylin.env.hdfs-working-dir=/kylin
 ```
+
 This will be very similar as on-premises deployment.
 
 - Use S3 as "kylin.env.hdfs-working-dir"
@@ -65,6 +66,14 @@ kylin.storage.hbase.cluster-fs=s3://yourbucket
 ```
 Then Kylin will use S3 for Cube building, big metadata file and Cube. The performance might be slower than HDFS.
 
+- Create the working-dir folder if it doesn't exist
+
+```
+hadoop fs -mkdir /kylin 
+or
+hadoop fs -mkdir s3://yourbucket/kylin
+```
+
 ### Start Kylin
 
 The start is the same as on normal Hadoop:
@@ -75,7 +84,7 @@ $KYLIN_HOME/bin/sample.sh
 $KYLIN_HOME/bin/kylin.sh start
 ```
 
-Don't forget to open the 7070 port access in the security group for EMR master, "ElasticMapReduce-master", or with SSH tunnel to the master node, then you can access Kylin Web GUI at http://\<master\-public\-address\>:7070/kylin
+Don't forget to enable the 7070 port access in the security group for EMR master - "ElasticMapReduce-master", or with SSH tunnel to the master node, then you can access Kylin Web GUI at http://\<master\-dns\>:7070/kylin
 
 Build the sample Cube, and then run queries when the Cube is ready. You can browse S3 to see whether the data is safely persisted.
 
