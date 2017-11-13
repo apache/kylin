@@ -45,8 +45,10 @@ import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 public class DataType implements Serializable {
 
     private static final LinkedHashSet<String> VALID_TYPES = new LinkedHashSet<String>();
+    private static final LinkedHashSet<String> COMPLEX_TYPES = new LinkedHashSet<String>();
 
     private static Pattern TYPE_PATTERN = null;
+    private static Pattern COMPLEX_TYPE_PATTERN = null;
     private static final String TYPE_PATTEN_TAIL = "\\s*" //
             + "(?:" + "[(]" + "([\\d\\s,]+)" + "[)]" + ")?";
 
@@ -61,8 +63,18 @@ public class DataType implements Serializable {
                 Pattern.CASE_INSENSITIVE);
     }
 
-    // standard sql types, ref: http://www.w3schools.com/sql/sql_datatypes_general.asp
+    public static synchronized void registerComplex(String... typeNames) {
+        for (String typeName : typeNames) {
+            COMPLEX_TYPES.add(typeName);
+        }
+        COMPLEX_TYPE_PATTERN = Pattern.compile(//
+                "(" + StringUtils.join(COMPLEX_TYPES, "|") + ")" //
+                        + TYPE_PATTEN_TAIL,
+                Pattern.CASE_INSENSITIVE);
+    }
+
     static {
+        // standard sql types, ref: http://www.w3schools.com/sql/sql_datatypes_general.asp
         register("any", "char", "varchar", "string", //
                 "boolean", "byte", "binary", //
                 "int", "short", "long", "integer", "tinyint", "smallint", "bigint", //
@@ -70,6 +82,8 @@ public class DataType implements Serializable {
                 "float", "real", "double", "decimal", "numeric", //
                 "date", "time", "datetime", "timestamp", //
                 InnerDataTypeEnum.LITERAL.getDataType(), InnerDataTypeEnum.DERIVED.getDataType());
+
+        registerComplex("array\\<.*\\>");
     }
 
     public static final Set<String> INTEGER_FAMILY = new HashSet<String>();
@@ -121,6 +135,11 @@ public class DataType implements Serializable {
         MeasureTypeFactory.getUDAFs();
     }
 
+    public static boolean isComplexType(DataType type) {
+        Matcher m = COMPLEX_TYPE_PATTERN.matcher(type.getName());
+        return m.matches();
+    }
+
     public static DataType getType(String type) {
         if (type == null)
             return null;
@@ -151,9 +170,15 @@ public class DataType implements Serializable {
         datatype = replaceLegacy(datatype);
 
         Pattern pattern = TYPE_PATTERN;
+        Pattern complexPattern = COMPLEX_TYPE_PATTERN;
         Matcher m = pattern.matcher(datatype);
-        if (m.matches() == false)
+        Matcher m2 = complexPattern.matcher(datatype);
+        if (m.matches() == false && m2.matches() == false)
             throw new IllegalArgumentException("bad data type -- " + datatype + ", does not match " + pattern);
+
+        if (m2.matches()) {
+            m = m2;
+        }
 
         name = replaceLegacy(m.group(1));
         precision = -1;
