@@ -11,7 +11,7 @@ Kylin supports LDAP authentication for enterprise or production deployment; This
 
 #### Configure LDAP server info
 
-Firstly, provide LDAP URL, and username/password if the LDAP server is secured; The password in kylin.properties need be encrypted; You can run the following command to get the encrypted value (please note, the password's length should be less than 16 characters, see [KYLIN-2416](https://issues.apache.org/jira/browse/KYLIN-2416)):
+Firstly, provide LDAP URL, and username/password if the LDAP server is secured; The password in kylin.properties need be encrypted; You can run the following command to get the encrypted value:
 
 ```
 cd $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib
