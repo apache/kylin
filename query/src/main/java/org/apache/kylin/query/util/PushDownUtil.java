@@ -60,17 +60,17 @@ public class PushDownUtil {
     private static final Logger logger = LoggerFactory.getLogger(PushDownUtil.class);
 
     public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownSelectQuery(String project, String sql,
-            String defaultSchema, SQLException sqlException) throws Exception {
-        return tryPushDownQuery(project, sql, defaultSchema, sqlException, true);
+            String defaultSchema, SQLException sqlException, boolean isPrepare) throws Exception {
+        return tryPushDownQuery(project, sql, defaultSchema, sqlException, true, isPrepare);
     }
 
     public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String project,
-            String sql, String defaultSchema) throws Exception {
-        return tryPushDownQuery(project, sql, defaultSchema, null, false);
+            String sql, String defaultSchema, boolean isPrepare) throws Exception {
+        return tryPushDownQuery(project, sql, defaultSchema, null, false, isPrepare);
     }
 
     private static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownQuery(String project, String sql,
-            String defaultSchema, SQLException sqlException, boolean isSelect) throws Exception {
+            String defaultSchema, SQLException sqlException, boolean isSelect, boolean isPrepare) throws Exception {
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
@@ -110,7 +110,7 @@ public class PushDownUtil {
 
         for (String converterName : kylinConfig.getPushDownConverterClassNames()) {
             IPushDownConverter converter = (IPushDownConverter) ClassUtil.newInstance(converterName);
-            String converted = converter.convert(sql, project, defaultSchema);
+            String converted = converter.convert(sql, project, defaultSchema, isPrepare);
             if (!sql.equals(converted)) {
                 logger.info("the query is converted to {} after applying converter {}", converted, converterName);
                 sql = converted;
@@ -123,7 +123,7 @@ public class PushDownUtil {
         if (isSelect) {
             runner.executeQuery(sql, returnRows, returnColumnMeta);
         }
-        if (!isSelect && kylinConfig.isPushDownUpdateEnabled()) {
+        if (!isSelect && !isPrepare && kylinConfig.isPushDownUpdateEnabled()) {
             runner.executeUpdate(sql);
         }
         return Pair.newPair(returnRows, returnColumnMeta);

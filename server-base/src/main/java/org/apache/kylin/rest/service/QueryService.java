@@ -193,8 +193,8 @@ public class QueryService extends BasicService {
         Connection conn = null;
         try {
             conn = QueryConnection.getConnection(sqlRequest.getProject());
-            Pair<List<List<String>>, List<SelectedColumnMeta>> r = PushDownUtil
-                    .tryPushDownNonSelectQuery(sqlRequest.getProject(), sqlRequest.getSql(), conn.getSchema());
+            Pair<List<List<String>>, List<SelectedColumnMeta>> r = PushDownUtil.tryPushDownNonSelectQuery(
+                    sqlRequest.getProject(), sqlRequest.getSql(), conn.getSchema(), BackdoorToggles.getPrepareOnly());
 
             List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
             columnMetas.add(new SelectedColumnMeta(false, false, false, false, 1, false, Integer.MAX_VALUE, "c0", "c0",
@@ -859,7 +859,7 @@ public class QueryService extends BasicService {
             Pair<List<List<String>>, List<SelectedColumnMeta>> r = null;
             try {
                 r = PushDownUtil.tryPushDownSelectQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(),
-                        sqlException);
+                        sqlException, BackdoorToggles.getPrepareOnly());
             } catch (Exception e2) {
                 logger.error("pushdown engine failed current query too", e2);
                 //exception in pushdown, throw it instead of exception in calcite
