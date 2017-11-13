@@ -68,7 +68,6 @@ public class CubingJob extends DefaultChainedExecutable {
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
     private static final String DEPLOY_ENV_NAME = "envName";
     private static final String PROJECT_INSTANCE_NAME = "projectName";
-    private static final String CUBE_DISPLAY_NAME = "cubeDisplayName";
 
     public static CubingJob createBuildJob(CubeSegment seg, String submitter, JobEngineConfig config) {
         return initCubingJob(seg, "BUILD", submitter, config);
@@ -100,7 +99,6 @@ public class CubingJob extends DefaultChainedExecutable {
         format.setTimeZone(TimeZone.getTimeZone(config.getTimeZone()));
         result.setDeployEnvName(kylinConfig.getDeployEnv());
         result.setProjectName(projList.get(0).getName());
-        result.setCubeDisplayName(cube.getDisplayName());
         CubingExecutableUtil.setCubeName(seg.getCubeInstance().getName(), result.getParams());
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
         result.setName(jobType + " CUBE - " + seg.getCubeInstance().getDisplayName() + " - " + seg.getName() + " - "
@@ -128,14 +126,6 @@ public class CubingJob extends DefaultChainedExecutable {
 
     public String getProjectName() {
         return getParam(PROJECT_INSTANCE_NAME);
-    }
-
-    public String getCubeDisplayName() {
-        return getParam(CUBE_DISPLAY_NAME);
-    }
-
-    protected void setCubeDisplayName(String name) {
-        setParam(CUBE_DISPLAY_NAME, name);
     }
 
     @Override

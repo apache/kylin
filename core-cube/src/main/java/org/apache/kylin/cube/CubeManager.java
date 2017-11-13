@@ -55,6 +55,7 @@ import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
@@ -664,9 +665,11 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private CubeSegment newSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange) {
+        DataModelDesc modelDesc = cube.getModel();
+
         CubeSegment segment = new CubeSegment();
         segment.setUuid(UUID.randomUUID().toString());
-        segment.setName(CubeSegment.makeSegmentName(tsRange, segRange));
+        segment.setName(CubeSegment.makeSegmentName(tsRange, segRange, modelDesc));
         segment.setCreateTimeUTC(System.currentTimeMillis());
         segment.setCubeInstance(cube);
 
@@ -845,6 +848,7 @@ public class CubeManager implements IRealizationProvider {
     public List<CubeSegment> calculateHoles(String cubeName) {
         List<CubeSegment> holes = Lists.newArrayList();
         final CubeInstance cube = getCube(cubeName);
+        DataModelDesc modelDesc = cube.getModel();
         Preconditions.checkNotNull(cube);
         final List<CubeSegment> segments = cube.getSegments();
         logger.info("totally " + segments.size() + " cubeSegments");
@@ -866,10 +870,10 @@ public class CubeManager implements IRealizationProvider {
                     hole.setSegRange(new SegmentRange(first.getSegRange().end, second.getSegRange().start));
                     hole.setSourcePartitionOffsetStart(first.getSourcePartitionOffsetEnd());
                     hole.setSourcePartitionOffsetEnd(second.getSourcePartitionOffsetStart());
-                    hole.setName(CubeSegment.makeSegmentName(null, hole.getSegRange()));
+                    hole.setName(CubeSegment.makeSegmentName(null, hole.getSegRange(), modelDesc));
                 } else {
                     hole.setTSRange(new TSRange(first.getTSRange().end.v, second.getTSRange().start.v));
-                    hole.setName(CubeSegment.makeSegmentName(hole.getTSRange(), null));
+                    hole.setName(CubeSegment.makeSegmentName(hole.getTSRange(), null, modelDesc));
                 }
                 holes.add(hole);
             }

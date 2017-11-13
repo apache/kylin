@@ -660,6 +660,13 @@ public class DataModelDesc extends RootPersistentEntity {
         return false;
     }
 
+    public boolean isStandardPartitionedDateColumn() {
+        if (StringUtils.isBlank(getPartitionDesc().getPartitionDateFormat())) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Add error info and thrown exception out
      */

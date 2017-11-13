@@ -120,7 +120,7 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     private Map<String, String> additionalInfo = new LinkedHashMap<String, String>();
 
     private Map<Long, Short> cuboidBaseShards = Maps.newConcurrentMap(); // cuboid id ==> base(starting) shard for this cuboid
-    
+
     // lazy init
     transient volatile ISegmentAdvisor advisor = null;
 
@@ -132,13 +132,17 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         return getCubeInstance().getCuboidScheduler();
     }
 
-    public static String makeSegmentName(TSRange tsRange, SegmentRange segRange) {
+    public static String makeSegmentName(TSRange tsRange, SegmentRange segRange, DataModelDesc modelDesc) {
         if (tsRange == null && segRange == null) {
             return "FULL_BUILD";
         }
 
         if (segRange != null) {
             return segRange.start.v + "_" + segRange.end.v;
+        }
+
+        if (!modelDesc.isStandardPartitionedDateColumn()) {
+            return tsRange.start.v + "_" + tsRange.end.v;
         }
 
         // using time
@@ -357,12 +361,12 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     void _setSourceOffsetEnd(long sourceOffsetEnd) {
         this.sourceOffsetEnd = sourceOffsetEnd;
     }
-    
+
     @Override
     public SegmentRange getSegRange() {
         return getAdvisor().getSegRange();
     }
-    
+
     public void setSegRange(SegmentRange range) {
         getAdvisor().setSegRange(range);
     }
@@ -371,19 +375,19 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
     public TSRange getTSRange() {
         return getAdvisor().getTSRange();
     }
-    
+
     public void setTSRange(TSRange range) {
         getAdvisor().setTSRange(range);
     }
-    
+
     public boolean isOffsetCube() {
         return getAdvisor().isOffsetCube();
     }
-    
+
     private ISegmentAdvisor getAdvisor() {
         if (advisor != null)
             return advisor;
-        
+
         synchronized (this) {
             if (advisor == null) {
                 advisor = Segments.newSegmentAdvisor(this);
@@ -391,11 +395,11 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
             return advisor;
         }
     }
-    
+
     @Override
     public void validate() throws IllegalStateException {
     }
-    
+
     public String getProject() {
         return getCubeDesc().getProject();
     }
