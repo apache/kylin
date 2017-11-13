@@ -65,7 +65,7 @@ public class ModelDimensionDesc implements Serializable {
                 for (int i = 0; i < columns.length; i++) {
                     TblColRef column = model.findColumn(table, columns[i]);
 
-                    if (column.getColumnDesc().isComputedColumnn() && !model.isFactTable(column.getTableRef())) {
+                    if (column.getColumnDesc().isComputedColumn() && !model.isFactTable(column.getTableRef())) {
                         throw new RuntimeException("Computed Column on lookup table is not allowed");
                     }
 

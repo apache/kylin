@@ -170,9 +170,6 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     private List<ColumnDesc> listSourceColumns() {
         ProjectManager mgr = ProjectManager.getInstance(olapSchema.getConfig());
 
-        // take care of computed columns
-        boolean exposeMore = olapSchema.getConfig().isPushDownEnabled() || this.exposeMore;
-
         List<ColumnDesc> tableColumns = mgr.listExposedColumns(olapSchema.getProjectName(), sourceTable, exposeMore);
 
         List<ColumnDesc> metricColumns = Lists.newArrayList();

@@ -155,7 +155,7 @@ public class TblColRef implements Serializable {
     }
 
     public String getExpressionInSourceDB() {
-        if (!column.isComputedColumnn()) {
+        if (!column.isComputedColumn()) {
             return getIdentity();
         } else {
             return column.getComputedColumnExpr();

@@ -169,7 +169,7 @@ public class QueryService extends BasicService {
     }
 
     public List<TableMeta> getMetadata(String project) throws SQLException {
-        return getMetadata(getCubeManager(), project, true);
+        return getMetadata(getCubeManager(), project);
     }
 
     public SQLResponse query(SQLRequest sqlRequest) throws Exception {
@@ -565,7 +565,7 @@ public class QueryService extends BasicService {
         }
     }
 
-    protected List<TableMeta> getMetadata(CubeManager cubeMgr, String project, boolean cubedOnly) throws SQLException {
+    protected List<TableMeta> getMetadata(CubeManager cubeMgr, String project) throws SQLException {
 
         Connection conn = null;
         ResultSet columnMeta = null;
@@ -591,8 +591,7 @@ public class QueryService extends BasicService {
                         schemaName == null ? Constant.FakeSchemaName : schemaName, JDBCTableMeta.getString(3),
                         JDBCTableMeta.getString(4), JDBCTableMeta.getString(5), null, null, null, null, null);
 
-                if (!cubedOnly
-                        || getProjectManager().isExposedTable(project, schemaName + "." + tblMeta.getTABLE_NAME())) {
+                if (!"metadata".equalsIgnoreCase(tblMeta.getTABLE_SCHEM())) {
                     tableMetas.add(tblMeta);
                     tableMap.put(tblMeta.getTABLE_SCHEM() + "#" + tblMeta.getTABLE_NAME(), tblMeta);
                 }
@@ -615,12 +614,11 @@ public class QueryService extends BasicService {
                         columnMeta.getString(20), columnMeta.getString(21), getShort(columnMeta.getString(22)),
                         columnMeta.getString(23));
 
-                if (!cubedOnly || getProjectManager().isExposedColumn(project,
-                        schemaName + "." + colmnMeta.getTABLE_NAME(), colmnMeta.getCOLUMN_NAME())) {
+                if (!"metadata".equalsIgnoreCase(colmnMeta.getTABLE_SCHEM())
+                        && !colmnMeta.getCOLUMN_NAME().toUpperCase().startsWith("_KY_")) {
                     tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(colmnMeta);
                 }
             }
-
         } finally {
             close(columnMeta, null, conn);
             if (JDBCTableMeta != null) {
@@ -632,11 +630,11 @@ public class QueryService extends BasicService {
     }
 
     public List<TableMetaWithType> getMetadataV2(String project) throws SQLException, IOException {
-        return getMetadataV2(getCubeManager(), project, true);
+        return getMetadataV2(getCubeManager(), project);
     }
 
     @SuppressWarnings("checkstyle:methodlength")
-    protected List<TableMetaWithType> getMetadataV2(CubeManager cubeMgr, String project, boolean cubedOnly)
+    protected List<TableMetaWithType> getMetadataV2(CubeManager cubeMgr, String project)
             throws SQLException, IOException {
         //Message msg = MsgPicker.getMsg();
 
@@ -668,8 +666,7 @@ public class QueryService extends BasicService {
                         schemaName == null ? Constant.FakeSchemaName : schemaName, JDBCTableMeta.getString(3),
                         JDBCTableMeta.getString(4), JDBCTableMeta.getString(5), null, null, null, null, null);
 
-                if (!cubedOnly
-                        || getProjectManager().isExposedTable(project, schemaName + "." + tblMeta.getTABLE_NAME())) {
+                if (!"metadata".equalsIgnoreCase(tblMeta.getTABLE_SCHEM())) {
                     tableMetas.add(tblMeta);
                     tableMap.put(tblMeta.getTABLE_SCHEM() + "#" + tblMeta.getTABLE_NAME(), tblMeta);
                 }
@@ -693,8 +690,8 @@ public class QueryService extends BasicService {
                         columnMeta.getString(20), columnMeta.getString(21), getShort(columnMeta.getString(22)),
                         columnMeta.getString(23));
 
-                if (!cubedOnly || getProjectManager().isExposedColumn(project,
-                        schemaName + "." + colmnMeta.getTABLE_NAME(), colmnMeta.getCOLUMN_NAME())) {
+                if (!"metadata".equalsIgnoreCase(colmnMeta.getTABLE_SCHEM())
+                        && !colmnMeta.getCOLUMN_NAME().toUpperCase().startsWith("_KY_")) {
                     tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(colmnMeta);
                     columnMap.put(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME() + "#"
                             + colmnMeta.getCOLUMN_NAME(), colmnMeta);

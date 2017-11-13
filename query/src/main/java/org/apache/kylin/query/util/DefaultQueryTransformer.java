@@ -111,6 +111,7 @@ public class DefaultQueryTransformer implements IQueryTransformer {
             sql = sql.substring(0, m.start(1)) + "'" + value + "'" + sql.substring(m.end(3));
         }
 
+        
         return sql;
     }
 }

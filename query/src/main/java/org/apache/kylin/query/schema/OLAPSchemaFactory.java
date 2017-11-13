@@ -49,15 +49,19 @@ public class OLAPSchemaFactory implements SchemaFactory {
     @Override
     public Schema create(SchemaPlus parentSchema, String schemaName, Map<String, Object> operand) {
         String project = (String) operand.get(SCHEMA_PROJECT);
-        Schema newSchema = new OLAPSchema(project, schemaName, false);
+        Schema newSchema = new OLAPSchema(project, schemaName, exposeMore());
         return newSchema;
     }
 
     private static Map<String, File> cachedJsons = Maps.newConcurrentMap();
 
+    public static boolean exposeMore() {
+        return KylinConfig.getInstanceFromEnv().isPushDownEnabled();
+    }
+
     public static File createTempOLAPJson(String project, KylinConfig config) {
 
-        Collection<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project);
+        Collection<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project, exposeMore());
 
         // "database" in TableDesc correspond to our schema
         // the logic to decide which schema to be "default" in calcite:

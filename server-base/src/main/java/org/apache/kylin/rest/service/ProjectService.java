@@ -29,7 +29,6 @@ import javax.annotation.Nullable;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -85,7 +84,8 @@ public class ProjectService extends BasicService {
             throw new BadRequestException(String.format(msg.getPROJECT_ALREADY_EXIST(), projectName));
         }
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description, overrideProps);
+        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description,
+                overrideProps);
         accessService.init(createdProject, AclPermission.ADMINISTRATION);
         logger.debug("New project created.");
 
@@ -93,7 +93,8 @@ public class ProjectService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION')")
-    public ProjectInstance updateProject(ProjectInstance newProject, ProjectInstance currentProject) throws IOException {
+    public ProjectInstance updateProject(ProjectInstance newProject, ProjectInstance currentProject)
+            throws IOException {
         if (!newProject.getName().equals(currentProject.getName())) {
             return renameProject(newProject, currentProject);
         }
@@ -102,20 +103,23 @@ public class ProjectService extends BasicService {
         String newDescription = newProject.getDescription();
         LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
 
-        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName, newDescription, overrideProps);
+        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName,
+                newDescription, overrideProps);
 
         logger.debug("Project updated.");
         return updatedProject;
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION')")
-    public ProjectInstance renameProject(ProjectInstance newProject, ProjectInstance currentProject) throws IOException {
+    public ProjectInstance renameProject(ProjectInstance newProject, ProjectInstance currentProject)
+            throws IOException {
         String newProjectName = newProject.getName();
         String newDescription = newProject.getDescription();
         LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
 
         // rename project but keep UUID, acl keeps the same
-        ProjectInstance renamedProject = getProjectManager().renameProject(currentProject, newProjectName, newDescription, overrideProps);
+        ProjectInstance renamedProject = getProjectManager().renameProject(currentProject, newProjectName,
+                newDescription, overrideProps);
 
         // rebind draft and project
         for (Draft draft : getDraftManager().list(currentProject.getName())) {
@@ -156,25 +160,6 @@ public class ProjectService extends BasicService {
         getProjectManager().dropProject(projectName);
 
         accessService.clean(project, true);
-    }
-
-    public boolean isTableInAnyProject(String tableName) {
-        for (ProjectInstance projectInstance : ProjectManager.getInstance(getConfig()).listAllProjects()) {
-            if (projectInstance.containsTable(tableName.toUpperCase())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean isTableInProject(String tableName, String projectName) {
-        ProjectInstance projectInstance = ProjectManager.getInstance(getConfig()).getProject(projectName);
-        if (projectInstance != null) {
-            if (projectInstance.containsTable(tableName.toUpperCase())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public String getProjectOfCube(String cubeName) {

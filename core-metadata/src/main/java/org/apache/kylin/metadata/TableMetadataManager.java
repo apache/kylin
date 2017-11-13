@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -136,34 +137,89 @@ public class TableMetadataManager {
     }
 
     public Map<String, TableDesc> getAllTablesMap(String prj) {
-        Map<String, TableDesc> globalTables = new LinkedHashMap<>();
-        Map<String, TableDesc> projectTables = new LinkedHashMap<>();
+        //TODO prj == null case is now only used by test case and CubeMetaIngester
+        //should refactor these test case and tool ASAP and stop supporting null case
+        if (prj == null) {
+            Map<String, TableDesc> globalTables = new LinkedHashMap<>();
 
-        for (TableDesc t : srcTableMap.values()) {
-            if (t.getProject() == null)
+            for (TableDesc t : srcTableMap.values()) {
                 globalTables.put(t.getIdentity(), t);
-            else if (t.getProject().equals(prj))
-                projectTables.put(t.getIdentity(), t);
+            }
+            return globalTables;
         }
+        
+        
+        ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
+        Set<String> prjTableNames = project.getTables();
 
-        Map<String, TableDesc> result = globalTables;
-        result.putAll(projectTables);
-        return result;
+        Map<String, TableDesc> ret = new LinkedHashMap<>();
+        for (String tableName : prjTableNames) {
+            String tableIdentity = getTableIdentity(tableName);
+            ret.put(tableIdentity, getProjectSpecificTableDesc(tableIdentity, prj));
+        }
+        return ret;
     }
 
     /**
      * Get TableDesc by name
      */
     public TableDesc getTableDesc(String tableName, String prj) {
-        if (tableName.indexOf(".") < 0)
-            tableName = "DEFAULT." + tableName;
+        return getProjectSpecificTableDesc(getTableIdentity(tableName), prj);
+    }
 
-        tableName.toUpperCase();
+    /**
+     * some legacy table name may not have DB prefix
+     */
+    private String getTableIdentity(String tableName) {
+        if (!tableName.contains("."))
+            return "DEFAULT." + tableName.toUpperCase();
+        else
+            return tableName.toUpperCase();
+    }
 
-        TableDesc result = srcTableMap.get(mapKey(tableName, prj));
-        if (result == null)
-            result = srcTableMap.get(mapKey(tableName, null));
+    /**
+     * the project-specific table desc will be expand by computed columns from the projects' models
+     * when the projects' model list changed, project-specific table should be reset and get expanded
+     * again
+     */
+    public void resetProjectSpecificTableDesc(String prj) throws IOException {
+        ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
+        for (String tableName : project.getTables()) {
+            String tableIdentity = getTableIdentity(tableName);
+            String key = mapKey(tableIdentity, prj);
+            TableDesc originTableDesc = srcTableMap.get(key);
+            if (originTableDesc == null) {
+                continue;
+            }
 
+            if (originTableDesc.isBorrowedFromGlobal()) {
+                srcTableMap.removeLocal(key);//delete it so that getProjectSpecificTableDesc will create again
+            } else {
+                String s = TableDesc.concatResourcePath(tableIdentity, prj);
+                TableDesc tableDesc = reloadSourceTableAt(s);
+                srcTableMap.putLocal(key, tableDesc);
+            }
+        }
+    }
+
+    /**
+     * make sure the returned table desc is project-specific
+     */
+    private TableDesc getProjectSpecificTableDesc(String fullTableName, String prj) {
+        String key = mapKey(fullTableName, prj);
+        TableDesc result = srcTableMap.get(key);
+
+        if (result == null) {
+            result = srcTableMap.get(mapKey(fullTableName, null));
+            if (result != null) {
+                result = new TableDesc(result);// deep copy of global tabledesc
+
+                result.setProject(prj);
+                result.setBorrowedFromGlobal(true);
+
+                srcTableMap.putLocal(key, result);
+            }
+        }
         return result;
     }
 
@@ -188,6 +244,11 @@ public class TableMetadataManager {
 
     public TableExtDesc getTableExt(TableDesc t) {
         TableExtDesc result = srcTableExtMap.get(mapKey(t.getIdentity(), t.getProject()));
+
+        if (null == result) {
+            //TODO: notice the table ext is not project-specific, seems not necessary at all
+            result = srcTableExtMap.get(mapKey(t.getIdentity(), null));
+        }
 
         // avoid returning null, since the TableDesc exists
         if (null == result) {

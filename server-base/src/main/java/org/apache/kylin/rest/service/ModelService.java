@@ -292,7 +292,7 @@ public class ModelService extends BasicService {
         StringBuilder checkRet = new StringBuilder();
         if (cubes != null && cubes.size() != 0) {
             dataModelDesc.init(getConfig(), getTableManager().getAllTablesMap(project),
-                    getDataModelManager().listDataModels());
+                    getDataModelManager().listDataModels(), false);
 
             List<String> curModelDims = getModelCols(dataModelDesc);
             List<String> curModelMeasures = getModelMeasures(dataModelDesc);

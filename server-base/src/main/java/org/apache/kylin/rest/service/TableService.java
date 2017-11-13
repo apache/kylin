@@ -177,7 +177,7 @@ public class TableService extends BasicService {
         }
 
         String[] result = (String[]) saved.toArray(new String[saved.size()]);
-        syncTableToProject(result, project);
+        addTableToProject(result, project);
         return result;
     }
     
@@ -223,7 +223,7 @@ public class TableService extends BasicService {
         return result;
     }
 
-    private void syncTableToProject(String[] tables, String project) throws IOException {
+    private void addTableToProject(String[] tables, String project) throws IOException {
         getProjectManager().addTableDescToProject(tables, project);
     }
 
@@ -298,7 +298,7 @@ public class TableService extends BasicService {
         aclEvaluate.checkProjectAdminPermission(project);
         desc.setUuid(UUID.randomUUID().toString());
         getTableManager().saveSourceTable(desc, project);
-        syncTableToProject(new String[] { desc.getIdentity() }, project);
+        addTableToProject(new String[] { desc.getIdentity() }, project);
     }
 
     /**

@@ -296,13 +296,17 @@ public class ProjectManager {
         clearL2Cache();
     }
 
-    public boolean isModelInProject(String projectName, String modelName) {
-        return this.getProject(projectName).containsModel(modelName);
-    }
-
-    public ProjectInstance updateModelToProject(String modelName, String newProjectName) throws IOException {
+    public ProjectInstance addModelToProject(String modelName, String newProjectName) throws IOException {
         removeModelFromProjects(modelName);
-        return addModelToProject(modelName, newProjectName);
+
+        ProjectInstance prj = getProject(newProjectName);
+        if (prj == null) {
+            throw new IllegalArgumentException("Project " + newProjectName + " does not exist.");
+        }
+        prj.addModel(modelName);
+        updateProject(prj);
+
+        return prj;
     }
 
     public void removeModelFromProjects(String modelName) throws IOException {
@@ -310,17 +314,6 @@ public class ProjectManager {
             projectInstance.removeModel(modelName);
             updateProject(projectInstance);
         }
-    }
-
-    private ProjectInstance addModelToProject(String modelName, String prjName) throws IOException {
-        ProjectInstance prj = getProject(prjName);
-        if (prj == null) {
-            throw new IllegalArgumentException("Project " + prjName + " does not exist.");
-        }
-        prj.addModel(modelName);
-        updateProject(prj);
-
-        return prj;
     }
 
     public ProjectInstance moveRealizationToProject(RealizationType type, String realizationName, String newProjectName,
@@ -450,19 +443,6 @@ public class ProjectManager {
         return projects;
     }
 
-    public ProjectInstance getProjectByUuid(String uuid) {
-        Collection<ProjectInstance> copy = new ArrayList<ProjectInstance>(projectMap.values());
-        for (ProjectInstance project : copy) {
-            if (uuid.equals(project.getUuid()))
-                return project;
-        }
-        return null;
-    }
-
-    public ExternalFilterDesc getExternalFilterDesc(String project, String extFilter) {
-        return l2Cache.getExternalFilterDesc(project, extFilter);
-    }
-
     public Map<String, ExternalFilterDesc> listExternalFilterDescs(String project) {
         return l2Cache.listExternalFilterDesc(project);
     }
@@ -471,10 +451,16 @@ public class ProjectManager {
         return l2Cache.listDefinedTables(norm(project));
     }
 
-    public Collection<TableDesc> listExposedTables(String project) {
-        return config.isPushDownEnabled() ? //
-                this.listDefinedTables(project) : //
-                l2Cache.listExposedTables(norm(project));
+    private Collection<TableDesc> listExposedTablesByRealizations(String project) {
+        return l2Cache.listExposedTables(norm(project));
+    }
+
+    public Collection<TableDesc> listExposedTables(String project, boolean exposeMore) {
+        if (exposeMore) {
+            return listDefinedTables(project);
+        } else {
+            return listExposedTablesByRealizations(project);
+        }
     }
 
     public List<ColumnDesc> listExposedColumns(String project, TableDesc tableDesc, boolean exposeMore) {
@@ -487,19 +473,6 @@ public class ProjectManager {
         } else {
             return Lists.newArrayList(exposedColumns);
         }
-    }
-
-    public boolean isExposedTable(String project, String table) {
-        return config.isPushDownEnabled() ? //
-                l2Cache.isDefinedTable(norm(project), table) : //
-                l2Cache.isExposedTable(norm(project), table);
-    }
-
-    public boolean isExposedColumn(String project, String table, String col) {
-        return config.isPushDownEnabled() ? //
-                l2Cache.isDefinedColumn(norm(project), table, col) || l2Cache.isExposedColumn(norm(project), table, col)
-                : //
-                l2Cache.isExposedColumn(norm(project), table, col);
     }
 
     public Set<IRealization> listAllRealizations(String project) {

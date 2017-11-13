@@ -79,6 +79,7 @@ public class ColumnDesc implements Serializable {
         this.comment = other.comment;
         this.dataGen = other.dataGen;
         this.index = other.index;
+        this.computedColumnExpr = other.computedColumnExpr;
     }
 
     public ColumnDesc(String id, String name, String datatype, String comment, String dataGen, String index,
@@ -199,7 +200,7 @@ public class ColumnDesc implements Serializable {
         return computedColumnExpr;
     }
 
-    public boolean isComputedColumnn() {
+    public boolean isComputedColumn() {
         return computedColumnExpr != null;
     }
 

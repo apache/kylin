@@ -20,16 +20,20 @@ package org.apache.kylin.metadata.model;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringSplitter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 
 /**
  * Table Metadata from Source. All name should be uppercase.
@@ -37,6 +41,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class TableDesc extends RootPersistentEntity implements ISourceAware {
+    private static final Logger logger = LoggerFactory.getLogger(TableDesc.class);
 
     private static final String TABLE_TYPE_VIRTUAL_VIEW = "VIRTUAL_VIEW";
     private static final String materializedTableNamePrefix = "kylin_intermediate_";
@@ -57,6 +62,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     private String project;
     private DatabaseDesc database = new DatabaseDesc();
     private String identity = null;
+    private boolean isBorrowedFromGlobal = false;
 
     public TableDesc() {
     }
@@ -81,30 +87,43 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         this.identity = other.identity;
     }
 
-    public TableDesc appendColumns(ColumnDesc[] computedColumns) {
+    public TableDesc appendColumns(ColumnDesc[] computedColumns, boolean makeCopy) {
         if (computedColumns == null || computedColumns.length == 0) {
             return this;
         }
 
-        TableDesc ret = new TableDesc(this);//deep copy of the table desc
-        ColumnDesc[] origin = ret.columns;
-        ret.columns = new ColumnDesc[computedColumns.length + origin.length];
-        for (int i = 0; i < origin.length; i++) {
-            ret.columns[i] = origin[i];
+        TableDesc ret = makeCopy ? new TableDesc(this) : this;
+        ColumnDesc[] existingColumns = ret.columns;
+        List<ColumnDesc> newColumns = Lists.newArrayList();
+
+        for (int j = 0; j < computedColumns.length; j++) {
 
             //check name conflict
-            for (int j = 0; j < computedColumns.length; j++) {
-                if (origin[i].getName().equalsIgnoreCase(computedColumns[j].getName())) {
-                    throw new IllegalArgumentException(String.format(
-                            "There is already a column named %s on table %s, please change your computed column name",
-                            new Object[] { computedColumns[j].getName(), this.getIdentity() }));
+            boolean isFreshCC = true;
+            for (int i = 0; i < existingColumns.length; i++) {
+                if (existingColumns[i].getName().equalsIgnoreCase(computedColumns[j].getName())) {
+                    // if we're adding a computed column twice, it should be allowed without producing duplicates
+                    if (!existingColumns[i].isComputedColumn()) {
+                        throw new IllegalArgumentException(String.format(
+                                "There is already a column named %s on table %s, please change your computed column name",
+                                new Object[] { computedColumns[j].getName(), this.getIdentity() }));
+                    } else {
+                        isFreshCC = false;
+                    }
                 }
             }
+
+            if (isFreshCC) {
+                newColumns.add(computedColumns[j]);
+            }
         }
-        for (int i = 0; i < computedColumns.length; i++) {
-            computedColumns[i].init(ret);
-            ret.columns[i + this.columns.length] = computedColumns[i];
+
+        List<ColumnDesc> expandedColumns = Lists.newArrayList(existingColumns);
+        for (ColumnDesc newColumnDesc : newColumns) {
+            newColumnDesc.init(ret);
+            expandedColumns.add(newColumnDesc);
         }
+        ret.columns = expandedColumns.toArray(new ColumnDesc[0]);
         return ret;
     }
 
@@ -125,6 +144,10 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     }
 
     public String getResourcePath() {
+        if (isBorrowedFromGlobal()) {
+            return concatResourcePath(getIdentity(), null);
+        }
+        
         return concatResourcePath(getIdentity(), project);
     }
 
@@ -181,8 +204,20 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     // ============================================================================
 
+    public boolean isBorrowedFromGlobal() {
+        return isBorrowedFromGlobal;
+    }
+
+    public void setBorrowedFromGlobal(boolean borrowedFromGlobal) {
+        isBorrowedFromGlobal = borrowedFromGlobal;
+    }
+
     public String getProject() {
         return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
     }
 
     public String getName() {

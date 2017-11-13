@@ -333,7 +333,8 @@ public class DataModelDesc extends RootPersistentEntity {
         throw new IllegalArgumentException("Table not found by " + tableIdentity + " in model " + name);
     }
 
-    public void init(KylinConfig config, Map<String, TableDesc> tables, List<DataModelDesc> otherModels) {
+    public void init(KylinConfig config, Map<String, TableDesc> tables, List<DataModelDesc> otherModels,
+            boolean isOnlineModel) {
         this.config = config;
 
         initJoinTablesForUpgrade();
@@ -347,7 +348,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
         boolean reinit = validate();
         if (reinit) { // model slightly changed by validate() and must init() again
-            init(config, tables, otherModels);
+            init(config, tables, otherModels, isOnlineModel);
         }
     }
 
@@ -747,7 +748,7 @@ public class DataModelDesc extends RootPersistentEntity {
     public static DataModelDesc getCopyOf(DataModelDesc orig) {
         return copy(orig, new DataModelDesc());
     }
-    
+
     public static DataModelDesc copy(DataModelDesc orig, DataModelDesc copy) {
         copy.config = orig.config;
         copy.name = orig.name;

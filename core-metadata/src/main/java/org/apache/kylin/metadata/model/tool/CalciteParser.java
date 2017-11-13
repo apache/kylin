@@ -51,7 +51,7 @@ public class CalciteParser {
             selectList = ((SqlSelect) CalciteParser.parse(sql)).getSelectList();
         } catch (SqlParseException e) {
             throw new RuntimeException(
-                    "Failed to parse expression \'" + sql + "\', please make sure the expression is valid");
+                    "Failed to parse expression \'" + sql + "\', please make sure the expression is valid", e);
         }
 
         Preconditions.checkArgument(selectList.size() == 1,

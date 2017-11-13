@@ -44,7 +44,7 @@ public abstract class AbstractKylinTestCase {
             "org.apache.kylin.job.dao.ExecutableDao" //
     };
 
-    public abstract void createTestMetadata() throws Exception;
+    public abstract void createTestMetadata(String... overlayMetadataDirs) throws Exception;
 
     public abstract void cleanupTestMetadata() throws Exception;
 

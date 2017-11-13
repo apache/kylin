@@ -232,12 +232,8 @@ public class ProjectInstance extends RootPersistentEntity {
         extFilters.remove(filterName);
     }
 
-    public int getTablesCount() {
-        return this.getTables().size();
-    }
-
     public void addTable(String tableName) {
-        this.getTables().add(tableName.toUpperCase());
+        tables.add(tableName.toUpperCase());
     }
 
     public Set<String> getTables() {

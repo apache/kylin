@@ -332,7 +332,7 @@ public class CubeDescManager {
             cubeDescMap.putLocal(desc.getName(), desc);
         }
 
-        logger.info("Loaded " + cubeDescMap.size() + " Cube(s)");
+        logger.info("Loaded " + cubeDescMap.size() + " Cube Desc(s)");
     }
 
     /**

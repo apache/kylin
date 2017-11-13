@@ -84,7 +84,7 @@ public class DataModelManager {
             return r;
         }
     }
-    
+
     private static DataModelManager newInstance(KylinConfig conf) {
         try {
             String cls = StringUtil.noBlank(conf.getDataModelManagerImpl(), DataModelManager.class.getName());
@@ -103,7 +103,7 @@ public class DataModelManager {
 
     private KylinConfig config;
     private Serializer<DataModelDesc> serializer;
-    
+
     // name => DataModelDesc
     private CaseInsensitiveStringCache<DataModelDesc> dataModelDescMap;
 
@@ -118,7 +118,7 @@ public class DataModelManager {
     public ResourceStore getStore() {
         return ResourceStore.getStore(this.config);
     }
-    
+
     public Serializer<DataModelDesc> getDataModelSerializer() {
         if (serializer == null) {
             try {
@@ -133,7 +133,7 @@ public class DataModelManager {
     }
 
     public List<DataModelDesc> listDataModels() {
-        return Lists.newArrayList(this.dataModelDescMap.values());
+        return Lists.newArrayList(dataModelDescMap.values());
     }
 
     protected void init(KylinConfig config) throws IOException {
@@ -142,7 +142,7 @@ public class DataModelManager {
 
         // touch lower level metadata before registering model listener
         TableMetadataManager.getInstance(config);
-        
+
         reloadAllDataModel();
         Broadcaster.getInstance(config).registerListener(new DataModelSyncListener(), "data_model");
     }
@@ -155,6 +155,9 @@ public class DataModelManager {
 
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
+            //clean up the current project's table desc
+            TableMetadataManager.getInstance(config).resetProjectSpecificTableDesc(project);
+
             for (String model : ProjectManager.getInstance(config).getProject(project).getModels()) {
                 reloadDataModelDescAt(DataModelDesc.concatResourcePath(model));
             }
@@ -248,7 +251,7 @@ public class DataModelManager {
             String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
 
             if (!dataModelDesc.isDraft()) {
-                dataModelDesc.init(config, this.getAllTablesMap(prj), listDataModels());
+                dataModelDesc.init(config, this.getAllTablesMap(prj), listDataModels(), true);
             }
 
             dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
@@ -297,7 +300,7 @@ public class DataModelManager {
         }
 
         // now that model is saved, update project formally
-        prjMgr.updateModelToProject(name, projectName);
+        prjMgr.addModelToProject(name, projectName);
 
         return desc;
     }
@@ -316,7 +319,7 @@ public class DataModelManager {
         String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
 
         if (!dataModelDesc.isDraft())
-            dataModelDesc.init(config, this.getAllTablesMap(prj), listDataModels());
+            dataModelDesc.init(config, this.getAllTablesMap(prj), listDataModels(), true);
 
         String path = dataModelDesc.getResourcePath();
         getStore().putResource(path, dataModelDesc, getDataModelSerializer());
