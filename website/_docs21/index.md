@@ -26,6 +26,7 @@ Installation & Setup
 3. [Advanced settings](install/advance_settings.html)
 4. [Deploy in cluster mode](install/kylin_cluster.html)
 5. [Run Kylin with Docker](install/kylin_docker.html)
+6. [Install Kylin with AWS EMR](install/kylin_aws_emr.html)
 
 
 
