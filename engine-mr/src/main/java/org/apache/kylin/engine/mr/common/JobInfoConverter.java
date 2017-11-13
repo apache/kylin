@@ -62,6 +62,11 @@ public class JobInfoConverter {
         }
 
         Output output = outputs.get(job.getId());
+        if (output == null) {
+            logger.warn("job output is null.");
+            return null;
+        }
+
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
@@ -91,6 +96,11 @@ public class JobInfoConverter {
         }
 
         Output output = outputs.get(job.getId());
+        if (output == null) {
+            logger.warn("job output is null.");
+            return null;
+        }
+
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
