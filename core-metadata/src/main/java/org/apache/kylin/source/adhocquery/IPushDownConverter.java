@@ -21,5 +21,5 @@ package org.apache.kylin.source.adhocquery;
  * convert the query to satisfy the parser of push down query engine
  */
 public interface IPushDownConverter {
-    String convert(String originSql, String project, String defaultSchema);
+    String convert(String originSql, String project, String defaultSchema, boolean isPrepare);
 }
