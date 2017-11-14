@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
@@ -51,8 +50,8 @@ import org.apache.kylin.rest.broadcaster.BroadcasterReceiveServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,8 +69,8 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     private static AtomicLong counter = new AtomicLong();
 
-    @Before
-    public void beforeClass() throws Exception {
+    @BeforeClass
+    public static void beforeClass() throws Exception {
         staticCreateTestMetadata();
         counter.set(0L);
         int port = CheckUtil.randomAvailablePort(40000, 50000);
@@ -125,20 +124,23 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
                         logger.info(log);
                         try {
                             serviceA.notifyMetadataChange(entity, wipeEvent, cacheKey);
-                            serviceB.notifyMetadataChange(entity, wipeEvent, cacheKey);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        } finally {
-                            counter.incrementAndGet();
+                        } catch (Exception e) {
+                            logger.error("", e);
                         }
+                        try {
+                            serviceB.notifyMetadataChange(entity, wipeEvent, cacheKey);
+                        } catch (Exception e) {
+                            logger.error("", e);
+                        }
+                        counter.incrementAndGet();
                     }
                 })), "/");
 
         server.start();
     }
 
-    @After
-    public void afterClass() throws Exception {
+    @AfterClass
+    public static void afterClass() throws Exception {
         server.stop();
         cleanAfterClass();
     }
