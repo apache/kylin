@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.calcite.DataContext;
 import org.apache.calcite.adapter.java.AbstractQueryableTable;
@@ -67,6 +68,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     protected static final Logger logger = LoggerFactory.getLogger(OLAPTable.class);
 
     private static Map<String, SqlTypeName> SQLTYPE_MAPPING = new HashMap<String, SqlTypeName>();
+    private static Map<String, SqlTypeName> REGEX_SQLTYPE_MAPPING = new HashMap<String, SqlTypeName>();
 
     static {
         SQLTYPE_MAPPING.put("char", SqlTypeName.CHAR);
@@ -85,6 +87,8 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         SQLTYPE_MAPPING.put("time", SqlTypeName.TIME);
         SQLTYPE_MAPPING.put("timestamp", SqlTypeName.TIMESTAMP);
         SQLTYPE_MAPPING.put("any", SqlTypeName.ANY);
+
+        REGEX_SQLTYPE_MAPPING.put("array\\<.*\\>", SqlTypeName.ARRAY);
     }
 
     private final boolean exposeMore;
@@ -143,6 +147,16 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
 
     public static RelDataType createSqlType(RelDataTypeFactory typeFactory, DataType dataType, boolean isNullable) {
         SqlTypeName sqlTypeName = SQLTYPE_MAPPING.get(dataType.getName());
+        if (sqlTypeName == null) {
+            for (String reg : REGEX_SQLTYPE_MAPPING.keySet()) {
+                Pattern pattern = Pattern.compile(reg);
+                if (pattern.matcher(dataType.getName()).matches()) {
+                    sqlTypeName = REGEX_SQLTYPE_MAPPING.get(reg);
+                    break;
+                }
+            }
+        }
+
         if (sqlTypeName == null)
             throw new IllegalArgumentException("Unrecognized data type " + dataType);
 
@@ -150,7 +164,11 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         int scale = dataType.getScale();
 
         RelDataType result;
-        if (precision >= 0 && scale >= 0)
+        if (sqlTypeName == SqlTypeName.ARRAY) {
+            String innerTypeName = dataType.getName().split("<|>")[1];
+            result = typeFactory.createArrayType(createSqlType(typeFactory, DataType.getType(innerTypeName), false),
+                    -1);
+        } else if (precision >= 0 && scale >= 0)
             result = typeFactory.createSqlType(sqlTypeName, precision, scale);
         else if (precision >= 0)
             result = typeFactory.createSqlType(sqlTypeName, precision);
