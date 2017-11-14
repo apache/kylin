@@ -1,0 +1,5 @@
+{
+  "session_id" : "DEFAULT_SESSION",
+  "statement_id": "temp_table2",
+  "statement": "as (select * from fact_table2)"
+}

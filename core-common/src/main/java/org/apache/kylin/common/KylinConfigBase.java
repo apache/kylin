@@ -1052,6 +1052,10 @@ abstract public class KylinConfigBase implements Serializable {
     // QUERY
     // ============================================================================
 
+    public boolean isConvertCreateTableToWith() {
+        return Boolean.valueOf(getOptional("kylin.query.convert-create-table-to-with", "false"));
+    }
+
     /**
      * Rule is usually singleton as static field, the configuration of this property is like:
      * RuleClassName1#FieldName1,RuleClassName2#FieldName2,...

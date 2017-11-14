@@ -89,6 +89,7 @@ import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.PushDownUtil;
 import org.apache.kylin.query.util.QueryUtil;
+import org.apache.kylin.query.util.TempStatementUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -380,6 +381,10 @@ public class QueryService extends BasicService {
     }
 
     public SQLResponse doQueryWithCache(SQLRequest sqlRequest) {
+        return doQueryWithCache(sqlRequest, false);
+    }
+
+    public SQLResponse doQueryWithCache(SQLRequest sqlRequest, boolean isQueryInspect) {
         Message msg = MsgPicker.getMsg();
         sqlRequest.setUsername(getUserName());
 
@@ -414,6 +419,14 @@ public class QueryService extends BasicService {
             logger.info("Using project: " + project);
             logger.info("The original query:  " + sql);
 
+            sql = QueryUtil.removeCommentInSql(sql);
+
+            Pair<Boolean, String> result = TempStatementUtil.handleTempStatement(sql, kylinConfig);
+
+            boolean isTempStatement = result.getFirst();
+            sql = result.getSecond();
+            sqlRequest.setSql(sql);
+
             final boolean isSelect = QueryUtil.isSelectStatement(sql);
 
             long startTime = System.currentTimeMillis();
@@ -432,7 +445,12 @@ public class QueryService extends BasicService {
 
             try {
                 if (null == sqlResponse) {
-                    if (isSelect) {
+                    if (isQueryInspect) {
+                        // set query sql to exception message string
+                        sqlResponse = new SQLResponse(null, null, 0, false, sqlRequest.getSql());
+                    } else if (isTempStatement) {
+                        sqlResponse = new SQLResponse(null, null, 0, false, null);
+                    } else if (isSelect) {
                         sqlResponse = query(sqlRequest);
                         Trace.addTimelineAnnotation("query almost done");
                     } else if (kylinConfig.isPushDownEnabled() && kylinConfig.isPushDownUpdateEnabled()) {
