@@ -26,6 +26,11 @@
       "name": "ssb",
       "type": "CUBE",
       "realization": "ssb"
+    },
+    {
+      "name": "fifty_dim_full_build_cube",
+      "type": "CUBE",
+      "realization": "fifty_dim_full_build_cube"
     }
   ],
   "tables": [

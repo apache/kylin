@@ -487,6 +487,12 @@ public class CubeManager implements IRealizationProvider {
         checkInputRanges(tsRange, segRange);
         checkBuildingSegment(cube);
 
+        if (cube.getModel().getPartitionDesc().isPartitioned() == false) {
+            // full build
+            tsRange = null;
+            segRange = null;
+        }
+
         CubeSegment newSegment = newSegment(cube, tsRange, segRange);
 
         Pair<Boolean, Boolean> pair = cube.getSegments().fitInSegments(newSegment);
