@@ -195,7 +195,7 @@ public class TableMetadataManager {
             if (originTableDesc.isBorrowedFromGlobal()) {
                 srcTableMap.removeLocal(key);//delete it so that getProjectSpecificTableDesc will create again
             } else {
-                String s = TableDesc.concatResourcePath(tableIdentity, prj);
+                String s = originTableDesc.getResourcePath();
                 TableDesc tableDesc = reloadSourceTableAt(s);
                 srcTableMap.putLocal(key, tableDesc);
             }
@@ -308,7 +308,7 @@ public class TableMetadataManager {
 
         srcTable.init(prj);
 
-        String path = TableDesc.concatResourcePath(srcTable.getIdentity(), prj);
+        String path = srcTable.getResourcePath();
         getStore().putResource(path, srcTable, TABLE_SERIALIZER);
 
         srcTableMap.put(mapKey(srcTable.getIdentity(), prj), srcTable);
@@ -319,7 +319,7 @@ public class TableMetadataManager {
         if (t == null)
             return;
 
-        String path = TableDesc.concatResourcePath(t.getIdentity(), t.getProject());
+        String path = t.getResourcePath();
         getStore().deleteResource(path);
         srcTableMap.remove(mapKey(t.getIdentity(), t.getProject()));
     }

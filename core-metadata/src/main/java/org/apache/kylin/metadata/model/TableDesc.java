@@ -174,7 +174,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";
     }
 
-    public static String concatResourcePath(String tableIdentity, String prj) {
+    // this method should only used for getting dest path when copying from src to dest.
+    // if you want to get table's src path, use getResourcePath() instead.
+    private static String concatResourcePath(String tableIdentity, String prj) {
         if (prj == null || prj.isEmpty())
             return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + ".json";
         else

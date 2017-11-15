@@ -583,7 +583,7 @@ public class CubeMigrationCLI extends AbstractApplication {
             if (srcItem.contains(ResourceStore.TABLE_EXD_RESOURCE_ROOT))
                 return TableExtDesc.concatResourcePath(tableIdentity, dstProject);
             else
-                return TableDesc.concatResourcePath(tableIdentity, dstProject);
+                return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + "--" + dstProject + ".json";
         }
         return srcItem;
     }

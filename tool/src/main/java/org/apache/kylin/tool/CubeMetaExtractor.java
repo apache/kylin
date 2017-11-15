@@ -39,12 +39,11 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -296,7 +295,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         return realizationRegistry.getRealization(realizationEntry.getType(), realizationEntry.getRealization());
     }
 
-    private void dealWithStreaming(CubeInstance cube) {
+    private void addStreamingConfig(CubeInstance cube) {
         streamingManager = StreamingManager.getInstance(kylinConfig);
         for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
             if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
@@ -306,79 +305,24 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         }
     }
 
-    private void retrieveResourcePath(IRealization realization) {
+    private void retrieveResourcePath(IRealization realization) throws IOException {
         if (realization == null) {
             return;
         }
-
         logger.info("Deal with realization {} of type {}", realization.getName(), realization.getType());
-
         if (realization instanceof CubeInstance) {
             CubeInstance cube = (CubeInstance) realization;
-            String descName = cube.getDescName();
-            CubeDesc cubeDesc = cubeDescManager.getCubeDesc(descName);
-            String modelName = cubeDesc.getModelName();
-            DataModelDesc modelDesc = metadataManager.getDataModelDesc(modelName);
-
-            dealWithStreaming(cube);
-
-            if (modelDesc != null) {
-                String project = modelDesc.getProject();
-                for (TableRef table : modelDesc.getAllTables()) {
-                    String tableName = table.getTableIdentity();
-                    addRequired(TableDesc.concatResourcePath(tableName, project));
-                    addOptional(TableExtDesc.concatResourcePath(tableName, project));
-                }
-                addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
-            }
-            
+            CubeDesc cubeDesc = cubeDescManager.getCubeDesc(cube.getDescName());
+            DataModelDesc modelDesc = metadataManager.getDataModelDesc(cubeDesc.getModelName());
+            // add tables
+            addTables(modelDesc);
+            // add streaming stuff
+            addStreamingConfig(cube);
+            // add cube
             addRequired(CubeDesc.concatResourcePath(cubeDesc.getName()));
+            //add Segments and Jobs
+            addSegAndJob(cube);
 
-            if (includeSegments) {
-                addRequired(CubeInstance.concatResourcePath(cube.getName()));
-                for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
-                    addRequired(CubeSegment.getStatisticsResourcePath(cube.getName(), segment.getUuid()));
-                    if (includeSegmentDetails) {
-                        for (String dictPat : segment.getDictionaryPaths()) {
-                            addRequired(dictPat);
-                        }
-                        for (String snapshotPath : segment.getSnapshotPaths()) {
-                            addRequired(snapshotPath);
-                        }
-                    }
-
-                    if (includeJobs) {
-                        String lastJobId = segment.getLastBuildJobID();
-                        if (StringUtils.isEmpty(lastJobId)) {
-                            throw new RuntimeException("No job exist for segment :" + segment);
-                        } else {
-                            try {
-                                if (onlyJobOutput) {
-                                    ExecutablePO executablePO = executableDao.getJob(lastJobId);
-                                    addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + lastJobId);
-                                } else {
-                                    ExecutablePO executablePO = executableDao.getJob(lastJobId);
-                                    addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + lastJobId);
-                                    addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + lastJobId);
-                                    for (ExecutablePO task : executablePO.getTasks()) {
-                                        addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + task.getUuid());
-                                        addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + task.getUuid());
-                                    }
-                                }
-                            } catch (PersistentException e) {
-                                throw new RuntimeException("PersistentException", e);
-                            }
-                        }
-                    }
-                }
-            } else {
-                if (includeJobs) {
-                    logger.warn("It's useless to set includeJobs to true when includeSegments is set to false");
-                }
-
-                cube.setStatus(RealizationStatusEnum.DISABLED);
-                cubesToTrimAndSave.add(cube);
-            }
         } else if (realization instanceof HybridInstance) {
             HybridInstance hybridInstance = (HybridInstance) realization;
             addRequired(HybridInstance.concatResourcePath(hybridInstance.getName()));
@@ -390,6 +334,66 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             }
         } else {
             logger.warn("Unknown realization type: " + realization.getType());
+        }
+    }
+
+    private void addTables(DataModelDesc modelDesc) throws IOException {
+        if (modelDesc != null) {
+            //fixme should get all tbls in prj not only in cubes when back up by prj.
+            for (TableRef tableRef : modelDesc.getAllTables()) {
+                addRequired(tableRef.getTableDesc().getResourcePath());
+                addOptional(TableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv()) //
+                        .getTableExt(tableRef.getTableDesc()) //
+                        .getResourcePath()); //
+            }
+            addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
+        }
+    }
+
+    private void addSegAndJob(CubeInstance cube) {
+        if (includeSegments) {
+            addRequired(CubeInstance.concatResourcePath(cube.getName()));
+            for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
+                addRequired(CubeSegment.getStatisticsResourcePath(cube.getName(), segment.getUuid()));
+                if (includeSegmentDetails) {
+                    for (String dictPat : segment.getDictionaryPaths()) {
+                        addRequired(dictPat);
+                    }
+                    for (String snapshotPath : segment.getSnapshotPaths()) {
+                        addRequired(snapshotPath);
+                    }
+                }
+
+                if (includeJobs) {
+                    String lastJobId = segment.getLastBuildJobID();
+                    if (StringUtils.isEmpty(lastJobId)) {
+                        throw new RuntimeException("No job exist for segment :" + segment);
+                    } else {
+                        try {
+                            if (onlyJobOutput) {
+                                ExecutablePO executablePO = executableDao.getJob(lastJobId);
+                                addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + lastJobId);
+                            } else {
+                                ExecutablePO executablePO = executableDao.getJob(lastJobId);
+                                addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + lastJobId);
+                                addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + lastJobId);
+                                for (ExecutablePO task : executablePO.getTasks()) {
+                                    addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + task.getUuid());
+                                    addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + task.getUuid());
+                                }
+                            }
+                        } catch (PersistentException e) {
+                            throw new RuntimeException("PersistentException", e);
+                        }
+                    }
+                }
+            }
+        } else {
+            if (includeJobs) {
+                logger.warn("It's useless to set includeJobs to true when includeSegments is set to false");
+            }
+            cube.setStatus(RealizationStatusEnum.DISABLED);
+            cubesToTrimAndSave.add(cube);
         }
     }
 
