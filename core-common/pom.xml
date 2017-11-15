@@ -60,8 +60,17 @@
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
         </dependency>
+        
+        <!-- Metric & Tracing -->
+        <dependency>
+            <groupId>org.apache.htrace</groupId>
+            <artifactId>htrace-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.htrace</groupId>
+            <artifactId>htrace-zipkin</artifactId>
+        </dependency>
 
-    
         <!-- Env & Test -->
         <dependency>
             <groupId>junit</groupId>

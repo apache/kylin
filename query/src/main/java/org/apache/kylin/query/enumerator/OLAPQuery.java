@@ -57,7 +57,8 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
         OLAPContext olapContext = OLAPContext.getThreadLocalContextById(contextId);
         switch (type) {
         case OLAP:
-            return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new OLAPEnumerator(olapContext, optiqContext);
+            return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator()
+                    : new OLAPEnumerator(olapContext, optiqContext);
         case LOOKUP_TABLE:
             return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new LookupTableEnumerator(olapContext);
         case HIVE:
@@ -66,9 +67,9 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
             throw new IllegalArgumentException("Wrong type " + type + "!");
         }
     }
-    
+
     private static class EmptyEnumerator implements Enumerator<Object[]> {
-        
+
         EmptyEnumerator() {
             logger.debug("Using empty enumerator");
         }

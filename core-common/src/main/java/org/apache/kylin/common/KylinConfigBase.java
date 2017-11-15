@@ -278,7 +278,7 @@ abstract public class KylinConfigBase implements Serializable {
         r.putAll(getPropertiesByPrefix("kylin.metadata.resource-store-provider.")); // note the naming convention -- http://kylin.apache.org/development/coding_naming_convention.html
         return r;
     }
-    
+
     public String getDataModelImpl() {
         return getOptional("kylin.metadata.data-model-impl", null);
     }
@@ -286,7 +286,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getDataModelManagerImpl() {
         return getOptional("kylin.metadata.data-model-manager-impl", null);
     }
-    
+
     public String[] getRealizationProviders() {
         return getOptionalStringArray("kylin.metadata.realization-providers", //
                 new String[] { "org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager" });
@@ -305,7 +305,7 @@ abstract public class KylinConfigBase implements Serializable {
                 "org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock$Factory");
         return (DistributedLockFactory) ClassUtil.newInstance(clsName);
     }
-    
+
     public String getHBaseMappingAdapter() {
         return getOptional("kylin.metadata.hbasemapping-adapter");
     }
@@ -422,11 +422,11 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
     // Cube Planner
     // ============================================================================
-    
+
     public boolean isCubePlannerEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", "false"));
     }
-    
+
     public boolean isCubePlannerEnabledForExistingCube() {
         return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled-for-existing-cube", "false"));
     }
@@ -1236,7 +1236,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getQueryRealizationFilter() {
         return getOptional("kylin.query.realization-filter", null);
     }
-    
+
     // ============================================================================
     // SERVER
     // ============================================================================
@@ -1286,7 +1286,7 @@ abstract public class KylinConfigBase implements Serializable {
     public int getServerUserCacheMaxEntries() {
         return Integer.valueOf(this.getOptional("kylin.server.auth-user-cache.max-entries", "100"));
     }
-    
+
     public String getExternalAclProvider() {
         return getOptional("kylin.server.external-acl-provider", "");
     }
@@ -1347,4 +1347,7 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.metrics.perflogger-class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
     }
 
+    public boolean isHtraceTracingEveryQuery() {
+        return Boolean.valueOf(getOptional("kylin.htrace.trace-every-query", "false"));
+    }
 }

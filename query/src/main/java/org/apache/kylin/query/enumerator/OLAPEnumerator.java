@@ -23,6 +23,8 @@ import java.util.Map;
 
 import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.Enumerator;
+import org.apache.htrace.Trace;
+import org.apache.htrace.TraceScope;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -106,22 +108,26 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
     }
 
     private ITupleIterator queryStorage() {
-        logger.debug("query storage...");
+        try (TraceScope scope = Trace.startSpan("query realization " + olapContext.realization.getCanonicalName())) {
 
-        // bind dynamic variables
-        bindVariable(olapContext.filter);
+            logger.debug("query storage...");
 
-        olapContext.resetSQLDigest();
-        SQLDigest sqlDigest = olapContext.getSQLDigest();
+            // bind dynamic variables
+            bindVariable(olapContext.filter);
 
-        // query storage engine
-        IStorageQuery storageEngine = StorageFactory.createQuery(olapContext.realization);
-        ITupleIterator iterator = storageEngine.search(olapContext.storageContext, sqlDigest, olapContext.returnTupleInfo);
-        if (logger.isDebugEnabled()) {
-            logger.debug("return TupleIterator...");
+            olapContext.resetSQLDigest();
+            SQLDigest sqlDigest = olapContext.getSQLDigest();
+
+            // query storage engine
+            IStorageQuery storageEngine = StorageFactory.createQuery(olapContext.realization);
+            ITupleIterator iterator = storageEngine.search(olapContext.storageContext, sqlDigest,
+                    olapContext.returnTupleInfo);
+            if (logger.isDebugEnabled()) {
+                logger.debug("return TupleIterator...");
+            }
+
+            return iterator;
         }
-
-        return iterator;
     }
 
     private void bindVariable(TupleFilter filter) {

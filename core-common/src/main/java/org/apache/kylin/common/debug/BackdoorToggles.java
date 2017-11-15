@@ -47,7 +47,7 @@ public class BackdoorToggles {
         }
         _backdoorToggles.get().put(key, value);
     }
-    
+
     public static void addToggles(Map<String, String> toggles) {
         Map<String, String> map = _backdoorToggles.get();
         if (map == null) {
@@ -55,13 +55,13 @@ public class BackdoorToggles {
         }
         _backdoorToggles.get().putAll(toggles);
     }
-    
+
     // try avoid using this generic method
     public static String getToggle(String key) {
         Map<String, String> map = _backdoorToggles.get();
         if (map == null)
             return null;
-        
+
         return map.get(key);
     }
 
@@ -97,14 +97,18 @@ public class BackdoorToggles {
         return getString(DEBUG_TOGGLE_DUMPED_PARTITION_DIR);
     }
 
-    public static boolean getCheckAllModels(){
+    public static boolean getCheckAllModels() {
         return getBoolean(DEBUG_TOGGLE_CHECK_ALL_MODELS);
     }
 
     public static boolean getDisabledRawQueryLastHacker() {
         return getBoolean(DISABLE_RAW_QUERY_HACKER);
     }
-    
+
+    public static boolean getHtraceEnabled() {
+        return getBoolean(DEBUG_TOGGLE_HTRACE_ENABLED);
+    }
+
     public static int getQueryTimeout() {
         String v = getString(DEBUG_TOGGLE_QUERY_TIMEOUT);
         if (v == null)
@@ -134,7 +138,7 @@ public class BackdoorToggles {
     public static boolean getPrepareOnly() {
         return getBoolean(DEBUG_TOGGLE_PREPARE_ONLY);
     }
-    
+
     private static String getString(String key) {
         Map<String, String> toggles = _backdoorToggles.get();
         if (toggles == null) {
@@ -268,7 +272,7 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_PREPARE_ONLY = "DEBUG_TOGGLE_PREPARE_ONLY";
-    
+
     // properties on statement may go with this "channel" too
     /**
      * set ATTR_STATEMENT_MAX_ROWS="maxRows" to statement's max rows property
@@ -299,4 +303,14 @@ public class BackdoorToggles {
      }
      */
     public final static String DISABLE_RAW_QUERY_HACKER = "DISABLE_RAW_QUERY_HACKER";
+
+    /**
+     * set DEBUG_TOGGLE_HTRACE_ENABLED="true" to enable htrace
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_HTRACE_ENABLED": "true"
+     }
+     */
+    public final static String DEBUG_TOGGLE_HTRACE_ENABLED = "DEBUG_TOGGLE_HTRACE_ENABLED";
 }

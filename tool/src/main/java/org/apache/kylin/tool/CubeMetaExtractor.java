@@ -144,6 +144,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         options.addOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT);
         options.addOption(OPTION_STORAGE_TYPE);
         options.addOption(OPTION_ENGINE_TYPE);
+        
     }
 
     @Override

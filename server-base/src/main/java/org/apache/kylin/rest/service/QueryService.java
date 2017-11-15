@@ -54,6 +54,9 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.htrace.Sampler;
+import org.apache.htrace.Trace;
+import org.apache.htrace.TraceScope;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
@@ -391,7 +394,12 @@ public class QueryService extends BasicService {
 
         final QueryContext queryContext = QueryContext.current();
 
+        TraceScope scope = null;
+        if (KylinConfig.getInstanceFromEnv().isHtraceTracingEveryQuery() || BackdoorToggles.getHtraceEnabled())
+            scope = Trace.startSpan("query life cycle for " + queryContext.getQueryId(), Sampler.ALWAYS);
+
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
+
             String sql = sqlRequest.getSql();
             String project = sqlRequest.getProject();
             logger.info("Using project: " + project);
@@ -408,14 +416,19 @@ public class QueryService extends BasicService {
 
             if (queryCacheEnabled) {
                 sqlResponse = searchQueryInCache(sqlRequest);
+                Trace.addTimelineAnnotation("query cache searched");
+            } else {
+                Trace.addTimelineAnnotation("query cache skip search");
             }
 
             try {
                 if (null == sqlResponse) {
                     if (isSelect) {
                         sqlResponse = query(sqlRequest);
+                        Trace.addTimelineAnnotation("query main almost done");
                     } else if (kylinConfig.isPushDownEnabled() && kylinConfig.isPushDownUpdateEnabled()) {
                         sqlResponse = update(sqlRequest);
+                        Trace.addTimelineAnnotation("update query almost done");
                     } else {
                         logger.debug(
                                 "Directly return exception as the sql is unsupported, and query pushdown is disabled");
@@ -472,7 +485,6 @@ public class QueryService extends BasicService {
             }
 
             logQuery(sqlRequest, sqlResponse);
-
             QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
             QueryMetrics2Facade.updateMetrics(sqlRequest, sqlResponse);
 
@@ -484,6 +496,10 @@ public class QueryService extends BasicService {
         } finally {
             BackdoorToggles.cleanToggles();
             QueryContext.reset();
+
+            if (scope != null) {
+                scope.close();
+            }
         }
     }
 
@@ -551,6 +567,7 @@ public class QueryService extends BasicService {
                 //CAUTION: should not change sqlRequest content!
                 //sqlRequest.setSql(correctedSql);
             }
+            Trace.addTimelineAnnotation("query massaged");
 
             // add extra parameters into olap context, like acceptPartial
             Map<String, String> parameters = new HashMap<String, String>();
