@@ -475,7 +475,7 @@ public class AccessService {
             return 64;
         }
         if (mask1 == 1 || mask2 == 1) { // READ
-            return 64;
+            return 1;
         }
         return null;
     }

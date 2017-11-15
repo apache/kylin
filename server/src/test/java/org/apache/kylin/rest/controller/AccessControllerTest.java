@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
@@ -93,16 +92,22 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         List<ProjectInstance> projects = projectController.getProjects(10000, 0);
         assertTrue(projects.size() > 0);
         ProjectInstance project = projects.get(0);
-        AccessRequest groupAccessRequest = getAccessRequest(Constant.ROLE_ANALYST, MANAGEMENT, false);
-        accessController.grant(PROJECT_INSTANCE, project.getUuid(), groupAccessRequest);
-
-        ManagedUser user = new ManagedUser("u", "kylin", false, Constant.ROLE_ANALYST);
+        ManagedUser user = new ManagedUser("u", "kylin", false, "all_users");
         userService.createUser(user);
-        AccessRequest userAccessRequest = getAccessRequest("u", OPERATION, true);
-        accessController.grant(PROJECT_INSTANCE, project.getUuid(), userAccessRequest);
 
-        swichUser("u", Constant.ROLE_ANALYST);
-        Assert.assertEquals(MANAGEMENT, accessController.getUserPermissionInPrj(project.getName()));
+        grantPermission("g1", READ, project.getUuid());
+        grantPermission("g2", READ, project.getUuid());
+
+        swichUser("u", "g1", "g2");
+        Assert.assertEquals(READ, accessController.getUserPermissionInPrj(project.getName()));
+
+        grantPermission("g1", MANAGEMENT, project.getUuid());
+        grantPermission("g2", ADMINISTRATION, project.getUuid());
+        grantPermission("g3", OPERATION, project.getUuid());
+        grantPermission("g4", READ, project.getUuid());
+
+        swichUser("u", "g1", "g2", "g3", "g4");
+        Assert.assertEquals(ADMINISTRATION, accessController.getUserPermissionInPrj(project.getName()));
     }
 
     @Test
@@ -221,7 +226,7 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         assertEquals(0, cubes.size());
     }
 
-    private void swichUser(String name, String auth) {
+    private void swichUser(String name, String... auth) {
         Authentication token = new TestingAuthenticationToken(name, name, auth);
         SecurityContextHolder.getContext().setAuthentication(token);
     }
@@ -242,5 +247,11 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         accessRequest.setSid(role);
         accessRequest.setPrincipal(isPrincipal);
         return accessRequest;
+    }
+
+    private void grantPermission(String sid, String permission, String uuid) {
+        swichToAdmin();
+        AccessRequest groupAccessRequest = getAccessRequest(sid, permission, false);
+        accessController.grant(PROJECT_INSTANCE, uuid, groupAccessRequest);
     }
 }
