@@ -24,6 +24,8 @@ import java.util.regex.Pattern;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +46,10 @@ public class QueryUtil {
     public static String massageSql(String sql, String project, int limit, int offset, String defaultSchema) {
         sql = sql.trim();
         sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+
+        ProjectManager projectManager = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+        ProjectInstance projectInstance = projectManager.getProject(project);
+        KylinConfig kylinConfig = projectInstance.getConfig();
 
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
