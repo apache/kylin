@@ -128,6 +128,7 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
         Admin hbaseAdmin = new HBaseAdmin(conf);
         creatTable(hbaseAdmin, conf, aclTable, new String[] { AclConstant.ACL_INFO_FAMILY, AclConstant.ACL_ACES_FAMILY });
         creatTable(hbaseAdmin, conf, userTable, new String[] { AclConstant.USER_AUTHORITY_FAMILY });
+        hbaseAdmin.close();
     }
 
     private void addRecordsToTable() throws Exception {
@@ -170,6 +171,7 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
                 hbaseAdmin.disableTable(userTable);
             hbaseAdmin.deleteTable(userTable);
         }
+        hbaseAdmin.close();
     }
 
     private void creatTable(Admin admin, Configuration conf, TableName tableName, String[] family) throws IOException {
