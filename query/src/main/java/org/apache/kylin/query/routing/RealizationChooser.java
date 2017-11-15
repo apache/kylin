@@ -106,8 +106,17 @@ public class RealizationChooser {
     }
 
     private static String toErrorMsg(OLAPContext ctx) {
-        StringBuilder buf = new StringBuilder();
-        buf.append(ctx.firstTableScan);
+        StringBuilder buf = new StringBuilder("OLAPContext");
+        RealizationCheck checkResult = ctx.realizationCheck;
+        for (RealizationCheck.IncapableReason reason : checkResult.getCubeIncapableReasons().values()) {
+            buf.append(", ").append(reason);
+        }
+        for (List<RealizationCheck.IncapableReason> reasons : checkResult.getModelIncapableReasons().values()) {
+            for (RealizationCheck.IncapableReason reason : reasons) {
+                buf.append(", ").append(reason);
+            }
+        }
+        buf.append(", ").append(ctx.firstTableScan);
         for (JoinDesc join : ctx.joins)
             buf.append(", ").append(join);
         return buf.toString();
