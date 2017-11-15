@@ -94,6 +94,20 @@ public class Number2BytesConverter implements BytesConverter<String>, Serializab
         return Bytes.toString(backup, 0, len);
     }
 
+    @Override
+    public byte[] convertBytesValueFromBytes(byte[] b, int offset, int length) {
+        NumberBytesCodec codec = getCodec(this.maxDigitsBeforeDecimalPoint);
+        byte[] backup = codec.buf;
+        codec.buf = b;
+        codec.bufOffset = offset;
+        codec.bufLen = length;
+        int len = codec.decodeNumber(backup, 0);
+        codec.buf = backup;
+        byte[] bytes = new byte[len];
+        System.arraycopy(backup, 0, bytes, 0 , len);
+        return bytes;
+    }
+
     // encode a number into an order preserving byte sequence
     // for positives -- padding '0'
     // for negatives -- '-' sign, padding '9', invert digits, and terminate by ';'

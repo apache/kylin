@@ -44,9 +44,9 @@ import com.google.common.base.Preconditions;
  */
 public class OLAPUnionRel extends Union implements OLAPRel {
 
-    private final boolean localAll; // avoid same name in parent class
-    private ColumnRowType columnRowType;
-    private OLAPContext context;
+    final boolean localAll ; // avoid same name in parent class
+    ColumnRowType columnRowType;
+    OLAPContext context;
 
     public OLAPUnionRel(RelOptCluster cluster, RelTraitSet traitSet, List<RelNode> inputs, boolean all) {
         super(cluster, traitSet, inputs, all);
@@ -147,7 +147,7 @@ public class OLAPUnionRel extends Union implements OLAPRel {
     @Override
     public boolean hasSubQuery() {
         for (RelNode child : getInputs()) {
-            if (((OLAPRel)child).hasSubQuery()) {
+            if (((OLAPRel) child).hasSubQuery()) {
                 return true;
             }
         }

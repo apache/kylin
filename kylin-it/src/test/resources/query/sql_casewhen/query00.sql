@@ -16,8 +16,12 @@
 -- limitations under the License.
 --
 
-select test_cal_dt.week_beg_dt, sum(test_kylin_fact.price) 
- from test_kylin_fact 
- inner join edw.test_cal_dt as test_cal_dt on test_kylin_fact.cal_dt = test_cal_dt.cal_dt 
- group by test_cal_dt.week_beg_dt
+SELECT "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" 
+FROM   TEST_KYLIN_FACT 
+WHERE  (
 
+(CASE "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" WHEN 'Auction' THEN 'Auc' 
+WHEN 'FOO' THEN 'NO' ELSE "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" END) 
+
+> 'A')
+GROUP BY "TEST_KYLIN_FACT"."LSTG_FORMAT_NAME" 

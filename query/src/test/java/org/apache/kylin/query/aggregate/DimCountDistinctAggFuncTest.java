@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.measure.dim.DimCountDistinctAggFunc;
+import org.apache.kylin.measure.dim.DimCountDistinctCounter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,7 +45,7 @@ public class DimCountDistinctAggFuncTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasic() {
-        DimCountDistinctAggFunc.DimDistinctCounter counter = DimCountDistinctAggFunc.init();
+        DimCountDistinctCounter counter = DimCountDistinctAggFunc.init();
 
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 2; j++) {
@@ -60,7 +61,7 @@ public class DimCountDistinctAggFuncTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testEmpty() {
-        DimCountDistinctAggFunc.DimDistinctCounter counter = DimCountDistinctAggFunc.init();
+        DimCountDistinctCounter counter = DimCountDistinctAggFunc.init();
         assertEquals(0, DimCountDistinctAggFunc.result(counter));
     }
 
@@ -68,7 +69,7 @@ public class DimCountDistinctAggFuncTest extends LocalFileMetadataTestCase {
     public void testThreshold() {
         System.setProperty("kylin.query.max-dimension-count-distinct", "100");
 
-        DimCountDistinctAggFunc.DimDistinctCounter counter = DimCountDistinctAggFunc.init();
+        DimCountDistinctCounter counter = DimCountDistinctAggFunc.init();
 
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Cardinality of dimension exceeds the threshold: 100");

@@ -41,10 +41,10 @@ import com.google.common.base.Preconditions;
  */
 public class OLAPLimitRel extends SingleRel implements OLAPRel {
 
-    private final RexNode localOffset; // avoid same name in parent class
-    private final RexNode localFetch; // avoid same name in parent class
-    private ColumnRowType columnRowType;
-    private OLAPContext context;
+    public final RexNode localOffset; // avoid same name in parent class
+    public final RexNode localFetch; // avoid same name in parent class
+    ColumnRowType columnRowType;
+    OLAPContext context;
 
     public OLAPLimitRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset, RexNode fetch) {
         super(cluster, traitSet, child);
@@ -98,7 +98,7 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
         }
     }
 
-    private ColumnRowType buildColumnRowType() {
+    ColumnRowType buildColumnRowType() {
         OLAPRel olapChild = (OLAPRel) getInput();
         ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
         return inputColumnRowType;
@@ -143,4 +143,5 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
         this.traitSet = this.traitSet.replace(trait);
         return oldTraitSet;
     }
+
 }

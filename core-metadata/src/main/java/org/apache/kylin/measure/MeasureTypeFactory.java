@@ -111,6 +111,7 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new RawMeasureType.Factory());
         factoryInsts.add(new ExtendedColumnMeasureType.Factory());
         factoryInsts.add(new PercentileMeasureType.Factory());
+        factoryInsts.add(new DimCountDistinctMeasureType.Factory());
 
         logger.info("Checking custom measure types from kylin config");
 
@@ -132,11 +133,11 @@ abstract public class MeasureTypeFactory<T> {
         // register factories & data type serializers
         for (MeasureTypeFactory<?> factory : factoryInsts) {
             String funcName = factory.getAggrFunctionName();
-            if (funcName.equals(funcName.toUpperCase()) == false)
+            if (!funcName.equals(funcName.toUpperCase()))
                 throw new IllegalArgumentException(
                         "Aggregation function name '" + funcName + "' must be in upper case");
             String dataTypeName = factory.getAggrDataTypeName();
-            if (dataTypeName.equals(dataTypeName.toLowerCase()) == false)
+            if (!dataTypeName.equals(dataTypeName.toLowerCase()))
                 throw new IllegalArgumentException(
                         "Aggregation data type name '" + dataTypeName + "' must be in lower case");
             Class<? extends DataTypeSerializer<?>> serializer = factory.getAggrDataTypeSerializer();
@@ -191,7 +192,7 @@ abstract public class MeasureTypeFactory<T> {
     public static MeasureType<?> createNoRewriteFieldsMeasureType(String funcName, DataType dataType) {
         // currently only has DimCountDistinctAgg
         if (funcName.equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT)) {
-            return new DimCountDistinctMeasureType.DimCountDistinctMeasureTypeFactory().createMeasureType(funcName,
+            return new DimCountDistinctMeasureType.Factory().createMeasureType(funcName,
                     dataType);
         }
 

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.dict;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -888,6 +889,7 @@ public class TrieDictionaryForestTest {
 
             assertEquals(id, dict.getIdFromValue(value));
             assertEquals(value, dict.getValueFromId(id));
+            assertArrayEquals(value.getBytes(), dict.getValueByteFromId(id));
         }
 
         //test not found value
@@ -916,6 +918,7 @@ public class TrieDictionaryForestTest {
         // test null value
         int nullId = dict.getIdFromValue(null);
         assertNull(dict.getValueFromId(nullId));
+        assertNull(dict.getValueByteFromId(nullId));
     }
 
     private Map<String, Integer> rightIdMap(int baseId, ArrayList<String> strs) {

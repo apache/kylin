@@ -95,6 +95,17 @@ public class BytesUtil {
         return integer;
     }
 
+    public static int readUnsigned(ByteArray in, int offset, int size) {
+        int integer = 0;
+        offset += in.offset();
+        byte[] bytes = in.array();
+        for (int i = offset, n = offset + size; i < n; i++) {
+            integer <<= 8;
+            integer |= (int) bytes[i] & 0xFF;
+        }
+        return integer;
+    }
+
     public static void writeSignedLong(long num, byte[] bytes, int offset, int size) {
         writeLong(num, bytes, offset, size);
     }

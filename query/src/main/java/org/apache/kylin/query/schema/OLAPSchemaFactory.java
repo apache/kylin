@@ -91,11 +91,14 @@ public class OLAPSchemaFactory implements SchemaFactory {
             out.append("    \"schemas\": [\n");
 
             int counter = 0;
+
+
+
             for (String schemaName : schemaCounts.keySet()) {
                 out.append("        {\n");
                 out.append("            \"type\": \"custom\",\n");
                 out.append("            \"name\": \"" + schemaName + "\",\n");
-                out.append("            \"factory\": \"org.apache.kylin.query.schema.OLAPSchemaFactory\",\n");
+                out.append("            \"factory\": \"" + KylinConfig.getInstanceFromEnv().getSchemaFactory()+ "\",\n");
                 out.append("            \"operand\": {\n");
                 out.append("                \"" + SCHEMA_PROJECT + "\": \"" + project + "\"\n");
                 out.append("            },\n");

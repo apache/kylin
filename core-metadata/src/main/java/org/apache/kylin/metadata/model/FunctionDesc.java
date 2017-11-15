@@ -108,6 +108,7 @@ public class FunctionDesc implements Serializable {
         if (isDimensionAsMetric && isCountDistinct()) {
             // create DimCountDis
             measureType = MeasureTypeFactory.createNoRewriteFieldsMeasureType(getExpression(), getReturnDataType());
+            returnDataType = DataType.getType("dim_dc");
         } else {
             measureType = MeasureTypeFactory.create(getExpression(), getReturnDataType());
         }

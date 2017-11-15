@@ -68,9 +68,9 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
         }
     }
 
-    private static class EmptyEnumerator implements Enumerator<Object[]> {
-
-        EmptyEnumerator() {
+    public static class EmptyEnumerator implements Enumerator<Object[]> {
+        
+        public EmptyEnumerator() {
             logger.debug("Using empty enumerator");
         }
 

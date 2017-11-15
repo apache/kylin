@@ -250,7 +250,7 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public static KylinConfig createKylinConfig(KylinConfig another) {
-        return createKylinConfig(another.getAllProperties());
+        return createKylinConfig(another.getRawAllProperties());
     }
 
     public static KylinConfig createKylinConfig(Properties prop) {
@@ -397,7 +397,7 @@ public class KylinConfig extends KylinConfigBase {
         copy.putAll(all);
         return copy;
     }
-    
+
     public String exportToString() throws IOException {
         Properties allProps = getAllProperties();
         OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
@@ -432,7 +432,7 @@ public class KylinConfig extends KylinConfigBase {
     public synchronized void reloadFromSiteProperties() {
         reloadKylinConfig(buildSiteProperties());
     }
-    
+
     public KylinConfig base() {
         return this;
     }

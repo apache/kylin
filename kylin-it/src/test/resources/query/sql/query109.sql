@@ -16,8 +16,12 @@
 -- limitations under the License.
 --
 
-select test_cal_dt.week_beg_dt, sum(test_kylin_fact.price) 
- from test_kylin_fact 
- inner join edw.test_cal_dt as test_cal_dt on test_kylin_fact.cal_dt = test_cal_dt.cal_dt 
- group by test_cal_dt.week_beg_dt
-
+select  count(*) as TRANS_CNT  FROM test_kylin_fact
+ inner JOIN edw.test_cal_dt as test_cal_dt
+ ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
+ inner JOIN test_category_groupings
+ ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id
+ AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id 
+where test_kylin_fact.cal_dt < DATE '1970-01-02' --row keys are represented as ts string in kylin, make sure 2012-01-01 is not < 1970-01-02 (86400000 in milli-seconds)
+ or test_kylin_fact.cal_dt > DATE '2013-01-01'
+ 

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.lock.DistributedLockFactory;
@@ -55,7 +56,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     /*
      * DON'T DEFINE CONSTANTS FOR PROPERTY KEYS!
-     * 
+     *
      * For 1), no external need to access property keys, all accesses are by public methods.
      * For 2), it's cumbersome to maintain constants at top and code at bottom.
      * For 3), key literals usually appear only once.
@@ -112,12 +113,26 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     protected String getOptional(String prop, String dft) {
+
         final String property = System.getProperty(prop);
-        return property != null ? property : properties.getProperty(prop, dft);
+        return property != null ? StrSubstitutor.replace(property, System.getenv())
+                : StrSubstitutor.replace(properties.getProperty(prop, dft), System.getenv());
     }
 
     protected Properties getAllProperties() {
+        Map<String, String> envMap = System.getenv();
+        StrSubstitutor sub = new StrSubstitutor(envMap);
+
+        Properties properties = new Properties();
+        for (Entry<Object, Object> entry : this.properties.entrySet()) {
+            properties.put(entry.getKey(), sub.replace((String) entry.getValue()));
+        }
         return properties;
+    }
+
+    protected Properties getRawAllProperties() {
+        return properties;
+
     }
 
     final protected Map<String, String> getPropertiesByPrefix(String prefix) {
@@ -1069,7 +1084,7 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.query.stream-aggregate-enabled", "true"));
     }
 
-    @Deprecated //Limit is good even it's large. This config is meaning less since we already have scan threshold 
+    @Deprecated //Limit is good even it's large. This config is meaning less since we already have scan threshold
     public int getStoragePushDownLimitMax() {
         return Integer.parseInt(getOptional("kylin.query.max-limit-pushdown", "10000"));
     }
@@ -1182,6 +1197,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public boolean isPushDownUpdateEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.query.pushdown.update-enabled", "false"));
+    }
+
+    public String getSchemaFactory() {
+        return this.getOptional("kylin.query.schema-factory", "org.apache.kylin.query.schema.OLAPSchemaFactory");
     }
 
     public String getPushDownRunnerClassName() {

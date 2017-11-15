@@ -70,10 +70,8 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
     protected CubeDesc cubeDesc;
     protected Cuboid cuboid;
 
-    protected StorageContext context;
-
     public CubeScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions, Set<TblColRef> groupByDims, //
-            Collection<FunctionDesc> metrics, TupleFilter havingFilter, StorageContext context) {
+                                Collection<FunctionDesc> metrics, TupleFilter havingFilter, StorageContext context) {
         this.context = context;
 
         this.maxScanRanges = cubeSegment.getConfig().getQueryStorageVisitScanRangeMax();
@@ -117,6 +115,8 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
             }
         }
     }
+
+    protected StorageContext context;
 
     /**
      * Construct  GTScanRangePlanner with incomplete information. For UT only.

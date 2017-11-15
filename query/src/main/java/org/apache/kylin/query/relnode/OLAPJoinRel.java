@@ -67,13 +67,13 @@ import com.google.common.base.Preconditions;
  */
 public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
-    private final static String[] COLUMN_ARRAY_MARKER = new String[0];
+    final static String[] COLUMN_ARRAY_MARKER = new String[0];
 
-    private OLAPContext context;
-    private ColumnRowType columnRowType;
-    private int columnRowTypeLeftRightCut;
-    private boolean isTopJoin;
-    private boolean hasSubQuery;
+    protected OLAPContext context;
+    protected ColumnRowType columnRowType;
+    protected int columnRowTypeLeftRightCut;
+    protected boolean isTopJoin;
+    protected boolean hasSubQuery;
 
     public OLAPJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, //
             RexNode condition, ImmutableIntList leftKeys, ImmutableIntList rightKeys, //
@@ -110,7 +110,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
     }
 
     //when OLAPJoinPushThroughJoinRule is applied, a "MerelyPermutation" project rel will be created
-    private boolean isParentMerelyPermutation(OLAPImplementor implementor) {
+    protected boolean isParentMerelyPermutation(OLAPImplementor implementor) {
         if (implementor.getParentNode() instanceof OLAPProjectRel) {
             return ((OLAPProjectRel) implementor.getParentNode()).isMerelyPermutation();
         }
@@ -124,7 +124,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         if (!(implementor.getParentNode() instanceof OLAPJoinRel) && !isParentMerelyPermutation(implementor)) {
             implementor.allocateContext();
         }
-
+        //parent context
         this.context = implementor.getContext();
         this.context.allOlapJoins.add(this);
         this.isTopJoin = !this.context.hasJoin;
@@ -136,6 +136,8 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         // as we keep the first table as fact table, we need to visit from left to right
         implementor.fixSharedOlapTableScanOnTheLeft(this);
         implementor.visitChild(this.left, this);
+
+        //current  has another context
         if (this.context != implementor.getContext() || ((OLAPRel) this.left).hasSubQuery()) {
             this.hasSubQuery = true;
             leftHasSubquery = true;
@@ -201,7 +203,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         }
     }
 
-    private ColumnRowType buildColumnRowType() {
+    protected ColumnRowType buildColumnRowType() {
         List<TblColRef> columns = new ArrayList<TblColRef>();
 
         OLAPRel olapLeft = (OLAPRel) this.left;
@@ -221,7 +223,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         return new ColumnRowType(columns);
     }
 
-    private JoinDesc buildJoin(RexCall condition) {
+    protected JoinDesc buildJoin(RexCall condition) {
         Map<TblColRef, TblColRef> joinColumns = new HashMap<TblColRef, TblColRef>();
         translateJoinColumn(condition, joinColumns);
 
@@ -247,13 +249,13 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         return join;
     }
 
-    private void translateJoinColumn(RexNode condition, Map<TblColRef, TblColRef> joinCol) {
+    protected void translateJoinColumn(RexNode condition, Map<TblColRef, TblColRef> joinCol) {
         if (condition instanceof RexCall) {
             translateJoinColumn((RexCall) condition, joinCol);
         }
     }
 
-    private void translateJoinColumn(RexCall condition, Map<TblColRef, TblColRef> joinColumns) {
+    void translateJoinColumn(RexCall condition, Map<TblColRef, TblColRef> joinColumns) {
         SqlKind kind = condition.getOperator().getKind();
         if (kind == SqlKind.AND) {
             for (RexNode operand : condition.getOperands()) {
@@ -275,7 +277,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
     }
 
     // workaround that EnumerableJoin constructor is protected
-    private static Constructor<EnumerableJoin> constr;
+    protected static Constructor<EnumerableJoin> constr;
     static {
         try {
             constr = EnumerableJoin.class.getDeclaredConstructor(RelOptCluster.class, //

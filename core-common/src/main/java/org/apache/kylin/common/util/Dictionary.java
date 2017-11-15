@@ -26,6 +26,8 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.kylin.common.KylinConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice
@@ -43,6 +45,8 @@ import org.apache.kylin.common.KylinConfig;
  * @author yangli9
  */
 abstract public class Dictionary<T> implements Serializable {
+    private static final Logger logger = LoggerFactory.getLogger(Dictionary.class);
+
     private static final long serialVersionUID = 1L;
 
     // ID with all bit-1 (0xff e.g.) reserved for NULL value
@@ -132,6 +136,34 @@ abstract public class Dictionary<T> implements Serializable {
             return null;
         else
             return getValueFromIdImpl(id);
+    }
+
+    /**
+     * @return the value bytes corresponds to the given ID
+     * @throws IllegalArgumentException
+     *             if ID is not found in dictionary
+     */
+    final public byte[] getValueByteFromId(int id) throws IllegalArgumentException {
+        if (isNullId(id))
+            return null;
+        else
+            return getValueBytesFromIdImpl(id);
+    }
+
+    protected int cacheHitCount = 0;
+    protected int cacheMissCount = 0;
+
+    protected byte[] getValueBytesFromIdImpl(int id) {
+        throw new  UnsupportedOperationException() ;
+
+    }
+
+    public void printlnStatistics() {
+        logger.info("cache hit count: " + cacheHitCount);
+        logger.info("cache miss count: " + cacheMissCount);
+        logger.info("cache hit percent: " + cacheHitCount * 1.0 / (cacheMissCount + cacheHitCount));
+        cacheHitCount = 0;
+        cacheMissCount = 0;
     }
 
     abstract protected T getValueFromIdImpl(int id);

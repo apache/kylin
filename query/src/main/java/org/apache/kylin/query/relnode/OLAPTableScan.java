@@ -91,13 +91,13 @@ import com.google.common.base.Preconditions;
  */
 public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
-    private final OLAPTable olapTable;
+    protected final OLAPTable olapTable;
     private final String tableName;
-    private final int[] fields;
+    protected final int[] fields;
     private String alias;
     private String backupAlias;
-    private ColumnRowType columnRowType;
-    private OLAPContext context;
+    protected ColumnRowType columnRowType;
+    protected OLAPContext context;
     private KylinConfig kylinConfig;
 
     public OLAPTableScan(RelOptCluster cluster, RelOptTable table, OLAPTable olapTable, int[] fields) {
@@ -119,6 +119,10 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     public int[] getFields() {
         return fields;
+    }
+
+    public String getBackupAlias() {
+        return backupAlias;
     }
 
     @Override
@@ -339,7 +343,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     }
 
     private ColumnRowType buildColumnRowType() {
-        this.alias = context.allTableScans.size() + "_" + Integer.toHexString(System.identityHashCode(this));
+        this.alias = Integer.toHexString(System.identityHashCode(this));
         TableRef tableRef = TblColRef.tableForUnknownModel(this.alias, olapTable.getSourceTable());
 
         List<TblColRef> columns = new ArrayList<TblColRef>();
@@ -384,6 +388,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
+
         return this;
     }
 
@@ -399,7 +404,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         return implementor.result(physType, Blocks.toBlock(exprCall));
     }
 
-    private String genExecFunc() {
+    public String genExecFunc() {
         // if the table to scan is not the fact table of cube, then it's a lookup table
         if (context.realization.getModel().isLookupTable(tableName)) {
             return "executeLookupTableQuery";
@@ -438,4 +443,5 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         this.traitSet = this.traitSet.replace(trait);
         return oldTraitSet;
     }
+
 }

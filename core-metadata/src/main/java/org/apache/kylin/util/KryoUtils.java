@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.cube.util;
+package org.apache.kylin.util;
 
 import java.util.BitSet;
 
@@ -32,7 +32,7 @@ public class KryoUtils {
 
     public static byte[] serialize(Object obj) {
         Kryo kryo = getKryo();
-        Output output = new Output(1024, 2014 * 1024);
+        Output output = new Output(1024, 8 * 1024 * 1024);
         kryo.writeObject(output, obj);
         return output.toBytes();
     }

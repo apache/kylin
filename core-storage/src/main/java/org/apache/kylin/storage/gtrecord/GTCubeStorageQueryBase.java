@@ -100,7 +100,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 request.getGroups(), request.getMetrics(), returnTupleInfo, request.getContext(), sqlDigest);
     }
 
-    protected GTCubeStorageQueryRequest getStorageQueryRequest(StorageContext context, SQLDigest sqlDigest,
+    public GTCubeStorageQueryRequest getStorageQueryRequest(StorageContext context, SQLDigest sqlDigest,
             TupleInfo returnTupleInfo) {
         context.setStorageQuery(this);
 
@@ -343,7 +343,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             return compf;
 
         DeriveInfo hostInfo = cubeDesc.getHostInfo(derived);
-        LookupStringTable lookup = getLookupStringTableForDerived(derived, hostInfo);
+        LookupStringTable lookup = cubeDesc.getHostInfo(derived).type == CubeDesc.DeriveType.PK_FK ? null
+                : getLookupStringTableForDerived(derived, hostInfo);
         Pair<TupleFilter, Boolean> translated = DerivedFilterTranslator.translate(lookup, hostInfo, compf);
         TupleFilter translatedFilter = translated.getFirst();
         boolean loosened = translated.getSecond();
@@ -470,9 +471,10 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             List<FunctionDesc> aggregations, Set<FunctionDesc> metrics) {
         // must have only one segment
         Segments<CubeSegment> readySegs = cubeInstance.getSegments(SegmentStatusEnum.READY);
-        if (readySegs.size() != 1)
+        if (readySegs.size() != 1) {
+            logger.info("Can not push down having filter, must have only one segment");
             return null;
-
+        }
         // sharded-by column must on group by
         CubeDesc desc = cubeInstance.getDescriptor();
         Set<TblColRef> shardBy = desc.getShardByColumns();

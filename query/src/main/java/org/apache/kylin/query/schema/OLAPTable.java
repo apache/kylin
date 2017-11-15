@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.schema;
 
@@ -90,7 +90,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     private final boolean exposeMore;
     private final OLAPSchema olapSchema;
     private final TableDesc sourceTable;
-    private RelDataType rowType;
+    protected RelDataType rowType;
     private List<ColumnDesc> sourceColumns;
 
     public OLAPTable(OLAPSchema schema, TableDesc tableDesc, boolean exposeMore) {
@@ -203,7 +203,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         return new OLAPTableScan(context.getCluster(), relOptTable, this, fields);
     }
 
-    private int[] identityList(int n) {
+    protected int[] identityList(int n) {
         int[] integers = new int[n];
         for (int i = 0; i < n; i++) {
             integers[i] = i;

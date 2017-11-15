@@ -16,8 +16,7 @@
 -- limitations under the License.
 --
 
-select test_cal_dt.week_beg_dt, sum(test_kylin_fact.price) 
- from test_kylin_fact 
- inner join edw.test_cal_dt as test_cal_dt on test_kylin_fact.cal_dt = test_cal_dt.cal_dt 
- group by test_cal_dt.week_beg_dt
-
+SELECT timestampdiff(DAY,date'2013-01-01',WEEK_BEG_DT) as x ,WEEK_BEG_DT
+ FROM TEST_KYLIN_FACT 
+ inner JOIN EDW.TEST_CAL_DT AS TEST_CAL_DT ON (TEST_KYLIN_FACT.CAL_DT = TEST_CAL_DT.CAL_DT) 
+ GROUP BY TEST_CAL_DT.WEEK_BEG_DT

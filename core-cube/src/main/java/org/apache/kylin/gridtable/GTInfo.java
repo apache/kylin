@@ -81,6 +81,10 @@ public class GTInfo {
         return colBlocks[i];
     }
 
+    public ImmutableBitSet[] getColumnBlocks() {
+        return colBlocks;
+    }
+
     public ImmutableBitSet getPrimaryKey() {
         return primaryKey;
     }

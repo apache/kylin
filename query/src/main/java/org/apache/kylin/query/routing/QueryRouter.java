@@ -73,7 +73,8 @@ public class QueryRouter {
         adjustForDimensionAsMeasure(chosen, olapContext);
 
         logger.info("The realizations remaining: " + RoutingRule.getPrintableText(candidates)
-                + " And the final chosen one is the first one");
+                + ",and the final chosen one for current olap context " + olapContext.id + " is "
+                + chosen.realization.getCanonicalName());
 
         for (CapabilityInfluence influence : chosen.getCapability().influences) {
             if (influence.getInvolvedMeasure() != null) {

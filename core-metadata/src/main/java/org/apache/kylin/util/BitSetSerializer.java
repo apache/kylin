@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.cube.util;
+package org.apache.kylin.util;
 
 import java.util.BitSet;
 
