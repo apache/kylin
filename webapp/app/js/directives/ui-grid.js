@@ -3375,6 +3375,16 @@ function uiGridDirective($compile, $templateCache, $timeout, $window, gridUtil, 
               }
               grid.refreshCanvas(true);
             });
+
+            // If 'ui.fullscreen' is changed, we need to watch and react
+            $scope.$watch('$parent.ui.fullScreen', function (newValue, oldValue) {
+              if (newValue === oldValue) {
+                return;
+              }
+              grid.gridWidth = $scope.gridWidth = gridUtil.elementWidth($elm);
+              grid.gridHeight = $scope.gridHeight = gridUtil.elementHeight($elm);
+              grid.refreshCanvas(true);
+            });
           }
 
           // Initialize the directive
