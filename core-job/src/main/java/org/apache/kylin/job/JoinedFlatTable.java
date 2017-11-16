@@ -178,7 +178,7 @@ public class JoinedFlatTable {
                         if (i > 0) {
                             sql.append(" AND ");
                         }
-                        sql.append(fk[i].getIdentity() + " = " + pk[i].getIdentity());
+                        sql.append(fk[i].getExpressionInSourceDB() + " = " + pk[i].getExpressionInSourceDB());
                     }
                     sql.append(sep);
 

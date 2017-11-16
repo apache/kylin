@@ -30,8 +30,10 @@ import com.google.common.collect.Lists;
 
 public class JoinsTree implements Serializable {
     private static final long serialVersionUID = 1L;
+    private static final IJoinDescMatcher DEFAULT_JOINDESC_MATCHER = new DefaultJoinDescMatcher();
 
     final Map<String, Chain> tableChains = new LinkedHashMap<>();
+    private IJoinDescMatcher joinDescMatcher = DEFAULT_JOINDESC_MATCHER;
 
     public JoinsTree(TableRef rootTable, List<JoinDesc> joins) {
         for (JoinDesc join : joins) {
@@ -108,7 +110,8 @@ public class JoinsTree implements Serializable {
             matches = anotherChain.join == null
                     && chain.table.getTableDesc().getIdentity().equals(anotherChain.table.getTableDesc().getIdentity());
         } else {
-            matches = chain.join.matches(anotherChain.join) && matchChain(chain.fkSide, anotherChain.fkSide, matchUp);
+            matches = joinDescMatcher.matches(chain.join, anotherChain.join)
+                    && matchChain(chain.fkSide, anotherChain.fkSide, matchUp);
         }
 
         if (matches) {
@@ -138,6 +141,10 @@ public class JoinsTree implements Serializable {
 
     public Map<String, Chain> getTableChains() {
         return tableChains;
+    }
+
+    public void setJoinDescMatcher(IJoinDescMatcher joinDescMatcher) {
+        this.joinDescMatcher = joinDescMatcher;
     }
 
     public static class Chain implements Serializable {
@@ -170,4 +177,45 @@ public class JoinsTree implements Serializable {
         }
     }
 
+    public static interface IJoinDescMatcher {
+        boolean matches(JoinDesc join1, JoinDesc join2);
+    }
+
+    public static class DefaultJoinDescMatcher implements IJoinDescMatcher {
+        @Override
+        public boolean matches(JoinDesc join1, JoinDesc join2) {
+            if (join1 == null) {
+                return join2 == null;
+            } else if (join2 == null) {
+                return false;
+            } else {
+
+                if (!join1.getType().equalsIgnoreCase(join2.getType()))
+                    return false;
+
+                // note pk/fk are sorted, sortByFK()
+                if (!this.columnDescEquals(join1.getForeignKeyColumns(), join2.getForeignKeyColumns()))
+                    return false;
+                if (!this.columnDescEquals(join1.getPrimaryKeyColumns(), join2.getPrimaryKeyColumns()))
+                    return false;
+
+                return true;
+            }
+        }
+
+        private boolean columnDescEquals(TblColRef[] a, TblColRef[] b) {
+            if (a.length != b.length)
+                return false;
+
+            for (int i = 0; i < a.length; i++) {
+                if (columnDescEquals(a[i].getColumnDesc(), b[i].getColumnDesc()) == false)
+                    return false;
+            }
+            return true;
+        }
+
+        protected boolean columnDescEquals(ColumnDesc a, ColumnDesc b) {
+            return a == null ? b == null : a.equals(b);
+        }
+    }
 }

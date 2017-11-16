@@ -404,11 +404,12 @@ public class DataModelDesc extends RootPersistentEntity {
             alias = alias.toUpperCase();
             join.setAlias(alias);
 
-            TableRef ref = new TableRef(this, alias, tableDesc, true);
+            boolean isLookup = join.getKind() == TableKind.LOOKUP;
+            TableRef ref = new TableRef(this, alias, tableDesc, isLookup);
 
             join.setTableRef(ref);
             addAlias(ref);
-            (join.getKind() == TableKind.LOOKUP ? lookupTableRefs : factTableRefs).add(ref);
+            (isLookup ? lookupTableRefs : factTableRefs).add(ref);
         }
 
         tableNameMap.putAll(aliasMap);
