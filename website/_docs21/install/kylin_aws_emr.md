@@ -19,6 +19,25 @@ Launch an EMR cluser with AWS web console, command line or API. Select "**HBase*
 
 You can select "HDFS" or "S3" as the storage for HBase, depending on whether you need Cube data be persisted after shutting down the cluster. EMR HDFS uses the local disk of EC2 instances, which will erase the data when cluster is stopped, then Kylin metadata and Cube data can be lost.
 
+If you use "S3" as HBase's storage, you need customize its configuration for "hbase.rpc.timeout", because the bulk load to S3 is a copy operation, when data size is huge, HBase region server need wait much longer time than on HDFS to finish.
+
+```
+[  {
+    "Classification": "hbase-site",
+    "Properties": {
+      "hbase.rpc.timeout": "3600000",
+      "hbase.rootdir": "s3://yourbucket/EMRROOT"
+    }
+  },
+  {
+    "Classification": "hbase",
+    "Properties": {
+      "hbase.emr.storageMode": "s3"
+    }
+  }
+]
+```
+
 ### Install Kylin
 
 When EMR cluser is in "Waiting" status, you can SSH into its master  node, download Kylin and then uncompress the tar ball:
