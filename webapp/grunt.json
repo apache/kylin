@@ -37,8 +37,7 @@
         "app/components/angular-chosen-localytics/chosen.js",
         "app/components/moment/min/moment.min.js",
         "app/components/d3/d3.min.js",
-        "app/components/nvd3/nv.d3.min.js",
-        "app/components/angularjs-nvd3-directives/dist/angularjs-nvd3-directives.js",
+        "app/components/nvd3/build/nv.d3.min.js",
         "app/components/bootstrap-sweetalert/lib/sweet-alert.js",
         "app/components/angular-sweetalert/SweetAlert.js",
         "app/components/underscore/underscore.js",
@@ -48,6 +47,7 @@
         "app/components/angular-toggle-switch/angular-toggle-switch.js",
         "app/components/angular-ui-select/dist/select.js",
         "app/components/angular-sanitize/angular-sanitize.js",
+        "app/components/angular-nvd3/dist/angular-nvd3.js",
         "tmp/js/scripts.js"
       ],
       "dest": "tmp/js/scripts.min.js"
@@ -65,7 +65,7 @@
         "app/css/messenger-theme-ice.css",
         "app/components/chosen/chosen.css",
         "app/components/angular-chosen-localytics/chosen-spinner.css",
-        "app/components/nvd3/nv.d3.min.css",
+        "app/components/nvd3/build/nv.d3.min.css",
         "app/css/AdminLTE.css",
         "app/css/skins/_all-skins.min.css",
         "app/components/bootstrap-sweetalert/lib/sweet-alert.css",

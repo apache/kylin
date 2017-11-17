@@ -82,7 +82,7 @@
       </button>
       </span>
     <div class="pull-right" ng-if="curQuery.status=='success'">
-        <button class="btn btn-default btn-xs"  ng-click="curQuery.graph.show=!curQuery.graph.show;buildGraphMetadata(curQuery);resetGraph(curQuery);refreshGraphData(curQuery)">
+        <button class="btn btn-default btn-xs"  ng-click="curQuery.graph.show=!curQuery.graph.show;buildGraphMetadata(curQuery);resetGraph(curQuery)">
             <span ng-if="!curQuery.graph.show"><i class="fa fa-bar-chart-o"></i> Visualization</span>
             <span ng-if="curQuery.graph.show"><i class="fa fa-list-ul"></i> Grid</span>
         </button>
@@ -126,102 +126,50 @@
     </div>
 
     <div ng-if="curQuery.graph.show" class="row">
-        <div class="col-xs-4 col-lg-3">
+        <div class="col-xs-4">
             <div class="graph_content">
                 <label>Graph Type</label>
-
-                <select ng-model="curQuery.graph.type"
-                        ng-change="resetGraph(curQuery);refreshGraphData(curQuery)"
+                <div>
+                    <select chosen style="width: 100%;"
+                        ng-model="curQuery.graph.type"
+                        ng-change="resetGraph(curQuery)"
                         ng-options="type as type.name for type in chartTypes"></select>
+                </div>
             </div>
-
+        </div>
+        <div class="col-xs-4">
             <div class="graph_content">
                 <label>Dimensions</label>
                 <div>
-                    <select
-                            chosen style="width: 100%;"
+                    <select chosen style="width: 100%;"
                             ng-model="curQuery.graph.state.dimensions" ng-change="refreshGraphData(curQuery)"
                             ng-options="dimension as dimension.column.label for dimension in curQuery.graph.meta.dimensions | filter: mappingToChartype">
                         <option value="">-- choose dimension --</option>
                     </select>
                 </div>
             </div>
-
+        </div>
+        <div class="col-xs-4">
             <div class="graph_content">
                 <label>Metrics</label>
-
-                <div class="chosen-relative">
-                    <select ng-if="curQuery.graph.type.metrics.multiple"
-                            chosen style="width: 100%;"
-                            multiple
-                            data-placeholder="Select Metrics.."
-                            ng-model="curQuery.graph.state.metrics"
-                            ng-options="metrics as metrics.column.label for metrics in curQuery.graph.meta.metrics"
-                            ng-change="refreshGraphData(curQuery)">
-                        <option value="">-- choose metrics --</option>
-                    </select>
-                    <select ng-if="!curQuery.graph.type.metrics.multiple"
-                            chosen style="width: 100%"
-                            data-placeholder="Select Metrics.."
-                            ng-model="curQuery.graph.state.metrics"
-                            ng-options="metrics as metrics.column.label for metrics in curQuery.graph.meta.metrics"
-                            ng-change="refreshGraphData(curQuery)">
+                <div>
+                  <select chosen style="width: 100%;"
+                          data-placeholder="Select Metrics.."
+                          ng-model="curQuery.graph.state.metrics"
+                          ng-options="metrics as metrics.column.label for metrics in curQuery.graph.meta.metrics"
+                          ng-change="refreshGraphData(curQuery)">
                         <option value="">-- choose metrics --</option>
                     </select>
                 </div>
             </div>
         </div>
-
-        <div class="col-xs-8 col-lg-9">
-            <div ng-if="curQuery.graph.data.length > 0">
-                <div ng-if="curQuery.graph.type.value == 'bar'">
-                    <nvd3-multi-bar-chart
-                            data="curQuery.graph.data"
-                            height="{{curQuery.graph.data.length * 5 + 250}}"
-                            showXAxis="true"
-                            showYAxis="true"
-                            noData="No Graph"
-                            showLegend="true"
-                            interactive="true"
-                            tooltips="true"
-                            >
-                        <svg></svg>
-                    </nvd3-multi-bar-chart>
-                </div>
-
-                <div ng-if="curQuery.graph.type.value == 'line'">
-                    <nvd3-line-chart
-                            height="350"
-                            data="curQuery.graph.data"
-                            xAxisTickFormat="xAxisTickFormatFunction()"
-                            showXAxis="true"
-                            showYAxis="true"
-                            noData="No Graph"
-                            clipVoronoi="true"
-                            interactive="true"
-                            tooltips="true"
-                            >
-                        <svg></svg>
-                    </nvd3-line-chart>
-                </div>
-
-                <div ng-if="curQuery.graph.type.value == 'pie'">
-                    <nvd3-pie-chart
-                            data="curQuery.graph.data"
-                            height="{{ curQuery.graph.data.length | resizePieHeight }}"
-                            x="xFunction()"
-                            y="yFunction()"
-                            noData="No Graph"
-                            tooltips="true"
-                            showLabels="true"
-                            showLegend="true"
-                            >
-                        <svg></svg>
-                    </nvd3-pie-chart>
-                </div>
+    </div>
+    <div ng-if="curQuery.graph.show" class="row">
+         <div class="col-xs-12">
+            <div ng-if="chart">
+                <nvd3 options="chart.options" data="chart.data"></nvd3>
             </div>
-
-            <div ng-if="!curQuery.graph.data || curQuery.graph.data.length == 0" style="padding-top: 10%">
+             <div ng-if="!chart" style="padding-top: 10%">
                 <div no-result text="No Graph Generated."></div>
             </div>
         </div>

@@ -282,15 +282,6 @@ KylinApp
             $scope.query($scope.curQuery);
         }
 
-        $scope.resetGraph = function (query) {
-            var dimension = (query.graph.meta.dimensions && query.graph.meta.dimensions.length > 0) ? query.graph.meta.dimensions[0] : null;
-            var metrics = (query.graph.meta.metrics && query.graph.meta.metrics.length > 0) ? query.graph.meta.metrics[0] : null;
-            query.graph.state = {
-                dimensions: dimension,
-                metrics: ((query.graph.type.metrics.multiple) ? [metrics] : metrics)
-            };
-        }
-
         $scope.loadMore = function (query) {
             query.result.loading = true;
             var query = query;
@@ -424,7 +415,7 @@ KylinApp
 
 
     })
-    .controller('QueryResultCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, GraphService) {
+    .controller('QueryResultCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, queryConfig) {
         $scope.buildGraphMetadata = function (query) {
             if (!query.graph.show) {
                 return;
@@ -467,34 +458,85 @@ KylinApp
             return $scope.curQuery.graph.type.dimension.types.indexOf(dimension.type) > -1;
         }
 
+        $scope.resetGraph = function (query) {
+            var dimension = (query.graph.meta.dimensions && query.graph.meta.dimensions.length > 0) ? query.graph.meta.dimensions[0] : null;
+            var metrics = (query.graph.meta.metrics && query.graph.meta.metrics.length > 0) ? query.graph.meta.metrics[0] : null;
+            query.graph.state = {
+                dimensions: dimension,
+                metrics: ((query.graph.type.metrics.multiple) ? [metrics] : metrics)
+            };
+            $scope.refreshGraphData(query);
+        }
+
         $scope.refreshGraphData = function (query) {
             if (query.graph.show) {
-                query.graph.data = GraphService.buildGraph(query);
-            }
-            else {
-                query.graph.data = [];
+                $scope.chart = undefined;
+
+                var selectedDimension = query.graph.state.dimensions;
+                if (selectedDimension && query.graph.type.dimension.types.indexOf(selectedDimension.type) > -1) {
+                    $scope.chart = {};
+
+                    var chartType = query.graph.type.value;
+                    var selectedMetric = query.graph.state.metrics;
+
+                    var dataValues = [];
+                    angular.forEach(query.result.results, function(result, ind) {
+                        var data = {
+                            label: result[selectedDimension.index],
+                            value: parseFloat(result[selectedMetric.index])
+                        };
+                        if (selectedDimension.type === 'date' && chartType === 'line') {
+                            data.label = parseInt(moment(data.label).format('X'));
+                        }
+                        dataValues.push(data);
+                    });
+
+                    dataValues = _.sortBy(dataValues, 'label');
+                    var oldLabel = dataValues[0].label;
+                    var groupValues = [{label: dataValues[0].label, value: 0}];
+                    angular.forEach(dataValues, function(data) {
+                        if (data.label === oldLabel) {
+                            groupValues[groupValues.length-1].value += data.value;
+                        } else {
+                            groupValues.push(data);
+                            oldLabel = data.label;
+                        }
+                    });
+
+                    $scope.chart.data = [{
+                        key: selectedMetric.column.label,
+                        values: groupValues
+                    }];
+
+                    if (chartType === 'line') {
+                        $scope.chart.options = angular.copy(queryConfig.lineChartOptions);
+                        if (selectedDimension.type === 'date') {
+                            $scope.chart.options.chart.xAxis.tickFormat = function (d) {
+                                return d3.time.format('%Y-%m-%d')(moment.unix(d).toDate());
+                            };
+                        }
+                    } else if (chartType === 'bar') {
+                        $scope.chart.options = angular.copy(queryConfig.barChartOptions);
+                        if (groupValues.length > 15) {
+                            $scope.chart.options.chart.showLegend = false;
+                            $scope.chart.options.chart.xAxis.height = 100;
+                            $scope.chart.options.chart.margin.bottom =  150;
+                            $scope.chart.options.chart.xAxis.rotateLabels = -90;
+                            if (groupValues.length > 50) {
+                                $scope.chart.options.chart.showXAxis = false;
+                            }
+                        }
+                    } else if (chartType === 'pie') {
+                        $scope.chart.options = angular.copy(queryConfig.pieChartOptions);
+                        $scope.chart.data = groupValues;
+                        if (groupValues.length > 15) {
+                            $scope.chart.options.chart.showLegend = false;
+                            $scope.chart.options.chart.showLabels = false;
+                        }
+                    }
+                }
+            } else {
+                $scope.chart.data = [];
             }
         }
-
-        $scope.xAxisTickFormatFunction = function () {
-            return function (d) {
-                return d3.time.format("%Y-%m-%d")(moment.unix(d).toDate());
-            }
-        };
-
-        $scope.xFunction = function () {
-            return function (d) {
-                return d.key;
-            }
-        };
-
-        $scope.yFunction = function () {
-            return function (d) {
-                return d.y;
-            }
-        }
-
-        $scope.$on('elementClick.directive', function (angularEvent, event) {
-            console.log('clicked.');
-        });
     });

@@ -19,8 +19,7 @@
     "messenger": "1.4.1",
     "moment": "2.5.1",
     "d3": "3.4.4",
-    "nvd3": "1.1.15-beta",
-    "angularjs-nvd3-directives": "0.0.5-beta",
+    "nvd3": "1.8.4",
     "angular-sweetalert": "~1.0.3",
     "angular-underscore": "~0.5.0",
     "angular-ui-sortable": "0.13.1",
@@ -35,7 +34,8 @@
     "angular-ui-select": "0.13.2",
     "angular-sanitize": "1.2.18",
     "angular-tree-control": "0.2.8",
-    "angular-bootstrap-datetimepicker": "0.3.15"
+    "angular-bootstrap-datetimepicker": "0.3.15",
+    "angular-nvd3": "1.0.9"
   },
   "devDependencies": {
     "less.js": "~1.4.0",
@@ -43,7 +43,7 @@
   },
   "resolutions": {
     "angular": "1.2.29",
-    "nvd3": "1.1.15-beta",
+    "nvd3": "1.8.4",
     "d3": "3.4.4",
     "moment": "2.4.0",
     "angular-resource": "1.2.15",
