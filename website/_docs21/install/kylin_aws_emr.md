@@ -19,7 +19,7 @@ Launch an EMR cluser with AWS web console, command line or API. Select "**HBase*
 
 You can select "HDFS" or "S3" as the storage for HBase, depending on whether you need Cube data be persisted after shutting down the cluster. EMR HDFS uses the local disk of EC2 instances, which will erase the data when cluster is stopped, then Kylin metadata and Cube data can be lost.
 
-If you use "S3" as HBase's storage, you need customize its configuration for "hbase.rpc.timeout", because the bulk load to S3 is a copy operation, when data size is huge, HBase region server need wait much longer time than on HDFS to finish.
+If you use "S3" as HBase's storage, you need customize its configuration for "**hbase.rpc.timeout**", because the bulk load to S3 is a copy operation, when data size is huge, HBase region server need wait much longer to finish than on HDFS.
 
 ```
 [  {
@@ -66,30 +66,65 @@ Before start Kylin, you need do a couple of configurations:
 
 - Use HDFS as "kylin.env.hdfs-working-dir"
 
-If using HDFS as Kylin working directory, you can leave configurations unchanged as EMR's default FS is HDFS:
+EMR recommends to "use HDFS for intermediate data storage while the cluster is running and Amazon S3 only to input the initial data and output the final results". 
+
+If using HDFS as Kylin working directory, you just leave configurations unchanged as EMR's default FS is HDFS:
 
 ```
 kylin.env.hdfs-working-dir=/kylin
 ```
 
-This will be very similar as on-premises deployment.
+Before you shudown/restart the cluster, you can backup the data on HDFS to S3 with [S3DistCp](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/UsingEMR_s3distcp.html).
 
 - Use S3 as "kylin.env.hdfs-working-dir"
 
-Configure the following 2 parameters:
+If you want to totally use S3 as storage (assume HBase is also on S3), configure the following 2 parameters:
 
 ```
 kylin.env.hdfs-working-dir=s3://yourbucket/kylin
 kylin.storage.hbase.cluster-fs=s3://yourbucket
 
 ```
-Then Kylin will use S3 for Cube building, big metadata file and Cube. The performance might be slower than HDFS.
+
+The intermediate file and the HFile will all be written to S3. The build performance should be slower than HDFS. Make sure you have a good understanding about the difference between S3 and HDFS. 
+
+- Hadoop configurations
+
+Some Hadoop configurations need be applied for better performance and data consistency on S3, according to [emr-troubleshoot-errors-io](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-troubleshoot-errors-io.html)
+
+```
+<property>
+  <name>io.file.buffer.size</name>
+  <value>65536</value>
+</property>
+<property>
+  <name>mapred.map.tasks.speculative.execution</name>
+  <value>false</value>
+</property>
+<property>
+  <name>mapred.reduce.tasks.speculative.execution</name>
+  <value>false</value>
+</property>
+<property>
+  <name>mapreduce.map.speculative</name>
+  <value>false</value>
+</property>
+<property>
+  <name>mapreduce.reduce.speculative</name>
+  <value>false</value>
+</property>
+
+```
 
 - Create the working-dir folder if it doesn't exist
 
 ```
 hadoop fs -mkdir /kylin 
+```
+
 or
+
+```
 hadoop fs -mkdir s3://yourbucket/kylin
 ```
 
