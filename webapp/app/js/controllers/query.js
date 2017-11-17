@@ -21,6 +21,9 @@
 KylinApp
     .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService, SweetAlert, VdmUtil) {
         $scope.mainPanel = 'query';
+        if ($routeParams.queryPanel) {
+            $scope.mainPanel = $routeParams.queryPanel;
+        }
         $scope.rowsPerPage = 50000;
         $scope.base64 = $base64;
         $scope.queryString = "";

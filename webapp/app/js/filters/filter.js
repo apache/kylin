@@ -242,5 +242,14 @@ KylinApp
       });
       return out;
     }
+  }).filter('startCase', function($filter) {
+    return function (item) {
+      var words = item.split(' ');
+      var formatWord = '';
+      angular.forEach(words, function(word, ind) {
+        formatWord += ' ' + word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      return formatWord.slice(1);
+    };
   });
 

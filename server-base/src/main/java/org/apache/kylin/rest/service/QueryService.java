@@ -371,7 +371,15 @@ public class QueryService extends BasicService {
         }
     }
 
+    public SQLResponse queryWithoutSecure(SQLRequest sqlRequest) {
+        return doQueryWithCache(sqlRequest, false);
+    }
+
     public SQLResponse doQueryWithCache(SQLRequest sqlRequest) {
+        return doQueryWithCache(sqlRequest, true);
+    }
+
+    public SQLResponse doQueryWithCache(SQLRequest sqlRequest, boolean secureEnabled) {
         Message msg = MsgPicker.getMsg();
         sqlRequest.setUsername(getUserName());
 

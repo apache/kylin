@@ -48,6 +48,8 @@
         "app/components/angular-ui-select/dist/select.js",
         "app/components/angular-sanitize/angular-sanitize.js",
         "app/components/angular-nvd3/dist/angular-nvd3.js",
+        "app/components/moment-timezone/builds/moment-timezone-with-data.js",
+        "app/components/bootstrap-daterangepicker/daterangepicker.js",
         "tmp/js/scripts.js"
       ],
       "dest": "tmp/js/scripts.min.js"
@@ -73,6 +75,7 @@
         "app/components/angular-toggle-switch/angular-toggle-switch.css",
         "app/components/angular-ui-select/dist/select.css",
         "app/components/angular-bootstrap-datetimepicker/src/css/datetimepicker.css",
+        "app/components/bootstrap-daterangepicker/daterangepicker-bs3.css",
         "tmp/css/styles.css"
       ],
       "dest": "tmp/css/styles.min.css"
