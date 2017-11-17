@@ -272,6 +272,7 @@ public class HivePushDownConverter implements IPushDownConverter {
         convertedSql = subqueryReplace(convertedSql);
 
         // Step5.Replace char_length with length
+        convertedSql = replaceString(convertedSql, "CHAR_LENGTH", "LENGTH");
         convertedSql = replaceString(convertedSql, "char_length", "length");
 
         // Step6.Replace "||" with concat
