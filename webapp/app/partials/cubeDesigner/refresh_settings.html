@@ -50,6 +50,7 @@
                                     class="chosen-select">
                             </select>
                             <input type="text" ng-if="timeRange.type=='days'"
+                                   onInput="this.value=this.value.replace(/[^0-9]/g, '')"
                                    ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)"
                                    class="form-control input-sm" placeholder="days range" ng-model="timeRange.range">
                           </td>
