@@ -258,6 +258,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         // for KylinJobMRLibDir
         String mrLibDir = kylinConf.getKylinJobMRLibDir();
+        logger.trace("MR additional lib dir: " + mrLibDir);
         StringUtil.appendWithSeparator(kylinDependency, mrLibDir);
 
         setJobTmpJarsAndFiles(job, kylinDependency.toString());
@@ -287,7 +288,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         if (StringUtils.isBlank(kylinDependency))
             return;
 
-        String[] fNameList = kylinDependency.split(",");
+        logger.trace("setJobTmpJarsAndFiles: " + kylinDependency);
 
         try {
             Configuration jobConf = job.getConfiguration();
@@ -297,7 +298,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             StringBuilder jarList = new StringBuilder();
             StringBuilder fileList = new StringBuilder();
 
-            for (String fileName : fNameList) {
+            for (String fileName : kylinDependency.split(",")) {
                 Path p = new Path(fileName);
                 if (p.isAbsolute() == false) {
                     logger.warn("The directory of kylin dependency '" + fileName + "' is not absolute, skip");
@@ -314,6 +315,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 }
 
                 if (fs.getFileStatus(p).isDirectory()) {
+                    logger.trace("Expanding depedency directory: " + p);
                     appendTmpDir(job, fs, p, jarList, fileList);
                     continue;
                 }
