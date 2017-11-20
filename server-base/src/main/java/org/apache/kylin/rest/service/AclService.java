@@ -246,7 +246,7 @@ public class AclService implements MutableAclService {
                     PrincipalSid psid = (PrincipalSid) ace.getSid();
                     String userName = psid.getPrincipal();
                     if (!userService.userExists(userName))
-                        throw new BadRequestException(String.format(msg.getUSER_NOT_EXIST(), userName));
+                        logger.error("Grant project access error," + String.format(msg.getUSER_NOT_EXIST(), userName));
                 }
                 AceInfo aceInfo = new AceInfo(ace);
                 allAceInfo.put(String.valueOf(aceInfo.getSidInfo().getSid()), aceInfo);
