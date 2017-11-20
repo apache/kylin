@@ -435,6 +435,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
+    public long getCuboidLastOptimized() {
+        return cuboidLastOptimized;
+    }
+
+    public void setCuboidLastOptimized(long lastOptimized) {
+        this.cuboidLastOptimized = lastOptimized;
+    }
+
     /**
      * Get cuboid level count except base cuboid
      * @return

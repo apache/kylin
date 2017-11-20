@@ -113,5 +113,79 @@ KylinApp.constant('cubeConfig', {
     {name:"Global Dictionary", value:"org.apache.kylin.dict.GlobalDictionaryBuilder"},
     {name:"Segment Dictionary", value:"org.apache.kylin.dict.global.SegmentAppendTrieDictBuilder"}
   ],
-  needSetLengthEncodingList:['fixed_length','fixed_length_hex','int','integer']
+  needSetLengthEncodingList:['fixed_length','fixed_length_hex','int','integer'],
+  baseChartOptions: {
+    chart: {
+      type: 'sunburstChart',
+      height: 500,
+      duration: 250,
+      groupColorByParent: false,
+      tooltip: {
+        contentGenerator: function(obj) {
+          var preCalculatedStr = '';
+          if (typeof obj.data.existed !== 'undefined' && obj.data.existed !== null) {
+            preCalculatedStr = '<tr><td align="right"><b>Existed:</b></td><td>' + obj.data.existed + '</td></tr>';
+          }
+          var rowCountRateStr = '';
+          if (obj.data.row_count) {
+            rowCountRateStr = '<tr><td align="right"><b>Row Count:</b></td><td>' + obj.data.row_count + '</td></tr><tr><td align="right"><b>Rollup Rate:</b></td><td>' + (obj.data.row_count * 100 / obj.data.parent_row_count).toFixed(2) + '%</td></tr>';
+          }
+          return '<table><tbody>'
+          + '<tr><td align="right"><i class="fa fa-square" style="color: ' + obj.color + '; margin-right: 15px;" aria-hidden="true"></i><b>Name:</b></td><td class="key"><b>' + obj.data.name +'</b></td></tr>'
+          + '<tr><td align="right"><b>ID:</b></td><td>' + obj.data.cuboid_id + '</td></tr>'
+          + '<tr><td align="right"><b>Query Count:</b></td><td>' + obj.data.query_count + '  [' + (obj.data.query_rate * 100).toFixed(2) + '%]</td></tr>'
+          + '<tr><td align="right"><b>Exactly Match Count:</b></td><td>' + obj.data.exactly_match_count + '</td></tr>'
+          + rowCountRateStr
+          + preCalculatedStr
+          + '</tbody></table>';
+        }
+      }
+    },
+    title: {
+      enable: true,
+      text: '',
+      className: 'h4',
+      css: {
+        position: 'relative',
+        top: '30px'
+      }
+    },
+    subtitle: {
+      enable: true,
+      text: '',
+      className: 'h5',
+      css: {
+        position: 'relative',
+        top: '40px'
+      }
+    }
+  },
+  currentCaption: {
+    enable: true,
+    html: '<div>Existed: <i class="fa fa-square" style="color:#38c;"></i> Hottest '
+          + '<i class="fa fa-square" style="color:#7bd;"></i> Hot '
+          + '<i class="fa fa-square" style="color:#ade;"></i> Warm '
+          + '<i class="fa fa-square" style="color:#cef;"></i> Cold '
+          + '<i class="fa fa-square" style="color:#999;"></i> Retire</div>',
+    css: {
+      position: 'relative',
+      top: '-35px',
+      height: 0
+    }
+  },
+  recommendCaption: {
+    enable: true,
+    html: '<div>New: <i class="fa fa-square" style="color:#3a5;"></i> Hottest '
+      + '<i class="fa fa-square" style="color:#7c7;"></i> Hot '
+      + '<i class="fa fa-square" style="color:#aea;"></i> Warm '
+      + '<i class="fa fa-square" style="color:#cfc;"></i> Cold '
+      + '<i class="fa fa-square" style="color:#f94;"></i> Mandatory</div>',
+    css: {
+      position: 'relative',
+      top: '-35px',
+      height: 0,
+      'text-align': 'left',
+      'left': '-12px'
+    }
+  }
 });

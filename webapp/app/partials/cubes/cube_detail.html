@@ -41,6 +41,9 @@
             ng-if="userService.hasRole('ROLE_ADMIN')">
             <a href="" ng-click="cube.visiblePage='hbase';getHbaseInfo(cube)">Storage</a>
         </li>
+        <li class="{{cube.visiblePage=='planner'? 'active':''}}" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask)">
+            <a href="" ng-click="cube.visiblePage='planner';getCubePlanner(cube);">Planner</a>
+        </li>
     </ul>
 
     <div class="cube-detail" ng-if="!cube.visiblePage || cube.visiblePage=='metadata'">
@@ -117,5 +120,46 @@
             </div>
         </div>
     </div>
-  </div>
+    <div class="cube-detail" ng-if="cube.visiblePage=='planner'">
+        <div style="padding: 15px;">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4 style="display: inline;">Cuboid Distribution</h4>
+                    <button ng-if="enableRecommend" class="btn btn-success btn-sm pull-right" ng-click="getRecommendCuboids(cube)" ng-if="currentData">
+                        Recommend
+                    </button>
+                    <div ng-if="cube.cuboid_last_optimized" class="pull-right" style="padding: 5px;">Last Optimized Time: {{cube.cuboid_last_optimized | utcToConfigTimeZone}}</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-sm-12">
+                     <nvd3 options="currentOptions" data="currentData" api="currentChart.api"></nvd3>
+                </div>
+                <div class="col-md-6 col-sm-12" ng-if="recommendData">
+                    <nvd3 options="recommendOptions" data="recommendData"></nvd3>
+                </div>
+            </div>
+            <div class="row cube-planner-column" ng-if="currentData || recommendData">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr ng-repeat="row in cube.detail.rowkey.rowkey_columns track by $index" ng-if="$index % 5 == 0" class="row">
+                            <th ng-class="{'column-in-cuobid': selectCuboid.charAt($index) == 1, 'column-not-in-cuboid': selectCuboid.charAt($index) == 0}">{{cube.detail.rowkey.rowkey_columns[$index].column}}</th>
+                            <th ng-class="{'column-in-cuobid': selectCuboid.charAt($index + 1) == 1, 'column-not-in-cuboid': selectCuboid.charAt($index + 1) == 0}">{{cube.detail.rowkey.rowkey_columns[$index + 1].column}}</th>
+                            <th ng-class="{'column-in-cuobid': selectCuboid.charAt($index + 2) == 1, 'column-not-in-cuboid': selectCuboid.charAt($index + 2) == 0}">{{cube.detail.rowkey.rowkey_columns[$index + 2].column}}</th>
+                            <th ng-class="{'column-in-cuobid': selectCuboid.charAt($index + 3) == 1, 'column-not-in-cuboid': selectCuboid.charAt($index + 3) == 0}">{{cube.detail.rowkey.rowkey_columns[$index + 3].column}}</th>
+                            <th ng-class="{'column-in-cuobid': selectCuboid.charAt($index + 4) == 1, 'column-not-in-cuboid': selectCuboid.charAt($index + 4) == 0}">{{cube.detail.rowkey.rowkey_columns[$index + 4].column}}</th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <button class="btn btn-success btn-next pull-right" ng-click="optimizeCuboids(cube)" ng-if="recommendData">
+                        Optimize
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 

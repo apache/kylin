@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService, CubeService, TableService, ModelGraphService, UserService,SweetAlert,loadingRequest,modelsManager,$modal,cubesManager) {
+KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService, CubeService, cubeConfig, TableService, ModelGraphService, UserService,SweetAlert,loadingRequest,modelsManager,$modal,cubesManager, $location) {
     $scope.newAccess = null;
     $scope.state = {jsonEdit: false};
 
@@ -111,5 +111,182 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
         }
     };
 
+    // cube api to refresh current chart after get recommend data.
+    $scope.currentChart = {};
+
+    // click planner tab to get current cuboid chart
+    $scope.getCubePlanner = function(cube) {
+        $scope.enableRecommend = cube.segments.length > 0 && _.some(cube.segments, function(segment){ return segment.status === 'READY'; });
+        if (!cube.currentCuboids) {
+            CubeService.getCurrentCuboids({cubeId: cube.name}, function(data) {
+                if (data && data.nodeInfos) {
+                    $scope.createChart(data, 'current');
+                    cube.currentCuboids = data;
+                } else {
+                    $scope.currentOptions = angular.copy(cubeConfig.chartOptions);
+                    $scope.currentData = [];
+                }
+            }, function(e) {
+                SweetAlert.swal('Oops...', 'Failed to get current cuboid.', 'error');
+                console.error('current cuboid error', e.data);
+            });
+        } else {
+            $scope.createChart(cube.currentCuboids, 'current');
+        }
+    };
+
+    // get recommend cuboid chart
+    $scope.getRecommendCuboids = function(cube) {
+        if (!cube.recommendCuboids) {
+            loadingRequest.show();
+            CubeService.getRecommendCuboids({cubeId: cube.name}, function(data) {
+                loadingRequest.hide();
+                if (data && data.nodeInfos) {
+                    // recommending
+                    if (data.nodeInfos.length === 1 && !data.nodeInfos[0].cuboid_id) {
+                         SweetAlert.swal('Loading', 'Please wait a minute, servers are recommending for you', 'success');
+                    } else {
+                        $scope.createChart(data, 'recommend');
+                        cube.recommendCuboids = data;
+                        // update current chart mark delete node gray.
+                        angular.forEach(cube.currentCuboids.nodeInfos, function(nodeInfo) {
+                            var tempNode = _.find(data.nodeInfos, function(o) { return o.cuboid_id == nodeInfo.cuboid_id; });
+                            if (!tempNode) {
+                                nodeInfo.deleted = true;
+                            }
+                        });
+                        $scope.createChart(cube.currentCuboids, 'current');
+                        $scope.currentChart.api.refresh();
+                    }
+                } else {
+                    $scope.currentOptions = angular.copy(cubeConfig.chartOptions);
+                    $scope.recommendData = [];
+                }
+            }, function(e) {
+                loadingRequest.hide();
+                SweetAlert.swal('Oops...', 'Failed to get recommend cuboid.', 'error');
+                console.error('recommend cuboid error', e.data);
+            });
+        } else {
+            $scope.createChart(cube.recommendCuboids, 'recommend');
+        }
+    };
+
+    // optimize cuboid
+    $scope.optimizeCuboids = function(cube){
+        SweetAlert.swal({
+            title: '',
+            text: 'Are you sure to optimize the cube?',
+            type: '',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: "Yes",
+            closeOnConfirm: true
+        }, function(isConfirm) {
+              if(isConfirm) {
+                var cuboidsRecommendArr = [];
+                angular.forEach(cube.recommendCuboids.nodeInfos, function(node) {
+                    cuboidsRecommendArr.push(node.cuboid_id);
+                });
+                loadingRequest.show();
+                CubeService.optimize({cubeId: cube.name}, {cuboidsRecommend: cuboidsRecommendArr},
+                    function(job){
+                        loadingRequest.hide();
+                        SweetAlert.swal({
+                            title: 'Success!',
+                            text: 'Optimize cube job has been started!',
+                            type: 'success'},
+                            function() {
+                                $location.path("/jobs");
+                            }
+                        );
+                    }, function(e) {
+                        loadingRequest.hide();
+                        if (e.status === 400) {
+                            SweetAlert.swal('Oops...', e.data.exception, 'error');
+                        } else {
+                            SweetAlert.swal('Oops...', "Failed to create optimize cube job.", 'error');
+                            console.error('optimize cube error', e.data);
+                        }
+                });
+            }
+        });
+    };
+
+    // transform chart data and customized options.
+    $scope.createChart = function(data, type) {
+        var chartData = data.treeNode;
+        if ('current' === type) {
+            $scope.currentData = [chartData];
+            $scope.currentOptions = angular.copy(cubeConfig.baseChartOptions);
+            $scope.currentOptions.caption = angular.copy(cubeConfig.currentCaption);
+            if ($scope.cube.recommendCuboids){
+                $scope.currentOptions.caption.css['text-align'] = 'right';
+                $scope.currentOptions.caption.css['right'] = '-12px';
+            }
+            $scope.currentOptions.chart.color = function(d) {
+                var cuboid = _.find(data.nodeInfos, function(o) { return o.name == d; });
+                if (cuboid.deleted) {
+                    return d3.scale.category20c().range()[17];
+                } else {
+                    return getColorByQuery(0, 1/data.nodeInfos.length, cuboid.query_rate);
+                }
+            };
+            $scope.currentOptions.chart.sunburst = getSunburstDispatch();
+            $scope.currentOptions.title.text = 'Current Cuboid Distribution';
+            $scope.currentOptions.subtitle.text = '[Cuboid Count: ' + data.nodeInfos.length + '] [Row Count: ' + data.totalRowCount + ']';
+        } else if ('recommend' === type) {
+            $scope.recommendData = [chartData];
+            $scope.recommendOptions = angular.copy(cubeConfig.baseChartOptions);
+            $scope.recommendOptions.caption = angular.copy(cubeConfig.recommendCaption);
+            $scope.recommendOptions.chart.color = function(d) {
+                var cuboid = _.find(data.nodeInfos, function(o) { return o.name == d; });
+                if (cuboid.row_count < 0) {
+                    return d3.scale.category20c().range()[5];
+                } else {
+                    var colorIndex = 0;
+                    if (!cuboid.existed) {
+                        colorIndex = 8;
+                    }
+                    return getColorByQuery(colorIndex, 1/data.nodeInfos.length, cuboid.query_rate);
+                }
+            };
+            $scope.recommendOptions.chart.sunburst = getSunburstDispatch();
+            $scope.recommendOptions.title.text = 'Recommend Cuboid Distribution';
+            $scope.recommendOptions.subtitle.text = '[Cuboid Count: ' + data.nodeInfos.length + '] [Row Count: ' + data.totalRowCount + ']';
+        }
+    };
+
+    // Hover behavior for highlight dimensions
+    function getSunburstDispatch() {
+        return {
+            dispatch: {
+                elementMouseover: function(t, u) {
+                    $scope.selectCuboid = t.data.name;
+                    $scope.$apply();
+                },
+                renderEnd: function(t, u) {
+                    var chartElements = document.getElementsByClassName('nv-sunburst');
+                    angular.element(chartElements).on('mouseleave', function() {
+                        $scope.selectCuboid = '0';
+                        $scope.$apply();
+                    });
+                }
+            }
+        };
+    };
+
+    // Different color for chart element by query count
+    function getColorByQuery(colorIndex, baseRate, queryRate) {
+        if (queryRate > (3 * baseRate)) {
+            return d3.scale.category20c().range()[colorIndex];
+        } else if (queryRate > (2 * baseRate)) {
+            return d3.scale.category20c().range()[colorIndex+1];
+        } else if (queryRate > baseRate) {
+            return d3.scale.category20c().range()[colorIndex+2];
+        } else {
+            return d3.scale.category20c().range()[colorIndex+3];
+        }
+    }
 });
 

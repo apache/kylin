@@ -18,8 +18,12 @@
 
 package org.apache.kylin.job.execution;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +37,7 @@ public class CheckpointExecutable extends DefaultChainedExecutable {
 
     private static final String DEPLOY_ENV_NAME = "envName";
     private static final String PROJECT_INSTANCE_NAME = "projectName";
+    private static final String CUBE_NAME = "cubeName";
 
     private final List<AbstractExecutable> subTasksForCheck = Lists.newArrayList();
 
@@ -62,6 +67,33 @@ public class CheckpointExecutable extends DefaultChainedExecutable {
         return true;
     }
 
+    @Override
+    protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
+        super.onExecuteFinished(result, executableContext);
+        if (!isDiscarded() && result.succeed()) {
+            List<? extends Executable> jobs = getTasks();
+            boolean allSucceed = true;
+            for (Executable task : jobs) {
+                final ExecutableState status = task.getStatus();
+                if (status != ExecutableState.SUCCEED) {
+                    allSucceed = false;
+                }
+            }
+            if (allSucceed) {
+                // Add last optimization time
+                CubeManager cubeManager = CubeManager.getInstance(executableContext.getConfig());
+                CubeInstance cube = cubeManager.getCube(getCubeName());
+                try{
+                    cube.setCuboidLastOptimized(getEndTime());
+                    CubeUpdate cubeUpdate = new CubeUpdate(cube);
+                    cubeManager.updateCube(cubeUpdate);
+                } catch (IOException e) {
+                    logger.error("Failed to update last optimized for " + getCubeName(), e);
+                }
+            }
+        }
+    }
+
     public String getDeployEnvName() {
         return getParam(DEPLOY_ENV_NAME);
     }
@@ -78,8 +110,13 @@ public class CheckpointExecutable extends DefaultChainedExecutable {
         setParam(PROJECT_INSTANCE_NAME, name);
     }
 
+    public String getCubeName() {
+        return getParam(CUBE_NAME);
+    }
+
     @Override
     public int getDefaultPriority() {
         return DEFAULT_PRIORITY;
     }
+
 }
