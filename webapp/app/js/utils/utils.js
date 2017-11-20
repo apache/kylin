@@ -110,6 +110,15 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
       }else{
         newObj=angular.extend({},needFilterObj);
       }
+      function removeByValue(arr,val){
+        for(var i=arr.length-1; i>=0; i--) {
+          if(arr[i] == val) {
+            arr.splice(i, 1);
+          }
+        }
+      }
+      var autoMergeTimeRanges = newObj.auto_merge_time_ranges;
+      removeByValue(autoMergeTimeRanges,0);
       function filterData(data){
         var obj=data;
         for(var i in obj){
