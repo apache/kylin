@@ -93,4 +93,35 @@ public class PushDownUtilTest {
         String exceptSQL = "select * from EDW.t1 join (select * from EDW.t2 join (select * from EDW.t3))";
         Assert.assertEquals(exceptSQL, PushDownUtil.schemaCompletion(sql, "EDW"));
     }
+
+    @Test
+    public void testWithSyntax() throws SqlParseException {
+        String ori = "WITH tmp AS\n" + //
+                "  (SELECT *\n" + //
+                "   FROM t) \n" + //
+                "SELECT a1\n" + //
+                "FROM (\n" + //
+                "  WITH tmp2 AS\n" + //
+                "    (SELECT *\n" + //
+                "     FROM t) \n" + //
+                "  SELECT a1\n" + //
+                "  FROM t2\n" + //
+                "  ORDER BY c_customer_id\n" + //
+                ")\n" + //
+                "ORDER BY c_customer_id limit 5"; //
+        String expected = "WITH tmp AS\n" + //
+                "  (SELECT *\n" + //
+                "   FROM EDW.t) \n" + //
+                "SELECT a1\n" + //
+                "FROM (\n" + //
+                "  WITH tmp2 AS\n" + //
+                "    (SELECT *\n" + //
+                "     FROM EDW.t) \n" + //
+                "  SELECT a1\n" + //
+                "  FROM EDW.t2\n" + //
+                "  ORDER BY c_customer_id\n" + //
+                ")\n" + //
+                "ORDER BY c_customer_id limit 5"; //
+        Assert.assertEquals(expected, PushDownUtil.schemaCompletion(ori, "EDW"));
+    }
 }

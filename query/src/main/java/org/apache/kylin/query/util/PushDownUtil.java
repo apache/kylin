@@ -36,6 +36,8 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlWith;
+import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.calcite.sql.validate.SqlValidatorException;
@@ -203,6 +205,13 @@ public class PushDownUtil {
 
         @Override
         public SqlNode visit(SqlNodeList nodeList) {
+            for (int i = 0; i < nodeList.size(); i++) {
+                SqlNode node = nodeList.get(i);
+                if (node instanceof SqlWithItem) {
+                    SqlWithItem item = (SqlWithItem) node;
+                    item.query.accept(this);
+                }
+            }
             return null;
         }
 
@@ -220,8 +229,13 @@ public class PushDownUtil {
             }
             if (call instanceof SqlOrderBy) {
                 SqlOrderBy orderBy = (SqlOrderBy) call;
-                ((SqlSelect) orderBy.query).getFrom().accept(this);
+                orderBy.query.accept(this);
                 return null;
+            }
+            if (call instanceof SqlWith) {
+                SqlWith sqlWith = (SqlWith) call;
+                sqlWith.body.accept(this);
+                sqlWith.withList.accept(this);
             }
             if (call instanceof SqlBasicCall) {
                 SqlBasicCall node = (SqlBasicCall) call;
@@ -233,11 +247,6 @@ public class PushDownUtil {
                 node.getLeft().accept(this);
                 node.getRight().accept(this);
                 return null;
-            }
-            for (SqlNode operand : call.getOperandList()) {
-                if (operand != null) {
-                    operand.accept(this);
-                }
             }
             return null;
         }
