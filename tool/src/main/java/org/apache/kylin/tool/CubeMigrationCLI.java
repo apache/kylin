@@ -88,7 +88,8 @@ public class CubeMigrationCLI extends AbstractApplication {
     protected ResourceStore dstStore;
     protected FileSystem hdfsFS;
     private HBaseAdmin hbaseAdmin;
-    private boolean doAclCopy = false;
+    protected boolean doAclCopy = false;
+    protected boolean doOverwrite = false;
     protected String dstProject;
 
     private static final String ACL_PREFIX = "/acl/";
@@ -121,11 +122,12 @@ public class CubeMigrationCLI extends AbstractApplication {
             String purgeAndDisable, String overwriteIfExists, String realExecute)
             throws IOException, InterruptedException {
 
+        doAclCopy = Boolean.parseBoolean(copyAcl);
+        doOverwrite = Boolean.parseBoolean(overwriteIfExists);
         srcConfig = srcCfg;
         srcStore = ResourceStore.getStore(srcConfig);
         dstConfig = dstCfg;
         dstStore = ResourceStore.getStore(dstConfig);
-
         dstProject = projectName;
 
         CubeManager cubeManager = CubeManager.getInstance(srcConfig);
@@ -137,16 +139,9 @@ public class CubeMigrationCLI extends AbstractApplication {
 
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         hbaseAdmin = new HBaseAdmin(conf);
-
         hdfsFS = HadoopUtil.getWorkingFileSystem();
-
         operations = new ArrayList<Opt>();
-
-        if (Boolean.parseBoolean(copyAcl) == true) {
-            doAclCopy = true;
-        }
-
-        copyFilesInMetaStore(cube, overwriteIfExists, doAclCopy);
+        copyFilesInMetaStore(cube);
         renameFoldersInHdfs(cube);
         changeHtableHost(cube);
         addCubeAndModelIntoProject(cube, cubeName);
@@ -155,7 +150,7 @@ public class CubeMigrationCLI extends AbstractApplication {
             purgeAndDisable(cubeName); // this should be the last action
         }
 
-        if (realExecute.equalsIgnoreCase("true")) {
+        if (Boolean.parseBoolean(realExecute) == true) {
             doOpts();
             checkMigrationSuccess(dstConfig, cubeName, true);
             updateMeta(dstConfig);
@@ -220,14 +215,13 @@ public class CubeMigrationCLI extends AbstractApplication {
         }
     }
 
-    protected void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists, boolean copyAcl)
-            throws IOException {
+    protected void copyFilesInMetaStore(CubeInstance cube) throws IOException {
 
         List<String> metaItems = new ArrayList<String>();
         Set<String> dictAndSnapshot = new HashSet<String>();
-        listCubeRelatedResources(cube, metaItems, dictAndSnapshot, copyAcl);
+        listCubeRelatedResources(cube, metaItems, dictAndSnapshot);
 
-        if (dstStore.exists(cube.getResourcePath()) && !overwriteIfExists.equalsIgnoreCase("true"))
+        if (dstStore.exists(cube.getResourcePath()) && !doOverwrite)
             throw new IllegalStateException("The cube named " + cube.getName()
                     + " already exists on target metadata store. Use overwriteIfExists to overwrite it");
 
@@ -277,8 +271,8 @@ public class CubeMigrationCLI extends AbstractApplication {
         return toResource;
     }
 
-    protected void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, Set<String> dictAndSnapshot,
-            boolean copyAcl) throws IOException {
+    protected void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, Set<String> dictAndSnapshot)
+            throws IOException {
 
         CubeDesc cubeDesc = cube.getDescriptor();
         String prj = cubeDesc.getProject();
@@ -297,7 +291,7 @@ public class CubeMigrationCLI extends AbstractApplication {
             dictAndSnapshot.addAll(segment.getDictionaryPaths());
         }
 
-        if (copyAcl) {
+        if (doAclCopy) {
             metaResource.add(ACL_PREFIX + cube.getUuid());
             metaResource.add(ACL_PREFIX + cube.getModel().getUuid());
         }
@@ -496,7 +490,8 @@ public class CubeMigrationCLI extends AbstractApplication {
                 project.addTable(tableRef.getTableIdentity());
             }
 
-            project.addModel(modelName);
+            if (project.getModels().contains(modelName) == false)
+                project.addModel(modelName);
             project.removeRealization(RealizationType.CUBE, cubeName);
             project.addRealizationEntry(RealizationType.CUBE, cubeName);
 
