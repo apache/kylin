@@ -42,7 +42,7 @@ public class QueryContext {
 
     private QueryContext() {
         // use QueryContext.current() instead
-        
+
         queryId = UUID.randomUUID().toString();
     }
 

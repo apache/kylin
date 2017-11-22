@@ -23,6 +23,8 @@ import static org.apache.kylin.common.util.CheckUtil.checkCondition;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -54,13 +56,11 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.htrace.Sampler;
-import org.apache.htrace.Trace;
-import org.apache.htrace.TraceScope;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
+import org.apache.kylin.common.htrace.HtraceInit;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
@@ -103,6 +103,9 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
+import org.apache.kylin.shaded.htrace.org.apache.htrace.Sampler;
+import org.apache.kylin.shaded.htrace.org.apache.htrace.Trace;
+import org.apache.kylin.shaded.htrace.org.apache.htrace.TraceScope;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -311,6 +314,7 @@ public class QueryService extends BasicService {
         stringBuilder.append("Hit Exception Cache: ").append(response.isHitExceptionCache()).append(newLine);
         stringBuilder.append("Storage cache used: ").append(storageCacheUsed).append(newLine);
         stringBuilder.append("Is Query Push-Down: ").append(isPushDown).append(newLine);
+        stringBuilder.append("Trace URL: ").append(response.getTraceUrl()).append(newLine);
         stringBuilder.append("Message: ").append(response.getExceptionMessage()).append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
 
@@ -395,8 +399,13 @@ public class QueryService extends BasicService {
         final QueryContext queryContext = QueryContext.current();
 
         TraceScope scope = null;
-        if (KylinConfig.getInstanceFromEnv().isHtraceTracingEveryQuery() || BackdoorToggles.getHtraceEnabled())
+        if (KylinConfig.getInstanceFromEnv().isHtraceTracingEveryQuery() || BackdoorToggles.getHtraceEnabled()) {
+            logger.info("Current query is under tracing");
+            HtraceInit.init();
             scope = Trace.startSpan("query life cycle for " + queryContext.getQueryId(), Sampler.ALWAYS);
+        }
+
+        String traceUrl = getTraceUrl(scope);
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
 
@@ -425,7 +434,7 @@ public class QueryService extends BasicService {
                 if (null == sqlResponse) {
                     if (isSelect) {
                         sqlResponse = query(sqlRequest);
-                        Trace.addTimelineAnnotation("query main almost done");
+                        Trace.addTimelineAnnotation("query almost done");
                     } else if (kylinConfig.isPushDownEnabled() && kylinConfig.isPushDownUpdateEnabled()) {
                         sqlResponse = update(sqlRequest);
                         Trace.addTimelineAnnotation("update query almost done");
@@ -460,11 +469,13 @@ public class QueryService extends BasicService {
                         cacheManager.getCache(SUCCESS_QUERY_CACHE)
                                 .put(new Element(sqlRequest.getCacheKey(), sqlResponse));
                     }
+                    Trace.addTimelineAnnotation("response from execution");
 
                 } else {
                     sqlResponse.setDuration(System.currentTimeMillis() - startTime);
                     sqlResponse.setTotalScanCount(0);
                     sqlResponse.setTotalScanBytes(0);
+                    Trace.addTimelineAnnotation("response from cache");
                 }
 
                 checkQueryAuth(sqlResponse, project);
@@ -473,7 +484,7 @@ public class QueryService extends BasicService {
                 logger.error("Exception while executing query", e);
                 String errMsg = makeErrorMsgUserFriendly(e);
 
-                sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
+                sqlResponse = new SQLResponse(null, null, null, 0, true, errMsg, false, false);
                 sqlResponse.setTotalScanCount(queryContext.getScannedRows());
                 sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
 
@@ -482,9 +493,12 @@ public class QueryService extends BasicService {
                     Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
                     exceptionCache.put(new Element(sqlRequest.getCacheKey(), sqlResponse));
                 }
+                Trace.addTimelineAnnotation("error response");
             }
 
+            sqlResponse.setTraceUrl(traceUrl);
             logQuery(sqlRequest, sqlResponse);
+
             QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
             QueryMetrics2Facade.updateMetrics(sqlRequest, sqlResponse);
 
@@ -501,6 +515,29 @@ public class QueryService extends BasicService {
                 scope.close();
             }
         }
+    }
+
+    private String getTraceUrl(TraceScope scope) {
+        if (scope == null) {
+            return null;
+        }
+
+        String hostname = System.getProperty("zipkin.collector-hostname");
+        if (StringUtils.isEmpty(hostname)) {
+            try {
+                hostname = InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                logger.debug("failed to get trace url due to " + e.getMessage());
+                return null;
+            }
+        }
+
+        String port = System.getProperty("zipkin.web-ui-port");
+        if (StringUtils.isEmpty(port)) {
+            port = "9411";
+        }
+
+        return "http://" + hostname + ":" + port + "/zipkin/traces/" + Long.toHexString(scope.getSpan().getTraceId());
     }
 
     private String getUserName() {

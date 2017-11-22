@@ -39,6 +39,7 @@ public class SandboxMetastoreCLI {
     private static final Logger logger = LoggerFactory.getLogger(SandboxMetastoreCLI.class);
 
     public static void main(String[] args) throws Exception {
+        System.setProperty("HADOOP_USER_NAME", "root");
         logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);

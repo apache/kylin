@@ -22,12 +22,12 @@ import java.util.Arrays;
 
 import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.Enumerator;
-import org.apache.htrace.Trace;
-import org.apache.htrace.TraceScope;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.shaded.htrace.org.apache.htrace.Trace;
+import org.apache.kylin.shaded.htrace.org.apache.htrace.TraceScope;
 import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageFactory;
 import org.slf4j.Logger;

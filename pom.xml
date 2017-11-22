@@ -116,7 +116,6 @@
         <t-digest.version>3.1</t-digest.version>
         <!--metric-->
         <dropwizard.version>3.1.2</dropwizard.version>
-        <htrace.version>3.1.0-incubating</htrace.version>
         <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
         <spring.boot.version>1.3.8.RELEASE</spring.boot.version>
         <spring.framework.version>4.3.10.RELEASE</spring.framework.version>
@@ -451,14 +450,9 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>org.apache.htrace</groupId>
-                <artifactId>htrace-core</artifactId>
-                <version>${htrace.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.htrace</groupId>
-                <artifactId>htrace-zipkin</artifactId>
-                <version>${htrace.version}</version>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-external-htrace</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-cli</groupId>
@@ -1116,6 +1110,7 @@
     </build>
 
     <modules>
+        <module>external</module>
         <module>atopcalcite</module>
         <module>core-common</module>
         <module>core-metadata</module>

@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
-import org.apache.htrace.Trace;
-import org.apache.htrace.TraceScope;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.EmptyGTScanner;
 import org.apache.kylin.gridtable.GTInfo;
@@ -32,6 +30,8 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStorage;
 import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.shaded.htrace.org.apache.htrace.Trace;
+import org.apache.kylin.shaded.htrace.org.apache.htrace.TraceScope;
 import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

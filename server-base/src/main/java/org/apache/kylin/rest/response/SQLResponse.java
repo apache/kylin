@@ -63,6 +63,8 @@ public class SQLResponse implements Serializable {
 
     protected boolean queryPushDown = false;
 
+    protected String traceUrl = null;
+
     public SQLResponse() {
     }
 
@@ -70,16 +72,6 @@ public class SQLResponse implements Serializable {
             boolean isException, String exceptionMessage) {
         this.columnMetas = columnMetas;
         this.results = results;
-        this.affectedRowCount = affectedRowCount;
-        this.isException = isException;
-        this.exceptionMessage = exceptionMessage;
-    }
-
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
-            int affectedRowCount, boolean isException, String exceptionMessage) {
-        this.columnMetas = columnMetas;
-        this.results = results;
-        this.cube = cube;
         this.affectedRowCount = affectedRowCount;
         this.isException = isException;
         this.exceptionMessage = exceptionMessage;
@@ -184,5 +176,13 @@ public class SQLResponse implements Serializable {
 
     public void setStorageCacheUsed(boolean storageCacheUsed) {
         this.storageCacheUsed = storageCacheUsed;
+    }
+
+    public String getTraceUrl() {
+        return traceUrl;
+    }
+
+    public void setTraceUrl(String traceUrl) {
+        this.traceUrl = traceUrl;
     }
 }

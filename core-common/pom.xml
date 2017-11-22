@@ -63,12 +63,8 @@
         
         <!-- Metric & Tracing -->
         <dependency>
-            <groupId>org.apache.htrace</groupId>
-            <artifactId>htrace-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.htrace</groupId>
-            <artifactId>htrace-zipkin</artifactId>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-external-htrace</artifactId>
         </dependency>
 
         <!-- Env & Test -->

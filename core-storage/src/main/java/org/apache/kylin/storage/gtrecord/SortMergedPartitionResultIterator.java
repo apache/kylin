@@ -19,12 +19,14 @@
 package org.apache.kylin.storage.gtrecord;
 
 import java.util.Comparator;
-import java.util.List;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
@@ -34,30 +36,48 @@ import com.google.common.collect.UnmodifiableIterator;
  * Merge-sort {@code GTRecord}s in all partitions, assume each partition contains sorted elements.
  */
 public class SortMergedPartitionResultIterator extends UnmodifiableIterator<GTRecord> {
+    private static final Logger logger = LoggerFactory.getLogger(SortMergedPartitionResultIterator.class);
 
-    final GTRecord record; // reuse to avoid object creation
-    PriorityQueue<PeekingIterator<GTRecord>> heap;
+    private final Iterator<PartitionResultIterator> iterators;
+    private final Comparator<GTRecord> comparator;
+    private final GTRecord record; // reuse to avoid object creation
 
-    SortMergedPartitionResultIterator(List<PartitionResultIterator> partitionResults, GTInfo info,
+    private boolean initted = false;
+    private PriorityQueue<PeekingIterator<GTRecord>> heap;
+
+    SortMergedPartitionResultIterator(Iterator<PartitionResultIterator> iterators, GTInfo info,
             final Comparator<GTRecord> comparator) {
-
+        this.iterators = iterators;
         this.record = new GTRecord(info);
-        Comparator<PeekingIterator<GTRecord>> heapComparator = new Comparator<PeekingIterator<GTRecord>>() {
-            public int compare(PeekingIterator<GTRecord> o1, PeekingIterator<GTRecord> o2) {
-                return comparator.compare(o1.peek(), o2.peek());
-            }
-        };
-        this.heap = new PriorityQueue<>(partitionResults.size(), heapComparator);
-
-        for (PartitionResultIterator it : partitionResults) {
-            if (it.hasNext()) {
-                heap.offer(Iterators.peekingIterator(it));
-            }
-        }
+        this.comparator = comparator;
     }
 
     @Override
     public boolean hasNext() {
+        if (!initted) {
+
+            Comparator<PeekingIterator<GTRecord>> heapComparator = new Comparator<PeekingIterator<GTRecord>>() {
+                public int compare(PeekingIterator<GTRecord> o1, PeekingIterator<GTRecord> o2) {
+                    return comparator.compare(o1.peek(), o2.peek());
+                }
+            };
+
+            this.heap = new PriorityQueue<>(3, heapComparator);
+            int total = 0, actual = 0;
+
+            while (iterators.hasNext()) {
+                total++;
+                PartitionResultIterator it = iterators.next();
+                if (it.hasNext()) {
+                    actual++;
+                    heap.offer(Iterators.peekingIterator(it));
+                }
+            }
+            logger.debug("Using SortMergedPartitionResultIterator to merge {} partition results out of {} partitions",
+                    actual, total);
+            initted = true;
+        }
+
         return !heap.isEmpty();
     }
 

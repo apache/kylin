@@ -1365,6 +1365,10 @@ abstract public class KylinConfigBase implements Serializable {
     public String getPerfLoggerClassName() {
         return getOptional("kylin.metrics.perflogger-class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
     }
+    
+    public boolean isShowingGuiTraceToggle() {
+        return Boolean.valueOf(getOptional("kylin.htrace.show-gui-trace-toggle", "false"));
+    }
 
     public boolean isHtraceTracingEveryQuery() {
         return Boolean.valueOf(getOptional("kylin.htrace.trace-every-query", "false"));
