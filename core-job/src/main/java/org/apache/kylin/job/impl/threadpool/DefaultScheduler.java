@@ -76,13 +76,15 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             try {
                 // logger.debug("Job Fetcher is running...");
                 Map<String, Executable> runningJobs = context.getRunningJobs();
-                if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
-                    logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
+                if (isJobPoolFull()) {
                     return;
                 }
 
                 int nRunning = 0, nReady = 0, nStopped = 0, nOthers = 0, nError = 0, nDiscarded = 0, nSUCCEED = 0;
                 for (final String id : executableManager.getAllJobIds()) {
+                    if (isJobPoolFull()) {
+                        return;
+                    }
                     if (runningJobs.containsKey(id)) {
                         // logger.debug("Job id:" + id + " is already running");
                         nRunning++;
@@ -127,6 +129,16 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                 logger.warn("Job Fetcher caught a exception " + e);
             }
         }
+    }
+
+    private boolean isJobPoolFull() {
+        Map<String, Executable> runningJobs = context.getRunningJobs();
+        if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
+            logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
+            return true;
+        }
+
+        return false;
     }
 
     private class JobRunner implements Runnable {
