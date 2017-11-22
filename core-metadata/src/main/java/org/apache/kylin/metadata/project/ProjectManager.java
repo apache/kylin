@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -90,8 +92,13 @@ public class ProjectManager {
 
     private KylinConfig config;
     private ProjectL2Cache l2Cache;
+    
     // project name => ProjrectInstance
     private CaseInsensitiveStringCache<ProjectInstance> projectMap;
+    
+    // protects concurrent operations around the projectMap, to avoid for example
+    // writing a project in the middle of reloading it (dirty read)
+    private ReadWriteLock prjMapLock = new ReentrantReadWriteLock();
 
     private ProjectManager(KylinConfig config) throws IOException {
         logger.info("Initializing ProjectManager with metadata url " + config);
@@ -132,20 +139,30 @@ public class ProjectManager {
     }
 
     private void reloadAllProjects() throws IOException {
-        ResourceStore store = getStore();
-        List<String> paths = store.collectResourceRecursively(ResourceStore.PROJECT_RESOURCE_ROOT, ".json");
+        prjMapLock.writeLock().lock();
+        try {
+            ResourceStore store = getStore();
+            List<String> paths = store.collectResourceRecursively(ResourceStore.PROJECT_RESOURCE_ROOT, ".json");
 
-        logger.debug(
-                "Loading Project from folder " + store.getReadableResourcePath(ResourceStore.PROJECT_RESOURCE_ROOT));
+            logger.debug("Loading Project from folder "
+                    + store.getReadableResourcePath(ResourceStore.PROJECT_RESOURCE_ROOT));
 
-        for (String path : paths) {
-            reloadProjectLocalAt(path);
+            for (String path : paths) {
+                reloadProjectLocalAt(path);
+            }
+            logger.debug("Loaded " + projectMap.size() + " Project(s)");
+        } finally {
+            prjMapLock.writeLock().unlock();
         }
-        logger.debug("Loaded " + projectMap.size() + " Project(s)");
     }
 
     public ProjectInstance reloadProjectLocal(String project) throws IOException {
-        return reloadProjectLocalAt(ProjectInstance.concatResourcePath(project));
+        prjMapLock.writeLock().lock();
+        try {
+            return reloadProjectLocalAt(ProjectInstance.concatResourcePath(project));
+        } finally {
+            prjMapLock.writeLock().unlock();
+        }
     }
 
     private ProjectInstance reloadProjectLocalAt(String path) throws IOException {
@@ -164,125 +181,151 @@ public class ProjectManager {
     }
 
     public List<ProjectInstance> listAllProjects() {
-        return new ArrayList<ProjectInstance>(projectMap.values());
+        prjMapLock.readLock().lock();
+        try {
+            return new ArrayList<ProjectInstance>(projectMap.values());
+        } finally {
+            prjMapLock.readLock().unlock();
+        }
     }
 
     public ProjectInstance getProject(String projectName) {
-        projectName = norm(projectName);
-        return projectMap.get(projectName);
+        prjMapLock.readLock().lock();
+        try {
+            projectName = norm(projectName);
+            return projectMap.get(projectName);
+        } finally {
+            prjMapLock.readLock().unlock();
+        }
     }
 
     public ProjectInstance getPrjByUuid(String uuid) {
-        Collection<ProjectInstance> copy = new ArrayList<ProjectInstance>(projectMap.values());
-        for (ProjectInstance prj : copy) {
-            if (uuid.equals(prj.getUuid()))
-                return prj;
+        prjMapLock.readLock().lock();
+        try {
+            Collection<ProjectInstance> copy = new ArrayList<ProjectInstance>(projectMap.values());
+            for (ProjectInstance prj : copy) {
+                if (uuid.equals(prj.getUuid()))
+                    return prj;
+            }
+            return null;
+        } finally {
+            prjMapLock.readLock().unlock();
         }
-        return null;
     }
 
     public ProjectInstance createProject(String projectName, String owner, String description,
             LinkedHashMap<String, String> overrideProps) throws IOException {
-        logger.info("Creating project " + projectName);
+        prjMapLock.writeLock().lock();
+        try {
+            logger.info("Creating project " + projectName);
 
-        ProjectInstance currentProject = getProject(projectName);
-        if (currentProject == null) {
-            currentProject = ProjectInstance.create(projectName, owner, description, overrideProps, null, null);
-        } else {
-            throw new IllegalStateException("The project named " + projectName + "already exists");
+            ProjectInstance currentProject = getProject(projectName);
+            if (currentProject == null) {
+                currentProject = ProjectInstance.create(projectName, owner, description, overrideProps, null, null);
+            } else {
+                throw new IllegalStateException("The project named " + projectName + "already exists");
+            }
+
+            updateProject(currentProject);
+
+            return currentProject;
+        } finally {
+            prjMapLock.writeLock().unlock();
         }
-
-        updateProject(currentProject);
-
-        return currentProject;
     }
 
     public ProjectInstance dropProject(String projectName) throws IOException {
-        if (projectName == null)
-            throw new IllegalArgumentException("Project name not given");
+        prjMapLock.writeLock().lock();
+        try {
+            if (projectName == null)
+                throw new IllegalArgumentException("Project name not given");
 
-        ProjectInstance projectInstance = getProject(projectName);
+            ProjectInstance projectInstance = getProject(projectName);
 
-        if (projectInstance == null) {
-            throw new IllegalStateException("The project named " + projectName + " does not exist");
-        }
+            if (projectInstance == null) {
+                throw new IllegalStateException("The project named " + projectName + " does not exist");
+            }
 
-        if (projectInstance.getRealizationCount(null) != 0) {
-            throw new IllegalStateException("The project named " + projectName
-                    + " can not be deleted because there's still realizations in it. Delete them first.");
-        }
+            if (projectInstance.getRealizationCount(null) != 0) {
+                throw new IllegalStateException("The project named " + projectName
+                        + " can not be deleted because there's still realizations in it. Delete them first.");
+            }
 
-        logger.info("Dropping project '" + projectInstance.getName() + "'");
+            logger.info("Dropping project '" + projectInstance.getName() + "'");
 
-        removeProject(projectInstance);
-        BadQueryHistoryManager.getInstance(config).removeBadQueryHistory(projectName);
+            removeProject(projectInstance);
+            BadQueryHistoryManager.getInstance(config).removeBadQueryHistory(projectName);
 
-        return projectInstance;
-    }
-
-    //passive update due to underlying realization update
-    public void updateProject(RealizationType type, String realizationName) throws IOException {
-        for (ProjectInstance proj : findProjects(type, realizationName)) {
-            updateProject(proj);
+            return projectInstance;
+        } finally {
+            prjMapLock.writeLock().unlock();
         }
     }
 
     // rename project
     public ProjectInstance renameProject(ProjectInstance project, String newName, String newDesc,
             LinkedHashMap<String, String> overrideProps) throws IOException {
-        Preconditions.checkArgument(!project.getName().equals(newName));
-        ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc, overrideProps);
+        prjMapLock.writeLock().lock();
+        try {
+            Preconditions.checkArgument(!project.getName().equals(newName));
+            ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc, overrideProps);
 
-        newProject.setUuid(project.getUuid());
-        newProject.setCreateTimeUTC(project.getCreateTimeUTC());
-        newProject.recordUpdateTime(System.currentTimeMillis());
-        newProject.setRealizationEntries(project.getRealizationEntries());
-        newProject.setTables(project.getTables());
-        newProject.setModels(project.getModels());
-        newProject.setExtFilters(project.getExtFilters());
+            newProject.setUuid(project.getUuid());
+            newProject.setCreateTimeUTC(project.getCreateTimeUTC());
+            newProject.recordUpdateTime(System.currentTimeMillis());
+            newProject.setRealizationEntries(project.getRealizationEntries());
+            newProject.setTables(project.getTables());
+            newProject.setModels(project.getModels());
+            newProject.setExtFilters(project.getExtFilters());
 
-        removeProject(project);
-        updateProject(newProject);
+            removeProject(project);
+            updateProject(newProject);
 
-        return newProject;
+            return newProject;
+        } finally {
+            prjMapLock.writeLock().unlock();
+        }
     }
 
-    //update project itself
+    // update project itself
     public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc,
             LinkedHashMap<String, String> overrideProps) throws IOException {
-        Preconditions.checkArgument(project.getName().equals(newName));
-        project.setName(newName);
-        project.setDescription(newDesc);
-        project.setOverrideKylinProps(overrideProps);
+        prjMapLock.writeLock().lock();
+        try {
+            Preconditions.checkArgument(project.getName().equals(newName));
+            project.setName(newName);
+            project.setDescription(newDesc);
+            project.setOverrideKylinProps(overrideProps);
 
-        if (project.getUuid() == null)
-            project.updateRandomUuid();
+            if (project.getUuid() == null)
+                project.updateRandomUuid();
 
-        updateProject(project);
+            updateProject(project);
 
-        return project;
+            return project;
+        } finally {
+            prjMapLock.writeLock().unlock();
+        }
     }
 
     private void updateProject(ProjectInstance prj) throws IOException {
-        synchronized (prj) {
-            LinkedHashMap<String, String> overrideProps = prj.getOverrideKylinProps();
+        LinkedHashMap<String, String> overrideProps = prj.getOverrideKylinProps();
 
-            if (overrideProps != null) {
-                Iterator<Map.Entry<String, String>> iterator = overrideProps.entrySet().iterator();
+        if (overrideProps != null) {
+            Iterator<Map.Entry<String, String>> iterator = overrideProps.entrySet().iterator();
 
-                while (iterator.hasNext()) {
-                    Map.Entry<String, String> entry = iterator.next();
+            while (iterator.hasNext()) {
+                Map.Entry<String, String> entry = iterator.next();
 
-                    if (StringUtils.isAnyBlank(entry.getKey(), entry.getValue())) {
-                        throw new IllegalStateException("Property key/value must not be blank");
-                    }
+                if (StringUtils.isAnyBlank(entry.getKey(), entry.getValue())) {
+                    throw new IllegalStateException("Property key/value must not be blank");
                 }
             }
-
-            getStore().putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
-            projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
-            clearL2Cache();
         }
+
+        getStore().putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
+        projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
+        clearL2Cache();
     }
 
     private void removeProject(ProjectInstance proj) throws IOException {
@@ -297,29 +340,44 @@ public class ProjectManager {
     }
 
     public ProjectInstance addModelToProject(String modelName, String newProjectName) throws IOException {
-        removeModelFromProjects(modelName);
+        prjMapLock.writeLock().lock();
+        try {
+            removeModelFromProjects(modelName);
 
-        ProjectInstance prj = getProject(newProjectName);
-        if (prj == null) {
-            throw new IllegalArgumentException("Project " + newProjectName + " does not exist.");
+            ProjectInstance prj = getProject(newProjectName);
+            if (prj == null) {
+                throw new IllegalArgumentException("Project " + newProjectName + " does not exist.");
+            }
+            prj.addModel(modelName);
+            updateProject(prj);
+
+            return prj;
+        } finally {
+            prjMapLock.writeLock().unlock();
         }
-        prj.addModel(modelName);
-        updateProject(prj);
-
-        return prj;
     }
 
     public void removeModelFromProjects(String modelName) throws IOException {
-        for (ProjectInstance projectInstance : findProjectsByModel(modelName)) {
-            projectInstance.removeModel(modelName);
-            updateProject(projectInstance);
+        prjMapLock.writeLock().lock();
+        try {
+            for (ProjectInstance projectInstance : findProjectsByModel(modelName)) {
+                projectInstance.removeModel(modelName);
+                updateProject(projectInstance);
+            }
+        } finally {
+            prjMapLock.writeLock().unlock();
         }
     }
 
     public ProjectInstance moveRealizationToProject(RealizationType type, String realizationName, String newProjectName,
             String owner) throws IOException {
-        removeRealizationsFromProjects(type, realizationName);
-        return addRealizationToProject(type, realizationName, newProjectName, owner);
+        prjMapLock.writeLock().lock();
+        try {
+            removeRealizationsFromProjects(type, realizationName);
+            return addRealizationToProject(type, realizationName, newProjectName, owner);
+        } finally {
+            prjMapLock.writeLock().unlock();
+        }
     }
 
     private ProjectInstance addRealizationToProject(RealizationType type, String realizationName, String project,
@@ -342,105 +400,151 @@ public class ProjectManager {
     }
 
     public void removeRealizationsFromProjects(RealizationType type, String realizationName) throws IOException {
-        for (ProjectInstance projectInstance : findProjects(type, realizationName)) {
-            projectInstance.removeRealization(type, realizationName);
-            updateProject(projectInstance);
+        prjMapLock.writeLock().lock();
+        try {
+            for (ProjectInstance projectInstance : findProjects(type, realizationName)) {
+                projectInstance.removeRealization(type, realizationName);
+                updateProject(projectInstance);
+            }
+        } finally {
+            prjMapLock.writeLock().unlock();
         }
     }
 
     public ProjectInstance addTableDescToProject(String[] tableIdentities, String projectName) throws IOException {
-        TableMetadataManager metaMgr = getTableManager();
-        ProjectInstance projectInstance = getProject(projectName);
-        for (String tableId : tableIdentities) {
-            TableDesc table = metaMgr.getTableDesc(tableId, projectName);
-            if (table == null) {
-                throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
+        prjMapLock.writeLock().lock();
+        try {
+            TableMetadataManager metaMgr = getTableManager();
+            ProjectInstance projectInstance = getProject(projectName);
+            for (String tableId : tableIdentities) {
+                TableDesc table = metaMgr.getTableDesc(tableId, projectName);
+                if (table == null) {
+                    throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
+                }
+                projectInstance.addTable(table.getIdentity());
             }
-            projectInstance.addTable(table.getIdentity());
-        }
 
-        updateProject(projectInstance);
-        return projectInstance;
+            updateProject(projectInstance);
+            return projectInstance;
+        } finally {
+            prjMapLock.writeLock().unlock();
+        }
     }
 
     public void removeTableDescFromProject(String tableIdentities, String projectName) throws IOException {
-        TableMetadataManager metaMgr = getTableManager();
-        ProjectInstance projectInstance = getProject(projectName);
-        TableDesc table = metaMgr.getTableDesc(tableIdentities, projectName);
-        if (table == null) {
-            throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
-        }
+        prjMapLock.writeLock().lock();
+        try {
+            TableMetadataManager metaMgr = getTableManager();
+            ProjectInstance projectInstance = getProject(projectName);
+            TableDesc table = metaMgr.getTableDesc(tableIdentities, projectName);
+            if (table == null) {
+                throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
+            }
 
-        projectInstance.removeTable(table.getIdentity());
-        updateProject(projectInstance);
+            projectInstance.removeTable(table.getIdentity());
+            updateProject(projectInstance);
+        } finally {
+            prjMapLock.writeLock().unlock();
+        }
     }
 
     public ProjectInstance addExtFilterToProject(String[] filters, String projectName) throws IOException {
-        TableMetadataManager metaMgr = getTableManager();
-        ProjectInstance projectInstance = getProject(projectName);
-        for (String filterName : filters) {
-            ExternalFilterDesc extFilter = metaMgr.getExtFilterDesc(filterName);
-            if (extFilter == null) {
-                throw new IllegalStateException("Cannot find external filter '" + filterName + "' in metadata manager");
+        prjMapLock.writeLock().lock();
+        try {
+            TableMetadataManager metaMgr = getTableManager();
+            ProjectInstance projectInstance = getProject(projectName);
+            for (String filterName : filters) {
+                ExternalFilterDesc extFilter = metaMgr.getExtFilterDesc(filterName);
+                if (extFilter == null) {
+                    throw new IllegalStateException(
+                            "Cannot find external filter '" + filterName + "' in metadata manager");
+                }
+                projectInstance.addExtFilter(filterName);
             }
-            projectInstance.addExtFilter(filterName);
-        }
 
-        updateProject(projectInstance);
-        return projectInstance;
+            updateProject(projectInstance);
+            return projectInstance;
+        } finally {
+            prjMapLock.writeLock().unlock();
+        }
     }
 
     public void removeExtFilterFromProject(String filterName, String projectName) throws IOException {
-        TableMetadataManager metaMgr = getTableManager();
-        ProjectInstance projectInstance = getProject(projectName);
-        ExternalFilterDesc filter = metaMgr.getExtFilterDesc(filterName);
-        if (filter == null) {
-            throw new IllegalStateException("Cannot find external filter '" + filterName + "' in metadata manager");
-        }
+        prjMapLock.writeLock().lock();
+        try {
+            TableMetadataManager metaMgr = getTableManager();
+            ProjectInstance projectInstance = getProject(projectName);
+            ExternalFilterDesc filter = metaMgr.getExtFilterDesc(filterName);
+            if (filter == null) {
+                throw new IllegalStateException("Cannot find external filter '" + filterName + "' in metadata manager");
+            }
 
-        projectInstance.removeExtFilter(filterName);
-        updateProject(projectInstance);
+            projectInstance.removeExtFilter(filterName);
+            updateProject(projectInstance);
+        } finally {
+            prjMapLock.writeLock().unlock();
+        }
     }
 
     public ProjectInstance getProjectOfModel(String model) {
-        for (ProjectInstance prj : projectMap.values()) {
-            if (prj.getModels().contains(model))
-                return prj;
+        prjMapLock.readLock().lock();
+        try {
+            for (ProjectInstance prj : projectMap.values()) {
+                if (prj.getModels().contains(model))
+                    return prj;
+            }
+            throw new IllegalStateException("No project found for model " + model);
+        } finally {
+            prjMapLock.readLock().unlock();
         }
-        throw new IllegalStateException("No project found for model " + model);
     }
 
     public List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
-        List<ProjectInstance> result = Lists.newArrayList();
-        for (ProjectInstance prj : projectMap.values()) {
-            for (RealizationEntry entry : prj.getRealizationEntries()) {
-                if (entry.getType().equals(type) && entry.getRealization().equals(realizationName)) {
-                    result.add(prj);
-                    break;
+        prjMapLock.readLock().lock();
+        try {
+            List<ProjectInstance> result = Lists.newArrayList();
+            for (ProjectInstance prj : projectMap.values()) {
+                for (RealizationEntry entry : prj.getRealizationEntries()) {
+                    if (entry.getType().equals(type) && entry.getRealization().equals(realizationName)) {
+                        result.add(prj);
+                        break;
+                    }
                 }
             }
+            return result;
+        } finally {
+            prjMapLock.readLock().unlock();
         }
-        return result;
     }
 
     public List<ProjectInstance> findProjectsByModel(String modelName) {
-        List<ProjectInstance> projects = new ArrayList<ProjectInstance>();
-        for (ProjectInstance projectInstance : projectMap.values()) {
-            if (projectInstance.containsModel(modelName)) {
-                projects.add(projectInstance);
+        prjMapLock.readLock().lock();
+        try {
+            List<ProjectInstance> projects = new ArrayList<ProjectInstance>();
+            for (ProjectInstance projectInstance : projectMap.values()) {
+                if (projectInstance.containsModel(modelName)) {
+                    projects.add(projectInstance);
+                }
             }
+            return projects;
+        } finally {
+            prjMapLock.readLock().unlock();
         }
-        return projects;
     }
 
     public List<ProjectInstance> findProjectsByTable(String tableIdentity) {
-        List<ProjectInstance> projects = new ArrayList<ProjectInstance>();
-        for (ProjectInstance projectInstance : projectMap.values()) {
-            if (projectInstance.containsTable(tableIdentity)) {
-                projects.add(projectInstance);
+        prjMapLock.readLock().lock();
+        try {
+            List<ProjectInstance> projects = new ArrayList<ProjectInstance>();
+            for (ProjectInstance projectInstance : projectMap.values()) {
+                if (projectInstance.containsTable(tableIdentity)) {
+                    projects.add(projectInstance);
+                }
             }
+            return projects;
+        } finally {
+            prjMapLock.readLock().unlock();
         }
-        return projects;
     }
 
     public Map<String, ExternalFilterDesc> listExternalFilterDescs(String project) {

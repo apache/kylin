@@ -47,6 +47,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
+/**
+ * A general purpose resource store to persist small metadata, like JSON files.
+ * 
+ * In additional to raw bytes save and load, the store takes special care for concurrent modifications
+ * by using a timestamp based test-and-set mechanism to detect (and refuse) dirty writes.
+ */
 abstract public class ResourceStore {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceStore.class);
@@ -72,7 +78,7 @@ abstract public class ResourceStore {
 
     public static final String METASTORE_UUID_TAG = "/UUID";
 
-    private static final ConcurrentMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
+    private static final ConcurrentMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<>();
 
     private static ResourceStore createResourceStore(KylinConfig kylinConfig) {
         StorageURL metadataUrl = kylinConfig.getMetadataUrl();
@@ -125,7 +131,7 @@ abstract public class ResourceStore {
      */
     abstract protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException;
 
-    public String createMetaStoreUUID() throws IOException {
+    protected String createMetaStoreUUID() throws IOException {
         return UUID.randomUUID().toString();
     }
 
@@ -147,7 +153,7 @@ abstract public class ResourceStore {
     abstract protected boolean existsImpl(String resPath) throws IOException;
 
     /**
-     * Read a resource, return null in case of not found or is a folder
+     * Read a resource, return null in case of not found or is a folder.
      */
     final public <T extends RootPersistentEntity> T getResource(String resPath, Class<T> clz, Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);

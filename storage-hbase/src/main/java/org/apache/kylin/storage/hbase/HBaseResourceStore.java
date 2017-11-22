@@ -133,7 +133,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     /* override get meta store uuid method for backward compatibility */
     @Override
-    public String createMetaStoreUUID() throws IOException {
+    protected String createMetaStoreUUID() throws IOException {
         try (final Admin hbaseAdmin = HBaseConnection.get(metadataUrl).getAdmin()) {
             final String metaStoreName = metadataUrl.getIdentifier();
             final HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(metaStoreName));
