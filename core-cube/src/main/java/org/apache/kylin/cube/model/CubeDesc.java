@@ -701,7 +701,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public void validateAggregationGroupsCombination() {
-        int index = 0;
+        int index = 1;
 
         for (AggregationGroup agg : getAggregationGroups()) {
             try {
@@ -726,7 +726,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public void validateAggregationGroups() {
-        int index = 0;
+        int index = 1;
 
         for (AggregationGroup agg : getAggregationGroups()) {
             if (agg.getIncludes() == null) {

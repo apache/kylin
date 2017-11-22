@@ -55,7 +55,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             return;
         }
 
-        int index = 0;
+        int index = 1;
         for (AggregationGroup agg : cube.getAggregationGroups()) {
             if (agg.getIncludes() == null) {
                 context.addResult(ResultLevel.ERROR, "Aggregation group " + index + " 'includes' field not set");
