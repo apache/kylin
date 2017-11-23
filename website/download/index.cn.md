@@ -25,7 +25,7 @@ title: 下载
 Apache Kylin的旧版本可以从 [https://archive.apache.org/dist/kylin/](https://archive.apache.org/dist/kylin/) 下载。
 
 ## ODBC 驱动程序
-* [Kylin ODBC 驱动 v2.2.0](http://kylin.apache.org/download/KylinODBCDriver-2.2.0.zip)  （与所有 Kylin 版本兼容）
+* [Kylin ODBC 驱动 v2.1.0](http://kylin.apache.org/download/KylinODBCDriver-2.1.0.zip)  （与所有 Kylin 版本兼容）
 * [Kylin ODBC 驱动 v1.6](http://kylin.apache.org/download/KylinODBCDriver-1.6.zip)  （与所有 Kylin 版本兼容）
 * [Kylin ODBC 驱动 v1.5](http://kylin.apache.org/download/KylinODBCDriver-1.5.zip) 
 
