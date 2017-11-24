@@ -114,7 +114,13 @@ public class StreamingController extends BasicController {
         }
 
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
+        if(!streamingRequest.isSuccessful()){
+            return streamingRequest;
+        }
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDesc(streamingRequest);
+        if(!streamingRequest.isSuccessful()){
+            return streamingRequest;
+        }
         boolean saveStreamingSuccess = false, saveKafkaSuccess = false;
 
         try {
@@ -181,7 +187,13 @@ public class StreamingController extends BasicController {
     @ResponseBody
     public StreamingRequest updateStreamingConfig(@RequestBody StreamingRequest streamingRequest) throws JsonProcessingException {
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
+        if(!streamingRequest.isSuccessful()){
+            return streamingRequest;
+        }
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDesc(streamingRequest);
+        if(!streamingRequest.isSuccessful()){
+            return streamingRequest;
+        }
         String project = streamingRequest.getProject();
         if (streamingConfig == null) {
             return streamingRequest;
@@ -230,6 +242,7 @@ public class StreamingController extends BasicController {
         try {
             logger.debug("Saving TableDesc " + streamingRequest.getTableData());
             desc = JsonUtil.readValue(streamingRequest.getTableData(), TableDesc.class);
+            updateRequest(streamingRequest, true, null);
         } catch (JsonParseException e) {
             logger.error("The TableDesc definition is invalid.", e);
             updateRequest(streamingRequest, false, e.getMessage());
@@ -255,6 +268,7 @@ public class StreamingController extends BasicController {
         try {
             logger.debug("Saving StreamingConfig " + streamingRequest.getStreamingConfig());
             desc = JsonUtil.readValue(streamingRequest.getStreamingConfig(), StreamingConfig.class);
+            updateRequest(streamingRequest, true, null);
         } catch (JsonParseException e) {
             logger.error("The StreamingConfig definition is invalid.", e);
             updateRequest(streamingRequest, false, e.getMessage());
@@ -273,6 +287,7 @@ public class StreamingController extends BasicController {
         try {
             logger.debug("Saving KafkaConfig " + streamingRequest.getKafkaConfig());
             desc = JsonUtil.readValue(streamingRequest.getKafkaConfig(), KafkaConfig.class);
+            updateRequest(streamingRequest, true, null);
         } catch (JsonParseException e) {
             logger.error("The KafkaConfig definition is invalid.", e);
             updateRequest(streamingRequest, false, e.getMessage());
