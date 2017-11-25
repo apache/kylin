@@ -82,7 +82,7 @@
             <tr ng-if="cluster.newBroker">
               <td>
                 <div class="input-group">
-                  <input class="form-control" type="text" ng-model="cluster.newBroker.id" name="broker_id" placeholder="Input broker ID"/>
+                  <input class="form-control" type="text" ng-model="cluster.newBroker.id" name="broker_id" placeholder="Input broker ID" onInput="this.value=this.value.replace(/[^0-9]/g, '')"/>
                 </div>
               </td>
               <td>
@@ -92,7 +92,7 @@
               </td>
               <td>
                 <div class="input-group">
-                  <input class="form-control" type="text" ng-model="cluster.newBroker.port" name="broker_port" placeholder="Input broker port">
+                  <input class="form-control" type="text" ng-model="cluster.newBroker.port" name="broker_port" placeholder="Input broker port" onInput="this.value=this.value.replace(/[^0-9]/g, '')">
                 </div>
               </td>
               <td>
