@@ -21,7 +21,7 @@
 
 # (if your're deploying KYLIN on a powerful server and want to replace the default conservative settings)
 # uncomment following to for it to take effect
-export KYLIN_JVM_SETTINGS="-XX:+UseG1GC -Xms4g -Xmx4g -XX:G1HeapRegionSize=16m -XX:MaxPermSize=256M -XX:ReservedCodeCacheSize=128M -XX:+PrintFlagsFinal -XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy -XX:+UnlockDiagnosticVMOptions -XX:+G1SummarizeConcMark  -Xloggc:$KYLIN_HOME/logs/kylin.gc.$$  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=64M"
+export KYLIN_JVM_SETTINGS="-XX:+UseG1GC -Xms1g -Xmx4g -XX:G1HeapRegionSize=16m -XX:MaxPermSize=256M -XX:ReservedCodeCacheSize=128M -XX:+PrintFlagsFinal -XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy -XX:+UnlockDiagnosticVMOptions -XX:+G1SummarizeConcMark  -Xloggc:$KYLIN_HOME/logs/kylin.gc.$$  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=64M"
 #export KYLIN_JVM_SETTINGS="-XX:+UseG1GC -Xms24g -Xmx24g -XX:G1HeapRegionSize=16m -XX:MaxPermSize=256M -XX:ReservedCodeCacheSize=128M -XX:+PrintFlagsFinal -XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy -XX:+UnlockDiagnosticVMOptions -XX:+G1SummarizeConcMark  -Xloggc:$KYLIN_HOME/logs/kylin.gc.$$  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=64M"
 
 # uncomment following to for it to take effect(the values need adjusting to fit your env)
