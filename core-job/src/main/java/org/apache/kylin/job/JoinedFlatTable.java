@@ -85,7 +85,8 @@ public class JoinedFlatTable {
 
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir,
             String format) {
-        return generateCreateTableStatement(flatDesc, storageDfsDir, format, "|");
+        String fieldDelimiter = flatDesc.getDataModel().getConfig().getSourceFieldDelimiter();
+        return generateCreateTableStatement(flatDesc, storageDfsDir, format, fieldDelimiter);
     }
 
     public static String generateDropTableStatement(IJoinedFlatTableDesc flatDesc) {

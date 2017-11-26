@@ -27,9 +27,9 @@ public class SqlUtilTest {
     @Test
     public void testJdbcTypetoKylinDataType() {
         this.getClass().getClassLoader().toString();
-        Assert.assertEquals("double", SqlUtil.jdbcTypetoKylinDataType(Types.FLOAT));
-        Assert.assertEquals("varchar", SqlUtil.jdbcTypetoKylinDataType(Types.NVARCHAR));
-        Assert.assertEquals("any", SqlUtil.jdbcTypetoKylinDataType(Types.ARRAY));
+        Assert.assertEquals("double", SqlUtil.jdbcTypeToKylinDataType(Types.FLOAT));
+        Assert.assertEquals("varchar", SqlUtil.jdbcTypeToKylinDataType(Types.NVARCHAR));
+        Assert.assertEquals("any", SqlUtil.jdbcTypeToKylinDataType(Types.ARRAY));
     }
 
     @Test
