@@ -584,9 +584,12 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         for (InputSplit split : input.getSplits(job)) {
             mapInputBytes += split.getLength();
         }
+        
+        // 0 input bytes is possible when the segment range hits no partition on a partitioned hive table (KYLIN-2470) 
         if (mapInputBytes == 0) {
-            throw new IllegalArgumentException("Map input splits are 0 bytes, something is wrong!");
+            logger.warn("Map input splits are 0 bytes, something is wrong?");
         }
+        
         double totalMapInputMB = (double) mapInputBytes / 1024 / 1024;
         return totalMapInputMB;
     }
