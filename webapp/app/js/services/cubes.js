@@ -21,7 +21,7 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
     list: {method: 'GET', params: {}, isArray: true},
     getValidEncodings: {method: 'GET', params: {action:"validEncodings"}, isArray: false},
     getCube: {method: 'GET', params: {}, isArray: false},
-    getSql: {method: 'GET', params: {propName: 'segs', action: 'sql'}, isArray: false},
+    getSql: {method: 'GET', params: {action: 'sql'}, isArray: false},
     updateNotifyList: {method: 'PUT', params: {propName: 'notify_list'}, isArray: false},
     cost: {method: 'PUT', params: {action: 'cost'}, isArray: false},
     rebuildLookUp: {method: 'PUT', params: {propName: 'segs', action: 'refresh_lookup'}, isArray: false},

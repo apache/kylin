@@ -30,7 +30,7 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
     };
 
     $scope.getCubeSql = function (cube) {
-        CubeService.getSql({cubeId: cube.name, propValue: "null"}, function (sql) {
+        CubeService.getSql({cubeId: cube.name}, function (sql) {
             cube.sql = sql.sql;
         },function(e){
             if(e.data&& e.data.exception){
