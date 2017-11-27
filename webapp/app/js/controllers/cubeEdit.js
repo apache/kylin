@@ -282,6 +282,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
       $scope.cubeMetaFrame.model_name = $scope.cubeMetaFrame.name;
     }
 
+    VdmUtil.removeElementInArrayByValue($scope.cubeMetaFrame.auto_merge_time_ranges, 0);
     $scope.state.project = ProjectModel.getSelectedProject();
 //        delete $scope.cubeMetaFrame.project;
 
