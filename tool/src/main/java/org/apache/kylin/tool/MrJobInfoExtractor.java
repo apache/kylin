@@ -23,24 +23,19 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.yarn.conf.HAUtil;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.hadoop.yarn.util.RMHAUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.tool.common.HadoopConfExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,35 +74,10 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
     }
 
     private void extractRestCheckUrl() {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        final String yarnStatusCheckUrl = config.getYarnStatusCheckUrl();
-        Pattern pattern = Pattern.compile("(http://)([^:]*):([^/])*.*");
-        if (yarnStatusCheckUrl != null) {
-            Matcher m = pattern.matcher(yarnStatusCheckUrl);
-            if (m.matches()) {
-                jobHistoryUrlBase = m.group(1) + m.group(2) + ":19888";
-                yarnMasterUrlBase = m.group(1) + m.group(2) + ":" + m.group(3);
-            }
-        }
-        logger.info("kylin.engine.mr.yarn-check-status-url" + " is not set, read from hadoop configuration");
-
         Configuration conf = HadoopUtil.getCurrentConfiguration();
-        String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, conf);
-        if (HAUtil.isHAEnabled(conf)) {
-            YarnConfiguration yarnConf = new YarnConfiguration(conf);
-            String active = RMHAUtils.findActiveRMHAId(yarnConf);
-            rmWebHost = HAUtil.getConfValueForRMInstance(HAUtil.addSuffix(YarnConfiguration.RM_WEBAPP_ADDRESS, active), YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, yarnConf);
-        }
-        if (StringUtils.isEmpty(rmWebHost)) {
-            return;
-        }
-        if (!rmWebHost.startsWith("http://") && !rmWebHost.startsWith("https://")) {
-            rmWebHost = "http://" + rmWebHost;
-        }
-        Matcher m = pattern.matcher(rmWebHost);
-        Preconditions.checkArgument(m.matches(), "Yarn master URL not found.");
-        yarnMasterUrlBase = rmWebHost;
-        jobHistoryUrlBase = m.group(1) + HAUtil.getConfValueForRMInstance("mapreduce.jobhistory.webapp.address", m.group(2) + ":19888", conf);
+        yarnMasterUrlBase = HadoopConfExtractor.extractYarnMasterUrl(conf);
+        jobHistoryUrlBase = HadoopConfExtractor.extractJobHistoryUrl(yarnMasterUrlBase, conf);
+        logger.info("job history url base: " + jobHistoryUrlBase);
     }
 
     private String getHttpResponse(String url) {
