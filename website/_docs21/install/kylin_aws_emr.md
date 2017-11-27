@@ -64,9 +64,9 @@ Before start Kylin, you need do a couple of configurations:
 </property>
 ```
 
-- Use HDFS as "kylin.env.hdfs-working-dir"
+- Use HDFS as "kylin.env.hdfs-working-dir" (Recommended)
 
-EMR recommends to "use HDFS for intermediate data storage while the cluster is running and Amazon S3 only to input the initial data and output the final results". 
+EMR recommends to **"use HDFS for intermediate data storage while the cluster is running and Amazon S3 only to input the initial data and output the final results"**. Kylin's 'hdfs-working-dir' is for putting the intermediate data for Cube building, cuboid files and also some metadata files (like dictionary and table snapshots which are not good in HBase); so it is best to configure HDFS for this. 
 
 If using HDFS as Kylin working directory, you just leave configurations unchanged as EMR's default FS is HDFS:
 
@@ -74,19 +74,23 @@ If using HDFS as Kylin working directory, you just leave configurations unchange
 kylin.env.hdfs-working-dir=/kylin
 ```
 
-Before you shudown/restart the cluster, you can backup the data on HDFS to S3 with [S3DistCp](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/UsingEMR_s3distcp.html).
+Before you shudown/restart the cluster, you must backup the "/kylin" data on HDFS to S3 with [S3DistCp](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/UsingEMR_s3distcp.html), or you may lost data and couldn't recover the cluster later.
 
-- Use S3 as "kylin.env.hdfs-working-dir"
+- Use S3 as "kylin.env.hdfs-working-dir" 
 
-If you want to totally use S3 as storage (assume HBase is also on S3), configure the following 2 parameters:
+If you want to use S3 as storage (assume HBase is also on S3), you need configure the following parameters:
 
 ```
 kylin.env.hdfs-working-dir=s3://yourbucket/kylin
 kylin.storage.hbase.cluster-fs=s3://yourbucket
-
+kylin.source.hive.redistribute-flat-table=false
 ```
 
-The intermediate file and the HFile will all be written to S3. The build performance should be slower than HDFS. Make sure you have a good understanding about the difference between S3 and HDFS. 
+The intermediate file and the HFile will all be written to S3. The build performance would be slower than HDFS. Make sure you have a good understanding about the difference between S3 and HDFS. Read the following articles from AWS:
+
+[Input and Output Errors](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-troubleshoot-errors-io.html)
+[Are you having trouble loading data to or from Amazon S3 into Hive](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-troubleshoot-error-hive.html#emr-troubleshoot-error-hive-3)
+
 
 - Hadoop configurations
 
@@ -115,6 +119,7 @@ Some Hadoop configurations need be applied for better performance and data consi
 </property>
 
 ```
+
 
 - Create the working-dir folder if it doesn't exist
 
