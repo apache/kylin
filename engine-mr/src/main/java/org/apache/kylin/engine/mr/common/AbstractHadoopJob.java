@@ -656,4 +656,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return false;
     }
 
+    @Override
+    public void setConf(Configuration conf) {
+        Configuration healSickConf = HadoopUtil.healSickConfig(conf);
+        super.setConf(healSickConf);
+    }
 }
