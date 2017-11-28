@@ -22,8 +22,8 @@ source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 # source me
 hive_conf_dir="${KYLIN_HOME}/conf/kylin_hive_conf.xml"
 
-names=(`sed -n 's|<name>\(.*\)</name>|\1|p'  ${hive_conf_dir} | sed 's/ \+//g'`)
-values=(`sed -n 's|<value>\(.*\)</value>|\1|p'  ${hive_conf_dir} | sed 's/ \+//g'`)
+names=(`sed -n '/<!--/,/-->/!p' ${hive_conf_dir} | sed -n 's|<name>\(.*\)</name>|\1|p' | sed 's/ \+//g'`)
+values=(`sed -n '/<!--/,/-->/!p' ${hive_conf_dir} | sed -n 's|<value>\(.*\)</value>|\1|p' | sed 's/ \+//g'`)
 
 len_names=${#names[@]}
 len_values=${#values[@]}
