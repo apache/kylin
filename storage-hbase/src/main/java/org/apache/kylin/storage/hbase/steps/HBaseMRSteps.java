@@ -202,6 +202,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
 
         List<String> toDeletePaths = new ArrayList<>();
         toDeletePaths.addAll(getMergingHDFSPaths());
+        toDeletePaths.add(getHFilePath(jobId));
 
         HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
         step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HDFS);
@@ -216,6 +217,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
 
         List<String> toDeletePaths = new ArrayList<>();
         toDeletePaths.add(getFactDistinctColumnsPath(jobId));
+        toDeletePaths.add(getHFilePath(jobId));
 
         HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
         step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HBASE);
