@@ -56,9 +56,11 @@ $ ./dev-support/submit-patch.py -jid KYLIN-xxxxx -b master -srb
 
 ## Apply Patch
 * Committer will review Pull Requests and Patches in JIRA regarding correctness, performance, design, coding style, test coverage
-* Discuss and revise if necessary
+* Discuss and revise if necessary;
 * Finally committer merge code into target branch
-	* We use `git rebase` to ensure the merged result is a streamline of commits.
+	* For a git patch, use "git am -s -3 patch-file" command to apply;
+	* If it is from a github Pull Request, need add "This closes #<PR NUMBER>" as part of the commit messages. This will allow ASF Git bot to close the PR.
+	* Use `git rebase` to ensure the merged result is a streamline of commits.
 
 
 ## Making Document Changes
