@@ -28,8 +28,7 @@ public class KeywordDefaultDirtyHack implements QueryUtil.IQueryTransformer {
             return sql;
         }
         // KYLIN-2108, DEFAULT is hive default database, but a sql keyword too, needs quote
-        sql = sql.replace("DEFAULT.", "\"DEFAULT\".");
-        sql = sql.replace("default.", "\"default\".");
+        sql = sql.replaceAll("(?i)default\\.", "\"DEFAULT\".");
         sql = sql.replace("defaultCatalog.", "");
 
         return sql;
