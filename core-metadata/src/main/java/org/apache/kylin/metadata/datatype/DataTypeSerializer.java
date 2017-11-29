@@ -18,13 +18,14 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import com.google.common.collect.Maps;
-import org.apache.kylin.common.util.BytesSerializer;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
+
+import org.apache.kylin.common.util.BytesSerializer;
+
+import com.google.common.collect.Maps;
 
 /**
  * Note: the implementations MUST be thread-safe.
@@ -83,6 +84,10 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T>, java.
 
     /** Get an estimate of the average size in bytes of this kind of serialized data */
     abstract public int getStorageBytesEstimate();
+
+    protected double getStorageBytesEstimate(double count) {
+        return 0;
+    }
 
     /** An optional convenient method that converts a string to this data type (for dimensions) */
     public T valueOf(String str) {

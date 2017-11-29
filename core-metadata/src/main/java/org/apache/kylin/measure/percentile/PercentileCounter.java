@@ -78,6 +78,33 @@ public class PercentileCounter implements Serializable {
         return maxLength();
     }
 
+    /**
+     * the Percentile is non-fixed length that is affected by the count and compression mainly. so we collect some statistics
+     * about it and do some analysis, which get from test and the T-digest Paper
+     *
+     * As a result, we conclude its regular pattern by Stata , a tool help construct function model.
+     * 0 - 2 * compression it grows a linear function which is easily derived from T-digest Algorithm
+     * 2 * compression - 50000000 it grows roughly a log and the accuracy increases with the number of samples observed
+     *
+     * @param count
+     * @return
+     */
+    public double getBytesEstimate(double count) {
+        if (count <= 2 * compression)
+            return 16 + count * 5;
+
+        switch ((int) compression) {
+        case 100:
+            return 597.9494 * Math.log1p(count) - 2358.987;
+        case 1000:
+            return 5784.34 * Math.log1p(count) - 35030.97;
+        case 10000:
+            return 54313.96 * Math.log1p(count) - 438988.8;
+        default:
+            return 0.0;
+        }
+    }
+
     public int maxLength() {
         // 10KB for max length
         return 10 * 1024;

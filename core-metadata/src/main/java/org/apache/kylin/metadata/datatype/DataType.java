@@ -249,6 +249,10 @@ public class DataType implements Serializable {
         return DataTypeSerializer.create(this).getStorageBytesEstimate();
     }
 
+    public double getStorageBytesEstimate(double count) {
+        return DataTypeSerializer.create(this).getStorageBytesEstimate(count);
+    }
+
     public boolean isStringFamily() {
         return STRING_FAMILY.contains(name);
     }
