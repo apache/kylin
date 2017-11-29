@@ -287,10 +287,10 @@ public class ModelService extends BasicService {
     private String checkIfBreakExistingCubes(DataModelDesc dataModelDesc, String project) throws IOException {
         String modelName = dataModelDesc.getName();
         List<CubeInstance> cubes = cubeService.listAllCubes(null, project, modelName, true);
-        DataModelDesc originDataModelDesc = listAllModels(modelName, project, true).get(0);
-
+        List<DataModelDesc> historyModels = listAllModels(modelName, project, true);
+        
         StringBuilder checkRet = new StringBuilder();
-        if (cubes != null && cubes.size() != 0) {
+        if (cubes != null && cubes.size() != 0 && !historyModels.isEmpty()) {
             dataModelDesc.init(getConfig(), getTableManager().getAllTablesMap(project),
                     getDataModelManager().listDataModels(), false);
 
@@ -321,6 +321,7 @@ public class ModelService extends BasicService {
                 checkRet.append("\r\n");
             }
 
+            DataModelDesc originDataModelDesc = historyModels.get(0);
             if (!dataModelDesc.getRootFactTable().equals(originDataModelDesc.getRootFactTable()))
                 checkRet.append("Root fact table can't be modified. \r\n");
 
