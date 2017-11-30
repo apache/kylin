@@ -364,7 +364,7 @@ KylinApp
         };
 
         $scope.showSavePanel = function () {
-            $modal.open({
+            var modalInstance = $modal.open({
                 templateUrl: 'saveQueryModal.html',
                 controller: saveQueryController,
                 resolve: {
@@ -372,6 +372,11 @@ KylinApp
                         return $scope.curQuery;
                     }
                 }
+            });
+            modalInstance.result.then( function (result) {
+                $scope.listSavedQueries();
+            }, function (reason) {
+                $scope.listSavedQueries();
             });
         }
 
