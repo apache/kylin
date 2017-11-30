@@ -149,14 +149,20 @@
                                   ng-init="newMeasure.function.parameter.value = 1">
                                   <b>&nbsp;&nbsp;1</b>
                                 </span>
-                                  <!--!COUNT_DISTINCT-->
-                                <select class="form-control" chosen
-                                      ng-if="newMeasure.function.parameter.type == 'column'"
-                                      ng-model="newMeasure.function.parameter.value" required
-                                      ng-change="measureReturnTypeUpdate();"
-                                      ng-options="column as column for column in measureParamValueColumn" >
-                                <option value="">{{dataKylin.cube.cubeMSParamValueSelect}}</option>
-                              </select>
+
+
+                                <ui-select
+                                  ng-if="newMeasure.function.parameter.type == 'column'"
+                                  on-select="measureReturnTypeUpdate()"
+                                  on-remove="measureReturnTypeUpdate()"
+                                  ng-model="newMeasure.function.parameter.value"
+                                  >
+                                  <ui-select-match placeholder="Select Measure" style="overflow: auto;">{{$select.selected}}</ui-select-match>
+                                  <ui-select-choices repeat="column in measureParamValueColumn | filter:$select.search" style="word-break:break-all;">
+                                    <span ng-bind-html="column | highlight: $select.search"></span>
+                                  </ui-select-choices>
+                                </ui-select>
+
                             </div>
                             <label ng-if="newMeasure.function.parameter.type == 'column'&& newMeasure.function.expression !== 'EXTENDED_COLUMN'">
                               <input type="checkbox" ng-model="newMeasure.showDim" ng-change="measureParamValueUpdate();" />&nbsp;Also Show Dimensions
