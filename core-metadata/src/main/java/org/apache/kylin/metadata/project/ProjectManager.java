@@ -155,7 +155,7 @@ public class ProjectManager {
             return null;
         }
 
-        projectInstance.init();
+        projectInstance.init(config);
 
         projectMap.putLocal(projectInstance.getName(), projectInstance);
         clearL2Cache();

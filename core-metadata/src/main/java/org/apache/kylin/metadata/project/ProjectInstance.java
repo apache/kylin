@@ -27,6 +27,8 @@ import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -83,6 +85,8 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("override_kylin_properties")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private LinkedHashMap<String, String> overrideKylinProps;
+
+    private KylinConfigExt config;
 
     public String getResourcePath() {
         return concatResourcePath(name);
@@ -304,7 +308,7 @@ public class ProjectInstance extends RootPersistentEntity {
         this.overrideKylinProps = overrideKylinProps;
     }
 
-    public void init() {
+    public void init(KylinConfig config) {
         if (name == null)
             name = ProjectInstance.DEFAULT_PROJECT_NAME;
 
@@ -321,6 +325,12 @@ public class ProjectInstance extends RootPersistentEntity {
 
         if (StringUtils.isBlank(this.name))
             throw new IllegalStateException("Project name must not be blank");
+
+        this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
+    }
+
+    public KylinConfig getConfig() {
+        return config;
     }
 
     @Override

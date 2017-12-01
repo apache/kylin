@@ -98,6 +98,7 @@ import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.RequestUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
@@ -392,6 +393,10 @@ public class QueryService extends BasicService {
         if (StringUtils.isBlank(sqlRequest.getProject())) {
             throw new BadRequestException(msg.getEMPTY_PROJECT_NAME());
         }
+        ProjectInstance projectInstance = getProjectManager().getProject(sqlRequest.getProject());
+        if (projectInstance == null) {
+            throw new BadRequestException(msg.getPROJECT_NOT_FOUND());
+        }
 
         if (sqlRequest.getBackdoorToggles() != null)
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
@@ -405,6 +410,19 @@ public class QueryService extends BasicService {
             logger.info("The original query:  " + sql);
 
             final boolean isSelect = QueryUtil.isSelectStatement(sql);
+            final boolean isPushDownUpdateEnabled = kylinConfig.isPushDownEnabled()
+                    && kylinConfig.isPushDownUpdateEnabled();
+
+            if (!isSelect && !isPushDownUpdateEnabled) {
+                logger.debug("Directly return exception as the sql is unsupported, and query pushdown is disabled");
+                throw new BadRequestException(msg.getNOT_SUPPORTED_SQL());
+            }
+
+            if (!RequestUtil.openQueryRequest(projectInstance.getName(),
+                    projectInstance.getConfig().getQueryConcurrentRunningThresholdForProject())) {
+                logger.warn("Directly return exception as too many concurrent query requests for project:" + project);
+                throw new BadRequestException(msg.getQUERY_TOO_MANY_RUNNING());
+            }
 
             long startTime = System.currentTimeMillis();
 
@@ -417,19 +435,20 @@ public class QueryService extends BasicService {
                     checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
 
             if (queryCacheEnabled) {
-                sqlResponse = searchQueryInCache(sqlRequest);
+                try { // to deal with the case that cache searching throws exception
+                    sqlResponse = searchQueryInCache(sqlRequest);
+                } catch (Throwable e) {
+                    RequestUtil.closeQueryRequest(projectInstance.getName());
+                    throw e;
+                }
             }
 
             try {
                 if (null == sqlResponse) {
                     if (isSelect) {
                         sqlResponse = query(sqlRequest);
-                    } else if (kylinConfig.isPushDownEnabled() && kylinConfig.isPushDownUpdateEnabled()) {
+                    } else if (isPushDownUpdateEnabled) {
                         sqlResponse = update(sqlRequest);
-                    } else {
-                        logger.debug(
-                                "Directly return exception as the sql is unsupported, and query pushdown is disabled");
-                        throw new BadRequestException(msg.getNOT_SUPPORTED_SQL());
                     }
 
                     long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
@@ -481,6 +500,8 @@ public class QueryService extends BasicService {
                     Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
                     exceptionCache.put(new Element(sqlRequest.getCacheKey(), sqlResponse));
                 }
+            } finally {
+                RequestUtil.closeQueryRequest(projectInstance.getName());
             }
 
             logQuery(sqlRequest, sqlResponse);

@@ -334,6 +334,10 @@ public class Message {
         return "Not Supported SQL.";
     }
 
+    public String getQUERY_TOO_MANY_RUNNING() {
+        return "Too many concurrent query requests.";
+    }
+
     public String getTABLE_META_INCONSISTENT() {
         return "Table metadata inconsistent with JDBC meta.";
     }
