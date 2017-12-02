@@ -74,6 +74,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
 
             HiveCmdStep step = new HiveCmdStep();
             step.setCmd(hiveInitStatements + dropTableHql + createTableHql);
+            step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
             return step;
         }
 
@@ -171,7 +172,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
             logger.debug(String.format("sqoop cmd:%s", cmd));
             CmdStep step = new CmdStep();
             step.setCmd(cmd);
-            step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
+            step.setName(ExecutableConstants.STEP_NAME_SQOOP_TO_FLAT_HIVE_TABLE);
             return step;
         }
 

@@ -35,10 +35,8 @@ public class MySQLJdbcMetadata extends DefaultJdbcMetadata {
     @Override
     public List<String> listDatabases() throws SQLException {
         List<String> ret = new ArrayList<>();
-        try (Connection con = SqlUtil.getConnection(dbconf); ResultSet res = con.getMetaData().getCatalogs()) {
-            while (res.next()) {
-                ret.add(res.getString("TABLE_CAT"));
-            }
+        try (Connection con = SqlUtil.getConnection(dbconf)) {
+            ret.add(con.getCatalog());
         }
         return ret;
     }

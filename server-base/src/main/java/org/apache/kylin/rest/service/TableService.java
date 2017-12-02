@@ -119,7 +119,7 @@ public class TableService extends BasicService {
         SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
         for (String fullTableName : tables) {
             String[] parts = HadoopUtil.parseHiveTableName(fullTableName);
-            db2tables.put(parts[0].toUpperCase(), parts[1].toUpperCase());
+            db2tables.put(parts[0], parts[1]);
         }
 
         // load all tables first
@@ -128,9 +128,9 @@ public class TableService extends BasicService {
         for (Map.Entry<String, String> entry : db2tables.entries()) {
             Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue(), project);
             TableDesc tableDesc = pair.getFirst();
-            Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey()));
-            Preconditions.checkState(tableDesc.getName().equals(entry.getValue()));
-            Preconditions.checkState(tableDesc.getIdentity().equals(entry.getKey() + "." + entry.getValue()));
+            Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey().toUpperCase()));
+            Preconditions.checkState(tableDesc.getName().equals(entry.getValue().toUpperCase()));
+            Preconditions.checkState(tableDesc.getIdentity().equals(entry.getKey().toUpperCase() + "." + entry.getValue().toUpperCase()));
             TableExtDesc extDesc = pair.getSecond();
             Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getIdentity()));
             allMeta.add(pair);

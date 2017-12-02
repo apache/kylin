@@ -47,16 +47,11 @@ public class MySQLJdbcMetadataTest extends DefaultJdbcMetadataTest {
 
     @Test
     public void testListDatabases() throws SQLException {
-        ResultSet rs = mock(ResultSet.class);
-        when(rs.next()).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(rs.getString("TABLE_CAT")).thenReturn("catalog1").thenReturn("catalog2");
-
-        when(connection.getMetaData()).thenReturn(dbmd);
-        when(dbmd.getCatalogs()).thenReturn(rs);
+        when(connection.getCatalog()).thenReturn("catalog1");
 
         List<String> dbs = jdbcMetadata.listDatabases();
 
-        Assert.assertEquals(2, dbs.size());
+        Assert.assertEquals(1, dbs.size());
         Assert.assertEquals("catalog1", dbs.get(0));
     }
 
