@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
+import java.util.NoSuchElementException;
 import java.util.concurrent.BlockingQueue;
 
 public class RecordConsumeBlockingQueueController<T> extends ConsumeBlockingQueueController<T> {
@@ -31,25 +32,39 @@ public class RecordConsumeBlockingQueueController<T> extends ConsumeBlockingQueu
    
     private T currentObject = null;
     private volatile boolean ifEnd = false;
-    private volatile boolean cut = false;
-    private long outputRowCountCut = 0L;
+    private volatile boolean ifCut = false;
 
     @Override
     public boolean hasNext() {
         if (currentObject != null) {
-            return hasNext(currentObject);
+            return true;
         }
-        if (!super.hasNext()) {
-            return false;
+        if (ifCut) {
+            if (!super.hasNextInBuffer()) {
+                return false;
+            }
+        } else {
+            if (!super.hasNext()) {
+                return false;
+            }
         }
+
         currentObject = super.next();
-        return hasNext(currentObject);
+        if (inputConverterUnit.ifEnd(currentObject)) {
+            ifEnd = true;
+            return false;
+        } else if (inputConverterUnit.ifCut(currentObject)) {
+            ifCut = true;
+            currentObject = null;
+            return hasNext();
+        }
+        return true;
     }
 
     @Override
     public T next() {
-        if (ifEnd())
-            throw new IllegalStateException();
+        if (ifEnd() || currentObject == null)
+            throw new NoSuchElementException();
 
         T result = currentObject;
         currentObject = null;
@@ -58,18 +73,6 @@ public class RecordConsumeBlockingQueueController<T> extends ConsumeBlockingQueu
 
     public boolean ifEnd() {
         return ifEnd;
-    }
-
-    private boolean hasNext(T object) {
-        if (inputConverterUnit.ifEnd(object)) {
-            ifEnd = true;
-            return false;
-        }else if(cut){
-            return false;
-        }else if(inputConverterUnit.ifCut(object)){
-            return false;
-        }
-        return true;
     }
     
     public static <T> RecordConsumeBlockingQueueController<T> getQueueController(InputConverterUnit<T> inputConverterUnit, BlockingQueue<T> input){
@@ -81,11 +84,6 @@ public class RecordConsumeBlockingQueueController<T> extends ConsumeBlockingQueu
     }
 
     public void forceCutPipe() {
-        cut = true;
-        outputRowCountCut = getOutputRowCount();
-    }
-
-    public long getOutputRowCountAfterCut() {
-        return getOutputRowCount() - outputRowCountCut;
+        ifCut = true;
     }
 }
