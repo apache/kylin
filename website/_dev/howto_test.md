@@ -18,7 +18,7 @@ In general, there should be unit tests to cover individual classes; there must b
     * As the name indicates, the script is only for hdp 2.2.4.2, but you get the idea of how integration test run from it.
     * The integration tests start from generate random data, then build cube, merge cube, and finally query the result and compare to H2 DB.
     * The integration tests take one to two hours to complete.
-* `nohup dev-support/test_all_against_hdp_2_4_0_0_169.sh < /dev/null 2>&1 > nohup.out` runs IT in an unattended mode.
+* `nohup dev-support/test_all_against_hdp_2_4_0_0_169.sh < /dev/null 2>&1 > nohup.out &` runs IT in an unattended mode.
 
 ## Test v1.3 and below
 
