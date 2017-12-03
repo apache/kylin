@@ -190,6 +190,9 @@ public class DeployUtil {
     }
 
     private static void deployTables(String modelName) throws Exception {
+        // the special VIEW_SELLER_TYPE_DIM is a wrapper of TABLE_SELLER_TYPE_DIM_TABLE
+        final String VIEW_SELLER_TYPE_DIM = "EDW.TEST_SELLER_TYPE_DIM";
+        final String TABLE_SELLER_TYPE_DIM_TABLE = "EDW.TEST_SELLER_TYPE_DIM_TABLE";
 
         TableMetadataManager metaMgr = TableMetadataManager.getInstance(config());
         DataModelManager modelMgr = DataModelManager.getInstance(config());
@@ -205,6 +208,8 @@ public class DeployUtil {
                 TABLE_NAMES.add(identity);
             }
         }
+        TABLE_NAMES.add(TABLE_SELLER_TYPE_DIM_TABLE); // the wrapper view VIEW_SELLER_TYPE_DIM need this table
+        
         // scp data files, use the data from hbase, instead of local files
         File tempDir = Files.createTempDir();
         String tempDirAbsPath = tempDir.getAbsolutePath();
@@ -239,12 +244,11 @@ public class DeployUtil {
         // load data to hive tables
         // LOAD DATA LOCAL INPATH 'filepath' [OVERWRITE] INTO TABLE tablename
         for (String tablename : TABLE_NAMES) {
+            logger.info(String.format("load data into %s", tablename));
             sampleDataDeployer.loadSampleData(tablename, tempDirAbsPath);
         }
         
-        //TODO create the view automatically here
-        final String VIEW_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
-        final String TABLE_SELLER_TYPE_DIM_TABLE = "edw.test_seller_type_dim_table";
+        // create the view automatically here
         sampleDataDeployer.createWrapperView(TABLE_SELLER_TYPE_DIM_TABLE, VIEW_SELLER_TYPE_DIM);
     }
 }
