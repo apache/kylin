@@ -20,7 +20,7 @@ Install following tools before you add or edit documentation:
 	* `gem install jekyll jekyll-multiple-languages kramdown rouge`  
 	* __Note__: Some specific version of jekyll and jekyll-multiple-languages does not work together (I got a "undefined method" error with jekyll 3.0.1 and jekyll-multiple-languages 2.0.3). In that case, `jekyll 2.5.3` and `jekyll-multiple-languages 1.0.8` is the known working version.
         * eg. Use `gem install jekyll --version "=2.5.3"` to install a specific version.
-	
+	* __Note__: For Mac user, if gem install raise error like this 'ERROR:  While executing gem ... (Gem::FilePermissionError)'. To solve this problem you can use 'brew install ruby', then restart you terminal.
 3. And optionally any markdown editor you prefer
 
 Below is a gem list that works. Stick to these versions if jekyll installation becomes a problem.
@@ -40,6 +40,35 @@ json (1.8.1)
 kramdown (1.9.0)
 ...
 rouge (1.10.1)
+...
+```
+
+## Use Docker for document compile
+
+The latest kylin release provides dockerfile, to reduce build complexity using docker and Makefile can call docker command.
+
+```
+$ pwd
+/Users/<username>/kylin/website
+$ make docker.build
+docker build -f Dockerfile -t kylin-document:latest .
+Sending build context to Docker daemon  82.44MB
+Step 1/3 : FROM jekyll/jekyll:2.5.3
+ ---> e81842c29599
+Step 2/3 : RUN gem install jekyll-multiple-languages -v 1.0.11
+ ---> Using cache
+ ---> e9e8b0f1d388
+Step 3/3 : RUN gem install rouge -v 3.0.0
+ ---> Using cache
+ ---> 1bd42c6b93c0
+Successfully built 1bd42c6b93c0
+Successfully tagged kylin-document:latest
+$ make runserver
+docker run --volume="/Users/<username>/kylin/website:/srv/jekyll" -p 4000:4000 --rm -it kylin-document:latest jekyll server --watch
+Configuration file: /srv/jekyll/_config.yml
+            Source: /srv/jekyll
+       Destination: /srv/jekyll/_site
+      Generating...
 ...
 ```
 
