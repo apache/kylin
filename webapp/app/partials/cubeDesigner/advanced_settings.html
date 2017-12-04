@@ -33,7 +33,15 @@
                  class="table table-hover list">
             <tr class="row">
               <th class="col-xs-1">ID</th>
-              <th class="col-xs-11">Aggregation Groups</th>
+              <th class="col-xs-3">
+                <span>Aggregation Groups</span>
+                <span style="margin-left:42px">
+                  <i kylinpopover placement="left" title="Max Dimension Combination" template="dimCapTip.html" class="fa fa-info-circle"></i>
+                  Max Dimension Combination:
+                  <input onInput="this.value=this.value.replace(/[^0-9]/g, '')" type="text" ng-model="dim_cap" ng-change="changeDimCap(dim_cap)" ng-disabled="state.mode !== 'edit'" style="margin-left:5px; width:20px;">
+                </span>
+              </th>
+              <th></th>
               <th ng-if="state.mode=='edit'" class="col-xs-1"></th>
             </tr>
 
@@ -580,6 +588,14 @@
    </ng-form>
  </div>
 
+<script type="text/ng-template" id="dimCapTip.html">
+  <div>
+    <ol style="font-size:12px;">
+      <li>Dimension limitations mean max dimensions may be contained within a group of SQL queries.</li>
+      <li>In a set of queries, if each query required the number of dimensions is not more than five, you can set 5 here.</li>
+    </ol>
+  </div>
+</script>
 <script type="text/ng-template" id="rowkeyTip.html">
   <div>
     <h4>Shard By this column?</h4>

@@ -23,6 +23,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
 
   var needLengthKeyList=cubeConfig.needSetLengthEncodingList;
   $scope.convertedRowkeys = [];
+  $scope.dim_cap = $scope.cubeMetaFrame.aggregation_groups.length > 0 && $scope.cubeMetaFrame.aggregation_groups[0].select_rule.dim_cap ? $scope.cubeMetaFrame.aggregation_groups[0].select_rule.dim_cap : 0;
   angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
     item.encoding=$scope.removeVersion(item.encoding);
     var _valueLength;
@@ -104,6 +105,11 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   $scope.sortableOptions = {
     stop:$scope.resortRowkey
   };
+  $scope.changeDimCap  = function (dim_cap) {
+    angular.forEach($scope.cubeMetaFrame.aggregation_groups, function (agg) {
+      agg.select_rule.dim_cap = dim_cap
+    })
+  }
 
   $scope.addNewHierarchy = function(grp){
     grp.select_rule.hierarchy_dims.push([]);
