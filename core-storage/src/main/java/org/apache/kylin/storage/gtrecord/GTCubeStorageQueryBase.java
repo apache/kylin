@@ -39,6 +39,7 @@ import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.gridtable.StorageLimitLevel;
 import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.metadata.filter.CaseTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -143,7 +144,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
         // exactAggregation mean: needn't aggregation at storage and query engine both.
         boolean exactAggregation = isExactAggregation(context, cuboid, groups, otherDimsD, singleValuesD,
-                derivedPostAggregation, sqlDigest.aggregations);
+                derivedPostAggregation, sqlDigest.aggregations, sqlDigest.aggrSqlCalls);
         context.setExactAggregation(exactAggregation);
 
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
@@ -518,7 +519,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     private boolean isExactAggregation(StorageContext context, Cuboid cuboid, Collection<TblColRef> groups,
             Set<TblColRef> othersD, Set<TblColRef> singleValuesD, Set<TblColRef> derivedPostAggregation,
-            Collection<FunctionDesc> functionDescs) {
+            Collection<FunctionDesc> functionDescs, List<SQLDigest.SQLCall> aggrSQLCalls) {
         if (context.isNeedStorageAggregation()) {
             logger.info("exactAggregation is false because need storage aggregation");
             return false;
@@ -547,6 +548,12 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         for (FunctionDesc functionDesc : functionDescs) {
             if (functionDesc.isDimensionAsMetric()) {
                 logger.info("exactAggregation is false because has DimensionAsMetric");
+                return false;
+            }
+        }
+        for (SQLDigest.SQLCall aggrSQLCall : aggrSQLCalls) {
+            if (aggrSQLCall.function.equals(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT)) {
+                logger.info("exactAggregation is false because has INTERSECT_COUNT");
                 return false;
             }
         }
