@@ -48,7 +48,7 @@ public class ConsumeBlockingQueueController<T> implements Iterator<T> {
         if (hasException) {
             return false;
         }
-        if (hasNextInBuffer()) {
+        if (internalIT.hasNext()) {
             return true;
         } else {
             batchBuffer.clear();
@@ -72,10 +72,6 @@ public class ConsumeBlockingQueueController<T> implements Iterator<T> {
     @Override
     public void remove() {
         throw new UnsupportedOperationException();
-    }
-
-    protected boolean hasNextInBuffer() {
-        return internalIT.hasNext();
     }
 
     public void findException() {
