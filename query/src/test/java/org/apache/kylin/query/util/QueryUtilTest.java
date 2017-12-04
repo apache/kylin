@@ -100,6 +100,18 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testForceLimit() {
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.query.force-limit", "10");
+        String sql1 = "select   * \nfrom DEFAULT.TEST_KYLIN_FACT";
+        String result = QueryUtil.massageSql(sql1, "default", 0, 0, "DEFAULT");
+        Assert.assertEquals("select   * \nfrom DEFAULT.TEST_KYLIN_FACT\nLIMIT 10", result);
+
+        String sql2 = "select   2 * 8 from DEFAULT.TEST_KYLIN_FACT";
+        result = QueryUtil.massageSql(sql2, "default", 0, 0, "DEFAULT");
+        Assert.assertEquals("select   2 * 8 from DEFAULT.TEST_KYLIN_FACT", result);
+    }
+
+    @Test
     public void testRemoveCommentInSql() {
 
         String originSql = "select count(*) from test_kylin_fact where price > 10.0";

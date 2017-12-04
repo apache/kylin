@@ -64,7 +64,7 @@ public class QueryUtil {
 
         // https://issues.apache.org/jira/browse/KYLIN-2649
         if (kylinConfig.getForceLimit() > 0 && !sql.toLowerCase().contains("limit")
-                && sql.toLowerCase().contains("*")) {
+                && sql.toLowerCase().matches("^select\\s+\\*\\p{all}*")) {
             sql += ("\nLIMIT " + kylinConfig.getForceLimit());
         }
 
