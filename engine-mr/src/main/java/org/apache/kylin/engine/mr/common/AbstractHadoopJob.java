@@ -468,7 +468,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
     }
 
-    public static KylinConfig loadKylinConfigFromHdfs(String uri) {
+    public static KylinConfig loadKylinConfigFromHdfs(SerializableConfiguration conf, String uri) {
+        HadoopUtil.setCurrentConfiguration(conf.get());
+
         if (uri == null)
             throw new IllegalArgumentException("meta url should not be null");
 
