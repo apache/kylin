@@ -89,12 +89,11 @@ public class ITDoggedCubeBuilderTest extends LocalFileMetadataTestCase {
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
         DoggedCubeBuilder doggedBuilder = new DoggedCubeBuilder(cube.getCuboidScheduler(), flatDesc, dictionaryMap);
         doggedBuilder.setConcurrentThreads(THREADS);
-        doggedBuilder.setSplitRowThreshold(SPLIT_ROWS);
         FileRecordWriter doggedResult = new FileRecordWriter();
 
         {
             Future<?> future = executorService.submit(doggedBuilder.buildAsRunnable(queue, doggedResult));
-            ITInMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
+            ITInMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed, SPLIT_ROWS);
             future.get();
             doggedResult.close();
         }
@@ -110,7 +109,7 @@ public class ITDoggedCubeBuilderTest extends LocalFileMetadataTestCase {
             inmemResult.close();
         }
 
-        fileCompare(doggedResult.file, inmemResult.file);
+        fileCompare(inmemResult.file, doggedResult.file);
         doggedResult.file.delete();
         inmemResult.file.delete();
     }

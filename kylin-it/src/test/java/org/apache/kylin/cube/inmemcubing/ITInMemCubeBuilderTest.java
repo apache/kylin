@@ -151,6 +151,11 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
 
     static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<String[]> queue, int count,
             long randSeed) throws IOException, InterruptedException {
+        feedData(cube, flatTable, queue, count, randSeed, Integer.MAX_VALUE);
+    }
+
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<String[]> queue, int count,
+            long randSeed, int splitRowThreshold) throws IOException, InterruptedException {
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
         int nColumns = flatDesc.getAllColumns().size();
 
@@ -178,6 +183,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
             rand.setSeed(randSeed);
 
         // output with random data
+        int countOfLastSplit = 0;
         for (; count > 0; count--) {
             String[] row = new String[nColumns];
             for (int i = 0; i < nColumns; i++) {
@@ -185,6 +191,13 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
                 row[i] = candidates[rand.nextInt(candidates.length)];
             }
             queue.put(row);
+
+            // put cut row if possible
+            countOfLastSplit++;
+            if (countOfLastSplit >= splitRowThreshold) {
+                queue.put(InputConverterUnitForRawData.CUT_ROW);
+                countOfLastSplit = 0;
+            }
         }
         queue.put(InputConverterUnitForRawData.END_ROW);
     }

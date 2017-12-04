@@ -50,7 +50,6 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(DoggedCubeBuilder.class);
 
-    private int splitRowThreshold = Integer.MAX_VALUE;
     private int unitRows = ConsumeBlockingQueueController.DEFAULT_BATCH_SIZE;
 
     public DoggedCubeBuilder(CuboidScheduler cuboidScheduler, IJoinedFlatTableDesc flatDesc,
@@ -60,11 +59,6 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
         // check memory more often if a single row is big
         if (cubeDesc.hasMemoryHungryMeasures())
             unitRows /= 10;
-    }
-
-    public void setSplitRowThreshold(int rowThreshold) {
-        this.splitRowThreshold = rowThreshold;
-        this.unitRows = Math.min(unitRows, rowThreshold);
     }
 
     @Override
@@ -80,6 +74,9 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
         public <T> void build(BlockingQueue<T> input, InputConverterUnit<T> inputConverterUnit, ICuboidWriter output)
                 throws IOException {
+            final RecordConsumeBlockingQueueController<T> inputController = RecordConsumeBlockingQueueController
+                    .getQueueController(inputConverterUnit, input, unitRows);
+
             final List<SplitThread> splits = new ArrayList<SplitThread>();
             final Merger merger = new Merger();
 
@@ -88,8 +85,11 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
             try {
                 while (true) {
-                    SplitThread last = new SplitThread(splits.size() + 1, RecordConsumeBlockingQueueController
-                            .getQueueController(inputConverterUnit, input, unitRows));
+                    if (inputController.ifEnd()) {
+                        break;
+                    }
+
+                    SplitThread last = new SplitThread(splits.size() + 1, inputController);
                     splits.add(last);
 
                     last.start();
@@ -99,9 +99,6 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                     last.join();
 
                     checkException(splits);
-                    if (last.inputController.ifEnd()) {
-                        break;
-                    }
                 }
 
                 logger.info("Dogged Cube Build splits complete, took " + (System.currentTimeMillis() - start) + " ms");

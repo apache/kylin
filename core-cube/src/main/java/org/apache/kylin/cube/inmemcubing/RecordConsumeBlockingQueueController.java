@@ -31,24 +31,34 @@ public class RecordConsumeBlockingQueueController<T> extends ConsumeBlockingQueu
    
     private T currentObject = null;
     private volatile boolean ifEnd = false;
-    private volatile boolean cut = false;
-    private long outputRowCountCut = 0L;
 
     @Override
-    public boolean hasNext() {
+    public boolean hasNext() { // should be idempotent
+        if (ifEnd) {
+            return false;
+        }
         if (currentObject != null) {
-            return hasNext(currentObject);
+            return true;
         }
         if (!super.hasNext()) {
             return false;
         }
         currentObject = super.next();
-        return hasNext(currentObject);
+
+        if (inputConverterUnit.ifEnd(currentObject)) {
+            ifEnd = true;
+            return false;
+        } else if (inputConverterUnit.ifCut(currentObject)) {
+            currentObject = null;
+            hasNext();
+            return false;
+        }
+        return true;
     }
 
     @Override
     public T next() {
-        if (ifEnd())
+        if (ifEnd() || currentObject == null)
             throw new IllegalStateException();
 
         T result = currentObject;
@@ -59,18 +69,6 @@ public class RecordConsumeBlockingQueueController<T> extends ConsumeBlockingQueu
     public boolean ifEnd() {
         return ifEnd;
     }
-
-    private boolean hasNext(T object) {
-        if (inputConverterUnit.ifEnd(object)) {
-            ifEnd = true;
-            return false;
-        }else if(cut){
-            return false;
-        }else if(inputConverterUnit.ifCut(object)){
-            return false;
-        }
-        return true;
-    }
     
     public static <T> RecordConsumeBlockingQueueController<T> getQueueController(InputConverterUnit<T> inputConverterUnit, BlockingQueue<T> input){
         return new RecordConsumeBlockingQueueController<>(inputConverterUnit, input, DEFAULT_BATCH_SIZE);
@@ -78,14 +76,5 @@ public class RecordConsumeBlockingQueueController<T> extends ConsumeBlockingQueu
     
     public static <T> RecordConsumeBlockingQueueController<T> getQueueController(InputConverterUnit<T> inputConverterUnit, BlockingQueue<T> input, int batchSize){
         return new RecordConsumeBlockingQueueController<>(inputConverterUnit, input, batchSize);
-    }
-
-    public void forceCutPipe() {
-        cut = true;
-        outputRowCountCut = getOutputRowCount();
-    }
-
-    public long getOutputRowCountAfterCut() {
-        return getOutputRowCount() - outputRowCountCut;
     }
 }

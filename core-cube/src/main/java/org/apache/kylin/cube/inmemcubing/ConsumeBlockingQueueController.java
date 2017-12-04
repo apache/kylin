@@ -78,7 +78,7 @@ public class ConsumeBlockingQueueController<T> implements Iterator<T> {
         hasException = true;
     }
 
-    public long getOutputRowCount() {
+    public int getOutputRowCount() {
         return outputRowCount.get();
     }
 }
