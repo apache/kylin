@@ -81,14 +81,18 @@ public class MeasureCodec implements java.io.Serializable {
     }
 
     public int[] getPeekLength(ByteBuffer buf) {
-        int[] length = new int[nMeasures];
+        int[] result = new int[nMeasures];
+        getPeekLength(buf, result);
+        return result;
+    }
+
+    public void getPeekLength(ByteBuffer buf, int[] result) {
         int offset = 0;
         for (int i = 0; i < nMeasures; i++) {
-            length[i] = serializers[i].peekLength(buf);
-            offset += length[i];
+            result[i] = serializers[i].peekLength(buf);
+            offset += result[i];
             buf.position(offset);
         }
-        return length;
     }
 
     public void decode(ByteBuffer buf, Object[] result) {
@@ -96,6 +100,10 @@ public class MeasureCodec implements java.io.Serializable {
         for (int i = 0; i < nMeasures; i++) {
             result[i] = serializers[i].deserialize(buf);
         }
+    }
+    
+    public Object decode(ByteBuffer buf, int index) {
+        return serializers[index].deserialize(buf);
     }
 
 }

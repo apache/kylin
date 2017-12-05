@@ -179,9 +179,6 @@ public class TupleFilterSerializer {
         case ISNOTNULL:
             filter = new CompareTupleFilter(op);
             break;
-        case EXTRACT:
-            filter = new ExtractTupleFilter(op);
-            break;
         case CASE:
             filter = new CaseTupleFilter();
             break;

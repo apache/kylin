@@ -29,7 +29,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -278,7 +277,7 @@ public class RestClient {
         HashMap<String, String> paraMap = new HashMap<String, String>();
         paraMap.put("sql", sql);
         paraMap.put("project", project);
-        String jsonMsg = new ObjectMapper().writeValueAsString(paraMap);
+        String jsonMsg = JsonUtil.writeValueAsString(paraMap);
         post.setEntity(new StringEntity(jsonMsg, "UTF-8"));
         HttpResponse response = client.execute(post);
         return response;
@@ -328,12 +327,29 @@ public class RestClient {
         return content;
     }
 
+    public void updateCube(String project, String cubeName, String cubeDescData) throws IOException {
+        HttpPut put = newPut(baseUrl + "/cubes");
+        HashMap<String, String> paraMap = new HashMap<>();
+        paraMap.put("project", project);
+        paraMap.put("cubeName", cubeName);
+        paraMap.put("cubeDescData", cubeDescData);
+        put.setEntity(new StringEntity(JsonUtil.writeValueAsString(paraMap), "UTF-8"));
+
+        HttpResponse response = client.execute(put);
+        HashMap respBody = dealResponse(response);
+        boolean success = (boolean) respBody.get("successful");
+        String errorMessage = (String) respBody.get("message");
+        if (!success) {
+            throw new IOException("Failed to edit cube: " + errorMessage);
+        }
+    }
+
     private HashMap dealResponse(HttpResponse response) throws IOException {
         if (response.getStatusLine().getStatusCode() != 200) {
             throw new IOException("Invalid response " + response.getStatusLine().getStatusCode());
         }
         String result = getContent(response);
-        HashMap resultMap = new ObjectMapper().readValue(result, HashMap.class);
+        HashMap resultMap = JsonUtil.readValue(result, HashMap.class);
         return resultMap;
     }
 

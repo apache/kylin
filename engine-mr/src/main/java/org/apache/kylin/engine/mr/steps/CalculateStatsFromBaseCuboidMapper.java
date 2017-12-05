@@ -146,7 +146,7 @@ public class CalculateStatsFromBaseCuboidMapper extends KylinMapper<Text, Text, 
             Hasher hc = hf.newHasher();
             String colValue = row[i];
             if (colValue != null) {
-                rowHashCodes[i] = hc.putString(colValue).hash().asBytes();
+                rowHashCodes[i] = hc.putUnencodedChars(colValue).hash().asBytes();
             } else {
                 rowHashCodes[i] = hc.putInt(0).hash().asBytes();
             }
@@ -170,7 +170,7 @@ public class CalculateStatsFromBaseCuboidMapper extends KylinMapper<Text, Text, 
             String colValue = row[i];
             if (colValue == null)
                 colValue = "0";
-            byte[] bytes = hc.putString(colValue).hash().asBytes();
+            byte[] bytes = hc.putUnencodedChars(colValue).hash().asBytes();
             rowHashCodesLong[i] = (Bytes.toLong(bytes) + i);//add column ordinal to the hash value to distinguish between (a,b) and (b,a)
         }
 

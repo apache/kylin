@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.measure.MeasureAggregator;
@@ -203,12 +204,12 @@ public class AggregationCacheMemSizeTest {
             if ((i + 1) % reportInterval == 0) {
                 stopwatch.start();
                 long estimateBytes = GTAggregateScanner.estimateSizeOfAggrCache(key, values, map.size());
-                estimateMillis += stopwatch.elapsedMillis();
+                estimateMillis += stopwatch.elapsed(TimeUnit.MILLISECONDS);
                 stopwatch.reset();
 
                 stopwatch.start();
                 long actualBytes = meter.measureDeep(map);
-                actualMillis += stopwatch.elapsedMillis();
+                actualMillis += stopwatch.elapsed(TimeUnit.MILLISECONDS);
                 stopwatch.reset();
 
                 System.out.printf(Locale.ROOT, "%,15d %,15d %,15d %,15d %,15d\n", map.size(), estimateBytes,

@@ -385,6 +385,27 @@
             </div>
           </div>
         </div>
+
+        <!--Cube Storage-->
+        <div class="form-group large-popover" style="margin-bottom:30px;">
+          <h3 style="margin-left:42px;margin-bottom:30px;">Cube Storage  <i kylinpopover placement="right" title="Cube Storage" template="CubeStorageTip.html" class="fa fa-info-circle"></i></h3>
+          <div class="row" style="margin-left:42px">
+            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Storage Type :</b></label>
+            <div class="col-xs-12 col-sm-6">
+              <select style="width: 100%" chosen
+                      ng-model="cubeMetaFrame.storage_type"
+                      ng-if="state.mode=='edit'"
+                      ng-disabled="instance.segments.length>0"
+                      ng-options="et.value as et.name for et in cubeConfig.storageType">
+                <option value="">--Select Storage Type--</option>
+              </select>
+              <span ng-if="state.mode=='view'&&cubeMetaFrame.storage_type==2">HBase</span>
+              <span ng-if="state.mode=='view'&&cubeMetaFrame.storage_type==5">Druid</span>
+            </div>
+          </div>
+        </div>
+
+
         <div class="form-group large-popover">
           <h3 style="margin-left:42px">Advanced Dictionaries  <i kylinpopover placement="right" title="Advanced Dictionaries" template="AdvancedDictionariesTip.html" class="fa fa-info-circle"></i></h3>
           <div style="margin-left:42px">
@@ -746,5 +767,13 @@
 <script type="text/ng-template" id="AdvanceSnapshotTableTip.html">
   <div>
     <h4>Advance snapshot design for global lookup table and provide different storage type.</h4>
+  </div>
+</script>
+
+<script type="text/ng-template" id="CubeStorageTip.html" >
+  <div>
+    <h4>
+      Select cube storage.
+    </h4>
   </div>
 </script>

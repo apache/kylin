@@ -105,7 +105,7 @@ public class CubeSamplingTest {
         int x = 0;
         for (String field : row) {
             Hasher hc = hf.newHasher();
-            row_index[x++] = hc.putString(field).hash().asBytes();
+            row_index[x++] = hc.putUnencodedChars(field).hash().asBytes();
         }
 
         for (int i = 0, n = allCuboidsBitSet.length; i < n; i++) {

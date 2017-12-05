@@ -196,4 +196,9 @@ public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupl
     public int hashCode() {
         return (operator == null ? 0 : operator.hashCode()) + 31 * this.children.hashCode();
     }
+
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitLogical(this);
+    }
+
 }

@@ -78,7 +78,7 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
-        byte[] hashKey = hf.hashString(authentication.getName() + authentication.getCredentials()).asBytes();
+        byte[] hashKey = hf.hashUnencodedChars(authentication.getName() + authentication.getCredentials()).asBytes();
         String userKey = Arrays.toString(hashKey);
 
         if (userService.isEvictCacheFlag()) {

@@ -23,6 +23,7 @@ public interface IStorageAware {
     public static final int ID_HBASE = 0;
     public static final int ID_HYBRID = 1;
     public static final int ID_SHARDED_HBASE = 2;
+    public static final int ID_SHARDED_DRUID = 5;
 
     int getStorageType();
 }

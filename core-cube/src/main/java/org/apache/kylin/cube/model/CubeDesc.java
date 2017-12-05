@@ -186,6 +186,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     private int storageType = IStorageAware.ID_HBASE;
     @JsonProperty("override_kylin_properties")
     private LinkedHashMap<String, String> overrideKylinProps = new LinkedHashMap<String, String>();
+    @JsonProperty("online_version")
+    private int onlineVersion = 0;
 
     @JsonProperty("partition_offset_start")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -337,6 +339,18 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return result;
     }
 
+    public List<DeriveInfo> getDeriveInfos(List<TblColRef> rowCols) {
+        List<DeriveInfo> result = new ArrayList<>();
+        for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedMap.entrySet()) {
+            Array<TblColRef> hostCols = entry.getKey();
+            boolean hostOnRow = rowCols.containsAll(Arrays.asList(hostCols.data));
+            if (hostOnRow) {
+                result.addAll(entry.getValue());
+            }
+        }
+        return result;
+    }
+
     public String getResourcePath() {
         return concatResourcePath(resourceName());
     }
@@ -467,8 +481,19 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return overrideKylinProps;
     }
 
-    private void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
+    public void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
         this.overrideKylinProps = overrideKylinProps;
+    }
+    public synchronized void addOnlineVersion() {
+        onlineVersion ++;
+    }
+
+    public void setOnlineVersion(int onlineVersion) {
+        this.onlineVersion = onlineVersion;
+    }
+
+    public int getOnlineVersion() {
+        return onlineVersion;
     }
 
     public List<Set<String>> getMandatoryDimensionSetList() {
@@ -570,8 +595,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     .append(JsonUtil.writeValueAsString(this.measures)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.rowkey)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.aggregationGroups)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.hbaseMapping)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.storageType)).append("|");
+                    .append(JsonUtil.writeValueAsString(this.hbaseMapping)).append("|");
 
             if (mandatoryDimensionSetList != null && !mandatoryDimensionSetList.isEmpty()) {
                 for (Set<String> mandatoryDimensionSet : mandatoryDimensionSetList) {

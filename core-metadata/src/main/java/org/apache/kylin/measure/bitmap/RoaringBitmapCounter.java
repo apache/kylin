@@ -60,6 +60,10 @@ public class RoaringBitmapCounter implements BitmapCounter, Serializable {
         return result;
     }
 
+    public ImmutableRoaringBitmap getImmutableBimap() {
+        return bitmap;
+    }
+
     @Override
     public void add(int value) {
         getMutableBitmap().add(value);

@@ -27,6 +27,10 @@ KylinApp.constant('cubeConfig', {
     {name:'MapReduce',value: 2},
     {name:'Spark',value: 4}
   ],
+  storageType:[
+    {name:'HBase',value: 2},
+    {name:'Druid',value: 5}
+  ],
   joinTypes: [
     {name: 'Left', value: 'left'},
     {name: 'Inner', value: 'inner'}

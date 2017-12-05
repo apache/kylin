@@ -45,14 +45,14 @@ public class BytesUtil {
             num >>>= 8;
         }
     }
-
+    
     public static byte[] writeShort(short num) {
         byte[] output = new byte[Shorts.BYTES];
         writeShort(num, output, 0, output.length);
         return output;
     }
 
-    public static long readShort(byte[] bytes, int offset, int size) {
+    public static short readShort(byte[] bytes, int offset, int size) {
         short num = 0;
         for (int i = offset, n = offset + size; i < n; i++) {
             num <<= 8;
@@ -60,6 +60,7 @@ public class BytesUtil {
         }
         return num;
     }
+
 
     public static short readShort(byte[] bytes) {
         return (short) readShort(bytes, 0, Shorts.BYTES);

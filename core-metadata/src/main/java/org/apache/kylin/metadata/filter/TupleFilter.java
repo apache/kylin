@@ -350,6 +350,8 @@ public abstract class TupleFilter {
 
     public abstract void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer);
 
+    public abstract <R> R accept(TupleFilterVisitor<R> visitor);
+
     public static boolean isEvaluableRecursively(TupleFilter filter) {
         if (filter == null)
             return true;

@@ -25,4 +25,9 @@ public abstract class FunctionTupleFilter extends TupleFilter {
     protected FunctionTupleFilter(List<TupleFilter> filters, FilterOperatorEnum op) {
         super(filters, op);
     }
+
+    @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitFunction(this);
+    }
 }

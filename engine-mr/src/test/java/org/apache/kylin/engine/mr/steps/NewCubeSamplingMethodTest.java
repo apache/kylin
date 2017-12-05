@@ -113,7 +113,7 @@ public class NewCubeSamplingMethodTest {
                     int x = 0;
                     for (String field : row) {
                         Hasher hc = hf.newHasher();
-                        colHashValues[x++] = hc.putString(field).hash().asBytes();
+                        colHashValues[x++] = hc.putUnencodedChars(field).hash().asBytes();
                     }
 
                     Hasher hc = hf.newHasher();
@@ -139,7 +139,7 @@ public class NewCubeSamplingMethodTest {
                     int x = 0;
                     for (String field : row) {
                         Hasher hc = hf2.newHasher();
-                        byte[] bytes = hc.putString(x + field).hash().asBytes();
+                        byte[] bytes = hc.putUnencodedChars(x + field).hash().asBytes();
                         valueHashLong[x++] = Bytes.toLong(bytes);
                     }
 
@@ -213,7 +213,7 @@ public class NewCubeSamplingMethodTest {
         int x = 0;
         for (String field : row) {
             Hasher hc = hashFunction.newHasher();
-            colHashValues[x++] = hc.putString(field).hash().asBytes();
+            colHashValues[x++] = hc.putUnencodedChars(field).hash().asBytes();
         }
 
         for (int i = 0, n = allCuboidsBitSet.length; i < n; i++) {
@@ -230,7 +230,7 @@ public class NewCubeSamplingMethodTest {
         int x = 0;
         for (String field : row) {
             Hasher hc = hashFunction.newHasher();
-            byte[] bytes = hc.putString(x + field).hash().asBytes();
+            byte[] bytes = hc.putUnencodedChars(x + field).hash().asBytes();
             hashValuesLong[x++] = Bytes.toLong(bytes);
         }
 

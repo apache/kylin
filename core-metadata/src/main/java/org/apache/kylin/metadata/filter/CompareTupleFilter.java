@@ -255,6 +255,10 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
         return CompareResultType.Unknown;
     }
 
+    public boolean columnMatchSingleValue() {
+        return column != null && operator == FilterOperatorEnum.EQ && conditionValues.size() == 1;
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void serialize(IFilterCodeSystem cs, ByteBuffer buffer) {
@@ -320,4 +324,9 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
         result = 31 * result + (dynamicVariables != null ? dynamicVariables.hashCode() : 0);
         return result;
     }
+
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitCompare(this);
+    }
+
 }
