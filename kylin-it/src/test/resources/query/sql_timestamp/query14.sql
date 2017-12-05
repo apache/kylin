@@ -15,8 +15,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-
-SELECT timestampadd(MONTH,1,WEEK_BEG_DT) as x ,WEEK_BEG_DT
+SELECT sum(price)  as sum_price
  FROM TEST_KYLIN_FACT 
- inner JOIN EDW.TEST_CAL_DT AS TEST_CAL_DT ON (TEST_KYLIN_FACT.CAL_DT = TEST_CAL_DT.CAL_DT) 
- GROUP BY TEST_CAL_DT.WEEK_BEG_DT
+ WHERE CAL_DT > cast(TIMESTAMPADD(Day, -15000, CURRENT_TIMESTAMP ) as DATE)
+GROUP BY CAL_DT

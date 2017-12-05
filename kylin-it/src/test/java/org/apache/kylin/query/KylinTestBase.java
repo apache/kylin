@@ -293,8 +293,8 @@ public class KylinTestBase {
                 BackdoorToggles.getPrepareOnly());
     }
 
-    protected Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String sql, boolean isPrepare)
-            throws Exception {
+    protected Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String sql,
+            boolean isPrepare) throws Exception {
         return PushDownUtil.tryPushDownNonSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", isPrepare);
     }
 
