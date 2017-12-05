@@ -44,7 +44,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
         hiveCmdBuilder.addStatement(getInitStatement());
-        hiveCmdBuilder.addStatement(getCreateTableStatement());
+        hiveCmdBuilder.addStatementWithRedistributeBy(getCreateTableStatement());
         final String cmd = hiveCmdBuilder.toString();
 
         stepLogger.log("Create and distribute table, cmd: ");
