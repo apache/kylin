@@ -1022,6 +1022,13 @@ public class CubeController extends BasicController {
         }
     }
 
+    @RequestMapping(value = "/{cube}/{project}/migrate", method = { RequestMethod.POST })
+    @ResponseBody
+    public void migrateCube(@PathVariable String cube, @PathVariable String project) {
+        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cube);
+        cubeService.migrateCube(cubeInstance, project);
+    }
+
     public void setCubeService(CubeService cubeService) {
         this.cubeService = cubeService;
     }

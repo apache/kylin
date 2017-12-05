@@ -1572,4 +1572,29 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.metrics.subject-query-rpc", "METRICS_QUERY_RPC") + "_"
                 + getKylinMetricsSubjectSuffix();
     }
+
+    // ============================================================================
+    // tool
+    // ============================================================================
+    public boolean isAllowAutoMigrateCube() {
+        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.enabled", "false"));
+    }
+
+    public boolean isAutoMigrateCubeCopyAcl() {
+        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.copy-acl", "true"));
+    }
+
+    public boolean isAutoMigrateCubePurge() {
+        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.purge-src-cube", "true"));
+    }
+
+    public String getAutoMigrateCubeSrcConfig() {
+        return getOptional("kylin.tool.auto-migrate-cube.src-config", "");
+    }
+
+    public String getAutoMigrateCubeDestConfig() {
+        return getOptional("kylin.tool.auto-migrate-cube.dest-config", "");
+    }
+
+
 }

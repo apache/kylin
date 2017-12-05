@@ -293,6 +293,35 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
       });
     };
 
+    $scope.isAutoMigrateCubeEnabled = function(){
+      return kylinConfig.isAutoMigrateCubeEnabled();
+    };
+
+    $scope.migrateCube = function (cube) {
+      SweetAlert.swal({
+        title: '',
+        text: "The cube will overwrite the same cube in prod env" +
+        "\nMigrating cube will elapse a couple of minutes." +
+        "\nPlease wait.",
+        type: '',
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: "Yes",
+        closeOnConfirm: true
+      }, function(isConfirm) {
+        if(isConfirm){
+          loadingRequest.show();
+          CubeService.autoMigrate({cubeId: cube.name, propName: $scope.projectModel.selectedProject}, {}, function (result) {
+            loadingRequest.hide();
+            SweetAlert.swal('Success!', cube.name + ' migrate successfully!', 'success');
+          },function(e){
+            loadingRequest.hide();
+            SweetAlert.swal('Migrate failed!', "Please contact your ADMIN.", 'error');
+          });
+        }
+      });
+    };
+
     $scope.startJobSubmit = function (cube) {
 
       $scope.loadDetail(cube).then(function () {
@@ -464,8 +493,6 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
         });
       });
     }
-
-
     $scope.cubeEdit = function (cube) {
       $location.path("cubes/edit/" + cube.name);
     }
@@ -494,6 +521,8 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
         });
       })
     }
+
+
   });
 
 

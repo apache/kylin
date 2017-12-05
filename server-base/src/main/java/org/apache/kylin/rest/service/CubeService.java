@@ -30,6 +30,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -41,6 +42,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.CuboidRecommenderUtil;
+import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -60,6 +62,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
+import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
@@ -843,5 +846,41 @@ public class CubeService extends BasicService implements InitializingBean {
     public Map<Long, Long> getRecommendCuboidStatistics(CubeInstance cube, Map<Long, Long> hitFrequencyMap,
             Map<Long, Map<Long, Long>> rollingUpCountSourceMap) throws IOException {
         return CuboidRecommenderUtil.getRecommendCuboidList(cube, hitFrequencyMap, rollingUpCountSourceMap);
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public void migrateCube(CubeInstance cube, String projectName) {
+        KylinConfig config = cube.getConfig();
+        try {
+            if (!config.isAllowAutoMigrateCube()) {
+                throw new InternalErrorException("This cube couldn't one click migrate cube, Please contact your ADMIN");
+            }
+
+            for (CubeSegment segment : cube.getSegments()) {
+                if (segment.getStatus() != SegmentStatusEnum.READY) {
+                    throw new InternalErrorException("At least one segment is not in READY state. Please check whether there are Running or Error jobs.");
+                }
+            }
+
+            String srcCfgUri = config.getAutoMigrateCubeSrcConfig();
+            String dstCfgUri = config.getAutoMigrateCubeDestConfig();
+
+            String stringBuilder = ("%s/bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI %s %s %s %s %s %s true true");
+            String cmd = String.format(stringBuilder, KylinConfig.getKylinHome(), srcCfgUri, dstCfgUri, cube.getName(),
+                    projectName, config.isAutoMigrateCubeCopyAcl(), config.isAutoMigrateCubePurge());
+
+            logger.info("cmd: " + cmd);
+
+            CliCommandExecutor exec = new CliCommandExecutor();
+            PatternedLogger patternedLogger = new PatternedLogger(logger);
+
+            try {
+                exec.execute(cmd, patternedLogger);
+            } catch (IOException e) {
+                throw new InternalErrorException("Migrating cube fails, Please contact your ADMIN");
+            }
+        } catch (Throwable e) {
+            throw new InternalErrorException(e.getMessage());
+        }
     }
 }
