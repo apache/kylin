@@ -281,6 +281,12 @@ public class HiveMRInput implements IMRInput {
             return hiveClient.getHiveTableRows(database, table);
         }
 
+        private long getDataSize(String database, String table) throws Exception {
+            IHiveClient hiveClient = HiveClientFactory.getHiveClient();
+            long size = hiveClient.getHiveTableMeta(database, table).fileSize;
+            return size;
+        }
+
         private void redistributeTable(KylinConfig config, int numReducers) throws IOException {
             final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
             hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
@@ -346,6 +352,8 @@ public class HiveMRInput implements IMRInput {
                 stepLogger.log("num reducers for RedistributeFlatHiveTableStep = " + numReducers);
 
                 redistributeTable(config, numReducers);
+                long dataSize = getDataSize(database, tableName);
+                getManager().addJobInfo(getId(), ExecutableConstants.HDFS_BYTES_WRITTEN, "" + dataSize);
                 return new ExecuteResult(ExecuteResult.State.SUCCEED, stepLogger.getBufferedLog());
 
             } catch (Exception e) {
