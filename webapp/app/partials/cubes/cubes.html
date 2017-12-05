@@ -84,7 +84,7 @@
             <td>
                 <div ng-click="$event.stopPropagation();" class="btn-group">
                     <button type="button" class="btn btn-default btn-xs dropdown-toggle"
-                            data-toggle="dropdown" ng-click="listAccess(cube, 'CubeInstance')">
+                            data-toggle="dropdown">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
                     <ul ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)" class="dropdown-menu" role="menu" style="right:0;left:auto;">
@@ -108,7 +108,7 @@
             </td>
             <td ng-if="userService.hasRole('ROLE_ADMIN')">
                 <div ng-click="$event.stopPropagation();" class="btn-group">
-                    <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" ng-click="listAccess(cube, 'CubeInstance')">
+                    <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu" style="right:0;left:auto;">

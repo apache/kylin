@@ -49,7 +49,7 @@
 
             <div class="pull-right" showonhoverparent style="display:none;" >
               <div ng-click="$event.stopPropagation();" class="btn-group">
-                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" ng-click="listModelAccess(model)">
+                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
                   Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                 </button>
                 <ul class="dropdown-menu" role="menu" style="right:0;left:auto;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">
