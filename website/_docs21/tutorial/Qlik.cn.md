@@ -12,7 +12,7 @@ Qlik Sense 是新一代自助式数据可视化工具。它是一款完整的商
 
 有关安装信息，参考页面 [Kylin ODBC 驱动](http://kylin.apache.org/cn/docs21/tutorial/odbc.html).
 
-###安装 Qlik Sense
+### 安装 Qlik Sense
 
 有关 Olik Sense 的安装说明，请访问 [Qlik Sense Desktop download](https://www.qlik.com/us/try-or-buy/download-qlik-sense).
 
@@ -20,29 +20,30 @@ Qlik Sense 是新一代自助式数据可视化工具。它是一款完整的商
 
 配置完本地 DSN 并成功安装 Qlik Sense 后，可执行以下步骤来用 Qlik Sense 连接 Apache Kylin：
 
-1. 打开 **Qlik Sense Desktop**.
-2. 输入 Qlik 用户名和密码，接着系统将弹出以下对话框。单击**创建新应用程序**.
+- 打开 **Qlik Sense Desktop**.
 
-![Create New Application](../../images/tutorial/2.1/Qlik/welcome_to_qlik_desktop.png)
 
-3. 为新建的应用程序指定名称. 
+- 输入 Qlik 用户名和密码，接着系统将弹出以下对话框。单击**创建新应用程序**.
 
-![Specify a unique name](../../images/tutorial/2.1/Qlik/create_new_application.png)
+![](/images/tutorial/2.1/Qlik/welcome_to_qlik_desktop.png)
 
-4. 应用程序视图中有两个选项，选择下方的**脚本编辑器**。
+- 为新建的应用程序指定名称. 
 
-![Select Script Editor](../../images/tutorial/2.1/Qlik/script_editor.png)
+![](/images/tutorial/2.1/Qlik/create_new_application.png)
 
-5. 此时会显示 **数据加载编辑器**的窗口。单击页面右上方的**创建新连接**并选择**ODBC**。
+- 应用程序视图中有两个选项，选择下方的**脚本编辑器**。
 
-![Create New Data Connection](../../images/tutorial/2.1/Qlik/create_data_connection.png)
+![](/images/tutorial/2.1/Qlik/script_editor.png)
 
-6. Select **DSN** you have created, ignore the account information, and then click **Create**. 
-7. 选择你创建的**DSN**，忽略账户信息，点击**创建**。
+- 此时会显示 **数据加载编辑器**的窗口。单击页面右上方的**创建新连接**并选择**ODBC**。
 
-![ODBC Connection](../../images/tutorial/2.1/Qlik/odbc_connection.png)
+![Create New Data Connection](/images/tutorial/2.1/Qlik/create_data_connection.png)
 
-###配置Direct Query连接模式
+- 选择你创建的**DSN**，忽略账户信息，点击**创建**。
+
+![ODBC Connection](/images/tutorial/2.1/Qlik/odbc_connection.png)
+
+### 配置Direct Query连接模式
 修改默认的脚本中的"TimeFormat", "DateFormat" and "TimestampFormat" 为
 
 `SET TimeFormat='h:mm:ss';`
@@ -55,7 +56,7 @@ Qlik Sense 是新一代自助式数据可视化工具。它是一款完整的商
 
 下面的截图展现了一个连接了 *Learn_kylin* 项目中的 *kylin_sales_cube* 的Direct Query的脚本。
 
-![Script](../../images/tutorial/2.1/Qlik/script_run_result.png) 
+![Script](/images/tutorial/2.1/Qlik/script_run_result.png) 
 
 Qlik sense会基于你定义的这个脚本在报表中相应的生成SQL查询。
 
@@ -69,7 +70,7 @@ Qlik sense会基于你定义的这个脚本在报表中相应的生成SQL查询�
 
 请确保将脚本中`LIB CONNECT TO 'kylin';` 部分引用的DSN进行相应的修改。 
 
-```sql
+```SQL
 SET ThousandSep=',';
 SET DecimalSep='.';
 SET MoneyThousandSep=',';
@@ -127,30 +128,26 @@ on (KYLIN_COUNTRY.COUNTRY=KYLIN_ACCOUNT.ACCOUNT_COUNTRY)
 
 点击窗口右上方的**加载数据**，Qlik sense会根据脚本来生成探测查询以检查脚本的语法。
 
-![Load Data](../../images/tutorial/2.1/Qlik/load_data.png)
+![Load Data](/images/tutorial/2.1/Qlik/load_data.png)
 
-###创建报表
+### 创建报表
 
 点击左上角的**应用程序视图**。
 
-![Open App Overview](../../images/tutorial/2.1/Qlik/go_to_app_overview.png)
+![Open App Overview](/images/tutorial/2.1/Qlik/go_to_app_overview.png)
 
 点击**创建新工作表**。
 
- Click **Create new sheet** on this page.
-
-![Create new sheet](../../images/tutorial/2.1/Qlik/create_new_report.png)
+![Create new sheet](/images/tutorial/2.1/Qlik/create_new_report.png)
 
 选择一个图标类型，将维度和度量根据需要添加到图表上。
 
-![Select the required charts, dimension and measure](../../images/tutorial/2.1/Qlik/add_dimension.png)
+![Select the required charts, dimension and measure](/images/tutorial/2.1/Qlik/add_dimension.png)
 
 图表返回了结果，说明连接Apache Kylin成功。
 
 现在你可以使用Qlik sense分析Apache Kylin中的数据了。
 
-![View data in Qlik Sense](../../images/tutorial/2.1/Qlik/report.png)
+![View data in Qlik Sense](/images/tutorial/2.1/Qlik/report.png)
 
 请注意如果你希望你的报表可以击中Cube，你在Qlik sense中定义的度量需要和Cube上定义的一致。比如，为了击中Learn_kylin项目的 *Kylin_sales_cube* 我们在本例中使用`sum(price)`。
-
-![Create Measure that can hit on Cube](../../images/tutorial/2.1/Qlik/measure.png)
