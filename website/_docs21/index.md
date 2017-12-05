@@ -57,6 +57,7 @@ Connectivity and APIs
 9. [Connect from SQuirreL](tutorial/squirrel.html)
 10. [Connect from Apache Flink](tutorial/flink.html)
 11. [Connect from Apache Hue](tutorial/hue.html)
+12. [Connect from Qlik Sense](tutorial/Qlik.html)
 
 
 Operations

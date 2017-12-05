@@ -33,6 +33,7 @@
   - install/kylin_cluster
   - install/advance_settings
   - install/kylin_docker
+  - install/kylin_aws_emr
 
 - title: Tutorial
   docs:
@@ -56,6 +57,7 @@
   - tutorial/squirrel
   - tutorial/flink
   - tutorial/hue
+  - tutorial/Qlik
 
 - title: How To
   docs:
