@@ -44,6 +44,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.KylinVersion;
@@ -814,6 +815,18 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             }
 
             index++;
+        }
+    }
+
+    public void validateNotifyList() {
+        List<String> notifyList = getNotifyList();
+        if (notifyList != null && !notifyList.isEmpty()) {
+            EmailValidator emailValidator = EmailValidator.getInstance();
+            for (String email: notifyList) {
+                if (!emailValidator.isValid(email)) {
+                    throw new IllegalArgumentException("Email [" + email + "] is not validation.");
+                }
+            }
         }
     }
 

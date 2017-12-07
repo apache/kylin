@@ -34,6 +34,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -397,6 +398,19 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testValidateNotifyList() throws Exception{
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Email [test] is not validation.");
+
+        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
+        List<String> notify = Lists.newArrayList();
+        notify.add("test");
+        cubeDesc.setNotifyList(notify);
+        cubeDesc.validateNotifyList();
+        cubeDesc.init(getTestConfig());
+    }
+
+    @Test
     public void testSerialize() throws Exception {
         CubeDesc desc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         String str = JsonUtil.writeValueAsIndentString(desc);
@@ -493,4 +507,5 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         Assert.assertNotNull(lc);
         Assert.assertTrue(lc.getAllCuboids().size() > 0);
     }
+
 }

@@ -351,6 +351,7 @@ public class CubeDescManager {
             throw new IllegalArgumentException("CubeDesc '" + name + "' does not exist.");
         if (desc.isDraft())
             throw new IllegalArgumentException("CubeDesc '" + desc.getName() + "' must not be a draft");
+        desc.validateNotifyList();
 
         try {
             desc.init(config);

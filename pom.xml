@@ -100,6 +100,7 @@
         <!-- Commons -->
         <commons-lang3.version>3.4</commons-lang3.version>
         <commons-email.version>1.5</commons-email.version>
+        <commons-validator.version>1.4.0</commons-validator.version>
 
         <!-- Utility -->
         <log4j.version>1.2.17</log4j.version>
@@ -639,6 +640,11 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-email</artifactId>
                 <version>${commons-email.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-validator</groupId>
+                <artifactId>commons-validator</artifactId>
+                <version>${commons-validator.version}</version>
             </dependency>
 
             <!-- Logging -->

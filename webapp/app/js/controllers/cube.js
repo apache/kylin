@@ -69,7 +69,11 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
     };
 
     $scope.updateNotifyList = function (cube) {
-        cube.detail.notify_list = cube.notifyListString.split(",");
+        if (cube.notifyListString.length === 0) {
+            cube.detail.notify_list = [];
+        } else {
+            cube.detail.notify_list = cube.notifyListString.split(",");
+        }
         CubeService.updateNotifyList({cubeId: cube.name}, cube.detail.notify_list, function () {
             SweetAlert.swal('Success!', 'Notify List updated successfully!', 'success');
         },function(e){

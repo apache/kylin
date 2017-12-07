@@ -274,7 +274,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertNotNull(cubeDescManager.getCubeDesc(cubeDescName));
         assertNotNull(cubeDescManagerB.getCubeDesc(cubeDescName));
 
-        cubeDesc.setNotifyList(Arrays.asList("test@email", "test@email", "test@email"));
+        cubeDesc.setNotifyList(Arrays.asList("test@email.com", "test@email.com", "test@email.com"));
         cubeDescManager.updateCubeDesc(cubeDesc);
         assertEquals(1, broadcaster.getCounterAndClear());
         waitForCounterAndClear(1);
