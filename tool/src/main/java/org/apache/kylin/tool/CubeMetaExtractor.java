@@ -77,31 +77,49 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(CubeMetaExtractor.class);
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false).withDescription("Specify which cube to extract").create("cube");
+    private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false)
+            .withDescription("Specify which cube to extract").create("cube");
     @SuppressWarnings("static-access")
-    private static final Option OPTION_HYBRID = OptionBuilder.withArgName("hybrid").hasArg().isRequired(false).withDescription("Specify which hybrid to extract").create("hybrid");
+    private static final Option OPTION_HYBRID = OptionBuilder.withArgName("hybrid").hasArg().isRequired(false)
+            .withDescription("Specify which hybrid to extract").create("hybrid");
     @SuppressWarnings("static-access")
-    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
+    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false)
+            .withDescription("Specify realizations in which project to extract").create("project");
     @SuppressWarnings("static-access")
-    private static final Option OPTION_All_PROJECT = OptionBuilder.withArgName("allProjects").hasArg(false).isRequired(false).withDescription("Specify realizations in all projects to extract").create("allProjects");
+    private static final Option OPTION_All_PROJECT = OptionBuilder.withArgName("allProjects").hasArg(false)
+            .isRequired(false).withDescription("Specify realizations in all projects to extract").create("allProjects");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_STORAGE_TYPE = OptionBuilder.withArgName("storageType").hasArg().isRequired(false).withDescription("Specify the storage type to overwrite. Default is empty, keep origin.").create("storageType");
+    private static final Option OPTION_STORAGE_TYPE = OptionBuilder.withArgName("storageType").hasArg()
+            .isRequired(false).withDescription("Specify the storage type to overwrite. Default is empty, keep origin.")
+            .create("storageType");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_ENGINE_TYPE = OptionBuilder.withArgName("engineType").hasArg().isRequired(false).withDescription("Specify the engine type to overwrite. Default is empty, keep origin.").create("engineType");
+    private static final Option OPTION_ENGINE_TYPE = OptionBuilder.withArgName("engineType").hasArg().isRequired(false)
+            .withDescription("Specify the engine type to overwrite. Default is empty, keep origin.")
+            .create("engineType");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_SEGMENTS = OptionBuilder.withArgName("includeSegments").hasArg().isRequired(false).withDescription("set this to true if want extract the segments info. Default true").create("includeSegments");
+    private static final Option OPTION_INCLUDE_SEGMENTS = OptionBuilder.withArgName("includeSegments").hasArg()
+            .isRequired(false).withDescription("set this to true if want extract the segments info. Default true")
+            .create("includeSegments");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false).withDescription("set this to true if want to extract job info/outputs too. Default false").create("includeJobs");
+    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false)
+            .withDescription("set this to true if want to extract job info/outputs too. Default false")
+            .create("includeJobs");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_ONLY_JOB_OUTPUT = OptionBuilder.withArgName("onlyOutput").hasArg().isRequired(false).withDescription("when include jobs, onlt extract output of job. Default true").create("onlyOutput");
+    private static final Option OPTION_INCLUDE_ONLY_JOB_OUTPUT = OptionBuilder.withArgName("onlyOutput").hasArg()
+            .isRequired(false).withDescription("when include jobs, onlt extract output of job. Default true")
+            .create("onlyOutput");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_SEGMENT_DETAILS = OptionBuilder.withArgName("includeSegmentDetails").hasArg().isRequired(false).withDescription("set this to true if want to extract segment details too, such as dict, tablesnapshot. Default false").create("includeSegmentDetails");
+    private static final Option OPTION_INCLUDE_SEGMENT_DETAILS = OptionBuilder.withArgName("includeSegmentDetails")
+            .hasArg().isRequired(false)
+            .withDescription(
+                    "set this to true if want to extract segment details too, such as dict, tablesnapshot. Default false")
+            .create("includeSegmentDetails");
 
     private KylinConfig kylinConfig;
     private DataModelManager metadataManager;
@@ -113,6 +131,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private ExecutableDao executableDao;
     private RealizationRegistry realizationRegistry;
     private BadQueryHistoryManager badQueryHistoryManager;
+    private String exportPath;
 
     private boolean includeSegments;
     private boolean includeJobs;
@@ -127,9 +146,6 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
     public CubeMetaExtractor() {
         super();
-
-        packageType = "cubemeta";
-
         OptionGroup realizationOrProject = new OptionGroup();
         realizationOrProject.addOption(OPTION_CUBE);
         realizationOrProject.addOption(OPTION_PROJECT);
@@ -144,17 +160,28 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         options.addOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT);
         options.addOption(OPTION_STORAGE_TYPE);
         options.addOption(OPTION_ENGINE_TYPE);
-        
+
     }
 
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
-        includeSegments = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENTS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENTS)) : true;
-        includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : false;
-        includeSegmentDetails = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENT_DETAILS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENT_DETAILS)) : false;
-        onlyJobOutput = optionsHelper.hasOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_ONLY_JOB_OUTPUT)) : true;
-        storageType = optionsHelper.hasOption(OPTION_STORAGE_TYPE) ? optionsHelper.getOptionValue(OPTION_STORAGE_TYPE) : null;
-        engineType = optionsHelper.hasOption(OPTION_ENGINE_TYPE) ? optionsHelper.getOptionValue(OPTION_ENGINE_TYPE) : null;
+        includeSegments = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENTS)
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENTS))
+                : true;
+        includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB)
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB))
+                : false;
+        includeSegmentDetails = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENT_DETAILS)
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENT_DETAILS))
+                : false;
+        onlyJobOutput = optionsHelper.hasOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT)
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_ONLY_JOB_OUTPUT))
+                : true;
+        storageType = optionsHelper.hasOption(OPTION_STORAGE_TYPE) ? optionsHelper.getOptionValue(OPTION_STORAGE_TYPE)
+                : null;
+        engineType = optionsHelper.hasOption(OPTION_ENGINE_TYPE) ? optionsHelper.getOptionValue(OPTION_ENGINE_TYPE)
+                : null;
+        exportPath = exportDir.getAbsolutePath();
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         metadataManager = DataModelManager.getInstance(kylinConfig);
@@ -165,7 +192,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         executableDao = ExecutableDao.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
         badQueryHistoryManager = BadQueryHistoryManager.getInstance(kylinConfig);
-        
+
         addRequired(ResourceStore.METASTORE_UUID_TAG);
 
         if (optionsHelper.hasOption(OPTION_All_PROJECT)) {
@@ -206,6 +233,10 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         engineOverwrite(new File(exportDir.getAbsolutePath()));
     }
 
+    public String getExportPath() {
+        return exportPath;
+    }
+
     private void requireProject(ProjectInstance projectInstance) throws IOException {
         addRequired(projectInstance.getResourcePath());
         List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
@@ -241,7 +272,9 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
                 try {
                     ResourceTool.copy(srcConfig, dstConfig, Lists.newArrayList(r), true);
                 } catch (Exception e) {
-                    logger.warn("Exception when copying optional resource {}. May be caused by resource missing. skip it.", r);
+                    logger.warn(
+                            "Exception when copying optional resource {}. May be caused by resource missing. skip it.",
+                            r);
                 }
             }
 
@@ -299,7 +332,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private void addStreamingConfig(CubeInstance cube) {
         streamingManager = StreamingManager.getInstance(kylinConfig);
         for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
-            if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
+            if (streamingConfig.getName() != null
+                    && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
                 addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
                 addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
             }
@@ -329,7 +363,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             addRequired(HybridInstance.concatResourcePath(hybridInstance.getName()));
             for (IRealization iRealization : hybridInstance.getRealizations()) {
                 if (iRealization.getType() != RealizationType.CUBE) {
-                    throw new RuntimeException("Hybrid " + iRealization.getName() + " contains non cube child " + iRealization.getName() + " with type " + iRealization.getType());
+                    throw new RuntimeException("Hybrid " + iRealization.getName() + " contains non cube child "
+                            + iRealization.getName() + " with type " + iRealization.getType());
                 }
                 retrieveResourcePath(iRealization);
             }

@@ -51,6 +51,10 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     @SuppressWarnings("static-access")
     private static final Option OPTION_SUBMODULE = OptionBuilder.withArgName("submodule").hasArg().isRequired(false).withDescription("specify whether this is a submodule of other CLI tool").create("submodule");
 
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_PACKAGETYPE = OptionBuilder.withArgName("packagetype").hasArg().isRequired(false).withDescription("specify the package type").create("packagetype");
+
+
     private static final String DEFAULT_PACKAGE_TYPE = "base";
     private static final String[] COMMIT_SHA1_FILES = { "commit_SHA1", "commit.sha1" };
 
@@ -64,7 +68,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         options.addOption(OPTION_DEST);
         options.addOption(OPTION_COMPRESS);
         options.addOption(OPTION_SUBMODULE);
-
+        options.addOption(OPTION_PACKAGETYPE);
         packageType = DEFAULT_PACKAGE_TYPE;
     }
 
@@ -78,7 +82,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         String exportDest = optionsHelper.getOptionValue(options.getOption("destDir"));
         boolean shouldCompress = optionsHelper.hasOption(OPTION_COMPRESS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS)) : true;
         boolean isSubmodule = optionsHelper.hasOption(OPTION_SUBMODULE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_SUBMODULE)) : false;
-
+        packageType = optionsHelper.getOptionValue(OPTION_PACKAGETYPE);
         if (StringUtils.isEmpty(exportDest)) {
             throw new RuntimeException("destDir is not set, exit directly without extracting");
         }
