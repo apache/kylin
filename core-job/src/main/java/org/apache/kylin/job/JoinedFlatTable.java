@@ -56,11 +56,18 @@ public class JoinedFlatTable {
     }
 
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir) {
-        return generateCreateTableStatement(flatDesc, storageDfsDir, "SEQUENCEFILE");
+        String storageFormat = flatDesc.getDataModel().getConfig().getFlatTableStorageFormat();
+        return generateCreateTableStatement(flatDesc, storageDfsDir, storageFormat);
     }
 
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir,
-            String format, String filedDelimiter) {
+            String storageFormat) {
+        String fieldDelimiter = flatDesc.getDataModel().getConfig().getFlatTableFieldDelimiter();
+        return generateCreateTableStatement(flatDesc, storageDfsDir, storageFormat, fieldDelimiter);
+    }
+
+    public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir,
+            String storageFormat, String filedDelimiter) {
         StringBuilder ddl = new StringBuilder();
 
         ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + flatDesc.getTableName() + "\n");
@@ -74,19 +81,13 @@ public class JoinedFlatTable {
             ddl.append(colName(col) + " " + getHiveDataType(col.getDatatype()) + "\n");
         }
         ddl.append(")" + "\n");
-        if ("TEXTFILE".equals(format)) {
+        if ("TEXTFILE".equals(storageFormat)) {
             ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '" + filedDelimiter + "'\n");
         }
-        ddl.append("STORED AS " + format + "\n");
+        ddl.append("STORED AS " + storageFormat + "\n");
         ddl.append("LOCATION '" + getTableDir(flatDesc, storageDfsDir) + "';").append("\n");
         ddl.append("ALTER TABLE " + flatDesc.getTableName() + " SET TBLPROPERTIES('auto.purge'='true');\n");
         return ddl.toString();
-    }
-
-    public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir,
-            String format) {
-        String fieldDelimiter = flatDesc.getDataModel().getConfig().getSourceFieldDelimiter();
-        return generateCreateTableStatement(flatDesc, storageDfsDir, format, fieldDelimiter);
     }
 
     public static String generateDropTableStatement(IJoinedFlatTableDesc flatDesc) {

@@ -663,6 +663,14 @@ abstract public class KylinConfigBase implements Serializable {
         return this.getOptional("kylin.source.hive.database-for-flat-table", "default");
     }
 
+    public String getFlatTableStorageFormat() {
+        return this.getOptional("kylin.source.hive.flat-table-storage-format", "SEQUENCEFILE").toUpperCase();
+    }
+
+    public String getFlatTableFieldDelimiter() {
+        return this.getOptional("kylin.source.hive.flat-table-field-delimiter", "\\u001F");
+    }
+
     public boolean isHiveRedistributeEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.source.hive.redistribute-flat-table", "true"));
     }
