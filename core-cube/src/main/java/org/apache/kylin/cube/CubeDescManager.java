@@ -22,15 +22,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
-import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.cuboid.CuboidManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.CubeMetadataValidator;
 import org.apache.kylin.cube.model.validation.ValidateContext;
@@ -63,35 +61,13 @@ public class CubeDescManager {
 
     public static final Serializer<CubeDesc> CUBE_DESC_SERIALIZER = new JsonSerializer<CubeDesc>(CubeDesc.class);
 
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, CubeDescManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeDescManager>();
-
     public static CubeDescManager getInstance(KylinConfig config) {
-        CubeDescManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (CubeDescManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new CubeDescManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                }
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init CubeDescManager from " + config, e);
-            }
-        }
+        return config.getManager(CubeDescManager.class);
     }
 
-    public static void clearCache() {
-        CACHE.clear();
+    // called by reflection
+    static CubeDescManager newInstance(KylinConfig config) throws IOException {
+        return new CubeDescManager(config);
     }
 
     // ============================================================================
@@ -111,12 +87,6 @@ public class CubeDescManager {
     }
 
     private class CubeDescSyncListener extends Broadcaster.Listener {
-
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-            Cuboid.clearCache();
-        }
 
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
@@ -166,7 +136,7 @@ public class CubeDescManager {
         CubeDesc ndesc = loadCubeDesc(CubeDesc.concatResourcePath(name), false);
 
         cubeDescMap.putLocal(ndesc.getName(), ndesc);
-        Cuboid.clearCache(ndesc.getName()); // avoid calling CubeDesc.getInitialCuboidScheduler() for late initializing CuboidScheduler
+        clearCuboidCache(ndesc.getName());
 
         // if related cube is in DESCBROKEN state before, change it back to DISABLED
         CubeManager cubeManager = CubeManager.getInstance(config);
@@ -292,13 +262,18 @@ public class CubeDescManager {
         String path = cubeDesc.getResourcePath();
         getStore().deleteResource(path);
         cubeDescMap.remove(cubeDesc.getName());
-        Cuboid.clearCache(cubeDesc.getName()); // avoid calling CubeDesc.getInitialCuboidScheduler() for late initializing CuboidScheduler
+        clearCuboidCache(cubeDesc.getName());
     }
 
     // remove cubeDesc
     public void removeLocalCubeDesc(String name) throws IOException {
         cubeDescMap.removeLocal(name);
-        Cuboid.clearCache(name);
+        clearCuboidCache(name);
+    }
+    
+    private void clearCuboidCache(String descName) {
+        // avoid calling CubeDesc.getInitialCuboidScheduler() for late initializing CuboidScheduler
+        CuboidManager.getInstance(config).clearCache(descName);
     }
 
     private void reloadAllCubeDesc() throws IOException {

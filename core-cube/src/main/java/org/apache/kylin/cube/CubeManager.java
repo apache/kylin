@@ -91,39 +91,13 @@ public class CubeManager implements IRealizationProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeManager.class);
 
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, CubeManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeManager>();
-
     public static CubeManager getInstance(KylinConfig config) {
-        CubeManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (CubeManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new CubeManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                    for (KylinConfig kylinConfig : CACHE.keySet()) {
-                        logger.warn("type: " + kylinConfig.getClass() + " reference: "
-                                + System.identityHashCode(kylinConfig.base()));
-                    }
-                }
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init CubeManager from " + config, e);
-            }
-        }
+        return config.getManager(CubeManager.class);
     }
 
-    public static void clearCache() {
-        CACHE.clear();
+    // called by reflection
+    static CubeManager newInstance(KylinConfig config) throws IOException {
+        return new CubeManager(config);
     }
 
     // ============================================================================
@@ -148,10 +122,6 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private class CubeSyncListener extends Broadcaster.Listener {
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {

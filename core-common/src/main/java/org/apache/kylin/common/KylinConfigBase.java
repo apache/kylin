@@ -329,6 +329,10 @@ abstract public class KylinConfigBase implements Serializable {
     public String getHBaseMappingAdapter() {
         return getOptional("kylin.metadata.hbasemapping-adapter");
     }
+    
+    public boolean isCheckCopyOnWrite() {
+        return Boolean.parseBoolean(getOptional("kylin.metadata.check-copy-on-write", "false"));
+    }
 
     // ============================================================================
     // DICTIONARY & SNAPSHOT

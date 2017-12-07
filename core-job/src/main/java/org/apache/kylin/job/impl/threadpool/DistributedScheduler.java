@@ -22,8 +22,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -63,6 +61,22 @@ import com.google.common.collect.Maps;
  *  3. add all the job servers and query servers to the kylin.server.cluster-servers
  */
 public class DistributedScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
+    private static final Logger logger = LoggerFactory.getLogger(DistributedScheduler.class);
+    
+    private final static String SEGMENT_ID = "segmentId";
+    public static final String ZOOKEEPER_LOCK_PATH = "/job_engine/lock"; // note ZookeeperDistributedLock will ensure zk path prefix: /${kylin.env.zookeeper-base-path}/metadata
+
+    public static DistributedScheduler getInstance(KylinConfig config) {
+        return config.getManager(DistributedScheduler.class);
+    }
+
+    // called by reflection
+    static DistributedScheduler newInstance(KylinConfig config) throws IOException {
+        return new DistributedScheduler();
+    }
+
+    // ============================================================================
+    
     private ExecutableManager executableManager;
     private FetcherRunner fetcher;
     private ScheduledExecutorService fetcherPool;
@@ -72,39 +86,12 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     private DistributedLock jobLock;
     private Closeable lockWatch;
 
-    private static final Logger logger = LoggerFactory.getLogger(DistributedScheduler.class);
-    private static final ConcurrentMap<KylinConfig, DistributedScheduler> CACHE = new ConcurrentHashMap<KylinConfig, DistributedScheduler>();
     //keep all segments having running job
     private final Set<String> segmentWithLocks = new CopyOnWriteArraySet<>();
     private volatile boolean initialized = false;
     private volatile boolean hasStarted = false;
     private JobEngineConfig jobEngineConfig;
     private String serverName;
-
-    private final static String SEGMENT_ID = "segmentId";
-    public static final String ZOOKEEPER_LOCK_PATH = "/job_engine/lock"; // note ZookeeperDistributedLock will ensure zk path prefix: /${kylin.env.zookeeper-base-path}/metadata
-
-    //only for it test
-    public static DistributedScheduler getInstance(KylinConfig config) {
-        DistributedScheduler r = CACHE.get(config);
-        if (r == null) {
-            synchronized (DistributedScheduler.class) {
-                r = CACHE.get(config);
-                if (r == null) {
-                    r = new DistributedScheduler();
-                    CACHE.put(config, r);
-                    if (CACHE.size() > 1) {
-                        logger.warn("More than one singleton exist");
-                    }
-                }
-            }
-        }
-        return r;
-    }
-
-    public static void clearCache() {
-        CACHE.clear();
-    }
 
     private class FetcherRunner implements Runnable {
         @Override

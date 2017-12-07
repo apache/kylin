@@ -249,6 +249,10 @@ public class Message {
         return "Cannot modify non-empty project";
     }
 
+    public String getPROJECT_RENAME() {
+        return "Project renaming is not allowed.";
+    }
+
     // Table
     public String getHIVE_TABLE_NOT_FOUND() {
         return "Cannot find Hive table '%s'.";

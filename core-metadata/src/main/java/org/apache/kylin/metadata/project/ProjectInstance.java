@@ -126,6 +126,11 @@ public class ProjectInstance extends RootPersistentEntity {
     public ProjectInstance() {
     }
 
+    @Override
+    public String resourceName() {
+        return this.name;
+    }
+    
     public String getDescription() {
         return description;
     }

@@ -156,7 +156,8 @@ public class ProjectController extends BasicController {
             if (projectDesc.getName().equals(currentProject.getName())) {
                 updatedProj = projectService.updateProject(projectDesc, currentProject);
             } else {
-                updatedProj = projectService.renameProject(projectDesc, currentProject);
+                throw new IllegalStateException("Rename project is not supported yet, from " + formerProjectName
+                        + " to " + projectDesc.getName());
             }
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);

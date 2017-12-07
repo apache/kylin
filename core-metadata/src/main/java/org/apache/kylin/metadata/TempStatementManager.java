@@ -21,12 +21,7 @@ package org.apache.kylin.metadata;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -39,49 +34,19 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
 
 public class TempStatementManager {
     private static final Logger logger = LoggerFactory.getLogger(TempStatementManager.class);
-    private static final ConcurrentMap<KylinConfig, TempStatementManager> CACHE = new ConcurrentHashMap<>();
     public static final Serializer<TempStatementEntity> TEMP_STATEMENT_SERIALIZER = new JsonSerializer<>(
             TempStatementEntity.class);
 
     public static TempStatementManager getInstance(KylinConfig config) {
-        TempStatementManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (TempStatementManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new TempStatementManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist, current keys: {}", StringUtils
-                            .join(Iterators.transform(CACHE.keySet().iterator(), new Function<KylinConfig, String>() {
-                                @Nullable
-                                @Override
-                                public String apply(@Nullable KylinConfig input) {
-                                    return String.valueOf(System.identityHashCode(input));
-                                }
-                            }), ","));
-                }
-
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init TableMetadataManager from " + config, e);
-            }
-        }
+        return config.getManager(TempStatementManager.class);
     }
 
-    public static void clearCache() {
-        CACHE.clear();
+    // called by reflection
+    static TempStatementManager newInstance(KylinConfig config) throws IOException {
+        return new TempStatementManager(config);
     }
 
     // ============================================================================
@@ -195,10 +160,6 @@ public class TempStatementManager {
     }
 
     private class TempStatementSyncListener extends Broadcaster.Listener {
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey)
@@ -210,6 +171,7 @@ public class TempStatementManager {
         }
     }
 
+    @SuppressWarnings("serial")
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
     private static class TempStatementEntity extends RootPersistentEntity {
         private static final String DEFAULT_SESSION_ID = "DEFAULT_SESSION";

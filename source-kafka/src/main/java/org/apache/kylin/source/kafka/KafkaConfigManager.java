@@ -21,8 +21,6 @@ package org.apache.kylin.source.kafka;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -43,20 +41,24 @@ public class KafkaConfigManager {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaConfigManager.class);
 
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, KafkaConfigManager> CACHE = new ConcurrentHashMap<KylinConfig, KafkaConfigManager>();
-
-    private KylinConfig config;
-
-    // name ==> StreamingConfig
-    private CaseInsensitiveStringCache<KafkaConfig> kafkaMap;
-
     public static final Serializer<KafkaConfig> KAFKA_SERIALIZER = new JsonSerializer<KafkaConfig>(KafkaConfig.class);
-
-    public static void clearCache() {
-        CACHE.clear();
+    
+    public static KafkaConfigManager getInstance(KylinConfig config) {
+        return config.getManager(KafkaConfigManager.class);
     }
 
+    // called by reflection
+    static KafkaConfigManager newInstance(KylinConfig config) throws IOException {
+        return new KafkaConfigManager(config);
+    }
+
+    // ============================================================================
+
+    private KylinConfig config;
+    
+    // name ==> StreamingConfig
+    private CaseInsensitiveStringCache<KafkaConfig> kafkaMap;
+    
     private KafkaConfigManager(KylinConfig config) throws IOException {
         this.config = config;
         this.kafkaMap = new CaseInsensitiveStringCache<KafkaConfig>(config, "kafka");
@@ -67,10 +69,6 @@ public class KafkaConfigManager {
     }
 
     private class KafkaSyncListener extends Broadcaster.Listener {
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
@@ -83,30 +81,6 @@ public class KafkaConfigManager {
 
     private ResourceStore getStore() {
         return ResourceStore.getStore(this.config);
-    }
-
-    public static KafkaConfigManager getInstance(KylinConfig config) {
-        KafkaConfigManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (KafkaConfigManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new KafkaConfigManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                }
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init KafkaConfigManager from " + config, e);
-            }
-        }
     }
 
     public List<KafkaConfig> listAllKafkaConfigs() {

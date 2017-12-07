@@ -26,20 +26,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.AutoReadWriteLock;
+import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
@@ -56,36 +53,14 @@ import com.google.common.collect.Sets;
 
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
-    private static final ConcurrentMap<KylinConfig, ProjectManager> CACHE = new ConcurrentHashMap<KylinConfig, ProjectManager>();
-    public static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(
-            ProjectInstance.class);
 
     public static ProjectManager getInstance(KylinConfig config) {
-        ProjectManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (ProjectManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new ProjectManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                }
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init ProjectManager from " + config, e);
-            }
-        }
+        return config.getManager(ProjectManager.class);
     }
 
-    public static void clearCache() {
-        CACHE.clear();
+    // called by reflection
+    static ProjectManager newInstance(KylinConfig config) throws IOException {
+        return new ProjectManager(config);
     }
 
     // ============================================================================
@@ -98,25 +73,29 @@ public class ProjectManager {
     
     // protects concurrent operations around the projectMap, to avoid for example
     // writing a project in the middle of reloading it (dirty read)
-    private ReadWriteLock prjMapLock = new ReentrantReadWriteLock();
+    private AutoReadWriteLock prjMapLock = new AutoReadWriteLock();
+    
+    private CachedCrudAssist<ProjectInstance> crud;
 
     private ProjectManager(KylinConfig config) throws IOException {
         logger.info("Initializing ProjectManager with metadata url " + config);
         this.config = config;
         this.projectMap = new CaseInsensitiveStringCache<ProjectInstance>(config, "project");
         this.l2Cache = new ProjectL2Cache(this);
+        this.crud = new CachedCrudAssist<ProjectInstance>(getStore(), ResourceStore.PROJECT_RESOURCE_ROOT,
+                ProjectInstance.class, projectMap) {
+            @Override
+            protected void initEntityAfterReload(ProjectInstance prj) {
+                prj.init();
+            }
+        };
 
-        // touch lower level metadata before registering my listener
-        reloadAllProjects();
+        crud.reloadAll();
+        
         Broadcaster.getInstance(config).registerListener(new ProjectSyncListener(), "project");
     }
 
     private class ProjectSyncListener extends Broadcaster.Listener {
-
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
@@ -128,7 +107,7 @@ public class ProjectManager {
                 return;
             }
 
-            reloadProjectLocal(project);
+            reloadProjectQuietly(project);
             broadcaster.notifyProjectSchemaUpdate(project);
             broadcaster.notifyProjectDataUpdate(project);
         }
@@ -138,85 +117,39 @@ public class ProjectManager {
         l2Cache.clear();
     }
 
-    private void reloadAllProjects() throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
-            ResourceStore store = getStore();
-            List<String> paths = store.collectResourceRecursively(ResourceStore.PROJECT_RESOURCE_ROOT, ".json");
-
-            logger.debug("Loading Project from folder "
-                    + store.getReadableResourcePath(ResourceStore.PROJECT_RESOURCE_ROOT));
-
-            for (String path : paths) {
-                reloadProjectLocalAt(path);
-            }
-            logger.debug("Loaded " + projectMap.size() + " Project(s)");
-        } finally {
-            prjMapLock.writeLock().unlock();
+    public ProjectInstance reloadProjectQuietly(String project) throws IOException {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
+            ProjectInstance prj = crud.reloadQuietly(project);
+            clearL2Cache();
+            return prj;
         }
-    }
-
-    public ProjectInstance reloadProjectLocal(String project) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
-            return reloadProjectLocalAt(ProjectInstance.concatResourcePath(project));
-        } finally {
-            prjMapLock.writeLock().unlock();
-        }
-    }
-
-    private ProjectInstance reloadProjectLocalAt(String path) throws IOException {
-        ProjectInstance projectInstance = getStore().getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
-        if (projectInstance == null) {
-            logger.warn("reload project at path:" + path + " not found, this:" + this.toString());
-            return null;
-        }
-
-        projectInstance.init();
-
-        projectMap.putLocal(projectInstance.getName(), projectInstance);
-        clearL2Cache();
-
-        return projectInstance;
     }
 
     public List<ProjectInstance> listAllProjects() {
-        prjMapLock.readLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForRead()) {
             return new ArrayList<ProjectInstance>(projectMap.values());
-        } finally {
-            prjMapLock.readLock().unlock();
         }
     }
 
     public ProjectInstance getProject(String projectName) {
-        prjMapLock.readLock().lock();
-        try {
-            projectName = norm(projectName);
+        try (AutoLock lock = prjMapLock.lockForRead()) {
             return projectMap.get(projectName);
-        } finally {
-            prjMapLock.readLock().unlock();
         }
     }
 
     public ProjectInstance getPrjByUuid(String uuid) {
-        prjMapLock.readLock().lock();
-        try {
-            Collection<ProjectInstance> copy = new ArrayList<ProjectInstance>(projectMap.values());
-            for (ProjectInstance prj : copy) {
+        try (AutoLock lock = prjMapLock.lockForRead()) {
+            for (ProjectInstance prj : projectMap.values()) {
                 if (uuid.equals(prj.getUuid()))
                     return prj;
             }
             return null;
-        } finally {
-            prjMapLock.readLock().unlock();
         }
     }
 
     public ProjectInstance createProject(String projectName, String owner, String description,
             LinkedHashMap<String, String> overrideProps) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             logger.info("Creating project " + projectName);
 
             ProjectInstance currentProject = getProject(projectName);
@@ -225,18 +158,30 @@ public class ProjectManager {
             } else {
                 throw new IllegalStateException("The project named " + projectName + "already exists");
             }
+            checkOverrideProps(currentProject);
 
-            updateProject(currentProject);
+            return save(currentProject);
+        }
+    }
 
-            return currentProject;
-        } finally {
-            prjMapLock.writeLock().unlock();
+    private void checkOverrideProps(ProjectInstance prj) throws IOException {
+        LinkedHashMap<String, String> overrideProps = prj.getOverrideKylinProps();
+
+        if (overrideProps != null) {
+            Iterator<Map.Entry<String, String>> iterator = overrideProps.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<String, String> entry = iterator.next();
+
+                if (StringUtils.isAnyBlank(entry.getKey(), entry.getValue())) {
+                    throw new IllegalStateException("Property key/value must not be blank");
+                }
+            }
         }
     }
 
     public ProjectInstance dropProject(String projectName) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             if (projectName == null)
                 throw new IllegalArgumentException("Project name not given");
 
@@ -253,45 +198,18 @@ public class ProjectManager {
 
             logger.info("Dropping project '" + projectInstance.getName() + "'");
 
-            removeProject(projectInstance);
+            crud.delete(projectInstance);
             BadQueryHistoryManager.getInstance(config).removeBadQueryHistory(projectName);
 
+            clearL2Cache();
             return projectInstance;
-        } finally {
-            prjMapLock.writeLock().unlock();
-        }
-    }
-
-    // rename project
-    public ProjectInstance renameProject(ProjectInstance project, String newName, String newDesc,
-            LinkedHashMap<String, String> overrideProps) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
-            Preconditions.checkArgument(!project.getName().equals(newName));
-            ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc, overrideProps);
-
-            newProject.setUuid(project.getUuid());
-            newProject.setCreateTimeUTC(project.getCreateTimeUTC());
-            newProject.recordUpdateTime(System.currentTimeMillis());
-            newProject.setRealizationEntries(project.getRealizationEntries());
-            newProject.setTables(project.getTables());
-            newProject.setModels(project.getModels());
-            newProject.setExtFilters(project.getExtFilters());
-
-            removeProject(project);
-            updateProject(newProject);
-
-            return newProject;
-        } finally {
-            prjMapLock.writeLock().unlock();
         }
     }
 
     // update project itself
     public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc,
             LinkedHashMap<String, String> overrideProps) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             Preconditions.checkArgument(project.getName().equals(newName));
             project.setName(newName);
             project.setDescription(newDesc);
@@ -300,48 +218,19 @@ public class ProjectManager {
             if (project.getUuid() == null)
                 project.updateRandomUuid();
 
-            updateProject(project);
-
-            return project;
-        } finally {
-            prjMapLock.writeLock().unlock();
+            return save(project);
         }
     }
 
-    private void updateProject(ProjectInstance prj) throws IOException {
-        LinkedHashMap<String, String> overrideProps = prj.getOverrideKylinProps();
-
-        if (overrideProps != null) {
-            Iterator<Map.Entry<String, String>> iterator = overrideProps.entrySet().iterator();
-
-            while (iterator.hasNext()) {
-                Map.Entry<String, String> entry = iterator.next();
-
-                if (StringUtils.isAnyBlank(entry.getKey(), entry.getValue())) {
-                    throw new IllegalStateException("Property key/value must not be blank");
-                }
-            }
+    public void removeProjectLocal(String proj) {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
+            projectMap.removeLocal(proj);
+            clearL2Cache();
         }
-
-        getStore().putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
-        projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
-        clearL2Cache();
-    }
-
-    private void removeProject(ProjectInstance proj) throws IOException {
-        getStore().deleteResource(proj.getResourcePath());
-        projectMap.remove(norm(proj.getName()));
-        clearL2Cache();
-    }
-
-    private void removeProjectLocal(String proj) {
-        projectMap.remove(norm(proj));
-        clearL2Cache();
     }
 
     public ProjectInstance addModelToProject(String modelName, String newProjectName) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             removeModelFromProjects(modelName);
 
             ProjectInstance prj = getProject(newProjectName);
@@ -349,71 +238,57 @@ public class ProjectManager {
                 throw new IllegalArgumentException("Project " + newProjectName + " does not exist.");
             }
             prj.addModel(modelName);
-            updateProject(prj);
-
-            return prj;
-        } finally {
-            prjMapLock.writeLock().unlock();
+            
+            return save(prj);
         }
     }
 
     public void removeModelFromProjects(String modelName) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             for (ProjectInstance projectInstance : findProjectsByModel(modelName)) {
                 projectInstance.removeModel(modelName);
-                updateProject(projectInstance);
+                save(projectInstance);
             }
-        } finally {
-            prjMapLock.writeLock().unlock();
         }
     }
 
     public ProjectInstance moveRealizationToProject(RealizationType type, String realizationName, String newProjectName,
             String owner) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             removeRealizationsFromProjects(type, realizationName);
             return addRealizationToProject(type, realizationName, newProjectName, owner);
-        } finally {
-            prjMapLock.writeLock().unlock();
         }
     }
 
     private ProjectInstance addRealizationToProject(RealizationType type, String realizationName, String project,
             String user) throws IOException {
-        String newProjectName = norm(project);
-        if (StringUtils.isEmpty(newProjectName)) {
+        if (StringUtils.isEmpty(project)) {
             throw new IllegalArgumentException("Project name should not be empty.");
         }
-        ProjectInstance newProject = getProject(newProjectName);
+        ProjectInstance newProject = getProject(project);
         if (newProject == null) {
-            newProject = this.createProject(newProjectName, user,
+            newProject = this.createProject(project, user,
                     "This is a project automatically added when adding realization " + realizationName + "(" + type
                             + ")",
                     null);
         }
         newProject.addRealizationEntry(type, realizationName);
-        updateProject(newProject);
+        save(newProject);
 
         return newProject;
     }
 
     public void removeRealizationsFromProjects(RealizationType type, String realizationName) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             for (ProjectInstance projectInstance : findProjects(type, realizationName)) {
                 projectInstance.removeRealization(type, realizationName);
-                updateProject(projectInstance);
+                save(projectInstance);
             }
-        } finally {
-            prjMapLock.writeLock().unlock();
         }
     }
 
     public ProjectInstance addTableDescToProject(String[] tableIdentities, String projectName) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             TableMetadataManager metaMgr = getTableManager();
             ProjectInstance projectInstance = getProject(projectName);
             for (String tableId : tableIdentities) {
@@ -424,16 +299,12 @@ public class ProjectManager {
                 projectInstance.addTable(table.getIdentity());
             }
 
-            updateProject(projectInstance);
-            return projectInstance;
-        } finally {
-            prjMapLock.writeLock().unlock();
+            return save(projectInstance);
         }
     }
 
     public void removeTableDescFromProject(String tableIdentities, String projectName) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             TableMetadataManager metaMgr = getTableManager();
             ProjectInstance projectInstance = getProject(projectName);
             TableDesc table = metaMgr.getTableDesc(tableIdentities, projectName);
@@ -442,15 +313,12 @@ public class ProjectManager {
             }
 
             projectInstance.removeTable(table.getIdentity());
-            updateProject(projectInstance);
-        } finally {
-            prjMapLock.writeLock().unlock();
+            save(projectInstance);
         }
     }
 
     public ProjectInstance addExtFilterToProject(String[] filters, String projectName) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             TableMetadataManager metaMgr = getTableManager();
             ProjectInstance projectInstance = getProject(projectName);
             for (String filterName : filters) {
@@ -462,16 +330,12 @@ public class ProjectManager {
                 projectInstance.addExtFilter(filterName);
             }
 
-            updateProject(projectInstance);
-            return projectInstance;
-        } finally {
-            prjMapLock.writeLock().unlock();
+            return save(projectInstance);
         }
     }
 
     public void removeExtFilterFromProject(String filterName, String projectName) throws IOException {
-        prjMapLock.writeLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             TableMetadataManager metaMgr = getTableManager();
             ProjectInstance projectInstance = getProject(projectName);
             ExternalFilterDesc filter = metaMgr.getExtFilterDesc(filterName);
@@ -480,28 +344,28 @@ public class ProjectManager {
             }
 
             projectInstance.removeExtFilter(filterName);
-            updateProject(projectInstance);
-        } finally {
-            prjMapLock.writeLock().unlock();
+            save(projectInstance);
         }
+    }
+    
+    private ProjectInstance save(ProjectInstance prj) throws IOException {
+        crud.save(prj);
+        clearL2Cache();
+        return prj;
     }
 
     public ProjectInstance getProjectOfModel(String model) {
-        prjMapLock.readLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForRead()) {
             for (ProjectInstance prj : projectMap.values()) {
                 if (prj.getModels().contains(model))
                     return prj;
             }
             throw new IllegalStateException("No project found for model " + model);
-        } finally {
-            prjMapLock.readLock().unlock();
         }
     }
 
     public List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
-        prjMapLock.readLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             List<ProjectInstance> result = Lists.newArrayList();
             for (ProjectInstance prj : projectMap.values()) {
                 for (RealizationEntry entry : prj.getRealizationEntries()) {
@@ -512,14 +376,11 @@ public class ProjectManager {
                 }
             }
             return result;
-        } finally {
-            prjMapLock.readLock().unlock();
         }
     }
 
     public List<ProjectInstance> findProjectsByModel(String modelName) {
-        prjMapLock.readLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             List<ProjectInstance> projects = new ArrayList<ProjectInstance>();
             for (ProjectInstance projectInstance : projectMap.values()) {
                 if (projectInstance.containsModel(modelName)) {
@@ -527,14 +388,11 @@ public class ProjectManager {
                 }
             }
             return projects;
-        } finally {
-            prjMapLock.readLock().unlock();
         }
     }
 
     public List<ProjectInstance> findProjectsByTable(String tableIdentity) {
-        prjMapLock.readLock().lock();
-        try {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
             List<ProjectInstance> projects = new ArrayList<ProjectInstance>();
             for (ProjectInstance projectInstance : projectMap.values()) {
                 if (projectInstance.containsTable(tableIdentity)) {
@@ -542,8 +400,6 @@ public class ProjectManager {
                 }
             }
             return projects;
-        } finally {
-            prjMapLock.readLock().unlock();
         }
     }
 
@@ -552,11 +408,11 @@ public class ProjectManager {
     }
 
     public List<TableDesc> listDefinedTables(String project) {
-        return l2Cache.listDefinedTables(norm(project));
+        return l2Cache.listDefinedTables(project);
     }
 
     private Collection<TableDesc> listExposedTablesByRealizations(String project) {
-        return l2Cache.listExposedTables(norm(project));
+        return l2Cache.listExposedTables(project);
     }
 
     public Collection<TableDesc> listExposedTables(String project, boolean exposeMore) {
@@ -568,7 +424,7 @@ public class ProjectManager {
     }
 
     public List<ColumnDesc> listExposedColumns(String project, TableDesc tableDesc, boolean exposeMore) {
-        Set<ColumnDesc> exposedColumns = l2Cache.listExposedColumns(norm(project), tableDesc.getIdentity());
+        Set<ColumnDesc> exposedColumns = l2Cache.listExposedColumns(project, tableDesc.getIdentity());
 
         if (exposeMore) {
             Set<ColumnDesc> dedup = Sets.newHashSet(tableDesc.getColumns());
@@ -580,19 +436,19 @@ public class ProjectManager {
     }
 
     public Set<IRealization> listAllRealizations(String project) {
-        return l2Cache.listAllRealizations(norm(project));
+        return l2Cache.listAllRealizations(project);
     }
 
     public Set<IRealization> getRealizationsByTable(String project, String tableName) {
-        return l2Cache.getRealizationsByTable(norm(project), tableName.toUpperCase());
+        return l2Cache.getRealizationsByTable(project, tableName.toUpperCase());
     }
 
     public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable) {
-        return l2Cache.listEffectiveRewriteMeasures(norm(project), factTable.toUpperCase(), true);
+        return l2Cache.listEffectiveRewriteMeasures(project, factTable.toUpperCase(), true);
     }
 
     public List<MeasureDesc> listEffectiveMeasures(String project, String factTable) {
-        return l2Cache.listEffectiveRewriteMeasures(norm(project), factTable.toUpperCase(), false);
+        return l2Cache.listEffectiveRewriteMeasures(project, factTable.toUpperCase(), false);
     }
 
     KylinConfig getConfig() {
@@ -605,10 +461,6 @@ public class ProjectManager {
 
     TableMetadataManager getTableManager() {
         return TableMetadataManager.getInstance(config);
-    }
-
-    private String norm(String project) {
-        return project;
     }
 
 }

@@ -26,11 +26,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -382,6 +384,8 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     // ============================================================================
+    
+    Map<Class, Object> managersCache = new ConcurrentHashMap<>();
 
     private KylinConfig() {
         super();
@@ -389,6 +393,43 @@ public class KylinConfig extends KylinConfigBase {
 
     protected KylinConfig(Properties props, boolean force) {
         super(props, force);
+    }
+
+    public <T> T getManager(Class<T> clz) {
+        KylinConfig base = base();
+        if (base != this)
+            return base.getManager(clz);
+        
+        Object mgr = managersCache.get(clz);
+        if (mgr != null)
+            return (T) mgr;
+        
+        synchronized (this) {
+            mgr = managersCache.get(clz);
+            if (mgr != null)
+                return (T) mgr;
+            
+            try {
+                // new manager via static Manager.newInstance()
+                Method method = clz.getDeclaredMethod("newInstance", KylinConfig.class);
+                method.setAccessible(true); // override accessibility
+                mgr = method.invoke(null, this);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            managersCache.put(clz, mgr);
+        }
+        return (T) mgr;
+    }
+    
+    public void clearManagers() {
+        KylinConfig base = base();
+        if (base != this) {
+            base.clearManagers();
+            return;
+        }
+        
+        managersCache.clear();
     }
 
     public Properties exportToProperties() {
@@ -432,7 +473,7 @@ public class KylinConfig extends KylinConfigBase {
     public synchronized void reloadFromSiteProperties() {
         reloadKylinConfig(buildSiteProperties());
     }
-
+    
     public KylinConfig base() {
         return this;
     }

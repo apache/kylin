@@ -24,8 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -67,39 +65,13 @@ public class Broadcaster {
     public static final String SYNC_PRJ_DATA = "project_data"; // the special entity to indicate project data has change, e.g. cube/raw_table update
     public static final String SYNC_PRJ_ACL = "project_acl"; // the special entity to indicate query ACL has change, e.g. table_acl/learn_kylin update
 
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, Broadcaster> CACHE = new ConcurrentHashMap<KylinConfig, Broadcaster>();
-
     public static Broadcaster getInstance(KylinConfig config) {
-
-        synchronized (CACHE) {
-            Broadcaster r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-
-            r = new Broadcaster(config);
-            CACHE.put(config, r);
-            if (CACHE.size() > 1) {
-                logger.warn("More than one singleton exist");
-            }
-            return r;
-        }
+        return config.getManager(Broadcaster.class);
     }
-
-    // call Broadcaster.getInstance().notifyClearAll() to clear cache
-    public static void clearCache() {
-        synchronized (CACHE) {
-            CACHE.clear();
-        }
-    }
-
-    public static void clearCache(KylinConfig kylinConfig) {
-        if (kylinConfig != null) {
-            synchronized (CACHE) {
-                CACHE.remove(kylinConfig);
-            }
-        }
+    
+    // called by reflection
+    static Broadcaster newInstance(KylinConfig config) {
+        return new Broadcaster(config);
     }
 
     // ============================================================================
@@ -260,7 +232,7 @@ public class Broadcaster {
             for (Listener l : list) {
                 l.onClearAll(this);
             }
-            clearCache(); // clear broadcaster too in the end
+            config.clearManagers(); // clear all registered managers in config
             break;
         case SYNC_PRJ_SCHEMA:
             ProjectManager.getInstance(config).clearL2Cache();

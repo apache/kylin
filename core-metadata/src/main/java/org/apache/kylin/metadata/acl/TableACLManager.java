@@ -20,8 +20,6 @@ package org.apache.kylin.metadata.acl;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -41,40 +39,13 @@ public class TableACLManager {
     private static final Serializer<TableACL> TABLE_ACL_SERIALIZER = new JsonSerializer<>(TableACL.class);
     private static final String DIR_PREFIX = "/table_acl/";
 
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, TableACLManager> CACHE = new ConcurrentHashMap<>();
-
     public static TableACLManager getInstance(KylinConfig config) {
-        TableACLManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (TableACLManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new TableACLManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                }
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init CubeDescManager from " + config, e);
-            }
-        }
+        return config.getManager(TableACLManager.class);
     }
 
-    public static void clearCache() {
-        CACHE.clear();
-    }
-
-    public static void clearCache(KylinConfig kylinConfig) {
-        if (kylinConfig != null)
-            CACHE.remove(kylinConfig);
+    // called by reflection
+    static TableACLManager newInstance(KylinConfig config) throws IOException {
+        return new TableACLManager(config);
     }
 
     // ============================================================================
@@ -92,10 +63,6 @@ public class TableACLManager {
     }
 
     private class TableACLSyncListener extends Broadcaster.Listener {
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey) throws IOException {

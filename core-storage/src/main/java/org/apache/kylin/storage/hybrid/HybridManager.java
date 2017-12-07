@@ -20,8 +20,6 @@ package org.apache.kylin.storage.hybrid;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -49,35 +47,13 @@ public class HybridManager implements IRealizationProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(HybridManager.class);
 
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, HybridManager> CACHE = new ConcurrentHashMap<KylinConfig, HybridManager>();
-
     public static HybridManager getInstance(KylinConfig config) {
-        HybridManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (HybridManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new HybridManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                }
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init Hybrid Manager from " + config, e);
-            }
-        }
+        return config.getManager(HybridManager.class);
     }
 
-    public static void clearCache() {
-        CACHE.clear();
+    // called by reflection
+    static HybridManager newInstance(KylinConfig config) throws IOException {
+        return new HybridManager(config);
     }
 
     // ============================================================================
@@ -97,11 +73,6 @@ public class HybridManager implements IRealizationProvider {
     }
 
     private class HybridSyncListener extends Broadcaster.Listener {
-
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {

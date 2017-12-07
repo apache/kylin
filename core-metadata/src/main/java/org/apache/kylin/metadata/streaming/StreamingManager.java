@@ -21,8 +21,6 @@ package org.apache.kylin.metadata.streaming;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -42,19 +40,23 @@ public class StreamingManager {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamingManager.class);
 
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, StreamingManager> CACHE = new ConcurrentHashMap<KylinConfig, StreamingManager>();
-
     public static final Serializer<StreamingConfig> STREAMING_SERIALIZER = new JsonSerializer<StreamingConfig>(StreamingConfig.class);
 
+    public static StreamingManager getInstance(KylinConfig config) {
+        return config.getManager(StreamingManager.class);
+    }
+
+    // called by reflection
+    static StreamingManager newInstance(KylinConfig config) throws IOException {
+        return new StreamingManager(config);
+    }
+
+    // ============================================================================
+    
     private KylinConfig config;
 
     // name ==> StreamingConfig
     private CaseInsensitiveStringCache<StreamingConfig> streamingMap;
-
-    public static void clearCache() {
-        CACHE.clear();
-    }
 
     private StreamingManager(KylinConfig config) throws IOException {
         this.config = config;
@@ -66,10 +68,6 @@ public class StreamingManager {
     }
 
     private class StreamingSyncListener extends Broadcaster.Listener {
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
@@ -82,42 +80,6 @@ public class StreamingManager {
 
     private ResourceStore getStore() {
         return ResourceStore.getStore(this.config);
-    }
-
-    public static StreamingManager getInstance(KylinConfig config) {
-        StreamingManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (StreamingManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new StreamingManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                }
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init StreamingManager from " + config, e);
-            }
-        }
-    }
-
-    private static String formatStreamingConfigPath(String name) {
-        return ResourceStore.STREAMING_RESOURCE_ROOT + "/" + name + ".json";
-    }
-
-    private static String formatStreamingOutputPath(String streaming, int partition) {
-        return ResourceStore.STREAMING_OUTPUT_RESOURCE_ROOT + "/" + streaming + "_" + partition + ".json";
-    }
-
-    private static String formatStreamingOutputPath(String streaming, List<Integer> partitions) {
-        return ResourceStore.STREAMING_OUTPUT_RESOURCE_ROOT + "/" + streaming + "_" + StringUtils.join(partitions, "_") + ".json";
     }
 
     public StreamingConfig getStreamingConfig(String name) {

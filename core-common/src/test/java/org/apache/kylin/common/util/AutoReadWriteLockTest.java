@@ -18,25 +18,26 @@
 
 package org.apache.kylin.common.util;
 
-import org.apache.kylin.common.KylinConfig;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- * @author ysong1
- *
- */
-public abstract class AbstractKylinTestCase {
+import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
+import org.junit.Assert;
+import org.junit.Test;
 
-    public abstract void createTestMetadata(String... overlayMetadataDirs) throws Exception;
 
-    public abstract void cleanupTestMetadata() throws Exception;
-
-    public static KylinConfig getTestConfig() {
-        return KylinConfig.getInstanceFromEnv();
+public class AutoReadWriteLockTest {
+    
+    @Test
+    public void testBasics() {
+        AutoReadWriteLock lock = new AutoReadWriteLock(new ReentrantReadWriteLock());
+        try (AutoLock al = lock.lockForRead()) {
+            Assert.assertTrue(lock.innerLock().getReadHoldCount() == 1);
+        }
+        Assert.assertTrue(lock.innerLock().getReadHoldCount() == 0);
+        
+        try (AutoLock al = lock.lockForWrite()) {
+            Assert.assertTrue(lock.innerLock().getWriteHoldCount() == 1);
+        }
+        Assert.assertTrue(lock.innerLock().getWriteHoldCount() == 0);
     }
-
-    public static void staticCleanupTestMetadata() {
-        System.clearProperty(KylinConfig.KYLIN_CONF);
-        KylinConfig.destroyInstance();
-    }
-
 }

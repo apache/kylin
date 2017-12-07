@@ -26,12 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.RawResource;
@@ -50,8 +45,6 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -67,43 +60,13 @@ public class TableMetadataManager {
     public static final Serializer<ExternalFilterDesc> EXTERNAL_FILTER_DESC_SERIALIZER = new JsonSerializer<ExternalFilterDesc>(
             ExternalFilterDesc.class);
 
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, TableMetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, TableMetadataManager>();
-
     public static TableMetadataManager getInstance(KylinConfig config) {
-        TableMetadataManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (TableMetadataManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new TableMetadataManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist, current keys: {}", StringUtils
-                            .join(Iterators.transform(CACHE.keySet().iterator(), new Function<KylinConfig, String>() {
-                                @Nullable
-                                @Override
-                                public String apply(@Nullable KylinConfig input) {
-                                    return String.valueOf(System.identityHashCode(input));
-                                }
-                            }), ","));
-                }
-
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init TableMetadataManager from " + config, e);
-            }
-        }
+        return config.getManager(TableMetadataManager.class);
     }
 
-    public static void clearCache() {
-        CACHE.clear();
+    // called by reflection
+    static TableMetadataManager newInstance(KylinConfig config) throws IOException {
+        return new TableMetadataManager(config);
     }
 
     // ============================================================================
@@ -147,7 +110,6 @@ public class TableMetadataManager {
             }
             return globalTables;
         }
-        
         
         ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
         Set<String> prjTableNames = project.getTables();
@@ -359,10 +321,6 @@ public class TableMetadataManager {
     }
 
     private class SrcTableSyncListener extends Broadcaster.Listener {
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
@@ -387,10 +345,6 @@ public class TableMetadataManager {
     }
 
     private class SrcTableExtSyncListener extends Broadcaster.Listener {
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
@@ -403,10 +357,6 @@ public class TableMetadataManager {
     }
 
     private class ExtFilterSyncListener extends Broadcaster.Listener {
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)

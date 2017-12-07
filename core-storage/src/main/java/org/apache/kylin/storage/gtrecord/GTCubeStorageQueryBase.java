@@ -175,7 +175,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     protected abstract String getGTStorage();
 
     protected Cuboid findCuboid(CubeInstance cubeInstance, Set<TblColRef> dimensionsD, Set<FunctionDesc> metrics) {
-        return Cuboid.identifyCuboid(cubeInstance, dimensionsD, metrics);
+        return Cuboid.findCuboid(cubeInstance.getCuboidScheduler(), dimensionsD, metrics);
     }
 
     protected ITupleConverter newCubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid,

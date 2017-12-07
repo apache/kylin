@@ -26,7 +26,6 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.badquery.BadQueryEntry;
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
-import org.apache.kylin.metadata.model.DataModelManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -37,7 +36,6 @@ public class DiagnosisServiceTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        DataModelManager.clearCache();
     }
 
     @After

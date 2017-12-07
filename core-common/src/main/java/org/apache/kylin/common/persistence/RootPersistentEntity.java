@@ -98,6 +98,15 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     public void updateRandomUuid() {
         setUuid(UUID.randomUUID().toString());
     }
+    
+    /**
+     * The name as a part of the resource path used to save the entity.
+     * 
+     * E.g. /resource-root-dir/{RESOURCE_NAME}.json
+     */
+    public String resourceName() {
+        return uuid;
+    }
 
     @Override
     public int hashCode() {

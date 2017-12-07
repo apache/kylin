@@ -41,9 +41,7 @@ import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
-import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.junit.After;
 import org.junit.Before;
@@ -89,11 +87,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         createTestMetadata();
 
         logger.info("The metadataUrl is : " + getTestConfig());
-
-        DataModelManager.clearCache();
-        CubeManager.clearCache();
-        ProjectManager.clearCache();
-        DictionaryManager.clearCache();
+        getTestConfig().clearManagers();
 
         // hack for distributed cache
         // CubeManager.removeInstance(KylinConfig.createInstanceFromUri("../job/meta"));//to

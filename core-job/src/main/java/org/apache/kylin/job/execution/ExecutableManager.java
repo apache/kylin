@@ -22,13 +22,12 @@ import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -51,8 +50,18 @@ import com.google.common.collect.Maps;
 public class ExecutableManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ExecutableManager.class);
-    private static final ConcurrentMap<KylinConfig, ExecutableManager> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableManager>();
 
+    public static ExecutableManager getInstance(KylinConfig config) {
+        return config.getManager(ExecutableManager.class);
+    }
+
+    // called by reflection
+    static ExecutableManager newInstance(KylinConfig config) throws IOException {
+        return new ExecutableManager(config);
+    }
+
+    // ============================================================================
+    
     private final KylinConfig config;
     private final ExecutableDao executableDao;
 
@@ -60,27 +69,6 @@ public class ExecutableManager {
         logger.info("Using metadata url: " + config);
         this.config = config;
         this.executableDao = ExecutableDao.getInstance(config);
-    }
-
-    public static ExecutableManager getInstance(KylinConfig config) {
-        ExecutableManager r = CACHE.get(config);
-        if (r == null) {
-            synchronized (ExecutableManager.class) {
-                r = CACHE.get(config);
-                if (r == null) {
-                    r = new ExecutableManager(config);
-                    CACHE.put(config, r);
-                    if (CACHE.size() > 1) {
-                        logger.warn("More than one singleton exist");
-                    }
-                }
-            }
-        }
-        return r;
-    }
-
-    public static void clearCache() {
-        CACHE.clear();
     }
 
     private static ExecutablePO parse(AbstractExecutable executable) {

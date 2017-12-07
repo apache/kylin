@@ -118,6 +118,10 @@ abstract public class ResourceStore {
     protected ResourceStore(KylinConfig kylinConfig) {
         this.kylinConfig = kylinConfig;
     }
+    
+    final public KylinConfig getConfig() {
+        return kylinConfig;
+    }
 
     /**
      * List resources and sub-folders under a given folder, return null if given path is not a folder

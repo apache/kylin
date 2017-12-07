@@ -22,12 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -44,8 +39,6 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 /**
@@ -54,38 +47,12 @@ public class DataModelManager {
 
     private static final Logger logger = LoggerFactory.getLogger(DataModelManager.class);
 
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, DataModelManager> CACHE = new ConcurrentHashMap<KylinConfig, DataModelManager>();
-
     public static DataModelManager getInstance(KylinConfig config) {
-        DataModelManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (DataModelManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            r = newInstance(config);
-            CACHE.put(config, r);
-            if (CACHE.size() > 1) {
-                logger.warn("More than one singleton exist, current keys: {}", StringUtils
-                        .join(Iterators.transform(CACHE.keySet().iterator(), new Function<KylinConfig, String>() {
-                            @Nullable
-                            @Override
-                            public String apply(@Nullable KylinConfig input) {
-                                return String.valueOf(System.identityHashCode(input));
-                            }
-                        }), ","));
-            }
-
-            return r;
-        }
+        return config.getManager(DataModelManager.class);
     }
 
-    private static DataModelManager newInstance(KylinConfig conf) {
+    // called by reflection
+    static DataModelManager newInstance(KylinConfig conf) {
         try {
             String cls = StringUtil.noBlank(conf.getDataModelManagerImpl(), DataModelManager.class.getName());
             Class<? extends DataModelManager> clz = ClassUtil.forName(cls, DataModelManager.class);
@@ -93,10 +60,6 @@ public class DataModelManager {
         } catch (Exception e) {
             throw new RuntimeException("Failed to init DataModelManager from " + conf, e);
         }
-    }
-
-    public static void clearCache() {
-        CACHE.clear();
     }
 
     // ============================================================================
@@ -148,10 +111,6 @@ public class DataModelManager {
     }
 
     private class DataModelSyncListener extends Broadcaster.Listener {
-        @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-        }
 
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {

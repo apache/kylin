@@ -27,7 +27,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.apache.directory.api.util.Strings;
-import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
@@ -95,9 +94,6 @@ public class ProjectService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION')")
     public ProjectInstance updateProject(ProjectInstance newProject, ProjectInstance currentProject)
             throws IOException {
-        if (!newProject.getName().equals(currentProject.getName())) {
-            return renameProject(newProject, currentProject);
-        }
 
         String newProjectName = newProject.getName();
         String newDescription = newProject.getDescription();
@@ -108,27 +104,6 @@ public class ProjectService extends BasicService {
 
         logger.debug("Project updated.");
         return updatedProject;
-    }
-
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION')")
-    public ProjectInstance renameProject(ProjectInstance newProject, ProjectInstance currentProject)
-            throws IOException {
-        String newProjectName = newProject.getName();
-        String newDescription = newProject.getDescription();
-        LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
-
-        // rename project but keep UUID, acl keeps the same
-        ProjectInstance renamedProject = getProjectManager().renameProject(currentProject, newProjectName,
-                newDescription, overrideProps);
-
-        // rebind draft and project
-        for (Draft draft : getDraftManager().list(currentProject.getName())) {
-            draft.setProject(newProjectName);
-            getDraftManager().save(draft);
-        }
-
-        logger.debug("Project rename.");
-        return renamedProject;
     }
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)

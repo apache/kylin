@@ -376,7 +376,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         }
 
         thrown.expect(TooManyCuboidException.class);
-        CubeDescManager.clearCache();
+        getTestConfig().clearManagers();
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig())
                 .getCubeDesc("ut_cube_desc_combination_int_overflow");
         cubeDesc.init(getTestConfig());
@@ -391,7 +391,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Too many rowkeys (78) in CubeDesc, please try to reduce dimension number or adopt derived dimensions");
-        CubeDescManager.clearCache();
+        getTestConfig().clearManagers();
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("ut_78_rowkeys");
         cubeDesc.init(getTestConfig());
     }
