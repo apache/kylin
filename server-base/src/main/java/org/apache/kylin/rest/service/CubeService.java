@@ -141,9 +141,9 @@ public class CubeService extends BasicService implements InitializingBean {
 
         if (modelName != null) {
             for (CubeInstance cubeInstance : cubeInstances) {
-                boolean isCubeMatch = cubeInstance.getDescriptor().getModelName().toLowerCase()
-                        .equals(modelName.toLowerCase());
-                if (isCubeMatch) {
+                boolean isModelMatch = cubeInstance.getDescriptor().getModelName()
+                        .equalsIgnoreCase(modelName);
+                if (isModelMatch) {
                     filterModelCubes.add(cubeInstance);
                 }
             }
