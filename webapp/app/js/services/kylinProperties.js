@@ -31,11 +31,11 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   };
 
   this.getProperty = function (name) {
-    var keyIndex = _config.indexOf(name);
+    var keyIndex = _config.indexOf('\n' + name + '=');
     var keyLength = name.length;
     var partialResult = _config.substr(keyIndex);
     var preValueIndex = partialResult.indexOf("=");
-    var sufValueIndex = partialResult.indexOf("\n");
+    var sufValueIndex = partialResult.indexOf("\n", 2);
     return partialResult.substring(preValueIndex + 1, sufValueIndex);
 
   }
