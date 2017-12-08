@@ -318,7 +318,7 @@
 
         <!-- Central storage of cryptographic keys -->
         <bean id="keyManager" class="org.springframework.security.saml.key.JKSKeyManager">
-            <constructor-arg value="classpath:samlKeystore.jks"/>
+            <constructor-arg value="${kylin.security.saml.keystore-file}"/>
             <constructor-arg type="java.lang.String" value="changeit"/>
             <constructor-arg>
                 <map>
@@ -403,7 +403,7 @@
                         <constructor-arg>
                             <bean class="org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider">
                                 <constructor-arg>
-                                    <value type="java.io.File">classpath:sso_metadata.xml</value>
+                                    <value type="java.io.File">${kylin.security.saml.metadata-file}</value>
                                 </constructor-arg>
                                 <property name="parserPool" ref="parserPool"/>
                             </bean>
