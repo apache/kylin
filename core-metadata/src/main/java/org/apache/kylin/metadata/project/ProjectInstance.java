@@ -88,7 +88,7 @@ public class ProjectInstance extends RootPersistentEntity {
     private LinkedHashMap<String, String> overrideKylinProps;
 
     public String getResourcePath() {
-        return concatResourcePath(name);
+        return concatResourcePath(resourceName());
     }
 
     public static String concatResourcePath(String projectName) {

@@ -1,4 +1,5 @@
 {
+  "uuid" : "9f37ed8c-aed7-4a98-ba05-28c89cfac870",
   "session_id" : "DEFAULT_SESSION",
   "statement_id": "temp_table2",
   "statement": "as (select * from fact_table2)"

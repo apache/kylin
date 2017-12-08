@@ -182,7 +182,7 @@ public class SparkCubing extends AbstractApplication {
     private void writeDictionary(Dataset<Row> intermediateTable, String cubeName, String segmentId) throws Exception {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         final CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
-        final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
+        final CubeInstance cubeInstance = cubeManager.getCube(cubeName);
         final String[] columns = intermediateTable.columns();
         final CubeSegment seg = cubeInstance.getSegmentById(segmentId);
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
@@ -249,7 +249,7 @@ public class SparkCubing extends AbstractApplication {
     }
 
     private Map<Long, HLLCounter> sampling(final JavaRDD<List<String>> rowJavaRDD, final String cubeName, String segmentId) throws Exception {
-        CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
+        CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
         CubeDesc cubeDesc = cubeInstance.getDescriptor();
         CuboidScheduler cuboidScheduler = cubeInstance.getCuboidScheduler();

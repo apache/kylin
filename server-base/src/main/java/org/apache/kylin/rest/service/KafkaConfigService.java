@@ -75,7 +75,7 @@ public class KafkaConfigService extends BasicService {
         if (getKafkaManager().getKafkaConfig(config.getName()) != null) {
             throw new BadRequestException(String.format(msg.getKAFKA_CONFIG_ALREADY_EXIST(), config.getName()));
         }
-        getKafkaManager().createKafkaConfig(config.getName(), config);
+        getKafkaManager().createKafkaConfig(config);
         return config;
     }
 

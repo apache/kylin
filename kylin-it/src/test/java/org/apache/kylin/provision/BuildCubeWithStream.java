@@ -131,7 +131,7 @@ public class BuildCubeWithStream {
         BrokerConfig brokerConfig = kafkaConfig.getKafkaClusterConfigs().get(0).getBrokerConfigs().get(0);
         brokerConfig.setHost(localIp);
         kafkaConfig.setTopic(topicName);
-        KafkaConfigManager.getInstance(kylinConfig).saveKafkaConfig(kafkaConfig);
+        KafkaConfigManager.getInstance(kylinConfig).updateKafkaConfig(kafkaConfig);
 
         startEmbeddedKafka(topicName, brokerConfig);
     }

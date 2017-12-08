@@ -19,13 +19,14 @@
 package org.apache.kylin.metadata.acl;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.AutoReadWriteLock;
+import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
+import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +36,6 @@ import org.slf4j.LoggerFactory;
 public class TableACLManager {
 
     private static final Logger logger = LoggerFactory.getLogger(TableACLManager.class);
-
-    private static final Serializer<TableACL> TABLE_ACL_SERIALIZER = new JsonSerializer<>(TableACL.class);
-    private static final String DIR_PREFIX = "/table_acl/";
 
     public static TableACLManager getInstance(KylinConfig config) {
         return config.getManager(TableACLManager.class);
@@ -53,20 +51,36 @@ public class TableACLManager {
     private KylinConfig config;
     // user ==> TableACL
     private CaseInsensitiveStringCache<TableACL> tableACLMap;
+    private CachedCrudAssist<TableACL> crud;
+    private AutoReadWriteLock lock = new AutoReadWriteLock();
 
     public TableACLManager(KylinConfig config) throws IOException {
         logger.info("Initializing TableACLManager with config " + config);
         this.config = config;
         this.tableACLMap = new CaseInsensitiveStringCache<>(config, "table_acl");
-        loadAllTableACL();
+        this.crud = new CachedCrudAssist<TableACL>(getStore(), "/table_acl", "", TableACL.class, tableACLMap) {
+            @Override
+            protected TableACL initEntityAfterReload(TableACL acl, String resourceName) {
+                acl.init(resourceName);
+                return acl;
+            }
+        };
+
+        crud.reloadAll();
         Broadcaster.getInstance(config).registerListener(new TableACLSyncListener(), "table_acl");
     }
 
     private class TableACLSyncListener extends Broadcaster.Listener {
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey) throws IOException {
-            reloadTableACL(cacheKey);
+        public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey)
+                throws IOException {
+            try (AutoLock l = lock.lockForWrite()) {
+                if (event == Event.DROP)
+                    tableACLMap.removeLocal(cacheKey);
+                else
+                    crud.reloadQuietly(cacheKey);
+            }
             broadcaster.notifyProjectACLUpdate(cacheKey);
         }
     }
@@ -79,64 +93,57 @@ public class TableACLManager {
         return ResourceStore.getStore(this.config);
     }
 
-    public TableACL getTableACLByCache(String project){
-        TableACL tableACL = tableACLMap.get(project);
-        if (tableACL == null) {
-            return new TableACL();
+    public TableACL getTableACLByCache(String project) {
+        try (AutoLock l = lock.lockForRead()) {
+            TableACL tableACL = tableACLMap.get(project);
+            if (tableACL == null) {
+                return newTableACL(project);
+            }
+            return tableACL;
         }
-        return tableACL;
-    }
-
-    private void loadAllTableACL() throws IOException {
-        ResourceStore store = getStore();
-        List<String> paths = store.collectResourceRecursively("/table_acl", "");
-        final int prefixLen = DIR_PREFIX.length();
-        for (String path : paths) {
-            String project = path.substring(prefixLen, path.length());
-            reloadTableACL(project);
-        }
-        logger.info("Loading table ACL from folder " + store.getReadableResourcePath("/table_acl"));
-    }
-
-    private void reloadTableACL(String project) throws IOException {
-        TableACL tableACLRecord = getTableACL(project);
-        tableACLMap.putLocal(project, tableACLRecord);
-    }
-
-    private TableACL getTableACL(String project) throws IOException {
-        String path = DIR_PREFIX + project;
-        TableACL tableACLRecord = getStore().getResource(path, TableACL.class, TABLE_ACL_SERIALIZER);
-        if (tableACLRecord == null) {
-            return new TableACL();
-        }
-        return tableACLRecord;
     }
 
     public void addTableACL(String project, String name, String table, String type) throws IOException {
-        String path = DIR_PREFIX + project;
-        TableACL tableACL = getTableACL(project).add(name, table, type);
-        getStore().putResource(path, tableACL, System.currentTimeMillis(), TABLE_ACL_SERIALIZER);
-        tableACLMap.put(project, tableACL);
+        try (AutoLock l = lock.lockForWrite()) {
+            TableACL tableACL = loadTableACL(project).add(name, table, type);
+            crud.save(tableACL);
+        }
     }
 
     public void deleteTableACL(String project, String name, String table, String type) throws IOException {
-        String path = DIR_PREFIX + project;
-        TableACL tableACL = getTableACL(project).delete(name, table, type);
-        getStore().putResource(path, tableACL, System.currentTimeMillis(), TABLE_ACL_SERIALIZER);
-        tableACLMap.put(project, tableACL);
+        try (AutoLock l = lock.lockForWrite()) {
+            TableACL tableACL = loadTableACL(project).delete(name, table, type);
+            crud.save(tableACL);
+        }
     }
 
     public void deleteTableACL(String project, String name, String type) throws IOException {
-        String path = DIR_PREFIX + project;
-        TableACL tableACL = getTableACL(project).delete(name, type);
-        getStore().putResource(path, tableACL, System.currentTimeMillis(), TABLE_ACL_SERIALIZER);
-        tableACLMap.put(project, tableACL);
+        try (AutoLock l = lock.lockForWrite()) {
+            TableACL tableACL = loadTableACL(project).delete(name, type);
+            crud.save(tableACL);
+        }
     }
 
     public void deleteTableACLByTbl(String project, String table) throws IOException {
-        String path = DIR_PREFIX + project;
-        TableACL tableACL = getTableACL(project).deleteByTbl(table);
-        getStore().putResource(path, tableACL, System.currentTimeMillis(), TABLE_ACL_SERIALIZER);
-        tableACLMap.put(project, tableACL);
+        try (AutoLock l = lock.lockForWrite()) {
+            TableACL tableACL = loadTableACL(project).deleteByTbl(table);
+            crud.save(tableACL);
+        }
     }
+
+    private TableACL loadTableACL(String project) throws IOException {
+        TableACL acl = crud.reload(project);
+        if (acl == null) {
+            acl = newTableACL(project);
+        }
+        return acl;
+    }
+
+    private TableACL newTableACL(String project) {
+        TableACL acl = new TableACL();
+        acl.updateRandomUuid();
+        acl.init(project);
+        return acl;
+    }
+
 }

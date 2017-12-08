@@ -70,12 +70,11 @@ public class ProjectManager {
     
     // project name => ProjrectInstance
     private CaseInsensitiveStringCache<ProjectInstance> projectMap;
-    
-    // protects concurrent operations around the projectMap, to avoid for example
-    // writing a project in the middle of reloading it (dirty read)
-    private AutoReadWriteLock prjMapLock = new AutoReadWriteLock();
-    
     private CachedCrudAssist<ProjectInstance> crud;
+    
+    // protects concurrent operations around the cached map, to avoid for example
+    // writing an entity in the middle of reloading it (dirty read)
+    private AutoReadWriteLock prjMapLock = new AutoReadWriteLock();
 
     private ProjectManager(KylinConfig config) throws IOException {
         logger.info("Initializing ProjectManager with metadata url " + config);
@@ -85,13 +84,14 @@ public class ProjectManager {
         this.crud = new CachedCrudAssist<ProjectInstance>(getStore(), ResourceStore.PROJECT_RESOURCE_ROOT,
                 ProjectInstance.class, projectMap) {
             @Override
-            protected void initEntityAfterReload(ProjectInstance prj) {
+            protected ProjectInstance initEntityAfterReload(ProjectInstance prj, String resourceName) {
                 prj.init();
+                return prj;
             }
         };
 
+        // touch lower level metadata before registering my listener
         crud.reloadAll();
-        
         Broadcaster.getInstance(config).registerListener(new ProjectSyncListener(), "project");
     }
 

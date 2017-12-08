@@ -18,6 +18,8 @@
 
 package org.apache.kylin.cube;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,8 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -63,6 +67,8 @@ import com.google.common.collect.Lists;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity implements IRealization, IBuildable {
+    private static final Logger logger = LoggerFactory.getLogger(CubeInstance.class);
+
     public static final int COST_WEIGHT_MEASURE = 1;
     public static final int COST_WEIGHT_DIMENSION = 10;
     public static final int COST_WEIGHT_INNER_JOIN = 100;
@@ -121,6 +127,24 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     // default constructor for jackson
     public CubeInstance() {
     }
+    
+    void init(KylinConfig config) {
+        CubeDesc cubeDesc = CubeDescManager.getInstance(config).getCubeDesc(descName);
+        checkNotNull(cubeDesc, "cube descriptor '%s' (for cube '%s') not found", descName, name);
+
+        if (cubeDesc.isBroken()) {
+            setStatus(RealizationStatusEnum.DESCBROKEN);
+            logger.error("cube descriptor {} (for cube '{}') is broken", cubeDesc.getResourcePath(), name);
+            for (String error : cubeDesc.getError()) {
+                logger.error("Error: {}", error);
+            }
+        } else if (getStatus() == RealizationStatusEnum.DESCBROKEN) {
+            setStatus(RealizationStatusEnum.DISABLED);
+            logger.info("cube {} changed from DESCBROKEN to DISABLED", name);
+        }
+
+        setConfig((KylinConfigExt) cubeDesc.getConfig());
+    }
 
     public CuboidScheduler getCuboidScheduler() {
         if (cuboidScheduler != null)
@@ -174,9 +198,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return (getStatus() == RealizationStatusEnum.DISABLED || getStatus() == RealizationStatusEnum.DESCBROKEN)
                 && segments.isEmpty();
     }
+    
+    @Override
+    public String resourceName() {
+        return name;
+    }
 
     public String getResourcePath() {
-        return concatResourcePath(name);
+        return concatResourcePath(resourceName());
     }
 
     public static String concatResourcePath(String cubeName) {

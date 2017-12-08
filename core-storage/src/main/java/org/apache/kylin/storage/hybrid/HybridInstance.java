@@ -50,15 +50,26 @@ import com.google.common.collect.Lists;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class HybridInstance extends RootPersistentEntity implements IRealization {
 
+    private final static Logger logger = LoggerFactory.getLogger(HybridInstance.class);
+
+    public static HybridInstance create(KylinConfig config, String name, List<RealizationEntry> realizationEntries) {
+        HybridInstance hybridInstance = new HybridInstance();
+
+        hybridInstance.setConfig(config);
+        hybridInstance.setName(name);
+        hybridInstance.setRealizationEntries(realizationEntries);
+        hybridInstance.updateRandomUuid();
+
+        return hybridInstance;
+    }
+    
+    // ============================================================================
+
     @JsonIgnore
     private KylinConfig config;
 
     @JsonProperty("name")
     private String name;
-
-    public void setRealizationEntries(List<RealizationEntry> realizationEntries) {
-        this.realizationEntries = realizationEntries;
-    }
 
     @JsonProperty("realizations")
     private List<RealizationEntry> realizationEntries;
@@ -75,21 +86,17 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     private long dateRangeEnd;
     private boolean isReady = false;
 
-    private final static Logger logger = LoggerFactory.getLogger(HybridInstance.class);
-
+    @Override
+    public String resourceName() {
+        return name;
+    }
+    
     public List<RealizationEntry> getRealizationEntries() {
         return realizationEntries;
     }
 
-    public static HybridInstance create(KylinConfig config, String name, List<RealizationEntry> realizationEntries) {
-        HybridInstance hybridInstance = new HybridInstance();
-
-        hybridInstance.setConfig(config);
-        hybridInstance.setName(name);
-        hybridInstance.setRealizationEntries(realizationEntries);
-        hybridInstance.updateRandomUuid();
-
-        return hybridInstance;
+    public void setRealizationEntries(List<RealizationEntry> realizationEntries) {
+        this.realizationEntries = realizationEntries;
     }
 
     private void init() {

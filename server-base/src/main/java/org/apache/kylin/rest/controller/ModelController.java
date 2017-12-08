@@ -206,7 +206,7 @@ public class ModelController extends BasicController {
             newModelDesc = modelService.createModelDesc(project, newModelDesc);
 
             //reload avoid shallow
-            metaManager.reloadDataModelDescAt(DataModelDesc.concatResourcePath(newModelName));
+            metaManager.reloadDataModel(newModelName);
         } catch (IOException e) {
             throw new InternalErrorException("failed to clone DataModelDesc", e);
         }

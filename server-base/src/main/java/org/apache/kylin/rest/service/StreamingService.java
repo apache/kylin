@@ -41,7 +41,7 @@ public class StreamingService extends BasicService {
         if (StringUtils.isEmpty(table)) {
             streamingConfigs = getStreamingManager().listAllStreaming();
         } else {
-            StreamingConfig config = getStreamingManager().getConfig(table);
+            StreamingConfig config = getStreamingManager().getStreamingConfig(table);
             if (config != null) {
                 streamingConfigs.add(config);
             }
@@ -73,7 +73,7 @@ public class StreamingService extends BasicService {
         if (getStreamingManager().getStreamingConfig(config.getName()) != null) {
             throw new BadRequestException(String.format(msg.getSTREAMING_CONFIG_ALREADY_EXIST(), config.getName()));
         }
-        StreamingConfig streamingConfig = getStreamingManager().saveStreamingConfig(config);
+        StreamingConfig streamingConfig = getStreamingManager().createStreamingConfig(config);
         return streamingConfig;
     }
 

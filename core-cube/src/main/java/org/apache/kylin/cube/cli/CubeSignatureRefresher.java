@@ -97,7 +97,7 @@ public class CubeSignatureRefresher {
             String calculatedSign = cubeDesc.calculateSignature();
             if (cubeDesc.getSignature() == null || (!cubeDesc.getSignature().equals(calculatedSign))) {
                 cubeDesc.setSignature(calculatedSign);
-                store.putResource(cubeDesc.getResourcePath(), cubeDesc, CubeDescManager.CUBE_DESC_SERIALIZER);
+                store.putResource(cubeDesc.getResourcePath(), cubeDesc, CubeDesc.newSerializerForLowLevelAccess());
                 updatedResources.add(cubeDesc.getResourcePath());
             }
         } catch (Exception e) {

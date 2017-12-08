@@ -47,6 +47,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.KylinVersion;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
@@ -58,13 +59,13 @@ import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -89,6 +90,11 @@ import com.google.common.collect.Sets;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     private static final Logger logger = LoggerFactory.getLogger(CubeDesc.class);
+
+    // Use with care! Normally you should go to CubeDescManager and don't need this.
+    public static JsonSerializer<CubeDesc> newSerializerForLowLevelAccess() {
+        return new JsonSerializer<>(CubeDesc.class);
+    }
 
     public static class CannotFilterExtendedColumnException extends RuntimeException {
         public CannotFilterExtendedColumnException(TblColRef tblColRef) {
@@ -122,6 +128,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
 
     }
+    
+    // ============================================================================
 
     private KylinConfigExt config;
     private DataModelDesc model;
@@ -183,6 +191,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private int parentForward = 3;
 
+    // Error messages during resolving json metadata
+    private List<String> errors = new ArrayList<String>();
+
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
     private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
     private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<>();
@@ -194,6 +205,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     transient volatile private CuboidScheduler cuboidScheduler = null;
 
+    @Override
+    public String resourceName() {
+        return name;
+    }
+    
     public boolean isEnableSharding() {
         //in the future may extend to other storage that is shard-able
         return storageType != IStorageAware.ID_HBASE && storageType != IStorageAware.ID_HYBRID;
@@ -202,11 +218,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     public Set<TblColRef> getShardByColumns() {
         return getRowkey().getShardByColumns();
     }
-
-    /**
-     * Error messages during resolving json metadata
-     */
-    private List<String> errors = new ArrayList<String>();
 
     /**
      * @return all columns this cube can support, including derived
@@ -311,7 +322,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public String getResourcePath() {
-        return concatResourcePath(name);
+        return concatResourcePath(resourceName());
     }
 
     public static String concatResourcePath(String descName) {
@@ -1115,6 +1126,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     public void setAutoMergeTimeRanges(long[] autoMergeTimeRanges) {
         this.autoMergeTimeRanges = autoMergeTimeRanges;
+    }
+    
+    public boolean isBroken() {
+        return !errors.isEmpty();
     }
 
     public void addError(String message) {

@@ -124,6 +124,11 @@ public class DataModelDesc extends RootPersistentEntity {
     public KylinConfig getConfig() {
         return config;
     }
+    
+    @Override
+    public String resourceName() {
+        return name;
+    }
 
     public String getName() {
         return name;
@@ -721,7 +726,7 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public String getResourcePath() {
-        return concatResourcePath(name);
+        return concatResourcePath(resourceName());
     }
 
     public static String concatResourcePath(String descName) {

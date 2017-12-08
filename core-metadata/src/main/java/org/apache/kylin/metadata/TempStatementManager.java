@@ -23,11 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.AutoReadWriteLock;
+import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +38,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TempStatementManager {
     private static final Logger logger = LoggerFactory.getLogger(TempStatementManager.class);
-    public static final Serializer<TempStatementEntity> TEMP_STATEMENT_SERIALIZER = new JsonSerializer<>(
-            TempStatementEntity.class);
 
     public static TempStatementManager getInstance(KylinConfig config) {
         return config.getManager(TempStatementManager.class);
@@ -52,60 +51,39 @@ public class TempStatementManager {
     // ============================================================================
 
     private KylinConfig config;
-    private CaseInsensitiveStringCache<String> tempStatementMap;
+    private CaseInsensitiveStringCache<TempStatementEntity> tmpStatMap;
+    private CachedCrudAssist<TempStatementEntity> crud;
+    private AutoReadWriteLock lock = new AutoReadWriteLock();
 
-    private TempStatementManager(KylinConfig config) throws IOException {
-        init(config);
-    }
+    private TempStatementManager(KylinConfig cfg) throws IOException {
+        this.config = cfg;
+        this.tmpStatMap = new CaseInsensitiveStringCache<>(config, "temp_statement");
+        this.crud = new CachedCrudAssist<TempStatementEntity>(getStore(), ResourceStore.TEMP_STATMENT_RESOURCE_ROOT,
+                TempStatementEntity.class, tmpStatMap) {
+            @Override
+            protected TempStatementEntity initEntityAfterReload(TempStatementEntity t, String resourceName) {
+                return t; // noop
+            }
+        };
 
-    private void init(KylinConfig config) throws IOException {
-        this.config = config;
-        this.tempStatementMap = new CaseInsensitiveStringCache<>(config, "temp_statement");
-
-        reloadAllTempStatement();
+        crud.reloadAll();
 
         // touch lower level metadata before registering my listener
         Broadcaster.getInstance(config).registerListener(new TempStatementSyncListener(), "temp_statement");
     }
 
-    private void reloadAllTempStatement() throws IOException {
-        ResourceStore store = getStore();
-        logger.debug("Reloading temp statement from folder "
-                + store.getReadableResourcePath(ResourceStore.TEMP_STATMENT_RESOURCE_ROOT));
+    private class TempStatementSyncListener extends Broadcaster.Listener {
 
-        tempStatementMap.clear();
-
-        List<String> paths = store.collectResourceRecursively(ResourceStore.TEMP_STATMENT_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
-        for (String path : paths) {
-            reloadTempStatementAt(path);
+        @Override
+        public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey)
+                throws IOException {
+            try (AutoLock l = lock.lockForWrite()) {
+                if (event == Broadcaster.Event.DROP)
+                    tmpStatMap.removeLocal(cacheKey);
+                else
+                    crud.reloadQuietly(cacheKey);
+            }
         }
-
-        logger.debug("Loaded " + tempStatementMap.size() + " Temp Statement(s)");
-    }
-
-    private TempStatementEntity reloadTempStatement(String statementId) throws IOException {
-        return reloadTempStatement(TempStatementEntity.DEFAULT_SESSION_ID, statementId);
-    }
-
-    private TempStatementEntity reloadTempStatement(String sessionId, String statementId) throws IOException {
-        return reloadTempStatementAt(TempStatementEntity.concatResourcePath(sessionId, statementId));
-    }
-
-    private TempStatementEntity reloadTempStatementAt(String path) throws IOException {
-        ResourceStore store = getStore();
-
-        TempStatementEntity s = store.getResource(path, TempStatementEntity.class, TEMP_STATEMENT_SERIALIZER);
-        if (s == null) {
-            return null;
-        }
-
-        tempStatementMap.putLocal(s.getMapKey(), s.getStatement());
-        return s;
-    }
-
-    public ResourceStore getStore() {
-        return ResourceStore.getStore(this.config);
     }
 
     public String getTempStatement(String statementId) {
@@ -113,12 +91,22 @@ public class TempStatementManager {
     }
 
     public String getTempStatement(String sessionId, String statementId) {
-        return tempStatementMap.get(TempStatementEntity.getMapKey(sessionId, statementId));
+        TempStatementEntity entity = getTempStatEntity(sessionId, statementId);
+        return entity == null ? null : entity.statement;
     }
+
+    public TempStatementEntity getTempStatEntity(String sessionId, String statementId) {
+        try (AutoLock l = lock.lockForRead()) {
+            return tmpStatMap.get(TempStatementEntity.resourceName(sessionId, statementId));
+        }
+    }
+
     // for test
-    List<String> listAllTempStatement() throws IOException {
-        reloadAllTempStatement();
-        return new ArrayList<>(tempStatementMap.keySet());
+    List<String> reloadAllTempStatement() throws IOException {
+        try (AutoLock l = lock.lockForWrite()) {
+            crud.reloadAll();
+            return new ArrayList<>(tmpStatMap.keySet());
+        }
     }
 
     public void updateTempStatement(String statementId, String statement) throws IOException {
@@ -126,15 +114,28 @@ public class TempStatementManager {
     }
 
     public void updateTempStatement(String sessionId, String statementId, String statement) throws IOException {
-        TempStatementEntity entity = new TempStatementEntity(sessionId, statementId, statement);
-        updateTempStatementWithRetry(entity, 0);
-        tempStatementMap.put(entity.getMapKey(), statement);
+        try (AutoLock l = lock.lockForWrite()) {
+            TempStatementEntity entity = new TempStatementEntity(sessionId, statementId, statement);
+            entity = prepareToOverwrite(entity, getTempStatEntity(sessionId, statementId));
+            updateTempStatementWithRetry(entity, 0);
+        }
     }
 
-    public void updateTempStatementWithRetry(TempStatementEntity entity, int retry) throws IOException {
-        ResourceStore store = getStore();
+    private TempStatementEntity prepareToOverwrite(TempStatementEntity entity, TempStatementEntity origin) {
+        if (origin == null) {
+            // create
+            entity.updateRandomUuid();
+        } else {
+            // update
+            entity.setUuid(origin.getUuid());
+            entity.setLastModified(origin.getLastModified());
+        }
+        return entity;
+    }
+
+    private void updateTempStatementWithRetry(TempStatementEntity entity, int retry) throws IOException {
         try {
-            store.putResource(entity.concatResourcePath(), entity, TEMP_STATEMENT_SERIALIZER);
+            crud.save(entity);
         } catch (IllegalStateException ise) {
             logger.warn("Write conflict to update temp statement" + entity.statementId + " at try " + retry
                     + ", will retry...");
@@ -143,35 +144,27 @@ public class TempStatementManager {
                 throw ise;
             }
 
-            TempStatementEntity reload = reloadTempStatement(entity.statementId);
-            reload.setStatement(entity.statement);
-            retry++;
-            updateTempStatementWithRetry(reload, retry);
+            TempStatementEntity reload = crud.reload(entity.resourceName());
+            entity = prepareToOverwrite(entity, reload);
+            updateTempStatementWithRetry(entity, ++retry);
         }
     }
+
     public void removeTempStatement(String statementId) throws IOException {
         removeTempStatement(TempStatementEntity.DEFAULT_SESSION_ID, statementId);
     }
 
     public void removeTempStatement(String session, String statementId) throws IOException {
-        ResourceStore store = getStore();
-        store.deleteResource(TempStatementEntity.concatResourcePath(session, statementId));
-        tempStatementMap.remove(TempStatementEntity.concatResourcePath(session, statementId));
-    }
-
-    private class TempStatementSyncListener extends Broadcaster.Listener {
-
-        @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey)
-                throws IOException {
-            if (event == Broadcaster.Event.DROP)
-                tempStatementMap.removeLocal(cacheKey);
-            else
-                reloadTempStatementAt(TempStatementEntity.concatResourcePath(cacheKey));
+        try (AutoLock l = lock.lockForWrite()) {
+            crud.delete(TempStatementEntity.resourceName(session, statementId));
         }
     }
 
-    @SuppressWarnings("serial")
+    private ResourceStore getStore() {
+        return ResourceStore.getStore(this.config);
+    }
+
+    @SuppressWarnings({ "serial", "unused" })
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
     private static class TempStatementEntity extends RootPersistentEntity {
         private static final String DEFAULT_SESSION_ID = "DEFAULT_SESSION";
@@ -217,10 +210,15 @@ public class TempStatementManager {
          * @return
          */
         public String getMapKey() {
+            return resourceName();
+        }
+
+        @Override
+        public String resourceName() {
             return sessionId + "/" + statementId;
         }
 
-        public static String getMapKey(String sessionId, String statementId) {
+        public static String resourceName(String sessionId, String statementId) {
             return sessionId + "/" + statementId;
         }
 
@@ -233,7 +231,8 @@ public class TempStatementManager {
         }
 
         public static String concatResourcePath(String sessionId, String statementId) {
-            return ResourceStore.TEMP_STATMENT_RESOURCE_ROOT + "/" + sessionId + "/" + statementId + MetadataConstants.FILE_SURFIX;
+            return ResourceStore.TEMP_STATMENT_RESOURCE_ROOT + "/" + sessionId + "/" + statementId
+                    + MetadataConstants.FILE_SURFIX;
         }
     }
 }

@@ -41,10 +41,48 @@ import com.google.common.collect.Lists;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class TableDesc extends RootPersistentEntity implements ISourceAware {
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(TableDesc.class);
 
     private static final String TABLE_TYPE_VIRTUAL_VIEW = "VIRTUAL_VIEW";
     private static final String materializedTableNamePrefix = "kylin_intermediate_";
+
+    public static String concatRawResourcePath(String nameOnPath) {
+        return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";
+    }
+    
+    public static String makeResourceName(String tableIdentity, String prj) {
+        return prj == null ? tableIdentity : tableIdentity + "--" + prj;
+    }
+
+    // this method should only used for getting dest path when copying from src to dest.
+    // if you want to get table's src path, use getResourcePath() instead.
+    private static String concatResourcePath(String tableIdentity, String prj) {
+        return concatRawResourcePath(makeResourceName(tableIdentity, prj));
+    }
+
+    // returns <table, project>
+    public static Pair<String, String> parseResourcePath(String path) {
+        if (path.endsWith(".json"))
+            path = path.substring(0, path.length() - ".json".length());
+
+        int cut = path.lastIndexOf("/");
+        if (cut >= 0)
+            path = path.substring(cut + 1);
+
+        String table, prj;
+        int dash = path.indexOf("--");
+        if (dash >= 0) {
+            table = path.substring(0, dash);
+            prj = path.substring(dash + 2);
+        } else {
+            table = path;
+            prj = null;
+        }
+        return Pair.newPair(table, prj);
+    }
+
+    // ============================================================================
 
     @JsonProperty("name")
     private String name;
@@ -87,6 +125,11 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         this.identity = other.identity;
     }
 
+    @Override
+    public String resourceName() {
+        return makeResourceName(getIdentity(), getProject());
+    }
+    
     public TableDesc appendColumns(ColumnDesc[] computedColumns, boolean makeCopy) {
         if (computedColumns == null || computedColumns.length == 0) {
             return this;
@@ -169,42 +212,6 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public boolean isView() {
         return TABLE_TYPE_VIRTUAL_VIEW.equals(tableType);
     }
-
-    public static String concatRawResourcePath(String nameOnPath) {
-        return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";
-    }
-
-    // this method should only used for getting dest path when copying from src to dest.
-    // if you want to get table's src path, use getResourcePath() instead.
-    private static String concatResourcePath(String tableIdentity, String prj) {
-        if (prj == null || prj.isEmpty())
-            return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + ".json";
-        else
-            return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + "--" + prj + ".json";
-    }
-
-    // returns <table, project>
-    public static Pair<String, String> parseResourcePath(String path) {
-        if (path.endsWith(".json"))
-            path = path.substring(0, path.length() - ".json".length());
-
-        int cut = path.lastIndexOf("/");
-        if (cut >= 0)
-            path = path.substring(cut + 1);
-
-        String table, prj;
-        int dash = path.indexOf("--");
-        if (dash >= 0) {
-            table = path.substring(0, dash);
-            prj = path.substring(dash + 2);
-        } else {
-            table = path;
-            prj = null;
-        }
-        return Pair.newPair(table, prj);
-    }
-
-    // ============================================================================
 
     public boolean isBorrowedFromGlobal() {
         return isBorrowedFromGlobal;

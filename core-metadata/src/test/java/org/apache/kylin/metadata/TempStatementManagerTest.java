@@ -46,21 +46,21 @@ public class TempStatementManagerTest extends LocalFileMetadataTestCase {
     public void testAddTempStatement() throws IOException {
         TempStatementManager manager = TempStatementManager.getInstance(getTestConfig());
         manager.updateTempStatement("temp_table3", "AAAAA");
-        Assert.assertEquals(3, manager.listAllTempStatement().size());
+        Assert.assertEquals(3, manager.reloadAllTempStatement().size());
     }
 
     @Test
     public void testRemoveTempStatement() throws IOException {
         TempStatementManager manager = TempStatementManager.getInstance(getTestConfig());
         manager.removeTempStatement("temp_table1");
-        Assert.assertEquals(1, manager.listAllTempStatement().size());
+        Assert.assertEquals(1, manager.reloadAllTempStatement().size());
     }
 
     @Test
     public void testUpdateTempStatement() throws IOException {
         TempStatementManager manager = TempStatementManager.getInstance(getTestConfig());
         manager.updateTempStatement("temp_table1", "AAAAA");
-        Assert.assertEquals(2, manager.listAllTempStatement().size());
+        Assert.assertEquals(2, manager.reloadAllTempStatement().size());
         Assert.assertEquals("AAAAA", manager.getTempStatement("temp_table1"));
     }
 }

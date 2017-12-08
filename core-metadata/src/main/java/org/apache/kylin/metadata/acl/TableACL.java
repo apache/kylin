@@ -48,6 +48,17 @@ public class TableACL extends RootPersistentEntity {
     @JsonProperty()
     private TableACLEntry groupTableBlackList = new TableACLEntry();
 
+    private String project;
+    
+    void init(String project) {
+        this.project = project;
+    }
+    
+    @Override
+    public String resourceName() {
+        return project;
+    }
+    
     public Set<String> getTableBlackList(String username, Set<String> groups) {
         Set<String> tableBlackList = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         tableBlackList.addAll(userTableBlackList.getTableBlackList(username));

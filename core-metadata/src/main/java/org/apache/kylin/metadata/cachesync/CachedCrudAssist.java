@@ -26,6 +26,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
     final private ResourceStore store;
     final private Class<T> entityType;
     final private String resRootPath;
+    final private String resPathSuffix;
     final private Serializer<T> serializer;
     final private SingleValueCache<String, T> cache;
 
@@ -45,9 +47,15 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
 
     public CachedCrudAssist(ResourceStore store, String resourceRootPath, Class<T> entityType,
             SingleValueCache<String, T> cache) {
+        this(store, resourceRootPath, MetadataConstants.FILE_SURFIX, entityType, cache);
+    }
+
+    public CachedCrudAssist(ResourceStore store, String resourceRootPath, String resourcePathSuffix,
+            Class<T> entityType, SingleValueCache<String, T> cache) {
         this.store = store;
         this.entityType = entityType;
         this.resRootPath = resourceRootPath;
+        this.resPathSuffix = resourcePathSuffix;
         this.serializer = new JsonSerializer<T>(entityType);
         this.cache = cache;
 
@@ -57,12 +65,23 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         Preconditions.checkArgument(resRootPath.endsWith("/") == false);
     }
 
+    public Serializer<DataModelDesc> getSerializer() {
+        return (Serializer<DataModelDesc>) serializer;
+    }
+
     public void setCheckOnWrite(boolean check) {
         this.checkCopyOnWrite = check;
     }
 
     private String resourcePath(String resourceName) {
-        return resRootPath + "/" + resourceName + MetadataConstants.FILE_SURFIX;
+        return resRootPath + "/" + resourceName + resPathSuffix;
+    }
+
+    private String resourceName(String resourcePath) {
+        Preconditions.checkArgument(resourcePath.startsWith(resRootPath));
+        Preconditions.checkArgument(resourcePath.endsWith(resPathSuffix));
+        return resourcePath.substring(resRootPath.length() + 1,
+                resourcePath.length() - resPathSuffix.length());
     }
 
     public void reloadAll() throws IOException {
@@ -70,15 +89,16 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
 
         cache.clear();
 
-        List<String> paths = store.collectResourceRecursively(resRootPath, MetadataConstants.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(resRootPath, resPathSuffix);
         for (String path : paths) {
             reloadQuietlyAt(path);
         }
 
-        logger.debug("Loaded " + cache.size() + " " + entityType.getName() + "(s)");
+        logger.debug(
+                "Loaded " + cache.size() + " " + entityType.getName() + "(s) out of " + paths.size() + " resource");
     }
 
-    public T reload(String resourceName) throws IOException {
+    public T reload(String resourceName) {
         return reloadAt(resourcePath(resourceName));
     }
 
@@ -95,25 +115,38 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         }
     }
 
-    public T reloadAt(String path) throws IOException {
-        T entity = store.getResource(path, entityType, serializer);
-        if (entity == null) {
-            logger.warn("No " + entityType.getName() + " found at " + path + ", returning null");
-            return null;
+    public T reloadAt(String path) {
+        try {
+            T entity = store.getResource(path, entityType, serializer);
+            if (entity == null) {
+                logger.warn("No " + entityType.getName() + " found at " + path + ", returning null");
+                cache.removeLocal(resourceName(path));
+                return null;
+            }
+
+            entity = initEntityAfterReload(entity, resourceName(path));
+
+            if (path.equals(resourcePath(entity.resourceName())) == false)
+                throw new IllegalStateException("The entity " + entity + " read from " + path
+                        + " will save to a different path " + resourcePath(entity.resourceName()));
+
+            cache.putLocal(entity.resourceName(), entity);
+            return entity;
+        } catch (Exception e) {
+            throw new IllegalStateException("Error loading " + entityType.getName() + " at " + path, e);
         }
-        
-        initEntityAfterReload(entity);
-        cache.putLocal(entity.resourceName(), entity);
-        return entity;
     }
 
-    abstract protected void initEntityAfterReload(T entity);
+    abstract protected T initEntityAfterReload(T entity, String resourceName);
 
     public T save(T entity) throws IOException {
         Preconditions.checkArgument(entity != null);
+        Preconditions.checkArgument(entity.getUuid() != null);
         Preconditions.checkArgument(entityType.isInstance(entity));
 
         String resName = entity.resourceName();
+        Preconditions.checkArgument(resName != null && resName.length() > 0);
+
         if (checkCopyOnWrite) {
             if (cache.get(resName) == entity) {
                 throw new IllegalStateException("Copy-on-write violation! The updating entity " + entity
@@ -121,7 +154,10 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
             }
         }
 
-        store.putResource(resourcePath(resName), entity, serializer);
+        String path = resourcePath(resName);
+        logger.debug("Saving {} at {}", entityType.getName(), path);
+
+        store.putResource(path, entity, serializer);
         cache.put(resName, entity);
         return entity;
     }
@@ -132,7 +168,11 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
 
     public void delete(String resName) throws IOException {
         Preconditions.checkArgument(resName != null);
-        store.deleteResource(resourcePath(resName));
+
+        String path = resourcePath(resName);
+        logger.debug("Deleting {} at {}", entityType.getName(), path);
+
+        store.deleteResource(path);
         cache.remove(resName);
     }
 

@@ -24,12 +24,12 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.Serializer;
-import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.common.util.AutoReadWriteLock;
+import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
@@ -39,10 +39,9 @@ import org.slf4j.LoggerFactory;
  */
 public class KafkaConfigManager {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(KafkaConfigManager.class);
 
-    public static final Serializer<KafkaConfig> KAFKA_SERIALIZER = new JsonSerializer<KafkaConfig>(KafkaConfig.class);
-    
     public static KafkaConfigManager getInstance(KylinConfig config) {
         return config.getManager(KafkaConfigManager.class);
     }
@@ -55,27 +54,39 @@ public class KafkaConfigManager {
     // ============================================================================
 
     private KylinConfig config;
-    
+
     // name ==> StreamingConfig
     private CaseInsensitiveStringCache<KafkaConfig> kafkaMap;
-    
+    private CachedCrudAssist<KafkaConfig> crud;
+    private AutoReadWriteLock lock = new AutoReadWriteLock();
+
     private KafkaConfigManager(KylinConfig config) throws IOException {
         this.config = config;
         this.kafkaMap = new CaseInsensitiveStringCache<KafkaConfig>(config, "kafka");
+        this.crud = new CachedCrudAssist<KafkaConfig>(getStore(), ResourceStore.KAFKA_RESOURCE_ROOT, KafkaConfig.class,
+                kafkaMap) {
+            @Override
+            protected KafkaConfig initEntityAfterReload(KafkaConfig t, String resourceName) {
+                return t; // noop
+            }
+        };
 
         // touch lower level metadata before registering my listener
-        reloadAllKafkaConfig();
+        crud.reloadAll();
         Broadcaster.getInstance(config).registerListener(new KafkaSyncListener(), "kafka");
     }
 
     private class KafkaSyncListener extends Broadcaster.Listener {
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
-            if (event == Event.DROP)
-                removeKafkaConfigLocal(cacheKey);
-            else
-                reloadKafkaConfigLocal(cacheKey);
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                throws IOException {
+            try (AutoLock l = lock.lockForWrite()) {
+                if (event == Event.DROP)
+                    kafkaMap.removeLocal(cacheKey);
+                else
+                    crud.reloadQuietly(cacheKey);
+            }
         }
     }
 
@@ -83,85 +94,45 @@ public class KafkaConfigManager {
         return ResourceStore.getStore(this.config);
     }
 
-    public List<KafkaConfig> listAllKafkaConfigs() {
-        return new ArrayList(kafkaMap.values());
-    }
-
-    /**
-     * Reload KafkaConfig from resource store It will be triggered by an desc
-     * update event.
-     *
-     * @param name
-     * @throws IOException
-     */
-    public KafkaConfig reloadKafkaConfigLocal(String name) throws IOException {
-
-        // Save Source
-        String path = KafkaConfig.concatResourcePath(name);
-
-        // Reload the KafkaConfig
-        KafkaConfig ndesc = loadKafkaConfigAt(path);
-
-        // Here replace the old one
-        kafkaMap.putLocal(ndesc.getName(), ndesc);
-        return ndesc;
-    }
-
-    public boolean createKafkaConfig(String name, KafkaConfig config) {
-
-        if (config == null || StringUtils.isEmpty(config.getName())) {
-            throw new IllegalArgumentException();
-        }
-
-        if (kafkaMap.containsKey(config.getName()))
-            throw new IllegalArgumentException("KafkaConfig '" + config.getName() + "' already exists");
-        try {
-            getStore().putResource(KafkaConfig.concatResourcePath(name), config, KafkaConfig.SERIALIZER);
-            kafkaMap.put(config.getName(), config);
-            return true;
-        } catch (IOException e) {
-            logger.error("error save resource name:" + name, e);
-            throw new RuntimeException("error save resource name:" + name, e);
-        }
-    }
-
-    public KafkaConfig updateKafkaConfig(KafkaConfig desc) throws IOException {
-        // Validate KafkaConfig
-        if (desc.getUuid() == null || desc.getName() == null) {
-            throw new IllegalArgumentException();
-        }
-        String name = desc.getName();
-        if (!kafkaMap.containsKey(name)) {
-            throw new IllegalArgumentException("KafkaConfig '" + name + "' does not exist.");
-        }
-
-        // Save Source
-        String path = desc.getResourcePath();
-        getStore().putResource(path, desc, KAFKA_SERIALIZER);
-
-        // Reload the KafkaConfig
-        KafkaConfig ndesc = loadKafkaConfigAt(path);
-        // Here replace the old one
-        kafkaMap.put(ndesc.getName(), desc);
-
-        return ndesc;
-    }
-
-    private KafkaConfig loadKafkaConfigAt(String path) throws IOException {
-        ResourceStore store = getStore();
-        KafkaConfig kafkaConfig = store.getResource(path, KafkaConfig.class, KAFKA_SERIALIZER);
-
-        if (StringUtils.isBlank(kafkaConfig.getName())) {
-            throw new IllegalStateException("KafkaConfig name must not be blank");
-        }
-        return kafkaConfig;
-    }
-
     public KafkaConfig getKafkaConfig(String name) {
-        return kafkaMap.get(name);
+        try (AutoLock l = lock.lockForRead()) {
+            return kafkaMap.get(name);
+        }
     }
 
-    public void saveKafkaConfig(KafkaConfig kafkaConfig) throws IOException {
+    public List<KafkaConfig> listAllKafkaConfigs() {
+        try (AutoLock l = lock.lockForRead()) {
+            return new ArrayList(kafkaMap.values());
+        }
+    }
+
+    public boolean createKafkaConfig(KafkaConfig kafkaConfig) throws IOException {
+        try (AutoLock l = lock.lockForWrite()) {
+
+            if (kafkaMap.containsKey(kafkaConfig.resourceName()))
+                throw new IllegalArgumentException("KafkaConfig '" + kafkaConfig.getName() + "' already exists");
+
+            kafkaConfig.updateRandomUuid();
+            checkKafkaConfig(kafkaConfig);
+
+            crud.save(kafkaConfig);
+            return true;
+        }
+    }
+
+    public KafkaConfig updateKafkaConfig(KafkaConfig kafkaConfig) throws IOException {
+        try (AutoLock l = lock.lockForWrite()) {
+
+            if (!kafkaMap.containsKey(kafkaConfig.resourceName()))
+                throw new IllegalArgumentException("KafkaConfig '" + kafkaConfig.getName() + "' does not exist.");
+
+            checkKafkaConfig(kafkaConfig);
+            
+            return crud.save(kafkaConfig);
+        }
+    }
+
+    private void checkKafkaConfig(KafkaConfig kafkaConfig) {
         if (kafkaConfig == null || StringUtils.isEmpty(kafkaConfig.getName())) {
             throw new IllegalArgumentException();
         }
@@ -173,50 +144,13 @@ public class KafkaConfigManager {
         if (kafkaConfig.getKafkaClusterConfigs() == null || kafkaConfig.getKafkaClusterConfigs().size() == 0) {
             throw new IllegalArgumentException("No cluster info");
         }
-
-        String path = KafkaConfig.concatResourcePath(kafkaConfig.getName());
-        getStore().putResource(path, kafkaConfig, KafkaConfig.SERIALIZER);
     }
 
     // remove kafkaConfig
     public void removeKafkaConfig(KafkaConfig kafkaConfig) throws IOException {
-        String path = kafkaConfig.getResourcePath();
-        getStore().deleteResource(path);
-        kafkaMap.remove(kafkaConfig.getName());
-    }
-
-    private void removeKafkaConfigLocal(String name) {
-        kafkaMap.remove(name);
-    }
-
-    private void reloadAllKafkaConfig() throws IOException {
-        ResourceStore store = getStore();
-        logger.info("Reloading Kafka Metadata from folder " + store.getReadableResourcePath(ResourceStore.KAFKA_RESOURCE_ROOT));
-
-        kafkaMap.clear();
-
-        List<String> paths = store.collectResourceRecursively(ResourceStore.KAFKA_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
-        for (String path : paths) {
-            KafkaConfig kafkaConfig;
-            try {
-                kafkaConfig = loadKafkaConfigAt(path);
-            } catch (Exception e) {
-                logger.error("Error loading kafkaConfig desc " + path, e);
-                continue;
-            }
-            if (path.equals(kafkaConfig.getResourcePath()) == false) {
-                logger.error("Skip suspicious desc at " + path + ", " + kafkaConfig + " should be at " + kafkaConfig.getResourcePath());
-                continue;
-            }
-            if (kafkaMap.containsKey(kafkaConfig.getName())) {
-                logger.error("Dup KafkaConfig name '" + kafkaConfig.getName() + "' on path " + path);
-                continue;
-            }
-
-            kafkaMap.putLocal(kafkaConfig.getName(), kafkaConfig);
+        try (AutoLock l = lock.lockForWrite()) {
+            crud.delete(kafkaConfig);
         }
-
-        logger.debug("Loaded " + kafkaMap.size() + " KafkaConfig(s)");
     }
 
 }

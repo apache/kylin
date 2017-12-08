@@ -32,10 +32,13 @@ import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.AutoReadWriteLock;
+import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -52,13 +55,11 @@ import com.google.common.collect.Maps;
  */
 public class TableMetadataManager {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(TableMetadataManager.class);
 
-    public static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
-    public static final Serializer<TableExtDesc> TABLE_EXT_SERIALIZER = new JsonSerializer<TableExtDesc>(
+    private static final Serializer<TableExtDesc> TABLE_EXT_SERIALIZER = new JsonSerializer<TableExtDesc>(
             TableExtDesc.class);
-    public static final Serializer<ExternalFilterDesc> EXTERNAL_FILTER_DESC_SERIALIZER = new JsonSerializer<ExternalFilterDesc>(
-            ExternalFilterDesc.class);
 
     public static TableMetadataManager getInstance(KylinConfig config) {
         return config.getManager(TableMetadataManager.class);
@@ -72,15 +73,28 @@ public class TableMetadataManager {
     // ============================================================================
 
     private KylinConfig config;
+
     // table name ==> SourceTable
     private CaseInsensitiveStringCache<TableDesc> srcTableMap;
-    // name => SourceTableExt
-    private CaseInsensitiveStringCache<TableExtDesc> srcTableExtMap;
-    // name => External Filter Desc
-    private CaseInsensitiveStringCache<ExternalFilterDesc> extFilterMap;
+    private CachedCrudAssist<TableDesc> srcTableCrud;
+    private AutoReadWriteLock srcTableMapLock = new AutoReadWriteLock();
 
-    private TableMetadataManager(KylinConfig config) throws IOException {
-        init(config);
+    // name => SourceTableExt
+    private CaseInsensitiveStringCache<TableExtDesc> srcExtMap;
+    private CachedCrudAssist<TableExtDesc> srcExtCrud;
+    private AutoReadWriteLock srcExtMapLock = new AutoReadWriteLock();
+
+    // name => ExternalFilterDesc
+    private CaseInsensitiveStringCache<ExternalFilterDesc> extFilterMap;
+    private CachedCrudAssist<ExternalFilterDesc> extFilterCrud;
+    private AutoReadWriteLock extFilterMapLock = new AutoReadWriteLock();
+
+    private TableMetadataManager(KylinConfig cfg) throws IOException {
+        this.config = cfg;
+
+        initSrcTable();
+        initSrcExt();
+        initExtFilter();
     }
 
     public KylinConfig getConfig() {
@@ -91,42 +105,114 @@ public class TableMetadataManager {
         return ResourceStore.getStore(this.config);
     }
 
-    public List<TableDesc> listAllTables(String prj) {
-        return Lists.newArrayList(getAllTablesMap(prj).values());
+    // ============================================================================
+    // TableDesc methods
+    // ============================================================================
+
+    private void initSrcTable() throws IOException {
+        this.srcTableMap = new CaseInsensitiveStringCache<>(config, "table");
+        this.srcTableCrud = new CachedCrudAssist<TableDesc>(getStore(), ResourceStore.TABLE_RESOURCE_ROOT,
+                TableDesc.class, srcTableMap) {
+            @Override
+            protected TableDesc initEntityAfterReload(TableDesc t, String resourceName) {
+                String prj = TableDesc.parseResourcePath(resourceName).getSecond();
+                t.init(prj);
+                return t;
+            }
+        };
+        srcTableCrud.reloadAll();
+        Broadcaster.getInstance(config).registerListener(new SrcTableSyncListener(), "table");
     }
 
-    public List<ExternalFilterDesc> listAllExternalFilters() {
-        return Lists.newArrayList(extFilterMap.values());
+    private class SrcTableSyncListener extends Broadcaster.Listener {
+        @Override
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                throws IOException {
+            try (AutoLock lock = srcTableMapLock.lockForWrite()) {
+                if (event == Event.DROP)
+                    srcTableMap.removeLocal(cacheKey);
+                else
+                    srcTableCrud.reloadQuietly(cacheKey);
+            }
+
+            Pair<String, String> pair = TableDesc.parseResourcePath(cacheKey);
+            String table = pair.getFirst();
+            String prj = pair.getSecond();
+
+            if (prj == null) {
+                for (ProjectInstance p : ProjectManager.getInstance(config).findProjectsByTable(table)) {
+                    broadcaster.notifyProjectSchemaUpdate(p.getName());
+                }
+            } else {
+                broadcaster.notifyProjectSchemaUpdate(prj);
+            }
+        }
+    }
+
+    public List<TableDesc> listAllTables(String prj) {
+        try (AutoLock lock = srcTableMapLock.lockForWrite()) {
+            return Lists.newArrayList(getAllTablesMap(prj).values());
+        }
     }
 
     public Map<String, TableDesc> getAllTablesMap(String prj) {
-        //TODO prj == null case is now only used by test case and CubeMetaIngester
-        //should refactor these test case and tool ASAP and stop supporting null case
-        if (prj == null) {
-            Map<String, TableDesc> globalTables = new LinkedHashMap<>();
+        try (AutoLock lock = srcTableMapLock.lockForWrite()) {
+            //TODO prj == null case is now only used by test case and CubeMetaIngester
+            //should refactor these test case and tool ASAP and stop supporting null case
+            if (prj == null) {
+                Map<String, TableDesc> globalTables = new LinkedHashMap<>();
 
-            for (TableDesc t : srcTableMap.values()) {
-                globalTables.put(t.getIdentity(), t);
+                for (TableDesc t : srcTableMap.values()) {
+                    globalTables.put(t.getIdentity(), t);
+                }
+                return globalTables;
             }
-            return globalTables;
-        }
-        
-        ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
-        Set<String> prjTableNames = project.getTables();
 
-        Map<String, TableDesc> ret = new LinkedHashMap<>();
-        for (String tableName : prjTableNames) {
-            String tableIdentity = getTableIdentity(tableName);
-            ret.put(tableIdentity, getProjectSpecificTableDesc(tableIdentity, prj));
+            ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
+            Set<String> prjTableNames = project.getTables();
+
+            Map<String, TableDesc> ret = new LinkedHashMap<>();
+            for (String tableName : prjTableNames) {
+                String tableIdentity = getTableIdentity(tableName);
+                ret.put(tableIdentity, getProjectSpecificTableDesc(tableIdentity, prj));
+            }
+            return ret;
         }
-        return ret;
     }
 
     /**
      * Get TableDesc by name
      */
     public TableDesc getTableDesc(String tableName, String prj) {
-        return getProjectSpecificTableDesc(getTableIdentity(tableName), prj);
+        try (AutoLock lock = srcTableMapLock.lockForWrite()) {
+            return getProjectSpecificTableDesc(getTableIdentity(tableName), prj);
+        }
+    }
+
+    /**
+     * Make sure the returned table desc is project-specific.
+     * 
+     * All locks on srcTableMapLock are WRITE LOCKS because of this method!!
+     */
+    private TableDesc getProjectSpecificTableDesc(String fullTableName, String prj) {
+        String key = mapKey(fullTableName, prj);
+        TableDesc result = srcTableMap.get(key);
+
+        if (result == null) {
+            try (AutoLock lock = srcTableMapLock.lockForWrite()) {
+                result = srcTableMap.get(mapKey(fullTableName, null));
+                if (result != null) {
+                    result = new TableDesc(result);// deep copy of global tabledesc
+
+                    result.setLastModified(0);
+                    result.setProject(prj);
+                    result.setBorrowedFromGlobal(true);
+
+                    srcTableMap.putLocal(key, result);
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -139,55 +225,87 @@ public class TableMetadataManager {
             return tableName.toUpperCase();
     }
 
+    public void saveSourceTable(TableDesc srcTable, String prj) throws IOException {
+        try (AutoLock lock = srcTableMapLock.lockForWrite()) {
+            srcTable.init(prj);
+            srcTableCrud.save(srcTable);
+        }
+    }
+
+    public void removeSourceTable(String tableIdentity, String prj) throws IOException {
+        try (AutoLock lock = srcTableMapLock.lockForWrite()) {
+            TableDesc t = getTableDesc(tableIdentity, prj);
+            if (t == null)
+                return;
+
+            srcTableCrud.delete(t);
+        }
+    }
+
     /**
      * the project-specific table desc will be expand by computed columns from the projects' models
      * when the projects' model list changed, project-specific table should be reset and get expanded
      * again
      */
     public void resetProjectSpecificTableDesc(String prj) throws IOException {
-        ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
-        for (String tableName : project.getTables()) {
-            String tableIdentity = getTableIdentity(tableName);
-            String key = mapKey(tableIdentity, prj);
-            TableDesc originTableDesc = srcTableMap.get(key);
-            if (originTableDesc == null) {
-                continue;
-            }
+        try (AutoLock lock = srcTableMapLock.lockForWrite()) {
+            ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
+            for (String tableName : project.getTables()) {
+                String tableIdentity = getTableIdentity(tableName);
+                String key = mapKey(tableIdentity, prj);
+                TableDesc originTableDesc = srcTableMap.get(key);
+                if (originTableDesc == null) {
+                    continue;
+                }
 
-            if (originTableDesc.isBorrowedFromGlobal()) {
-                srcTableMap.removeLocal(key);//delete it so that getProjectSpecificTableDesc will create again
-            } else {
-                String s = originTableDesc.getResourcePath();
-                TableDesc tableDesc = reloadSourceTableAt(s);
-                srcTableMap.putLocal(key, tableDesc);
+                if (originTableDesc.isBorrowedFromGlobal()) {
+                    srcTableMap.removeLocal(key);//delete it so that getProjectSpecificTableDesc will create again
+                } else {
+                    srcTableCrud.reload(key);
+                }
             }
         }
     }
 
-    /**
-     * make sure the returned table desc is project-specific
-     */
-    private TableDesc getProjectSpecificTableDesc(String fullTableName, String prj) {
-        String key = mapKey(fullTableName, prj);
-        TableDesc result = srcTableMap.get(key);
-
-        if (result == null) {
-            result = srcTableMap.get(mapKey(fullTableName, null));
-            if (result != null) {
-                result = new TableDesc(result);// deep copy of global tabledesc
-
-                result.setProject(prj);
-                result.setBorrowedFromGlobal(true);
-
-                srcTableMap.putLocal(key, result);
-            }
-        }
-        return result;
+    private String mapKey(String identity, String prj) {
+        return TableDesc.makeResourceName(identity, prj);
     }
 
-    public ExternalFilterDesc getExtFilterDesc(String filterTableName) {
-        ExternalFilterDesc result = extFilterMap.get(filterTableName);
-        return result;
+    // ============================================================================
+    // TableExtDesc methods
+    // ============================================================================
+
+    private void initSrcExt() throws IOException {
+        this.srcExtMap = new CaseInsensitiveStringCache<>(config, "table_ext");
+        this.srcExtCrud = new CachedCrudAssist<TableExtDesc>(getStore(), ResourceStore.TABLE_EXD_RESOURCE_ROOT,
+                TableExtDesc.class, srcExtMap) {
+            @Override
+            protected TableExtDesc initEntityAfterReload(TableExtDesc t, String resourceName) {
+                // convert old tableExt json to new one
+                if (t.getIdentity() == null) {
+                    t = convertOldTableExtToNewer(resourceName);
+                }
+
+                String prj = TableDesc.parseResourcePath(resourceName).getSecond();
+                t.init(prj);
+                return t;
+            }
+        };
+        srcExtCrud.reloadAll();
+        Broadcaster.getInstance(config).registerListener(new SrcTableExtSyncListener(), "table_ext");
+    }
+
+    private class SrcTableExtSyncListener extends Broadcaster.Listener {
+        @Override
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                throws IOException {
+            try (AutoLock lock = srcExtMapLock.lockForWrite()) {
+                if (event == Event.DROP)
+                    srcExtMap.removeLocal(cacheKey);
+                else
+                    srcExtCrud.reloadQuietly(cacheKey);
+            }
+        }
     }
 
     /**
@@ -205,233 +323,89 @@ public class TableMetadataManager {
     }
 
     public TableExtDesc getTableExt(TableDesc t) {
-        TableExtDesc result = srcTableExtMap.get(mapKey(t.getIdentity(), t.getProject()));
+        try (AutoLock lock = srcExtMapLock.lockForRead()) {
+            TableExtDesc result = srcExtMap.get(mapKey(t.getIdentity(), t.getProject()));
 
-        if (null == result) {
-            //TODO: notice the table ext is not project-specific, seems not necessary at all
-            result = srcTableExtMap.get(mapKey(t.getIdentity(), null));
-        }
+            if (null == result) {
+                //TODO: notice the table ext is not project-specific, seems not necessary at all
+                result = srcExtMap.get(mapKey(t.getIdentity(), null));
+            }
 
-        // avoid returning null, since the TableDesc exists
-        if (null == result) {
-            result = new TableExtDesc();
-            result.setIdentity(t.getIdentity());
-            result.setUuid(UUID.randomUUID().toString());
-            result.setLastModified(0);
-            result.init(t.getProject());
-            srcTableExtMap.put(mapKey(t.getIdentity(), t.getProject()), result);
+            // avoid returning null, since the TableDesc exists
+            if (null == result) {
+                result = new TableExtDesc();
+                result.setIdentity(t.getIdentity());
+                result.setUuid(UUID.randomUUID().toString());
+                result.setLastModified(0);
+                result.init(t.getProject());
+                srcExtMap.put(mapKey(t.getIdentity(), t.getProject()), result);
+            }
+            return result;
         }
-        return result;
     }
 
     public void saveTableExt(TableExtDesc tableExt, String prj) throws IOException {
-        if (tableExt.getUuid() == null || tableExt.getIdentity() == null) {
-            throw new IllegalArgumentException();
+        try (AutoLock lock = srcExtMapLock.lockForWrite()) {
+            if (tableExt.getUuid() == null || tableExt.getIdentity() == null) {
+                throw new IllegalArgumentException();
+            }
+
+            // updating a legacy global table
+            if (tableExt.getProject() == null) {
+                if (getTableExt(tableExt.getIdentity(), prj).getProject() != null)
+                    throw new IllegalStateException(
+                            "Updating a legacy global TableExtDesc while a project level version exists: "
+                                    + tableExt.getIdentity() + ", " + prj);
+                prj = tableExt.getProject();
+            }
+
+            tableExt.init(prj);
+
+            // what is this doing??
+            String path = TableExtDesc.concatResourcePath(tableExt.getIdentity(), prj);
+            ResourceStore store = getStore();
+            TableExtDesc t = store.getResource(path, TableExtDesc.class, TABLE_EXT_SERIALIZER);
+            if (t != null && t.getIdentity() == null)
+                store.deleteResource(path);
+
+            srcExtCrud.save(tableExt);
         }
-
-        // updating a legacy global table
-        if (tableExt.getProject() == null) {
-            if (getTableExt(tableExt.getIdentity(), prj).getProject() != null)
-                throw new IllegalStateException(
-                        "Updating a legacy global TableExtDesc while a project level version exists: "
-                                + tableExt.getIdentity() + ", " + prj);
-            prj = tableExt.getProject();
-        }
-
-        tableExt.init(prj);
-
-        String path = TableExtDesc.concatResourcePath(tableExt.getIdentity(), prj);
-
-        ResourceStore store = getStore();
-
-        TableExtDesc t = store.getResource(path, TableExtDesc.class, TABLE_EXT_SERIALIZER);
-        if (t != null && t.getIdentity() == null)
-            store.deleteResource(path);
-
-        store.putResource(path, tableExt, TABLE_EXT_SERIALIZER);
-        srcTableExtMap.put(mapKey(tableExt.getIdentity(), tableExt.getProject()), tableExt);
     }
 
     public void removeTableExt(String tableName, String prj) throws IOException {
-        // note, here assume always delete TableExtDesc first, then TableDesc
-        TableExtDesc t = getTableExt(tableName, prj);
-        if (t == null)
-            return;
+        try (AutoLock lock = srcExtMapLock.lockForWrite()) {
+            // note, here assume always delete TableExtDesc first, then TableDesc
+            TableExtDesc t = getTableExt(tableName, prj);
+            if (t == null)
+                return;
 
-        String path = TableExtDesc.concatResourcePath(t.getIdentity(), t.getProject());
-        getStore().deleteResource(path);
-        srcTableExtMap.remove(mapKey(t.getIdentity(), t.getProject()));
-    }
-
-    public void saveSourceTable(TableDesc srcTable, String prj) throws IOException {
-        if (srcTable.getUuid() == null || srcTable.getIdentity() == null) {
-            throw new IllegalArgumentException();
-        }
-
-        srcTable.init(prj);
-
-        String path = srcTable.getResourcePath();
-        getStore().putResource(path, srcTable, TABLE_SERIALIZER);
-
-        srcTableMap.put(mapKey(srcTable.getIdentity(), prj), srcTable);
-    }
-
-    public void removeSourceTable(String tableIdentity, String prj) throws IOException {
-        TableDesc t = getTableDesc(tableIdentity, prj);
-        if (t == null)
-            return;
-
-        String path = t.getResourcePath();
-        getStore().deleteResource(path);
-        srcTableMap.remove(mapKey(t.getIdentity(), t.getProject()));
-    }
-
-    public void saveExternalFilter(ExternalFilterDesc desc) throws IOException {
-        if (desc.getUuid() == null) {
-            throw new IllegalArgumentException("UUID not set.");
-        }
-        String path = desc.getResourcePath();
-        getStore().putResource(path, desc, EXTERNAL_FILTER_DESC_SERIALIZER);
-        desc = reloadExternalFilterAt(path);
-        extFilterMap.put(desc.getName(), desc);
-
-    }
-
-    public void removeExternalFilter(String name) throws IOException {
-        String path = ExternalFilterDesc.concatResourcePath(name);
-        getStore().deleteResource(path);
-        extFilterMap.remove(name);
-
-    }
-
-    private void init(KylinConfig config) throws IOException {
-        this.config = config;
-        this.srcTableMap = new CaseInsensitiveStringCache<>(config, "table");
-        this.srcTableExtMap = new CaseInsensitiveStringCache<>(config, "table_ext");
-        this.extFilterMap = new CaseInsensitiveStringCache<>(config, "external_filter");
-
-        reloadAllSourceTable();
-        reloadAllTableExt();
-        reloadAllExternalFilter();
-
-        // touch lower level metadata before registering my listener
-        Broadcaster.getInstance(config).registerListener(new SrcTableSyncListener(), "table");
-        Broadcaster.getInstance(config).registerListener(new SrcTableExtSyncListener(), "table_ext");
-        Broadcaster.getInstance(config).registerListener(new ExtFilterSyncListener(), "external_filter");
-    }
-
-    private class SrcTableSyncListener extends Broadcaster.Listener {
-
-        @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
-            if (event == Event.DROP)
-                srcTableMap.removeLocal(cacheKey);
-            else
-                reloadSourceTableAt(TableDesc.concatRawResourcePath(cacheKey));
-
-            Pair<String, String> pair = TableDesc.parseResourcePath(cacheKey);
-            String table = pair.getFirst();
-            String prj = pair.getSecond();
-
-            if (prj == null) {
-                for (ProjectInstance p : ProjectManager.getInstance(config).findProjectsByTable(table)) {
-                    broadcaster.notifyProjectSchemaUpdate(p.getName());
-                }
-            } else {
-                broadcaster.notifyProjectSchemaUpdate(prj);
-            }
+            srcExtCrud.delete(t);
         }
     }
 
-    private class SrcTableExtSyncListener extends Broadcaster.Listener {
-
-        @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
-            if (event == Event.DROP)
-                srcTableExtMap.removeLocal(cacheKey);
-            else
-                reloadTableExtAt(TableExtDesc.concatRawResourcePath(cacheKey));
-        }
-    }
-
-    private class ExtFilterSyncListener extends Broadcaster.Listener {
-
-        @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
-            if (event == Event.DROP)
-                extFilterMap.removeLocal(cacheKey);
-            else
-                reloadExtFilter(cacheKey);
-        }
-    }
-
-    private void reloadAllTableExt() throws IOException {
+    private TableExtDesc convertOldTableExtToNewer(String resourceName) {
         ResourceStore store = getStore();
-        logger.debug("Reloading Table_exd info from folder "
-                + store.getReadableResourcePath(ResourceStore.TABLE_EXD_RESOURCE_ROOT));
-
-        srcTableExtMap.clear();
-
-        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
-        for (String path : paths) {
-            reloadTableExtAt(path);
-        }
-
-        logger.debug("Loaded " + srcTableExtMap.size() + " SourceTable EXD(s)");
-    }
-
-    private TableExtDesc reloadTableExtAt(String path) throws IOException {
-        ResourceStore store = getStore();
-        String prj = TableExtDesc.parseResourcePath(path).getSecond();
-
-        TableExtDesc t = store.getResource(path, TableExtDesc.class, TABLE_EXT_SERIALIZER);
-
-        if (t == null) {
-            return null;
-        }
-
-        // convert old tableExt json to new one
-        if (t.getIdentity() == null) {
-            t = convertOldTableExtToNewer(path);
-        }
-
-        t.init(prj);
-
-        srcTableExtMap.putLocal(mapKey(t.getIdentity(), prj), t);
-        return t;
-    }
-
-    private String mapKey(String identity, String prj) {
-        return prj == null ? identity : identity + "--" + prj;
-    }
-
-    private TableExtDesc convertOldTableExtToNewer(String path) throws IOException {
         Map<String, String> attrs = Maps.newHashMap();
 
-        ResourceStore store = getStore();
-        RawResource res = store.getResource(path);
-
-        InputStream is = res.inputStream;
-
         try {
-            attrs.putAll(JsonUtil.readValue(is, HashMap.class));
-        } finally {
-            if (is != null)
-                is.close();
+            RawResource res = store.getResource(
+                    ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + resourceName + MetadataConstants.FILE_SURFIX);
+
+            InputStream is = res.inputStream;
+            try {
+                attrs.putAll(JsonUtil.readValue(is, HashMap.class));
+            } finally {
+                if (is != null)
+                    is.close();
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
 
         String cardinality = attrs.get(MetadataConstants.TABLE_EXD_CARDINALITY);
 
         // parse table identity from file name
-        String file = path;
-        if (file.indexOf("/") > -1) {
-            file = file.substring(file.lastIndexOf("/") + 1);
-        }
-        String tableIdentity = file.substring(0, file.length() - MetadataConstants.FILE_SURFIX.length()).toUpperCase();
+        String tableIdentity = TableDesc.parseResourcePath(resourceName).getFirst();
         TableExtDesc result = new TableExtDesc();
         result.setIdentity(tableIdentity);
         result.setUuid(UUID.randomUUID().toString());
@@ -440,66 +414,59 @@ public class TableMetadataManager {
         return result;
     }
 
-    private void reloadAllExternalFilter() throws IOException {
-        ResourceStore store = getStore();
-        logger.debug("Reloading ExternalFilter from folder "
-                + store.getReadableResourcePath(ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT));
+    // ============================================================================
+    // ExternalFilterDesc methods
+    // ============================================================================
 
-        extFilterMap.clear();
-
-        List<String> paths = store.collectResourceRecursively(ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
-        for (String path : paths) {
-            reloadExternalFilterAt(path);
-        }
-
-        logger.debug("Loaded " + extFilterMap.size() + " ExternalFilter(s)");
+    private void initExtFilter() throws IOException {
+        this.extFilterMap = new CaseInsensitiveStringCache<>(config, "external_filter");
+        this.extFilterCrud = new CachedCrudAssist<ExternalFilterDesc>(getStore(),
+                ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT, ExternalFilterDesc.class, extFilterMap) {
+            @Override
+            protected ExternalFilterDesc initEntityAfterReload(ExternalFilterDesc t, String resourceName) {
+                return t; // noop
+            }
+        };
+        extFilterCrud.reloadAll();
+        Broadcaster.getInstance(config).registerListener(new ExtFilterSyncListener(), "external_filter");
     }
 
-    private void reloadAllSourceTable() throws IOException {
-        ResourceStore store = getStore();
-        logger.debug("Reloading SourceTable from folder "
-                + store.getReadableResourcePath(ResourceStore.TABLE_RESOURCE_ROOT));
-
-        srcTableMap.clear();
-
-        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
-        for (String path : paths) {
-            reloadSourceTableAt(path);
+    private class ExtFilterSyncListener extends Broadcaster.Listener {
+        @Override
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                throws IOException {
+            try (AutoLock lock = extFilterMapLock.lockForWrite()) {
+                if (event == Event.DROP)
+                    extFilterMap.removeLocal(cacheKey);
+                else
+                    extFilterCrud.reloadQuietly(cacheKey);
+            }
         }
-
-        logger.debug("Loaded " + srcTableMap.size() + " SourceTable(s)");
     }
 
-    private TableDesc reloadSourceTableAt(String path) throws IOException {
-        ResourceStore store = getStore();
-        String prj = TableDesc.parseResourcePath(path).getSecond();
-
-        TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
-        if (t == null) {
-            return null;
+    public List<ExternalFilterDesc> listAllExternalFilters() {
+        try (AutoLock lock = extFilterMapLock.lockForRead()) {
+            return Lists.newArrayList(extFilterMap.values());
         }
-        t.init(prj);
-
-        srcTableMap.putLocal(mapKey(t.getIdentity(), prj), t);
-
-        return t;
     }
 
-    private ExternalFilterDesc reloadExternalFilterAt(String path) throws IOException {
-        ResourceStore store = getStore();
-        ExternalFilterDesc t = store.getResource(path, ExternalFilterDesc.class, EXTERNAL_FILTER_DESC_SERIALIZER);
-        if (t == null) {
-            return null;
+    public ExternalFilterDesc getExtFilterDesc(String filterTableName) {
+        try (AutoLock lock = extFilterMapLock.lockForRead()) {
+            ExternalFilterDesc result = extFilterMap.get(filterTableName);
+            return result;
         }
-        extFilterMap.putLocal(t.getName(), t);
-
-        return t;
     }
 
-    public void reloadExtFilter(String extFilterName) throws IOException {
-        reloadExternalFilterAt(ExternalFilterDesc.concatResourcePath(extFilterName));
+    public void saveExternalFilter(ExternalFilterDesc desc) throws IOException {
+        try (AutoLock lock = extFilterMapLock.lockForWrite()) {
+            extFilterCrud.save(desc);
+        }
+    }
+
+    public void removeExternalFilter(String name) throws IOException {
+        try (AutoLock lock = extFilterMapLock.lockForWrite()) {
+            extFilterCrud.delete(name);
+        }
     }
 
 }
