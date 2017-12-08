@@ -104,7 +104,8 @@
                                   <select class="form-control"
                                       ng-init="newMeasure.function.expression = (!!newMeasure.function.expression)?newMeasure.function.expression:cubeConfig.dftSelections.measureExpression" chosen ng-model="newMeasure.function.expression" required
                                       ng-change="measureReturnTypeUpdate();measureParamValueUpdate();"
-                                      ng-options="me as me for me in cubeConfig.measureExpressions">
+                                      ng-options="me as me for me in cubeConfig.measureExpressions | filter: isMeasureUnHidden">
+
                                       <option value=""></option>
                                   </select>
                               </div>

@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel,cubeConfig,modelsManager) {
+KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel,cubeConfig,modelsManager,kylinConfig) {
   $scope.num=0;
   $scope.convertedColumns=[];
   $scope.groupby=[];
@@ -431,6 +431,14 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       // emit measures edit event in order to re-generate advanced dict.
       $scope.$emit('MeasuresEdited');
     });
+  }
+
+  $scope.isMeasureUnHidden = function(measure) {
+    if (kylinConfig.getHiddenMeasures().indexOf(measure) == -1) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
 });

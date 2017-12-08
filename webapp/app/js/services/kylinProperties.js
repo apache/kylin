@@ -115,5 +115,9 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     return true;
   }
 
+  this.getHiddenMeasures = function() {
+    var hide_measures = this.getProperty("kylin.web.hide-measures").replace(/\s/g,"").toUpperCase();
+    return hide_measures.split(",")
+  }
 });
 
