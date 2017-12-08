@@ -50,8 +50,14 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   $scope.logout = function () {
     ProjectModel.clear();
     $rootScope.userAction.islogout = true;
+    var logoutURL = Config.service.base;
+    if(kylinConfig.getProperty('kylin.security.profile') === 'saml') {
+      logoutURL += 'saml/logout';
+    } else {
+      logoutURL += 'j_spring_security_logout';
+    }
     $scope.$emit('event:logoutRequest');
-    $http.get(Config.service.base + 'j_spring_security_logout').success(function () {
+    $http.get(logoutURL).success(function () {
       UserService.setCurUser({});
       $scope.username = $scope.password = null;
       $location.path('/login');

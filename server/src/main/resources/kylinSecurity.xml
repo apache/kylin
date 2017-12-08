@@ -358,7 +358,6 @@
         <!-- Handler for successful logout -->
         <bean id="successLogoutHandler"
               class="org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler">
-            <property name="defaultTargetUrl" value="/login"/>
         </bean>
 
         <!-- Logger for SAML messages and events -->
