@@ -251,5 +251,17 @@ KylinApp
       })
       return formatWord.slice(1);
     };
+  }).filter('formatCubeName', function($filter) {
+    return function(item) {
+      var cubeArr = item.split(',');
+      var formatCubeName = '';
+      angular.forEach(cubeArr, function(cubeName, ind) {
+        if (ind != 0) {
+          formatCubeName += ' ';
+        }
+        formatCubeName += cubeName.split('[name=')[1].match(/[^&]*.(?=])/);
+      });
+      return formatCubeName;
+    }
   });
 

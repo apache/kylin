@@ -52,7 +52,7 @@
 
 <div class="form-group">
     <ul class="row">
-        <li class="col-md-3" style="display: inline">
+        <li class="col-md-2" style="display: inline">
             <label>Status: &nbsp;</label>
             <span class="label label-lg label-danger arrowed" ng-if="curQuery.status=='failed'">Failed</span>
             <span class="label label-lg label-success arrowed" ng-if="curQuery.status=='success'">Success</span>
@@ -63,9 +63,9 @@
             <label>Project: &nbsp;</label>
             <span>{{curQuery.project}}</span>
         </li>
-        <li class="col-md-4 " style="display: inline">
+        <li class="col-md-5 " style="display: inline">
             <label>Cubes: &nbsp;</label>
-            <span>{{curQuery.result.cube}}</span>
+            <span>{{curQuery.result.cube | limitTo:30}}<span ng-if="curQuery.result.cube.length > 30">...  <i class="fa fa-list text-aqua" style="cursor: pointer;" popover-placement="left" popover="{{curQuery.result.cube | formatCubeName}}" popover-title="Cube Info Details"></i></span></span>
         </li>
     </ul>
 </div>
