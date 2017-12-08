@@ -43,7 +43,7 @@ public class DefaultQueryTransformer implements IQueryTransformer {
     private static final Pattern PTN_INTERVAL = Pattern.compile(
             "interval" + SM + "(floor\\()([\\d\\.]+)(\\))" + SM + "(second|minute|hour|day|month|year)",
             Pattern.CASE_INSENSITIVE);
-    private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}",
+    private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + SM + "(EXTRACT\\(.*?\\))" + "\\}",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern PIN_SUM_OF_CAST = Pattern.compile(S0 + "SUM" + S0 + "\\(" + S0 + "CAST" + S0 + "\\("
             + S0 + "([^\\s,]+)" + S0 + "AS" + SM + "DOUBLE" + S0 + "\\)" + S0 + "\\)", Pattern.CASE_INSENSITIVE);
@@ -76,7 +76,9 @@ public class DefaultQueryTransformer implements IQueryTransformer {
         }
 
         // Case {fn EXTRACT(...) }
-        // Use non-greedy regrex matching to remove escape functions
+        // Use non-greedy regex matching to remove escape functions
+        // Notice: Only unsupported escape function need to be handled
+        // Reference: https://calcite.apache.org/docs/reference.html#jdbc-function-escape
         while (true) {
             m = PTN_HAVING_ESCAPE_FUNCTION.matcher(sql);
             if (!m.find())

@@ -92,5 +92,13 @@ public class DefaultQueryTransformerTest {
         assertTrue("select sum(LSTG_SITE_ID), sum(price) from KYLIN_SALES group by LSTG_SITE_ID"
                 .equalsIgnoreCase(correctSql));
     }
+    
+    @Test
+    public void functionEscapeTransform() throws Exception {
+        DefaultQueryTransformer transformer = new DefaultQueryTransformer();
 
+        String fnConvertSumSql = "select {fn EXTRACT(YEAR from PART_DT)} from KYLIN_SALES";
+        String correctSql = transformer.transform(fnConvertSumSql, "", "");
+        assertTrue("select EXTRACT(YEAR from PART_DT) from KYLIN_SALES".equalsIgnoreCase(correctSql));
+    }
 }
