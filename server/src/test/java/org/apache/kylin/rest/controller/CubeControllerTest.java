@@ -119,14 +119,13 @@ public class CubeControllerTest extends ServiceTestBase {
         List<String> notifyList = Lists.newArrayList();
         notifyList.add("john@example.com");
         cubeController.updateNotifyList(newCubeName, notifyList);
-        cubeController.updateCubeCost(newCubeName, 80);
 
         List<CubeInstanceResponse> cubeInstances = cubeController.getCubes(newCubeName, cube.getModelName(), "default",
                 1, 0);
 
         CubeInstance cubeInstance = cubeController.getCube(cubeInstances.get(0).getName());
         Assert.assertTrue(cubeInstance.getDescriptor().getNotifyList().contains("john@example.com"));
-        Assert.assertTrue(cubeInstance.getCost() == 80);
+        Assert.assertTrue(cubeInstance.getCost() == 495);
         cubeController.deleteCube(newCubeName);
     }
 

@@ -92,6 +92,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     private String descName;
     @JsonProperty("display_name")
     private String displayName;
+    // DEPRECATED: the cost should be calculated in runtime
     // Mark cube priority for query
     @JsonProperty("cost")
     private int cost = 50;
@@ -248,8 +249,15 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         this.displayName = displayName;
     }
 
+    @Override
     public int getCost() {
-        return cost;
+        int countedDimensionNum = getRowKeyColumnCount();
+        int c = countedDimensionNum * COST_WEIGHT_DIMENSION + getMeasures().size() * COST_WEIGHT_MEASURE;
+        for (JoinTableDesc join : getModel().getJoinTables()) {
+            if (join.getJoin().isInnerJoin())
+                c += CubeInstance.COST_WEIGHT_INNER_JOIN;
+        }
+        return c;
     }
 
     public void setCost(int cost) {
