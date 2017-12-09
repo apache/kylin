@@ -43,17 +43,20 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     private static final Logger logger = LoggerFactory.getLogger(AbstractInfoExtractor.class);
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_DEST = OptionBuilder.withArgName("destDir").hasArg().isRequired(true).withDescription("specify the dest dir to save the related information").create("destDir");
+    private static final Option OPTION_DEST = OptionBuilder.withArgName("destDir").hasArg().isRequired(true)
+            .withDescription("specify the dest dir to save the related information").create("destDir");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_COMPRESS = OptionBuilder.withArgName("compress").hasArg().isRequired(false).withDescription("specify whether to compress the output with zip. Default true.").create("compress");
+    private static final Option OPTION_COMPRESS = OptionBuilder.withArgName("compress").hasArg().isRequired(false)
+            .withDescription("specify whether to compress the output with zip. Default true.").create("compress");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_SUBMODULE = OptionBuilder.withArgName("submodule").hasArg().isRequired(false).withDescription("specify whether this is a submodule of other CLI tool").create("submodule");
+    private static final Option OPTION_SUBMODULE = OptionBuilder.withArgName("submodule").hasArg().isRequired(false)
+            .withDescription("specify whether this is a submodule of other CLI tool").create("submodule");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_PACKAGETYPE = OptionBuilder.withArgName("packagetype").hasArg().isRequired(false).withDescription("specify the package type").create("packagetype");
-
+    private static final Option OPTION_PACKAGETYPE = OptionBuilder.withArgName("packagetype").hasArg().isRequired(false)
+            .withDescription("specify the package type").create("packagetype");
 
     private static final String DEFAULT_PACKAGE_TYPE = "base";
     private static final String[] COMMIT_SHA1_FILES = { "commit_SHA1", "commit.sha1" };
@@ -80,9 +83,17 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         String exportDest = optionsHelper.getOptionValue(options.getOption("destDir"));
-        boolean shouldCompress = optionsHelper.hasOption(OPTION_COMPRESS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS)) : true;
-        boolean isSubmodule = optionsHelper.hasOption(OPTION_SUBMODULE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_SUBMODULE)) : false;
+        boolean shouldCompress = optionsHelper.hasOption(OPTION_COMPRESS)
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS))
+                : true;
+        boolean isSubmodule = optionsHelper.hasOption(OPTION_SUBMODULE)
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_SUBMODULE))
+                : false;
         packageType = optionsHelper.getOptionValue(OPTION_PACKAGETYPE);
+
+        if (packageType == null)
+            packageType = DEFAULT_PACKAGE_TYPE;
+
         if (StringUtils.isEmpty(exportDest)) {
             throw new RuntimeException("destDir is not set, exit directly without extracting");
         }
@@ -91,7 +102,8 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         }
 
         // create new folder to contain the output
-        String packageName = packageType.toLowerCase() + "_" + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date());
+        String packageName = packageType.toLowerCase() + "_"
+                + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date());
         if (!isSubmodule && new File(exportDest).exists()) {
             exportDest = exportDest + packageName + "/";
         }
