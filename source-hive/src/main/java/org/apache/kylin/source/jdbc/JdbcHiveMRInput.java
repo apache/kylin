@@ -67,7 +67,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
 
         private AbstractExecutable createFlatHiveTableFromFiles(String hiveInitStatements, String jobWorkingDir) {
             final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
-            String filedDelimiter = getConfig().getSourceFieldDelimiter();
+            String filedDelimiter = getConfig().getJdbcSourceFieldDelimiter();
             // Sqoop does not support exporting SEQUENSEFILE to Hive now SQOOP-869
             final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, jobWorkingDir,
                     "TEXTFILE", filedDelimiter);
@@ -153,7 +153,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
             String jdbcUser = config.getJdbcSourceUser();
             String jdbcPass = config.getJdbcSourcePass();
             String sqoopHome = config.getSqoopHome();
-            String filedDelimiter = config.getSourceFieldDelimiter();
+            String filedDelimiter = config.getJdbcSourceFieldDelimiter();
             int mapperNum = config.getSqoopMapperNum();
 
             String bquery = String.format("SELECT min(%s), max(%s) FROM %s.%s", splitColumn, splitColumn, splitDatabase,

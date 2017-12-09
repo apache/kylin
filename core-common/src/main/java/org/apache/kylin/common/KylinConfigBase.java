@@ -664,7 +664,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getFlatTableStorageFormat() {
-        return this.getOptional("kylin.source.hive.flat-table-storage-format", "SEQUENCEFILE").toUpperCase();
+        return this.getOptional("kylin.source.hive.flat-table-storage-format", "SEQUENCEFILE");
     }
 
     public String getFlatTableFieldDelimiter() {
@@ -768,7 +768,7 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.source.jdbc.sqoop-mapper-num", "4"));
     }
 
-    public String getSourceFieldDelimiter() {
+    public String getJdbcSourceFieldDelimiter() {
         return getOptional("kylin.source.jdbc.field-delimiter", "|");
     }
 
