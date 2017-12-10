@@ -60,7 +60,7 @@ public class PercentileAggregatorTest {
     @Test
     public void testLargeSize() throws Exception {
         for (int compression : compressions) {
-            testPercentileSize(20000000, null, compression);
+            testPercentileSize(2000000, null, compression);
         }
     }
 
