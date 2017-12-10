@@ -128,6 +128,12 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     public CubeInstance() {
     }
     
+    public CubeInstance latestCopyForWrite() {
+        CubeManager mgr = CubeManager.getInstance(config);
+        CubeInstance latest = mgr.getCube(name); // in case this object is out-of-date
+        return mgr.copyForWrite(latest);
+    }
+    
     void init(KylinConfig config) {
         CubeDesc cubeDesc = CubeDescManager.getInstance(config).getCubeDesc(descName);
         checkNotNull(cubeDesc, "cube descriptor '%s' (for cube '%s') not found", descName, name);

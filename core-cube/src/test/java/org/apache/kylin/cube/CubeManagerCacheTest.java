@@ -19,6 +19,7 @@
 package org.apache.kylin.cube;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -60,11 +61,24 @@ public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
         CubeInstance createdCube = cubeManager.getCube("a_whole_new_cube");
         assertEquals(0, createdCube.getSegments().size());
         assertEquals(RealizationStatusEnum.DISABLED, createdCube.getStatus());
-        createdCube.setStatus(RealizationStatusEnum.DESCBROKEN);
-        CubeUpdate cubeBuilder = new CubeUpdate(createdCube);
 
-        cubeManager.updateCube(cubeBuilder);
-        assertEquals(RealizationStatusEnum.DESCBROKEN, cubeManager.getCube("a_whole_new_cube").getStatus());
+        cubeManager.updateCubeStatus(createdCube, RealizationStatusEnum.READY);
+
+        assertEquals(RealizationStatusEnum.READY, cubeManager.getCube("a_whole_new_cube").getStatus());
+    }
+
+    @Test
+    public void testCachedAndSharedFlag() {
+        CubeInstance cube = cubeManager.getCube("test_kylin_cube_with_slr_empty");
+        assertEquals(true, cube.isCachedAndShared());
+        assertEquals(false, cube.latestCopyForWrite().isCachedAndShared());
+
+        try {
+            new CubeUpdate(cube);
+            fail();
+        } catch (IllegalArgumentException ex) {
+            // update cached object is illegal
+        }
     }
 
     public CubeDescManager getCubeDescManager() {

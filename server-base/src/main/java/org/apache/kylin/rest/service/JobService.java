@@ -37,7 +37,6 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
@@ -256,10 +255,8 @@ public class JobService extends BasicService implements InitializingBean {
                 logger.error("Job submission might failed for NEW segment {}, will clean the NEW segment from cube",
                         newSeg.getName());
                 try {
-                    // Remove this segments
-                    CubeUpdate cubeBuilder = new CubeUpdate(cube);
-                    cubeBuilder.setToRemoveSegs(newSeg);
-                    getCubeManager().updateCube(cubeBuilder);
+                    // Remove this segment
+                    getCubeManager().updateCubeDropSegments(cube, newSeg);
                 } catch (Exception ee) {
                     // swallow the exception
                     logger.error("Clean New segment failed, ignoring it", e);
@@ -347,10 +344,8 @@ public class JobService extends BasicService implements InitializingBean {
         for (String segmentId : StringUtils.split(segmentIds)) {
             final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
             if (segment != null && (segment.getStatus() == SegmentStatusEnum.NEW || segment.getTSRange().end.v == 0)) {
-                // Remove this segments
-                CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
-                cubeBuilder.setToRemoveSegs(segment);
-                getCubeManager().updateCube(cubeBuilder);
+                // Remove this segment
+                getCubeManager().updateCubeDropSegments(cubeInstance, segment);
             }
         }
         getExecutableManager().discardJob(job.getId());

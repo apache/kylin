@@ -58,6 +58,9 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
 
     @JsonProperty("last_modified")
     protected long lastModified;
+    
+    // if cached and shared, the object MUST NOT be modified (call setXXX() for example)
+    protected boolean isCachedAndShared = false;
 
     /**
      * Metadata model version
@@ -99,6 +102,14 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         setUuid(UUID.randomUUID().toString());
     }
     
+    public boolean isCachedAndShared() {
+        return isCachedAndShared;
+    }
+
+    public void setCachedAndShared(boolean isCachedAndShared) {
+        this.isCachedAndShared = isCachedAndShared;
+    }
+
     /**
      * The name as a part of the resource path used to save the entity.
      * 

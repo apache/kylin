@@ -176,9 +176,8 @@ public class CubeService extends BasicService implements InitializingBean {
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         cube.setOwner(owner);
 
-        CubeUpdate cubeBuilder = new CubeUpdate(cube).setOwner(owner).setCost(cost);
-
-        return getCubeManager().updateCube(cubeBuilder);
+        CubeUpdate update = new CubeUpdate(cube.latestCopyForWrite()).setOwner(owner).setCost(cost);
+        return getCubeManager().updateCube(update);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
@@ -359,16 +358,7 @@ public class CubeService extends BasicService implements InitializingBean {
             throw new BadRequestException(String.format(msg.getDISABLE_NOT_READY_CUBE(), cubeName, ostatus));
         }
 
-        cube.setStatus(RealizationStatusEnum.DISABLED);
-
-        try {
-            CubeUpdate cubeBuilder = new CubeUpdate(cube);
-            cubeBuilder.setStatus(RealizationStatusEnum.DISABLED);
-            return getCubeManager().updateCube(cubeBuilder);
-        } catch (IOException e) {
-            cube.setStatus(ostatus);
-            throw e;
-        }
+        return getCubeManager().updateCubeStatus(cube, RealizationStatusEnum.DISABLED);
     }
 
     public void checkEnableCubeCondition(CubeInstance cube) {
@@ -399,15 +389,7 @@ public class CubeService extends BasicService implements InitializingBean {
      * @throws IOException
      */
     public CubeInstance enableCube(CubeInstance cube) throws IOException {
-        RealizationStatusEnum ostatus = cube.getStatus();
-        try {
-            CubeUpdate cubeBuilder = new CubeUpdate(cube);
-            cubeBuilder.setStatus(RealizationStatusEnum.READY);
-            return getCubeManager().updateCube(cubeBuilder);
-        } catch (IOException e) {
-            cube.setStatus(ostatus);
-            throw e;
-        }
+        return getCubeManager().updateCubeStatus(cube, RealizationStatusEnum.READY);
     }
 
     public MetricsResponse calculateMetrics(MetricsRequest request) {
@@ -509,9 +491,7 @@ public class CubeService extends BasicService implements InitializingBean {
             throw new BadRequestException(String.format(msg.getDELETE_NOT_READY_SEG(), segmentName));
         }
 
-        CubeUpdate update = new CubeUpdate(cube);
-        update.setToRemoveSegs(new CubeSegment[] { toDelete });
-        return CubeManager.getInstance(getConfig()).updateCube(update);
+        return CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, toDelete);
     }
 
     protected void releaseAllJobs(CubeInstance cube) {
@@ -532,10 +512,7 @@ public class CubeService extends BasicService implements InitializingBean {
      */
     private void releaseAllSegments(CubeInstance cube) throws IOException {
         releaseAllJobs(cube);
-
-        CubeUpdate update = new CubeUpdate(cube);
-        update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
-        CubeManager.getInstance(getConfig()).updateCube(update);
+        CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, cube.getSegments());
     }
 
     public void updateOnNewSegmentReady(String cubeName) {
@@ -579,10 +556,8 @@ public class CubeService extends BasicService implements InitializingBean {
             }
 
             if (toRemoveSegs.size() > 0) {
-                CubeUpdate cubeBuilder = new CubeUpdate(cube);
-                cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()]));
                 try {
-                    this.getCubeManager().updateCube(cubeBuilder);
+                    getCubeManager().updateCubeDropSegments(cube, toRemoveSegs);
                 } catch (IOException e) {
                     logger.error("Failed to remove old segment from cube " + cubeName, e);
                 }

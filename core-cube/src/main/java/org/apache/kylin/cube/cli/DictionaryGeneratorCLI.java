@@ -87,6 +87,8 @@ public class DictionaryGeneratorCLI {
             cubeMgr.buildSnapshotTable(cubeSeg, tableIdentity);
         }
         
+        CubeInstance updatedCube = cubeMgr.getCube(cubeSeg.getCubeInstance().getName());
+        cubeSeg = updatedCube.getSegmentById(cubeSeg.getUuid());
         for (TableRef lookup : toCheckLookup) {
             logger.info("Checking snapshot of " + lookup);
             JoinDesc join = cubeSeg.getModel().getJoinsTree().getJoinByPKSide(lookup);

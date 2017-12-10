@@ -18,6 +18,10 @@
 
 package org.apache.kylin.metadata.cachesync;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -69,8 +73,35 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         return (Serializer<DataModelDesc>) serializer;
     }
 
-    public void setCheckOnWrite(boolean check) {
+    public void setCheckCopyOnWrite(boolean check) {
         this.checkCopyOnWrite = check;
+    }
+
+    // Make copy of an entity such that update can apply on the copy.
+    // Note cached and shared object MUST NOT be updated directly.
+    public T copyForWrite(T entity) {
+        if (entity.isCachedAndShared() == false)
+            return entity;
+
+        T copy;
+        try {
+            byte[] bytes;
+            try (ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                    DataOutputStream dout = new DataOutputStream(buf)) {
+                serializer.serialize(entity, dout);
+                bytes = buf.toByteArray();
+            }
+
+            try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes))) {
+                copy = serializer.deserialize(in);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        copy.setCachedAndShared(false);
+        initEntityAfterReload(copy, entity.resourceName());
+        return copy;
     }
 
     private String resourcePath(String resourceName) {
@@ -80,12 +111,11 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
     private String resourceName(String resourcePath) {
         Preconditions.checkArgument(resourcePath.startsWith(resRootPath));
         Preconditions.checkArgument(resourcePath.endsWith(resPathSuffix));
-        return resourcePath.substring(resRootPath.length() + 1,
-                resourcePath.length() - resPathSuffix.length());
+        return resourcePath.substring(resRootPath.length() + 1, resourcePath.length() - resPathSuffix.length());
     }
 
     public void reloadAll() throws IOException {
-        logger.debug("Reloading " + entityType.getName() + " from " + store.getReadableResourcePath(resRootPath));
+        logger.debug("Reloading " + entityType.getSimpleName() + " from " + store.getReadableResourcePath(resRootPath));
 
         cache.clear();
 
@@ -94,8 +124,8 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
             reloadQuietlyAt(path);
         }
 
-        logger.debug(
-                "Loaded " + cache.size() + " " + entityType.getName() + "(s) out of " + paths.size() + " resource");
+        logger.debug("Loaded " + cache.size() + " " + entityType.getSimpleName() + "(s) out of " + paths.size()
+                + " resource");
     }
 
     public T reload(String resourceName) {
@@ -110,7 +140,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         try {
             return reloadAt(path);
         } catch (Exception ex) {
-            logger.error("Error loading " + entityType.getName() + " at " + path, ex);
+            logger.error("Error loading " + entityType.getSimpleName() + " at " + path, ex);
             return null;
         }
     }
@@ -119,21 +149,23 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         try {
             T entity = store.getResource(path, entityType, serializer);
             if (entity == null) {
-                logger.warn("No " + entityType.getName() + " found at " + path + ", returning null");
+                logger.warn("No " + entityType.getSimpleName() + " found at " + path + ", returning null");
                 cache.removeLocal(resourceName(path));
                 return null;
             }
 
+            // mark cached object
+            entity.setCachedAndShared(true);
             entity = initEntityAfterReload(entity, resourceName(path));
 
             if (path.equals(resourcePath(entity.resourceName())) == false)
                 throw new IllegalStateException("The entity " + entity + " read from " + path
                         + " will save to a different path " + resourcePath(entity.resourceName()));
-
+            
             cache.putLocal(entity.resourceName(), entity);
             return entity;
         } catch (Exception e) {
-            throw new IllegalStateException("Error loading " + entityType.getName() + " at " + path, e);
+            throw new IllegalStateException("Error loading " + entityType.getSimpleName() + " at " + path, e);
         }
     }
 
@@ -148,18 +180,23 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         Preconditions.checkArgument(resName != null && resName.length() > 0);
 
         if (checkCopyOnWrite) {
-            if (cache.get(resName) == entity) {
+            if (entity.isCachedAndShared() || cache.get(resName) == entity) {
                 throw new IllegalStateException("Copy-on-write violation! The updating entity " + entity
-                        + " is a shared object in " + entityType.getName() + " cache, which should not be.");
+                        + " is a shared object in " + entityType.getSimpleName() + " cache, which should not be.");
             }
         }
 
         String path = resourcePath(resName);
-        logger.debug("Saving {} at {}", entityType.getName(), path);
+        logger.debug("Saving {} at {}", entityType.getSimpleName(), path);
 
         store.putResource(path, entity, serializer);
+        
+        // just to trigger the event broadcast, the entity won't stay in cache
         cache.put(resName, entity);
-        return entity;
+
+        // keep the pass-in entity out of cache, the caller may use it for further update
+        // return a reloaded new object
+        return reload(resName);
     }
 
     public void delete(T entity) throws IOException {
@@ -170,7 +207,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         Preconditions.checkArgument(resName != null);
 
         String path = resourcePath(resName);
-        logger.debug("Deleting {} at {}", entityType.getName(), path);
+        logger.debug("Deleting {} at {}", entityType.getSimpleName(), path);
 
         store.deleteResource(path);
         cache.remove(resName);

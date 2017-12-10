@@ -238,11 +238,17 @@ public class SparkCubing extends AbstractApplication {
             })));
         }
         final long end = System.currentTimeMillis();
-        CubingUtils.writeDictionary(seg, dictionaryMap, start, end);
+        
+        // work on copy instead of cached objects
+        CubeInstance cubeCopy = cubeInstance.latestCopyForWrite();
+        CubeSegment segCopy = cubeCopy.getSegmentById(seg.getUuid());
+
+        CubingUtils.writeDictionary(segCopy, dictionaryMap, start, end);
+        
         try {
-            CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
-            cubeBuilder.setToUpdateSegs(seg);
-            cubeManager.updateCube(cubeBuilder);
+            CubeUpdate update = new CubeUpdate(cubeCopy);
+            update.setToUpdateSegs(segCopy);
+            cubeManager.updateCube(update);
         } catch (IOException e) {
             throw new RuntimeException("Failed to deal with the request: " + e.getLocalizedMessage());
         }
@@ -501,8 +507,8 @@ public class SparkCubing extends AbstractApplication {
 
     private void bulkLoadHFile(String cubeName, String segmentId, String hfileLocation) throws Exception {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
-        final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+        final CubeInstance cubeCopy = CubeManager.getInstance(kylinConfig).getCube(cubeName).latestCopyForWrite();
+        final CubeSegment segCopy = cubeCopy.getSegmentById(segmentId);
         final Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
 
         FsShell shell = new FsShell(hbaseConf);
@@ -515,18 +521,17 @@ public class SparkCubing extends AbstractApplication {
 
         String[] newArgs = new String[2];
         newArgs[0] = hfileLocation;
-        newArgs[1] = cubeSegment.getStorageLocationIdentifier();
+        newArgs[1] = segCopy.getStorageLocationIdentifier();
 
         int ret = ToolRunner.run(new LoadIncrementalHFiles(hbaseConf), newArgs);
         System.out.println("incremental load result:" + ret);
 
-        cubeSegment.setStatus(SegmentStatusEnum.READY);
         try {
-            CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
-            cubeInstance.setStatus(RealizationStatusEnum.READY);
-            cubeSegment.setStatus(SegmentStatusEnum.READY);
-            cubeBuilder.setToUpdateSegs(cubeSegment);
-            CubeManager.getInstance(kylinConfig).updateCube(cubeBuilder);
+            CubeUpdate update = new CubeUpdate(cubeCopy);
+            cubeCopy.setStatus(RealizationStatusEnum.READY);
+            segCopy.setStatus(SegmentStatusEnum.READY);
+            update.setToUpdateSegs(segCopy);
+            CubeManager.getInstance(kylinConfig).updateCube(update);
         } catch (IOException e) {
             throw new RuntimeException("Failed to deal with the request: " + e.getLocalizedMessage());
         }

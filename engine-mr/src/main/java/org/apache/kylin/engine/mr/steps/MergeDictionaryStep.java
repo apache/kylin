@@ -63,12 +63,16 @@ public class MergeDictionaryStep extends AbstractExecutable {
         try {
             checkLookupSnapshotsMustIncremental(mergingSegments);
 
-            makeDictForNewSegment(conf, cube, newSegment, mergingSegments);
-            makeSnapshotForNewSegment(cube, newSegment, mergingSegments);
+            // work on copy instead of cached objects
+            CubeInstance cubeCopy = cube.latestCopyForWrite();
+            CubeSegment newSegCopy = cubeCopy.getSegmentById(newSegment.getUuid());
+            
+            makeDictForNewSegment(conf, cubeCopy, newSegCopy, mergingSegments);
+            makeSnapshotForNewSegment(cubeCopy, newSegCopy, mergingSegments);
 
-            CubeUpdate cubeBuilder = new CubeUpdate(cube);
-            cubeBuilder.setToUpdateSegs(newSegment);
-            mgr.updateCube(cubeBuilder);
+            CubeUpdate update = new CubeUpdate(cubeCopy);
+            update.setToUpdateSegs(newSegCopy);
+            mgr.updateCube(update);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to merge dictionary or lookup snapshots", e);

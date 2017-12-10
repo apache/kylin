@@ -36,7 +36,7 @@ public class CubeUpdate {
     private Map<Long, Long> cuboids = null;
 
     public CubeUpdate(CubeInstance cubeInstance) {
-        this.cubeInstance = cubeInstance;
+        setCubeInstance(cubeInstance);
     }
 
     public CubeInstance getCubeInstance() {
@@ -44,6 +44,9 @@ public class CubeUpdate {
     }
 
     public CubeUpdate setCubeInstance(CubeInstance cubeInstance) {
+        if (cubeInstance.isCachedAndShared())
+            throw new IllegalArgumentException();
+        
         this.cubeInstance = cubeInstance;
         return this;
     }
