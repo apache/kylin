@@ -286,6 +286,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                             Stats stats = result.getStats();
                             queryContext.addAndGetScannedRows(stats.getScannedRowCount());
                             queryContext.addAndGetScannedBytes(stats.getScannedBytes());
+                            queryContext.addAndGetReturnedRows(stats.getScannedRowCount()
+                                    - stats.getAggregatedRowCount() - stats.getFilteredRowCount());
 
                             RuntimeException rpcException = null;
                             if (result.getStats().getNormalComplete() != 1) {
@@ -305,6 +307,10 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                 rpcException = new ResourceLimitExceededException(
                                         "Query scanned " + queryContext.getScannedBytes() + " bytes exceeds threshold "
                                                 + cubeSeg.getConfig().getQueryMaxScanBytes());
+                            } else if (queryContext.getReturnedRows() > cubeSeg.getConfig().getQueryMaxReturnRows()) {
+                                rpcException = new ResourceLimitExceededException(
+                                        "Query returned " + queryContext.getReturnedRows() + " rows exceeds threshold "
+                                                + cubeSeg.getConfig().getQueryMaxReturnRows());
                             }
 
                             if (rpcException != null) {

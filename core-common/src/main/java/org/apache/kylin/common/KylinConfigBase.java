@@ -1225,6 +1225,10 @@ abstract public class KylinConfigBase implements Serializable {
         return value > 0 ? value : Long.MAX_VALUE;
     }
 
+    public long getQueryMaxReturnRows() {
+        return Integer.parseInt(this.getOptional("kylin.query.max-return-rows", "5000000"));
+    }
+
     public int getTranslatedInClauseMaxSize() {
         return Integer.parseInt(getOptional("kylin.query.translated-in-clause-max-size", String.valueOf(1024 * 1024)));
     }
