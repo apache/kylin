@@ -104,6 +104,11 @@ public class QueryUtil {
                 msg = cause.getMessage();
                 break;
             }
+
+            if (cause.getClass().getName().contains("ArithmeticException")) {
+                msg = "ArithmeticException: " + cause.getMessage();
+                break;
+            }
             cause = cause.getCause();
         }
 
