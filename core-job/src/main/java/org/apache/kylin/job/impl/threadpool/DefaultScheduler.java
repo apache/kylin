@@ -126,7 +126,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         + nStopped + " stopped, " + nReady + " ready, " + nSUCCEED + " already succeed, " + nError
                         + " error, " + nDiscarded + " discarded, " + nOthers + " others");
             } catch (Exception e) {
-                logger.warn("Job Fetcher caught a exception " + e);
+                logger.warn("Job Fetcher caught a exception ", e);
             }
         }
     }
