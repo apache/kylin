@@ -31,8 +31,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 
-public class RequestUtil {
-    private static final Logger logger = LoggerFactory.getLogger(RequestUtil.class);
+public class QueryRequestUtil {
+    private static final Logger logger = LoggerFactory.getLogger(QueryRequestUtil.class);
 
     private static LoadingCache<String, AtomicInteger> queryRequestMap = CacheBuilder.newBuilder()
             .removalListener(new RemovalListener<String, AtomicInteger>() {
@@ -49,6 +49,9 @@ public class RequestUtil {
             });
 
     public static boolean openQueryRequest(String project, int maxConcurrentQuery) {
+        if (maxConcurrentQuery == 0) {
+            return true;
+        }
         try {
             AtomicInteger nRunningQueries = queryRequestMap.get(project);
             for (;;) {
@@ -66,7 +69,10 @@ public class RequestUtil {
         }
     }
 
-    public static void closeQueryRequest(String project) {
+    public static void closeQueryRequest(String project, int maxConcurrentQuery) {
+        if (maxConcurrentQuery == 0) {
+            return;
+        }
         AtomicInteger nRunningQueries = queryRequestMap.getIfPresent(project);
         if (nRunningQueries != null) {
             nRunningQueries.decrementAndGet();

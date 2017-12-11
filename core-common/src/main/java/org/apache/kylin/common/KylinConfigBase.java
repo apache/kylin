@@ -1132,7 +1132,8 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getQueryConcurrentRunningThresholdForProject() {
-        return Integer.parseInt(getOptional("kylin.query.project-concurrent-running-threshold", "20"));
+        // by default there's no limitation
+        return Integer.parseInt(getOptional("kylin.query.project-concurrent-running-threshold", "0"));
     }
 
     public long getQueryMaxScanBytes() {

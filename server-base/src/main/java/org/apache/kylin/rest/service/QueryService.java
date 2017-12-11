@@ -98,7 +98,7 @@ import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.RequestUtil;
+import org.apache.kylin.rest.util.QueryRequestUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
@@ -418,8 +418,8 @@ public class QueryService extends BasicService {
                 throw new BadRequestException(msg.getNOT_SUPPORTED_SQL());
             }
 
-            if (!RequestUtil.openQueryRequest(projectInstance.getName(),
-                    projectInstance.getConfig().getQueryConcurrentRunningThresholdForProject())) {
+            int maxConcurrentQuery = projectInstance.getConfig().getQueryConcurrentRunningThresholdForProject();
+            if (!QueryRequestUtil.openQueryRequest(projectInstance.getName(), maxConcurrentQuery)) {
                 logger.warn("Directly return exception as too many concurrent query requests for project:" + project);
                 throw new BadRequestException(msg.getQUERY_TOO_MANY_RUNNING());
             }
@@ -430,78 +430,75 @@ public class QueryService extends BasicService {
             OLAPContext.clearThreadLocalContexts();
 
             SQLResponse sqlResponse = null;
-            boolean queryCacheEnabled = checkCondition(kylinConfig.isQueryCacheEnabled(),
-                    "query cache disabled in KylinConfig") && //
-                    checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
-
-            if (queryCacheEnabled) {
-                try { // to deal with the case that cache searching throws exception
+            try { // to deal with the case that cache searching throws exception
+                boolean queryCacheEnabled = checkCondition(kylinConfig.isQueryCacheEnabled(),
+                        "query cache disabled in KylinConfig") && //
+                        checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
+                if (queryCacheEnabled) {
                     sqlResponse = searchQueryInCache(sqlRequest);
-                } catch (Throwable e) {
-                    RequestUtil.closeQueryRequest(projectInstance.getName());
-                    throw e;
-                }
-            }
-
-            try {
-                if (null == sqlResponse) {
-                    if (isSelect) {
-                        sqlResponse = query(sqlRequest);
-                    } else if (isPushDownUpdateEnabled) {
-                        sqlResponse = update(sqlRequest);
-                    }
-
-                    long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
-                    long scanCountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
-                    long scanBytesThreshold = kylinConfig.getQueryScanBytesCacheThreshold();
-                    sqlResponse.setDuration(System.currentTimeMillis() - startTime);
-                    logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
-                            String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()),
-                            String.valueOf(sqlResponse.getTotalScanCount()));
-                    if (checkCondition(queryCacheEnabled, "query cache is disabled") //
-                            && checkCondition(!sqlResponse.getIsException(), "query has exception") //
-                            && checkCondition(!(sqlResponse.isPushDown()
-                                    && (isSelect == false || kylinConfig.isPushdownQueryCacheEnabled() == false)),
-                                    "query is executed with pushdown, but it is non-select, or the cache for pushdown is disabled") //
-                            && checkCondition(
-                                    sqlResponse.getDuration() > durationThreshold
-                                            || sqlResponse.getTotalScanCount() > scanCountThreshold
-                                            || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
-                                    "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})",
-                                    sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(),
-                                    scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
-                            && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(),
-                                    "query response is too large: {} ({})", sqlResponse.getResults().size(),
-                                    kylinConfig.getLargeQueryThreshold())) {
-                        cacheManager.getCache(SUCCESS_QUERY_CACHE)
-                                .put(new Element(sqlRequest.getCacheKey(), sqlResponse));
-                    }
-
-                } else {
-                    sqlResponse.setDuration(System.currentTimeMillis() - startTime);
-                    sqlResponse.setTotalScanCount(0);
-                    sqlResponse.setTotalScanBytes(0);
                 }
 
-                checkQueryAuth(sqlResponse, project, secureEnabled);
+                try {
+                    if (null == sqlResponse) {
+                        if (isSelect) {
+                            sqlResponse = query(sqlRequest);
+                        } else if (isPushDownUpdateEnabled) {
+                            sqlResponse = update(sqlRequest);
+                        }
 
-            } catch (Throwable e) { // calcite may throw AssertError
-                logger.error("Exception while executing query", e);
-                String errMsg = makeErrorMsgUserFriendly(e);
+                        long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
+                        long scanCountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
+                        long scanBytesThreshold = kylinConfig.getQueryScanBytesCacheThreshold();
+                        sqlResponse.setDuration(System.currentTimeMillis() - startTime);
+                        logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
+                                String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()),
+                                String.valueOf(sqlResponse.getTotalScanCount()));
+                        if (checkCondition(queryCacheEnabled, "query cache is disabled") //
+                                && checkCondition(!sqlResponse.getIsException(), "query has exception") //
+                                && checkCondition(!(sqlResponse.isPushDown()
+                                        && (isSelect == false || kylinConfig.isPushdownQueryCacheEnabled() == false)),
+                                        "query is executed with pushdown, but it is non-select, or the cache for pushdown is disabled") //
+                                && checkCondition(
+                                        sqlResponse.getDuration() > durationThreshold
+                                                || sqlResponse.getTotalScanCount() > scanCountThreshold
+                                                || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
+                                        "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})",
+                                        sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(),
+                                        scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
+                                && checkCondition(
+                                        sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(),
+                                        "query response is too large: {} ({})", sqlResponse.getResults().size(),
+                                        kylinConfig.getLargeQueryThreshold())) {
+                            cacheManager.getCache(SUCCESS_QUERY_CACHE)
+                                    .put(new Element(sqlRequest.getCacheKey(), sqlResponse));
+                        }
 
-                sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
-                sqlResponse.setThrowable(e.getCause() == null ? e : ExceptionUtils.getRootCause(e));
-                sqlResponse.setTotalScanCount(queryContext.getScannedRows());
-                sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
-                sqlResponse.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
+                    } else {
+                        sqlResponse.setDuration(System.currentTimeMillis() - startTime);
+                        sqlResponse.setTotalScanCount(0);
+                        sqlResponse.setTotalScanBytes(0);
+                    }
 
-                if (queryCacheEnabled && e.getCause() != null
-                        && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
-                    Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
-                    exceptionCache.put(new Element(sqlRequest.getCacheKey(), sqlResponse));
+                    checkQueryAuth(sqlResponse, project, secureEnabled);
+
+                } catch (Throwable e) { // calcite may throw AssertError
+                    logger.error("Exception while executing query", e);
+                    String errMsg = makeErrorMsgUserFriendly(e);
+
+                    sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
+                    sqlResponse.setThrowable(e.getCause() == null ? e : ExceptionUtils.getRootCause(e));
+                    sqlResponse.setTotalScanCount(queryContext.getScannedRows());
+                    sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
+                    sqlResponse.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
+
+                    if (queryCacheEnabled && e.getCause() != null
+                            && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
+                        Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+                        exceptionCache.put(new Element(sqlRequest.getCacheKey(), sqlResponse));
+                    }
                 }
             } finally {
-                RequestUtil.closeQueryRequest(projectInstance.getName());
+                QueryRequestUtil.closeQueryRequest(projectInstance.getName(), maxConcurrentQuery);
             }
 
             logQuery(sqlRequest, sqlResponse);

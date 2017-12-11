@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class RequestUtilTest {
+public class QueryRequestUtilTest {
 
     @Test
     public void testOpenAndCloseQueryRequest() {
@@ -43,11 +43,11 @@ public class RequestUtilTest {
                 @Override
                 public void run() {
                     try {
-                        boolean ifOpen = RequestUtil.openQueryRequest(project, maxConcurrentQuery);
+                        boolean ifOpen = QueryRequestUtil.openQueryRequest(project, maxConcurrentQuery);
                         lock.countDown();
                         if (ifOpen) {
                             lock.await();
-                            RequestUtil.closeQueryRequest(project);
+                            QueryRequestUtil.closeQueryRequest(project, maxConcurrentQuery);
                         } else {
                             nQueryFailed.incrementAndGet();
                         }
@@ -63,7 +63,7 @@ public class RequestUtilTest {
             } catch (InterruptedException e) {
             }
         }
-        Assert.assertEquals(new Integer(0), RequestUtil.getCurrentRunningQuery(project));
+        Assert.assertEquals(new Integer(0), QueryRequestUtil.getCurrentRunningQuery(project));
         Assert.assertEquals(nThread - maxConcurrentQuery, nQueryFailed.get());
     }
 }
