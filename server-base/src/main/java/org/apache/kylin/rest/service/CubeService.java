@@ -489,10 +489,6 @@ public class CubeService extends BasicService implements InitializingBean {
         aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
         Message msg = MsgPicker.getMsg();
 
-        if (!segmentName.equals(cube.getSegments().get(0).getName())
-                && !segmentName.equals(cube.getSegments().get(cube.getSegments().size() - 1).getName())) {
-            throw new BadRequestException(String.format(msg.getDELETE_NOT_FIRST_LAST_SEG(), segmentName));
-        }
         CubeSegment toDelete = null;
         for (CubeSegment seg : cube.getSegments()) {
             if (seg.getName().equals(segmentName)) {
@@ -506,6 +502,11 @@ public class CubeService extends BasicService implements InitializingBean {
 
         if (toDelete.getStatus() != SegmentStatusEnum.READY) {
             throw new BadRequestException(String.format(msg.getDELETE_NOT_READY_SEG(), segmentName));
+        }
+
+        if (!segmentName.equals(cube.getSegments().get(0).getName())
+                && !segmentName.equals(cube.getSegments().get(cube.getSegments().size() - 1).getName())) {
+            logger.warn(String.format("Cube [%s] gaps caused by deleting segment [%s].", cube.getName(), segmentName));
         }
 
         CubeUpdate update = new CubeUpdate(cube);
