@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -314,16 +315,57 @@ public class AccessService {
         }
     }
 
-    public List<AccessEntryResponse> generateAceResponses(Acl acl) {
+    public List<AccessEntryResponse> generateAceResponsesByFuzzMatching(Acl acl, String nameSeg, boolean isCaseSensitive) {
         if (null == acl) {
             return Collections.emptyList();
         }
 
         List<AccessEntryResponse> result = new ArrayList<AccessEntryResponse>();
         for (AccessControlEntry ace : acl.getEntries()) {
+            if (nameSeg != null && !needAdd(nameSeg, isCaseSensitive, getName(ace.getSid()))) {
+                continue;
+            }
             result.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
         }
 
+        return result;
+    }
+
+    private boolean needAdd(String nameSeg, boolean isCaseSensitive, String name) {
+        return isCaseSensitive && StringUtils.contains(name, nameSeg)
+                || !isCaseSensitive && StringUtils.containsIgnoreCase(name, nameSeg);
+    }
+
+    private static String getName(Sid sid) {
+        if (sid instanceof PrincipalSid) {
+            return ((PrincipalSid) sid).getPrincipal();
+        } else {
+            return ((GrantedAuthoritySid) sid).getGrantedAuthority();
+        }
+    }
+
+    public List<AccessEntryResponse> generateAceResponses(Acl acl) {
+        return generateAceResponsesByFuzzMatching(acl, null, false);
+    }
+
+    public List<String> getAllAclSids(Acl acl, String type) {
+        if (null == acl) {
+            return Collections.emptyList();
+        }
+
+        List<String> result = new ArrayList<>();
+        for (AccessControlEntry ace : acl.getEntries()) {
+            String name = null;
+            if (type.equalsIgnoreCase("user") && ace.getSid() instanceof PrincipalSid) {
+                name = ((PrincipalSid) ace.getSid()).getPrincipal();
+            }
+            if (type.equalsIgnoreCase("group") && ace.getSid() instanceof GrantedAuthoritySid) {
+                name = ((GrantedAuthoritySid) ace.getSid()).getGrantedAuthority();
+            }
+            if (!StringUtils.isBlank(name)) {
+                result.add(name);
+            }
+        }
         return result;
     }
 
