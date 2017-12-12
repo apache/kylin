@@ -68,11 +68,17 @@ KylinApp.controller('streamingConfigCtrl', function ($scope,StreamingService, $q
 
   $scope.addBroker = function (cluster,broker) {
     //$scope.modelsManager.selectedModel = model;
-    cluster.newBroker=(!!broker)?broker:StreamingModel.createBrokerConfig();
+	if(!!broker){
+	  cluster.newBroker = {};
+	  angular.copy(broker, cluster.newBroker);
+	  cluster.edit_index = cluster.brokers.indexOf(broker);
+	}else{
+	  cluster.newBroker = StreamingModel.createBrokerConfig();
+	}
   };
 
   $scope.removeNewBroker = function (cluster){
-    delete cluster.newBroker;
+    $scope.clearNewBroker(cluster);
   }
 
   $scope.removeElement = function (cluster, element) {
@@ -80,16 +86,37 @@ KylinApp.controller('streamingConfigCtrl', function ($scope,StreamingService, $q
     if (index > -1) {
       cluster.brokers.splice(index, 1);
     }
+    $scope.clearNewBroker(cluster);
   };
 
   $scope.saveNewBroker = function(cluster){
-    if (cluster.brokers.indexOf(cluster.newBroker) === -1) {
+    if ($scope.isIDExistentInArray(cluster.brokers,cluster.newBroker)) {
+      if (cluster.edit_index > -1) {
+        cluster.brokers.splice(cluster.edit_index, 1, cluster.newBroker);
+      }else{
+        SweetAlert.swal('', 'The new record ID already exists.', 'warning');
+        return;
+      }
+	}else{
       cluster.brokers.push(cluster.newBroker);
     }
-    delete cluster.newBroker;
+    $scope.clearNewBroker(cluster);
   }
 
+  $scope.isIDExistentInArray = function(arr,obj){
+      if(!arr || arr.length === 0){
+        return false;
+      }
+      for(var i=0; i<arr.length; i++) {
+        if(arr[i].id == obj.id){
+            return true;
+        }
+      }
+      return false;
+    }
+
   $scope.clearNewBroker = function(cluster){
+	delete cluster.edit_index;
     delete cluster.newBroker;
   }
 
