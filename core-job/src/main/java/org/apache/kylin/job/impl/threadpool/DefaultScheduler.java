@@ -59,6 +59,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private static final Logger logger = LoggerFactory.getLogger(DefaultScheduler.class);
     private volatile boolean initialized = false;
     private volatile boolean hasStarted = false;
+    volatile boolean fetchFailed = false;
     private JobEngineConfig jobEngineConfig;
 
     private static DefaultScheduler INSTANCE = null;
@@ -102,7 +103,12 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         } else if (output.getState() == ExecutableState.STOPPED) {
                             nStopped++;
                         } else {
-                            nOthers++;
+                            if (fetchFailed) {
+                                executableManager.updateJobOutput(id, ExecutableState.ERROR, null, null);
+                                nError++;
+                            } else {
+                                nOthers++;
+                            }
                         }
                         continue;
                     }
@@ -122,10 +128,13 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         logger.warn(jobDesc + " fail to schedule", ex);
                     }
                 }
+
+                fetchFailed = false;
                 logger.info("Job Fetcher: " + nRunning + " should running, " + runningJobs.size() + " actual running, "
                         + nStopped + " stopped, " + nReady + " ready, " + nSUCCEED + " already succeed, " + nError
                         + " error, " + nDiscarded + " discarded, " + nOthers + " others");
             } catch (Exception e) {
+                fetchFailed = true;
                 logger.warn("Job Fetcher caught a exception ", e);
             }
         }

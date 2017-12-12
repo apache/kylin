@@ -114,4 +114,20 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
             }
         }
     }
+
+    protected void runningJobToError(String jobId) {
+        while (true) {
+            try {
+                AbstractExecutable job = jobService.getJob(jobId);
+                ExecutableState status = job.getStatus();
+                if (status == ExecutableState.RUNNING) {
+                    scheduler.fetchFailed = true;
+                    break;
+                }
+                Thread.sleep(1000);
+            } catch (Exception ex) {
+                logger.error("", ex);
+            }
+        }
+    }
 }
