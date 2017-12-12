@@ -245,6 +245,7 @@
             <scr:intercept-url pattern="/api/models*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/streaming*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/job*/**" access="isAuthenticated()"/>
+            <scr:intercept-url pattern="/api/admin/public_config" access="permitAll"/>
             <scr:intercept-url pattern="/api/projects" access="permitAll"/>
             <scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')"/>
             <scr:intercept-url pattern="/api/**" access="isAuthenticated()"/>

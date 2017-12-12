@@ -30,6 +30,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -439,11 +440,9 @@ public class KylinConfig extends KylinConfigBase {
         return copy;
     }
 
-    public String exportToString() throws IOException {
-        Properties allProps = getAllProperties();
-        OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
-
-        final StringBuilder sb = new StringBuilder();
+    public String exportAllToString() throws IOException {
+        final Properties allProps = getProperties(null);
+        final OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
 
         for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
             String key = entry.getKey().toString();
@@ -454,7 +453,27 @@ public class KylinConfig extends KylinConfigBase {
                 orderedProperties.setProperty(key, value);
             }
         }
+
+        final StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
+            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+        }
+        return sb.toString();
+
+    }
+
+    public String exportToString(Collection<String> propertyKeys) throws IOException {
+        Properties filteredProps = getProperties(propertyKeys);
+        OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
+
+        for (String key : propertyKeys) {
+            if (!filteredProps.containsKey(key)) {
+                filteredProps.put(key, orderedProperties.getProperty(key, ""));
+            }
+        }
+
+        final StringBuilder sb = new StringBuilder();
+        for (Map.Entry<Object, Object> entry : filteredProps.entrySet()) {
             sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
         }
         return sb.toString();

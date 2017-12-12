@@ -19,8 +19,12 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
@@ -40,8 +44,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * Admin Controller is defined as Restful API entrance for UI.
- * 
- * @author jianliu
  * 
  */
 @Controller
@@ -75,13 +77,30 @@ public class AdminController extends BasicController {
     @RequestMapping(value = "/config", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public GeneralResponse getConfig() throws IOException {
-        String config = adminService.exportToString();
-
+        String config = KylinConfig.getInstanceFromEnv().exportAllToString();
         GeneralResponse configRes = new GeneralResponse();
         configRes.put("config", config);
 
         return configRes;
     }
+
+    @RequestMapping(value = "/public_config", method = { RequestMethod.GET }, produces = { "application/json" })
+    @ResponseBody
+    public GeneralResponse getPublicConfig() throws IOException {
+        final String whiteListProperties = KylinConfig.getInstanceFromEnv().getPropertiesWhiteList();
+
+        Collection<String> propertyKeys = Lists.newArrayList();
+        if (StringUtils.isNotEmpty(whiteListProperties)) {
+            propertyKeys.addAll(Arrays.asList(whiteListProperties.split(",")));
+        }
+
+        final String config = KylinConfig.getInstanceFromEnv().exportToString(propertyKeys);
+        GeneralResponse configRes = new GeneralResponse();
+        configRes.put("config", config);
+
+        return configRes;
+    }
+
 
     @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
@@ -97,7 +116,7 @@ public class AdminController extends BasicController {
 
     @RequestMapping(value = "/config", method = { RequestMethod.PUT }, produces = { "application/json" })
     public void updateKylinConfig(@RequestBody UpdateConfigRequest updateConfigRequest) {
-        KylinConfig.getInstanceFromEnv().setProperty(updateConfigRequest.getKey(), updateConfigRequest.getValue());
+        adminService.updateConfig(updateConfigRequest.getKey(), updateConfigRequest.getValue());
     }
 
     public void setAdminService(AdminService adminService) {

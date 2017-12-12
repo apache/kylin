@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -36,7 +35,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 /**
- * @author jianliu
  */
 @Component("adminService")
 public class AdminService extends BasicService {
@@ -77,14 +75,11 @@ public class AdminService extends BasicService {
         return content;
     }
 
-    /**
-     * Get Java config info as String
-     */
-    // @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)  // this is a critical security issue, see KYLIN-1664
-    public String exportToString() throws IOException {
-        logger.debug("Get Kylin Runtime Config");
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public void updateConfig(String key, String value) {
+        logger.debug("Update Kylin Runtime Config, key=" + key + ", value=" + value);
 
-        return KylinConfig.getInstanceFromEnv().exportToString();
+        KylinConfig.getInstanceFromEnv().setProperty(key, value);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)

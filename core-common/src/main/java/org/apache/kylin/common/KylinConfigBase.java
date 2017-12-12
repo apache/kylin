@@ -21,6 +21,7 @@ package org.apache.kylin.common;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -125,12 +126,23 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     protected Properties getAllProperties() {
+        return getProperties(null);
+    }
+
+    /**
+     *
+     * @param propertyKeys the collection of the properties; if null will return all properties
+     * @return
+     */
+    protected Properties getProperties(Collection<String> propertyKeys) {
         Map<String, String> envMap = System.getenv();
         StrSubstitutor sub = new StrSubstitutor(envMap);
 
         Properties properties = new Properties();
         for (Entry<Object, Object> entry : this.properties.entrySet()) {
-            properties.put(entry.getKey(), sub.replace((String) entry.getValue()));
+            if (propertyKeys == null || propertyKeys.contains(entry.getKey())) {
+                properties.put(entry.getKey(), sub.replace((String) entry.getValue()));
+            }
         }
         return properties;
     }
@@ -1385,5 +1397,13 @@ abstract public class KylinConfigBase implements Serializable {
 
     public boolean isHtraceTracingEveryQuery() {
         return Boolean.valueOf(getOptional("kylin.htrace.trace-every-query", "false"));
+    }
+
+    public String getPropertiesWhiteList() {
+        return getOptional("kylin.web.properties.whitelist",
+                "kylin.web.timezone,kylin.query.cache-enabled,kylin.env,kylin.web.hive-limit,kylin.storage.default,kylin.engine.default,kylin.web.link-hadoop,kylin.web.link-diagnostic,"
+                        + "kylin.web.contact-mail,kylin.web.help.length,kylin.web.help.0,kylin.web.help.1,kylin.web.help.2,kylin.web.help.3,"
+                        + "kylin.web.help,kylin.web.hide-measures,kylin.web.link-streaming-guide,kylin.server.external-acl-provider,kylin.security.profile,"
+                        + "kylin.htrace.show-gui-trace-toggle");
     }
 }

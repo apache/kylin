@@ -156,7 +156,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             builder.addHbaseColumnsToGT(intList);
         }
         builder.setRowkeyPreambleSize(cubeSeg.getRowKeyPreambleSize());
-        builder.setKylinProperties(kylinConfig.exportToString());
+        builder.setKylinProperties(kylinConfig.exportAllToString());
         final String queryId = queryContext.getQueryId();
         if (queryId != null) {
             builder.setQueryId(queryId);
