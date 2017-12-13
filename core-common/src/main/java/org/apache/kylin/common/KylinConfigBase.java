@@ -1027,12 +1027,12 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.engine.mr.mapper-input-rows", "1000000"));
     }
 
-    public int getCuboidStatisticsCalculatorMaxNumber() {
-        // default multi-thread statistics calculation is disabled
+    public int getCuboidStatsCalculatorMaxNumber() {
+        // set 1 to disable multi-thread statistics calculation
         return Integer.parseInt(getOptional("kylin.engine.mr.max-cuboid-stats-calculator-number", "1"));
     }
 
-    public int getCuboidNumberPerStatisticsCalculator() {
+    public int getCuboidNumberPerStatsCalculator() {
         return Integer.parseInt(getOptional("kylin.engine.mr.cuboid-number-per-stats-calculator", "100"));
     }
 
