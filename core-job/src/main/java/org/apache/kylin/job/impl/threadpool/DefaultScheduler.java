@@ -104,7 +104,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                             nStopped++;
                         } else {
                             if (fetchFailed) {
-                                executableManager.updateJobOutput(id, ExecutableState.ERROR, null, null);
+                                executableManager.forceKillJob(id);
                                 nError++;
                             } else {
                                 nOthers++;

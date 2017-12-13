@@ -61,7 +61,7 @@ public class ExecutableManager {
     }
 
     // ============================================================================
-    
+
     private final KylinConfig config;
     private final ExecutableDao executableDao;
 
@@ -223,7 +223,8 @@ public class ExecutableManager {
      * @param expectedClass
      * @return
      */
-    public List<AbstractExecutable> getAllAbstractExecutables(long timeStartInMillis, long timeEndInMillis, Class<? extends AbstractExecutable> expectedClass) {
+    public List<AbstractExecutable> getAllAbstractExecutables(long timeStartInMillis, long timeEndInMillis,
+            Class<? extends AbstractExecutable> expectedClass) {
         try {
             List<AbstractExecutable> ret = Lists.newArrayList();
             for (ExecutablePO po : executableDao.getJobs(timeStartInMillis, timeEndInMillis)) {
@@ -395,7 +396,8 @@ public class ExecutableManager {
             ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
             if (newStatus != null && oldStatus != newStatus) {
                 if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
-                    throw new IllegalStateTranferException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus + ", job id: " + jobId);
+                    throw new IllegalStateTranferException("there is no valid state transfer from:" + oldStatus + " to:"
+                            + newStatus + ", job id: " + jobId);
                 }
                 jobOutput.setStatus(newStatus.toString());
             }
@@ -409,6 +411,26 @@ public class ExecutableManager {
             logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
         } catch (PersistentException e) {
             logger.error("error change job:" + jobId + " to " + newStatus);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void forceKillJob(String jobId) {
+        try {
+            final ExecutableOutputPO jobOutput = executableDao.getJobOutput(jobId);
+            jobOutput.setStatus(ExecutableState.ERROR.toString());
+            List<ExecutablePO> tasks = executableDao.getJob(jobId).getTasks();
+
+            for (ExecutablePO task : tasks) {
+                if (executableDao.getJobOutput(task.getId()).getStatus().equals("SUCCEED")) {
+                    continue;
+                } else if (executableDao.getJobOutput(task.getId()).getStatus().equals("RUNNING")) {
+                    updateJobOutput(task.getId(), ExecutableState.READY, Maps.<String, String> newHashMap(), "");
+                }
+                break;
+            }
+            executableDao.updateJobOutput(jobOutput);
+        } catch (PersistentException e) {
             throw new RuntimeException(e);
         }
     }
@@ -495,7 +517,8 @@ public class ExecutableManager {
         }
     }
 
-    private AbstractExecutable parseToAbstract(ExecutablePO executablePO, Class<? extends AbstractExecutable> expectedClass) {
+    private AbstractExecutable parseToAbstract(ExecutablePO executablePO,
+            Class<? extends AbstractExecutable> expectedClass) {
         if (executablePO == null) {
             logger.warn("executablePO is null");
             return null;
