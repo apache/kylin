@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -407,6 +408,31 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         } finally {
             System.clearProperty("kylin.storage.hbase.namespace");
         }
+    }
+
+    @Test
+    public void testBuildCubeWithPartitionStartDate() throws IOException {
+        Long PARTITION_DATE_START = 1513123200L;
+        Long FIRST_BUILD_DATE_END = 1514764800L;
+        Long SECOND_BUILD_DATE_END = 1540339200L;
+
+        KylinConfig config = getTestConfig();
+        CubeManager cubeManager = CubeManager.getInstance(config);
+        CubeInstance cube = cubeManager.getCube("test_kylin_cube_with_slr_empty");
+        cube.getDescriptor().setPartitionDateStart(PARTITION_DATE_START);
+
+        CubeSegment segment = cubeManager.appendSegment(cube, new TSRange(0L, FIRST_BUILD_DATE_END), null, null, null);
+        assertEquals(segment._getDateRangeStart(), PARTITION_DATE_START.longValue());
+        assertEquals(segment._getDateRangeEnd(), FIRST_BUILD_DATE_END.longValue());
+
+        segment.setStatus(SegmentStatusEnum.READY);
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
+        cubeManager.updateCube(cubeBuilder);
+
+        segment = cubeManager.appendSegment(cube, new TSRange(0L, SECOND_BUILD_DATE_END), null, null, null);
+        assertEquals(segment._getDateRangeStart(), FIRST_BUILD_DATE_END.longValue());
+        assertEquals(segment._getDateRangeEnd(), SECOND_BUILD_DATE_END.longValue());
+
     }
 
 

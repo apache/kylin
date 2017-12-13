@@ -469,8 +469,13 @@ public class CubeManager implements IRealizationProvider {
         if (cube.getModel().getPartitionDesc().isPartitioned()) {
             // if missing start, set it to where last time ends
             CubeSegment last = cube.getLastSegment();
-            if (last != null && !last.isOffsetCube() && tsRange.start.v == 0) {
-                tsRange = new TSRange(last.getTSRange().end.v, tsRange.end.v);
+            CubeDesc cubeDesc = cube.getDescriptor();
+            if (tsRange != null && tsRange.start.v == 0) {
+                if (last == null) {
+                    tsRange = new TSRange(cubeDesc.getPartitionDateStart(), tsRange.end.v);
+                } else if (!last.isOffsetCube()) {
+                    tsRange = new TSRange(last.getTSRange().end.v, tsRange.end.v);
+                }
             }
         } else {
             // full build
