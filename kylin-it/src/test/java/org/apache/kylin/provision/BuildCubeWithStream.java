@@ -111,7 +111,7 @@ public class BuildCubeWithStream {
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
-        scheduler = DefaultScheduler.createInstance();
+        scheduler = DefaultScheduler.getInstance();
         scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
@@ -306,7 +306,6 @@ public class BuildCubeWithStream {
     public void after() {
         kafkaServer.stop();
         cleanKafkaZkPath(kafkaZkPath);
-        DefaultScheduler.destroyInstance();
     }
 
     private void cleanKafkaZkPath(String path) {

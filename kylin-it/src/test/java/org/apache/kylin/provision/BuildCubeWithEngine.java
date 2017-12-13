@@ -156,7 +156,7 @@ public class BuildCubeWithEngine {
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
-        scheduler = DefaultScheduler.createInstance();
+        scheduler = DefaultScheduler.getInstance();
         scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
@@ -172,7 +172,6 @@ public class BuildCubeWithEngine {
     }
 
     public void after() {
-        DefaultScheduler.destroyInstance();
     }
 
     public static void afterClass() {
