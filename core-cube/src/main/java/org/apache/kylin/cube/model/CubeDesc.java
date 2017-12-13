@@ -1039,8 +1039,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     checkState(!measureSet.contains(colMeasureRefs[i]), "measure (%s) duplicates", colMeasureRefs[i]);
                     measureSet.add(colMeasureRefs[i]);
 
-                    checkState(measureIndex[i] > lastMeasureIndex, "measure (%s) is not in order", colMeasureRefs[i]);
-                    lastMeasureIndex = measureIndex[i];
+                    if (storageType > IStorageAware.ID_SHARDED_HBASE) {
+                        checkState(measureIndex[i] > lastMeasureIndex, "measure (%s) is not in order",
+                                colMeasureRefs[i]);
+                        lastMeasureIndex = measureIndex[i];
+                    }
 
                     checkEachMeasureExist.set(measureIndex[i]);
                 }

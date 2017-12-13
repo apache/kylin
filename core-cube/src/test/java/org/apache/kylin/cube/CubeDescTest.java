@@ -322,20 +322,6 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testBadInit13() throws Exception {
-        thrown.expect(IllegalStateException.class);
-        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
-        MeasureDesc measureForTransCnt = cubeDesc.getMeasures().get(3);
-        Assert.assertEquals(measureForTransCnt.getName(), "TRANS_CNT");
-        thrown.expectMessage("measure (" + measureForTransCnt.getName() + ") is not in order");
-        HBaseColumnDesc colDesc = new HBaseColumnDesc();
-        colDesc.setQualifier("M");
-        colDesc.setMeasureRefs(new String[] { "GMV_SUM", "GMV_MIN", "GMV_MAX", "ITEM_COUNT_SUM", "TRANS_CNT" });
-        cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0] = colDesc;
-        cubeDesc.initMeasureReferenceToColumnFamily();
-    }
-
-    @Test
     public void testBadInit14() throws Exception {
         thrown.expect(IllegalStateException.class);
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
