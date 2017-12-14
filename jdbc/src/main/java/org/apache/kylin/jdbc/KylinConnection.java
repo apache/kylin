@@ -52,12 +52,12 @@ public class KylinConnection extends AvaticaConnection {
 
         String odbcUrl = url;
         odbcUrl = odbcUrl.replaceAll((Driver.CONNECT_STRING_PREFIX + "[[A-Za-z0-9]*=[A-Za-z0-9]*;]*//").toString(), "");
-        
-        String[] temps = odbcUrl.split("/");
-        assert temps.length == 2;
 
-        this.baseUrl = temps[0];
-        this.project = temps[1];
+        String[] temps = odbcUrl.split("/");
+        assert temps.length >= 2;
+
+        this.project = temps[temps.length - 1];
+        this.baseUrl = odbcUrl.substring(0, odbcUrl.indexOf(project) - 1);
 
         logger.debug("Kylin base url " + this.baseUrl + ", project name " + this.project);
 
