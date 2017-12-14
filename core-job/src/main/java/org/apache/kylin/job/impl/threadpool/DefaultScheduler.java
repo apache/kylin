@@ -249,16 +249,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     }
 
     @Override
-    public boolean stop(AbstractExecutable executable) throws SchedulerException {
-        if (hasStarted) {
-            return true;
-        } else {
-            //TODO should try to stop this executable
-            return true;
-        }
-    }
-
-    @Override
     public boolean hasStarted() {
         return this.hasStarted;
     }

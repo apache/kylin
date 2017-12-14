@@ -40,11 +40,6 @@ public class NoopScheduler implements Scheduler<AbstractExecutable> {
     }
 
     @Override
-    public boolean stop(AbstractExecutable executable) throws SchedulerException {
-        return false;
-    }
-
-    @Override
     public boolean hasStarted() {
         return false;
     }
