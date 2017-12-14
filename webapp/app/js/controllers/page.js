@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $location, $rootScope, $routeParams, $http, UserService, ProjectService, SweetAlert, $cookieStore, $log, kylinConfig, ProjectModel, TableModel) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $location, $rootScope, $routeParams, $http, UserService, ProjectService, SweetAlert, $cookieStore, $log, kylinConfig, ProjectModel, TableModel, JobList) {
 
   //init kylinConfig to get kylin.Propeties
   kylinConfig.init().$promise.then(function (data) {
@@ -49,6 +49,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   // Set up common methods
   $scope.logout = function () {
     ProjectModel.clear();
+    JobList.clearJobFilter();
     $rootScope.userAction.islogout = true;
     var logoutURL = Config.service.base;
     if(kylinConfig.getProperty('kylin.security.profile') === 'saml') {
