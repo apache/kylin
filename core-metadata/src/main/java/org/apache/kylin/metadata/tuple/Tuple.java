@@ -115,25 +115,27 @@ public class Tuple implements ITuple {
         // BigDecimal during cube build for best precision
         if ("double".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).doubleValue();
-        } else if ("decimal".equals(dataType) && fieldValue instanceof BigDecimal) {
-            fieldValue = normalizeDecimal((BigDecimal) fieldValue);
-        } else if ("integer".equals(dataType) && fieldValue instanceof Number) {
-            fieldValue = ((Number) fieldValue).intValue();
-        } else if ("smallint".equals(dataType) && fieldValue instanceof Number) {
-            fieldValue = ((Number) fieldValue).shortValue();
-        } else if ("tinyint".equals(dataType)) {
-            fieldValue = ((Number) fieldValue).byteValue();
+        } else if ("decimal".equals(dataType)) {
+            if (fieldValue instanceof BigDecimal) {
+                fieldValue = normalizeDecimal((BigDecimal) fieldValue);
+            } else if (fieldValue instanceof Number) {
+                fieldValue = new BigDecimal(((Number) fieldValue).doubleValue());
+            }
         } else if ("float".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).floatValue();
+        } else if ("integer".equals(dataType) && fieldValue instanceof Number) {
+            fieldValue = ((Number) fieldValue).intValue();
+        } else if ("bigint".equals(dataType) && fieldValue instanceof Number) {
+            fieldValue = ((Number) fieldValue).longValue();
+        } else if ("smallint".equals(dataType) && fieldValue instanceof Number) {
+            fieldValue = ((Number) fieldValue).shortValue();
+        } else if ("tinyint".equals(dataType) && fieldValue instanceof Number) {
+            fieldValue = ((Number) fieldValue).byteValue();
         } else if ("date".equals(dataType) && fieldValue instanceof Long) {
-            long millis = ((Long) fieldValue).longValue();
+            long millis = (Long) fieldValue;
             fieldValue = (int) (millis / (1000 * 3600 * 24));
-        } else if ("smallint".equals(dataType) && fieldValue instanceof Long) {
-            fieldValue = ((Long) fieldValue).shortValue();
         } else if ((!"varchar".equals(dataType) || !"char".equals(dataType)) && fieldValue instanceof String) {
             fieldValue = convertOptiqCellValue((String) fieldValue, dataType);
-        } else if ("bigint".equals(dataType) && fieldValue instanceof Double) {
-            fieldValue = ((Double) fieldValue).longValue();
         }
 
         values[idx] = fieldValue;
@@ -188,7 +190,8 @@ public class Tuple implements ITuple {
         if (strValue == null)
             return null;
 
-        if ((strValue.equals("") || strValue.equals("\\N")) && !dataTypeName.equals("string") && !dataTypeName.startsWith("varchar"))
+        if ((strValue.equals("") || strValue.equals("\\N")) && !dataTypeName.equals("string")
+                && !dataTypeName.startsWith("varchar"))
             return null;
 
         switch (dataTypeName) {

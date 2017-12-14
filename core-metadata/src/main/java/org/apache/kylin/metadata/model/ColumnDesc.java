@@ -59,7 +59,6 @@ public class ColumnDesc implements Serializable {
 
     // parsed from data type
     private DataType type;
-    private DataType upgradedType;
 
     private TableDesc table;
     private int zeroBasedIndex = -1;
@@ -116,16 +115,8 @@ public class ColumnDesc implements Serializable {
         type = DataType.getType(datatype);
     }
 
-    public void setUpgradedType(DataType upgradedType) {
-        this.upgradedType = upgradedType;
-    }
-
     public DataType getUpgradedType() {
-        if (this.upgradedType == null) {
-            return this.type;
-        } else {
-            return this.upgradedType;
-        }
+        return this.type;
     }
 
     public String getId() {
