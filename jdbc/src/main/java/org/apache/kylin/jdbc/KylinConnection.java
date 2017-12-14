@@ -57,7 +57,7 @@ public class KylinConnection extends AvaticaConnection {
         assert temps.length >= 2;
 
         this.project = temps[temps.length - 1];
-        this.baseUrl = odbcUrl.substring(0, odbcUrl.indexOf(project) - 1);
+        this.baseUrl = odbcUrl.substring(0, odbcUrl.lastIndexOf(project) - 1);
 
         logger.debug("Kylin base url " + this.baseUrl + ", project name " + this.project);
 
