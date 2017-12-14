@@ -390,6 +390,11 @@ public class ExecutableManager {
     }
 
     public void updateJobOutput(String jobId, ExecutableState newStatus, Map<String, String> info, String output) {
+        // when 
+        if (Thread.currentThread().isInterrupted()) {
+            throw new RuntimeException("Current thread is interruptted, aborting");
+        }
+
         try {
             final ExecutableOutputPO jobOutput = executableDao.getJobOutput(jobId);
             Preconditions.checkArgument(jobOutput != null, "there is no related output for job id:" + jobId);

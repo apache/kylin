@@ -81,7 +81,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
         @Override
         synchronized public void run() {
-            try {
+            try (SetThreadName ignored = new SetThreadName("Scheduler %s FetcherRunner",
+                    System.identityHashCode(DefaultScheduler.this))) {
                 // logger.debug("Job Fetcher is running...");
                 Map<String, Executable> runningJobs = context.getRunningJobs();
                 if (isJobPoolFull()) {
@@ -141,7 +142,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         + nStopped + " stopped, " + nReady + " ready, " + nSUCCEED + " already succeed, " + nError
                         + " error, " + nDiscarded + " discarded, " + nOthers + " others");
             } catch (Exception e) {
-                fetchFailed = true;
+                fetchFailed = true; // this could happen when resource store is unavailable
                 logger.warn("Job Fetcher caught a exception ", e);
             }
         }
@@ -258,12 +259,18 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         logger.info("Shutting down DefaultScheduler ....");
         jobLock.unlockJobEngine();
         try {
-            fetcherPool.shutdown();
+            fetcherPool.shutdownNow();//interrupt
             fetcherPool.awaitTermination(1, TimeUnit.MINUTES);
-            jobPool.shutdown();
+        } catch (InterruptedException e) {
+            //ignore it
+            logger.warn("InterruptedException is caught!");
+        }
+        try {
+            jobPool.shutdownNow();//interrupt
             jobPool.awaitTermination(1, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             //ignore it
+            logger.warn("InterruptedException is caught!");
         }
     }
 
