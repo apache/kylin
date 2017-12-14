@@ -90,7 +90,7 @@ public class BuildCubeWithStream {
     private KafkaConfig kafkaConfig;
     private MockKafka kafkaServer;
     private ZkConnection zkConnection;
-    private final String kafkaZkPath = "/" + UUID.randomUUID().toString();
+    private final String kafkaZkPath = "/kylin/streaming/" + UUID.randomUUID().toString();
 
     protected static boolean fastBuildMode = false;
     private volatile boolean generateData = true;
@@ -359,13 +359,15 @@ public class BuildCubeWithStream {
             buildCubeWithStream.before();
             buildCubeWithStream.build();
             logger.info("Build is done");
-
-            buildCubeWithStream.after();
-            buildCubeWithStream.cleanup();
-            logger.info("Going to exit");
         } catch (Throwable e) {
             logger.error("error", e);
             exitCode = 1;
+        } finally{
+            if (buildCubeWithStream != null) {
+                buildCubeWithStream.after();
+                buildCubeWithStream.cleanup();
+            }
+            logger.info("Going to exit");
         }
 
         long millis = System.currentTimeMillis() - start;
