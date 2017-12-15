@@ -130,7 +130,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                     exception = e;
                 }
                 retry++;
-            } while (((result != null && result.succeed() == false) || exception != null) && needRetry() == true);
+            } while (((result != null && !result.succeed()) || exception != null) && needRetry());
 
             if (exception != null) {
                 onExecuteError(exception, executableContext);
