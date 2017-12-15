@@ -626,6 +626,7 @@ public class JobService extends BasicService implements InitializingBean {
     public JobInstance pauseJob(JobInstance job) {
         aclEvaluate.checkProjectOperationPermission(job);
         getExecutableManager().pauseJob(job.getId());
+        job.setStatus(JobStatusEnum.STOPPED);
         return job;
     }
 
