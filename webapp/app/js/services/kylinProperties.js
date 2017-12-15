@@ -119,5 +119,17 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     var hide_measures = this.getProperty("kylin.web.hide-measures").replace(/\s/g,"").toUpperCase();
     return hide_measures.split(",")
   }
+
+  this.getQueryTimeout = function () {
+    var queryTimeout = parseInt(this.getProperty("kylin.web.query-timeout"));
+    if (isNaN(queryTimeout)) {
+       queryTimeout = 300000;
+    }
+    return queryTimeout;
+  }
+
+  this.isInitialized = function() {
+    return angular.isString(_config);
+  }  
 });
 
