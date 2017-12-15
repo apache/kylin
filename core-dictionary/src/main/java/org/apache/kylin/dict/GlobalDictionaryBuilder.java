@@ -53,7 +53,13 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             hdfsDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
         }
         String baseDir = hdfsDir + "resources/GlobalDict" + dictInfo.getResourceDir() + "/";
-        this.builder = new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, true);
+
+        try {
+            this.builder = new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, true);
+        } catch (Throwable e) {
+            lock.unlock(getLockPath(sourceColumn));
+            throw new RuntimeException(String.format("Failed to create global dictionary on %s ", sourceColumn), e);
+        }
         this.baseId = baseId;
     }
 
