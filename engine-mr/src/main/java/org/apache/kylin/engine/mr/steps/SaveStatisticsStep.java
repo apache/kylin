@@ -70,7 +70,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             Configuration hadoopConf = HadoopUtil.getCurrentConfiguration();
             Path statisticsDir = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()));
-            Path[] statisticsFiles = HadoopUtil.getFilterPath(fs, statisticsDir, BatchConstants.CFG_OUTPUT_STATISTICS);
+            Path[] statisticsFiles = HadoopUtil.getFilteredPath(fs, statisticsDir, BatchConstants.CFG_OUTPUT_STATISTICS);
             if (statisticsFiles == null) {
                 throw new IOException("fail to find the statistics file in base dir: " + statisticsDir);
             }
@@ -146,7 +146,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
     private void logMapperAndCuboidStatistics(Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage,
             int mapperNumber, long grantTotal, long totalRowsBeforeMerge) throws IOException {
         logger.debug("Total cuboid number: \t" + cuboidHLLMap.size());
-        logger.debug("Samping percentage: \t" + samplingPercentage);
+        logger.debug("Sampling percentage: \t" + samplingPercentage);
         logger.debug("The following statistics are collected based on sampling data.");
         logger.debug("Number of Mappers: " + mapperNumber);
 

@@ -85,7 +85,7 @@ public class MergeStatisticsWithOldStep extends AbstractExecutable {
                 throw new IOException("StatisticsFilePath " + statisticsDirPath + " is not a directory");
             }
 
-            Path[] statisticsFiles = HadoopUtil.getFilterPath(hdfs, statisticsDirPath,
+            Path[] statisticsFiles = HadoopUtil.getFilteredPath(hdfs, statisticsDirPath,
                     BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
             if (statisticsFiles == null) {
                 throw new IOException("fail to find the statistics file in base dir: " + statisticsDirPath);
