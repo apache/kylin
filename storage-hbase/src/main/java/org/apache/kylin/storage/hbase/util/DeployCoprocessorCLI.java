@@ -89,53 +89,58 @@ public class DeployCoprocessorCLI {
         Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
         FileSystem fileSystem = FileSystem.get(hconf);
         Connection conn = HBaseConnection.get(kylinConfig.getStorageUrl());
-        Admin hbaseAdmin = conn.getAdmin();
+        Admin hbaseAdmin = null;
 
-        String localCoprocessorJar;
-        if ("default".equals(args[0])) {
-            localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
-        } else {
-            localCoprocessorJar = new File(args[0]).getAbsolutePath();
+        try {
+            hbaseAdmin = conn.getAdmin();
+            String localCoprocessorJar;
+            if ("default".equals(args[0])) {
+                localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
+            } else {
+                localCoprocessorJar = new File(args[0]).getAbsolutePath();
+            }
+
+            logger.info("Identify coprocessor jar " + localCoprocessorJar);
+
+            List<String> tableNames = getHTableNames(kylinConfig);
+            logger.info("Identify tables " + tableNames);
+
+            String filterType = args[1].toLowerCase();
+            if (filterType.equals("-table")) {
+                tableNames = filterByTables(tableNames, Arrays.asList(args).subList(2, args.length));
+            } else if (filterType.equals("-cube")) {
+                tableNames = filterByCubes(tableNames, Arrays.asList(args).subList(2, args.length));
+            } else if (filterType.equals("-project")) {
+                tableNames = filterByProjects(tableNames, Arrays.asList(args).subList(2, args.length));
+            } else if (!filterType.equals("all")) {
+                printUsageAndExit();
+            }
+
+            logger.info("Will execute tables " + tableNames);
+            long start = System.currentTimeMillis();
+
+            Set<String> oldJarPaths = getCoprocessorJarPaths(hbaseAdmin, tableNames);
+            logger.info("Old coprocessor jar: " + oldJarPaths);
+
+            Path hdfsCoprocessorJar = uploadCoprocessorJar(localCoprocessorJar, fileSystem, oldJarPaths);
+            logger.info("New coprocessor jar: " + hdfsCoprocessorJar);
+
+            Pair<List<String>, List<String>> results = resetCoprocessorOnHTables(hbaseAdmin, hdfsCoprocessorJar, tableNames);
+
+            // Don't remove old jars, missing coprocessor jar will fail hbase
+            // removeOldJars(oldJarPaths, fileSystem);
+
+            logger.info("Processed time: " + (System.currentTimeMillis() - start));
+            logger.info("Processed tables count: " + results.getFirst().size());
+            logger.info("Processed tables: " + results.getFirst());
+            logger.error("Failed tables count: " + results.getSecond().size());
+            logger.error("Failed tables : " + results.getSecond());
+            logger.info("Active coprocessor jar: " + hdfsCoprocessorJar);
+        } finally {
+            if (hbaseAdmin != null) {
+                hbaseAdmin.close();
+            }
         }
-
-        logger.info("Identify coprocessor jar " + localCoprocessorJar);
-
-        List<String> tableNames = getHTableNames(kylinConfig);
-        logger.info("Identify tables " + tableNames);
-
-        String filterType = args[1].toLowerCase();
-        if (filterType.equals("-table")) {
-            tableNames = filterByTables(tableNames, Arrays.asList(args).subList(2, args.length));
-        } else if (filterType.equals("-cube")) {
-            tableNames = filterByCubes(tableNames, Arrays.asList(args).subList(2, args.length));
-        } else if (filterType.equals("-project")) {
-            tableNames = filterByProjects(tableNames, Arrays.asList(args).subList(2, args.length));
-        } else if (!filterType.equals("all")) {
-            printUsageAndExit();
-        }
-
-        logger.info("Will execute tables " + tableNames);
-        long start = System.currentTimeMillis();
-
-        Set<String> oldJarPaths = getCoprocessorJarPaths(hbaseAdmin, tableNames);
-        logger.info("Old coprocessor jar: " + oldJarPaths);
-
-        Path hdfsCoprocessorJar = uploadCoprocessorJar(localCoprocessorJar, fileSystem, oldJarPaths);
-        logger.info("New coprocessor jar: " + hdfsCoprocessorJar);
-
-        Pair<List<String>, List<String>> results = resetCoprocessorOnHTables(hbaseAdmin, hdfsCoprocessorJar, tableNames);
-
-        // Don't remove old jars, missing coprocessor jar will fail hbase
-        // removeOldJars(oldJarPaths, fileSystem);
-
-        hbaseAdmin.close();
-
-        logger.info("Processed time: " + (System.currentTimeMillis() - start));
-        logger.info("Processed tables count: " + results.getFirst().size());
-        logger.info("Processed tables: " + results.getFirst());
-        logger.error("Failed tables count: " + results.getSecond().size());
-        logger.error("Failed tables : " + results.getSecond());
-        logger.info("Active coprocessor jar: " + hdfsCoprocessorJar);
     }
 
     private static void printUsageAndExit() {
