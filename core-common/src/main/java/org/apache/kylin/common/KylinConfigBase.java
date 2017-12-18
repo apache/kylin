@@ -557,6 +557,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.job.retry", "0"));
     }
 
+    public String[] getJobRetryExceptions() {
+        return getOptionalStringArray("kylin.job.retry-exception-classes", new String[0]);
+    }
+
     public int getCubeStatsHLLPrecision() {
         return Integer.parseInt(getOptional("kylin.job.sampling-hll-precision", "14"));
     }

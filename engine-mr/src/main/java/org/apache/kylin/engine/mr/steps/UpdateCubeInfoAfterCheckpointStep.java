@@ -59,7 +59,7 @@ public class UpdateCubeInfoAfterCheckpointStep extends AbstractExecutable {
             }
             cubeManager.promoteCheckpointOptimizeSegments(cube, recommendCuboidsWithStats,
                     newSegments.toArray(new CubeSegment[newSegments.size()]));
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+            return new ExecuteResult();
         } catch (Exception e) {
             logger.error("fail to update cube after build", e);
             return ExecuteResult.createError(e);

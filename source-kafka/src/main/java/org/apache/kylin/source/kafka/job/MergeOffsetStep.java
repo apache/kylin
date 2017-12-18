@@ -73,7 +73,7 @@ public class MergeOffsetStep extends AbstractExecutable {
         cubeBuilder.setToUpdateSegs(segment);
         try {
             cubeManager.updateCube(cubeBuilder);
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+            return new ExecuteResult();
         } catch (IOException e) {
             logger.error("fail to update cube segment offset", e);
             return ExecuteResult.createError(e);

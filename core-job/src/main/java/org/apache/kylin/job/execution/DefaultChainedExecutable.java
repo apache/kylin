@@ -150,11 +150,6 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         return subTasks;
     }
 
-    @Override
-    protected boolean needRetry() {
-        return false;
-    }
-
     public final AbstractExecutable getTaskByName(String name) {
         for (AbstractExecutable task : subTasks) {
             if (task.getName() != null && task.getName().equalsIgnoreCase(name)) {

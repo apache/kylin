@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.kylin.job.BaseTestExecutable;
 import org.apache.kylin.job.ErrorTestExecutable;
 import org.apache.kylin.job.FailedTestExecutable;
+import org.apache.kylin.job.RetryableTestExecutable;
 import org.apache.kylin.job.SelfStopExecutable;
 import org.apache.kylin.job.SucceedTestExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -144,5 +145,21 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         }, 0, 1, TimeUnit.SECONDS);
         assertFalse("countDownLatch2 should NOT reach zero in 15 secs", countDownLatch2.await(7, TimeUnit.SECONDS));
         assertFalse("future2 should has been stopped", future2.cancel(true));
+    }
+
+    @Test
+    public void testRetryableException() throws Exception {
+        System.setProperty("kylin.job.retry-exception-classes", "java.io.FileNotFoundException");
+        System.setProperty("kylin.job.retry", "3");
+        DefaultChainedExecutable job = new DefaultChainedExecutable();
+        BaseTestExecutable task1 = new SucceedTestExecutable();
+        BaseTestExecutable task2 = new RetryableTestExecutable();
+        job.addTask(task1);
+        job.addTask(task2);
+        jobService.addJob(job);
+        waitForJobFinish(job.getId());
+        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
+        Assert.assertEquals(ExecutableState.ERROR, jobService.getOutput(task2.getId()).getState());
+        Assert.assertEquals(ExecutableState.ERROR, jobService.getOutput(job.getId()).getState());
     }
 }

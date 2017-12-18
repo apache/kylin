@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.MailService;
@@ -114,6 +115,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
         Preconditions.checkArgument(executableContext instanceof DefaultContext);
         ExecuteResult result = null;
+
         try {
             onExecuteStart(executableContext);
             Throwable exception;
@@ -130,9 +132,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                     exception = e;
                 }
                 retry++;
-            } while (((result != null && result.succeed() == false) || exception != null) && needRetry() == true);
+            } while (needRetry(result, exception));
 
-            if (exception != null) {
+            //check exception in result to avoid retry on ChainedExecutable(only need retry on subtask actually)
+            if (exception != null || result.getThrowable() != null) {
                 onExecuteError(exception, executableContext);
                 throw new ExecuteException(exception);
             }
@@ -168,6 +171,13 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 return true;
             }
             t = t.getCause();
+        }
+        return false;
+    }
+
+    private boolean isRetryableExecutionResult(ExecuteResult result) {
+        if (result != null && result.getThrowable() != null && isRetrableException(result.getThrowable())) {
+            return true;
         }
         return false;
     }
@@ -412,8 +422,26 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return status == ExecutableState.STOPPED;
     }
 
-    protected boolean needRetry() {
-        return this.retry <= config.getJobRetry();
+    protected boolean isRetrableException(Throwable t) {
+        return ArrayUtils.contains(KylinConfig.getInstanceFromEnv().getJobRetryExceptions(), t.getClass().getName());
+    }
+
+    // Retry will happen in below cases:
+    // 1) if property "kylin.job.retry-exception-classes" is not set or is null, all jobs with exceptions will retry according to the retry times.
+    // 2) if property "kylin.job.retry-exception-classes" is set and is not null, only jobs with the specified exceptions will retry according to the retry times.
+    protected boolean needRetry(ExecuteResult result, Throwable e) {
+        if (this.retry > KylinConfig.getInstanceFromEnv().getJobRetry()) {
+            return false;
+        }
+        String[] retryableEx = KylinConfig.getInstanceFromEnv().getJobRetryExceptions();
+        if (retryableEx == null || retryableEx.length == 0) {
+            return true;
+        }
+        if ((result != null && isRetryableExecutionResult(result))
+                || e != null && isRetrableException(e)) {
+            return true;
+        }
+        return false;
     }
 
     @Override

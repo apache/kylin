@@ -134,7 +134,7 @@ public class MergeStatisticsWithOldStep extends AbstractExecutable {
                     .getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));
             StatisticsDecisionUtil.decideCubingAlgorithm(cubingJob, optimizeSegment);
 
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+            return new ExecuteResult();
         } catch (IOException e) {
             logger.error("fail to merge cuboid statistics", e);
             return ExecuteResult.createError(e);
