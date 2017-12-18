@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -60,6 +61,11 @@ public class JoinedFlatTable {
 
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir,
             String format) {
+        return generateCreateTableStatement(flatDesc, storageDfsDir, format, "|");
+    }
+
+    public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir,
+            String format, String fieldDelimiter) {
         StringBuilder ddl = new StringBuilder();
 
         ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + flatDesc.getTableName() + "\n");
@@ -74,7 +80,7 @@ public class JoinedFlatTable {
         }
         ddl.append(")" + "\n");
         if ("TEXTFILE".equals(format)) {
-            ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
+            ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '" + fieldDelimiter + "'\n");
         }
         ddl.append("STORED AS " + format + "\n");
         ddl.append("LOCATION '" + getTableDir(flatDesc, storageDfsDir) + "';").append("\n");
@@ -207,15 +213,13 @@ public class JoinedFlatTable {
     private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, boolean singleLine) {
         final String sep = singleLine ? " " : "\n";
 
-        boolean hasCondition = false;
         StringBuilder whereBuilder = new StringBuilder();
-        whereBuilder.append("WHERE");
+        whereBuilder.append("WHERE 1=1");
 
         DataModelDesc model = flatDesc.getDataModel();
 
-        if (model.getFilterCondition() != null && model.getFilterCondition().equals("") == false) {
-            whereBuilder.append(" (").append(model.getFilterCondition()).append(") ");
-            hasCondition = true;
+        if (StringUtils.isNotEmpty(model.getFilterCondition())) {
+            whereBuilder.append(" AND (").append(model.getFilterCondition()).append(") ");
         }
 
         if (flatDesc.getSegment() != null) {
@@ -224,18 +228,15 @@ public class JoinedFlatTable {
                 SegmentRange segRange = flatDesc.getSegRange();
 
                 if (segRange != null && !segRange.isInfinite()) {
-                    whereBuilder.append(hasCondition ? " AND (" : " (");
+                    whereBuilder.append(" AND (");
                     whereBuilder.append(partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc,
                             flatDesc.getSegment(), segRange));
                     whereBuilder.append(")" + sep);
-                    hasCondition = true;
                 }
             }
         }
 
-        if (hasCondition) {
-            sql.append(whereBuilder.toString());
-        }
+        sql.append(whereBuilder.toString());
     }
 
     private static String colName(TblColRef col) {
@@ -243,10 +244,19 @@ public class JoinedFlatTable {
     }
 
     private static String getHiveDataType(String javaDataType) {
-        String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
-        hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;
+        String originDataType = javaDataType.toLowerCase();
+        String hiveDataType;
+        if (originDataType.startsWith("varchar")) {
+            hiveDataType = "string";
+        } else if (originDataType.startsWith("integer")) {
+            hiveDataType = "int";
+        } else if (originDataType.startsWith("bigint")) {
+            hiveDataType = "bigint";
+        } else {
+            hiveDataType = originDataType;
+        }
 
-        return hiveDataType.toLowerCase();
+        return hiveDataType;
     }
 
     public static String generateRedistributeFlatTableStatement(IJoinedFlatTableDesc flatDesc) {

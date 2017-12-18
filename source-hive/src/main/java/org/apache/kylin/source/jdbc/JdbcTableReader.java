@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.source.IReadableTable.TableReader;
 import org.apache.kylin.source.hive.DBConnConf;
@@ -30,23 +31,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An implementation of TableReader with HCatalog for Hive table.
+ * An implementation of TableReader with JDBC.
  */
 public class JdbcTableReader implements TableReader {
     private static final Logger logger = LoggerFactory.getLogger(JdbcTableReader.class);
-    
+
     private String dbName;
     private String tableName;
 
     private DBConnConf dbconf;
-    private String dialect;
     private Connection jdbcCon;
     private Statement statement;
     private ResultSet rs;
     private int colCount;
 
     /**
-     * Constructor for reading whole hive table
+     * Constructor for reading whole jdbc table
      * @param dbName
      * @param tableName
      * @throws IOException
@@ -55,22 +55,20 @@ public class JdbcTableReader implements TableReader {
         this.dbName = dbName;
         this.tableName = tableName;
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        String connectionUrl = config.getJdbcConnectionUrl();
-        String driverClass = config.getJdbcDriver();
-        String jdbcUser = config.getJdbcUser();
-        String jdbcPass = config.getJdbcPass();
+        String connectionUrl = config.getJdbcSourceConnectionUrl();
+        String driverClass = config.getJdbcSourceDriver();
+        String jdbcUser = config.getJdbcSourceUser();
+        String jdbcPass = config.getJdbcSourcePass();
         dbconf = new DBConnConf(driverClass, connectionUrl, jdbcUser, jdbcPass);
-        this.dialect = config.getJdbcDialect();
         jdbcCon = SqlUtil.getConnection(dbconf);
         String sql = String.format("select * from %s.%s", dbName, tableName);
         try {
             statement = jdbcCon.createStatement();
             rs = statement.executeQuery(sql);
             colCount = rs.getMetaData().getColumnCount();
-        }catch(SQLException e){
+        } catch (SQLException e) {
             throw new IOException(String.format("error while exec %s", sql), e);
         }
-        
     }
 
     @Override
@@ -85,11 +83,17 @@ public class JdbcTableReader implements TableReader {
     @Override
     public String[] getRow() {
         String[] ret = new String[colCount];
-        for (int i=1; i<=colCount; i++){
+        for (int i = 1; i <= colCount; i++) {
             try {
                 Object o = rs.getObject(i);
-                ret[i-1] = (o == null? null:o.toString());
-            }catch(Exception e){
+                String result;
+                if (null == o || o instanceof byte[]) {
+                    result = null;
+                } else {
+                    result = o.toString();
+                }
+                ret[i - 1] = result;
+            } catch (Exception e) {
                 logger.error("", e);
             }
         }
