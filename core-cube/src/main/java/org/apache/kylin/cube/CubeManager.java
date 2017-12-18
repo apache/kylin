@@ -349,7 +349,7 @@ public class CubeManager implements IRealizationProvider {
         }
 
         try {
-            crud.save(cube);
+            cube = crud.save(cube);
         } catch (IllegalStateException ise) {
             logger.warn("Write conflict to update cube " + cube.getName() + " at try " + retry + ", will retry...");
             if (retry >= 7) {
@@ -375,7 +375,7 @@ public class CubeManager implements IRealizationProvider {
         //this is a duplicate call to take care of scenarios where REST cache service unavailable
         ProjectManager.getInstance(cube.getConfig()).clearL2Cache();
 
-        return crud.reload(cube.resourceName());
+        return cube;
     }
 
     // for test
