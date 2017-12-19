@@ -596,16 +596,18 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, name);
 
         // cube inherit the project override props
+        LinkedHashMap<String, String> allOverrideProps = Maps.newLinkedHashMap(overrideKylinProps);
+
         if (ownerPrj.size() == 1) {
             Map<String, String> prjOverrideProps = ownerPrj.get(0).getOverrideKylinProps();
             for (Entry<String, String> entry : prjOverrideProps.entrySet()) {
                 if (!overrideKylinProps.containsKey(entry.getKey())) {
-                    overrideKylinProps.put(entry.getKey(), entry.getValue());
+                    allOverrideProps.put(entry.getKey(), entry.getValue());
                 }
             }
         }
 
-        this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
+        this.config = KylinConfigExt.createInstance(config, allOverrideProps);
 
         checkArgument(this.rowkey.getRowKeyColumns().length <= this.config.getCubeRowkeyMaxSize(),
                 "Too many rowkeys (%s) in CubeDesc, please try to reduce dimension number or adopt derived dimensions",
