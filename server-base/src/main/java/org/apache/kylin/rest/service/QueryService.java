@@ -98,7 +98,7 @@ import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
-import org.apache.kylin.rest.util.QueryRequestUtil;
+import org.apache.kylin.rest.util.QueryRequestLimits;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
@@ -412,25 +412,28 @@ public class QueryService extends BasicService {
             final boolean isSelect = QueryUtil.isSelectStatement(sql);
             final boolean isPushDownUpdateEnabled = kylinConfig.isPushDownEnabled()
                     && kylinConfig.isPushDownUpdateEnabled();
+            final int maxConcurrentQuery = projectInstance.getConfig().getQueryConcurrentRunningThresholdForProject();
 
             if (!isSelect && !isPushDownUpdateEnabled) {
                 logger.debug("Directly return exception as the sql is unsupported, and query pushdown is disabled");
                 throw new BadRequestException(msg.getNOT_SUPPORTED_SQL());
             }
 
-            int maxConcurrentQuery = projectInstance.getConfig().getQueryConcurrentRunningThresholdForProject();
-            if (!QueryRequestUtil.openQueryRequest(projectInstance.getName(), maxConcurrentQuery)) {
-                logger.warn("Directly return exception as too many concurrent query requests for project:" + project);
-                throw new BadRequestException(msg.getQUERY_TOO_MANY_RUNNING());
-            }
-
-            long startTime = System.currentTimeMillis();
-
-            // force clear the query context before a new query
-            OLAPContext.clearThreadLocalContexts();
-
             SQLResponse sqlResponse = null;
-            try { // to deal with the case that cache searching throws exception
+
+            try {
+                // Check project level query request concurrency limitation per query server
+                if (!QueryRequestLimits.openQueryRequest(projectInstance.getName(), maxConcurrentQuery)) {
+                    logger.warn(
+                            "Directly return exception as too many concurrent query requests for project:" + project);
+                    throw new BadRequestException(msg.getQUERY_TOO_MANY_RUNNING());
+                }
+
+                long startTime = System.currentTimeMillis();
+
+                // force clear the query context before a new query
+                OLAPContext.clearThreadLocalContexts();
+
                 boolean queryCacheEnabled = checkCondition(kylinConfig.isQueryCacheEnabled(),
                         "query cache disabled in KylinConfig") && //
                         checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
@@ -498,7 +501,7 @@ public class QueryService extends BasicService {
                     }
                 }
             } finally {
-                QueryRequestUtil.closeQueryRequest(projectInstance.getName(), maxConcurrentQuery);
+                QueryRequestLimits.closeQueryRequest(projectInstance.getName(), maxConcurrentQuery);
             }
 
             logQuery(sqlRequest, sqlResponse);

@@ -31,10 +31,10 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 
-public class QueryRequestUtil {
-    private static final Logger logger = LoggerFactory.getLogger(QueryRequestUtil.class);
+public class QueryRequestLimits {
+    private static final Logger logger = LoggerFactory.getLogger(QueryRequestLimits.class);
 
-    private static LoadingCache<String, AtomicInteger> queryRequestMap = CacheBuilder.newBuilder()
+    private static LoadingCache<String, AtomicInteger> runningStats = CacheBuilder.newBuilder()
             .removalListener(new RemovalListener<String, AtomicInteger>() {
                 @Override
                 public void onRemoval(RemovalNotification<String, AtomicInteger> notification) {
@@ -53,7 +53,7 @@ public class QueryRequestUtil {
             return true;
         }
         try {
-            AtomicInteger nRunningQueries = queryRequestMap.get(project);
+            AtomicInteger nRunningQueries = runningStats.get(project);
             for (;;) {
                 int nRunning = nRunningQueries.get();
                 if (nRunning < maxConcurrentQuery) {
@@ -73,14 +73,14 @@ public class QueryRequestUtil {
         if (maxConcurrentQuery == 0) {
             return;
         }
-        AtomicInteger nRunningQueries = queryRequestMap.getIfPresent(project);
+        AtomicInteger nRunningQueries = runningStats.getIfPresent(project);
         if (nRunningQueries != null) {
             nRunningQueries.decrementAndGet();
         }
     }
 
     public static Integer getCurrentRunningQuery(String project) {
-        AtomicInteger nRunningQueries = queryRequestMap.getIfPresent(project);
+        AtomicInteger nRunningQueries = runningStats.getIfPresent(project);
         if (nRunningQueries != null) {
             return nRunningQueries.get();
         } else {
