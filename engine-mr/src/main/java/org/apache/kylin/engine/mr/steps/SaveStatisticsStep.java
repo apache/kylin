@@ -61,7 +61,9 @@ public class SaveStatisticsStep extends AbstractExecutable {
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        CubeSegment newSegment = CubingExecutableUtil.findSegment(context, CubingExecutableUtil.getCubeName(this.getParams()), CubingExecutableUtil.getSegmentId(this.getParams()));
+        CubeSegment newSegment = CubingExecutableUtil.findSegment(context,
+                CubingExecutableUtil.getCubeName(this.getParams()),
+                CubingExecutableUtil.getSegmentId(this.getParams()));
         KylinConfig kylinConf = newSegment.getConfig();
 
         ResourceStore rs = ResourceStore.getStore(kylinConf);
@@ -70,7 +72,8 @@ public class SaveStatisticsStep extends AbstractExecutable {
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
             Configuration hadoopConf = HadoopUtil.getCurrentConfiguration();
             Path statisticsDir = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()));
-            Path[] statisticsFiles = HadoopUtil.getFilteredPath(fs, statisticsDir, BatchConstants.CFG_OUTPUT_STATISTICS);
+            Path[] statisticsFiles = HadoopUtil.getFilteredPath(fs, statisticsDir,
+                    BatchConstants.CFG_OUTPUT_STATISTICS);
             if (statisticsFiles == null) {
                 throw new IOException("fail to find the statistics file in base dir: " + statisticsDir);
             }
@@ -83,6 +86,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
             for (Path item : statisticsFiles) {
                 CubeStatsReader.CubeStatsResult cubeStatsResult = new CubeStatsReader.CubeStatsResult(item,
                         kylinConf.getCubeStatsHLLPrecision());
+                cuboidHLLMap.putAll(cubeStatsResult.getCounterMap());
                 long pGrantTotal = 0L;
                 for (HLLCounter hll : cubeStatsResult.getCounterMap().values()) {
                     pGrantTotal += hll.getCountEstimate();

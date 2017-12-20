@@ -98,10 +98,10 @@ public class CubeStatsReader {
 
         this.seg = cubeSegment;
         this.cuboidScheduler = cuboidScheduler;
-        this.samplingPercentage = cubeStatsResult.percentage;
-        this.mapperNumberOfFirstBuild = cubeStatsResult.mapperNumber;
-        this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.mapperOverlapRatio;
-        this.cuboidRowEstimatesHLL = cubeStatsResult.counterMap;
+        this.samplingPercentage = cubeStatsResult.getPercentage();
+        this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
+        this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
+        this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
     }
 
     /**
@@ -120,10 +120,10 @@ public class CubeStatsReader {
 
         this.seg = cubeSegment;
         this.cuboidScheduler = cuboidScheduler;
-        this.samplingPercentage = cubeStatsResult.percentage;
-        this.mapperNumberOfFirstBuild = cubeStatsResult.mapperNumber;
-        this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.mapperOverlapRatio;
-        this.cuboidRowEstimatesHLL = cubeStatsResult.counterMap;
+        this.samplingPercentage = cubeStatsResult.getPercentage();
+        this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
+        this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
+        this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
     }
 
     private File writeTmpSeqFile(InputStream inputStream) throws IOException {
@@ -333,7 +333,7 @@ public class CubeStatsReader {
         private int percentage = 100;
         private double mapperOverlapRatio = 0;
         private int mapperNumber = 0;
-        Map<Long, HLLCounter> counterMap = Maps.newHashMap();
+        private Map<Long, HLLCounter> counterMap = Maps.newHashMap();
 
         public CubeStatsResult(Path path, int precision) throws IOException {
             Configuration hadoopConf = HadoopUtil.getCurrentConfiguration();
