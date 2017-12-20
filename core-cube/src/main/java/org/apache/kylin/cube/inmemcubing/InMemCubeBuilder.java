@@ -344,15 +344,18 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         aggregationScanner.trackMemoryLevel(baseCuboidMemTracker);
 
         int count = 0;
-        for (GTRecord r : aggregationScanner) {
-            if (count == 0) {
-                baseCuboidMemTracker.markHigh();
+        try {
+            for (GTRecord r : aggregationScanner) {
+                if (count == 0) {
+                    baseCuboidMemTracker.markHigh();
+                }
+                baseBuilder.write(r);
+                count++;
             }
-            baseBuilder.write(r);
-            count++;
+        } finally {
+            aggregationScanner.close();
+            baseBuilder.close();
         }
-        aggregationScanner.close();
-        baseBuilder.close();
 
         long timeSpent = System.currentTimeMillis() - startTime;
         logger.info("Cuboid " + baseCuboidId + " has " + count + " rows, build takes " + timeSpent + "ms");
