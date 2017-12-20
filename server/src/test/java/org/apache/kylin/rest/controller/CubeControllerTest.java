@@ -146,15 +146,6 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController.deleteSegment(cubeName, "not_exist_segment");
     }
 
-    @Test(expected = InternalErrorException.class)
-    public void testDeleteSegmentInMiddle() throws IOException {
-        String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
-        CubeDesc[] cubes = cubeDescController.getCube(cubeName);
-        Assert.assertNotNull(cubes);
-
-        cubeController.deleteSegment(cubeName, "20131112000000_20131212000000");
-    }
-
     @Test
     public void testDeleteSegmentFromHead() throws IOException {
         String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
@@ -170,7 +161,6 @@ public class CubeControllerTest extends ServiceTestBase {
         Assert.assertTrue(segNumber == newSegNumber + 1);
     }
 
-
     @Test
     public void testGetHoles() throws IOException {
         String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
@@ -180,7 +170,7 @@ public class CubeControllerTest extends ServiceTestBase {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         List<CubeSegment> segments = cube.getSegments();
 
-        final long dateEnd = segments.get(segments.size() -1).getTSRange().end.v;
+        final long dateEnd = segments.get(segments.size() - 1).getTSRange().end.v;
 
         final long ONEDAY = 24 * 60 * 60000;
         cubeService.getCubeManager().appendSegment(cube, new TSRange(dateEnd + ONEDAY, dateEnd + ONEDAY * 2));
@@ -193,7 +183,6 @@ public class CubeControllerTest extends ServiceTestBase {
 
         Assert.assertTrue(hole.getTSRange().equals(new TSRange(dateEnd, dateEnd + ONEDAY)));
     }
-
 
     @Test
     public void testGetCubes() {

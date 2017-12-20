@@ -121,6 +121,10 @@ public class Message {
         return "Cube '%s' doesn't contain any READY segment.";
     }
 
+    public String getDELETE_SEGMENT_CAUSE_GAPS() {
+        return "Cube '%s' has gaps caused by deleting segment '%s'.";
+    }
+
     public String getENABLE_WITH_RUNNING_JOB() {
         return "Enable is not allowed with a running job.";
     }
@@ -173,7 +177,6 @@ public class Message {
     public String getINVALID_MODEL_NAME() {
         return "Invalid Model name '%s', only letters, numbers and underline supported.";
     }
-
 
     public String getDROP_REFERENCED_MODEL() {
         return "Model is referenced by Cube '%s' , could not dropped";

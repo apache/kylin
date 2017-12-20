@@ -141,8 +141,7 @@ public class CubeService extends BasicService implements InitializingBean {
 
         if (modelName != null) {
             for (CubeInstance cubeInstance : cubeInstances) {
-                boolean isModelMatch = cubeInstance.getDescriptor().getModelName()
-                        .equalsIgnoreCase(modelName);
+                boolean isModelMatch = cubeInstance.getDescriptor().getModelName().equalsIgnoreCase(modelName);
                 if (isModelMatch) {
                     filterModelCubes.add(cubeInstance);
                 }
@@ -455,7 +454,7 @@ public class CubeService extends BasicService implements InitializingBean {
         if ("hbase".equals(getConfig().getMetadataUrl().getScheme())) {
             try {
                 logger.debug("Loading HTable info " + cubeName + ", " + tableName);
-                
+
                 // use reflection to isolate NoClassDef errors when HBase is not available
                 hr = (HBaseResponse) Class.forName("org.apache.kylin.rest.service.HBaseInfoUtil")//
                         .getMethod("getHBaseInfo", new Class[] { String.class, KylinConfig.class })//
@@ -506,7 +505,7 @@ public class CubeService extends BasicService implements InitializingBean {
 
         if (!segmentName.equals(cube.getSegments().get(0).getName())
                 && !segmentName.equals(cube.getSegments().get(cube.getSegments().size() - 1).getName())) {
-            logger.warn(String.format("Cube [%s] gaps caused by deleting segment [%s].", cube.getName(), segmentName));
+            logger.warn(String.format(msg.getDELETE_SEGMENT_CAUSE_GAPS(), cube.getName(), segmentName));
         }
 
         CubeUpdate update = new CubeUpdate(cube);
@@ -535,8 +534,8 @@ public class CubeService extends BasicService implements InitializingBean {
 
         CubeUpdate update = new CubeUpdate(cube);
         update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
-        update.setCuboids(Maps.<Long, Long> newHashMap());
-        update.setCuboidsRecommend(Sets.<Long> newHashSet());
+        update.setCuboids(Maps.<Long, Long>newHashMap());
+        update.setCuboidsRecommend(Sets.<Long>newHashSet());
         CubeManager.getInstance(getConfig()).updateCube(update);
     }
 
