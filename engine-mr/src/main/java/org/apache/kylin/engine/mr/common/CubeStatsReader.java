@@ -93,8 +93,7 @@ public class CubeStatsReader {
         File tmpSeqFile = writeTmpSeqFile(store.getResource(statsKey).inputStream);
         Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
 
-        CubeStatsResult cubeStatsResult = new CubeStatsResult();
-        cubeStatsResult.initialize(path, kylinConfig.getCubeStatsHLLPrecision());
+        CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
         tmpSeqFile.delete();
 
         this.seg = cubeSegment;
@@ -117,8 +116,7 @@ public class CubeStatsReader {
      */
     public CubeStatsReader(CubeSegment cubeSegment, CuboidScheduler cuboidScheduler, KylinConfig kylinConfig, Path path)
             throws IOException {
-        CubeStatsResult cubeStatsResult = new CubeStatsResult();
-        cubeStatsResult.initialize(path, kylinConfig.getCubeStatsHLLPrecision());
+        CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());
 
         this.seg = cubeSegment;
         this.cuboidScheduler = cuboidScheduler;
@@ -331,13 +329,13 @@ public class CubeStatsReader {
         return new DecimalFormat("#.##").format(input);
     }
 
-    private class CubeStatsResult {
+    public static class CubeStatsResult {
         private int percentage = 100;
         private double mapperOverlapRatio = 0;
         private int mapperNumber = 0;
         Map<Long, HLLCounter> counterMap = Maps.newHashMap();
 
-        void initialize(Path path, int precision) throws IOException {
+        public CubeStatsResult(Path path, int precision) throws IOException {
             Configuration hadoopConf = HadoopUtil.getCurrentConfiguration();
             Option seqInput = SequenceFile.Reader.file(path);
             try (Reader reader = new SequenceFile.Reader(hadoopConf, seqInput)) {
@@ -358,6 +356,22 @@ public class CubeStatsReader {
                     }
                 }
             }
+        }
+
+        public int getPercentage() {
+            return percentage;
+        }
+
+        public double getMapperOverlapRatio() {
+            return mapperOverlapRatio;
+        }
+
+        public int getMapperNumber() {
+            return mapperNumber;
+        }
+
+        public Map<Long, HLLCounter> getCounterMap() {
+            return Collections.unmodifiableMap(counterMap);
         }
     }
 

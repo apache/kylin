@@ -27,19 +27,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.mr.common.CubeStatsWriter;
 import org.apache.kylin.engine.mr.common.StatisticsDecisionUtil;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -86,45 +81,29 @@ public class SaveStatisticsStep extends AbstractExecutable {
             int samplingPercentage = -1;
             int mapperNumber = -1;
             for (Path item : statisticsFiles) {
-                int pSamplingPercentage = 0;
-                double pMapperOverlapRatio = 0;
-                int pMapperNumber = 0;
-                long pGrantTotal = 0;
-                try (SequenceFile.Reader reader = new SequenceFile.Reader(hadoopConf, SequenceFile.Reader.file(item))) {
-                    LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), hadoopConf);
-                    BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(),
-                            hadoopConf);
-                    while (reader.next(key, value)) {
-                        if (key.get() == 0L) {
-                            pSamplingPercentage = Bytes.toInt(value.getBytes());
-                        } else if (key.get() == -1L) {
-                            pMapperOverlapRatio = Bytes.toDouble(value.getBytes());
-                        } else if (key.get() == -2L) {
-                            pMapperNumber = Bytes.toInt(value.getBytes());
-                        } else {
-                            HLLCounter hll = new HLLCounter(kylinConf.getCubeStatsHLLPrecision());
-                            ByteArray byteArray = new ByteArray(value.getBytes());
-                            hll.readRegisters(byteArray.asBuffer());
-                            cuboidHLLMap.put(key.get(), hll);
-                            pGrantTotal += hll.getCountEstimate();
-                        }
-                    }
-                    totalRowsBeforeMerge += pGrantTotal * pMapperOverlapRatio;
-                    grantTotal += pGrantTotal;
-                    if (pMapperNumber > 0) {
-                        if (mapperNumber < 0) {
-                            mapperNumber = pMapperNumber;
-                        } else {
-                            throw new RuntimeException(
-                                    "Base cuboid has been distributed to multiple reducers at step FactDistinctColumnsReducer!!!");
-                        }
-                    }
-                    if (samplingPercentage < 0) {
-                        samplingPercentage = pSamplingPercentage;
-                    } else if (samplingPercentage != pSamplingPercentage) {
+                CubeStatsReader.CubeStatsResult cubeStatsResult = new CubeStatsReader.CubeStatsResult(item,
+                        kylinConf.getCubeStatsHLLPrecision());
+                long pGrantTotal = 0L;
+                for (HLLCounter hll : cubeStatsResult.getCounterMap().values()) {
+                    pGrantTotal += hll.getCountEstimate();
+                }
+                totalRowsBeforeMerge += pGrantTotal * cubeStatsResult.getMapperOverlapRatio();
+                grantTotal += pGrantTotal;
+                int pMapperNumber = cubeStatsResult.getMapperNumber();
+                if (pMapperNumber > 0) {
+                    if (mapperNumber < 0) {
+                        mapperNumber = pMapperNumber;
+                    } else {
                         throw new RuntimeException(
-                                "The sampling percentage should be same among all of the reducer of FactDistinctColumnsReducer!!!");
+                                "Base cuboid has been distributed to multiple reducers at step FactDistinctColumnsReducer!!!");
                     }
+                }
+                int pSamplingPercentage = cubeStatsResult.getPercentage();
+                if (samplingPercentage < 0) {
+                    samplingPercentage = pSamplingPercentage;
+                } else if (samplingPercentage != pSamplingPercentage) {
+                    throw new RuntimeException(
+                            "The sampling percentage should be same among all of the reducer of FactDistinctColumnsReducer!!!");
                 }
             }
             if (samplingPercentage < 0) {
