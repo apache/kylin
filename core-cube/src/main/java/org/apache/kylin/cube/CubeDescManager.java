@@ -46,7 +46,6 @@ import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,14 +164,6 @@ public class CubeDescManager {
             // Broken CubeDesc is not allowed to be saved and broadcast.
             if (ndesc.isBroken())
                 throw new IllegalStateException("CubeDesc " + name + " is broken");
-    
-            // if related cube is in DESCBROKEN state before, change it back to DISABLED
-            CubeManager cubeManager = CubeManager.getInstance(config);
-            for (CubeInstance cube : cubeManager.getCubesByDesc(name)) {
-                if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
-                    cube.init(config);
-                }
-            }
     
             return ndesc;
         }

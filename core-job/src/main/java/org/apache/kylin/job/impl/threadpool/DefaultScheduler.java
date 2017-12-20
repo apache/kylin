@@ -163,8 +163,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             try (SetThreadName ignored = new SetThreadName("Scheduler %s Job %s",
                     System.identityHashCode(DefaultScheduler.this), executable.getId())) {
                 executable.execute(context);
-                // trigger the next step asap
-                fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
             } catch (ExecuteException e) {
                 logger.error("ExecuteException job:" + executable.getId(), e);
             } catch (Exception e) {
@@ -172,6 +170,9 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             } finally {
                 context.removeRunningJob(executable);
             }
+            
+            // trigger the next step asap
+            fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
         }
     }
 

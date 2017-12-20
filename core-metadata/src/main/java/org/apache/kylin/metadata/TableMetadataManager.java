@@ -156,6 +156,9 @@ public class TableMetadataManager {
     }
 
     public Map<String, TableDesc> getAllTablesMap(String prj) {
+        // avoid cyclic locks
+        ProjectInstance project = (prj == null) ? null : ProjectManager.getInstance(config).getProject(prj);
+        
         try (AutoLock lock = srcTableMapLock.lockForWrite()) {
             //TODO prj == null case is now only used by test case and CubeMetaIngester
             //should refactor these test case and tool ASAP and stop supporting null case
@@ -168,7 +171,6 @@ public class TableMetadataManager {
                 return globalTables;
             }
 
-            ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
             Set<String> prjTableNames = project.getTables();
 
             Map<String, TableDesc> ret = new LinkedHashMap<>();
@@ -248,8 +250,10 @@ public class TableMetadataManager {
      * again
      */
     public void resetProjectSpecificTableDesc(String prj) throws IOException {
+        // avoid cyclic locks
+        ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
+        
         try (AutoLock lock = srcTableMapLock.lockForWrite()) {
-            ProjectInstance project = ProjectManager.getInstance(config).getProject(prj);
             for (String tableName : project.getTables()) {
                 String tableIdentity = getTableIdentity(tableName);
                 String key = mapKey(tableIdentity, prj);
@@ -338,7 +342,7 @@ public class TableMetadataManager {
                 result.setUuid(UUID.randomUUID().toString());
                 result.setLastModified(0);
                 result.init(t.getProject());
-                srcExtMap.put(mapKey(t.getIdentity(), t.getProject()), result);
+                srcExtMap.putLocal(mapKey(t.getIdentity(), t.getProject()), result);
             }
             return result;
         }

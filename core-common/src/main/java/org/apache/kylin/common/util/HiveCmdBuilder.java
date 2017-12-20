@@ -188,8 +188,8 @@ public class HiveCmdBuilder {
             hiveConfFile = new File(path + File.separator + "conf", hiveConfFileName);
         }
 
-        if (hiveConfFile == null || !hiveConfFile.exists()) {
-            throw new RuntimeException("Failed to read " + HIVE_CONF_FILENAME + ".xml");
+        if (!hiveConfFile.exists()) {
+            throw new RuntimeException("Missing config file: " + hiveConfFile.getAbsolutePath());
         }
 
         String fileUrl = OptionsHelper.convertToFileURL(hiveConfFile.getAbsolutePath());
