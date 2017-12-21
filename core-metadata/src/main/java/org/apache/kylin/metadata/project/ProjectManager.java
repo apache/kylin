@@ -132,6 +132,10 @@ public class ProjectManager {
     }
 
     public ProjectInstance getProject(String projectName) {
+        // Null check is needed for ConcurrentMap does not supporting .get(null)
+        if (projectName == null)
+            return null;
+
         try (AutoLock lock = prjMapLock.lockForRead()) {
             return projectMap.get(projectName);
         }
