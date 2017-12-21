@@ -50,18 +50,28 @@ public class HiveCmdBuilder {
         CLI, BEELINE
     }
 
-    private HiveClientMode clientMode;
     private KylinConfig kylinConfig;
     final private Map<String, String> hiveConfProps = new HashMap<>();
     final private ArrayList<String> statements = Lists.newArrayList();
 
     public HiveCmdBuilder() {
         kylinConfig = KylinConfig.getInstanceFromEnv();
-        clientMode = HiveClientMode.valueOf(kylinConfig.getHiveClientMode().toUpperCase());
         loadHiveConfiguration();
     }
 
     public String build() {
+        HiveClientMode clientMode = HiveClientMode.valueOf(kylinConfig.getHiveClientMode().toUpperCase());
+        String beelineShell = kylinConfig.getHiveBeelineShell();
+        String beelineParams = kylinConfig.getHiveBeelineParams();
+        if (kylinConfig.getEnableSparkSqlForTableOps()) {
+            clientMode = HiveClientMode.BEELINE;
+            beelineShell = kylinConfig.getSparkSqlBeelineShell();
+            beelineParams = kylinConfig.getSparkSqlBeelineParams();
+            if (StringUtils.isBlank(beelineShell)) {
+                throw new IllegalStateException("Missing config 'kylin.source.hive.sparksql-beeline-shell', please check kylin.properties");
+            }
+        }
+        
         StringBuffer buf = new StringBuffer();
 
         switch (clientMode) {
@@ -83,8 +93,9 @@ public class HiveCmdBuilder {
                     bw.write(statement);
                     bw.newLine();
                 }
-                buf.append("beeline ");
-                buf.append(kylinConfig.getHiveBeelineParams());
+                buf.append(beelineShell);
+                buf.append(" ");
+                buf.append(beelineParams);
                 buf.append(parseProps());
                 buf.append(" -f ");
                 buf.append(tmpHql.getAbsolutePath());

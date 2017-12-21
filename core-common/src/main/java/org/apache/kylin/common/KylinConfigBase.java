@@ -691,8 +691,24 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.source.hive.client", "cli");
     }
 
+    public String getHiveBeelineShell() {
+        return getOptional("kylin.source.hive.beeline-shell", "beeline");
+    }
+    
     public String getHiveBeelineParams() {
         return getOptional("kylin.source.hive.beeline-params", "");
+    }
+
+    public boolean getEnableSparkSqlForTableOps() {
+        return Boolean.parseBoolean(getOptional("kylin.source.hive.enable-sparksql-for-table-ops", "false"));
+    }
+    
+    public String getSparkSqlBeelineShell() {
+        return getOptional("kylin.source.hive.sparksql-beeline-shell", "");
+    }
+    
+    public String getSparkSqlBeelineParams() {
+        return getOptional("kylin.source.hive.sparksql-beeline-params", "");
     }
 
     public String getFlatHiveTableClusterByDictColumn() {

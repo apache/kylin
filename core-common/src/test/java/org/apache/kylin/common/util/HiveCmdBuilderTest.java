@@ -43,7 +43,12 @@ public class HiveCmdBuilderTest {
     @After
     public void after() throws Exception {
         System.clearProperty("kylin.source.hive.client");
+        System.clearProperty("kylin.source.hive.beeline-shell");
         System.clearProperty("kylin.source.hive.beeline-params");
+        
+        System.clearProperty("kylin.source.hive.enable-sparksql-for-table-ops");
+        System.clearProperty("kylin.source.hive.sparksql-beeline-shell");
+        System.clearProperty("kylin.source.hive.sparksql-beeline-params");
     }
 
     @Test
@@ -67,6 +72,7 @@ public class HiveCmdBuilderTest {
     public void testBeeline() throws IOException {
         String lineSeparator = java.security.AccessController.doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
         System.setProperty("kylin.source.hive.client", "beeline");
+        System.setProperty("kylin.source.hive.beeline-shell", "/spark-client/bin/beeline");
         System.setProperty("kylin.source.hive.beeline-params", "-u jdbc_url");
 
         HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
@@ -75,7 +81,7 @@ public class HiveCmdBuilderTest {
         hiveCmdBuilder.addStatement("SHOW\n TABLES;");
 
         String cmd = hiveCmdBuilder.build();
-        assertTrue(cmd.startsWith("beeline -u jdbc_url"));
+        assertTrue(cmd.startsWith("/spark-client/bin/beeline -u jdbc_url"));
 
         String hqlFile = cmd.substring(cmd.lastIndexOf("-f ") + 3).trim();
         hqlFile = hqlFile.substring(0, hqlFile.length() - ";exit $ret_code".length());
@@ -84,5 +90,20 @@ public class HiveCmdBuilderTest {
         assertEquals("USE default;" + lineSeparator + "DROP TABLE test;" + lineSeparator + "SHOW\n TABLES;" + lineSeparator, hqlStatement);
 
         FileUtils.forceDelete(new File(hqlFile));
+    }
+
+    @Test
+    public void testSparkSqlForTableOps() throws IOException {
+        System.setProperty("kylin.source.hive.enable-sparksql-for-table-ops", "true");
+        System.setProperty("kylin.source.hive.sparksql-beeline-shell", "/spark-client/bin/beeline");
+        System.setProperty("kylin.source.hive.sparksql-beeline-params", "-u jdbc_url");
+
+        HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement("USE default;");
+        hiveCmdBuilder.addStatement("DROP TABLE test;");
+        hiveCmdBuilder.addStatement("SHOW\n TABLES;");
+
+        String cmd = hiveCmdBuilder.build();
+        assertTrue(cmd.startsWith("/spark-client/bin/beeline -u jdbc_url"));
     }
 }
