@@ -23,7 +23,7 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
 
 
   this.init = function () {
-    return AdminService.config({}, function (config) {
+    return AdminService.publicConfig({}, function (config) {
       _config = config.config;
     }, function (e) {
       $log.error("failed to load kylin.properties" + e);
@@ -113,6 +113,22 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
       return false;
     }
     return true;
+  }
+
+  this.isAdminExportAllowed = function(){
+    var status = this.getProperty("kylin.web.export-allow-admin").trim();
+    if(status!=='false'){
+      return true;
+    }
+    return false;
+  }
+
+  this.isNonAdminExportAllowed = function(){
+    var status = this.getProperty("kylin.web.export-allow-other").trim();
+    if(status!=='false'){
+      return true;
+    }
+    return false;
   }
 
 });

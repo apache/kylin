@@ -1367,6 +1367,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.web.cross-domain-enabled", "true"));
     }
 
+    public boolean isAdminUserExportAllowed() {
+        return Boolean.parseBoolean(getOptional("kylin.web.export-allow-admin", "true"));
+    }
+
+    public boolean isNoneAdminUserExportAllowed() {
+        return Boolean.parseBoolean(getOptional("kylin.web.export-allow-other", "true"));
+    }
+
     // ============================================================================
     // RESTCLIENT
     // ============================================================================
@@ -1412,6 +1420,6 @@ abstract public class KylinConfigBase implements Serializable {
                 "kylin.web.timezone,kylin.query.cache-enabled,kylin.env,kylin.web.hive-limit,kylin.storage.default,kylin.engine.default,kylin.web.link-hadoop,kylin.web.link-diagnostic,"
                         + "kylin.web.contact-mail,kylin.web.help.length,kylin.web.help.0,kylin.web.help.1,kylin.web.help.2,kylin.web.help.3,"
                         + "kylin.web.help,kylin.web.hide-measures,kylin.web.link-streaming-guide,kylin.server.external-acl-provider,kylin.security.profile,"
-                        + "kylin.htrace.show-gui-trace-toggle");
+                        + "kylin.htrace.show-gui-trace-toggle,kylin.web.export-allow-admin,kylin.web.export-allow-other");
     }
 }

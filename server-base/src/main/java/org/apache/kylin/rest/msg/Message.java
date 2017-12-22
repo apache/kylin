@@ -349,6 +349,10 @@ public class Message {
         return "Column metadata inconsistent with JDBC meta.";
     }
 
+    public String getEXPORT_RESULT_NOT_ALLOWED() {
+        return "Current user is not allowed to export query result.";
+    }
+
     // Access
     public String getACL_PERMISSION_REQUIRED() {
         return "Acl permission required.";

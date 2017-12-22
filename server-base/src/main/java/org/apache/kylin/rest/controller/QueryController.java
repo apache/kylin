@@ -29,11 +29,15 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMeta;
+import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.model.Query;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetaRequest;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
@@ -118,6 +122,14 @@ public class QueryController extends BasicController {
     @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
     public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
+        KylinConfig config = queryService.getConfig();
+        Message msg = MsgPicker.getMsg();
+
+        if ((isAdmin() && !config.isAdminUserExportAllowed())
+                || (!isAdmin() && !config.isNoneAdminUserExportAllowed())) {
+            throw new ForbiddenException(msg.getEXPORT_RESULT_NOT_ALLOWED());
+        }
+
         SQLResponse result = queryService.doQueryWithCache(sqlRequest);
         response.setContentType("text/" + format + ";charset=utf-8");
 
