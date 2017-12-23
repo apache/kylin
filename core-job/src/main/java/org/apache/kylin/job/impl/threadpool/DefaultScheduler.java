@@ -62,12 +62,19 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     volatile boolean fetchFailed = false;
     private JobEngineConfig jobEngineConfig;
 
-    private static volatile DefaultScheduler INSTANCE = null;
+    private static DefaultScheduler INSTANCE = null;
 
     public DefaultScheduler() {
         if (INSTANCE != null) {
-            throw new IllegalStateException("DefaultScheduler has been initiated. Use getInstance() instead.");
+            throw new IllegalStateException("DefaultScheduler has been initiated.");
         }
+    }
+
+    public static DefaultScheduler getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = createInstance();
+        }
+        return INSTANCE;
     }
 
     private class FetcherRunner implements Runnable {
@@ -170,7 +177,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             } finally {
                 context.removeRunningJob(executable);
             }
-            
+
             // trigger the next step asap
             fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
         }
@@ -180,7 +187,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     public void stateChanged(CuratorFramework client, ConnectionState newState) {
         if ((newState == ConnectionState.SUSPENDED) || (newState == ConnectionState.LOST)) {
             try {
-                logger.info("ZK Connection state change to " + newState + ", shutdown default scheduler.");
                 shutdown();
             } catch (SchedulerException e) {
                 throw new RuntimeException("failed to shutdown scheduler", e);
@@ -188,11 +194,23 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         }
     }
 
-    public synchronized static DefaultScheduler getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new DefaultScheduler();
-        }
+    public synchronized static DefaultScheduler createInstance() {
+        destroyInstance();
+        INSTANCE = new DefaultScheduler();
         return INSTANCE;
+    }
+
+    public synchronized static void destroyInstance() {
+        DefaultScheduler tmp = INSTANCE;
+        INSTANCE = null;
+        if (tmp != null) {
+            try {
+                tmp.shutdown();
+            } catch (SchedulerException e) {
+                logger.error("error stop DefaultScheduler", e);
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
