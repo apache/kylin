@@ -151,6 +151,12 @@ public class TableMetadataManager {
         }
     }
 
+    public void reloadSourceTable(String table, String project) {
+        try (AutoLock lock = srcTableMapLock.lockForWrite()) {
+            srcTableCrud.reloadQuietly(TableDesc.concatResourcePath(table, project));
+        }
+    }
+
     public List<TableDesc> listAllTables(String prj) {
         try (AutoLock lock = srcTableMapLock.lockForWrite()) {
             return Lists.newArrayList(getAllTablesMap(prj).values());
@@ -311,6 +317,12 @@ public class TableMetadataManager {
                 else
                     srcExtCrud.reloadQuietly(cacheKey);
             }
+        }
+    }
+
+    public void reloadTableExt(String table, String project) {
+        try (AutoLock lock = srcExtMapLock.lockForWrite()) {
+            srcExtCrud.reloadQuietly(TableExtDesc.concatResourcePath(table, project));
         }
     }
 

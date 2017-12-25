@@ -386,7 +386,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     // for internal
-    CubeInstance reloadCubeQuietly(String cubeName) {
+    public CubeInstance reloadCubeQuietly(String cubeName) {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             CubeInstance cube = crud.reloadQuietly(cubeName);
             if (cube != null)

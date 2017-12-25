@@ -187,6 +187,10 @@ class ProjectL2Cache {
         return result;
     }
 
+    public void reloadCacheByProject(String project) {
+        projectCaches.put(project, loadCache(project));
+    }
+
     private ProjectCache loadCache(String project) {
         logger.debug("Loading L2 project cache for " + project);
         ProjectCache projectCache = new ProjectCache(project);
