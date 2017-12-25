@@ -57,7 +57,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     // this method should only used for getting dest path when copying from src to dest.
     // if you want to get table's src path, use getResourcePath() instead.
-    private static String concatResourcePath(String tableIdentity, String prj) {
+    public static String concatResourcePath(String tableIdentity, String prj) {
         return concatRawResourcePath(makeResourceName(tableIdentity, prj));
     }
 

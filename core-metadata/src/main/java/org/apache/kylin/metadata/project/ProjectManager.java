@@ -117,10 +117,14 @@ public class ProjectManager {
         l2Cache.clear();
     }
 
+    public void reloadProjectL2Cache(String project) {
+        l2Cache.reloadCacheByProject(project);
+    }
+
     public ProjectInstance reloadProjectQuietly(String project) throws IOException {
         try (AutoLock lock = prjMapLock.lockForWrite()) {
             ProjectInstance prj = crud.reloadQuietly(project);
-            clearL2Cache();
+            reloadProjectL2Cache(project);
             return prj;
         }
     }

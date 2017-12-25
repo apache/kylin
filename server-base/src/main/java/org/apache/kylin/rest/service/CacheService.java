@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 
+import java.util.Map;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.storage.hbase.HBaseConnection;
@@ -114,7 +115,7 @@ public class CacheService extends BasicService implements InitializingBean {
         broadcaster.notifyListener(entity, event, cacheKey);
     }
 
-    protected void cleanDataCache(String project) {
+    public void cleanDataCache(String project) {
         if (cacheManager != null) {
             logger.info("cleaning cache for project " + project + " (currently remove all entries)");
             cacheManager.getCache(QueryService.SUCCESS_QUERY_CACHE).removeAll();
@@ -131,6 +132,37 @@ public class CacheService extends BasicService implements InitializingBean {
         } else {
             logger.warn("skip cleaning all storage cache");
         }
+    }
+
+    public void clearCacheForCubeMigration(String cube, String project, String model, Map<String, String> tableToProjects) throws IOException {
+        //the metadata reloading must be in order
+
+        //table must before model
+        for (Map.Entry<String, String> entry : tableToProjects.entrySet()) {
+            //For KYLIN-2717 compatibility, use tableProject not project
+            getTableManager().reloadSourceTable(entry.getKey(), entry.getValue());
+            getTableManager().reloadTableExt(entry.getKey(), entry.getValue());
+        }
+        logger.info("reload table cache done");
+
+        //ProjectInstance cache must before cube and model cache, as the new cubeDesc init and model reloading relays on latest ProjectInstance cache
+        getProjectManager().reloadProjectQuietly(project);
+        logger.info("reload project cache done");
+
+        //model must before cube desc
+        getDataModelManager().reloadDataModel(model);
+        logger.info("reload model cache done");
+
+        //cube desc must before cube instance
+        getCubeDescManager().reloadCubeDescLocal(cube);
+        logger.info("reload cubeDesc cache done");
+
+        getCubeManager().reloadCubeQuietly(cube);
+        logger.info("reload cube cache done");
+
+        //reload project l2cache again after cube cache, because the project L2 cache relay on latest cube cache
+        getProjectManager().reloadProjectL2Cache(project);
+        logger.info("reload project l2cache done");
     }
 
 }

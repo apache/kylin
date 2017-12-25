@@ -274,6 +274,26 @@ public class RestClient {
         return response;
     }
 
+    public void clearCacheForCubeMigration(String cube, String project, String model, Map<String, String> tableToProjects) throws IOException{
+        String url = baseUrl + "/cache/migration";
+        HttpPost post = new HttpPost(url);
+
+        post.addHeader("Accept", "application/json, text/plain, */*");
+        post.addHeader("Content-Type", "application/json");
+
+        HashMap<String, Object> paraMap = new HashMap<String, Object>();
+        paraMap.put("cube", cube);
+        paraMap.put("project", project);
+        paraMap.put("model", model);
+        paraMap.put("tableToProjects", tableToProjects);
+        String jsonMsg = JsonUtil.writeValueAsString(paraMap);
+        post.setEntity(new StringEntity(jsonMsg, "UTF-8"));
+        HttpResponse response = client.execute(post);
+        if (response.getStatusLine().getStatusCode() != 200) {
+            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode());
+        }
+    }
+
     private HashMap dealResponse(HttpResponse response) throws IOException {
         if (response.getStatusLine().getStatusCode() != 200) {
             throw new IOException("Invalid response " + response.getStatusLine().getStatusCode());

@@ -54,7 +54,6 @@ import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -129,8 +128,16 @@ public class CubeMigrationCLI extends AbstractApplication {
             throws IOException, InterruptedException {
 
         moveCube(KylinConfig.createInstanceFromUri(srcCfgUri), KylinConfig.createInstanceFromUri(dstCfgUri), cubeName,
-                projectName, Boolean.parseBoolean(copyAcl), Boolean.parseBoolean(purgeAndDisable),
-                Boolean.parseBoolean(overwriteIfExists), Boolean.parseBoolean(realExecute), true);
+                projectName, copyAcl, purgeAndDisable, overwriteIfExists, realExecute);
+    }
+
+    public void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, String copyAcl,
+            String purgeAndDisable, String overwriteIfExists, String realExecute)
+            throws IOException, InterruptedException {
+
+        moveCube(srcCfg, dstCfg, cubeName, projectName, Boolean.parseBoolean(copyAcl),
+                Boolean.parseBoolean(purgeAndDisable), Boolean.parseBoolean(overwriteIfExists),
+                Boolean.parseBoolean(realExecute), true);
     }
 
     public void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String copyAcl,
@@ -187,12 +194,12 @@ public class CubeMigrationCLI extends AbstractApplication {
             if (migrateSegment) {
                 checkMigrationSuccess(dstConfig, cubeName, true);
             }
-            updateMeta(dstConfig);
+            updateMeta(dstConfig, projectName, cubeName, cube.getModel());
         } else {
             showOpts();
         }
     }
-
+    
     public void checkMigrationSuccess(KylinConfig kylinConfig, String cubeName, Boolean ifFix) throws IOException {
         CubeMigrationCheckCLI checkCLI = new CubeMigrationCheckCLI(kylinConfig, ifFix);
         checkCLI.execute(cubeName);
@@ -619,7 +626,7 @@ public class CubeMigrationCLI extends AbstractApplication {
         }
         }
     }
-
+    
     private String renameTableWithinProject(String srcItem) {
         if (dstProject != null && srcItem.contains(ResourceStore.TABLE_RESOURCE_ROOT)) {
             String tableIdentity = TableDesc.parseResourcePath(srcItem).getFirst();
@@ -631,13 +638,18 @@ public class CubeMigrationCLI extends AbstractApplication {
         return srcItem;
     }
 
-    private void updateMeta(KylinConfig config) {
+    private void updateMeta(KylinConfig config, String projectName, String cubeName, DataModelDesc model) {
         String[] nodes = config.getRestServers();
+        Map<String, String> tableToProjects = new HashMap<>();
+        for (TableRef tableRef : model.getAllTables()) {
+            tableToProjects.put(tableRef.getTableIdentity(), tableRef.getTableDesc().getProject());
+        }
+
         for (String node : nodes) {
             RestClient restClient = new RestClient(node);
             try {
                 logger.info("update meta cache for " + node);
-                restClient.wipeCache(Broadcaster.SYNC_ALL, Broadcaster.Event.UPDATE.getType(), Broadcaster.SYNC_ALL);
+                restClient.clearCacheForCubeMigration(cubeName, projectName, model.getName(), tableToProjects);
             } catch (IOException e) {
                 logger.error(e.getMessage());
             }
