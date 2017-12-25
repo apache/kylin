@@ -19,12 +19,17 @@
 package org.apache.kylin.rest.service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.apache.kylin.rest.constant.Constant;
@@ -89,4 +94,14 @@ public class AdminService extends BasicService {
         job.execute(args);
     }
 
+    public String getPublicConfig() throws IOException {
+        final String whiteListProperties = KylinConfig.getInstanceFromEnv().getPropertiesWhiteList();
+
+        Collection<String> propertyKeys = Lists.newArrayList();
+        if (StringUtils.isNotEmpty(whiteListProperties)) {
+            propertyKeys.addAll(Arrays.asList(whiteListProperties.split(",")));
+        }
+
+        return KylinConfig.getInstanceFromEnv().exportToString(propertyKeys);
+    }
 }

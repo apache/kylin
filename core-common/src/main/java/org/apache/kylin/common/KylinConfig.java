@@ -55,6 +55,7 @@ public class KylinConfig extends KylinConfigBase {
      * Kylin properties file name
      */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
+    public static final String KYLIN_DEFAULT_CONF_PROPERTIES_FILE = "kylin-defaults.properties";
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
     // static cached instances

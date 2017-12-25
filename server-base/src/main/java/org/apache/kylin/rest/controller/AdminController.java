@@ -19,12 +19,8 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
@@ -87,20 +83,11 @@ public class AdminController extends BasicController {
     @RequestMapping(value = "/public_config", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public GeneralResponse getPublicConfig() throws IOException {
-        final String whiteListProperties = KylinConfig.getInstanceFromEnv().getPropertiesWhiteList();
-
-        Collection<String> propertyKeys = Lists.newArrayList();
-        if (StringUtils.isNotEmpty(whiteListProperties)) {
-            propertyKeys.addAll(Arrays.asList(whiteListProperties.split(",")));
-        }
-
-        final String config = KylinConfig.getInstanceFromEnv().exportToString(propertyKeys);
+        final String config = adminService.getPublicConfig();
         GeneralResponse configRes = new GeneralResponse();
         configRes.put("config", config);
-
         return configRes;
     }
-
 
     @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
