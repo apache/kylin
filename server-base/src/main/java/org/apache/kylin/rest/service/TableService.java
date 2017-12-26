@@ -76,10 +76,6 @@ public class TableService extends BasicService {
     private ModelService modelService;
 
     @Autowired
-    @Qualifier("projectService")
-    private ProjectService projectService;
-
-    @Autowired
     @Qualifier("streamingMgmtService")
     private StreamingService streamingService;
 
@@ -115,27 +111,11 @@ public class TableService extends BasicService {
 
     public String[] loadHiveTablesToProject(String[] tables, String project) throws Exception {
         aclEvaluate.checkProjectAdminPermission(project);
-        // de-dup
-        SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
-        for (String fullTableName : tables) {
-            String[] parts = HadoopUtil.parseHiveTableName(fullTableName);
-            db2tables.put(parts[0], parts[1]);
-        }
+        List<Pair<TableDesc, TableExtDesc>> allMeta = getAllMeta(tables, project);
+        return loadHiveTablesToProject(project, allMeta);
+    }
 
-        // load all tables first
-        List<Pair<TableDesc, TableExtDesc>> allMeta = Lists.newArrayList();
-        ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
-        for (Map.Entry<String, String> entry : db2tables.entries()) {
-            Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue(), project);
-            TableDesc tableDesc = pair.getFirst();
-            Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey().toUpperCase()));
-            Preconditions.checkState(tableDesc.getName().equals(entry.getValue().toUpperCase()));
-            Preconditions.checkState(tableDesc.getIdentity().equals(entry.getKey().toUpperCase() + "." + entry
-                .getValue().toUpperCase()));
-            TableExtDesc extDesc = pair.getSecond();
-            Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getIdentity()));
-            allMeta.add(pair);
-        }
+    String[] loadHiveTablesToProject(String project, List<Pair<TableDesc, TableExtDesc>> allMeta) throws Exception {
 
         // do schema check
         TableMetadataManager metaMgr = getTableManager();
@@ -181,7 +161,32 @@ public class TableService extends BasicService {
         addTableToProject(result, project);
         return result;
     }
-    
+
+    private List<Pair<TableDesc, TableExtDesc>> getAllMeta(String[] tables, String project) throws Exception {
+        // de-dup
+        SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
+        for (String fullTableName : tables) {
+            String[] parts = HadoopUtil.parseHiveTableName(fullTableName);
+            db2tables.put(parts[0], parts[1]);
+        }
+
+        // load all tables first
+        List<Pair<TableDesc, TableExtDesc>> allMeta = Lists.newArrayList();
+        ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
+        for (Map.Entry<String, String> entry : db2tables.entries()) {
+            Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue(), project);
+            TableDesc tableDesc = pair.getFirst();
+            Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey().toUpperCase()));
+            Preconditions.checkState(tableDesc.getName().equals(entry.getValue().toUpperCase()));
+            Preconditions.checkState(tableDesc.getIdentity().equals(entry.getKey().toUpperCase() + "." + entry
+                .getValue().toUpperCase()));
+            TableExtDesc extDesc = pair.getSecond();
+            Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getIdentity()));
+            allMeta.add(pair);
+        }
+        return allMeta;
+    }
+
     public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile) throws Exception {
         aclEvaluate.checkProjectAdminPermission(project);
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
