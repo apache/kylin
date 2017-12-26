@@ -18,12 +18,13 @@
 
 'use strict';
 
-KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService, CubeService, cubeConfig, TableService, ModelGraphService, UserService,SweetAlert,loadingRequest,modelsManager,$modal,cubesManager, $location) {
+KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, MessageService, CubeService, cubeConfig, TableService, ModelGraphService, UserService,SweetAlert,loadingRequest,modelsManager,$modal,cubesManager, $location) {
     $scope.newAccess = null;
     $scope.state = {jsonEdit: false};
 
     $scope.modelsManager = modelsManager;
     $scope.cubesManager = cubesManager;
+    $scope.isShowCubeplanner = $rootScope.isShowCubeplanner;
 
     $scope.buildGraph = function (cube) {
        ModelGraphService.buildTree(cube);

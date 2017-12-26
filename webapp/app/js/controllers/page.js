@@ -24,6 +24,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   kylinConfig.init().$promise.then(function (data) {
     $log.debug(data);
     kylinConfig.initWebConfigInfo();
+    $rootScope.isShowCubeplanner = kylinConfig.getProperty('kylin.cube.cubeplanner.enabled') === 'true'
   });
   $rootScope.userAction = {
     'islogout': false
