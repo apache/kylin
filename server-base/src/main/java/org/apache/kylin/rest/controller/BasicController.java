@@ -109,7 +109,7 @@ public class BasicController {
 
     protected void setDownloadResponse(String downloadFile, final HttpServletResponse response) {
         File file = new File(downloadFile);
-        try (InputStream fileInputStream = new FileInputStream(file); OutputStream output = response.getOutputStream();) {
+        try (InputStream fileInputStream = new FileInputStream(file); OutputStream output = response.getOutputStream()) {
             response.reset();
             response.setContentType("application/octet-stream");
             response.setContentLength((int) (file.length()));
