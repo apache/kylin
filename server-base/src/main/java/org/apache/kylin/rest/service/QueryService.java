@@ -409,7 +409,6 @@ public class QueryService extends BasicService {
             HtraceInit.init();
             scope = Trace.startSpan("query life cycle for " + queryContext.getQueryId(), Sampler.ALWAYS);
         }
-
         String traceUrl = getTraceUrl(scope);
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
@@ -516,10 +515,11 @@ public class QueryService extends BasicService {
 
             sqlResponse.setTraceUrl(traceUrl);
             logQuery(sqlRequest, sqlResponse);
-
-            QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
-            QueryMetrics2Facade.updateMetrics(sqlRequest, sqlResponse);
-
+            try {
+                recordMetric(sqlRequest, sqlResponse);
+            } catch (Throwable th) {
+                logger.warn("Write metric error.", th);
+            }
             if (sqlResponse.getIsException())
                 throw new InternalErrorException(sqlResponse.getExceptionMessage());
 
@@ -528,11 +528,15 @@ public class QueryService extends BasicService {
         } finally {
             BackdoorToggles.cleanToggles();
             QueryContext.reset();
-
             if (scope != null) {
                 scope.close();
             }
         }
+    }
+
+    protected void recordMetric(SQLRequest sqlRequest, SQLResponse sqlResponse) throws UnknownHostException {
+        QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
+        QueryMetrics2Facade.updateMetrics(sqlRequest, sqlResponse);
     }
 
     private String getTraceUrl(TraceScope scope) {
