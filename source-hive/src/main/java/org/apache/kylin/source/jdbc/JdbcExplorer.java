@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DBUtils;
@@ -99,33 +100,12 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
             }
         }
 
-        List<ColumnDesc> columns = new ArrayList<>();
         try (ResultSet rs = jdbcMetadataDialect.listColumns(dbmd, database, table)) {
-            while (rs.next()) {
-                String cname = rs.getString("COLUMN_NAME");
-                int type = rs.getInt("DATA_TYPE");
-                int csize = rs.getInt("COLUMN_SIZE");
-                int digits = rs.getInt("DECIMAL_DIGITS");
-                int pos = rs.getInt("ORDINAL_POSITION");
-                String remarks = rs.getString("REMARKS");
-
-                ColumnDesc cdesc = new ColumnDesc();
-                cdesc.setName(cname.toUpperCase());
-
-                String kylinType = SqlUtil.jdbcTypeToKylinDataType(type);
-                int precision = (SqlUtil.isPrecisionApplicable(kylinType) && csize > 0) ? csize : -1;
-                int scale = (SqlUtil.isScaleApplicable(kylinType) && digits > 0) ? digits : -1;
-
-                cdesc.setDatatype(new DataType(kylinType, precision, scale).toString());
-                cdesc.setId(String.valueOf(pos));
-                cdesc.setComment(remarks);
-                columns.add(cdesc);
-            }
+            tableDesc.setColumns(extractColumnFromMeta(rs));
         } finally {
             DBUtils.closeQuietly(con);
         }
 
-        tableDesc.setColumns(columns.toArray(new ColumnDesc[columns.size()]));
 
         TableExtDesc tableExtDesc = new TableExtDesc();
         tableExtDesc.setIdentity(tableDesc.getIdentity());
@@ -249,4 +229,63 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         return Collections.emptyList();
     }
 
+    @Override
+    public ColumnDesc[] evalQueryMetadata(String query) {
+        if (StringUtils.isEmpty(query)) {
+            throw new RuntimeException("Evalutate query shall not be empty.");
+        }
+
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        String tmpDatabase = config.getHiveDatabaseForIntermediateTable();
+        String tmpView = tmpDatabase + ".kylin_eval_query_" + UUID.nameUUIDFromBytes(query.getBytes()).toString().replaceAll("-", "");
+
+        String dropViewSql = "DROP VIEW IF EXISTS " + tmpView;
+        String evalViewSql = "CREATE VIEW " + tmpView + " as " + query;
+
+        try {
+            executeSQL(new String[] { dropViewSql, evalViewSql });
+            Connection con = SqlUtil.getConnection(dbconf);
+            DatabaseMetaData dbmd = con.getMetaData();
+            ResultSet rs = dbmd.getColumns(null, tmpDatabase, tmpView, null);
+            ColumnDesc[] result = extractColumnFromMeta(rs);
+            DBUtils.closeQuietly(rs);
+            DBUtils.closeQuietly(con);
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot evalutate metadata of query: " + query, e);
+        } finally {
+            try {
+                executeSQL(dropViewSql);
+            } catch (Exception e) {
+                throw new RuntimeException("Cannot temp view of query: " + query, e);
+            }
+        }
+    }
+
+    private ColumnDesc[] extractColumnFromMeta(ResultSet meta) throws SQLException {
+        List<ColumnDesc> columns = new ArrayList<>();
+
+        while (meta.next()) {
+            String cname = meta.getString("COLUMN_NAME");
+            int type = meta.getInt("DATA_TYPE");
+            int csize = meta.getInt("COLUMN_SIZE");
+            int digits = meta.getInt("DECIMAL_DIGITS");
+            int pos = meta.getInt("ORDINAL_POSITION");
+            String remarks = meta.getString("REMARKS");
+
+            ColumnDesc cdesc = new ColumnDesc();
+            cdesc.setName(cname.toUpperCase());
+
+            String kylinType = SqlUtil.jdbcTypeToKylinDataType(type);
+            int precision = (SqlUtil.isPrecisionApplicable(kylinType) && csize > 0) ? csize : -1;
+            int scale = (SqlUtil.isScaleApplicable(kylinType) && digits > 0) ? digits : -1;
+
+            cdesc.setDatatype(new DataType(kylinType, precision, scale).toString());
+            cdesc.setId(String.valueOf(pos));
+            cdesc.setComment(remarks);
+            columns.add(cdesc);
+        }
+
+        return columns.toArray(new ColumnDesc[columns.size()]);
+    }
 }

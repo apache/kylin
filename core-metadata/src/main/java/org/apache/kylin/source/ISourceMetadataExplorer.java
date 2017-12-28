@@ -21,6 +21,7 @@ package org.apache.kylin.source;
 import java.util.List;
 
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 
@@ -33,4 +34,6 @@ public interface ISourceMetadataExplorer {
     Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table, String prj) throws Exception;
     
     List<String> getRelatedKylinResources(TableDesc table);
+    
+    ColumnDesc[] evalQueryMetadata(String query);
 }

@@ -28,6 +28,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMRInput;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -208,6 +209,11 @@ public class KafkaSource implements ISource {
                 dependentResources.add(KafkaConfig.concatResourcePath(table.getIdentity()));
                 dependentResources.add(StreamingConfig.concatResourcePath(table.getIdentity()));
                 return dependentResources;
+            }
+
+            @Override
+            public ColumnDesc[] evalQueryMetadata(String query) {
+                throw new UnsupportedOperationException();
             }
         };
     }
