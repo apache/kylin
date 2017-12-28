@@ -39,9 +39,7 @@ import org.slf4j.LoggerFactory;
 public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseSchedulerTest.class);
-
     protected DefaultScheduler scheduler;
-
     protected ExecutableManager execMgr;
 
     @Before
@@ -81,7 +79,6 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
         int error = 0;
         long start = System.currentTimeMillis();
         final int errorLimit = 3;
-
         while (error < errorLimit && (System.currentTimeMillis() - start < maxWaitTime)) {
             try {
                 Thread.sleep(1000);

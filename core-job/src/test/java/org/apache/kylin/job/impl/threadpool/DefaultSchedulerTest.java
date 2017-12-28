@@ -27,14 +27,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.BaseTestExecutable;
 import org.apache.kylin.job.ErrorTestExecutable;
 import org.apache.kylin.job.FailedTestExecutable;
 import org.apache.kylin.job.FiveSecondSucceedTestExecutable;
 import org.apache.kylin.job.NoErrorStatusExecutable;
+import org.apache.kylin.job.RunningTestExecutable;
 import org.apache.kylin.job.SelfStopExecutable;
 import org.apache.kylin.job.SucceedTestExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -123,6 +126,23 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         Assert.assertEquals(ExecutableState.DISCARDED, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.DISCARDED, execMgr.getOutput(task1.getId()).getState());
         task1.waitForDoWork();
+    }
+
+    @Test
+    public void testIllegalState() throws Exception {
+        logger.info("testIllegalState");
+        DefaultChainedExecutable job = new DefaultChainedExecutable();
+        BaseTestExecutable task1 = new SucceedTestExecutable();
+        BaseTestExecutable task2 = new RunningTestExecutable();
+        job.addTask(task1);
+        job.addTask(task2);
+        execMgr.addJob(job);
+        ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv()).updateJobOutput(task2.getId(),
+                ExecutableState.RUNNING, null, null);
+        waitForJobFinish(job.getId(), 10000);
+        Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
+        Assert.assertEquals(ExecutableState.RUNNING, execMgr.getOutput(task2.getId()).getState());
     }
 
     @SuppressWarnings("rawtypes")
