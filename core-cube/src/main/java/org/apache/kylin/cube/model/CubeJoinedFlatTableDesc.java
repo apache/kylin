@@ -44,23 +44,31 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
     protected final String tableName;
     protected final CubeDesc cubeDesc;
     protected final CubeSegment cubeSegment;
+    protected final boolean includingDerived;
 
     private int columnCount = 0;
     private List<TblColRef> columnList = Lists.newArrayList();
     private Map<TblColRef, Integer> columnIndexMap = Maps.newHashMap();
 
     public CubeJoinedFlatTableDesc(CubeDesc cubeDesc) {
-        this(cubeDesc, null);
+        this(cubeDesc, null, false);
+    }
+
+    public CubeJoinedFlatTableDesc(CubeDesc cubeDesc, boolean includingDerived) {
+        this(cubeDesc, null, includingDerived);
     }
 
     public CubeJoinedFlatTableDesc(CubeSegment cubeSegment) {
-        this(cubeSegment.getCubeDesc(), cubeSegment);
+        this(cubeSegment.getCubeDesc(), cubeSegment, false);
     }
 
-    private CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment /* can be null */) {
+    private CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment /* can be null */,
+            boolean includingDerived) {
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
+
         this.tableName = makeTableName(cubeDesc, cubeSegment);
+        this.includingDerived = includingDerived;
         initParseCubeDesc();
     }
 
@@ -68,7 +76,8 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
         if (cubeSegment == null) {
             return "kylin_intermediate_" + cubeDesc.getName().toLowerCase();
         } else {
-            return "kylin_intermediate_" + cubeDesc.getName().toLowerCase() + "_" + cubeSegment.getUuid().replaceAll("-", "_");
+            return "kylin_intermediate_" + cubeDesc.getName().toLowerCase() + "_"
+                    + cubeSegment.getUuid().replaceAll("-", "_");
         }
     }
 
@@ -86,8 +95,14 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
 
     // check what columns from hive tables are required, and index them
     protected void initParseCubeDesc() {
-        for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived(false)) {
-            initAddColumn(col);
+        if (this.includingDerived) {
+            for (TblColRef col : cubeDesc.listDimensionColumnsIncludingDerived()) {
+                initAddColumn(col);
+            }
+        } else {
+            for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived(false)) {
+                initAddColumn(col);
+            }
         }
 
         List<MeasureDesc> measures = cubeDesc.getMeasures();
@@ -118,7 +133,8 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
     // sanity check the input record (in bytes) matches what's expected
     public void sanityCheck(BytesSplitter bytesSplitter) {
         if (columnCount != bytesSplitter.getBufferSize()) {
-            throw new IllegalArgumentException("Expect " + columnCount + " columns, but see " + bytesSplitter.getBufferSize() + " -- " + bytesSplitter);
+            throw new IllegalArgumentException("Expect " + columnCount + " columns, but see "
+                    + bytesSplitter.getBufferSize() + " -- " + bytesSplitter);
         }
 
         // TODO: check data types here
