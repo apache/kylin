@@ -245,6 +245,7 @@ public class DataModelManager {
                 prj.getModels().add(name);
 
                 desc.setOwner(owner);
+                logger.info("Saving Model {} to Project {} with {} as owner", desc.getName(), projectName, owner);
                 desc = saveDataModelDesc(desc);
 
             } finally {
