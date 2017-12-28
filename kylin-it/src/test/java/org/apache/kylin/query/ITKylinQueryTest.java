@@ -137,7 +137,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     public void testSingleRunQuery() throws Exception {
         System.setProperty("log4j.configuration", "file:../build/conf/kylin-tools-log4j.properties");
 
-        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_verifyCount/query03.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_verifyCount/query02.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {

@@ -77,6 +77,10 @@ import com.google.common.io.Files;
  */
 public class KylinTestBase {
 
+    static {
+        System.setProperty("needCheckCC", "true");
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(KylinTestBase.class);
     public static boolean PRINT_RESULT = false;
 

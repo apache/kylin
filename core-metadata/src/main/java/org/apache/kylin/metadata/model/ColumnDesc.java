@@ -57,6 +57,10 @@ public class ColumnDesc implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String index;
 
+    @JsonProperty("cc_expr")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String computedColumnExpr = null;//if null, it's not a computed column
+
     // parsed from data type
     private DataType type;
 
@@ -65,7 +69,6 @@ public class ColumnDesc implements Serializable {
     private boolean isNullable = true;
 
     private TblColRef ref;
-    private String computedColumnExpr = null;//if null, it's not a computed column
 
     public ColumnDesc() { // default constructor for Jackson
     }

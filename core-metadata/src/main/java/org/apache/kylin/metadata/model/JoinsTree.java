@@ -24,15 +24,17 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class JoinsTree implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final IJoinDescMatcher DEFAULT_JOINDESC_MATCHER = new DefaultJoinDescMatcher();
 
-    final Map<String, Chain> tableChains = new LinkedHashMap<>();
+    private Map<String, Chain> tableChains = new LinkedHashMap<>();
     private IJoinDescMatcher joinDescMatcher = DEFAULT_JOINDESC_MATCHER;
 
     public JoinsTree(TableRef rootTable, List<JoinDesc> joins) {
@@ -49,6 +51,10 @@ public class JoinsTree implements Serializable {
             Chain fkSide = tableChains.get(join.getFKSide().getAlias());
             tableChains.put(pkSide.getAlias(), new Chain(pkSide, join, fkSide));
         }
+    }
+
+    public JoinsTree(Map<String, Chain> tableChains) {
+        this.tableChains = tableChains;
     }
 
     public Map<String, String> matches(JoinsTree another) {
@@ -145,6 +151,22 @@ public class JoinsTree implements Serializable {
 
     public void setJoinDescMatcher(IJoinDescMatcher joinDescMatcher) {
         this.joinDescMatcher = joinDescMatcher;
+    }
+
+    public JoinsTree getSubgraphByAlias(Set<String> aliases) {
+        Map<String, Chain> subgraph = Maps.newHashMap();
+        for (String alias : aliases) {
+            Chain chain = tableChains.get(alias);
+            if (chain == null)
+                throw new IllegalArgumentException("Table with alias " + alias + " is not found");
+
+            while (chain.getFkSide() != null) {
+                subgraph.put(chain.table.getAlias(), chain);
+                chain = chain.getFkSide();
+            }
+            subgraph.put(chain.table.getAlias(), chain);
+        }
+        return new JoinsTree(subgraph);
     }
 
     public static class Chain implements Serializable {

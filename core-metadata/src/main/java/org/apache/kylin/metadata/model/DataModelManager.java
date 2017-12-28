@@ -88,7 +88,7 @@ public class DataModelManager {
             protected DataModelDesc initEntityAfterReload(DataModelDesc model, String resourceName) {
                 String prj = ProjectManager.getInstance(config).getProjectOfModel(model.getName()).getName();
                 if (!model.isDraft()) {
-                    model.init(config, getAllTablesMap(prj), listDataModels(), true);
+                    model.init(config, getAllTablesMap(prj), getModels(prj), true);
                 }
                 return model;
             }
@@ -182,7 +182,7 @@ public class DataModelManager {
                     if (null != model) {
                         ret.add(model);
                     } else {
-                        logger.error("Failed to load model " + modelName);
+                        logger.info("Model " + modelName + " is missing or unloaded yet");
                     }
                 }
             }
@@ -274,7 +274,7 @@ public class DataModelManager {
         String prj = ProjectManager.getInstance(config).getProjectOfModel(dataModelDesc.getName()).getName();
 
         if (!dataModelDesc.isDraft())
-            dataModelDesc.init(config, this.getAllTablesMap(prj), listDataModels(), true);
+            dataModelDesc.init(config, this.getAllTablesMap(prj), getModels(prj), false);
 
         crud.save(dataModelDesc);
 

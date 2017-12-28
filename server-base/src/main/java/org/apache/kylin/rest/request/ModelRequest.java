@@ -26,6 +26,7 @@ public class ModelRequest {
     private boolean successful;
     private String message;
     private String project;
+    private boolean isSeekingExprAdvice;
 
     public String getUuid() {
         return uuid;
@@ -104,4 +105,11 @@ public class ModelRequest {
         this.project = project;
     }
 
+    public boolean isSeekingExprAdvice() {
+        return isSeekingExprAdvice;
+    }
+
+    public void setIsSeekingExprAdvice(boolean seekingExprAdvice) {
+        isSeekingExprAdvice = seekingExprAdvice;
+    }
 }

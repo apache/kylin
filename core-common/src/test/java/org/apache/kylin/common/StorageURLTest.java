@@ -63,7 +63,23 @@ public class StorageURLTest {
     }
 
     @Test
+    public void testHDFS() {
+        {
+            StorageURL id = new StorageURL(
+                    "master_ci_instance@hdfs,path=hdfs://sandbox.hortonworks.com:8020/kylin/master_ci_instance/metadata/f112fe00-6f99-4f8e-b075-d57c08501106");
+
+            assertEquals("master_ci_instance", id.getIdentifier());
+            assertEquals("hdfs", id.getScheme());
+            assertEquals(1, id.getAllParameters().size());
+            assertEquals(
+                    "master_ci_instance@hdfs,path=hdfs://sandbox.hortonworks.com:8020/kylin/master_ci_instance/metadata/f112fe00-6f99-4f8e-b075-d57c08501106",
+                    id.toString());
+        }
+    }
+
+    @Test
     public void testEdgeCases() {
+
         {
             StorageURL id = new StorageURL("");
             assertEquals("kylin_metadata", id.getIdentifier());
@@ -87,7 +103,7 @@ public class StorageURLTest {
             assertEquals("hello@hbase,a", id.toString());
         }
     }
-    
+
     @Test
     public void testValueOfCache() {
         StorageURL id1 = StorageURL.valueOf("hello@hbase");

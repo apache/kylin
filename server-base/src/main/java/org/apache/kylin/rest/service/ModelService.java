@@ -288,11 +288,11 @@ public class ModelService extends BasicService {
         String modelName = dataModelDesc.getName();
         List<CubeInstance> cubes = cubeService.listAllCubes(null, project, modelName, true);
         List<DataModelDesc> historyModels = listAllModels(modelName, project, true);
-        
+
         StringBuilder checkRet = new StringBuilder();
         if (cubes != null && cubes.size() != 0 && !historyModels.isEmpty()) {
             dataModelDesc.init(getConfig(), getTableManager().getAllTablesMap(project),
-                    getDataModelManager().listDataModels(), false);
+                    getDataModelManager().getModels(project), false);
 
             List<String> curModelDims = getModelCols(dataModelDesc);
             List<String> curModelMeasures = getModelMeasures(dataModelDesc);
@@ -352,6 +352,7 @@ public class ModelService extends BasicService {
     }
 
     public DataModelDesc updateModelToResourceStore(DataModelDesc modelDesc, String projectName) throws IOException {
+
         aclEvaluate.checkProjectWritePermission(projectName);
         Message msg = MsgPicker.getMsg();
 
