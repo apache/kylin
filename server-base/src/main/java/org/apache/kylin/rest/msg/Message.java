@@ -61,10 +61,6 @@ public class Message {
         return "Inconsistent cube desc signature for '%s', if it's right after an upgrade, please try 'Edit CubeDesc' to delete the 'signature' field. Or use 'bin/metastore.sh refresh-cube-signature' to batch refresh all cubes' signatures, then reload metadata to take effect.";
     }
 
-    public String getDELETE_NOT_FIRST_LAST_SEG() {
-        return "Cannot delete segment '%s' as it is neither the first nor the last segment.";
-    }
-
     public String getDELETE_NOT_READY_SEG() {
         return "Cannot delete segment '%s' as its status is not READY. Discard the on-going job for it.";
     }
@@ -123,6 +119,10 @@ public class Message {
 
     public String getNO_READY_SEGMENT() {
         return "Cube '%s' doesn't contain any READY segment.";
+    }
+
+    public String getDELETE_SEGMENT_CAUSE_GAPS() {
+        return "Cube '%s' has gaps caused by deleting segment '%s'.";
     }
 
     public String getENABLE_WITH_RUNNING_JOB() {
@@ -339,6 +339,10 @@ public class Message {
 
     public String getNOT_SUPPORTED_SQL() {
         return "Not Supported SQL.";
+    }
+
+    public String getQUERY_TOO_MANY_RUNNING() {
+        return "Too many concurrent query requests.";
     }
 
     public String getTABLE_META_INCONSISTENT() {

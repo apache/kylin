@@ -85,7 +85,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
             rule.validate(desc, vContext);
             //vContext.print(System.out);
             assertTrue(vContext.getResults().length > 0);
-            assertTrue(vContext.getResults()[0].getMessage().startsWith("Aggregation group 0 has too many combinations"));
+            assertTrue(vContext.getResults()[0].getMessage().startsWith("Aggregation group 1 has too many combinations"));
         }
     }
 
@@ -115,7 +115,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
         rule.validate(desc, vContext);
         //vContext.print(System.out);
         assertEquals(1, vContext.getResults().length);
-        assertEquals("Aggregation group 0 'includes' dimensions not include all the dimensions:[seller_id, META_CATEG_NAME, lstg_format_name, lstg_site_id, slr_segment_cd]", (vContext.getResults()[0].getMessage()));
+        assertEquals("Aggregation group 1 'includes' dimensions not include all the dimensions:[seller_id, META_CATEG_NAME, lstg_format_name, lstg_site_id, slr_segment_cd]", (vContext.getResults()[0].getMessage()));
     }
 
     @Test
@@ -130,7 +130,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
         rule.validate(desc, vContext);
         //vContext.print(System.out);
         assertEquals(2, vContext.getResults().length);
-        assertEquals("Aggregation group 0 joint dimensions has overlap with more than 1 dimensions in same hierarchy: [CATEG_LVL2_NAME, META_CATEG_NAME]", (vContext.getResults()[0].getMessage()));
+        assertEquals("Aggregation group 1 joint dimensions has overlap with more than 1 dimensions in same hierarchy: [CATEG_LVL2_NAME, META_CATEG_NAME]", (vContext.getResults()[0].getMessage()));
     }
 
     @Test

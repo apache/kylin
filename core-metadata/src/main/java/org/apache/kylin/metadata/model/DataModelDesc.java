@@ -769,7 +769,7 @@ public class DataModelDesc extends RootPersistentEntity {
     public static DataModelDesc getCopyOf(DataModelDesc orig) {
         return copy(orig, new DataModelDesc());
     }
-
+    
     public static DataModelDesc copy(DataModelDesc orig, DataModelDesc copy) {
         copy.config = orig.config;
         copy.name = orig.name;

@@ -154,7 +154,6 @@ public class FunctionDesc implements Serializable {
     }
 
     public DataType getRewriteFieldType() {
-
         if (getMeasureType() instanceof BasicMeasureType) {
             if (isMax() || isMin()) {
                 return parameter.getColRefs().get(0).getType();
@@ -247,8 +246,16 @@ public class FunctionDesc implements Serializable {
         return expression;
     }
 
+    public void setExpression(String expression) {
+        this.expression = expression;
+    }
+    
     public ParameterDesc getParameter() {
         return parameter;
+    }
+
+    public void setParameter(ParameterDesc parameter) {
+        this.parameter = parameter;
     }
 
     public int getParameterCount() {
@@ -265,10 +272,6 @@ public class FunctionDesc implements Serializable {
 
     public void setReturnType(String returnType) {
         this.returnType = returnType;
-    }
-
-    public void setExpression(String expression) {
-        this.expression = expression;
     }
 
     public DataType getReturnDataType() {

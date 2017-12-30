@@ -48,8 +48,20 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-metrics</artifactId>
+        </dependency>
 
         <!-- these plug-in modules, should not have API dependencies -->
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-metrics-reporter-hive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-metrics-reporter-kafka</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-storage-hbase</artifactId>

@@ -168,8 +168,28 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         return result;
     }
 
-    public SegmentRange autoMergeCubeSegments(boolean needAutoMerge, String cubeName, long[] timeRanges)
-            throws IOException {
+    public void removeLatestSegmentByVolatileRange(Segments<T> segs, long volatileRange) {
+        if(volatileRange <= 0) {
+            return;
+        }
+        long latestSegEndTs = Long.MIN_VALUE;
+        for(T seg: segs) {
+            latestSegEndTs = Math.max(latestSegEndTs, seg.getTSRange().end.v);
+        }
+        Segments volatileSegs = new Segments();
+        for(T seg: segs) {
+            if(seg.getTSRange().end.v + volatileRange >= latestSegEndTs) {
+                logger.warn("segment in volatile range: seg:" + seg.toString() +
+                        "rangeStart:" + seg.getTSRange().start.v + ", rangeEnd" + seg.getTSRange().end.v);
+                volatileSegs.add(seg);
+            }
+        }
+
+        segs.removeAll(volatileSegs);
+
+    }
+
+    public SegmentRange autoMergeCubeSegments(boolean needAutoMerge, String cubeName, long[] timeRanges, long volatileRange) throws IOException {
         if (!needAutoMerge) {
             logger.debug("Cube " + cubeName + " doesn't need auto merge");
             return null;
@@ -194,6 +214,8 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
                 }
             }
         }
+
+        removeLatestSegmentByVolatileRange(readySegs, volatileRange);
 
         // exclude those already under merging segments
         readySegs.removeAll(mergingSegs);

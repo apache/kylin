@@ -65,6 +65,7 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
 
     @Override
     public Set<GrantedAuthority> getGroupMembershipRoles(String userDn, String username) {
+        setGroupSearchFilter("(|(member={0})(memberUid={1}))");
         Set<GrantedAuthority> authorities = super.getGroupMembershipRoles(userDn, username);
 
         Set<GrantedAuthority> userAuthorities = new HashSet<GrantedAuthority>();

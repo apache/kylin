@@ -16,9 +16,18 @@
  * limitations under the License.
 */
 
-KylinApp.factory('QueryService', ['$resource', function ($resource, config) {
+KylinApp.factory('QueryService', ['$resource', 'kylinConfig', function ($resource, kylinConfig, config) {
+    var queryTimeout;
+    if (kylinConfig.isInitialized()) {
+      queryTimeout = kylinConfig.getQueryTimeout();
+    } else { 
+      kylinConfig.init().$promise.then(function (data) {
+        kylinConfig.initWebConfigInfo();
+        queryTimeout = kylinConfig.getQueryTimeout();
+      });
+    }
     return $resource(Config.service.url + ':subject/:subject_id/:propName/:propValue/:action', {}, {
-        query: {method: 'POST', params: {action: 'query'},timeout:300000, isArray: false},
+        query: {method: 'POST', params: {action: 'query'}, timeout: queryTimeout, isArray: false},
         save: {method: 'POST', params: {subject: 'saved_queries'}, isArray: false},
         delete: {method: 'DELETE', params: {subject: 'saved_queries'}, isArray: false},
         list: {method: 'GET', params: {subject: 'saved_queries'}, isArray: true},

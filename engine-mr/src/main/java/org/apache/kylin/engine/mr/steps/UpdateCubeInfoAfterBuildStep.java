@@ -76,10 +76,10 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             }
 
             cubeManager.promoteNewlyBuiltSegments(cube, segment);
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+            return new ExecuteResult();
         } catch (IOException e) {
             logger.error("fail to update cube after build", e);
-            return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+            return ExecuteResult.createError(e);
         }
     }
 

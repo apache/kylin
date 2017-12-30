@@ -25,6 +25,7 @@ import java.util.List;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.ServiceTestBase;
@@ -111,4 +112,45 @@ public class QueryMetricsTest extends ServiceTestBase {
         System.clearProperty("kylin.server.query-metrics-enabled");
     }
 
+    @Test
+    public void testQueryStatisticsResult() throws Exception {
+        System.setProperty("kylin.core.metrics.reporter-query-enabled", "true");
+        QueryMetricsFacade.init();
+
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setSql("select * from TEST_KYLIN_FACT");
+        sqlRequest.setProject("default");
+
+        SQLResponse sqlResponse = new SQLResponse();
+        sqlResponse.setDuration(10);
+        sqlResponse.setCube("test_cube");
+        sqlResponse.setIsException(false);
+        sqlResponse.setTotalScanCount(100);
+        List<String> list1 = new ArrayList<>();
+        list1.add("111");
+        list1.add("112");
+        List<String> list2 = new ArrayList<>();
+        list2.add("111");
+        list2.add("112");
+        List<List<String>> results = new ArrayList<>();
+        results.add(list1);
+        results.add(list2);
+        sqlResponse.setResults(results);
+        sqlResponse.setStorageCacheUsed(true);
+
+        QueryContext context = QueryContext.current();
+        int ctxId = 0;
+        context.addContext(ctxId, "OLAP", true);
+        context.addRPCStatistics(ctxId, "sandbox", "test_cube", "20100101000000_20150101000000", 3L, 3L, 3L, null, 80L,
+                0L, 2L, 2L, 0L, 30L);
+
+        sqlResponse.setCubeSegmentStatisticsList(context.getCubeSegmentStatisticsResultList());
+
+        QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
+
+        Thread.sleep(2000);
+
+        System.clearProperty("kylin.server.query-metrics-enabled");
+        System.out.println("------------testQueryStatisticsResult done------------");
+    }
 }

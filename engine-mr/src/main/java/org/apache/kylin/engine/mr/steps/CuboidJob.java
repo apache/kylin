@@ -28,12 +28,15 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidModeEnum;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.common.CuboidSchedulerUtil;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,18 +53,27 @@ public class CuboidJob extends AbstractHadoopJob {
 
     private boolean skipped = false;
 
+    private CuboidScheduler cuboidScheduler;
+
     @Override
     public boolean isSkipped() {
         return skipped;
     }
 
-    private boolean checkSkip(String cubingJobId) {
+    private boolean checkSkip(String cubingJobId, int level) {
         if (cubingJobId == null)
             return false;
 
         ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubingJob cubingJob = (CubingJob) execMgr.getJob(cubingJobId);
         skipped = cubingJob.isLayerCubing() == false;
+        if (!skipped) {
+            skipped = (level > cuboidScheduler.getBuildLevel());
+            if (skipped) {
+                logger.info("Job level: " + level + " for " + cubingJobId + "[" + cubingJobId
+                        + "] exceeds real cuboid tree levels : " + cuboidScheduler.getBuildLevel());
+            }
+        }
         return skipped;
     }
 
@@ -80,6 +92,7 @@ public class CuboidJob extends AbstractHadoopJob {
             options.addOption(OPTION_OUTPUT_PATH);
             options.addOption(OPTION_NCUBOID_LEVEL);
             options.addOption(OPTION_CUBING_JOB_ID);
+            options.addOption(OPTION_CUBOID_MODE);
             parseOptions(options, args);
 
             String output = getOptionValue(OPTION_OUTPUT_PATH);
@@ -87,12 +100,18 @@ public class CuboidJob extends AbstractHadoopJob {
             int nCuboidLevel = Integer.parseInt(getOptionValue(OPTION_NCUBOID_LEVEL));
             String segmentID = getOptionValue(OPTION_SEGMENT_ID);
             String cubingJobId = getOptionValue(OPTION_CUBING_JOB_ID);
+            String cuboidModeName = getOptionValue(OPTION_CUBOID_MODE);
+            if (cuboidModeName == null) {
+                cuboidModeName = CuboidModeEnum.CURRENT.toString();
+            }
 
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
             CubeSegment segment = cube.getSegmentById(segmentID);
 
-            if (checkSkip(cubingJobId)) {
+            cuboidScheduler = CuboidSchedulerUtil.getCuboidSchedulerByMode(segment, cuboidModeName);
+
+            if (checkSkip(cubingJobId, nCuboidLevel)) {
                 logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + segmentID + "[" + segmentID + "]");
                 return 0;
             }
@@ -104,7 +123,7 @@ public class CuboidJob extends AbstractHadoopJob {
             setJobClasspath(job, cube.getConfig());
 
             // add metadata to distributed cache
-            attachSegmentMetadataWithDict(segment, job.getConfiguration());
+            attachSegmentMetadataWithAll(segment, job.getConfiguration());
 
             // Mapper
             job.setMapperClass(this.mapperClass);
@@ -122,12 +141,13 @@ public class CuboidJob extends AbstractHadoopJob {
 
             // set output
             IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(segment).getOuputFormat();
-            outputFormat.configureJobOutput(job, output, segment, nCuboidLevel);
+            outputFormat.configureJobOutput(job, output, segment, cuboidScheduler, nCuboidLevel);
 
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
             job.getConfiguration().setInt(BatchConstants.CFG_CUBE_CUBOID_LEVEL, nCuboidLevel);
+            job.getConfiguration().set(BatchConstants.CFG_CUBOID_MODE, cuboidModeName);
 
             return waitForCompletion(job);
         } finally {

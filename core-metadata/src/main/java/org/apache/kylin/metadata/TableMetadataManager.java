@@ -58,6 +58,8 @@ public class TableMetadataManager {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(TableMetadataManager.class);
 
+    public static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
+    
     private static final Serializer<TableExtDesc> TABLE_EXT_SERIALIZER = new JsonSerializer<TableExtDesc>(
             TableExtDesc.class);
 

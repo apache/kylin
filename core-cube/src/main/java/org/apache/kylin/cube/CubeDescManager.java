@@ -25,7 +25,9 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.cube.cuboid.CuboidManager;
@@ -58,6 +60,8 @@ public class CubeDescManager {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeDescManager.class);
 
+    public static final Serializer<CubeDesc> CUBE_DESC_SERIALIZER = new JsonSerializer<CubeDesc>(CubeDesc.class);
+    
     public static CubeDescManager getInstance(KylinConfig config) {
         return config.getManager(CubeDescManager.class);
     }

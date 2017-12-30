@@ -36,7 +36,6 @@ import org.apache.kylin.metadata.model.TblColRef;
  */
 public class RowKeyDecoder {
 
-    private final CubeSegment cubeSegment;
     private final CubeDesc cubeDesc;
     private final RowKeyColumnIO colIO;
     private final RowKeySplitter rowKeySplitter;
@@ -45,7 +44,6 @@ public class RowKeyDecoder {
     private List<String> values;
 
     public RowKeyDecoder(CubeSegment cubeSegment) {
-        this.cubeSegment = cubeSegment;
         this.cubeDesc = cubeSegment.getCubeDesc();
         this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 255);
         this.colIO = new RowKeyColumnIO(cubeSegment.getDimensionEncodingMap());
@@ -75,7 +73,7 @@ public class RowKeyDecoder {
         if (this.cuboid != null && this.cuboid.getId() == cuboidID) {
             return;
         }
-        this.cuboid = Cuboid.findById(cubeSegment, cuboidID);
+        this.cuboid = Cuboid.findForMandatory(cubeDesc, cuboidID);
     }
 
     private void collectValue(TblColRef col, byte[] valueBytes, int length) throws IOException {

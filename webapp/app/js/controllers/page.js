@@ -18,12 +18,13 @@
 
 'use strict';
 
-KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $location, $rootScope, $routeParams, $http, UserService, ProjectService, SweetAlert, $cookieStore, $log, kylinConfig, ProjectModel, TableModel) {
+KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $location, $rootScope, $routeParams, $http, UserService, ProjectService, SweetAlert, $cookieStore, $log, kylinConfig, ProjectModel, TableModel, JobList) {
 
   //init kylinConfig to get kylin.Propeties
   kylinConfig.init().$promise.then(function (data) {
     $log.debug(data);
     kylinConfig.initWebConfigInfo();
+    $rootScope.isShowCubeplanner = kylinConfig.getProperty('kylin.cube.cubeplanner.enabled') === 'true'
   });
   $rootScope.userAction = {
     'islogout': false
@@ -49,9 +50,16 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   // Set up common methods
   $scope.logout = function () {
     ProjectModel.clear();
+    JobList.clearJobFilter();
     $rootScope.userAction.islogout = true;
+    var logoutURL = Config.service.base;
+    if(kylinConfig.getProperty('kylin.security.profile') === 'saml') {
+      logoutURL += 'saml/logout';
+    } else {
+      logoutURL += 'j_spring_security_logout';
+    }
     $scope.$emit('event:logoutRequest');
-    $http.get(Config.service.base + 'j_spring_security_logout').success(function () {
+    $http.get(logoutURL).success(function () {
       UserService.setCurUser({});
       $scope.username = $scope.password = null;
       $location.path('/login');

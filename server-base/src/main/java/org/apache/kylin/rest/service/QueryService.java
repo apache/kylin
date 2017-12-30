@@ -103,6 +103,7 @@ import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
+import org.apache.kylin.rest.util.QueryRequestLimits;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.shaded.htrace.org.apache.htrace.Sampler;
 import org.apache.kylin.shaded.htrace.org.apache.htrace.Trace;
@@ -404,7 +405,7 @@ public class QueryService extends BasicService {
         final QueryContext queryContext = QueryContext.current();
 
         TraceScope scope = null;
-        if (KylinConfig.getInstanceFromEnv().isHtraceTracingEveryQuery() || BackdoorToggles.getHtraceEnabled()) {
+        if (kylinConfig.isHtraceTracingEveryQuery() || BackdoorToggles.getHtraceEnabled()) {
             logger.info("Current query is under tracing");
             HtraceInit.init();
             scope = Trace.startSpan("query life cycle for " + queryContext.getQueryId(), Sampler.ALWAYS);
@@ -412,107 +413,50 @@ public class QueryService extends BasicService {
         String traceUrl = getTraceUrl(scope);
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
-
+            long startTime = System.currentTimeMillis();
+            
+            SQLResponse sqlResponse = null;
             String sql = sqlRequest.getSql();
             String project = sqlRequest.getProject();
+            boolean isQueryCacheEnabled = isQueryCacheEnabled(kylinConfig);
             logger.info("Using project: " + project);
             logger.info("The original query:  " + sql);
 
             sql = QueryUtil.removeCommentInSql(sql);
 
             Pair<Boolean, String> result = TempStatementUtil.handleTempStatement(sql, kylinConfig);
-
-            boolean isTempStatement = result.getFirst();
+            boolean isCreateTempStatement = result.getFirst();
             sql = result.getSecond();
             sqlRequest.setSql(sql);
 
-            final boolean isSelect = QueryUtil.isSelectStatement(sql);
-
-            long startTime = System.currentTimeMillis();
-
-            SQLResponse sqlResponse = null;
-            boolean queryCacheEnabled = checkCondition(kylinConfig.isQueryCacheEnabled(),
-                    "query cache disabled in KylinConfig") && //
-                    checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
-
-            if (queryCacheEnabled) {
+            // try some cheap executions
+            if (sqlResponse == null && isQueryInspect) {
+                sqlResponse = new SQLResponse(null, null, 0, false, sqlRequest.getSql());
+            }
+            
+            if (sqlResponse == null && isCreateTempStatement) {
+                sqlResponse = new SQLResponse(null, null, 0, false, null);
+            }
+            
+            if (sqlResponse == null && isQueryCacheEnabled) {
                 sqlResponse = searchQueryInCache(sqlRequest);
                 Trace.addTimelineAnnotation("query cache searched");
+            }
+            
+            // real execution if required
+            if (sqlResponse == null) {
+                try (QueryRequestLimits limit = new QueryRequestLimits(sqlRequest.getProject())) {
+                    sqlResponse = queryAndUpdateCache(sqlRequest, startTime, isQueryCacheEnabled);
+                }
             } else {
-                Trace.addTimelineAnnotation("query cache skip search");
+                Trace.addTimelineAnnotation("response without real execution");
             }
 
-            try {
-                if (null == sqlResponse) {
-                    if (isQueryInspect) {
-                        // set query sql to exception message string
-                        sqlResponse = new SQLResponse(null, null, 0, false, sqlRequest.getSql());
-                    } else if (isTempStatement) {
-                        sqlResponse = new SQLResponse(null, null, 0, false, null);
-                    } else if (isSelect) {
-                        sqlResponse = query(sqlRequest);
-                        Trace.addTimelineAnnotation("query almost done");
-                    } else if (kylinConfig.isPushDownEnabled() && kylinConfig.isPushDownUpdateEnabled()) {
-                        sqlResponse = update(sqlRequest);
-                        Trace.addTimelineAnnotation("update query almost done");
-                    } else {
-                        logger.debug(
-                                "Directly return exception as the sql is unsupported, and query pushdown is disabled");
-                        throw new BadRequestException(msg.getNOT_SUPPORTED_SQL());
-                    }
-
-                    long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
-                    long scanCountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
-                    long scanBytesThreshold = kylinConfig.getQueryScanBytesCacheThreshold();
-                    sqlResponse.setDuration(System.currentTimeMillis() - startTime);
-                    logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
-                            String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()),
-                            String.valueOf(sqlResponse.getTotalScanCount()));
-                    if (checkCondition(queryCacheEnabled, "query cache is disabled") //
-                            && checkCondition(!sqlResponse.getIsException(), "query has exception") //
-                            && checkCondition(!(sqlResponse.isPushDown()
-                                    && (isSelect == false || kylinConfig.isPushdownQueryCacheEnabled() == false)),
-                                    "query is executed with pushdown, but it is non-select, or the cache for pushdown is disabled") //
-                            && checkCondition(
-                                    sqlResponse.getDuration() > durationThreshold
-                                            || sqlResponse.getTotalScanCount() > scanCountThreshold
-                                            || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
-                                    "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})",
-                                    sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(),
-                                    scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
-                            && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(),
-                                    "query response is too large: {} ({})", sqlResponse.getResults().size(),
-                                    kylinConfig.getLargeQueryThreshold())) {
-                        cacheManager.getCache(SUCCESS_QUERY_CACHE)
-                                .put(new Element(sqlRequest.getCacheKey(), sqlResponse));
-                    }
-                    Trace.addTimelineAnnotation("response from execution");
-
-                } else {
-                    sqlResponse.setDuration(System.currentTimeMillis() - startTime);
-                    sqlResponse.setTotalScanCount(0);
-                    sqlResponse.setTotalScanBytes(0);
-                    Trace.addTimelineAnnotation("response from cache");
-                }
-
+            // check authorization before return, since the response may come from cache
+            if (!sqlResponse.getIsException())
                 checkQueryAuth(sqlResponse, project);
 
-            } catch (Throwable e) { // calcite may throw AssertError
-                logger.error("Exception while executing query", e);
-                String errMsg = makeErrorMsgUserFriendly(e);
-
-                sqlResponse = new SQLResponse(null, null, null, 0, true, errMsg, false, false);
-                sqlResponse.setTotalScanCount(queryContext.getScannedRows());
-                sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
-
-                if (queryCacheEnabled && e.getCause() != null
-                        && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
-                    Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
-                    exceptionCache.put(new Element(sqlRequest.getCacheKey(), sqlResponse));
-                }
-                Trace.addTimelineAnnotation("error response");
-            }
-
+            sqlResponse.setDuration(System.currentTimeMillis() - startTime);
             sqlResponse.setTraceUrl(traceUrl);
             logQuery(sqlRequest, sqlResponse);
             try {
@@ -532,6 +476,76 @@ public class QueryService extends BasicService {
                 scope.close();
             }
         }
+    }
+
+    private SQLResponse queryAndUpdateCache(SQLRequest sqlRequest, long startTime, boolean queryCacheEnabled) {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        Message msg = MsgPicker.getMsg();
+        
+        SQLResponse sqlResponse = null;
+        try {
+            final boolean isSelect = QueryUtil.isSelectStatement(sqlRequest.getSql());
+            if (isSelect) {
+                sqlResponse = query(sqlRequest);
+                Trace.addTimelineAnnotation("query almost done");
+            } else if (kylinConfig.isPushDownEnabled() && kylinConfig.isPushDownUpdateEnabled()) {
+                sqlResponse = update(sqlRequest);
+                Trace.addTimelineAnnotation("update query almost done");
+            } else {
+                logger.debug("Directly return exception as the sql is unsupported, and query pushdown is disabled");
+                throw new BadRequestException(msg.getNOT_SUPPORTED_SQL());
+            }
+
+            long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
+            long scanCountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
+            long scanBytesThreshold = kylinConfig.getQueryScanBytesCacheThreshold();
+            sqlResponse.setDuration(System.currentTimeMillis() - startTime);
+            logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
+                    String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()),
+                    String.valueOf(sqlResponse.getTotalScanCount()));
+            if (checkCondition(queryCacheEnabled, "query cache is disabled") //
+                    && checkCondition(!sqlResponse.getIsException(), "query has exception") //
+                    && checkCondition(
+                            !(sqlResponse.isPushDown()
+                                    && (isSelect == false || kylinConfig.isPushdownQueryCacheEnabled() == false)),
+                            "query is executed with pushdown, but it is non-select, or the cache for pushdown is disabled") //
+                    && checkCondition(
+                            sqlResponse.getDuration() > durationThreshold
+                                    || sqlResponse.getTotalScanCount() > scanCountThreshold
+                                    || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
+                            "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})",
+                            sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(),
+                            scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
+                    && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(),
+                            "query response is too large: {} ({})", sqlResponse.getResults().size(),
+                            kylinConfig.getLargeQueryThreshold())) {
+                cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest.getCacheKey(), sqlResponse));
+            }
+            Trace.addTimelineAnnotation("response from execution");
+
+        } catch (Throwable e) { // calcite may throw AssertError
+            logger.error("Exception while executing query", e);
+            String errMsg = makeErrorMsgUserFriendly(e);
+
+            sqlResponse = new SQLResponse(null, null, null, 0, true, errMsg, false, false);
+            QueryContext queryContext = QueryContext.current();
+            sqlResponse.setTotalScanCount(queryContext.getScannedRows());
+            sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
+
+            if (queryCacheEnabled && e.getCause() != null
+                    && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
+                Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+                exceptionCache.put(new Element(sqlRequest.getCacheKey(), sqlResponse));
+            }
+            Trace.addTimelineAnnotation("error response");
+        }
+        return sqlResponse;
+    }
+
+    private boolean isQueryCacheEnabled(KylinConfig kylinConfig) {
+        return checkCondition(kylinConfig.isQueryCacheEnabled(),
+                "query cache disabled in KylinConfig") && //
+                checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
     }
 
     protected void recordMetric(SQLRequest sqlRequest, SQLResponse sqlResponse) throws UnknownHostException {

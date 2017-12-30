@@ -33,6 +33,7 @@ import org.apache.kylin.job.ErrorTestExecutable;
 import org.apache.kylin.job.FailedTestExecutable;
 import org.apache.kylin.job.FiveSecondSucceedTestExecutable;
 import org.apache.kylin.job.NoErrorStatusExecutable;
+import org.apache.kylin.job.RetryableTestExecutable;
 import org.apache.kylin.job.RunningTestExecutable;
 import org.apache.kylin.job.SelfStopExecutable;
 import org.apache.kylin.job.SucceedTestExecutable;
@@ -225,5 +226,20 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         waitForJobFinish(job.getId(), 10000);
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
+    }
+    
+    public void testRetryableException() throws Exception {
+        System.setProperty("kylin.job.retry-exception-classes", "java.io.FileNotFoundException");
+        System.setProperty("kylin.job.retry", "3");
+        DefaultChainedExecutable job = new DefaultChainedExecutable();
+        BaseTestExecutable task1 = new SucceedTestExecutable();
+        BaseTestExecutable task2 = new RetryableTestExecutable();
+        job.addTask(task1);
+        job.addTask(task2);
+        execMgr.addJob(job);
+        waitForJobFinish(job.getId(), 10000);
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
+        Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(task2.getId()).getState());
+        Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
     }
 }

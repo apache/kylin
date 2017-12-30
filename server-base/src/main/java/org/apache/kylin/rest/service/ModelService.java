@@ -137,10 +137,10 @@ public class ModelService extends BasicService {
     public DataModelDesc createModelDesc(String projectName, DataModelDesc desc) throws IOException {
         aclEvaluate.hasProjectWritePermission(getProjectManager().getProject(projectName));
         Message msg = MsgPicker.getMsg();
-
         if (getDataModelManager().getDataModelDesc(desc.getName()) != null) {
             throw new BadRequestException(String.format(msg.getDUPLICATE_MODEL_NAME(), desc.getName()));
         }
+        
         DataModelDesc createdDesc = null;
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         createdDesc = getDataModelManager().createDataModelDesc(desc, projectName, owner);

@@ -61,7 +61,7 @@
         <kafka.version>0.11.0.1</kafka.version>
 
         <!-- Spark versions -->
-        <spark.version>2.1.1</spark.version>
+        <spark.version>2.1.2</spark.version>
         <kryo.version>4.0.0</kryo.version>
 
         <!-- <reflections.version>0.9.10</reflections.version> -->
@@ -100,6 +100,7 @@
         <!-- Commons -->
         <commons-lang3.version>3.4</commons-lang3.version>
         <commons-email.version>1.5</commons-email.version>
+        <commons-validator.version>1.4.0</commons-validator.version>
 
         <!-- Utility -->
         <log4j.version>1.2.17</log4j.version>
@@ -112,7 +113,7 @@
         <cglib.version>3.2.4</cglib.version>
         <supercsv.version>2.4.0</supercsv.version>
         <cors.version>2.5</cors.version>
-        <tomcat.version>7.0.81</tomcat.version>
+        <tomcat.version>7.0.82</tomcat.version>
         <t-digest.version>3.1</t-digest.version>
         <!--metric-->
         <dropwizard.version>3.1.2</dropwizard.version>
@@ -205,6 +206,21 @@
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-core-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-core-metrics</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-metrics-reporter-hive</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-metrics-reporter-kafka</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -630,6 +646,11 @@
                 <artifactId>commons-email</artifactId>
                 <version>${commons-email.version}</version>
             </dependency>
+            <dependency>
+                <groupId>commons-validator</groupId>
+                <artifactId>commons-validator</artifactId>
+                <version>${commons-validator.version}</version>
+            </dependency>
 
             <!-- Logging -->
             <dependency>
@@ -653,6 +674,13 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+
+            <!-- Metrics -->
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-core</artifactId>
+                <version>${dropwizard.version}</version>
             </dependency>
 
             <!-- Test -->
@@ -1132,6 +1160,9 @@
         <module>tool-assembly</module>
         <module>kylin-it</module>
         <module>tomcat-ext</module>
+        <module>core-metrics</module>
+        <module>metrics-reporter-hive</module>
+        <module>metrics-reporter-kafka</module>
     </modules>
 
     <reporting>

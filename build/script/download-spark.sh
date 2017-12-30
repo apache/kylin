@@ -27,26 +27,26 @@ if [[ `uname -a` =~ "Darwin" ]]; then
     alias md5cmd="md5 -q"
 fi
 
-spark_version="2.1.1"
-spark_pkg_md5="195daab700e4332fcdaf7c66236de542"
+spark_version="2.1.2"
+spark_pkg_md5="b47cf199bf78042a0471b9a5ae0ceeac"
 
-if [ ! -f "build/spark-${spark_version}-bin-hadoop2.6.tgz" ]
+if [ ! -f "build/spark-${spark_version}-bin-hadoop2.7.tgz" ]
 then
     echo "no binary file found"
-    wget --directory-prefix=build/ http://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop2.6.tgz || echo "Download spark failed"
+    wget --directory-prefix=build/ http://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop2.7.tgz || echo "Download spark failed"
 else
-    if [ `md5cmd build/spark-${spark_version}-bin-hadoop2.6.tgz | awk '{print $1}'` != "${spark_pkg_md5}" ]
+    if [ `md5cmd build/spark-${spark_version}-bin-hadoop2.7.tgz | awk '{print $1}'` != "${spark_pkg_md5}" ]
     then
         echo "md5 check failed"
-        rm build/spark-${spark_version}-bin-hadoop2.6.tgz
-        wget --directory-prefix=build/ http://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop2.6.tgz || echo "Download spark failed"
+        rm build/spark-${spark_version}-bin-hadoop2.7.tgz
+        wget --directory-prefix=build/ http://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop2.7.tgz || echo "Download spark failed"
 
     fi
 fi
 unalias md5cmd
 
-tar -zxvf build/spark-${spark_version}-bin-hadoop2.6.tgz -C build/   || { exit 1; }
-mv build/spark-${spark_version}-bin-hadoop2.6 build/spark
+tar -zxvf build/spark-${spark_version}-bin-hadoop2.7.tgz -C build/   || { exit 1; }
+mv build/spark-${spark_version}-bin-hadoop2.7 build/spark
 
 # Remove unused components in Spark
 rm -rf build/spark/lib/spark-examples-*

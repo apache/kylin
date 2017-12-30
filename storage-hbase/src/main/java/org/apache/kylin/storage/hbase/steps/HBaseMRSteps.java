@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidModeEnum;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
@@ -32,6 +33,7 @@ import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 
 import com.google.common.base.Preconditions;
@@ -74,14 +76,18 @@ public class HBaseMRSteps extends JobBuilderSupport {
         return rowkeyDistributionStep;
     }
 
-
     public HadoopShellExecutable createCreateHTableStep(String jobId) {
+        return createCreateHTableStep(jobId, CuboidModeEnum.CURRENT);
+    }
+    
+    public HadoopShellExecutable createCreateHTableStep(String jobId, CuboidModeEnum cuboidMode) {
         HadoopShellExecutable createHtableStep = new HadoopShellExecutable();
         createHtableStep.setName(ExecutableConstants.STEP_NAME_CREATE_HBASE_TABLE);
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
         appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION, getRowkeyDistributionOutputPath(jobId) + "/part-r-00000");
+        appendExecCmdParameters(cmd, BatchConstants.ARG_CUBOID_MODE, cuboidMode.toString());
 
         createHtableStep.setJobParams(cmd.toString());
         createHtableStep.setJobClass(CreateHTableJob.class);
@@ -159,6 +165,35 @@ public class HBaseMRSteps extends JobBuilderSupport {
         return result;
     }
 
+    public MergeGCStep createOptimizeGCStep() {
+        MergeGCStep result = new MergeGCStep();
+        result.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
+        result.setOldHTables(getOptimizeHTables());
+        return result;
+    }
+
+    public List<CubeSegment> getOptimizeSegments() {
+        CubeInstance cube = (CubeInstance) seg.getRealization();
+        List<CubeSegment> newSegments = Lists.newArrayList(cube.getSegments(SegmentStatusEnum.READY_PENDING));
+        List<CubeSegment> oldSegments = Lists.newArrayListWithExpectedSize(newSegments.size());
+        for (CubeSegment segment : newSegments) {
+            oldSegments.add(cube.getOriginalSegmentToOptimize(segment));
+        }
+        return oldSegments;
+    }
+
+    public List<String> getOptimizeHTables() {
+        return getOldHTables(getOptimizeSegments());
+    }
+
+    public List<String> getOldHTables(final List<CubeSegment> oldSegments) {
+        final List<String> oldHTables = Lists.newArrayListWithExpectedSize(oldSegments.size());
+        for (CubeSegment segment : oldSegments) {
+            oldHTables.add(segment.getStorageLocationIdentifier());
+        }
+        return oldHTables;
+    }
+
     public List<String> getMergingHTables() {
         final List<CubeSegment> mergingSegments = ((CubeInstance) seg.getRealization()).getMergingSegments((CubeSegment) seg);
         Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge, target segment " + seg);
@@ -179,12 +214,54 @@ public class HBaseMRSteps extends JobBuilderSupport {
         return mergingHDFSPaths;
     }
 
+    public List<String> getOptimizeHDFSPaths() {
+        return getOldHDFSPaths(getOptimizeSegments());
+    }
+
+    public List<String> getOldHDFSPaths(final List<CubeSegment> oldSegments) {
+        final List<String> oldHDFSPaths = Lists.newArrayListWithExpectedSize(oldSegments.size());
+        for (CubeSegment oldSegment : oldSegments) {
+            oldHDFSPaths.add(getJobWorkingDir(oldSegment.getLastBuildJobID()));
+        }
+        return oldHDFSPaths;
+    }
+
     public String getHFilePath(String jobId) {
         return HBaseConnection.makeQualifiedPathInHBaseCluster(getJobWorkingDir(jobId) + "/" + seg.getRealization().getName() + "/hfile/");
     }
 
     public String getRowkeyDistributionOutputPath(String jobId) {
         return HBaseConnection.makeQualifiedPathInHBaseCluster(getJobWorkingDir(jobId) + "/" + seg.getRealization().getName() + "/rowkey_stats");
+    }
+
+    public void addOptimizeGarbageCollectionSteps(DefaultChainedExecutable jobFlow) {
+        String jobId = jobFlow.getId();
+
+        List<String> toDeletePaths = new ArrayList<>();
+        toDeletePaths.add(getOptimizationRootPath(jobId));
+
+        HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
+        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HDFS);
+        step.setDeletePaths(toDeletePaths);
+        step.setJobId(jobId);
+
+        jobFlow.addTask(step);
+    }
+
+    public void addCheckpointGarbageCollectionSteps(DefaultChainedExecutable jobFlow) {
+        String jobId = jobFlow.getId();
+
+        jobFlow.addTask(createOptimizeGCStep());
+
+        List<String> toDeletePaths = new ArrayList<>();
+        toDeletePaths.addAll(getOptimizeHDFSPaths());
+
+        HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
+        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HDFS);
+        step.setDeletePaths(toDeletePaths);
+        step.setJobId(jobId);
+
+        jobFlow.addTask(step);
     }
 
     public void addMergingGarbageCollectionSteps(DefaultChainedExecutable jobFlow) {
@@ -194,6 +271,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
 
         List<String> toDeletePaths = new ArrayList<>();
         toDeletePaths.addAll(getMergingHDFSPaths());
+        toDeletePaths.add(getHFilePath(jobId));
 
         HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
         step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HDFS);
@@ -208,6 +286,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
 
         List<String> toDeletePaths = new ArrayList<>();
         toDeletePaths.add(getFactDistinctColumnsPath(jobId));
+        toDeletePaths.add(getHFilePath(jobId));
 
         HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
         step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HBASE);

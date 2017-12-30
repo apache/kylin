@@ -52,14 +52,21 @@ public class HtableAlterMetadataCLI extends AbstractApplication {
 
     private void alter() throws IOException {
         Connection conn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl());
-        Admin hbaseAdmin = conn.getAdmin();
-        HTableDescriptor table = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+        Admin hbaseAdmin = null;
 
-        hbaseAdmin.disableTable(table.getTableName());
-        table.setValue(metadataKey, metadataValue);
-        hbaseAdmin.modifyTable(table.getTableName(), table);
-        hbaseAdmin.enableTable(table.getTableName());
-        hbaseAdmin.close();
+        try {
+            hbaseAdmin = conn.getAdmin();
+            HTableDescriptor table = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+
+            hbaseAdmin.disableTable(table.getTableName());
+            table.setValue(metadataKey, metadataValue);
+            hbaseAdmin.modifyTable(table.getTableName(), table);
+            hbaseAdmin.enableTable(table.getTableName());
+        } finally {
+            if (hbaseAdmin != null) {
+                hbaseAdmin.close();
+            }
+        }
     }
 
     public static void main(String[] args) throws Exception {

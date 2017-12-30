@@ -95,7 +95,8 @@ public class MergeGCStep extends AbstractExecutable {
             } catch (IOException e) {
                 output.append("Got error when drop HBase table, exiting... \n");
                 // This should not block the merge job; Orphans should be cleaned up in StorageCleanupJob
-                return new ExecuteResult(ExecuteResult.State.ERROR, output.append(e.getLocalizedMessage()).toString());
+                return new ExecuteResult(ExecuteResult.State.ERROR, output.append(e.getLocalizedMessage()).toString(),
+                        e);
             } finally {
                 if (admin != null)
                     try {

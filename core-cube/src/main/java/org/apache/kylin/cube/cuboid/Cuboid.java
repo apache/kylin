@@ -52,6 +52,11 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
         }
     };
 
+    // for mandatory cuboid, no need to translate cuboid
+    public static Cuboid findForMandatory(CubeDesc cube, long cuboidID) {
+        return new Cuboid(cube, cuboidID, cuboidID);
+    }
+    
     public static Cuboid findCuboid(CuboidScheduler cuboidScheduler, Set<TblColRef> dimensions,
             Collection<FunctionDesc> metrics) {
         long cuboidID = toCuboidId(cuboidScheduler.getCubeDesc(), dimensions, metrics);
@@ -62,12 +67,9 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
         return findById(cuboidScheduler, Bytes.toLong(cuboidID));
     }
 
+    @Deprecated
     public static Cuboid findById(CubeSegment cubeSegment, long cuboidID) {
         return findById(cubeSegment.getCuboidScheduler(), cuboidID);
-    }
-
-    public static Cuboid findById(CubeInstance cubeInstance, long cuboidID) {
-        return findById(cubeInstance.getCuboidScheduler(), cuboidID);
     }
 
     @VisibleForTesting

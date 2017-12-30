@@ -112,7 +112,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
                 ColumnDesc cdesc = new ColumnDesc();
                 cdesc.setName(cname.toUpperCase());
 
-                String kylinType = SqlUtil.jdbcTypetoKylinDataType(type);
+                String kylinType = SqlUtil.jdbcTypeToKylinDataType(type);
                 int precision = (SqlUtil.isPrecisionApplicable(kylinType) && csize > 0) ? csize : -1;
                 int scale = (SqlUtil.isScaleApplicable(kylinType) && digits > 0) ? digits : -1;
 

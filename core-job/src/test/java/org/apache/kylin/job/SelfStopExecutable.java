@@ -43,7 +43,7 @@ public class SelfStopExecutable extends BaseTestExecutable {
                     return new ExecuteResult(ExecuteResult.State.STOPPED, "stopped");
             }
                 
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+            return new ExecuteResult();
         } finally {
             doingWork = false;
         }

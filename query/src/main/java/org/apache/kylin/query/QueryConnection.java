@@ -29,7 +29,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 
 public class QueryConnection {
-
+    
     private static Boolean isRegister = false;
 
     public static Connection getConnection(String project) throws SQLException {

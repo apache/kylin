@@ -76,7 +76,8 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
                     if (zkClient == null) {
                         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
                         String zkConnectString = getZKConnectString(config);
-                        zkClient = CuratorFrameworkFactory.newClient(zkConnectString, 120000, 15000, retryPolicy);
+                        ZookeeperAclBuilder zookeeperAclBuilder = new ZookeeperAclBuilder().invoke();
+                        zkClient = zookeeperAclBuilder.setZKAclBuilder(CuratorFrameworkFactory.builder()).connectString(zkConnectString).sessionTimeoutMs(120000).connectionTimeoutMs(15000).retryPolicy(retryPolicy).build();
                         zkClient.start();
                         CACHE.put(config, zkClient);
                         if (CACHE.size() > 1) {

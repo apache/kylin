@@ -21,30 +21,42 @@ package org.apache.kylin.rest.controller;
 import static org.apache.kylin.rest.service.CubeService.VALID_CUBENAME;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
+import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
+import org.apache.kylin.engine.EngineFactory;
+import org.apache.kylin.engine.mr.common.CuboidStatsReaderUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
+import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metrics.MetricsManager;
+import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -52,7 +64,10 @@ import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.request.JobBuildRequest2;
+import org.apache.kylin.rest.request.JobOptimizeRequest;
+import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
+import org.apache.kylin.rest.response.CuboidTreeResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
@@ -60,6 +75,7 @@ import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +97,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
@@ -101,6 +118,10 @@ public class CubeController extends BasicController {
     @Autowired
     @Qualifier("projectService")
     private ProjectService projectService;
+
+    @Autowired
+    @Qualifier("queryService")
+    private QueryService queryService;
 
     @RequestMapping(value = "/validate/{cubeName}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
@@ -163,12 +184,37 @@ public class CubeController extends BasicController {
         return cube;
     }
 
+
     /**
-     * Get hive SQL of the cube
+     * Get SQL of a Cube
      *
      * @param cubeName Cube Name
      * @return
-     * @throws UnknownHostException
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/sql", method = { RequestMethod.GET }, produces = {
+            "application/json" })
+    @ResponseBody
+    public GeneralResponse getSql(@PathVariable String cubeName) {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (cube == null) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+        IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
+        String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
+
+        GeneralResponse response = new GeneralResponse();
+        response.setProperty("sql", sql);
+
+        return response;
+    }
+
+    /**
+     * Get SQL of a Cube segment
+     *
+     * @param cubeName Cube Name
+     * @param segmentName Segment Name
+     * @return
      * @throws IOException
      */
     @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = { RequestMethod.GET }, produces = {
@@ -336,6 +382,67 @@ public class CubeController extends BasicController {
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
+    /**
+     * Send a optimize cube job
+     *
+     * @param cubeName Cube ID
+     * @return JobInstance of CheckpointExecutable
+     */
+    @RequestMapping(value = "/{cubeName}/optimize", method = { RequestMethod.PUT })
+    @ResponseBody
+    public JobInstance optimize(@PathVariable String cubeName, @RequestBody JobOptimizeRequest jobOptimizeRequest) {
+        try {
+            String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+            CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
+
+            if (cube == null) {
+                throw new InternalErrorException("Cannot find cube " + cubeName);
+            }
+            logger.info("cuboid recommend:" + jobOptimizeRequest.getCuboidsRecommend());
+            return jobService.submitOptimizeJob(cube, jobOptimizeRequest.getCuboidsRecommend(), submitter).getFirst();
+        } catch (BadRequestException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw e;
+        } catch (JobException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new BadRequestException(e.getLocalizedMessage());
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage());
+        }
+    }
+
+    /**
+     * Send a optimize cube segment job
+     *
+     * @param cubeName Cube ID
+     * @param segmentID for segment to be optimized
+     */
+    @RequestMapping(value = "/{cubeName}/recover_segment_optimize/{segmentID}", method = { RequestMethod.PUT })
+    @ResponseBody
+    public JobInstance recoverSegmentOptimize(@PathVariable String cubeName, @PathVariable String segmentID) {
+        try {
+            String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+            CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
+            if (cube == null) {
+                throw new InternalErrorException("Cannot find cube " + cubeName);
+            }
+
+            CubeSegment segment = cube.getSegmentById(segmentID);
+            if (segment == null) {
+                throw new InternalErrorException("Cannot find segment '" + segmentID + "'");
+            }
+
+            return jobService.submitRecoverSegmentOptimizeJob(segment, submitter);
+        } catch (JobException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new BadRequestException(e.getLocalizedMessage());
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage());
         }
     }
 
@@ -682,6 +789,170 @@ public class CubeController extends BasicController {
 
         return jobs;
 
+    }
+
+    @RequestMapping(value = "/{cubeName}/cuboids/export", method = RequestMethod.GET)
+    @ResponseBody
+    public void cuboidsExport(@PathVariable String cubeName, @RequestParam(value = "top") Integer top,
+            HttpServletResponse response) throws IOException {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (cube == null) {
+            logger.error("Get cube: [" + cubeName + "] failed when get recommend cuboids");
+            throw new BadRequestException("Get cube: [" + cubeName + "] failed when get recommend cuboids");
+        }
+        Map<Long, Long> cuboidList = getRecommendCuboidList(cube);
+        if (cuboidList == null || cuboidList.isEmpty()) {
+            logger.warn("Cannot get recommend cuboid list for cube " + cubeName);
+        }
+        if (cuboidList.size() < top) {
+            logger.info("Only recommend " + cuboidList.size() + " cuboids less than topn " + top);
+        }
+        Iterator<Long> cuboidIterator = cuboidList.keySet().iterator();
+        RowKeyColDesc[] rowKeyColDescList = cube.getDescriptor().getRowkey().getRowKeyColumns();
+
+        List<Set<String>> dimensionSetList = Lists.newLinkedList();
+        while (top-- > 0 && cuboidIterator.hasNext()) {
+            Set<String> dimensionSet = Sets.newHashSet();
+            dimensionSetList.add(dimensionSet);
+            long cuboid = cuboidIterator.next();
+            for (int i = 0; i < rowKeyColDescList.length; i++) {
+                if ((cuboid & (1L << rowKeyColDescList[i].getBitIndex())) > 0) {
+                    dimensionSet.add(rowKeyColDescList[i].getColumn());
+                }
+            }
+        }
+
+        response.setContentType("text/json;charset=utf-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + cubeName + ".json\"");
+        try (PrintWriter writer = response.getWriter()) {
+            writer.write(JsonUtil.writeValueAsString(dimensionSetList));
+        } catch (IOException e) {
+            logger.error("", e);
+            throw new InternalErrorException("Failed to write: " + e.getLocalizedMessage());
+        }
+    }
+
+    @RequestMapping(value = "/{cubeName}/cuboids/current", method = RequestMethod.GET)
+    @ResponseBody
+    public CuboidTreeResponse getCurrentCuboids(@PathVariable String cubeName) {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (cube == null) {
+            logger.error("Get cube: [" + cubeName + "] failed when get current cuboids");
+            throw new BadRequestException("Get cube: [" + cubeName + "] failed when get current cuboids");
+        }
+        // The cuboid tree displayed should be consistent with the current one
+        CuboidScheduler cuboidScheduler = cube.getCuboidScheduler();
+        Map<Long, Long> cuboidStatsMap = cube.getCuboids();
+        if (cuboidStatsMap == null) {
+            cuboidStatsMap = CuboidStatsReaderUtil.readCuboidStatsFromCube(cuboidScheduler.getAllCuboidIds(), cube);
+        }
+
+        Map<Long, Long> hitFrequencyMap = null;
+        Map<Long, Long> queryMatchMap = null;
+        try {
+            hitFrequencyMap = getTargetCuboidHitFrequency(cubeName);
+            queryMatchMap = getCuboidQueryMatchCount(cubeName);
+        } catch (Exception e) {
+            logger.warn("Fail to query on system cube due to " + e);
+        }
+
+        Set<Long> currentCuboidSet = cube.getCuboidScheduler().getAllCuboidIds();
+        return cubeService.getCuboidTreeResponse(cuboidScheduler, cuboidStatsMap, hitFrequencyMap, queryMatchMap,
+                currentCuboidSet);
+    }
+
+    @RequestMapping(value = "/{cubeName}/cuboids/recommend", method = RequestMethod.GET)
+    @ResponseBody
+    public CuboidTreeResponse getRecommendCuboids(@PathVariable String cubeName) throws IOException {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (cube == null) {
+            logger.error("Get cube: [" + cubeName + "] failed when get recommend cuboids");
+            throw new BadRequestException("Get cube: [" + cubeName + "] failed when get recommend cuboids");
+        }
+        Map<Long, Long> recommendCuboidStatsMap = getRecommendCuboidList(cube);
+        if (recommendCuboidStatsMap == null || recommendCuboidStatsMap.isEmpty()) {
+            return new CuboidTreeResponse();
+        }
+        CuboidScheduler cuboidScheduler = new TreeCuboidScheduler(cube.getDescriptor(),
+                Lists.newArrayList(recommendCuboidStatsMap.keySet()),
+                new TreeCuboidScheduler.CuboidCostComparator(recommendCuboidStatsMap));
+
+        // Get cuboid target info for displaying heat map of cuboid hit
+        Map<Long, Long> displayHitFrequencyMap = getTargetCuboidHitFrequency(cubeName);
+        // Get exactly matched cuboid query count
+        Map<Long, Long> queryMatchMap = getCuboidQueryMatchCount(cubeName);
+
+        Set<Long> currentCuboidSet = cube.getCuboidScheduler().getAllCuboidIds();
+        return cubeService.getCuboidTreeResponse(cuboidScheduler, recommendCuboidStatsMap, displayHitFrequencyMap,
+                queryMatchMap, currentCuboidSet);
+    }
+
+    private Map<Long, Long> getRecommendCuboidList(CubeInstance cube) throws IOException {
+        // Get cuboid source info
+        Map<Long, Long> optimizeHitFrequencyMap = getSourceCuboidHitFrequency(cube.getName());
+        Map<Long, Map<Long, Long>> rollingUpCountSourceMap = getCuboidRollingUpCount(cube.getName());
+        return cubeService.getRecommendCuboidStatistics(cube, optimizeHitFrequencyMap, rollingUpCountSourceMap);
+    }
+
+    private Map<Long, Long> getSourceCuboidHitFrequency(String cubeName) {
+        return getCuboidHitFrequency(cubeName, true);
+    }
+
+    private Map<Long, Long> getTargetCuboidHitFrequency(String cubeName) {
+        return getCuboidHitFrequency(cubeName, false);
+    }
+
+    private Map<Long, Long> getCuboidHitFrequency(String cubeName, boolean isCuboidSource) {
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
+        String cuboidColumn = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
+        if (!isCuboidSource) {
+            cuboidColumn = QueryCubePropertyEnum.CUBOID_TARGET.toString();
+        }
+        String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
+        String table = cubeService.getMetricsManager()
+                .getSystemTableFromSubject(cubeService.getConfig().getKylinMetricsSubjectQueryCube());
+        String sql = "select " + cuboidColumn + ", sum(" + hitMeasure + ") " //
+                + "from " + table//
+                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' " //
+                + "group by " + cuboidColumn;
+        sqlRequest.setSql(sql);
+        List<List<String>> orgHitFrequency = queryService.doQueryWithCache(sqlRequest).getResults();
+        return cubeService.formatQueryCount(orgHitFrequency);
+    }
+
+    private Map<Long, Map<Long, Long>> getCuboidRollingUpCount(String cubeName) {
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
+        String cuboidSource = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
+        String cuboidTarget = QueryCubePropertyEnum.CUBOID_TARGET.toString();
+        String aggCount = QueryCubePropertyEnum.AGGR_COUNT.toString();
+        String table = cubeService.getMetricsManager()
+                .getSystemTableFromSubject(cubeService.getConfig().getKylinMetricsSubjectQueryCube());
+        String sql = "select " + cuboidSource + ", " + cuboidTarget + ", sum(" + aggCount + ")/count(*) " //
+                + "from " + table //
+                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' " //
+                + "group by " + cuboidSource + ", " + cuboidTarget;
+        sqlRequest.setSql(sql);
+        List<List<String>> orgRollingUpCount = queryService.doQueryWithCache(sqlRequest).getResults();
+        return cubeService.formatRollingUpCount(orgRollingUpCount);
+    }
+
+    private Map<Long, Long> getCuboidQueryMatchCount(String cubeName) {
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
+        String cuboidSource = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
+        String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
+        String table = cubeService.getMetricsManager()
+                .getSystemTableFromSubject(cubeService.getConfig().getKylinMetricsSubjectQueryCube());
+        String sql = "select " + cuboidSource + ", sum(" + hitMeasure + ") " //
+                + "from " + table //
+                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' and "
+                + QueryCubePropertyEnum.IF_MATCH.toString() + " = true " //
+                + "group by " + cuboidSource;
+        sqlRequest.setSql(sql);
+        List<List<String>> orgMatchHitFrequency = queryService.doQueryWithCache(sqlRequest).getResults();
+        return cubeService.formatQueryCount(orgMatchHitFrequency);
     }
 
     /**

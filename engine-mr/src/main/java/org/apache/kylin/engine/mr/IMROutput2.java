@@ -24,6 +24,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public interface IMROutput2 {
@@ -67,7 +68,7 @@ public interface IMROutput2 {
         public void configureJobInput(Job job, String input) throws Exception;
 
         /** Configure the OutputFormat of given job. */
-        public void configureJobOutput(Job job, String output, CubeSegment segment, int level) throws Exception;
+        public void configureJobOutput(Job job, String output, CubeSegment segment, CuboidScheduler cuboidScheduler, int level) throws Exception;
 
     }
 
@@ -113,4 +114,30 @@ public interface IMROutput2 {
         public CubeSegment findSourceSegment(FileSplit fileSplit, CubeInstance cube);
     }
 
+    public IMRBatchOptimizeOutputSide2 getBatchOptimizeOutputSide(CubeSegment seg);
+
+    /**
+     * Participate the batch cubing flow as the output side. Responsible for saving
+     * the cuboid output to storage at the end of Phase 3.
+     *
+     * - Phase 1: Filter Recommended Cuboid Data
+     * - Phase 2: Copy Dictionary & Calculate Statistics & Update Reused Cuboid Shard
+     * - Phase 3: Build Cube
+     * - Phase 4: Cleanup Optimize
+     * - Phase 5: Update Metadata & Cleanup
+     */
+    public interface IMRBatchOptimizeOutputSide2 {
+
+        /** Create HTable based on recommended cuboids & statistics*/
+        public void addStepPhase2_CreateHTable(DefaultChainedExecutable jobFlow);
+
+        /** Build only missing cuboids*/
+        public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow);
+
+        /** Cleanup intermediate cuboid data on HDFS*/
+        public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
+
+        /** Invoked by Checkpoint job & Cleanup old segments' HTables and related working directory*/
+        public void addStepPhase5_Cleanup(DefaultChainedExecutable jobFlow);
+    }
 }

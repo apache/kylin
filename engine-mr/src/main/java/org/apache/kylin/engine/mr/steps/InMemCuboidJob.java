@@ -93,7 +93,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             setJobClasspath(job, cube.getConfig());
 
             // add metadata to distributed cache
-            attachSegmentMetadataWithDict(segment, job.getConfiguration());
+            attachSegmentMetadataWithAll(segment, job.getConfiguration());
 
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
@@ -116,7 +116,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
 
             // set output
             IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(segment).getOuputFormat();
-            outputFormat.configureJobOutput(job, output, segment, 0);
+            outputFormat.configureJobOutput(job, output, segment, segment.getCuboidScheduler(), 0);
 
             return waitForCompletion(job);
         } finally {

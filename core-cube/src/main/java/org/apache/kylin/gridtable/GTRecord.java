@@ -251,6 +251,11 @@ public class GTRecord implements Comparable<GTRecord> {
         loadColumns(info.colBlocks[c], buf);
     }
 
+    /** change pointers to point to data in given buffer, UNLIKE deserialize */
+    public void loadColumns(ByteBuffer buf) {
+        loadColumns(info.colAll, buf);
+    }
+
     /**
      * Change pointers to point to data in given buffer, UNLIKE deserialize
      * @param selectedCols positions of column to load

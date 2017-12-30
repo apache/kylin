@@ -149,15 +149,6 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController.deleteSegment(cubeName, "not_exist_segment");
     }
 
-    @Test(expected = InternalErrorException.class)
-    public void testDeleteSegmentInMiddle() throws IOException {
-        String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
-        CubeDesc[] cubes = cubeDescController.getCube(cubeName);
-        Assert.assertNotNull(cubes);
-
-        cubeController.deleteSegment(cubeName, "20131112000000_20131212000000");
-    }
-
     @Test
     public void testDeleteSegmentFromHead() throws IOException {
         String cubeName = "test_kylin_cube_with_slr_ready_3_segments";

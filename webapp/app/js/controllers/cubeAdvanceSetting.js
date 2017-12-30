@@ -23,6 +23,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
 
   var needLengthKeyList=cubeConfig.needSetLengthEncodingList;
   $scope.convertedRowkeys = [];
+  $scope.dim_cap = $scope.cubeMetaFrame.aggregation_groups.length > 0 && $scope.cubeMetaFrame.aggregation_groups[0].select_rule.dim_cap ? $scope.cubeMetaFrame.aggregation_groups[0].select_rule.dim_cap : 0;
   angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
     item.encoding=$scope.removeVersion(item.encoding);
     var _valueLength;
@@ -104,6 +105,11 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   $scope.sortableOptions = {
     stop:$scope.resortRowkey
   };
+  $scope.changeDimCap  = function (dim_cap) {
+    angular.forEach($scope.cubeMetaFrame.aggregation_groups, function (agg) {
+      agg.select_rule.dim_cap = dim_cap
+    })
+  }
 
   $scope.addNewHierarchy = function(grp){
     grp.select_rule.hierarchy_dims.push([]);
@@ -379,6 +385,60 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   $scope.refreshColumnFamily = function (column_familys, index, colFamily) {
     if (column_familys) {
       column_familys[index] = colFamily;
+    }
+  };
+
+  $scope.mandatoryDimensionSet = {
+    select: []
+  };
+
+  $scope.uploadMandatoryDimensionSetList = function() {
+    var file = document.getElementById('cuboids').files[0];
+    if (file) {
+      var reader = new FileReader();
+      reader.onload = function(event) {
+        var dimensionSetList = JSON.parse(event.target.result);
+        $scope.cubeMetaFrame.mandatory_dimension_set_list = dimensionSetList;
+        $scope.$apply();
+        // TODO add verify dimension set
+      };
+      reader.readAsText(file);
+    } else {
+      swal('Oops...', 'Please choose your file first.', 'warning');
+    }
+  };
+
+  $scope.removeDimensionSet = function(index) {
+    $scope.cubeMetaFrame.mandatory_dimension_set_list.splice(index, 1);
+  };
+
+  $scope.addDimensionSet = function() {
+    if ($scope.mandatoryDimensionSet.select.length) {
+      // validate the dimension set existed
+      var existed = false;
+      var selectedDimension = _.clone($scope.mandatoryDimensionSet.select).sort(function (dimensionA, dimensionB) {
+        if (dimensionA < dimensionB) return 1;
+        if (dimensionB < dimensionA) return -1;
+        return 0;
+      });
+      angular.forEach($scope.cubeMetaFrame.mandatory_dimension_set_list, function(dimensionSet, index) {
+        var dimensionSetSorted = _.clone(dimensionSet).sort(function (dimensionA, dimensionB) {
+          if (dimensionA < dimensionB) return 1;
+          if (dimensionB < dimensionA) return -1;
+          return 0;
+        });
+        if (angular.equals(dimensionSet, selectedDimension)) {
+          existed = true;
+        };
+      });
+      if (!existed) {
+        $scope.cubeMetaFrame.mandatory_dimension_set_list.push($scope.mandatoryDimensionSet.select);
+        $scope.mandatoryDimensionSet.select = [];
+      } else {
+        swal('Oops...', 'Dimension set already existed', 'warning');
+      }
+    } else {
+      swal('Oops...', 'Dimension set should not be empty', 'warning');
     }
   };
 

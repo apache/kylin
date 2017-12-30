@@ -43,7 +43,6 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.DictionaryDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.lookup.LookupStringTable;
@@ -77,6 +76,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -434,10 +434,14 @@ public class CubeManager implements IRealizationProvider {
     @VisibleForTesting
     /*private*/ String generateStorageLocation() {
         String namePrefix = config.getHBaseTableNamePrefix();
+        String namespace = config.getHBaseStorageNameSpace();
         String tableName = "";
         Random ran = new Random();
         do {
             StringBuffer sb = new StringBuffer();
+            if ((namespace.equals("default") || namespace.equals("")) == false) {
+                sb.append(namespace).append(":");
+            }
             sb.append(namePrefix);
             for (int i = 0; i < HBASE_TABLE_LENGTH; i++) {
                 sb.append(ALPHA_NUM.charAt(ran.nextInt(ALPHA_NUM.length())));
@@ -514,6 +518,12 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    public CubeSegment[] optimizeSegments(CubeInstance cube, Set<Long> cuboidsRecommend) throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            return segAssist.optimizeSegments(cube, cuboidsRecommend);
+        }
+    }
+    
     public CubeSegment mergeSegments(CubeInstance cube, TSRange tsRange, SegmentRange segRange, boolean force)
             throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
@@ -527,10 +537,19 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    public void validateNewSegments(CubeInstance cube, CubeSegment newSegments) {
-        segAssist.validateNewSegments(cube, newSegments);
+    public void promoteNewlyOptimizeSegments(CubeInstance cube, CubeSegment... optimizedSegments) throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            segAssist.promoteNewlyOptimizeSegments(cube, optimizedSegments);
+        }
     }
 
+    public void promoteCheckpointOptimizeSegments(CubeInstance cube, Map<Long, Long> recommendCuboids,
+            CubeSegment... optimizedSegments) throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            segAssist.promoteCheckpointOptimizeSegments(cube, recommendCuboids, optimizedSegments);
+        }        
+    }
+    
     public List<CubeSegment> calculateHoles(String cubeName) {
         return segAssist.calculateHoles(cubeName);
     }
@@ -548,9 +567,13 @@ public class CubeManager implements IRealizationProvider {
             // fix start/end a bit
             if (cubeCopy.getModel().getPartitionDesc().isPartitioned()) {
                 // if missing start, set it to where last time ends
-                CubeSegment last = cubeCopy.getLastSegment();
-                if (last != null && !last.isOffsetCube() && tsRange.start.v == 0) {
-                    tsRange = new TSRange(last.getTSRange().end.v, tsRange.end.v);
+                if (tsRange != null && tsRange.start.v == 0) {
+                    CubeDesc cubeDesc = cubeCopy.getDescriptor();
+                    CubeSegment last = cubeCopy.getLastSegment();
+                    if (last == null)
+                        tsRange = new TSRange(cubeDesc.getPartitionDateStart(), tsRange.end.v);
+                    else if (!last.isOffsetCube())
+                        tsRange = new TSRange(last.getTSRange().end.v, tsRange.end.v);
                 }
             } else {
                 // full build
@@ -612,6 +635,27 @@ public class CubeManager implements IRealizationProvider {
             updateCube(update);
 
             return newSegment;
+        }
+
+        public CubeSegment[] optimizeSegments(CubeInstance cube, Set<Long> cuboidsRecommend) throws IOException {
+            checkReadyForOptimize(cube);
+
+            List<CubeSegment> readySegments = cube.getSegments(SegmentStatusEnum.READY);
+            CubeSegment[] optimizeSegments = new CubeSegment[readySegments.size()];
+            int i = 0;
+            for (CubeSegment segment : readySegments) {
+                CubeSegment newSegment = newSegment(cube, segment.getTSRange(), null);
+                validateNewSegments(cube, newSegment);
+
+                optimizeSegments[i++] = newSegment;
+            }
+
+            CubeUpdate update = new CubeUpdate(cube);
+            update.setCuboidsRecommend(cuboidsRecommend);
+            update.setToAddSegs(optimizeSegments);
+            updateCube(update);
+
+            return optimizeSegments;
         }
 
         public CubeSegment mergeSegments(CubeInstance cube, TSRange tsRange, SegmentRange segRange, boolean force)
@@ -701,8 +745,15 @@ public class CubeManager implements IRealizationProvider {
         }
 
         private void checkBuildingSegment(CubeInstance cube) {
-            int maxBuldingSeg = cube.getConfig().getMaxBuildingSegments();
-            if (cube.getBuildingSegments().size() >= maxBuldingSeg) {
+            checkBuildingSegment(cube, cube.getConfig().getMaxBuildingSegments());
+        }
+
+        private void checkReadyForOptimize(CubeInstance cube) {
+            checkBuildingSegment(cube, 1);
+        }
+
+        private void checkBuildingSegment(CubeInstance cube, int maxBuildingSeg) {
+            if (cube.getBuildingSegments().size() >= maxBuildingSeg) {
                 throw new IllegalStateException(
                         "There is already " + cube.getBuildingSegments().size() + " building segment; ");
             }
@@ -779,7 +830,57 @@ public class CubeManager implements IRealizationProvider {
             updateCube(update);
         }
 
-        public void validateNewSegments(CubeInstance cube, CubeSegment newSegments) {
+        public void promoteNewlyOptimizeSegments(CubeInstance cube, CubeSegment... optimizedSegments) throws IOException {
+            CubeInstance cubeCopy = cube.latestCopyForWrite();
+            CubeSegment[] segCopy = cube.regetSegments(optimizedSegments);
+            
+            for (CubeSegment seg : segCopy) {
+                seg.setStatus(SegmentStatusEnum.READY_PENDING);
+            }
+
+            CubeUpdate update = new CubeUpdate(cubeCopy);
+            update.setToUpdateSegs(segCopy);
+            updateCube(update);
+        }
+
+        public void promoteCheckpointOptimizeSegments(CubeInstance cube, Map<Long, Long> recommendCuboids,
+                CubeSegment... optimizedSegments) throws IOException {
+            CubeInstance cubeCopy = cube.latestCopyForWrite();
+            CubeSegment[] optSegCopy = cubeCopy.regetSegments(optimizedSegments);
+            
+            if (cubeCopy.getSegments().size() != optSegCopy.length * 2) {
+                throw new IllegalStateException("For cube " + cubeCopy
+                        + ", every READY segment should be optimized and all segments should be READY before optimizing");
+            }
+            
+            CubeSegment[] originalSegments = new CubeSegment[optSegCopy.length];
+            int i = 0;
+            for (CubeSegment seg : optSegCopy) {
+                originalSegments[i++] = cubeCopy.getOriginalSegmentToOptimize(seg);
+
+                if (StringUtils.isBlank(seg.getStorageLocationIdentifier()))
+                    throw new IllegalStateException(
+                            "For cube " + cubeCopy + ", segment " + seg + " missing StorageLocationIdentifier");
+
+                if (StringUtils.isBlank(seg.getLastBuildJobID()))
+                    throw new IllegalStateException("For cube " + cubeCopy + ", segment " + seg + " missing LastBuildJobID");
+
+                seg.setStatus(SegmentStatusEnum.READY);
+            }
+
+            logger.info("Promoting cube " + cubeCopy + ", new segments " + Arrays.toString(optSegCopy)
+                    + ", to remove segments " + originalSegments);
+
+            CubeUpdate update = new CubeUpdate(cubeCopy);
+            update.setToRemoveSegs(originalSegments) //
+                    .setToUpdateSegs(optSegCopy) //
+                    .setStatus(RealizationStatusEnum.READY) //
+                    .setCuboids(recommendCuboids) //
+                    .setCuboidsRecommend(Sets.<Long> newHashSet());
+            updateCube(update);
+        }
+
+        private void validateNewSegments(CubeInstance cube, CubeSegment newSegments) {
             List<CubeSegment> tobe = cube.calculateToBeSegments(newSegments);
             List<CubeSegment> newList = Arrays.asList(newSegments);
             if (tobe.containsAll(newList) == false) {
@@ -858,11 +959,6 @@ public class CubeManager implements IRealizationProvider {
 
     public LookupStringTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {
         return dictAssist.getLookupTable(cubeSegment, join);
-    }
-
-    //UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
-    public int[] getUHCIndex(CubeDesc cubeDesc) throws IOException {
-        return dictAssist.getUHCIndex(cubeDesc);
     }
 
     private class DictionaryAssist {
@@ -969,40 +1065,6 @@ public class CubeManager implements IRealizationProvider {
                 throw new IllegalStateException(
                         "Failed to load lookup table " + tableName + " from snapshot " + snapshotResPath, e);
             }
-        }
-
-        private final String GLOBAL_DICTIONNARY_CLASS = "org.apache.kylin.dict.GlobalDictionaryBuilder";
-
-        //UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
-        public int[] getUHCIndex(CubeDesc cubeDesc) throws IOException {
-            List<TblColRef> dictCols = Lists.newArrayList(cubeDesc.getAllColumnsNeedDictionaryBuilt());
-            int[] uhcIndex = new int[dictCols.size()];
-
-            //add GlobalDictionaryColumns
-            List<DictionaryDesc> dictionaryDescList = cubeDesc.getDictionaries();
-            if (dictionaryDescList != null) {
-                for (DictionaryDesc dictionaryDesc : dictionaryDescList) {
-                    if (dictionaryDesc.getBuilderClass() != null
-                            && dictionaryDesc.getBuilderClass().equalsIgnoreCase(GLOBAL_DICTIONNARY_CLASS)) {
-                        for (int i = 0; i < dictCols.size(); i++) {
-                            if (dictCols.get(i).equals(dictionaryDesc.getColumnRef())) {
-                                uhcIndex[i] = 1;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            //add ShardByColumns
-            Set<TblColRef> shardByColumns = cubeDesc.getShardByColumns();
-            for (int i = 0; i < dictCols.size(); i++) {
-                if (shardByColumns.contains(dictCols.get(i))) {
-                    uhcIndex[i] = 1;
-                }
-            }
-
-            return uhcIndex;
         }
     }
 

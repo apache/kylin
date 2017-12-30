@@ -56,16 +56,18 @@ public class JoinedFlatTable {
     }
 
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir) {
-        return generateCreateTableStatement(flatDesc, storageDfsDir, "SEQUENCEFILE");
+        String storageFormat = flatDesc.getDataModel().getConfig().getFlatTableStorageFormat();
+        return generateCreateTableStatement(flatDesc, storageDfsDir, storageFormat);
     }
 
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir,
-            String format) {
-        return generateCreateTableStatement(flatDesc, storageDfsDir, format, "|");
+            String storageFormat) {
+        String fieldDelimiter = flatDesc.getDataModel().getConfig().getFlatTableFieldDelimiter();
+        return generateCreateTableStatement(flatDesc, storageDfsDir, storageFormat, fieldDelimiter);
     }
 
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir,
-            String format, String fieldDelimiter) {
+            String storageFormat, String fieldDelimiter) {
         StringBuilder ddl = new StringBuilder();
 
         ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + flatDesc.getTableName() + "\n");
@@ -79,11 +81,12 @@ public class JoinedFlatTable {
             ddl.append(colName(col) + " " + getHiveDataType(col.getDatatype()) + "\n");
         }
         ddl.append(")" + "\n");
-        if ("TEXTFILE".equals(format)) {
+        if ("TEXTFILE".equals(storageFormat)) {
             ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '" + fieldDelimiter + "'\n");
         }
-        ddl.append("STORED AS " + format + "\n");
+        ddl.append("STORED AS " + storageFormat + "\n");
         ddl.append("LOCATION '" + getTableDir(flatDesc, storageDfsDir) + "';").append("\n");
+        ddl.append("ALTER TABLE " + flatDesc.getTableName() + " SET TBLPROPERTIES('auto.purge'='true');\n");
         return ddl.toString();
     }
 
@@ -99,7 +102,7 @@ public class JoinedFlatTable {
         if (null == segment) {
             kylinConfig = KylinConfig.getInstanceFromEnv();
         } else {
-            kylinConfig = ((CubeSegment) flatDesc.getSegment()).getConfig();
+            kylinConfig = (flatDesc.getSegment()).getConfig();
         }
 
         if (kylinConfig.isAdvancedFlatTableUsed()) {
@@ -217,7 +220,6 @@ public class JoinedFlatTable {
         whereBuilder.append("WHERE 1=1");
 
         DataModelDesc model = flatDesc.getDataModel();
-
         if (StringUtils.isNotEmpty(model.getFilterCondition())) {
             whereBuilder.append(" AND (").append(model.getFilterCondition()).append(") ");
         }

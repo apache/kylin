@@ -30,6 +30,7 @@ import com.google.common.collect.Maps;
 /**
  * Note: the implementations MUST be thread-safe.
  */
+@SuppressWarnings("serial")
 abstract public class DataTypeSerializer<T> implements BytesSerializer<T>, java.io.Serializable {
 
     final static Map<String, Class<?>> implementations = Maps.newHashMap();

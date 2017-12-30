@@ -104,7 +104,8 @@
                                   <select class="form-control"
                                       ng-init="newMeasure.function.expression = (!!newMeasure.function.expression)?newMeasure.function.expression:cubeConfig.dftSelections.measureExpression" chosen ng-model="newMeasure.function.expression" required
                                       ng-change="measureReturnTypeUpdate();measureParamValueUpdate();"
-                                      ng-options="me as me for me in cubeConfig.measureExpressions">
+                                      ng-options="me as me for me in cubeConfig.measureExpressions | filter: isMeasureUnHidden">
+
                                       <option value=""></option>
                                   </select>
                               </div>
@@ -206,7 +207,8 @@
                                    type="text" placeholder="Kylin won’t save more than this number of bytes" class="form-control"
                                    tooltip-trigger="focus"
                                    ng-init="newMeasure.function.returntype=newMeasure.function.returntype?newMeasure.function.returntype:'extendedcolumn(100)'"
-                                   ng-model="newMeasure.function.returntype" required />
+                                   ng-model="newMeasure.function.returntype" required
+                                   onInput="this.value=this.value.replace(/[^0-9]/g, '')" />
 
                             <span class="font-color-default"
                                   ng-if="newMeasure.function.expression != 'COUNT_DISTINCT' && newMeasure.function.expression != 'TOP_N' && newMeasure.function.expression != 'EXTENDED_COLUMN' ">

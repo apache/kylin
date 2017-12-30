@@ -421,6 +421,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         String callName = getSqlFuncName(aggCall);
         RelDataType fieldType = aggCall.getType();
         SqlAggFunction newAgg = aggCall.getAggregation();
+        
         Map<String, Class<?>> udafMap = func.getMeasureType().getRewriteCalciteAggrFunctions();
         if (func.isCount()) {
             newAgg = SqlStdOperatorTable.SUM0;

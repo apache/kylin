@@ -160,6 +160,22 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     });
 
+    var queryParam = {offset: 0, limit: 65535};
+
+    CubeService.list(queryParam, function (all_cubes) {
+      if($scope.allCubes.length > 0){
+        $scope.allCubes.splice(0,$scope.allCubes.length);
+      }
+
+      for (var i = 0; i < all_cubes.length; i++) {
+        $scope.allCubes.push(all_cubes[i].name.toUpperCase());
+      }
+    });
+
+    // ~ public methods
+    $scope.filterProj = function(project){
+        return $scope.userService.hasRole('ROLE_ADMIN') || $scope.hasPermission(project,$scope.permissions.ADMINISTRATION.mask);
+    };
 
     $scope.removeElement = function (arr, element) {
         var index = arr.indexOf(element);
@@ -287,18 +303,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
   $scope.check_cube_info = function(){
 
-    var queryParam = {offset: 0, limit: 65535};
-
-    CubeService.list(queryParam, function (all_cubes) {
-      if($scope.allCubes.length > 0){
-        $scope.allCubes.splice(0,$scope.allCubes.length);
-      }
-
-      for (var i = 0; i < all_cubes.length; i++) {
-        $scope.allCubes.push(all_cubes[i].name.toUpperCase());
-      }
-    });
-
     if(($scope.state.mode === "edit") &&$scope.cubeMode=="addNewCube"&&($scope.allCubes.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
       SweetAlert.swal('Oops...', "The cube named [" + $scope.cubeMetaFrame.name.toUpperCase() + "] already exists", 'warning');
       return false;
@@ -394,6 +398,26 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if (isCFEmpty == true) {
           errors.push("Each column family can't not be empty");
         }
+
+
+        angular.forEach($scope.cubeMetaFrame.measures, function (measure, index) {
+            if (measure.function.expression === 'COUNT_DISTINCT' && measure.function.returntype === 'bitmap' && !$scope.isIntMeasure(measure)) {
+                var measureColumn = measure.function.parameter.value;
+
+                var isColumnExit = false;
+                angular.forEach($scope.cubeMetaFrame.dictionaries, function (dictionaries) {
+                    if (!isColumnExit) {
+                        //keep backward compatibility
+                        if (dictionaries.column == measureColumn || dictionaries.column == VdmUtil.removeNameSpace(measureColumn))
+                            isColumnExit = true;
+                    }
+                });
+
+                if (!isColumnExit) {
+                    errors.push("The non-Int type precise count distinct measure must set advanced cict: " + measureColumn);
+                }
+            }
+        });
 
 
         var errorInfo = "";

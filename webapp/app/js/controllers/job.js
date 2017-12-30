@@ -24,12 +24,23 @@ KylinApp
         $scope.jobList = JobList;
         JobList.removeAll();
         $scope.jobConfig = jobConfig;
-        $scope.cubeName = null;
+        $scope.cubeName = JobList.jobFilter.cubeName;
         //$scope.projects = [];
         $scope.action = {};
-        $scope.timeFilter = jobConfig.timeFilter[1];
+        $scope.timeFilter = jobConfig.timeFilter[JobList.jobFilter.timeFilterId];
+        if ($routeParams.jobTimeFilter) {
+            $scope.timeFilter = jobConfig.timeFilter[$routeParams.jobTimeFilter];
+        }
 
         $scope.status = [];
+        for(var i in JobList.jobFilter.statusIds){
+            for(var j in jobConfig.allStatus){
+                if(JobList.jobFilter.statusIds[i] == jobConfig.allStatus[j].value){
+                    $scope.status.push(jobConfig.allStatus[j]);
+                    break;
+                }
+            }
+        }
         $scope.toggleSelection = function toggleSelection(current) {
             var idx = $scope.status.indexOf(current);
             if (idx > -1) {
@@ -68,7 +79,10 @@ KylinApp
                 statusIds.push(statusObj.value);
             });
 
-          $scope.cubeName=$scope.cubeName == ""?null:$scope.cubeName;
+            $scope.cubeName=$scope.cubeName == ""?null:$scope.cubeName;
+            JobList.jobFilter.cubeName = $scope.cubeName;
+            JobList.jobFilter.timeFilterId = $scope.timeFilter.value;
+            JobList.jobFilter.statusIds = statusIds;
 
             var jobRequest = {
                 cubeName: $scope.cubeName,

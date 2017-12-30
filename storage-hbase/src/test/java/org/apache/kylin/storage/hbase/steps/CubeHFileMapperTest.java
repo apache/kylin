@@ -39,7 +39,7 @@ import org.junit.Test;
  */
 public class CubeHFileMapperTest {
 
-    MapDriver<Text, Text, ImmutableBytesWritable, KeyValue> mapDriver;
+    MapDriver<Text, Text, RowKeyWritable, KeyValue> mapDriver;
 
     private String cube_name = "FLAT_ITEM_CUBE";
 
@@ -57,15 +57,15 @@ public class CubeHFileMapperTest {
 
         mapDriver.addInput(new Text("52010tech"), new Text("35.432"));
 
-        List<Pair<ImmutableBytesWritable, KeyValue>> result = mapDriver.run();
+        List<Pair<RowKeyWritable, KeyValue>> result = mapDriver.run();
 
         assertEquals(2, result.size());
 
         byte[] bytes = { 0, 0, 0, 0, 0, 0, 0, 119, 33, 0, 22, 1, 0, 121, 7 };
         ImmutableBytesWritable key = new ImmutableBytesWritable(bytes);
 
-        Pair<ImmutableBytesWritable, KeyValue> p1 = result.get(0);
-        Pair<ImmutableBytesWritable, KeyValue> p2 = result.get(1);
+        Pair<RowKeyWritable, KeyValue> p1 = result.get(0);
+        Pair<RowKeyWritable, KeyValue> p2 = result.get(1);
 
         assertEquals(key, p1.getFirst());
         assertEquals("cf1", new String(p1.getSecond().getFamily()));

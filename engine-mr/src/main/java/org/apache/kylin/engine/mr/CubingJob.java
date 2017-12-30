@@ -46,10 +46,13 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.metrics.JobMetricsFacade;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
 
 /**
  */
@@ -61,6 +64,41 @@ public class CubingJob extends DefaultChainedExecutable {
         LAYER, INMEM
     }
 
+    public enum CubingJobTypeEnum {
+        BUILD("BUILD", 20), OPTIMIZE("OPTIMIZE", 5), MERGE("MERGE", 25);
+
+        private final String name;
+        private final int defaultPriority;
+
+        CubingJobTypeEnum(String name, int priority) {
+            this.name = name;
+            this.defaultPriority = priority;
+        }
+
+        public int getDefaultPriority() {
+            return defaultPriority;
+        }
+
+        public String toString() {
+            return name;
+        }
+
+        public static CubingJobTypeEnum getByName(String name) {
+            if (Strings.isNullOrEmpty(name)) {
+                return null;
+            }
+            for (CubingJobTypeEnum jobTypeEnum : CubingJobTypeEnum.values()) {
+                if (jobTypeEnum.name.equals(name.toUpperCase())) {
+                    return jobTypeEnum;
+                }
+            }
+            return null;
+        }
+    }
+
+    //32MB per block created by the first step
+    private static final long MIN_SOURCE_SIZE = 33554432L;
+
     // KEYS of Output.extraInfo map, info passed across job steps
     public static final String SOURCE_RECORD_COUNT = "sourceRecordCount";
     public static final String SOURCE_SIZE_BYTES = "sourceSizeBytes";
@@ -68,13 +106,18 @@ public class CubingJob extends DefaultChainedExecutable {
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
     private static final String DEPLOY_ENV_NAME = "envName";
     private static final String PROJECT_INSTANCE_NAME = "projectName";
+    private static final String JOB_TYPE = "jobType";
 
     public static CubingJob createBuildJob(CubeSegment seg, String submitter, JobEngineConfig config) {
-        return initCubingJob(seg, "BUILD", submitter, config);
+        return initCubingJob(seg, CubingJobTypeEnum.BUILD.toString(), submitter, config);
+    }
+
+    public static CubingJob createOptimizeJob(CubeSegment seg, String submitter, JobEngineConfig config) {
+        return initCubingJob(seg, CubingJobTypeEnum.OPTIMIZE.toString(), submitter, config);
     }
 
     public static CubingJob createMergeJob(CubeSegment seg, String submitter, JobEngineConfig config) {
-        return initCubingJob(seg, "MERGE", submitter, config);
+        return initCubingJob(seg, CubingJobTypeEnum.MERGE.toString(), submitter, config);
     }
 
     private static CubingJob initCubingJob(CubeSegment seg, String jobType, String submitter, JobEngineConfig config) {
@@ -99,8 +142,10 @@ public class CubingJob extends DefaultChainedExecutable {
         format.setTimeZone(TimeZone.getTimeZone(config.getTimeZone()));
         result.setDeployEnvName(kylinConfig.getDeployEnv());
         result.setProjectName(projList.get(0).getName());
+        result.setJobType(jobType);
         CubingExecutableUtil.setCubeName(seg.getCubeInstance().getName(), result.getParams());
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
+        CubingExecutableUtil.setSegmentName(seg.getName(), result.getParams());
         result.setName(jobType + " CUBE - " + seg.getCubeInstance().getDisplayName() + " - " + seg.getName() + " - "
                 + format.format(new Date(System.currentTimeMillis())));
         result.setSubmitter(submitter);
@@ -110,6 +155,15 @@ public class CubingJob extends DefaultChainedExecutable {
 
     public CubingJob() {
         super();
+    }
+
+    @Override
+    public int getDefaultPriority() {
+        CubingJobTypeEnum jobType = CubingJobTypeEnum.getByName(getJobType());
+        if (jobType == null) {
+            return super.getDefaultPriority();
+        }
+        return jobType.getDefaultPriority();
     }
 
     protected void setDeployEnvName(String name) {
@@ -126,6 +180,14 @@ public class CubingJob extends DefaultChainedExecutable {
 
     public String getProjectName() {
         return getParam(PROJECT_INSTANCE_NAME);
+    }
+
+    public String getJobType() {
+        return getParam(JOB_TYPE);
+    }
+
+    void setJobType(String jobType) {
+        setParam(JOB_TYPE, jobType);
     }
 
     @Override
@@ -195,6 +257,44 @@ public class CubingJob extends DefaultChainedExecutable {
         }
         setMapReduceWaitTime(time);
         super.onExecuteFinished(result, executableContext);
+    }
+
+    protected void onStatusChange(ExecutableContext context, ExecuteResult result, ExecutableState state) {
+        super.onStatusChange(context, result, state);
+
+        updateMetrics(context, result, state);
+    }
+
+    protected void updateMetrics(ExecutableContext context, ExecuteResult result, ExecutableState state) {
+        JobMetricsFacade.JobStatisticsResult jobStats = new JobMetricsFacade.JobStatisticsResult();
+        jobStats.setWrapper(getSubmitter(), getProjectName(),
+                CubingExecutableUtil.getCubeName(getParams()), getId(), getJobType(),
+                getAlgorithm() == null ? "NULL" : getAlgorithm().toString());
+
+        if (state == ExecutableState.SUCCEED) {
+            jobStats.setJobStats(findSourceSizeBytes(), findCubeSizeBytes(), getDuration(), getMapReduceWaitTime(),
+                    getPerBytesTimeCost(findSourceSizeBytes(), getDuration()));
+            if (CubingJobTypeEnum.getByName(getJobType()) == CubingJobTypeEnum.BUILD) {
+                jobStats.setJobStepStats(
+                        getTaskByName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS).getDuration(),
+                        getTaskByName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY).getDuration(),
+                        getTaskByName(ExecutableConstants.STEP_NAME_BUILD_IN_MEM_CUBE).getDuration(),
+                        getTaskByName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE).getDuration());
+            }
+        } else if (state == ExecutableState.ERROR) {
+            jobStats.setJobException(result.getThrowable() != null ? result.getThrowable() : new Exception());
+        }
+        JobMetricsFacade.updateMetrics(jobStats);
+    }
+
+    private static double getPerBytesTimeCost(long size, long timeCost) {
+        if (size <= 0) {
+            return 0;
+        }
+        if (size < MIN_SOURCE_SIZE) {
+            size = MIN_SOURCE_SIZE;
+        }
+        return timeCost * 1.0 / size;
     }
 
     /**

@@ -19,9 +19,7 @@
 package org.apache.kylin.rest.response;
 
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.metadata.model.ISourceAware;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -89,33 +87,15 @@ public class CubeInstanceResponse extends CubeInstance {
     }
 
     protected void initSizeKB() {
-        long sizeKb = 0L;
-
-        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeKb += cubeSegment.getSizeKB();
-        }
-
-        this.sizeKB = sizeKb;
+        this.sizeKB = super.getSizeKB();
     }
 
     protected void initInputRecordCount() {
-        long inputRecordCount = 0L;
-
-        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            inputRecordCount += cubeSegment.getInputRecords();
-        }
-
-        this.inputRecordCnt = inputRecordCount;
+        this.inputRecordCnt = super.getInputRecordCount();
     }
 
     protected void initInputRecordSizeMB() {
-        long inputRecordSize = 0L;
-
-        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            inputRecordSize += cubeSegment.getInputRecordsSize();
-        }
-
-        this.inputRecordSizeMB = inputRecordSize;
+        this.inputRecordSizeMB = super.getInputRecordSizeMB();
     }
 
 }

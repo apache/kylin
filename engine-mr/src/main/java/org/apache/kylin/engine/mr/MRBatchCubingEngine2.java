@@ -48,6 +48,11 @@ public class MRBatchCubingEngine2 implements IBatchCubingEngine {
     }
 
     @Override
+    public DefaultChainedExecutable createBatchOptimizeJob(CubeSegment optimizeSegment, String submitter) {
+        return new BatchOptimizeJobBuilder2(optimizeSegment, submitter).build();
+    }
+
+    @Override
     public Class<?> getSourceInterface() {
         return IMRInput.class;
     }

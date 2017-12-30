@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.BytesUtil;
 
+@SuppressWarnings("serial")
 public class StringSerializer extends DataTypeSerializer<String> {
 
     final DataType type;

@@ -19,6 +19,8 @@
 package org.apache.kylin.cube;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.kylin.cube.cuboid.CuboidModeEnum.CURRENT;
+import static org.apache.kylin.cube.cuboid.CuboidModeEnum.RECOMMEND;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,6 +34,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.cube.cuboid.CuboidModeEnum;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -177,6 +180,16 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     public Segments<CubeSegment> getMergingSegments(CubeSegment mergedSegment) {
         return segments.getMergingSegments(mergedSegment);
+    }
+
+    public CubeSegment getOriginalSegmentToOptimize(CubeSegment optimizedSegment) {
+        for (CubeSegment segment : this.getSegments(SegmentStatusEnum.READY)) {
+            if (!optimizedSegment.equals(segment) //
+                    && optimizedSegment.getSegRange().equals(segment.getSegRange())) {
+                return segment;
+            }
+        }
+        return null;
     }
 
     public CubeDesc getDescriptor() {
@@ -343,6 +356,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
         return null;
     }
+    
+    public CubeSegment[] regetSegments(CubeSegment... segs) {
+        CubeSegment[] r = new CubeSegment[segs.length];
+        for (int i = 0; i < segs.length; i++) {
+            r[i] = getSegmentById(segs[i].getUuid());
+        }
+        return r;
+    }
 
     public long getCreateTimeUTC() {
         return createTimeUTC;
@@ -350,6 +371,35 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     public void setCreateTimeUTC(long createTimeUTC) {
         this.createTimeUTC = createTimeUTC;
+    }
+
+    public Set<Long> getCuboidsByMode(String cuboidModeName) {
+        return getCuboidsByMode(cuboidModeName == null ? null : CuboidModeEnum.getByModeName(cuboidModeName));
+    }
+
+    public Set<Long> getCuboidsByMode(CuboidModeEnum cuboidMode) {
+        if (cuboidMode == null || cuboidMode == CURRENT) {
+            return getCuboidScheduler().getAllCuboidIds();
+        }
+        Set<Long> cuboidsRecommend = getCuboidsRecommend();
+        if (cuboidsRecommend == null || cuboidMode == RECOMMEND) {
+            return cuboidsRecommend;
+        }
+        Set<Long> currentCuboids = getCuboidScheduler().getAllCuboidIds();
+        switch (cuboidMode) {
+        case RECOMMEND_EXISTING:
+            cuboidsRecommend.retainAll(currentCuboids);
+            return cuboidsRecommend;
+        case RECOMMEND_MISSING:
+            cuboidsRecommend.removeAll(currentCuboids);
+            return cuboidsRecommend;
+        case RECOMMEND_MISSING_WITH_BASE:
+            cuboidsRecommend.removeAll(currentCuboids);
+            cuboidsRecommend.add(getCuboidScheduler().getBaseCuboidId());
+            return cuboidsRecommend;
+        default:
+            return null;
+        }
     }
 
     public Map<Long, Long> getCuboids() {
@@ -415,6 +465,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public long getCuboidLastOptimized() {
+        return cuboidLastOptimized;
+    }
+
+    public void setCuboidLastOptimized(long lastOptimized) {
+        this.cuboidLastOptimized = lastOptimized;
     }
 
     /**
@@ -504,7 +562,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public SegmentRange autoMergeCubeSegments() throws IOException {
-        return segments.autoMergeCubeSegments(needAutoMerge(), getName(), getDescriptor().getAutoMergeTimeRanges());
+        return segments.autoMergeCubeSegments(needAutoMerge(), getName(), getDescriptor().getAutoMergeTimeRanges(), getDescriptor().getVolatileRange());
     }
 
     public Segments calculateToBeSegments(CubeSegment newSegment) {
@@ -518,6 +576,36 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         } else {
             return existing.get(existing.size() - 1);
         }
+    }
+
+    public long getSizeKB() {
+        long sizeKb = 0L;
+
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
+            sizeKb += cubeSegment.getSizeKB();
+        }
+
+        return sizeKb;
+    }
+
+    public long getInputRecordCount() {
+        long sizeRecordCount = 0L;
+
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
+            sizeRecordCount += cubeSegment.getInputRecords();
+        }
+
+        return sizeRecordCount;
+    }
+
+    public long getInputRecordSizeMB() {
+        long sizeRecordSize = 0L;
+
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
+            sizeRecordSize += cubeSegment.getInputRecordsSize();
+        }
+
+        return sizeRecordSize;
     }
 
     public String getProject() {

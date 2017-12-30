@@ -130,7 +130,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         List<RawScan> rawScans = preparedHBaseScans(scanRequest.getGTScanRanges(), selectedColBlocks);
         rawScanByteString = serializeRawScans(rawScans);
 
-        int coprocessorTimeout = getCoprocessorTimeoutMillis();
+        long coprocessorTimeout = getCoprocessorTimeoutMillis();
         scanRequest.setTimeout(coprocessorTimeout);
         scanRequest.clearScanRanges();//since raw scans are sent to coprocessor, we don't need to duplicate sending it
         scanRequestByteString = serializeGTScanReq(scanRequest);
@@ -205,14 +205,27 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                         queryContext.addAndGetScannedRows(stats.getScannedRowCount());
                                         queryContext.addAndGetScannedBytes(stats.getScannedBytes());
 
+                                        RuntimeException rpcException = null;
+                                        if (result.getStats().getNormalComplete() != 1) {
+                                            rpcException = getCoprocessorException(result);
+                                        }
+                                        queryContext.addRPCStatistics(storageContext.ctxId, stats.getHostname(),
+                                                cubeSeg.getCubeDesc().getName(), cubeSeg.getName(), cuboid.getInputID(),
+                                                cuboid.getId(), storageContext.getFilterMask(), rpcException,
+                                                stats.getServiceEndTime() - stats.getServiceStartTime(), 0,
+                                                stats.getScannedRowCount(),
+                                                stats.getScannedRowCount() - stats.getAggregatedRowCount()
+                                                        - stats.getFilteredRowCount(),
+                                                stats.getAggregatedRowCount(), stats.getScannedBytes());
+
                                         // if any other region has responded with error, skip further processing
                                         if (regionErrorHolder.get() != null) {
                                             return;
                                         }
 
                                         // record coprocessor error if happened
-                                        if (result.getStats().getNormalComplete() != 1) {
-                                            regionErrorHolder.compareAndSet(null, getCoprocessorException(result));
+                                        if (rpcException != null) {
+                                            regionErrorHolder.compareAndSet(null, rpcException);
                                             return;
                                         }
 
@@ -297,7 +310,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         sb.append("Endpoint RPC returned from HTable ").append(cubeSeg.getStorageLocationIdentifier()).append(" Shard ").append(BytesUtil.toHex(region)).append(" on host: ").append(stats.getHostname()).append(".");
         sb.append("Total scanned row: ").append(stats.getScannedRowCount()).append(". ");
         sb.append("Total scanned bytes: ").append(stats.getScannedBytes()).append(". ");
-        sb.append("Total filtered/aggred row: ").append(stats.getAggregatedRowCount()).append(". ");
+        sb.append("Total filtered row: ").append(stats.getFilteredRowCount()).append(". ");
+        sb.append("Total aggred row: ").append(stats.getAggregatedRowCount()).append(". ");
         sb.append("Time elapsed in EP: ").append(stats.getServiceEndTime() - stats.getServiceStartTime()).append("(ms). ");
         sb.append("Server CPU usage: ").append(stats.getSystemCpuLoad()).append(", server physical mem left: ").append(stats.getFreePhysicalMemorySize()).append(", server swap mem left:").append(stats.getFreeSwapSpaceSize()).append(".");
         sb.append("Etc message: ").append(stats.getEtcMsg()).append(".");

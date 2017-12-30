@@ -29,6 +29,8 @@ public interface BatchConstants {
      * ConFiGuration entry names for MR jobs
      */
 
+    String CFG_UPDATE_SHARD = "update.shard";
+    String CFG_CUBOID_MODE = "cuboid.mode";
     String CFG_CUBE_NAME = "cube.name";
     String CFG_CUBE_SEGMENT_NAME = "cube.segment.name";
     String CFG_CUBE_SEGMENT_ID = "cube.segment.id";
@@ -66,6 +68,9 @@ public interface BatchConstants {
     String CFG_OUTPUT_PARTITION = "partition";
     String CFG_MR_SPARK_JOB = "mr.spark.job";
     String CFG_SPARK_META_URL = "spark.meta.url";
+    String CFG_GLOBAL_DICT_BASE_DIR = "global.dict.base.dir";
+
+    String CFG_HLL_REDUCER_NUM = "cuboidHLLCounterReducerNum";
 
     /**
      * command line ARGuments
@@ -73,6 +78,8 @@ public interface BatchConstants {
     String ARG_INPUT = "input";
     String ARG_OUTPUT = "output";
     String ARG_PROJECT = "project";
+    String ARG_CUBOID_MODE = "cuboidMode";
+    String ARG_UPDATE_SHARD = "updateShard"; // indicate if need update base cuboid shard
     String ARG_JOB_NAME = "jobname";
     String ARG_CUBING_JOB_ID = "cubingJobId";
     String ARG_CUBE_NAME = "cubename";
@@ -87,6 +94,7 @@ public interface BatchConstants {
     String ARG_INPUT_FORMAT = "inputformat";
     String ARG_LEVEL = "level";
     String ARG_CONF = "conf";
+    String ARG_DICT_PATH = "dictPath";
 
     /**
      * logger and counter

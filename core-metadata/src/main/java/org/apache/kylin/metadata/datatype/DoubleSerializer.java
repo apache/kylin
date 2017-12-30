@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 
 /**
  */
+@SuppressWarnings("serial")
 public class DoubleSerializer extends DataTypeSerializer<Double> {
 
     public DoubleSerializer(DataType type) {

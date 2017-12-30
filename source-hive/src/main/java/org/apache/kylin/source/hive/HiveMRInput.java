@@ -49,6 +49,7 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.TableMetadataManager;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.JoinTableDesc;
@@ -201,7 +202,7 @@ public class HiveMRInput implements IMRInput {
             String prj = flatDesc.getDataModel().getProject();
             for (JoinTableDesc lookupDesc : flatDesc.getDataModel().getJoinTables()) {
                 TableDesc tableDesc = metadataManager.getTableDesc(lookupDesc.getTable(), prj);
-                if (tableDesc.isView()) {
+                if (lookupDesc.getKind() == DataModelDesc.TableKind.LOOKUP && tableDesc.isView()) {
                     lookupViewsTables.add(tableDesc);
                 }
             }
@@ -222,6 +223,8 @@ public class HiveMRInput implements IMRInput {
                     createIntermediateTableHql
                             .append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediate + " LIKE " + identity + "\n");
                     createIntermediateTableHql.append("LOCATION '" + jobWorkingDir + "/" + intermediate + "';\n");
+                    createIntermediateTableHql
+                            .append("ALTER TABLE " + intermediate + " SET TBLPROPERTIES('auto.purge'='true');\n");
                     createIntermediateTableHql
                             .append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + "\n");
                     hiveCmdBuilder.addStatementWithRedistributeBy(createIntermediateTableHql);
@@ -358,7 +361,7 @@ public class HiveMRInput implements IMRInput {
 
             } catch (Exception e) {
                 logger.error("job:" + getId() + " execute finished with exception", e);
-                return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
+                return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog(), e);
             }
         }
 
@@ -400,7 +403,7 @@ public class HiveMRInput implements IMRInput {
                 //output.append(cleanUpHiveViewIntermediateTable(config));
             } catch (IOException e) {
                 logger.error("job:" + getId() + " execute finished with exception", e);
-                return new ExecuteResult(ExecuteResult.State.ERROR, e.getMessage());
+                return ExecuteResult.createError(e);
             }
 
             return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());

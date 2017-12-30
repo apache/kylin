@@ -105,6 +105,20 @@ public class JobEngineConfig {
         return config;
     }
 
+    /**
+     * @return if consider job priority when scheduling jobs
+     * */
+    public boolean getJobPriorityConsidered() {
+        return config.getSchedulerPriorityConsidered();
+    }
+
+    /**
+     * @return the priority bar for fetching jobs from job priority queue
+     */
+    public int getFetchQueuePriorityBar() {
+        return config.getSchedulerPriorityBarFetchFromQueue();
+    }
+
     public String getHdfsWorkingDirectory() {
         return config.getHdfsWorkingDirectory();
     }

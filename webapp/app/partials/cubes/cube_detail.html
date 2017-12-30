@@ -29,10 +29,10 @@
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, 16) && !newAccess">
             <a href="" ng-click="cube.visiblePage='json';">JSON(Cube)</a>
         </li>
-        <li class="{{cube.visiblePage=='access'? 'active':''}}"
-            ng-if="!kylinConfig.isExternalAclEnabled()">
-            <a href="" ng-click="cube.visiblePage='access';listAccess(cube, 'CubeInstance');">Access</a>
-        </li>
+        <!--<li class="{{cube.visiblePage=='access'? 'active':''}}"-->
+            <!--ng-if="!kylinConfig.isExternalAclEnabled()">-->
+            <!--<a href="" ng-click="cube.visiblePage='access';listAccess(cube, 'CubeInstance');">Access</a>-->
+        <!--</li>-->
         <li class="{{cube.visiblePage=='notification'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, 16) && !newAccess">
             <a href="" ng-click="cube.visiblePage='notification';getNotifyListString(cube);">Notification</a>
@@ -40,6 +40,9 @@
         <li class="{{cube.visiblePage=='hbase'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN')">
             <a href="" ng-click="cube.visiblePage='hbase';getHbaseInfo(cube)">Storage</a>
+        </li>
+        <li class="{{cube.visiblePage=='planner'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask)) && isShowCubeplanner">
+            <a href="" ng-click="cube.visiblePage='planner';getCubePlanner(cube);">Planner</a>
         </li>
     </ul>
 
@@ -69,15 +72,15 @@
     <!--<div ng-show="cube.visiblePage=='graph'" id="cube_graph_{{cube.name}}" class="cube-detail cube_graph">-->
     <!--</div>-->
 
-    <div class="cube-detail" ng-if="cube.visiblePage=='access'">
-        <div class="row">
-            <div class="col-xs-1"></div>
-            <div class="col-xs-10">
-                <div ng-include src="'partials/common/access.html'" ng-init="entity=cube;type='CubeInstance';"></div>
-            </div>
-            <div class="col-xs-1"></div>
-        </div>
-    </div>
+    <!--<div class="cube-detail" ng-if="cube.visiblePage=='access'">-->
+        <!--<div class="row">-->
+            <!--<div class="col-xs-1"></div>-->
+            <!--<div class="col-xs-10">-->
+                <!--<div ng-include src="'partials/common/access.html'" ng-init="entity=cube;type='CubeInstance';"></div>-->
+            <!--</div>-->
+            <!--<div class="col-xs-1"></div>-->
+        <!--</div>-->
+    <!--</div>-->
 
     <div class="cube-detail" ng-show="cube.visiblePage=='notification'">
         <div style="margin: 15px;">
@@ -117,5 +120,57 @@
             </div>
         </div>
     </div>
-  </div>
+    <div class="cube-detail" ng-if="cube.visiblePage=='planner'">
+        <div style="padding: 15px;">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4 style="display: inline;">Cuboid Distribution</h4>
+                    <button ng-if="enableRecommend" class="btn btn-success btn-sm pull-right" ng-click="getRecommendCuboids(cube)" ng-if="currentData">
+                        Recommend
+                    </button>
+                    <div ng-if="cube.cuboid_last_optimized" class="pull-right" style="padding: 5px;">Last Optimized Time: {{cube.cuboid_last_optimized | utcToConfigTimeZone}}</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-sm-12">
+                     <nvd3 options="currentOptions" data="currentData" api="currentChart.api"></nvd3>
+                </div>
+                <div class="col-md-6 col-sm-12" ng-if="recommendData">
+                    <nvd3 options="recommendOptions" data="recommendData"></nvd3>
+                </div>
+            </div>
+            <div class="row cube-planner-column" ng-if="currentData || recommendData">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr ng-repeat="row in cube.detail.rowkey.rowkey_columns track by $index" ng-if="$index % 5 == 0" class="row">
+                            <th ng-class="{'column-in-cuobid': selectCuboid.charAt($index) == 1, 'column-not-in-cuboid': selectCuboid.charAt($index) == 0}">{{cube.detail.rowkey.rowkey_columns[$index].column}}</th>
+                            <th ng-class="{'column-in-cuobid': selectCuboid.charAt($index + 1) == 1, 'column-not-in-cuboid': selectCuboid.charAt($index + 1) == 0}">{{cube.detail.rowkey.rowkey_columns[$index + 1].column}}</th>
+                            <th ng-class="{'column-in-cuobid': selectCuboid.charAt($index + 2) == 1, 'column-not-in-cuboid': selectCuboid.charAt($index + 2) == 0}">{{cube.detail.rowkey.rowkey_columns[$index + 2].column}}</th>
+                            <th ng-class="{'column-in-cuobid': selectCuboid.charAt($index + 3) == 1, 'column-not-in-cuboid': selectCuboid.charAt($index + 3) == 0}">{{cube.detail.rowkey.rowkey_columns[$index + 3].column}}</th>
+                            <th ng-class="{'column-in-cuobid': selectCuboid.charAt($index + 4) == 1, 'column-not-in-cuboid': selectCuboid.charAt($index + 4) == 0}">{{cube.detail.rowkey.rowkey_columns[$index + 4].column}}</th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="dropup pull-right" style="margin-left: 10px;" ng-if="recommendData">
+                        <button class="btn btn-default dropdown-toggle" type="button" id="export" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Export
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="export">
+                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=10" target="_blank" >Top 10</a></li>
+                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=50" target="_blank" >Top 50</a></li>
+                            <li><a ng-href="{{config.service.url}}cubes/{{cube.name}}/cuboids/export?top=100" target="_blank" >Top 100</a></li>
+                        </ul>
+                    </div>
+                    <button class="btn btn-success btn-next pull-right" ng-click="optimizeCuboids(cube)" ng-if="recommendData">
+                        Optimize
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 

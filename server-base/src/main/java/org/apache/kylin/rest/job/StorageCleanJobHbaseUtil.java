@@ -50,7 +50,9 @@ public class StorageCleanJobHbaseUtil {
         CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
         // get all kylin hbase tables
         try (HBaseAdmin hbaseAdmin = new HBaseAdmin(conf)) {
-            String tableNamePrefix = kylinConfig.getHBaseTableNamePrefix();
+            String namespace = kylinConfig.getHBaseStorageNameSpace();
+            String tableNamePrefix = (namespace.equals("default") || namespace.equals(""))
+                    ? kylinConfig.getHBaseTableNamePrefix() : (namespace + ":" + kylinConfig.getHBaseTableNamePrefix());
             HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
             List<String> allTablesNeedToBeDropped = new ArrayList<String>();
             for (HTableDescriptor desc : tableDescriptors) {

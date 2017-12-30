@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -308,6 +309,82 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testAutoMergeWithVolatileRange() throws Exception {
+        CubeManager mgr = CubeManager.getInstance(getTestConfig());
+        CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
+
+        CubeDesc desc = cube.getDescriptor();
+        desc.setAutoMergeTimeRanges(new long[] { 2000, 6000 });
+        CubeDescManager.getInstance(getTestConfig()).updateCubeDesc(desc);
+
+        cube = mgr.getCube(cube.getName());
+        assertTrue(cube.needAutoMerge());
+
+        // no segment at first
+        assertEquals(0, cube.getSegments().size());
+
+        // append first
+        CubeSegment seg1 = mgr.appendSegment(cube, new TSRange(0L, 1000L));
+        mgr.updateCubeSegStatus(seg1, SegmentStatusEnum.READY);
+
+        CubeSegment seg3 = mgr.appendSegment(cube, new TSRange(2000L, 4000L));
+        mgr.updateCubeSegStatus(seg3, SegmentStatusEnum.READY);
+
+        cube = mgr.getCube(cube.getName());
+        assertEquals(2, cube.getSegments().size());
+
+        SegmentRange mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg == null);
+
+        assertEquals(2, cube.getSegments().size());
+
+        // append a new seg
+        CubeSegment seg4 = mgr.appendSegment(cube, new TSRange(4000L, 8000L));
+        mgr.updateCubeSegStatus(seg4, SegmentStatusEnum.READY);
+
+        cube = mgr.getCube(cube.getName());
+        assertEquals(3, cube.getSegments().size());
+
+        cube.getDescriptor().setVolatileRange(10000);
+
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg == null);
+
+        //will merge after change the volatile_range
+
+        cube.getDescriptor().setVolatileRange(0);
+
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg != null);
+        assertTrue((Long) mergedSeg.start.v == 2000 && (Long) mergedSeg.end.v == 8000);
+
+        // fill the gap
+        CubeSegment seg2 = mgr.appendSegment(cube, new TSRange(1000L, 2000L));
+        mgr.updateCubeSegStatus(seg2, SegmentStatusEnum.READY);
+
+        cube = mgr.getCube(cube.getName());
+        assertEquals(4, cube.getSegments().size());
+
+        cube.getDescriptor().setVolatileRange(10000);
+
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg == null);
+
+        //will merge after change the volatile_range
+        cube.getDescriptor().setVolatileRange(0);
+
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg != null);
+        assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 8000);
+
+        cube.getDescriptor().setVolatileRange(1000);
+
+        mergedSeg = cube.autoMergeCubeSegments();
+        assertTrue(mergedSeg != null);
+        assertTrue((Long) mergedSeg.start.v == 0 && (Long) mergedSeg.end.v == 2000);
+    }
+
+    @Test
     public void testGetCubeNameWithNamespace() {
         System.setProperty("kylin.storage.hbase.table-name-prefix", "HELLO_");
         try {
@@ -317,7 +394,39 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         } finally {
             System.clearProperty("kylin.storage.hbase.table-name-prefix");
         }
+
+        System.setProperty("kylin.storage.hbase.namespace", "MYSPACE");
+        try {
+            CubeManager mgr = CubeManager.getInstance(getTestConfig());
+            String tablename = mgr.generateStorageLocation();
+            assertTrue(tablename.startsWith("MYSPACE:"));
+        } finally {
+            System.clearProperty("kylin.storage.hbase.namespace");
+        }
     }
+
+    @Test
+    public void testBuildCubeWithPartitionStartDate() throws IOException {
+        Long PARTITION_DATE_START = 1513123200L;
+        Long FIRST_BUILD_DATE_END = 1514764800L;
+        Long SECOND_BUILD_DATE_END = 1540339200L;
+
+        KylinConfig config = getTestConfig();
+        CubeManager cubeManager = CubeManager.getInstance(config);
+        CubeInstance cube = cubeManager.getCube("test_kylin_cube_with_slr_empty");
+        cube.getDescriptor().setPartitionDateStart(PARTITION_DATE_START);
+
+        CubeSegment segment = cubeManager.appendSegment(cube, new TSRange(0L, FIRST_BUILD_DATE_END), null, null, null);
+        assertEquals(segment._getDateRangeStart(), PARTITION_DATE_START.longValue());
+        assertEquals(segment._getDateRangeEnd(), FIRST_BUILD_DATE_END.longValue());
+
+        cubeManager.updateCubeSegStatus(segment, SegmentStatusEnum.READY);
+
+        segment = cubeManager.appendSegment(cube, new TSRange(0L, SECOND_BUILD_DATE_END), null, null, null);
+        assertEquals(segment._getDateRangeStart(), FIRST_BUILD_DATE_END.longValue());
+        assertEquals(segment._getDateRangeEnd(), SECOND_BUILD_DATE_END.longValue());
+    }
+
 
     public CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getTestConfig());

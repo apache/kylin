@@ -113,7 +113,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         //DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
         cubeBuilder.setConcurrentThreads(nThreads);
 
-        ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);
+        ArrayBlockingQueue<String[]> queue = new ArrayBlockingQueue<String[]>(1000);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         try {
@@ -144,11 +144,18 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         }
     }
 
-    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count) throws IOException, InterruptedException {
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<String[]> queue, int count)
+            throws IOException, InterruptedException {
         feedData(cube, flatTable, queue, count, 0);
     }
 
-    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count, long randSeed) throws IOException, InterruptedException {
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<String[]> queue, int count,
+            long randSeed) throws IOException, InterruptedException {
+        feedData(cube, flatTable, queue, count, randSeed, Integer.MAX_VALUE);
+    }
+
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<String[]> queue, int count,
+            long randSeed, int splitRowThreshold) throws IOException, InterruptedException {
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
         int nColumns = flatDesc.getAllColumns().size();
 
@@ -176,15 +183,23 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
             rand.setSeed(randSeed);
 
         // output with random data
+        int countOfLastSplit = 0;
         for (; count > 0; count--) {
-            ArrayList<String> row = new ArrayList<String>(nColumns);
+            String[] row = new String[nColumns];
             for (int i = 0; i < nColumns; i++) {
                 String[] candidates = distincts.get(i);
-                row.add(candidates[rand.nextInt(candidates.length)]);
+                row[i] = candidates[rand.nextInt(candidates.length)];
             }
             queue.put(row);
+
+            // put cut row if possible
+            countOfLastSplit++;
+            if (countOfLastSplit >= splitRowThreshold) {
+                queue.put(InputConverterUnitForRawData.CUT_ROW);
+                countOfLastSplit = 0;
+            }
         }
-        queue.put(new ArrayList<String>(0));
+        queue.put(InputConverterUnitForRawData.END_ROW);
     }
 
     static Map<TblColRef, Dictionary<String>> getDictionaryMap(CubeInstance cube, String flatTable) throws IOException {

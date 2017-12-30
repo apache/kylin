@@ -41,6 +41,6 @@ public class FiveSecondSucceedTestExecutable extends BaseTestExecutable {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+        return ExecuteResult.createSucceed();
     }
 }

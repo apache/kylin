@@ -27,9 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author yangli9
- * 
  */
+@SuppressWarnings("serial")
 public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
 
     private static final Logger logger = LoggerFactory.getLogger(BigDecimalSerializer.class);

@@ -50,6 +50,31 @@ import com.google.common.collect.Lists;
 public class ProjectInstance extends RootPersistentEntity {
 
     public static final String DEFAULT_PROJECT_NAME = "default";
+
+    public static ProjectInstance create(String name, String owner, String description, LinkedHashMap<String, String> overrideProps, List<RealizationEntry> realizationEntries, List<String> models) {
+        ProjectInstance projectInstance = new ProjectInstance();
+
+        projectInstance.updateRandomUuid();
+        projectInstance.setName(name);
+        projectInstance.setOwner(owner);
+        projectInstance.setDescription(description);
+        projectInstance.setStatus(ProjectStatusEnum.ENABLED);
+        projectInstance.setCreateTimeUTC(System.currentTimeMillis());
+        projectInstance.setOverrideKylinProps(overrideProps);
+
+        if (realizationEntries != null)
+            projectInstance.setRealizationEntries(realizationEntries);
+        else
+            projectInstance.setRealizationEntries(Lists.<RealizationEntry> newArrayList());
+        if (models != null)
+            projectInstance.setModels(models);
+        else
+            projectInstance.setModels(new ArrayList<String>());
+        return projectInstance;
+    }
+
+    // ============================================================================
+
     private KylinConfigExt config;
 
     @JsonProperty("name")
@@ -87,43 +112,37 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private LinkedHashMap<String, String> overrideKylinProps;
 
+    public void init() {
+        if (name == null)
+            name = ProjectInstance.DEFAULT_PROJECT_NAME;
+
+        if (realizationEntries == null) {
+            realizationEntries = new ArrayList<RealizationEntry>();
+        }
+
+        if (tables == null)
+            tables = new TreeSet<String>();
+
+        if (overrideKylinProps == null) {
+            overrideKylinProps = new LinkedHashMap<>();
+        }
+
+        initConfig();
+
+        if (StringUtils.isBlank(this.name))
+            throw new IllegalStateException("Project name must not be blank");
+    }
+
+    private void initConfig() {
+        this.config = KylinConfigExt.createInstance(KylinConfig.getInstanceFromEnv(), this.overrideKylinProps);
+    }
+
     public String getResourcePath() {
         return concatResourcePath(resourceName());
     }
 
     public static String concatResourcePath(String projectName) {
         return ResourceStore.PROJECT_RESOURCE_ROOT + "/" + projectName + ".json";
-    }
-
-    public static ProjectInstance create(String name, String owner, String description, LinkedHashMap<String, String> overrideProps, List<RealizationEntry> realizationEntries, List<String> models) {
-        ProjectInstance projectInstance = new ProjectInstance();
-
-        projectInstance.updateRandomUuid();
-        projectInstance.setName(name);
-        projectInstance.setOwner(owner);
-        projectInstance.setDescription(description);
-        projectInstance.setStatus(ProjectStatusEnum.ENABLED);
-        projectInstance.setCreateTimeUTC(System.currentTimeMillis());
-        projectInstance.setOverrideKylinProps(overrideProps);
-
-        if (realizationEntries != null)
-            projectInstance.setRealizationEntries(realizationEntries);
-        else
-            projectInstance.setRealizationEntries(Lists.<RealizationEntry> newArrayList());
-        if (models != null)
-            projectInstance.setModels(models);
-        else
-            projectInstance.setModels(new ArrayList<String>());
-        return projectInstance;
-    }
-
-    public void initConfig() {
-        this.config = KylinConfigExt.createInstance(KylinConfig.getInstanceFromEnv(), this.overrideKylinProps);
-    }
-
-    // ============================================================================
-
-    public ProjectInstance() {
     }
 
     @Override
@@ -312,27 +331,6 @@ public class ProjectInstance extends RootPersistentEntity {
 
     public void setConfig(KylinConfigExt config) {
         this.config = config;
-    }
-
-    public void init() {
-        if (name == null)
-            name = ProjectInstance.DEFAULT_PROJECT_NAME;
-
-        if (realizationEntries == null) {
-            realizationEntries = new ArrayList<RealizationEntry>();
-        }
-
-        if (tables == null)
-            tables = new TreeSet<String>();
-
-        if (overrideKylinProps == null) {
-            overrideKylinProps = new LinkedHashMap<>();
-        }
-
-        initConfig();
-
-        if (StringUtils.isBlank(this.name))
-            throw new IllegalStateException("Project name must not be blank");
     }
 
     @Override

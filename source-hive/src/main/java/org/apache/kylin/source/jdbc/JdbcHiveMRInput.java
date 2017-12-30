@@ -21,7 +21,6 @@ package org.apache.kylin.source.jdbc;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -51,6 +50,10 @@ public class JdbcHiveMRInput extends HiveMRInput {
         public BatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
             super(flatDesc);
         }
+        
+        private KylinConfig getConfig() {
+            return flatDesc.getDataModel().getConfig();
+        }
 
         @Override
         protected void addStepPhase1_DoCreateFlatTable(DefaultChainedExecutable jobFlow) {
@@ -64,8 +67,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
 
         private AbstractExecutable createFlatHiveTableFromFiles(String hiveInitStatements, String jobWorkingDir) {
             final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            String filedDelimiter = config.getFieldDelimiter();
+            String filedDelimiter = getConfig().getJdbcSourceFieldDelimiter();
             // Sqoop does not support exporting SEQUENSEFILE to Hive now SQOOP-869
             final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, jobWorkingDir,
                     "TEXTFILE", filedDelimiter);
@@ -98,7 +100,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
                 return partitionDesc.getPartitionDateColumnRef();
             }
             TblColRef splitColumn = null;
-            TableMetadataManager tblManager = TableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+            TableMetadataManager tblManager = TableMetadataManager.getInstance(getConfig());
             long maxCardinality = 0;
             for (TableRef tableRef : flatDesc.getDataModel().getAllTables()) {
                 TableExtDesc tableExtDesc = tblManager.getTableExt(tableRef.getTableDesc());
@@ -124,8 +126,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
         }
 
         private AbstractExecutable createSqoopToFlatHiveStep(String jobWorkingDir, String cubeName) {
-            KylinConfig config = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName)
-                    .getConfig();
+            KylinConfig config = getConfig();
             PartitionDesc partitionDesc = flatDesc.getDataModel().getPartitionDesc();
             String partCol = null;
             String partitionString = null;
@@ -133,7 +134,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
             if (partitionDesc.isPartitioned()) {
                 partCol = partitionDesc.getPartitionDateColumn();//tablename.colname
                 partitionString = partitionDesc.getPartitionConditionBuilder().buildDateRangeCondition(partitionDesc,
-                    flatDesc.getSegment(), flatDesc.getSegRange());
+                        flatDesc.getSegment(), flatDesc.getSegRange());
             }
 
             String splitTable;
@@ -152,7 +153,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
             String jdbcUser = config.getJdbcSourceUser();
             String jdbcPass = config.getJdbcSourcePass();
             String sqoopHome = config.getSqoopHome();
-            String filedDelimiter = config.getFieldDelimiter();
+            String filedDelimiter = config.getJdbcSourceFieldDelimiter();
             int mapperNum = config.getSqoopMapperNum();
 
             String bquery = String.format("SELECT min(%s), max(%s) FROM %s.%s", splitColumn, splitColumn, splitDatabase,

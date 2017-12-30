@@ -22,11 +22,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.FileSystemCounter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskCounter;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsMapper.RawDataCounter;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
@@ -99,9 +100,13 @@ public class HadoopCmdOutput {
             mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
             rawInputBytesRead = String.valueOf(counters.findCounter(RawDataCounter.BYTES).getValue());
 
-            String fsScheme = FileSystem.get(job.getConfiguration()).getScheme();
+            String outputFolder = job.getConfiguration().get("mapreduce.output.fileoutputformat.outputdir", KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
+            logger.debug("outputFolder is " + outputFolder);
+            Path outputPath = new Path(outputFolder);
+            String fsScheme = outputPath.getFileSystem(job.getConfiguration()).getScheme();
             long bytesWritten = counters.findCounter(fsScheme, FileSystemCounter.BYTES_WRITTEN).getValue();
             if (bytesWritten == 0) {
+                logger.debug("Seems no counter found for " + fsScheme);
                 bytesWritten = counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue();
             }
             hdfsBytesWritten = String.valueOf(bytesWritten);

@@ -55,29 +55,29 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
     public boolean moveNext() throws IOException {
         String minValue = null;
         int curDictIndex = 0;
-        
+
         // multi-merge dictionary forest
         for (int i = 0; i < dictionaryList.size(); i++) {
             Dictionary<String> dict = dictionaryList.get(i);
             if (dict == null)
                 continue;
-            
+
             int curKey = curKeys.get(i);
             if (curKey > dict.getMaxId())
                 continue;
-            
+
             String curValue = dict.getValueFromId(curKey);
             if (minValue == null || dataType.compare(minValue, curValue) > 0) {
                 minValue = curValue;
                 curDictIndex = i;
             }
         }
-        
+
         if (minValue == null) {
             curValue = null;
             return false;
         }
-        
+
         curValue = minValue;
         curKeys.set(curDictIndex, curKeys.get(curDictIndex) + 1);
         return true;

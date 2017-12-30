@@ -96,7 +96,7 @@ public class SqlUtil {
         return con;
     }
 
-    public static String jdbcTypetoKylinDataType(int sqlType) {
+    public static String jdbcTypeToKylinDataType(int sqlType) {
         String result = "any";
 
         switch (sqlType) {

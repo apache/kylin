@@ -79,7 +79,7 @@ public class GTAggregateScanner implements IGTScanner, IGTBypassChecker {
     final boolean spillEnabled;
     final TupleFilter havingFilter;
 
-    private int aggregatedRowCount = 0;
+    private long inputRowCount = 0L;
     private MemoryWaterLevel memTracker;
     private boolean[] aggrMask;
 
@@ -149,6 +149,10 @@ public class GTAggregateScanner implements IGTScanner, IGTBypassChecker {
     @Override
     public GTInfo getInfo() {
         return info;
+    }
+
+    public long getInputRowCount() {
+        return inputRowCount;
     }
 
     @Override
@@ -371,7 +375,7 @@ public class GTAggregateScanner implements IGTScanner, IGTBypassChecker {
         }
 
         boolean aggregate(GTRecord r) {
-            if (++aggregatedRowCount % 100000 == 0) {
+            if (++inputRowCount % 100000 == 0) {
                 if (memTracker != null) {
                     memTracker.markHigh();
                 }
