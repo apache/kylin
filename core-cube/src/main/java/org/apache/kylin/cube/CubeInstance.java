@@ -578,6 +578,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
     }
 
+    // For JSON serialization of this attribute, use CubeInstanceResponse
     public long getSizeKB() {
         long sizeKb = 0L;
 
@@ -588,6 +589,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return sizeKb;
     }
 
+    // For JSON serialization of this attribute, use CubeInstanceResponse
     public long getInputRecordCount() {
         long sizeRecordCount = 0L;
 
@@ -598,6 +600,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return sizeRecordCount;
     }
 
+    // For JSON serialization of this attribute, use CubeInstanceResponse
     public long getInputRecordSizeMB() {
         long sizeRecordSize = 0L;
 
