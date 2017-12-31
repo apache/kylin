@@ -114,7 +114,7 @@ public class QueryMetricsTest extends ServiceTestBase {
 
     @Test
     public void testQueryStatisticsResult() throws Exception {
-        System.setProperty("kylin.core.metrics.reporter-query-enabled", "true");
+        System.setProperty("kylin.metrics.reporter-query-enabled", "true");
         QueryMetricsFacade.init();
 
         SQLRequest sqlRequest = new SQLRequest();
