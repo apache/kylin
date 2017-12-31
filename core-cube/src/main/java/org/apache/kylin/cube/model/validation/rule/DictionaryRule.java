@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DictionaryDesc;
+import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
@@ -46,12 +47,13 @@ public class DictionaryRule implements IValidatorRule<CubeDesc> {
     static final String ERROR_REUSE_BUILDER_BOTH_SET = "REUSE and BUILDER both set on dictionary for column: ";
     static final String ERROR_REUSE_BUILDER_BOTH_EMPTY = "REUSE and BUILDER both empty on dictionary for column: ";
     static final String ERROR_TRANSITIVE_REUSE = "Transitive REUSE is not allowed for dictionary: ";
-    static final String ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE = "Global dictionary couldn't be used for dimension column: ";
+    static final String ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE = "If one column is used for both dimension and precisely count distinct measure, its dimension encoding should not be dict: ";
 
     @Override
     public void validate(CubeDesc cubeDesc, ValidateContext context) {
         List<DictionaryDesc> dictDescs = cubeDesc.getDictionaries();
         Set<TblColRef> dimensionColumns = cubeDesc.listDimensionColumnsIncludingDerived();
+        RowKeyDesc rowKeyDesc = cubeDesc.getRowkey();
 
         if (dictDescs == null || dictDescs.isEmpty()) {
             return;
@@ -82,7 +84,7 @@ public class DictionaryRule implements IValidatorRule<CubeDesc> {
                 return;
             }
 
-            if (StringUtils.isNotEmpty(builderClass) && builderClass.equalsIgnoreCase(GlobalDictionaryBuilder.class.getName()) && dimensionColumns.contains(dictCol)) {
+            if (StringUtils.isNotEmpty(builderClass) && builderClass.equalsIgnoreCase(GlobalDictionaryBuilder.class.getName()) && dimensionColumns.contains(dictCol) && rowKeyDesc.isUseDictionary(dictCol)) {
                 context.addResult(ResultLevel.ERROR, ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE + dictCol);
                 return;
             }
