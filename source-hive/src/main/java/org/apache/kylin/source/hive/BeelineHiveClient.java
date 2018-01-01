@@ -28,7 +28,6 @@ import java.sql.Statement;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.kylin.common.util.DBUtils;
 
 import com.google.common.base.Preconditions;
@@ -117,12 +116,12 @@ public class BeelineHiveClient implements IHiveClient {
     }
     
     @Override
-    public void executeHQL(String hql) throws CommandNeedRetryException, IOException {
+    public void executeHQL(String hql) throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void executeHQL(String[] hqls) throws CommandNeedRetryException, IOException {
+    public void executeHQL(String[] hqls) throws IOException {
         throw new UnsupportedOperationException();
     }
 

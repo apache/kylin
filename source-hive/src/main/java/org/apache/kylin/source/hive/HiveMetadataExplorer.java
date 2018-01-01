@@ -32,11 +32,15 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISourceMetadataExplorer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDataDeployer {
 
+    private static final Logger logger = LoggerFactory.getLogger(HiveClientFactory.class);
+
     IHiveClient hiveClient = HiveClientFactory.getHiveClient();
-    
+
     @Override
     public List<String> listDatabases() throws Exception {
         return hiveClient.getHiveDbNames();
@@ -90,7 +94,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         tableExtDesc.setUuid(UUID.randomUUID().toString());
         tableExtDesc.setLastModified(0);
         tableExtDesc.init(prj);
-        
+
         tableExtDesc.addDataSourceProp("location", hiveTableMeta.sdLocation);
         tableExtDesc.addDataSourceProp("owner", hiveTableMeta.owner);
         tableExtDesc.addDataSourceProp("last_access_time", String.valueOf(hiveTableMeta.lastAccessTime));
@@ -114,10 +118,10 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         hiveClient.executeHQL(generateCreateSchemaSql(database));
     }
 
-    private String generateCreateSchemaSql(String schemaName){
+    private String generateCreateSchemaSql(String schemaName) {
         return String.format("CREATE DATABASE IF NOT EXISTS %s", schemaName);
     }
-    
+
     @Override
     public void createSampleTable(TableDesc table) throws Exception {
         hiveClient.executeHQL(generateCreateTableSql(table));
@@ -146,7 +150,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
 
         return new String[] { dropsql, dropsql2, ddl.toString() };
     }
-    
+
     @Override
     public void loadSampleData(String tableName, String tmpDataDir) throws Exception {
         hiveClient.executeHQL(generateLoadDataSql(tableName, tmpDataDir));
@@ -155,12 +159,12 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
     private String generateLoadDataSql(String tableName, String tableFileDir) {
         return "LOAD DATA LOCAL INPATH '" + tableFileDir + "/" + tableName + ".csv' OVERWRITE INTO TABLE " + tableName;
     }
-    
+
     @Override
     public void createWrapperView(String origTableName, String viewName) throws Exception {
         hiveClient.executeHQL(generateCreateViewSql(viewName, origTableName));
     }
-    
+
     private String[] generateCreateViewSql(String viewName, String tableName) {
 
         String dropView = "DROP VIEW IF EXISTS " + viewName;
@@ -170,7 +174,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
 
         return new String[] { dropView, dropTable, createSql };
     }
-    
+
     private static String getHiveDataType(String javaDataType) {
         String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
         hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;
@@ -192,16 +196,21 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         String evalViewSql = "CREATE VIEW " + tmpDatabase + "." + tmpView + " as " + query;
         
         try {
-            hiveClient.executeHQL(new String[] { dropViewSql, evalViewSql });
+            logger.debug("Removing duplicate view {}", tmpView);
+            hiveClient.executeHQL(dropViewSql);
+            logger.debug("Creating view {} for query: {}", tmpView, query);
+            hiveClient.executeHQL(evalViewSql);
+            logger.debug("Evaluating query columns' metadata");
             HiveTableMeta hiveTableMeta = hiveClient.getHiveTableMeta(tmpDatabase, tmpView);
             return extractColumnFromMeta(hiveTableMeta);
         } catch (Exception e) {
             throw new RuntimeException("Cannot evalutate metadata of query: " + query, e);
         } finally {
             try {
+                logger.debug("Cleaning up.");
                 hiveClient.executeHQL(dropViewSql);
             } catch (Exception e) {
-                throw new RuntimeException("Cannot temp view of query: " + query, e);
+                logger.warn("Cannot drop temp view of query: {}", query, e);
             }
         }
     }

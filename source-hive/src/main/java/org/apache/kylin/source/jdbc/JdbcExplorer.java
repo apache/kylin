@@ -243,7 +243,11 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         String evalViewSql = "CREATE VIEW " + tmpView + " as " + query;
 
         try {
-            executeSQL(new String[] { dropViewSql, evalViewSql });
+            logger.debug("Removing duplicate view {}", tmpView);
+            executeSQL(dropViewSql);
+            logger.debug("Creating view {} for query: {}", tmpView, query);
+            executeSQL(evalViewSql);
+            logger.debug("Evaluating query columns' metadata");
             Connection con = SqlUtil.getConnection(dbconf);
             DatabaseMetaData dbmd = con.getMetaData();
             ResultSet rs = dbmd.getColumns(null, tmpDatabase, tmpView, null);
@@ -255,9 +259,10 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
             throw new RuntimeException("Cannot evalutate metadata of query: " + query, e);
         } finally {
             try {
+                logger.debug("Cleaning up.");
                 executeSQL(dropViewSql);
             } catch (Exception e) {
-                throw new RuntimeException("Cannot temp view of query: " + query, e);
+                logger.warn("Cannot drop temp view of query: {}", query, e);
             }
         }
     }
