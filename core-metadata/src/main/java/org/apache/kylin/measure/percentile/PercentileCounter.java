@@ -106,8 +106,16 @@ public class PercentileCounter implements Serializable {
     }
 
     public int maxLength() {
-        // 10KB for max length
-        return 10 * 1024;
+        switch ((int) compression) {
+        case 100:
+            return 16 * 1024;
+        case 1000:
+            return 128 * 1024;
+        case 10000:
+            return 1024 * 1024;
+        default:
+            return 16 * 1024;
+        }
     }
 
     public int peekLength(ByteBuffer in) {
