@@ -55,3 +55,5 @@ __Companies & Organizations__
     * Apache Kylin is used at 4399.com for Big Data Analytics on Hadoop, which let us query massive data set at sub-second latency.
 * [ZTE 中兴](http://www.zte.com.cn/)
     * Apache Kylin is one of the foundational components of ZTE's Big Data Platform. ZTE uses Apache Kylin to provide OLAP capabilities to customers in the  telecom, government, banking, finance and other industries.
+* [Grow Force](http://www.300.cn/)
+    * Kyin in Grow Force are mainly in the new data warehouse system and the data computing of BI reports. On one hand, it increases our development efficiency and eliminates the need for the developer to manually write HQL/SQL statement to query dimension data; on the other hand, it decouples the existing system design. The data computing layer thus mainly includes the real-time calculation of Spark and the offline calculation of HQL. After Kylin being introduced, the whole offline calculation can be moved to Kylin, which improves the flexibility greatly. 
