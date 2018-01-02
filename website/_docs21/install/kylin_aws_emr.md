@@ -5,12 +5,10 @@ categories: install
 permalink: /docs21/install/kylin_aws_emr.html
 ---
 
-Many users run Hadoop on public Cloud like AWS today. Apache Kylin, compiled with standard Hadoop/HBase API, support most main stream Hadoop releases; The current version Kylin v2.2, supports AWS EMR 5.0 to 5.7. This document introduces how to run Kylin on EMR.
-
-For Chinese reader, you can also refer to [this AWS blog](https://aws.amazon.com/cn/blogs/china/using-apache-kylin-and-amazon-emr-to-proceed-olap-analysis-on-cloudc/), which was written with Kylin 2.0, but the main steps are the same.
+Many users run Hadoop on public Cloud like AWS today. Apache Kylin, compiled with standard Hadoop/HBase API, support most main stream Hadoop releases; The current version Kylin v2.2, supports AWS EMR 5.0 to 5.10. This document introduces how to run Kylin on EMR.
 
 ### Recommended Version
-* AWS EMR 5.7
+* AWS EMR 5.7 (for EMR 5.8 and above, please check [KYLIN-3129](https://issues.apache.org/jira/browse/KYLIN-3129))
 * Apache Kylin v2.2.0 for HBase 1.x
 
 ### Start EMR cluster
