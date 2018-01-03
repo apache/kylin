@@ -797,27 +797,29 @@ public class CubeController extends BasicController {
             HttpServletResponse response) throws IOException {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (cube == null) {
-            logger.error("Get cube: [" + cubeName + "] failed when get recommend cuboids");
-            throw new BadRequestException("Get cube: [" + cubeName + "] failed when get recommend cuboids");
+            throw new BadRequestException("Cube: [" + cubeName + "] not exist.");
         }
-        Map<Long, Long> cuboidList = getRecommendCuboidList(cube);
-        if (cuboidList == null || cuboidList.isEmpty()) {
-            logger.warn("Cannot get recommend cuboid list for cube " + cubeName);
-        }
-        if (cuboidList.size() < top) {
-            logger.info("Only recommend " + cuboidList.size() + " cuboids less than topn " + top);
-        }
-        Iterator<Long> cuboidIterator = cuboidList.keySet().iterator();
-        RowKeyColDesc[] rowKeyColDescList = cube.getDescriptor().getRowkey().getRowKeyColumns();
 
+        Map<Long, Long> cuboidList = getRecommendCuboidList(cube);
         List<Set<String>> dimensionSetList = Lists.newLinkedList();
-        while (top-- > 0 && cuboidIterator.hasNext()) {
-            Set<String> dimensionSet = Sets.newHashSet();
-            dimensionSetList.add(dimensionSet);
-            long cuboid = cuboidIterator.next();
-            for (int i = 0; i < rowKeyColDescList.length; i++) {
-                if ((cuboid & (1L << rowKeyColDescList[i].getBitIndex())) > 0) {
-                    dimensionSet.add(rowKeyColDescList[i].getColumn());
+
+        if (cuboidList == null || cuboidList.isEmpty()) {
+            logger.info("Cannot get recommended cuboid list for cube " + cubeName);
+        }else {
+            if (cuboidList.size() < top) {
+                logger.info("Require " + top + " recommended cuboids, but only " + cuboidList.size() + " is found.");
+            }
+            Iterator<Long> cuboidIterator = cuboidList.keySet().iterator();
+            RowKeyColDesc[] rowKeyColDescList = cube.getDescriptor().getRowkey().getRowKeyColumns();
+
+            while (top-- > 0 && cuboidIterator.hasNext()) {
+                Set<String> dimensionSet = Sets.newHashSet();
+                dimensionSetList.add(dimensionSet);
+                long cuboid = cuboidIterator.next();
+                for (int i = 0; i < rowKeyColDescList.length; i++) {
+                    if ((cuboid & (1L << rowKeyColDescList[i].getBitIndex())) > 0) {
+                        dimensionSet.add(rowKeyColDescList[i].getColumn());
+                    }
                 }
             }
         }
