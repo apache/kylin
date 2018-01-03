@@ -142,8 +142,7 @@ public class QueryUtil {
 
     public static String removeCommentInSql(String sql1) {
         // match two patterns, one is "-- comment", the other is "/* comment */"
-        final String[] commentPatterns = new String[] { "--[^\r\n]*", "/\\*[^\\*/]*" };
-        final int[] endOffset = new int[] { 0, 2 };
+        final String[] commentPatterns = new String[] { "--[^\r\n]*", "/\\*[\\s\\S]*?\\*/" };
 
         for (int i = 0; i < commentPatterns.length; i++) {
             String commentPattern = commentPatterns[i];
@@ -152,9 +151,9 @@ public class QueryUtil {
 
             while (matcher.find()) {
                 if (matcher.start() == 0) {
-                    sql1 = sql1.substring(matcher.end() + endOffset[i]).trim();
-                } else if ((matcher.start() > 0 && sql1.charAt(matcher.start() - 1) != '\'')) {
-                    sql1 = (sql1.substring(0, matcher.start()) + sql1.substring(matcher.end() + endOffset[i])).trim();
+                    sql1 = sql1.substring(matcher.end()).trim();
+                } else {
+                    sql1 = (sql1.substring(0, matcher.start()) + sql1.substring(matcher.end())).trim();
                 }
                 matcher = pattern.matcher(sql1);
             }
