@@ -507,6 +507,10 @@ public class CubeController extends BasicController {
         if (project == null) {
             throw new BadRequestException("Project " + projectName + " doesn't exist");
         }
+        // KYLIN-1925, forbid cloning cross projects
+        if (!project.getName().equals(cube.getProject())) {
+            throw new BadRequestException("Cloning cubes across projects is not supported.");
+        }
 
         CubeDesc cubeDesc = cube.getDescriptor();
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
