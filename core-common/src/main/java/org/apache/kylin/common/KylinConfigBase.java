@@ -358,6 +358,18 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.metadata.check-copy-on-write", "false"));
     }
 
+    public String getHbaseClientScannerTimeoutPeriod() {
+        return getOptional("kylin.metadata.hbase-client-scanner-timeout-period", "10000");
+    }
+
+    public String getHbaseRpcTimeout() {
+        return getOptional("kylin.metadata.hbase-rpc-timeout", "5000");
+    }
+
+    public String getHbaseClientRetriesNumber() {
+        return getOptional("kylin.metadata.hbase-client-retries-number", "1");
+    }
+
     // ============================================================================
     // DICTIONARY & SNAPSHOT
     // ============================================================================

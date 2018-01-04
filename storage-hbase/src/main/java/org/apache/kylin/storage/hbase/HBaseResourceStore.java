@@ -99,9 +99,9 @@ public class HBaseResourceStore extends ResourceStore {
 
         // control timeout for prompt error report
         Map<String, String> newParams = new LinkedHashMap<>();
-        newParams.put("hbase.client.scanner.timeout.period", "10000");
-        newParams.put("hbase.rpc.timeout", "5000");
-        newParams.put("hbase.client.retries.number", "1");
+        newParams.put("hbase.client.scanner.timeout.period", kylinConfig.getHbaseClientScannerTimeoutPeriod());
+        newParams.put("hbase.rpc.timeout", kylinConfig.getHbaseRpcTimeout());
+        newParams.put("hbase.client.retries.number", kylinConfig.getHbaseClientRetriesNumber());
         newParams.putAll(url.getAllParameters());
 
         return url.copy(newParams);
