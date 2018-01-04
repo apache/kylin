@@ -32,6 +32,9 @@
         <li>
           <a data-toggle="tab" ng-if="tableModel.selectedSrcTable.source_type==1" href="#streaming">Streaming Cluster</a>
         </li>
+        <li>
+          <a data-toggle="tab"  href="#access">Access</a>
+        </li>
       </ul>
       <div class="tab-content">
         <!--Schema-->
@@ -166,7 +169,24 @@
 
           <div  ng-include="'partials/cubeDesigner/streamingConfig.html'" ng-init="state.mode='view'"></div>
         </div>
+       <!--access-->
+        <div id="access" class="tab-pane">
 
+          <div class="tabbable nav-tabs">
+            <ul class="nav nav-tabs">
+              <li class="active">
+                <a data-toggle="tab" href="#accesstable">Table</a>
+              </li>
+            </ul>
+            <div class="tab-content">
+              <div id="accesstable" class="tab-pane active">
+                <div  ng-include="'partials/tables/table_access.html'"></div>
+              </div>
+            </div>
+          </div>
+
+
+        </div>
       </div>
 
       </div>
