@@ -184,7 +184,6 @@ public class CubeController extends BasicController {
         return cube;
     }
 
-
     /**
      * Get SQL of a Cube
      *
@@ -192,8 +191,7 @@ public class CubeController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/sql", method = { RequestMethod.GET }, produces = {
-            "application/json" })
+    @RequestMapping(value = "/{cubeName}/sql", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -805,7 +803,7 @@ public class CubeController extends BasicController {
 
         if (cuboidList == null || cuboidList.isEmpty()) {
             logger.info("Cannot get recommended cuboid list for cube " + cubeName);
-        }else {
+        } else {
             if (cuboidList.size() < top) {
                 logger.info("Require " + top + " recommended cuboids, but only " + cuboidList.size() + " is found.");
             }
