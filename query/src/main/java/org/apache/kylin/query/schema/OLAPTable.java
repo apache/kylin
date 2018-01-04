@@ -88,7 +88,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         SQLTYPE_MAPPING.put("timestamp", SqlTypeName.TIMESTAMP);
         SQLTYPE_MAPPING.put("any", SqlTypeName.ANY);
 
-        REGEX_SQLTYPE_MAPPING.put("array\\<.*\\>", SqlTypeName.ARRAY);
+        REGEX_SQLTYPE_MAPPING.put("array\\<.+\\>", SqlTypeName.ARRAY);
     }
 
     private final boolean exposeMore;
