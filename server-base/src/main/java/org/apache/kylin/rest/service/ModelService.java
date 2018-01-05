@@ -413,7 +413,7 @@ public class ModelService extends BasicService {
             RootPersistentEntity e = d.getEntity();
             if (e instanceof DataModelDesc) {
                 DataModelDesc m = (DataModelDesc) e;
-                if (modelName == null || modelName.equals(m.getName()))
+                if (StringUtils.isEmpty(modelName) || modelName.equals(m.getName()))
                     result.add(d);
             }
         }

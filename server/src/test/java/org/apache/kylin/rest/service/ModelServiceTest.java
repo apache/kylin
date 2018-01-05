@@ -27,6 +27,8 @@ import java.util.List;
 
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.job.exception.JobException;
+import org.apache.kylin.metadata.draft.Draft;
+import org.apache.kylin.metadata.draft.DraftManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.junit.Assert;
@@ -130,6 +132,22 @@ public class ModelServiceTest extends ServiceTestBase {
             Assert.assertTrue(dataModelDesc.getLastModified() <= oldLastModified);
             oldLastModified = dataModelDesc.getLastModified();
         }
+    }
+
+    @Test
+    public void testModelDraft() throws IOException {
+        DraftManager mgr = DraftManager.getInstance(getTestConfig());
+        // Create a draft of model
+        Draft d = new Draft();
+        d.setProject("default");
+        d.updateRandomUuid();
+        DataModelDesc modelDesc = modelService.getModel("ci_left_join_model", "default");
+        d.setEntity(modelDesc);
+        mgr.save(d);
+
+        // Check list draft
+        List<Draft> draftList = modelService.listModelDrafts("", "default");
+        Assert.assertEquals(draftList.size(), 1);
     }
 
 
