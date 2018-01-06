@@ -41,7 +41,7 @@
                     <a ng-click="mainPanel='saved';listSavedQueries()" style="cursor: pointer">Saved Queries</a>
                 </li>
                 <li class="{{mainPanel=='cached'?'active':''}}">
-                    <a ng-click="mainPanel='cached'" style="cursor: pointer">Query History</a>
+                    <a ng-click="mainPanel='cached';listCachedQueries()" style="cursor: pointer">Query History</a>
                 </li>
             </ul>
 
@@ -138,12 +138,12 @@
             </div>
 
             <div ng-show="mainPanel=='cached'">
-                <div ng-if="cachedQueries.length==0">
+                <div ng-if="cachedFilterQueries.length==0">
                     <div no-result text="No Query History."></div>
                 </div>
                 <table class="table table-hover table-striped list">
-                    <tr ng-repeat="query in cachedQueries | reverse track by $index"
-                        ng-if="$index >= (cachedQueries.curPage-1)*cachedQueries.perPage && $index < cachedQueries.curPage*cachedQueries.perPage">
+                    <tr ng-repeat="query in cachedFilterQueries | reverse track by $index"
+                        ng-if="$index >= (cachedFilterQueries.curPage-1)*cachedFilterQueries.perPage && $index < cachedFilterQueries.curPage*cachedFilterQueries.perPage">
                         <td>
                             <span style="color: #808080;line-height: 25px">Queried At: {{query.savedAt}} </span><span ng-if="query.project">in Project: {{query.project}}</span>
 
@@ -177,8 +177,8 @@
                         </td>
                     </tr>
                 </table>
-                <pagination total-items="cachedQueries.length" items-per-page="cachedQueries.perPage" max-size="5"
-                    page="cachedQueries.curPage" class="pull-right"></pagination>
+                <pagination total-items="cachedFilterQueries.length" items-per-page="cachedFilterQueries.perPage" max-size="5"
+                    page="cachedFilterQueries.curPage" class="pull-right"></pagination>
             </div>
         </div>
 

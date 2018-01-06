@@ -48,13 +48,6 @@ KylinApp
         ];
         $scope.statusFilter = null;
         $scope.savedQueries = null;
-        $scope.cachedQueries = storage.get("saved_queries");
-        if (!$scope.cachedQueries) {
-            $scope.cachedQueries = [];
-        }
-        $scope.cachedQueries.curPage = 1;
-        $scope.cachedQueries.perPage = 3;
-
         $scope.srcTables = [];
         $scope.srcColumns = [];
 
@@ -130,7 +123,7 @@ KylinApp
 
         function getQuery(queries, query) {
             for (var i = 0; i < queries.length; i++) {
-                if (queries[i].sql == query.sql) {
+                if (queries[i].sql === query.sql && queries[i].project === query.project) {
                     return queries[i];
                 }
             }
@@ -338,7 +331,6 @@ KylinApp
 
                 if ($scope.cachedQueries.length >= 99) {
                     delete $scope.cachedQueries.splice(0, 1);
-                    ;
                 }
 
                 $scope.cachedQueries.push({
@@ -351,11 +343,23 @@ KylinApp
         }
 
         $scope.listSavedQueries = function () {
-            QueryService.list({}, function (queries) {
-                $scope.savedQueries = queries;
+            QueryService.list({project: $scope.projectModel.selectedProject}, function (queries) {
+                $scope.savedQueries = queries
                 $scope.savedQueries.curPage = 1;
                 $scope.savedQueries.perPage = 3;
             });
+        }
+
+        $scope.listCachedQueries = function () {
+          $scope.cachedQueries = storage.get("saved_queries")
+          $scope.cachedFilterQueries = $scope.cachedQueries.filter(function (query) {
+            return query.project === $scope.projectModel.selectedProject
+          });
+          if (!$scope.cachedFilterQueries) {
+            $scope.cachedFilterQueries = [];
+          }
+          $scope.cachedFilterQueries.curPage = 1;
+          $scope.cachedFilterQueries.perPage = 3;
         }
 
         $scope.removeSavedQuery = function (id) {
@@ -403,6 +407,11 @@ KylinApp
                 });
             }
         }
+
+        $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
+          $scope.listCachedQueries();
+          $scope.listSavedQueries();
+        });
 
         $scope.$on('$locationChangeStart', function (event, next, current) {
             var isExecuting = false;
