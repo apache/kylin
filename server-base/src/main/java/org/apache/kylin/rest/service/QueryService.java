@@ -254,15 +254,20 @@ public class QueryService extends BasicService {
     }
 
     public List<Query> getQueries(final String creator) throws IOException {
+        return getQueries(creator, null);
+    }
+
+    public List<Query> getQueries(final String creator, final String project) throws IOException {
         if (null == creator) {
             return null;
         }
-        List<Query> queries = new ArrayList<Query>();
+        List<Query> queries = new ArrayList<>();
         QueryRecord record = queryStore.getResource(getQueryKeyById(creator), QueryRecord.class,
                 QueryRecordSerializer.getInstance());
         if (record != null) {
             for (Query query : record.getQueries()) {
-                queries.add(query);
+                if (project == null || query.getProject().equals(project))
+                    queries.add(query);
             }
         }
         return queries;
@@ -414,7 +419,7 @@ public class QueryService extends BasicService {
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
             long startTime = System.currentTimeMillis();
-            
+
             SQLResponse sqlResponse = null;
             String sql = sqlRequest.getSql();
             String project = sqlRequest.getProject();
@@ -433,16 +438,16 @@ public class QueryService extends BasicService {
             if (sqlResponse == null && isQueryInspect) {
                 sqlResponse = new SQLResponse(null, null, 0, false, sqlRequest.getSql());
             }
-            
+
             if (sqlResponse == null && isCreateTempStatement) {
                 sqlResponse = new SQLResponse(null, null, 0, false, null);
             }
-            
+
             if (sqlResponse == null && isQueryCacheEnabled) {
                 sqlResponse = searchQueryInCache(sqlRequest);
                 Trace.addTimelineAnnotation("query cache searched");
             }
-            
+
             // real execution if required
             if (sqlResponse == null) {
                 try (QueryRequestLimits limit = new QueryRequestLimits(sqlRequest.getProject())) {
@@ -481,7 +486,7 @@ public class QueryService extends BasicService {
     private SQLResponse queryAndUpdateCache(SQLRequest sqlRequest, long startTime, boolean queryCacheEnabled) {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         Message msg = MsgPicker.getMsg();
-        
+
         SQLResponse sqlResponse = null;
         try {
             final boolean isSelect = QueryUtil.isSelectStatement(sqlRequest.getSql());
@@ -543,8 +548,7 @@ public class QueryService extends BasicService {
     }
 
     private boolean isQueryCacheEnabled(KylinConfig kylinConfig) {
-        return checkCondition(kylinConfig.isQueryCacheEnabled(),
-                "query cache disabled in KylinConfig") && //
+        return checkCondition(kylinConfig.isQueryCacheEnabled(), "query cache disabled in KylinConfig") && //
                 checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
     }
 

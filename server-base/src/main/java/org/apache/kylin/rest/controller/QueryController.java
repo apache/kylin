@@ -54,6 +54,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
@@ -114,9 +115,9 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/saved_queries", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
-    public List<Query> getQueries() throws IOException {
+    public List<Query> getQueries(@RequestParam(value = "project", required = false) String project) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
-        return queryService.getQueries(creator);
+        return queryService.getQueries(creator, project);
     }
 
     @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET, produces = { "application/json" })
