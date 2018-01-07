@@ -630,9 +630,17 @@ public class JobService extends BasicService implements InitializingBean {
         return job;
     }
 
-    public void dropJob(JobInstance job) throws IOException {
+    public void dropJob(JobInstance job) {
         aclEvaluate.checkProjectOperationPermission(job);
+        if (job.getRelatedCube() != null && getCubeManager().getCube(job.getRelatedCube()) != null) {
+            if (job.getStatus() != JobStatusEnum.FINISHED && job.getStatus() != JobStatusEnum.DISCARDED) {
+                throw new BadRequestException(
+                        "Only FINISHED and DISCARDED job can be deleted. Please wait for the job finishing or discard the job!!!");
+            }
+        }
         getExecutableManager().deleteJob(job.getId());
+        logger.info("Delete job [" + job.getId() + "] trigger by + "
+                + SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
     /**
