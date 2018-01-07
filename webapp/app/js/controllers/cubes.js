@@ -597,7 +597,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
       if (e.data && e.data.exception) {
         var message = e.data.exception;
 
-        if(message.indexOf("Empty cube segment found")!=-1){
+        if(message.indexOf("Empty cube segment found")!=-1 || message.indexOf("Merging segments must not have gaps between")!=-1){
           var _segment = message.substring(message.indexOf(":")+1,message.length-1);
           SweetAlert.swal({
             title:'',
