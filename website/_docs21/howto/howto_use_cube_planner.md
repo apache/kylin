@@ -1,0 +1,127 @@
+---
+layout: docs21
+title:  Use Cube Planner
+categories: howto
+permalink: /docs21/howto/howto_use_cube_planner.html
+---
+
+# Cube Planner
+
+## What is Cube Planner
+
+OLAP solution trades off online query speed with offline cube build cost (compute resource to build cube and storage resource to save the cube data). Resource efficiency is the most important competency of OLAP engine. To be resource efficient, It is critical to just pre-build the most valuable cuboids.
+
+Cube Planner makes Apache Kylin to be more resource efficient. It intelligently build a partial cube to minimize the cost of building a cube and at the same time maximize the benefit of serving end user queries, then learn patterns from queries at runtime and dynamically recommend cuboids accordingly. 
+
+![CubePlanner](/images/CubePlanner/CubePlanner.png)
+
+## How to use it
+
+*Note: Cube planner optimization is not suitable for new cube. Cube should be online on production for a while (like 3 months) before optimizing it. So that Kylin platform collects enough real queries from end user and use them to optimize the cube.*  
+
+#### Step 1:
+
+​	Select a cube
+
+#### Step 2:
+
+1. Click the '**Planner**' button to view the '**Current Cuboid Distribution**' of the cube.
+
+  You should make sure the status of the cube is '**READY**'![Status_Ready](/images/CubePlanner/Status_Ready.png).
+
+  If the status of the cube is '**DISABLED**'![Status_Disabled](/images/CubePlanner/Status_Disabled.png), you will not be able to use the cube planner.
+
+  ​
+
+  You should change the status of the cube from '**DISABLED**' to '**READY**' by clicking the '**Enable**' button.
+
+  ![DISABLED2READY](/images/CubePlanner/DISABLED2READY.png)
+
+#### Step 3:
+
+a. Click the '**Planner**' button to view the '**Current Cuboid Distribution**' of the cube.
+
+- The data will be displayed in *[Sunburst Chart](https://en.wikipedia.org/wiki/Pie_chart#Ring_chart_.2F_Sunburst_chart_.2F_Multilevel_pie_chart)*. 
+
+- Each part refers to a cuboid, is shown in different colors determined by the query **frequency** against this cuboid.
+
+     ![CubePlanner](/images/CubePlanner/CP.png)
+
+
+-  You can move the cursor over the chart and it will display the detail information of the cuboid.
+
+   The detail information contains 5 attributes, '**Name**', '**ID**', '**Query Count**', '**Exactly Match Count**', '**Row Count**' and '**Rollup Rate**'. 
+
+   Cuboid **Name** is composed of several '0' or '1'. It means a combination of dimensions. '0' means the dimension doesn't exist in this combination, while '1' means the dimension exist in the combination. All the dimensions are ordered by the HBase row keys in advanced settings. 
+
+   Here is an example: 
+
+   ![CubePlanner](/images/CubePlanner/Leaf.png)
+
+   Name:1111111110000000 means the dimension combination is ["MONTH_BEG_DT","USER_CNTRY_SITE_CD","RPRTD_SGMNT_VAL","RPRTD_IND","SRVY_TYPE_ID","QSTN_ID","L1_L2_IND","PRNT_L1_ID","TRANCHE_ID"] based on the row key orders below:
+
+   ![CubePlanner](/images/CubePlanner/Rowkeys.png)
+
+   **ID** is the unique id of the cuboid.
+
+   **Query Count** is the total count of the queries that are served by this cuboid, including those queries that against other un-precalculated cuboids, but on line aggregated from this cuboid.  
+
+   **Exactly Match Count** is the query count that the query is actually against this cuboid.
+
+   **Row Count** is the total row count of all the segments for this cuboid.
+
+   **Rollup Rate** = (Cuboid's Row Count/its parent cuboid's Row Count) * 100%  
+
+-  The center of the sunburst chart contains the combined information of  basic cuboid. its '**Name**' is composed of several '1's.
+
+![Root](/images/CubePlanner/Root.png)
+
+As for a leaf, its '**Name**' is composed of several '0's and 1's. 
+
+![Leaf](/images/CubePlanner/Leaf.png)
+
+-    If you want to **specify** a leaf, just **click on** it. The view will change automatically.
+
+     ![Leaf-Specify](/images/CubePlanner/Leaf-Specify.png)
+
+-    If you want to specify the parent leaf of a leaf, click on the **center circle** (the part marked yellow).
+
+![Leaf-Specify-Parent](/images/CubePlanner/Leaf-Specify-Parent.png)
+
+b. Click the '**Recommend**' button to view the '**Recommend Cuboid Distribution**' of the cube.
+
+If the cube is currently under building![Running](/images/CubePlanner/Running.png), the cube planner '**Recommend**' function will not be able to perform correctly. Please first **stop the building progress** of the cube.
+
+-  The data will be calculated by unique algorithms. It is common to see this window.
+
+   ![Recommending](/images/CubePlanner/Recommending.png)
+
+-  The data will be displayed in *[Sunburst Chart](https://en.wikipedia.org/wiki/Pie_chart#Ring_chart_.2F_Sunburst_chart_.2F_Multilevel_pie_chart)*.
+
+   - Each part is shown in different colors determined by the **frequency**.
+
+![CubePlanner_Recomm](/images/CubePlanner/CPRecom.png)
+
+- Detailed operation of the '**Recommend Cuboid Distribution**' chart is the same as '**Current Cuboid Distribution**' chart.
+- User is able to tell the dimension names from a cuboid when mouse hovers over the sunburst chart as figure shown below.
+- User is able to click **'Export'** to export hot dimension combinations (TopN cuboids, currently including options of Top 10, Top 50, Top 100) from an existing cube as a json file, which will be downloaded to your local file system for recording or future import of dimension combinations when creating cube.
+
+![export cuboids](/images/CubePlanner/export_cuboids.png)
+
+c. Click the '**Optimize**' button to optimize the cube.
+
+- A window will jump up to ensure your decision.
+
+  ​	![CubePlanner_Optimize](/images/CubePlanner/CubePlanner_Optimize.png)
+
+  Click '**Yes**' to start the optimization.
+
+  Click '**Cancel**' to give up the optimization.
+
+- User is able to get to know the last optimized time of the cube in Cube Planner tab page. 
+
+![column name+optimize time](/images/CubePlanner/column_name+optimize_time.png)
+
+- User is able to receive an email notification for a cube optimization job.
+
+![optimize email](/images/CubePlanner/optimize_email.png)
