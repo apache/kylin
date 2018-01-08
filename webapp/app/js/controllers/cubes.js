@@ -597,7 +597,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
       if (e.data && e.data.exception) {
         var message = e.data.exception;
 
-        if(message.indexOf("Empty cube segment found")!=-1 || message.indexOf("Merging segments must not have gaps between")!=-1){
+        if(message.indexOf("Empty cube segment found")!=-1){
           var _segment = message.substring(message.indexOf(":")+1,message.length-1);
           SweetAlert.swal({
             title:'',
@@ -610,11 +610,29 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
             if (isConfirm) {
               $scope.jobBuildRequest.forceMergeEmptySegment = true;
               $scope.rebuild();
+              delete $scope.jobBuildRequest.forceMergeEmptySegment;
             }
           });
           return;
         }
 
+        if(message.indexOf("Merging segments must not have gaps between")!=-1){
+          SweetAlert.swal({
+            title:'',
+            type:'info',
+            text: 'There ares gaps between segments, do you want to merge segments forcely ?',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            closeOnConfirm: true
+          }, function (isConfirm) {
+            if (isConfirm) {
+              $scope.jobBuildRequest.forceMergeEmptySegment = true;
+              $scope.rebuild();
+              delete $scope.jobBuildRequest.forceMergeEmptySegment;
+            }
+          });
+          return;
+        }
         var msg = !!(message) ? message : 'Failed to take action.';
         SweetAlert.swal('Oops...', msg, 'error');
       } else {
