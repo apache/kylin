@@ -21,7 +21,7 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.QueryContextManager;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
@@ -57,7 +57,7 @@ public class ITFailfastQueryTest extends KylinTestBase {
 
     @After
     public void cleanUp() {
-        QueryContextManager.resetCurrent();
+        QueryContextFacade.resetCurrent();
     }
 
     @AfterClass

@@ -62,8 +62,12 @@ public class QueryContext {
     private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
 
     QueryContext() {
+        this(System.currentTimeMillis());
+    }
+
+    QueryContext(long startMills) {
         queryId = UUID.randomUUID().toString();
-        queryStartMillis = System.currentTimeMillis();
+        queryStartMillis = startMills;
     }
 
     public long getQueryStartMillis() {
@@ -72,7 +76,7 @@ public class QueryContext {
 
     public void setDeadline(long timeoutMillis) {
         if (timeoutMillis > 0) {
-            deadline  = queryStartMillis + timeoutMillis;
+            deadline = queryStartMillis + timeoutMillis;
         }
     }
 
