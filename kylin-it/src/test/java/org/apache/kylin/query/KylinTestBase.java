@@ -44,7 +44,7 @@ import java.util.logging.LogManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.QueryContextManager;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
@@ -229,19 +229,10 @@ public class KylinTestBase {
 
     // ////////////////////////////////////////////////////////////////////////////////////////
     // execute
-    private void initExecQueryUsingKylin(String sql) {
-        QueryContextManager.resetCurrent();
-        QueryContextManager.current();
-    }
-
-    protected ITable execQueryUsingKylin(IDatabaseConnection dbConn, String queryName, String sql, boolean needSort)
-            throws Exception {
-        initExecQueryUsingKylin(sql);
-        return executeQuery(dbConn, queryName, sql, needSort);
-    }
 
     protected ITable executeQuery(IDatabaseConnection dbConn, String queryName, String sql, boolean needSort)
             throws Exception {
+        QueryContextFacade.resetCurrent();
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);
@@ -262,7 +253,6 @@ public class KylinTestBase {
     }
 
     protected int executeQuery(String sql, boolean needDisplay) throws Exception {
-        initExecQueryUsingKylin(sql);
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);
@@ -312,12 +302,6 @@ public class KylinTestBase {
     protected Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownNonSelectQuery(String sql,
             boolean isPrepare) throws Exception {
         return PushDownUtil.tryPushDownNonSelectQuery(ProjectInstance.DEFAULT_PROJECT_NAME, sql, "DEFAULT", isPrepare);
-    }
-
-    protected ITable execDynamicQueryUsingKylin(IDatabaseConnection dbConn, String queryName, String sql,
-            List<String> parameters, boolean needSort) throws Exception {
-        initExecQueryUsingKylin(sql);
-        return executeDynamicQuery(dbConn, queryName, sql, parameters, needSort);
     }
 
     protected ITable executeDynamicQuery(IDatabaseConnection dbConn, String queryName, String sql,
@@ -400,7 +384,7 @@ public class KylinTestBase {
             // execute Kylin
             logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-            ITable kylinTable = execQueryUsingKylin(kylinConn, queryName, sql, false);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
 
             // compare the result
             if (BackdoorToggles.getPrepareOnly())
@@ -444,7 +428,7 @@ public class KylinTestBase {
             // execute Kylin
             logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-            ITable kylinTable = execQueryUsingKylin(kylinConn, queryName, sql, false);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
 
             // compare the result
             assertTableEquals(expectTable, kylinTable);
@@ -467,7 +451,7 @@ public class KylinTestBase {
             // execute Kylin
             logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-            ITable kylinTable = execQueryUsingKylin(kylinConn, queryName, sql, needSort);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
 
             // execute H2
             logger.info("Query Result from H2 - " + queryName);
@@ -496,7 +480,7 @@ public class KylinTestBase {
             // execute Kylin
             logger.info("Query Result from Kylin - " + sql);
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-            ITable kylinTable = execQueryUsingKylin(kylinConn, sql, sql, false);
+            ITable kylinTable = executeQuery(kylinConn, sql, sql, false);
 
             try {
                 // compare the result
@@ -528,7 +512,7 @@ public class KylinTestBase {
             // execute Kylin
             logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-            ITable kylinTable = execQueryUsingKylin(kylinConn, queryName, sqlWithLimit, false);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sqlWithLimit, false);
 
             // execute H2
             logger.info("Query Result from H2 - " + queryName);
@@ -579,7 +563,7 @@ public class KylinTestBase {
             // execute Kylin
             logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-            ITable kylinTable = execQueryUsingKylin(kylinConn, queryName, sql1, needSort);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sql1, needSort);
 
             // execute H2
             logger.info("Query Result from H2 - " + queryName);
@@ -619,7 +603,7 @@ public class KylinTestBase {
             // execute Kylin
             logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-            ITable kylinTable = execDynamicQueryUsingKylin(kylinConn, queryName, sql, parameters, needSort);
+            ITable kylinTable = executeDynamicQuery(kylinConn, queryName, sql, parameters, needSort);
 
             // execute H2
             logger.info("Query Result from H2 - " + queryName);
@@ -727,7 +711,7 @@ public class KylinTestBase {
 
         //setup cube conn
         String project = ProjectInstance.DEFAULT_PROJECT_NAME;
-        cubeConnection = QueryDataSource.create(project, config).getConnection();
+        cubeConnection = QueryConnection.getConnection(project);
 
         //setup h2
         h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++) + ";CACHE_SIZE=32072", "sa",

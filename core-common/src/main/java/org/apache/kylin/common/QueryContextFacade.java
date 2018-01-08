@@ -19,42 +19,42 @@
 package org.apache.kylin.common;
 
 import java.util.Comparator;
-import java.util.List;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
-public class QueryContextManager {
+public class QueryContextFacade {
 
-    private static final Logger logger = LoggerFactory.getLogger(QueryContextManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(QueryContextFacade.class);
 
-    private static final ConcurrentMap<String, QueryContext> idContextMap = Maps.newConcurrentMap();
-    private static final ThreadLocal<QueryContext> contexts = new ThreadLocal<QueryContext>() {
+    private static final ConcurrentMap<String, QueryContext> RUNNING_CTX_MAP = Maps.newConcurrentMap();
+    private static final ThreadLocal<QueryContext> CURRENT_CTX = new ThreadLocal<QueryContext>() {
         @Override
         protected QueryContext initialValue() {
             QueryContext queryContext = new QueryContext();
-            idContextMap.put(queryContext.getQueryId(), queryContext);
+            RUNNING_CTX_MAP.put(queryContext.getQueryId(), queryContext);
             return queryContext;
         }
     };
 
     public static QueryContext current() {
-        return contexts.get();
+        return CURRENT_CTX.get();
     }
 
     /**
      * invoked by program
      */
     public static void resetCurrent() {
-        QueryContext queryContext = contexts.get();
+        QueryContext queryContext = CURRENT_CTX.get();
         if (queryContext != null) {
-            idContextMap.remove(queryContext.getQueryId());
-            contexts.remove();
+            RUNNING_CTX_MAP.remove(queryContext.getQueryId());
+            CURRENT_CTX.remove();
         }
     }
 
@@ -63,7 +63,7 @@ public class QueryContextManager {
      * @link resetCurrent() should be finally invoked
      */
     public static void stopQuery(String queryId, String info) {
-        QueryContext queryContext = idContextMap.get(queryId);
+        QueryContext queryContext = RUNNING_CTX_MAP.get(queryId);
         if (queryContext != null) {
             queryContext.stopEarly(info);
         } else {
@@ -71,9 +71,8 @@ public class QueryContextManager {
         }
     }
 
-    public static List<QueryContext> getAllRunningQueries() {
-        // Sort by descending order
-        TreeSet<QueryContext> queriesSet = new TreeSet<>(new Comparator<QueryContext>() {
+    public static TreeSet<QueryContext> getAllRunningQueries() {
+        TreeSet<QueryContext> runningQueries = Sets.newTreeSet(new Comparator<QueryContext>() {
             @Override
             public int compare(QueryContext o1, QueryContext o2) {
                 if (o2.getAccumulatedMillis() > o1.getAccumulatedMillis()) {
@@ -81,29 +80,22 @@ public class QueryContextManager {
                 } else if (o2.getAccumulatedMillis() < o1.getAccumulatedMillis()) {
                     return -1;
                 } else {
-                    return 0;
+                    return o1.getQueryId().compareTo(o2.getQueryId());
                 }
             }
         });
 
-        for (QueryContext runningQuery : idContextMap.values()) {
-            queriesSet.add(runningQuery);
-        }
-        return Lists.newArrayList(queriesSet);
+        runningQueries.addAll(RUNNING_CTX_MAP.values());
+        return runningQueries;
     }
 
     /**
      * @param runningTime in milliseconds
      * @return running queries that have run more than specified time
      */
-    public static List<QueryContext> getLongRunningQueries(int runningTime) {
-        List<QueryContext> allRunningQueries = getAllRunningQueries();
-        int i = 0;
-        for (; i < allRunningQueries.size(); i++) {
-            if (allRunningQueries.get(i).getAccumulatedMillis() < runningTime) {
-                break;
-            }
-        }
-        return allRunningQueries.subList(0, i);
+    public static TreeSet<QueryContext> getLongRunningQueries(long runningTime) {
+        SortedSet<QueryContext> allRunningQueries = getAllRunningQueries();
+        QueryContext tmpCtx = new QueryContext(runningTime + 1L); // plus 1 to include those contexts in same accumulatedMills but different uuid
+        return (TreeSet<QueryContext>) allRunningQueries.headSet(tmpCtx);
     }
 }

@@ -25,13 +25,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.common.QueryContextManager;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMeta;
@@ -181,11 +182,12 @@ public class QueryController extends BasicController {
      */
     @RequestMapping(value = "/query/runningQueries", method = RequestMethod.GET)
     @ResponseBody
-    public List<QueryContext> getRunningQueries(@RequestParam(value = "runTimeMoreThan", required = false, defaultValue = "-1") int runTimeMoreThan) {
+    public TreeSet<QueryContext> getRunningQueries(
+            @RequestParam(value = "runTimeMoreThan", required = false, defaultValue = "-1") int runTimeMoreThan) {
         if (runTimeMoreThan == -1) {
-            return QueryContextManager.getAllRunningQueries();
-        }else {
-            return QueryContextManager.getLongRunningQueries(runTimeMoreThan * 1000);
+            return QueryContextFacade.getAllRunningQueries();
+        } else {
+            return QueryContextFacade.getLongRunningQueries(runTimeMoreThan * 1000);
         }
     }
 
@@ -193,8 +195,8 @@ public class QueryController extends BasicController {
     @ResponseBody
     public void stopQuery(@PathVariable String queryId) {
         final String user = SecurityContextHolder.getContext().getAuthentication().getName();
-        logger.info("{} stop the query: {}", new Object[] { user, queryId });
-        QueryContextManager.stopQuery(queryId, "stopped by " + user);
+        logger.info("{} tries to stop the query: {}, but not guaranteed to succeed.", user, queryId);
+        QueryContextFacade.stopQuery(queryId, "stopped by " + user);
     }
 
     public void setQueryService(QueryService queryService) {

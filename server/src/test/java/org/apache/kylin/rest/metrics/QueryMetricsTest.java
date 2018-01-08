@@ -26,7 +26,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.common.QueryContextManager;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.ServiceTestBase;
@@ -122,7 +122,7 @@ public class QueryMetricsTest extends ServiceTestBase {
         sqlRequest.setSql("select * from TEST_KYLIN_FACT");
         sqlRequest.setProject("default");
 
-        QueryContext context = QueryContextManager.current();
+        QueryContext context = QueryContextFacade.current();
         
         SQLResponse sqlResponse = new SQLResponse();
         sqlResponse.setDuration(10);
