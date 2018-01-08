@@ -19,6 +19,7 @@ package org.apache.kylin.rest.security;
 
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
@@ -28,26 +29,21 @@ import org.springframework.security.acls.model.Permission;
  */
 abstract public class ExternalAclProvider {
 
-    private static boolean inited = false;
-    private static ExternalAclProvider singleton = null;
+    private volatile static ExternalAclProvider singleton = null;
 
     public static ExternalAclProvider getInstance() {
-        if (inited)
-            return singleton;
-
-        synchronized (ExternalAclProvider.class) {
-            if (inited)
-                return singleton;
-
-            String cls = KylinConfig.getInstanceFromEnv().getExternalAclProvider();
-            if (cls != null && cls.length() > 0) {
-                singleton = (ExternalAclProvider) ClassUtil.newInstance(cls);
-                singleton.init();
+        if (singleton == null) {
+            synchronized (ExternalAclProvider.class) {
+                if (singleton == null) {
+                    String cls = KylinConfig.getInstanceFromEnv().getExternalAclProvider();
+                    if (!StringUtils.isBlank(cls)) {
+                        singleton = (ExternalAclProvider) ClassUtil.newInstance(cls);
+                        singleton.init();
+                    }
+                }
             }
-
-            inited = true;
-            return singleton;
         }
+        return singleton;
     }
 
     // ============================================================================
