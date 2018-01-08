@@ -89,3 +89,4 @@ dist/
 tomcat/
 webapp/app/kylin-servlet.xml
 webapp/app/web.xml
+dependency-reduced-pom.xml
