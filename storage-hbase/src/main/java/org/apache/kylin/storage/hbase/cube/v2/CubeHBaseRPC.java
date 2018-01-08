@@ -293,7 +293,7 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         if (BackdoorToggles.getQueryTimeout() != -1) {
             coopTimeout = BackdoorToggles.getQueryTimeout();
         } else {
-            coopTimeout = cubeSeg.getConfig().getQueryCoprocessorTimeoutSeconds() * 1000;
+            coopTimeout = cubeSeg.getConfig().getQueryCoprocessorTimeoutSeconds() * 1000L;
         }
         
         int rpcTimeout;
