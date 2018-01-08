@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -119,7 +120,7 @@ public class HybridService extends BasicService {
         if (StringUtils.isEmpty(projectName)) {
             hybridsInProject = new ArrayList(getHybridManager().listHybridInstances());
         } else if (project == null) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         } else {
             List<RealizationEntry> realizationEntries = project.getRealizationEntries(RealizationType.HYBRID);
             if (realizationEntries != null) {
@@ -134,7 +135,7 @@ public class HybridService extends BasicService {
         if (StringUtils.isEmpty(modelName)) {
             return hybridsInProject;
         } else if (model == null) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         } else {
             List<HybridInstance> hybridsInModel = new ArrayList<HybridInstance>();
             for (HybridInstance hybridInstance : hybridsInProject) {
