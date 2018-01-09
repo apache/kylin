@@ -5,7 +5,7 @@ categories: howto
 permalink: /docs21/howto/howto_setup_systemcube.html
 ---
 
-# Set Up System Cube
+> Available since Apache Kylin v2.3.x
 
 ## What is System Cube
 

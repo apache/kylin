@@ -5,11 +5,19 @@ categories: howto
 permalink: /docs21/howto/howto_use_dashboard.html
 ---
 
+> Available since Apache Kylin v2.3.0
+
 # Dashboard
 
-As a project owner, cube admin, do you want to know your cube usage metrics? Do you want to know how many queries are against your cube every day? What is the AVG query latency? Do you want to know the AVG cube build time per GB source data, which is very helpful to foresee the time cost of a coming cube build job? You can find all information from Kylin Dashboard. 
+As a project owner, do you want to know your cube usage metrics? Do you want to know how many queries are against your cube every day? What is the AVG query latency? Do you want to know the AVG cube build time per GB source data, which is very helpful to foresee the time cost of a coming cube build job? You can find all information from Kylin Dashboard. 
 
-Kylin Dashboard shows useful cube usage statistics, which are very important to our customers.
+Kylin Dashboard shows useful cube usage statistics, which are very important to users.
+
+## Prerequisites
+
+To enable Dashboard on WebUI, you need to ensure these are all set:
+* Set **kylin.web.dashboard-enabled=true** in **kylin.properties**.
+* Setup system cubes according to ![toturial](howto_setup_systemcube.html).
 
 ## How to use it
 

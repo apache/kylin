@@ -5,6 +5,8 @@ categories: howto
 permalink: /docs21/howto/howto_use_cube_planner.html
 ---
 
+> Available since Apache Kylin v2.3.0
+
 # Cube Planner
 
 ## What is Cube Planner
@@ -14,6 +16,10 @@ OLAP solution trades off online query speed with offline cube build cost (comput
 Cube Planner makes Apache Kylin to be more resource efficient. It intelligently build a partial cube to minimize the cost of building a cube and at the same time maximize the benefit of serving end user queries, then learn patterns from queries at runtime and dynamically recommend cuboids accordingly. 
 
 ![CubePlanner](/images/CubePlanner/CubePlanner.png)
+
+## Prerequisites
+
+To enable Dashboard on WebUI, you need to set **kylin.cube.cubeplanner.enabled=true** in **kylin.properties**.
 
 ## How to use it
 
