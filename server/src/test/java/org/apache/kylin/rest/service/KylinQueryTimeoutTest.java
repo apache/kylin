@@ -34,12 +34,13 @@ import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageFactory;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class KyilnQueryTimeoutTest extends LocalFileMetadataTestCase {
+public class KylinQueryTimeoutTest extends LocalFileMetadataTestCase {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -75,6 +76,8 @@ public class KyilnQueryTimeoutTest extends LocalFileMetadataTestCase {
             detector.queryEnd(Thread.currentThread(), "timeout");
             detector.interrupt();
         }
+        // every place that thrown KylinTimeoutException should reset the interrupt.
+        Assert.assertEquals(false, Thread.currentThread().isInterrupted());
     }
 
     public static class MockQueryTimeoutStorage implements IStorage {
