@@ -149,7 +149,7 @@ then
 else
     hive_lib_dir="$HIVE_LIB"
 fi
-hive_lib=`find -L ${hive_lib_dir} -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
+hive_lib=`find -L ${hive_lib_dir} -name '*.jar' ! -name '*calcite*' ! -name '*jackson-datatype-joda*' -printf '%p:' | sed 's/:$//'`
 
 validateDirectory ${hive_conf_path}
 checkFileExist ${hive_lib}
