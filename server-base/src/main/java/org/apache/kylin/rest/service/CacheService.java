@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -49,6 +50,7 @@ public class CacheService extends BasicService implements InitializingBean {
         @Override
         public void onClearAll(Broadcaster broadcaster) throws IOException {
             cleanAllDataCache();
+            HBaseConnection.clearConnCache(); // take the chance to clear HBase connection cache as well
         }
 
         @Override
@@ -104,7 +106,7 @@ public class CacheService extends BasicService implements InitializingBean {
 
     public void annouceWipeCache(String entity, String event, String cacheKey) {
         Broadcaster broadcaster = Broadcaster.getInstance(getConfig());
-        broadcaster.queue(entity, event, cacheKey);
+        broadcaster.announce(entity, event, cacheKey);
     }
 
     public void notifyMetadataChange(String entity, Event event, String cacheKey) throws IOException {

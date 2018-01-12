@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
@@ -68,7 +69,7 @@ public class Broadcaster {
     public static Broadcaster getInstance(KylinConfig config) {
         return config.getManager(Broadcaster.class);
     }
-    
+
     // called by reflection
     static Broadcaster newInstance(KylinConfig config) {
         return new Broadcaster(config);
@@ -79,13 +80,19 @@ public class Broadcaster {
     static final Map<String, List<Listener>> staticListenerMap = Maps.newConcurrentMap();
 
     private KylinConfig config;
+    private ExecutorService announceMainLoop;
+    private ExecutorService announceThreadPool;
+    private SyncErrorHandler syncErrorHandler;
     private BlockingDeque<BroadcastEvent> broadcastEvents = new LinkedBlockingDeque<>();
     private Map<String, List<Listener>> listenerMap = Maps.newConcurrentMap();
-    private AtomicLong counter = new AtomicLong();
-
+    private AtomicLong counter = new AtomicLong(); // a counter for testing purpose
+    
     private Broadcaster(final KylinConfig config) {
         this.config = config;
-        final int retryLimitTimes = config.getCacheSyncRetrys();
+        this.syncErrorHandler = getSyncErrorHandler(config);
+        this.announceMainLoop = Executors.newSingleThreadExecutor(new DaemonThreadFactory());
+        this.announceThreadPool = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<Runnable>(), new DaemonThreadFactory());
 
         final String[] nodes = config.getRestServers();
         if (nodes == null || nodes.length < 1) {
@@ -93,21 +100,14 @@ public class Broadcaster {
         }
         logger.debug(nodes.length + " nodes in the cluster: " + Arrays.toString(nodes));
 
-        Executors.newSingleThreadExecutor(new DaemonThreadFactory()).execute(new Runnable() {
+        announceMainLoop.execute(new Runnable() {
             @Override
             public void run() {
                 final Map<String, RestClient> restClientMap = Maps.newHashMap();
-                final ExecutorService wipingCachePool = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS,
-                        new LinkedBlockingQueue<Runnable>(), new DaemonThreadFactory());
 
-                while (true) {
+                while (!announceThreadPool.isShutdown()) {
                     try {
                         final BroadcastEvent broadcastEvent = broadcastEvents.takeFirst();
-                        broadcastEvent.setRetryTime(broadcastEvent.getRetryTime() + 1);
-                        if (broadcastEvent.getRetryTime() > retryLimitTimes) {
-                            logger.info("broadcastEvent retry up to limit times, broadcastEvent:{}", broadcastEvent);
-                            continue;
-                        }
 
                         String[] restServers = config.getRestServers();
                         logger.debug("Servers in the cluster: " + Arrays.toString(restServers));
@@ -117,25 +117,27 @@ public class Broadcaster {
                             }
                         }
 
-                        logger.debug("Announcing new broadcast event: " + broadcastEvent);
+                        String toWhere = broadcastEvent.getTargetNode();
+                        if (toWhere == null)
+                            toWhere = "all";
+                        logger.debug("Announcing new broadcast to " + toWhere + ": " + broadcastEvent);
+                        
                         for (final String node : restServers) {
-                            wipingCachePool.execute(new Runnable() {
+                            if (!(toWhere.equals("all") || toWhere.equals(node)))
+                                continue;
+                            
+                            announceThreadPool.execute(new Runnable() {
                                 @Override
                                 public void run() {
+                                    RestClient restClient = restClientMap.get(node);
                                     try {
-                                        restClientMap.get(node).wipeCache(broadcastEvent.getEntity(),
-                                                broadcastEvent.getEvent(), broadcastEvent.getCacheKey());
+                                        restClient.wipeCache(broadcastEvent.getEntity(), broadcastEvent.getEvent(),
+                                                broadcastEvent.getCacheKey());
                                     } catch (IOException e) {
-                                        logger.warn("Thread failed during wipe cache at {}, error msg: {}",
-                                                broadcastEvent, e);
-                                        // when sync failed, put back to queue
-                                        try {
-                                            broadcastEvents.putLast(broadcastEvent);
-                                        } catch (InterruptedException ex) {
-                                            logger.warn(
-                                                    "error reentry failed broadcastEvent to queue, broacastEvent:{}, error: {} ",
-                                                    broadcastEvent, ex);
-                                        }
+                                        logger.error(
+                                                "Announce broadcast event failed, targetNode {} broadcastEvent {}, error msg: {}",
+                                                node, broadcastEvent, e);
+                                        syncErrorHandler.handleAnnounceError(node, restClient, broadcastEvent);
                                     }
                                 }
                             });
@@ -146,6 +148,23 @@ public class Broadcaster {
                 }
             }
         });
+    }
+
+    private SyncErrorHandler getSyncErrorHandler(KylinConfig config) {
+        String clzName = config.getCacheSyncErrorHandler();
+        if (StringUtils.isEmpty(clzName)) {
+            clzName = DefaultSyncErrorHandler.class.getName();
+        }
+        return (SyncErrorHandler) ClassUtil.newInstance(clzName);
+    }
+
+    public KylinConfig getConfig() {
+        return config;
+    }
+    
+    public void stopAnnounce() {
+        announceThreadPool.shutdown();
+        announceMainLoop.shutdown();
     }
 
     // static listener survives cache wipe and goes after normal listeners
@@ -263,15 +282,19 @@ public class Broadcaster {
     }
 
     /**
-     * Broadcast an event out
+     * Announce an event out to peer kylin servers
      */
-    public void queue(String entity, String event, String key) {
+    public void announce(String entity, String event, String key) {
+        announce(new BroadcastEvent(entity, event, key));
+    }
+
+    public void announce(BroadcastEvent event) {
         if (broadcastEvents == null)
             return;
 
         try {
             counter.incrementAndGet();
-            broadcastEvents.putLast(new BroadcastEvent(entity, event, key));
+            broadcastEvents.putLast(event);
         } catch (Exception e) {
             counter.decrementAndGet();
             logger.error("error putting BroadcastEvent", e);
@@ -280,6 +303,40 @@ public class Broadcaster {
 
     public long getCounterAndClear() {
         return counter.getAndSet(0);
+    }
+
+    // ============================================================================
+
+    public static class DefaultSyncErrorHandler implements SyncErrorHandler {
+        Broadcaster broadcaster;
+        int maxRetryTimes;
+
+        @Override
+        public void init(Broadcaster broadcaster) {
+            this.maxRetryTimes = broadcaster.getConfig().getCacheSyncRetrys();
+            this.broadcaster = broadcaster;
+        }
+
+        @Override
+        public void handleAnnounceError(String targetNode, RestClient restClient, BroadcastEvent event) {
+            int retry = event.getRetryTime() + 1;
+
+            // when sync failed, put back to queue to retry
+            if (retry < maxRetryTimes) {
+                event.setRetryTime(retry);
+                event.setTargetNode(targetNode);
+                broadcaster.announce(event);
+            } else {
+                logger.error("Announce broadcast event exceeds retry limit, abandon targetNode {} broadcastEvent {}",
+                        targetNode, event);
+            }
+        }
+    }
+
+    public interface SyncErrorHandler {
+        void init(Broadcaster broadcaster);
+
+        void handleAnnounceError(String targetNode, RestClient restClient, BroadcastEvent event);
     }
 
     public enum Event {
@@ -326,6 +383,8 @@ public class Broadcaster {
 
     public static class BroadcastEvent {
         private int retryTime;
+        private String targetNode; // NULL means to all
+        
         private String entity;
         private String event;
         private String cacheKey;
@@ -343,6 +402,14 @@ public class Broadcaster {
 
         public void setRetryTime(int retryTime) {
             this.retryTime = retryTime;
+        }
+
+        public String getTargetNode() {
+            return targetNode;
+        }
+
+        public void setTargetNode(String targetNode) {
+            this.targetNode = targetNode;
         }
 
         public String getEntity() {

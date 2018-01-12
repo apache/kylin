@@ -53,7 +53,7 @@ public class InitialTaskManager implements InitializingBean {
             for (String taskClass : taskClasses) {
                 try {
                     InitialTask task = (InitialTask) Class.forName(taskClass).newInstance();
-                    logger.info("Running task: " + taskClass);
+                    logger.info("Running initial task: " + taskClass);
                     task.execute();
                 } catch (Throwable e) {
                     logger.error("Initial task failed: " + taskClass, e);
