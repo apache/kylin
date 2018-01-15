@@ -58,6 +58,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.kylin.cache.cachemanager.MemcachedQueryCacheManager;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContextFacade;
@@ -531,7 +532,9 @@ public class QueryService extends BasicService {
                                     && (isSelect == false || kylinConfig.isPushdownQueryCacheEnabled() == false)),
                             "query is executed with pushdown, but it is non-select, or the cache for pushdown is disabled") //
                     && checkCondition(
-                            sqlResponse.getDuration() > durationThreshold
+                            cacheManager
+                                    .getCache(QUERY_CACHE) instanceof MemcachedQueryCacheManager.MemCachedCacheAdaptor
+                                    || sqlResponse.getDuration() > durationThreshold
                                     || sqlResponse.getTotalScanCount() > scanCountThreshold
                                     || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
                             "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})",
