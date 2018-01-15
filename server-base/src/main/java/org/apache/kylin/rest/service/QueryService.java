@@ -493,8 +493,17 @@ public class QueryService extends BasicService {
         Message msg = MsgPicker.getMsg();
         final QueryContext queryContext = QueryContextFacade.current();
 
+        boolean isDummpyResponseEnabled = queryCacheEnabled && kylinConfig.isQueryDuplicationDummpyResponseEnabled();
         SQLResponse sqlResponse = null;
         try {
+            // Add dummy response which will be updated or evicted when query finishes
+            if (isDummpyResponseEnabled) {
+                SQLResponse dummyResponse = new SQLResponse();
+                dummyResponse.setRunning(true);
+                dummyResponse.setSignature(System.currentTimeMillis());
+                cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), dummyResponse);
+            }
+
             final boolean isSelect = QueryUtil.isSelectStatement(sqlRequest.getSql());
             if (isSelect) {
                 sqlResponse = query(sqlRequest);
@@ -532,6 +541,8 @@ public class QueryService extends BasicService {
                             "query response is too large: {} ({})", sqlResponse.getResults().size(),
                             kylinConfig.getLargeQueryThreshold())) {
                 cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
+            } else if (isDummpyResponseEnabled) {
+                cacheManager.getCache(QUERY_CACHE).evict(sqlRequest.getCacheKey());
             }
             Trace.addTimelineAnnotation("response from execution");
 
@@ -548,6 +559,8 @@ public class QueryService extends BasicService {
                     && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
                 Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
                 exceptionCache.put(sqlRequest.getCacheKey(), sqlResponse);
+            } else if (isDummpyResponseEnabled) {
+                cacheManager.getCache(QUERY_CACHE).evict(sqlRequest.getCacheKey());
             }
             Trace.addTimelineAnnotation("error response");
         }
@@ -605,6 +618,29 @@ public class QueryService extends BasicService {
         if (response == null) {
             return null;
         }
+
+        // Check whether duplicate query exists
+        while (response.isRunning()) {
+            // Wait at most one minute
+            if (System.currentTimeMillis() - response.getSignature() >= 60000L) {
+                queryCache.evict(sqlRequest.getCacheKey());
+                return null;
+            }
+            logger.info("Duplicated SQL request is running, waiting...");
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
+            wrapper = queryCache.get(sqlRequest.getCacheKey());
+            if (wrapper == null) {
+                return null;
+            }
+            response = (SQLResponse) wrapper.get();
+            if (response == null) {
+                return null;
+            }
+        }
+
         logger.info("The sqlResponse is found in QUERY_CACHE");
         if (response.getSignature() <= CODE_BAR) {
             logger.info(
