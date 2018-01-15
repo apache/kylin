@@ -46,17 +46,28 @@ public class AdminServiceTest extends ServiceTestBase {
         String path = Thread.currentThread().getContextClassLoader().getResource("kylin.properties").getPath();
         KylinConfig.setKylinConfigThreadLocal(KylinConfig.createInstanceFromUri(path));
         
-        String publicConfig = adminService.getPublicConfig();
-        
-        Assert.assertFalse(publicConfig.contains("kylin.metadata.data-model-manager-impl"));
-        Assert.assertFalse(publicConfig.contains("kylin.dictionary.use-forest-trie"));
-        Assert.assertFalse(publicConfig.contains("kylin.cube.segment-advisor"));
-        Assert.assertFalse(publicConfig.contains("kylin.job.use-remote-cli"));
-        Assert.assertFalse(publicConfig.contains("kylin.job.scheduler.provider"));
-        Assert.assertFalse(publicConfig.contains("kylin.engine.mr.job-jar"));
-        Assert.assertFalse(publicConfig.contains("kylin.engine.spark.sanity-check-enabled"));
-        Assert.assertFalse(publicConfig.contains("kylin.storage.provider"));
-        Assert.assertFalse(publicConfig.contains("kylin.query.convert-create-table-to-with"));
-        Assert.assertFalse(publicConfig.contains("kylin.server.init-tasks"));
+        String expected = "kylin.web.link-streaming-guide=http://kylin.apache.org/\n" +
+                "kylin.web.contact-mail=\n" +
+                "kylin.query.cache-enabled=true\n" +
+                "kylin.web.link-diagnostic=\n" +
+                "kylin.web.help.length=4\n" +
+                "kylin.web.timezone=GMT+8\n" +
+                "kylin.server.external-acl-provider=\n" +
+                "kylin.storage.default=2\n" +
+                "kylin.web.help=\n" +
+                "kylin.web.export-allow-other=true\n" +
+                "kylin.web.link-hadoop=\n" +
+                "kylin.web.hide-measures=RAW\n" +
+                "kylin.htrace.show-gui-trace-toggle=false\n" +
+                "kylin.web.export-allow-admin=true\n" +
+                "kylin.env=QA\n" +
+                "kylin.web.hive-limit=20\n" +
+                "kylin.engine.default=2\n" +
+                "kylin.web.help.3=onboard|Cube Design Tutorial|\n" +
+                "kylin.web.help.2=tableau|Tableau Guide|\n" +
+                "kylin.web.help.1=odbc|ODBC Driver|\n" +
+                "kylin.web.help.0=start|Getting Started|\n" +
+                "kylin.security.profile=testing\n";
+        Assert.assertEquals(expected, adminService.getPublicConfig());
     }
 }
