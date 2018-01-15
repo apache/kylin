@@ -78,6 +78,8 @@ public class SQLResponse implements Serializable {
 
     protected long signature = 0L;
 
+    protected boolean isRunning = false;
+
     public SQLResponse() {
     }
 
@@ -216,6 +218,14 @@ public class SQLResponse implements Serializable {
 
     public void setSignature(long signature) {
         this.signature = signature;
+    }
+
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    public void setRunning(boolean running) {
+        isRunning = running;
     }
 
     @JsonIgnore
