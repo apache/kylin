@@ -830,9 +830,9 @@ public class CubeService extends BasicService implements InitializingBean {
         return formattedRollingUpCount;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION')")
     public Map<Long, Long> getRecommendCuboidStatistics(CubeInstance cube, Map<Long, Long> hitFrequencyMap,
             Map<Long, Map<Long, Long>> rollingUpCountSourceMap) throws IOException {
+        aclEvaluate.checkProjectAdminPermission(cube.getProject());
         return CuboidRecommenderUtil.getRecommendCuboidList(cube, hitFrequencyMap, rollingUpCountSourceMap);
     }
 
