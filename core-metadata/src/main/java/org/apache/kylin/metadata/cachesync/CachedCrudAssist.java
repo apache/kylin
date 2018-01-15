@@ -173,7 +173,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
 
     public T save(T entity) throws IOException {
         Preconditions.checkArgument(entity != null);
-        Preconditions.checkArgument(entity.getUuid() != null);
+        completeUuidIfNeeded(entity);
         Preconditions.checkArgument(entityType.isInstance(entity));
 
         String resName = entity.resourceName();
@@ -197,6 +197,12 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         // keep the pass-in entity out of cache, the caller may use it for further update
         // return a reloaded new object
         return reload(resName);
+    }
+
+    private void completeUuidIfNeeded(T entity) {
+        if (entity.getUuid() == null) {
+            entity.updateRandomUuid();
+        }
     }
 
     public void delete(T entity) throws IOException {
