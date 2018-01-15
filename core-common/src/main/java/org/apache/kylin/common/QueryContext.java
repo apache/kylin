@@ -163,10 +163,9 @@ public class QueryContext {
     }
 
     private void stopQuery(Throwable t, String reason) {
-        if (isStopped()) {
+        if (!isRunning.compareAndSet(true, false)) {
             return;
         }
-        isRunning.set(false);
         this.throwable = t;
         this.stopReason = reason;
         for (QueryStopListener stopListener : stopListeners) {
