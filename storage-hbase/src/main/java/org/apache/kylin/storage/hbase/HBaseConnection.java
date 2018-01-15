@@ -20,8 +20,10 @@ package org.apache.kylin.storage.hbase;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -74,14 +76,11 @@ public class HBaseConnection {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                closeCoprocessorPool();
-
-                for (Connection conn : connPool.values()) {
-                    try {
-                        conn.close();
-                    } catch (IOException e) {
-                        logger.error("error closing hbase connection " + conn, e);
-                    }
+                try {
+                    closeCoprocessorPool();
+                    closeAndRestConnPool().join();
+                } catch (InterruptedException e) {
+                    logger.error("", e);
                 }
             }
         });
@@ -128,9 +127,30 @@ public class HBaseConnection {
             coprocessorPool.shutdownNow();
         }
     }
+    
+    private static Thread closeAndRestConnPool() {
+        final List<Connection> copy = new ArrayList<>(connPool.values());
+        connPool.clear();
+        
+        Thread t = new Thread() {
+            public void run() {
+                logger.info("Closing HBase connections...");
+                for (Connection conn : copy) {
+                    try {
+                        conn.close();
+                    } catch (Exception e) {
+                        logger.error("error closing hbase connection " + conn, e);
+                    }
+                }
+            }
+        };
+        t.setName("close-hbase-conn");
+        t.start();
+        return t;
+    }
 
     public static void clearConnCache() {
-        connPool.clear();
+        closeAndRestConnPool();
     }
 
     public static Configuration getCurrentHBaseConfiguration() {
