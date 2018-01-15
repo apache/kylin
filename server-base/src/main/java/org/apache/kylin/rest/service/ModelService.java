@@ -42,7 +42,6 @@ import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
-import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ValidateUtil;
 import org.slf4j.Logger;
@@ -63,10 +62,6 @@ import com.google.common.collect.Sets;
 public class ModelService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelService.class);
-
-    @Autowired
-    @Qualifier("accessService")
-    private AccessService accessService;
 
     @Autowired
     @Qualifier("cubeMgmtService")
@@ -142,12 +137,6 @@ public class ModelService extends BasicService {
         DataModelDesc createdDesc = null;
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         createdDesc = getDataModelManager().createDataModelDesc(desc, projectName, owner);
-
-        if (!desc.isDraft()) {
-            accessService.init(createdDesc, AclPermission.ADMINISTRATION);
-            ProjectInstance project = getProjectManager().getProject(projectName);
-            accessService.inherit(createdDesc, project);
-        }
         return createdDesc;
     }
 
@@ -169,8 +158,6 @@ public class ModelService extends BasicService {
         }
 
         getDataModelManager().dropModel(desc);
-
-        accessService.clean(desc, true);
     }
 
     public boolean isTableInAnyModel(TableDesc table) {

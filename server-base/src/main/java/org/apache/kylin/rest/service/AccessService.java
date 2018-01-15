@@ -218,6 +218,7 @@ public class AccessService {
         return acl;
     }
 
+    @Deprecated
     @Transactional
     public void inherit(AclEntity ae, AclEntity parentAe) {
         Message msg = MsgPicker.getMsg();
