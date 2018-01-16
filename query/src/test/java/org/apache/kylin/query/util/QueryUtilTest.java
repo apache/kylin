@@ -149,9 +149,23 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
         }
 
         {
-            String sqlWithComment = "/* comment \n select count(*) from kylin_sales; \n */ " + originSql;
+            String sqlWithComment = "/* comment1/comment2 */ " + originSql;
             Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
         }
 
+        {
+            String sqlWithComment = "/* comment1 * comment2 */ " + originSql;
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "/* comment1 * comment2 */ /* comment3 / comment4 */ -- comment 5\n" + originSql;
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "/* comment1 * comment2 */ -- comment 5\n" + originSql + "/* comment3 / comment4 */";
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
     }
 }
