@@ -210,6 +210,9 @@ public class HiveMRInput implements IMRInput {
             if (lookupViewsTables.size() == 0) {
                 return null;
             }
+            // Create work dir to avoid hive create it,
+            // the difference is that the owners are different.
+            checkAndCreateWorkDir(jobWorkingDir);
 
             HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
             hiveCmdBuilder.overwriteHiveProps(kylinConfig.getHiveConfigOverride());
@@ -237,6 +240,19 @@ public class HiveMRInput implements IMRInput {
 
             step.setCmd(hiveCmdBuilder.build());
             return step;
+        }
+
+        private void checkAndCreateWorkDir(String jobWorkingDir) {
+            try {
+                Path path = new Path(jobWorkingDir);
+                FileSystem fileSystem = HadoopUtil.getFileSystem(path);
+                if (!fileSystem.exists(path)) {
+                    logger.info("Create jobWorkDir : " + jobWorkingDir);
+                    fileSystem.mkdirs(path);
+                }
+            } catch (IOException e) {
+                logger.error("Could not create lookUp table dir : " + jobWorkingDir);
+            }
         }
 
         private AbstractExecutable createFlatHiveTableStep(String hiveInitStatements, String jobWorkingDir,
