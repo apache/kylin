@@ -683,8 +683,10 @@ public class CubeManager implements IRealizationProvider {
                 tsRange = null;
                 Preconditions.checkArgument(segRange != null);
             } else {
+                if(tsRange == null) {
+                    tsRange = new TSRange((Long)segRange.start.v, (Long)segRange.end.v);
+                }
                 segRange = null;
-                Preconditions.checkArgument(tsRange != null);
             }
 
             CubeSegment newSegment = newSegment(cubeCopy, tsRange, segRange);
