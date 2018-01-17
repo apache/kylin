@@ -370,7 +370,7 @@ public class BuildCubeWithStream {
         } catch (Throwable e) {
             logger.error("error", e);
             exitCode = 1;
-        } finally{
+        } finally {
             if (buildCubeWithStream != null) {
                 buildCubeWithStream.after();
                 buildCubeWithStream.cleanup();
