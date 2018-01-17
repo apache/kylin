@@ -18,11 +18,7 @@
 
 package org.apache.kylin.common.util;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,8 +26,6 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
@@ -42,9 +36,10 @@ import org.w3c.dom.NodeList;
 import com.google.common.collect.Lists;
 
 public class HiveCmdBuilder {
-    private static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
+    public static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
 
     public static final String HIVE_CONF_FILENAME = "kylin_hive_conf";
+    static final String CREATE_HQL_TMP_FILE_TEMPLATE = "cat >%s<<EOL\n%sEOL";
 
     public enum HiveClientMode {
         CLI, BEELINE
@@ -68,10 +63,11 @@ public class HiveCmdBuilder {
             beelineShell = kylinConfig.getSparkSqlBeelineShell();
             beelineParams = kylinConfig.getSparkSqlBeelineParams();
             if (StringUtils.isBlank(beelineShell)) {
-                throw new IllegalStateException("Missing config 'kylin.source.hive.sparksql-beeline-shell', please check kylin.properties");
+                throw new IllegalStateException(
+                        "Missing config 'kylin.source.hive.sparksql-beeline-shell', please check kylin.properties");
             }
         }
-        
+
         StringBuffer buf = new StringBuffer();
 
         switch (clientMode) {
@@ -84,37 +80,28 @@ public class HiveCmdBuilder {
             buf.append(parseProps());
             break;
         case BEELINE:
-            BufferedWriter bw = null;
-            File tmpHql = null;
+            String tmpHqlPath = null;
+            StringBuilder hql = new StringBuilder();
             try {
-                tmpHql = File.createTempFile("beeline_", ".hql");
-                bw = new BufferedWriter(new FileWriter(tmpHql));
+                tmpHqlPath = "/tmp/" + System.currentTimeMillis() + ".hql";
                 for (String statement : statements) {
-                    bw.write(statement);
-                    bw.newLine();
+                    hql.append(statement);
+                    hql.append("\n");
                 }
+                String createFileCmd = String.format(CREATE_HQL_TMP_FILE_TEMPLATE, tmpHqlPath, hql);
+                buf.append(createFileCmd);
+                buf.append("\n");
                 buf.append(beelineShell);
                 buf.append(" ");
                 buf.append(beelineParams);
                 buf.append(parseProps());
                 buf.append(" -f ");
-                buf.append(tmpHql.getAbsolutePath());
+                buf.append(tmpHqlPath);
                 buf.append(";ret_code=$?;rm -f ");
-                buf.append(tmpHql.getAbsolutePath());
+                buf.append(tmpHqlPath);
                 buf.append(";exit $ret_code");
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             } finally {
-                IOUtils.closeQuietly(bw);
-
-                if (tmpHql != null && logger.isDebugEnabled()) {
-                    String hql = null;
-                    try {
-                        hql = FileUtils.readFileToString(tmpHql, Charset.defaultCharset());
-                    } catch (IOException e) {
-                        // ignore
-                    }
+                if (tmpHqlPath != null && logger.isDebugEnabled()) {
                     logger.debug("The SQL to execute in beeline: \n" + hql);
                 }
             }

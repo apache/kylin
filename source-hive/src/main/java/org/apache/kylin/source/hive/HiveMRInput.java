@@ -177,7 +177,25 @@ public class HiveMRInput implements IMRInput {
         }
 
         protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
-            return JobBuilderSupport.getJobWorkingDir(hdfsWorkingDir, jobFlow.getId());
+
+            String jobWorkingDir = JobBuilderSupport.getJobWorkingDir(hdfsWorkingDir, jobFlow.getId());
+            // Create work dir to avoid hive create it,
+            // the difference is that the owners are different.
+            checkAndCreateWorkDir(jobWorkingDir);
+            return jobWorkingDir;
+        }
+
+        private void checkAndCreateWorkDir(String jobWorkingDir) {
+            try {
+                Path path = new Path(jobWorkingDir);
+                FileSystem fileSystem = HadoopUtil.getFileSystem(path);
+                if (!fileSystem.exists(path)) {
+                    logger.info("Create jobWorkDir : " + jobWorkingDir);
+                    fileSystem.mkdirs(path);
+                }
+            } catch (IOException e) {
+                logger.error("Could not create lookUp table dir : " + jobWorkingDir);
+            }
         }
 
         private AbstractExecutable createRedistributeFlatHiveTableStep(String hiveInitStatements, String cubeName) {
@@ -210,9 +228,6 @@ public class HiveMRInput implements IMRInput {
             if (lookupViewsTables.size() == 0) {
                 return null;
             }
-            // Create work dir to avoid hive create it,
-            // the difference is that the owners are different.
-            checkAndCreateWorkDir(jobWorkingDir);
 
             HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
             hiveCmdBuilder.overwriteHiveProps(kylinConfig.getHiveConfigOverride());
@@ -240,19 +255,6 @@ public class HiveMRInput implements IMRInput {
 
             step.setCmd(hiveCmdBuilder.build());
             return step;
-        }
-
-        private void checkAndCreateWorkDir(String jobWorkingDir) {
-            try {
-                Path path = new Path(jobWorkingDir);
-                FileSystem fileSystem = HadoopUtil.getFileSystem(path);
-                if (!fileSystem.exists(path)) {
-                    logger.info("Create jobWorkDir : " + jobWorkingDir);
-                    fileSystem.mkdirs(path);
-                }
-            } catch (IOException e) {
-                logger.error("Could not create lookUp table dir : " + jobWorkingDir);
-            }
         }
 
         private AbstractExecutable createFlatHiveTableStep(String hiveInitStatements, String jobWorkingDir,
