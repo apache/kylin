@@ -366,6 +366,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     public void shutdown() throws SchedulerException {
         logger.info("Shutting down DefaultScheduler ....");
         jobLock.unlockJobEngine();
+        initialized = false;
+        hasStarted = false;
         try {
             fetcherPool.shutdownNow();//interrupt
             fetcherPool.awaitTermination(1, TimeUnit.MINUTES);
