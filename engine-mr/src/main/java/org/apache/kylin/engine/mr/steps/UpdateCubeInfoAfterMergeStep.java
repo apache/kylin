@@ -31,11 +31,10 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.model.SegmentRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- */
 public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(UpdateCubeInfoAfterMergeStep.class);
@@ -66,10 +65,15 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         }
         long sourceCount = 0L;
         long sourceSize = 0L;
+
+        boolean isOffsetCube = mergedSegment.isOffsetCube();
+        Long tsStartMin = Long.MAX_VALUE, tsEndMax = 0L;
         for (String id : mergingSegmentIds) {
             CubeSegment segment = cube.getSegmentById(id);
             sourceCount += segment.getInputRecords();
             sourceSize += segment.getInputRecordsSize();
+            tsStartMin = Math.min(tsStartMin, segment.getTSRange().start.v);
+            tsEndMax = Math.max(tsEndMax, segment.getTSRange().end.v);
         }
 
         // update segment info
@@ -79,6 +83,11 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         mergedSegment.setLastBuildJobID(CubingExecutableUtil.getCubingJobId(this.getParams()));
         mergedSegment.setLastBuildTime(System.currentTimeMillis());
 
+        if (isOffsetCube == true) {
+            SegmentRange.TSRange tsRange = new SegmentRange.TSRange(tsStartMin, tsEndMax);
+            mergedSegment.setTSRange(tsRange);
+        }
+
         try {
             cubeManager.promoteNewlyBuiltSegments(cube, mergedSegment);
             return new ExecuteResult(ExecuteResult.State.SUCCEED);
@@ -87,5 +96,4 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
             return ExecuteResult.createError(e);
         }
     }
-
 }
