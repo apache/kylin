@@ -45,4 +45,15 @@ public class KylinRelDataTypeSystem extends RelDataTypeSystemImpl {
         }
         return argumentType;
     }
+
+    /**
+     * Hive support decimal with 38 digits, kylin should align
+     * 
+     * @see org.apache.calcite.rel.type.RelDataTypeSystem
+     * @see <a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-DecimalsdecimalDecimals">Hive/LanguageManualTypes-Decimals</a>
+     */
+    @Override
+    public int getMaxNumericPrecision() {
+        return 38;
+    }
 }
