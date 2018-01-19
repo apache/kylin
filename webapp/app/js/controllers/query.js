@@ -322,6 +322,8 @@ KylinApp
             if (queryToRemove) {
                 var index = $scope.cachedQueries.indexOf(queryToRemove);
                 $scope.cachedQueries.splice(index, 1);
+                var indexFilter = $scope.cachedFilterQueries.indexOf(queryToRemove);
+                $scope.cachedFilterQueries.splice(indexFilter, 1);
                 storage.set("saved_queries", $scope.cachedQueries);
             }
         }
@@ -344,16 +346,16 @@ KylinApp
 
         $scope.listSavedQueries = function () {
             QueryService.list({project: $scope.projectModel.selectedProject}, function (queries) {
-                $scope.savedQueries = queries
+                $scope.savedQueries = queries;
                 $scope.savedQueries.curPage = 1;
                 $scope.savedQueries.perPage = 3;
             });
         }
 
         $scope.listCachedQueries = function () {
-          $scope.cachedQueries = storage.get("saved_queries")
+          $scope.cachedQueries = storage.get("saved_queries");
           $scope.cachedFilterQueries = $scope.cachedQueries.filter(function (query) {
-            return query.project === $scope.projectModel.selectedProject
+            return query.project === $scope.projectModel.selectedProject;
           });
           if (!$scope.cachedFilterQueries) {
             $scope.cachedFilterQueries = [];
