@@ -44,6 +44,7 @@ import java.util.logging.LogManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
@@ -231,6 +232,7 @@ public class KylinTestBase {
 
     protected ITable executeQuery(IDatabaseConnection dbConn, String queryName, String sql, boolean needSort)
             throws Exception {
+        QueryContextFacade.resetCurrent();
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);

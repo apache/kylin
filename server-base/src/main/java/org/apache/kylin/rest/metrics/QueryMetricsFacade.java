@@ -28,6 +28,7 @@ import org.apache.hadoop.metrics2.MetricsException;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.metrics.MetricsManager;
 import org.apache.kylin.metrics.lib.impl.RecordEvent;
 import org.apache.kylin.metrics.lib.impl.TimedRecordEvent;
@@ -98,7 +99,7 @@ public class QueryMetricsFacade {
         if (user == null) {
             user = "unknown";
         }
-        for (QueryContext.RPCStatistics entry : QueryContext.current().getRpcStatisticsList()) {
+        for (QueryContext.RPCStatistics entry : QueryContextFacade.current().getRpcStatisticsList()) {
             RecordEvent rpcMetricsEvent = new TimedRecordEvent(
                     KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQueryRpcCall());
             setRPCWrapper(rpcMetricsEvent, //
