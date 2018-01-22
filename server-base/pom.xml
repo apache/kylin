@@ -76,7 +76,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-query-cache</artifactId>
+            <artifactId>kylin-cache</artifactId>
         </dependency>
 
         <dependency>

@@ -42,9 +42,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import net.spy.memcached.MemcachedClientIF;
 
-public class MemcachedQueryCacheManager extends AbstractCacheManager {
+public class MemcachedCacheManager extends AbstractCacheManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(MemcachedQueryCacheManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(MemcachedCacheManager.class);
     private static final Long ONE_MINUTE = 60 * 1000L;
 
     @Autowired

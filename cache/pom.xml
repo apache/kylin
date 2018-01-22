@@ -21,10 +21,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kylin-query-cache</artifactId>
+    <artifactId>kylin-cache</artifactId>
     <packaging>jar</packaging>
-    <name>Apache Kylin - Query Cache</name>
-    <description>Apache Kylin - Query Cache</description>
+    <name>Apache Kylin - Cache</name>
+    <description>Apache Kylin - Cache</description>
 
     <parent>
         <artifactId>kylin</artifactId>

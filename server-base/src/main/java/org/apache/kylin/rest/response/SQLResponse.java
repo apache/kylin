@@ -212,6 +212,7 @@ public class SQLResponse implements Serializable {
         this.traceUrl = traceUrl;
     }
 
+    @JsonIgnore
     public long getSignature() {
         return signature;
     }
@@ -220,6 +221,7 @@ public class SQLResponse implements Serializable {
         this.signature = signature;
     }
 
+    @JsonIgnore
     public boolean isRunning() {
         return isRunning;
     }

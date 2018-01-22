@@ -252,7 +252,7 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-query-cache</artifactId>
+                <artifactId>kylin-cache</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -1185,7 +1185,7 @@
         <module>core-metrics</module>
         <module>metrics-reporter-hive</module>
         <module>metrics-reporter-kafka</module>
-        <module>query-cache</module>
+        <module>cache</module>
     </modules>
 
     <reporting>

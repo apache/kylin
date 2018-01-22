@@ -87,26 +87,18 @@
 
     <!-- Cache Config -->
     <cache:annotation-driven/>
-    
-    <beans profile="ldap,saml,eaz">
-        <bean id="remoteCacheManager" class="org.apache.kylin.cache.cachemanager.MemcachedQueryCacheManager" />
-        <bean id="localCacheManager" class="org.apache.kylin.cache.cachemanager.InstrumentedEhCacheCacheManager" p:cacheManager-ref="ehcache"/>
-        <bean id="cacheManager" class="org.apache.kylin.cache.cachemanager.RemoteLocalFailOverCacheManager" />
 
-        <bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" p:configLocation="classpath:ehcache.xml" p:shared="true"/>
-
-        <bean id="memcachedCacheConfig" class="org.apache.kylin.cache.memcached.MemcachedCacheConfig">
-            <property name="timeout" value="500" />
-            <property name="hosts" value="${kylin.query.memcached.hosts}" />
-        </bean>
-    </beans>
-    
-    <beans profile="testing">
-        <bean id="cacheManager" class="org.apache.kylin.cache.cachemanager.InstrumentedEhCacheCacheManager"
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
           p:cacheManager-ref="ehcache"/>
-          
+    <beans profile="ldap,saml">
+        <bean id="ehcache"
+              class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+              p:configLocation="classpath:ehcache.xml" p:shared="true"/>
+    </beans>
+    <beans profile="testing">
         <bean id="ehcache"
               class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
               p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
     </beans>
+
 </beans>

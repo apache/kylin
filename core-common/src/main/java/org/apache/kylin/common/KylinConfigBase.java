@@ -1247,10 +1247,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.project-concurrent-running-threshold", "0"));
     }
 
-    public String[] getHighPriorityProjects() {
-        return getOptionalStringArray("kylin.query.highpriority-projects", null);
-    }
-
     public long getQueryMaxScanBytes() {
         long value = Long.parseLong(getOptional("kylin.query.max-scan-bytes", "0"));
         return value > 0 ? value : Long.MAX_VALUE;
@@ -1329,7 +1325,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
     
     public String getMemCachedHosts() {
-        return getOptional("kylin.query.memcached.hosts", null);
+        return getRequired("kylin.cache.memcached.hosts");
     }
 
     public String getQueryAccessController() {

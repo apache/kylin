@@ -631,8 +631,10 @@ public class QueryService extends BasicService {
             }
             logger.info("Duplicated SQL request is running, waiting...");
             try {
-                Thread.sleep(100);
+                Thread.sleep(100L);
             } catch (InterruptedException e) {
+                logger.error("Thread interrupted due to " + e);
+                throw new RuntimeException(e);
             }
             wrapper = queryCache.get(sqlRequest.getCacheKey());
             if (wrapper == null) {
