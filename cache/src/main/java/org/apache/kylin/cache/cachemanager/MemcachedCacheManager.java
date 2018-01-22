@@ -37,6 +37,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.support.AbstractCacheManager;
 import org.springframework.cache.support.SimpleValueWrapper;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -100,6 +101,11 @@ public class MemcachedCacheManager extends AbstractCacheManager {
 
     public boolean isClusterDown() {
         return !clusterHealth.get();
+    }
+
+    @VisibleForTesting
+    void setClusterHealth(boolean ifHealth) {
+        clusterHealth.set(ifHealth);
     }
 
     public static class MemCachedCacheAdaptor implements Cache {
