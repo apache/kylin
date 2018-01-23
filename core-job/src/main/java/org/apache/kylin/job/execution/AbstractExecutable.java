@@ -32,8 +32,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.EmailTemplateEnum;
 import org.apache.kylin.common.util.EmailTemplateFactory;
 import org.apache.kylin.common.util.MailService;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
@@ -88,7 +88,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
     }
 
-    private void onExecuteFinishedWithRetry(ExecuteResult result, ExecutableContext executableContext) {
+    private void onExecuteFinishedWithRetry(ExecuteResult result, ExecutableContext executableContext)
+            throws ExecuteException {
         Throwable exception;
         int nRetry = 0;
         do {
@@ -113,7 +114,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
         if (exception != null) {
             handleMetadataPersistException(executableContext, exception);
-            throw new RuntimeException(exception);
+            throw new ExecuteException(exception);
         }
     }
 
@@ -147,47 +148,47 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         logger.info("Executing AbstractExecutable (" + this.getName() + ")");
 
         Preconditions.checkArgument(executableContext instanceof DefaultContext);
-
-        onExecuteStart(executableContext);
-
         ExecuteResult result = null;
-        Throwable exception;
-        do {
-            if (retry > 0) {
-                logger.info("Retry " + retry);
-            }
-            exception = null;
-            result = null;
-            try {
-                result = doWork(executableContext);
-            } catch (Throwable e) {
-                logger.error("error running Executable: " + this.toString());
-                exception = e;
-            }
-            retry++;
-        } while (needRetry(result, exception));
 
-        if (exception != null) {
-            onExecuteError(exception, executableContext);
-            throw new ExecuteException(exception);
+        try {
+            onExecuteStart(executableContext);
+            Throwable exception;
+            do {
+                if (retry > 0) {
+                    logger.info("Retry " + retry);
+                }
+                exception = null;
+                result = null;
+                try {
+                    result = doWork(executableContext);
+                } catch (Throwable e) {
+                    logger.error("error running Executable: " + this.toString());
+                    exception = e;
+                }
+                retry++;
+            } while (needRetry(result, exception));
+
+            if (exception != null) {
+                onExecuteError(exception, executableContext);
+                throw new ExecuteException(exception);
+            }
+
+            onExecuteFinishedWithRetry(result, executableContext);
+        } catch (ExecuteException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ExecuteException(e);
         }
-
-        onExecuteFinishedWithRetry(result, executableContext);
         return result;
     }
 
     protected void handleMetadataPersistException(ExecutableContext context, Throwable exception) {
-        List<String> users = Lists.newArrayList();
         final String[] adminDls = context.getConfig().getAdminDls();
-        if (adminDls != null) {
-            for (String adminDl : adminDls) {
-                users.add(adminDl);
-            }
-        }
-        if (users.isEmpty()) {
+        if (adminDls == null || adminDls.length < 1) {
             logger.warn("no need to send email, user list is empty");
             return;
         }
+        List<String> users = Lists.newArrayList(adminDls);
 
         Map<String, Object> dataMap = Maps.newHashMap();
         dataMap.put("job_name", getName());

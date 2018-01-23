@@ -32,7 +32,7 @@
 <div style="margin-left:5%;margin-right:5%;font-family: 'Trebuchet MS ', Arial, Helvetica, sans-serif;">
 <span style="line-height: 1.1;font-size: 18px;">
     <p style="text-align:left;">Dear Kylin user,</p>
-    <p>Congratulations! Please feel free to query based on kylin cube.Thank you for using Kylin.</p>
+    <p>Congratulations! Please feel free to query based on kylin cube. Thank you for using Kylin.</p>
 </span>
     <hr style="margin-top: 20px;
             margin-bottom: 20px;

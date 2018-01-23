@@ -33,7 +33,7 @@
 <span style="
     line-height: 1.1;font-size: 18px;">
     <p style="text-align:left;">Dear Kylin user,</p>
-    <p>It's a pity that the job is discarded.Thank you for using Kylin.</p>
+    <p>It's a pity that the job is discarded. Thank you for using Kylin.</p>
 </span>
     <hr style="margin-top: 20px;
     margin-bottom: 20px;
