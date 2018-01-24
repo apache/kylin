@@ -83,7 +83,7 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
-import org.apache.kylin.rest.util.RealizationTimeSignatureUtil;
+import org.apache.kylin.rest.util.RealizationSignatureUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.shaded.htrace.org.apache.htrace.Sampler;
 import org.apache.kylin.shaded.htrace.org.apache.htrace.Trace;
@@ -128,7 +128,6 @@ import java.util.Set;
 
 import static org.apache.kylin.cache.cachemanager.CacheConstants.QUERY_CACHE;
 import static org.apache.kylin.common.util.CheckUtil.checkCondition;
-import static org.apache.kylin.rest.util.RealizationTimeSignatureUtil.CODE_BAR;
 
 /**
  * @author xduo
@@ -502,8 +501,7 @@ public class QueryService extends BasicService {
             // Add dummy response which will be updated or evicted when query finishes
             if (isDummpyResponseEnabled) {
                 SQLResponse dummyResponse = new SQLResponse();
-                dummyResponse.setRunning(true);
-                dummyResponse.setSignature(System.currentTimeMillis());
+                dummyResponse.setDummyTime(System.currentTimeMillis());
                 cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), dummyResponse);
             }
 
@@ -527,7 +525,8 @@ public class QueryService extends BasicService {
                     String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()),
                     String.valueOf(sqlResponse.getTotalScanCount()));
             if (checkCondition(queryCacheEnabled, "query cache is disabled") //
-                    && checkCondition(sqlResponse.getSignature() > CODE_BAR, "query does not hit cube nor hybrid") //
+                    && checkCondition(!Strings.isNullOrEmpty(sqlResponse.getCube()),
+                    "query does not hit cube nor hybrid") //
                     && checkCondition(!sqlResponse.getIsException(), "query has exception") //
                     && checkCondition(
                     !(sqlResponse.isPushDown()
@@ -625,7 +624,7 @@ public class QueryService extends BasicService {
         // Check whether duplicate query exists
         while (response.isRunning()) {
             // Wait at most one minute
-            if (System.currentTimeMillis() - response.getSignature() >= 60000L) {
+            if (System.currentTimeMillis() - response.getDummyTime() >= 60000L) {
                 queryCache.evict(sqlRequest.getCacheKey());
                 return null;
             }
@@ -646,40 +645,17 @@ public class QueryService extends BasicService {
             }
         }
 
-        logger.info("The sqlResponse is found in QUERY_CACHE");
-        if (response.getSignature() <= CODE_BAR) {
-            logger.info(
-                    "The sqlResponse is found in QUERY_CACHE but not cube or hybrid, will not use it. Remove it from QUERY_CACHE.");
+        logger.debug("The sqlResponse is found in QUERY_CACHE");
+        if (!RealizationSignatureUtil.checkSignature(getConfig(), response)) {
+            logger.info("The sql response signature is changed. Remove it from QUERY_CACHE.");
             queryCache.evict(sqlRequest.getCacheKey());
             return null;
         }
 
-        String cubes = response.getCube();
-        if (Strings.isNullOrEmpty(cubes)) {
-            logger.warn("The cube info in sqlResponse is null. Remove it from QUERY_CACHE.");
-            queryCache.evict(sqlRequest.getCacheKey());
-            return null;
-        }
-        long signatureTime = RealizationTimeSignatureUtil.getTimeSignature(cubes.split(","));
-        if (signatureTime < CODE_BAR) {
-            logger.info("The related cubes in sqlResponse are not found or disabled, will skip query queryCache.");
-            queryCache.evict(sqlRequest.getCacheKey());
-            return null;
-        } else if (signatureTime == CODE_BAR) {
-            logger.info("The sqlResponse is not from cube or hybrid, will not use it.");
-            queryCache.evict(sqlRequest.getCacheKey());
-            return null;
-        } else if (signatureTime != response.getSignature()) {
-            logger.info("The sqlResponse is stale, will not use it. Remove it from QUERY_CACHE. signatureTime = "
-                    + signatureTime + ", cached signatureTime :" + response.getSignature());
-            queryCache.evict(sqlRequest.getCacheKey());
-            return null;
+        if (response.getIsException()) {
+            response.setHitExceptionCache(true);
         } else {
-            if (response.getIsException()) {
-                response.setHitExceptionCache(true);
-            } else {
-                response.setStorageCacheUsed(true);
-            }
+            response.setStorageCacheUsed(true);
         }
         return response;
     }
@@ -1123,7 +1099,6 @@ public class QueryService extends BasicService {
 
         boolean isPartialResult = false;
 
-        List<String> realizations = Lists.newLinkedList();
         StringBuilder cubeSb = new StringBuilder();
         StringBuilder logSb = new StringBuilder("Processed rows for each storageContext: ");
         QueryContext queryContext = QueryContextFacade.current();
@@ -1141,22 +1116,18 @@ public class QueryService extends BasicService {
 
                     realizationName = ctx.realization.getName();
                     realizationType = ctx.realization.getStorageType();
-
-                    realizations.add(realizationName);
                 }
                 queryContext.setContextRealization(ctx.id, realizationName, realizationType);
             }
         }
         logger.info(logSb.toString());
 
-        long signatureTime = RealizationTimeSignatureUtil
-                .getTimeSignature(realizations.toArray(new String[realizations.size()]));
-
         SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, isException,
-                exceptionMessage, isPartialResult, isPushDown, signatureTime);
+                exceptionMessage, isPartialResult, isPushDown);
         response.setTotalScanCount(queryContext.getScannedRows());
         response.setTotalScanBytes(queryContext.getScannedBytes());
         response.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
+        response.setSignature(RealizationSignatureUtil.getSignature(getConfig(), response.getCube()));
         return response;
     }
 

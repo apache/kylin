@@ -20,10 +20,12 @@ package org.apache.kylin.rest.response;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContext.CubeSegmentStatisticsResult;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.rest.util.RealizationSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,9 +78,9 @@ public class SQLResponse implements Serializable {
     
     protected String traceUrl = null;
 
-    protected long signature = 0L;
+    protected byte[] signature;
 
-    protected boolean isRunning = false;
+    protected long dummyTime = -1L;
 
     public SQLResponse() {
     }
@@ -93,8 +95,7 @@ public class SQLResponse implements Serializable {
     }
 
     public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
-            int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial, boolean isPushDown,
-            long signature) {
+            int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial, boolean isPushDown) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;
@@ -103,7 +104,6 @@ public class SQLResponse implements Serializable {
         this.exceptionMessage = exceptionMessage;
         this.isPartial = isPartial;
         this.queryPushDown = isPushDown;
-        this.signature = signature;
     }
 
     public List<SelectedColumnMeta> getColumnMetas() {
@@ -213,28 +213,43 @@ public class SQLResponse implements Serializable {
     }
 
     @JsonIgnore
-    public long getSignature() {
-        return signature;
+    public Set<RealizationSignature> getSignature() {
+        try {
+            return signature == null ? null : (Set<RealizationSignature>) SerializationUtils.deserialize(signature);
+        } catch (Exception e) {
+            logger.warn("Error while deserialize signature due to " + e);
+            return null;
+        }
     }
 
-    public void setSignature(long signature) {
-        this.signature = signature;
+    public void setSignature(Set<RealizationSignature> signatureSet) {
+        try {
+            this.signature = signatureSet == null ? null : SerializationUtils.serialize((Serializable) signatureSet);
+        } catch (Exception e) { // serialize exception should not block query
+            logger.warn("Error while serialize signature due to " + e);
+            this.signature = null;
+        }
+    }
+
+    @JsonIgnore
+    public long getDummyTime() {
+        return dummyTime;
+    }
+
+    public void setDummyTime(long dummyTime) {
+        this.dummyTime = dummyTime;
     }
 
     @JsonIgnore
     public boolean isRunning() {
-        return isRunning;
-    }
-
-    public void setRunning(boolean running) {
-        isRunning = running;
+        return this.dummyTime >= 0;
     }
 
     @JsonIgnore
-    public List<QueryContext.CubeSegmentStatisticsResult> getCubeSegmentStatisticsList() {
+    public List<CubeSegmentStatisticsResult> getCubeSegmentStatisticsList() {
         try {
-            return queryStatistics == null ? Lists.<QueryContext.CubeSegmentStatisticsResult> newArrayList()
-                    : (List<QueryContext.CubeSegmentStatisticsResult>) SerializationUtils.deserialize(queryStatistics);
+            return queryStatistics == null ? Lists.<CubeSegmentStatisticsResult> newArrayList()
+                    : (List<CubeSegmentStatisticsResult>) SerializationUtils.deserialize(queryStatistics);
         } catch (Exception e) { // deserialize exception should not block query
             logger.warn("Error while deserialize queryStatistics due to " + e);
             return Lists.newArrayList();
@@ -242,7 +257,7 @@ public class SQLResponse implements Serializable {
     }
 
     public void setCubeSegmentStatisticsList(
-            List<QueryContext.CubeSegmentStatisticsResult> cubeSegmentStatisticsList) {
+            List<CubeSegmentStatisticsResult> cubeSegmentStatisticsList) {
         try {
             this.queryStatistics = cubeSegmentStatisticsList == null ? null
                     : SerializationUtils.serialize((Serializable) cubeSegmentStatisticsList);

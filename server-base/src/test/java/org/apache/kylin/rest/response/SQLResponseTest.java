@@ -36,8 +36,7 @@ public class SQLResponseTest {
                 "exceptionMessage", "duration", "partial", "totalScanCount", "totalScanBytes", "hitExceptionCache",
                 "storageCacheUsed", "pushDown", "traceUrl" };
 
-        SQLResponse sqlResponse = new SQLResponse(null, null, "learn_cube", 100, false, null, false, false,
-                System.currentTimeMillis());
+        SQLResponse sqlResponse = new SQLResponse(null, null, "learn_cube", 100, false, null, false, false);
         String jsonStr = JsonUtil.writeValueAsString(sqlResponse);
         System.out.println(jsonStr);
 
