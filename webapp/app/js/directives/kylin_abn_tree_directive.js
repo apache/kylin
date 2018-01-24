@@ -290,7 +290,6 @@
             });
           }
           n = scope.treeData.length;
-          console.log('num root branches = ' + n);
           for_each_branch(function(b, level) {
             b.level = level;
             return b.expanded = b.level < expand_level;
