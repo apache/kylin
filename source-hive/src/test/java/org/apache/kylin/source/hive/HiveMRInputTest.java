@@ -41,8 +41,8 @@ public class HiveMRInputTest {
         try {
             KylinConfig kylinConfig = mock(KylinConfig.class);
             KylinConfig.setKylinConfigThreadLocal(kylinConfig);
+            when(kylinConfig.getHiveTableDirCreateFirst()).thenReturn(true);
             when(kylinConfig.getHdfsWorkingDirectory()).thenReturn("/tmp/kylin/");
-
             DefaultChainedExecutable defaultChainedExecutable = mock(DefaultChainedExecutable.class);
             defaultChainedExecutable.setId(UUID.randomUUID().toString());
 

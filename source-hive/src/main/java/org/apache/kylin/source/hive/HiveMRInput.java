@@ -179,9 +179,11 @@ public class HiveMRInput implements IMRInput {
         protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
 
             String jobWorkingDir = JobBuilderSupport.getJobWorkingDir(hdfsWorkingDir, jobFlow.getId());
-            // Create work dir to avoid hive create it,
-            // the difference is that the owners are different.
-            checkAndCreateWorkDir(jobWorkingDir);
+            if (KylinConfig.getInstanceFromEnv().getHiveTableDirCreateFirst()) {
+                // Create work dir to avoid hive create it,
+                // the difference is that the owners are different.
+                checkAndCreateWorkDir(jobWorkingDir);
+            }
             return jobWorkingDir;
         }
 

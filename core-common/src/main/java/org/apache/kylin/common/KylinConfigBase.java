@@ -755,6 +755,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.source.hive.sparksql-beeline-params", "");
     }
 
+    public boolean getHiveTableDirCreateFirst() {
+        return Boolean.parseBoolean(getOptional("kylin.source.hive.table-dir-create-first", "false"));
+    }
+
     public String getFlatHiveTableClusterByDictColumn() {
         return getOptional("kylin.source.hive.flat-table-cluster-by-dict-column");
     }
