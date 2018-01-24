@@ -191,6 +191,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public CubeDesc getDescriptor() {
+        if (config == null) {
+            return null;
+        }
         return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
 
@@ -297,6 +300,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     @Override
     public int getCost() {
+        if (getDescriptor() == null) {
+            //in case not initialized
+            return 0;
+        }
         int countedDimensionNum = getRowKeyColumnCount();
         int c = countedDimensionNum * COST_WEIGHT_DIMENSION + getMeasures().size() * COST_WEIGHT_MEASURE;
         DataModelDesc model = getModel();
@@ -348,7 +355,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public void setSegments(Segments segments) {
-        this.segments = segments;
+        this.segments = new Segments<>(segments);
     }
 
     public CubeSegment getSegmentById(String segmentId) {
