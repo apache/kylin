@@ -1,97 +1,124 @@
 ---
-layout: docs20-cn
-title:  Kylin Client Tool 使用教程
+layout: docs-cn
+title:  Kylin Python 客户端工具库
 categories: 教程
-permalink: /cn/docs20/tutorial/kylin_client_tool.html
+permalink: /cn/docs/tutorial/kylin_client_tool.html
 ---
-  
-> Kylin-client-tool是一个用python编写的，完全基于kylin的rest api的工具。可以实现kylin的cube创建，按时build cube，job的提交、调度、查看、取消与恢复。
-  
+
+Apache Kylin Python 客户端工具库是基于Python可访问Kylin的客户端. 此工具库包含两个可使用原件. 想要了解更多关于此工具库信息请点击[Github仓库](https://github.com/Kyligence/kylinpy).
+
+* Apache Kylin 命令行工具
+* Apache Kylin SQLAchemy方言
+
 ## 安装
-1.确认运行环境安装了python2.6/2.7
+请确保您python解释器版本在2.7+, 或者3.4+以上. 最方便安装Apache Kylin python客户端工具库的方法是使用pip命令
+```
+    pip install --upgrade kylinpy
+```
 
-2.本工具需安装第三方python包apscheduler和requests，运行setup.sh进行安装，mac用户运行setup-mac.sh进行安装。也可用setuptools进行安装
+## Kylinpy 命令行工具
+安装完kylinpy后, 立即可以在终端下访问kylinpy
 
-## 配置
-修改工具目录下的settings/settings.py文件，进行配置
+```
+    $ kylinpy
+    Usage: kylinpy [OPTIONS] COMMAND [ARGS]...
 
-`KYLIN_USER`  Kylin用户名
+    Options:
+      -h, --host TEXT       kylin/kap host name  [required]
+      -P, --port INTEGER    kylin/kap port, default: 7070
+      -u, --username TEXT   kylin/kap username  [required]
+      -p, --password TEXT   kylin/kap password  [required]
+      --project TEXT        kylin/kap project  [required]
+      --prefix TEXT         kylin/kap RESTful prefix of url, default: /kylin/api
+      --debug / --no-debug  show debug infomation
+      --api2 / --api1       API version; default is api1; --api1 used by Apache KYLIN;
+                        --api2 used by KAP
+      --help                Show this message and exit.
 
-`KYLIN_PASSWORD`  Kylin的密码
+    Commands:
+      auth           get user auth info
+      cube_columns   list cube columns
+      cube_desc      show cube description
+      cube_names     list cube names
+      cube_sql       get sample sql of cube. KAP only
+      model_desc     show model description
+      projects       list all projects
+      query          sql query
+      table_columns  list table columns
+      table_names    list all table names
+      users          list all users. Need admin role. KAP only
+```
 
-`KYLIN_REST_HOST`  Kylin的地址
+## Kylinpy命令行工具示例
 
-`KYLIN_REST_PORT`  Kylin的端口
+1. 访问Apache Kylin
+```
+kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug auth
+```
 
-`KYLIN_JOB_MAX_COCURRENT`  允许同时build的job数量
+2. 访问选定cube所有的维度信息
+```
+kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_columns --name kylin_sales_cube
+```
 
-`KYLIN_JOB_MAX_RETRY`  cube build出现error后，允许的重启job次数
+3. 访问选定的cube描述
+```
+kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_desc --name kylin_sales_cube
+```
 
-## 命令行的使用
-本工具使用optparse通过命令行来执行操作，具体用法可通过`python kylin_client_tool.py －h`来查看
+4. 访问所有cube名称
+```
+kylinpy -h kap.kapdemo.com -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_names
+```
 
-## cube的创建
-本工具定义了一种读手写的文本，来快速cube创建的方法，格式如下
+5. 访问选定cube的SQL定义
+```
+kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_sql --name kylin_sales_cube
+```
 
-`cube名|fact table名|维度1,维度1类型;维度2,维度2类型...|指标1,指标1表达式,指标1类型...|设置项|filter|`
+6. 列出Kylin中所有项目
+```
+kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug projects
+```
 
-设置项内有以下选项，
+7. 访问选定表所有的维度信息
+```
+kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug table_columns --name KYLIN_SALES
+```
 
-`no_dictionary`  设置Rowkeys中不生成dictionary的维度及其长度
+8. 访问所有表名
+```
+kylinpy -h kap.kapdemo.com -u ADMIN -p KYLIN --project learn_kylin --api1 table_names
+```
 
-`mandatory_dimension`  设置Rowkeys中mandatory的维度
+9. 访问所选模型信息
+```
+kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug model_desc --name kylin_sales_model
+```
 
-`aggregation_group`  设置aggregation group
+## Apache Kylin SQLAlchemy方言
 
-`partition_date_column`  设置partition date column
+任何一个使用SQLAlchemy的应用程序都可以通过此`方言`访问到Kylin, 您之前如果已经安装了kylinpy那么现在就已经集成好了SQLAlchemy Dialect. 请使用如下DSN模板访问Kylin
 
-`partition_date_start`  设置partition start date
+```
+kylin://<username>:<password>@<hostname>:<port>/<project>?version=<v1|v2>&prefix=</kylin/api>
+```
 
-具体例子可以查看cube_def.csv文件，目前不支持含lookup table的cube创建
+## SQLAlchemy 实例
+测试Apache Kylin连接
 
-使用`-c`命令进行创建，用`-F`指定cube定义文件，例如
-
-`python kylin_client_tool.py -c -F cube_def.csv`
-
-## build cube
-###使用cube定义文件build
-使用`-b`命令，需要用`-F`指定cube定义文件，如果指定了partition date column，通过`-T`指定end date(year-month-day格式)，若不指定，以当前时间为end date，例如
-
-`python kylin_client_tool.py -b -F cube_def.csv -T 2016-03-01`
-
-###使用cube名文件build
-用`-f`指定cube名文件，文件每行一个cube名
-
-`python kylin_client_tool.py -b -f cube_names.csv -T 2016-03-01`
-
-###直接命令行写cube名build
-用`-C`指定cube名，通过逗号进行分隔
-
-`python kylin_client_tool.py -b -C client_tool_test1,client_tool_test2 -T 2016-03-01`
-
-## job管理
-###查看job状态
-使用`-s`命令查看，用`-f`指定cube名文件，用`-C`指定cube名，若不指定，将查看所有cube状态。用`-S`指定job状态，R表示`Running`，E表示`Error`，F表示`Finished`，D表示`Discarded`，例如：
-
-`python kylin_client_tool.py -s -C kylin_sales_cube -f cube_names.csv -S F`
-
-###恢复job
-用`-r`命令恢复job，用`-f`指定cube名文件，用`-C`指定cube名，若不指定，将恢复所有Error状态的job，例如：
-
-`python kylin_client_tool.py -r -C kylin_sales_cube -f cube_names.csv`
-
-###取消job
-用`-k`命令取消job，用`-f`指定cube名文件，用`-C`指定cube名，若不指定，将取消所有Running或Error状态的job，例如：
-
-`python kylin_client_tool.py -k -C kylin_sales_cube -f cube_names.csv`
-
-## 定时build cube
-### 每隔一段时间build cube
-在cube build命令的基础上，使用`-B i`指定每隔一段时间build的方式，使用`-O`指定间隔的小时数，例如：
-
-`python kylin_client_tool.py -b -F cube_def.csv -B i -O 1`
-
-### 设定时间build cube
-使用`-B t`指定按时build cube的方式，使用`-O`指定build时间，用逗号进行分隔
-
-`python kylin_client_tool.py -b -F cube_def.csv -T 2016-03-04 -B t -O 2016,3,1,0,0,0`
+```
+    $ python
+    >>> import sqlalchemy as sa
+    >>> kylin_engine = sa.create_engine('kylin://username:password@hostname:7070/learn_kylin?version=v1')
+    >>> results = kylin_engine.execute('SELECT count(*) FROM KYLIN_SALES')
+    >>> [e for e in results]
+    [(4953,)]
+    >>> kylin_engine.table_names()
+    [u'KYLIN_ACCOUNT',
+     u'KYLIN_CAL_DT',
+     u'KYLIN_CATEGORY_GROUPINGS',
+     u'KYLIN_COUNTRY',
+     u'KYLIN_SALES',
+     u'KYLIN_STREAMING_TABLE']
+```
