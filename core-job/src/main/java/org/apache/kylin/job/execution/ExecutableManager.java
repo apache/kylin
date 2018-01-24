@@ -23,7 +23,6 @@ import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
 import java.util.List;
@@ -235,45 +234,6 @@ public class ExecutableManager {
             return ret;
         } catch (PersistentException e) {
             logger.error("error get All Jobs", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Since ExecutableManager will instantiate all AbstractExecutable class by Class.forName(), but for each version release,
-     * new classes are introduced, old classes are deprecated, renamed or removed. The Class.forName() will throw out
-     * ClassNotFoundException. This API is used to retrieve the Executable Object list, not for calling the object method,
-     * so we could just instance the parent common class instead of the concrete class. It will tolerate the class missing issue.
-     *
-     * @param timeStartInMillis
-     * @param timeEndInMillis
-     * @param expectedClass
-     * @return
-     */
-    public List<AbstractExecutable> getAllAbstractExecutables(long timeStartInMillis, long timeEndInMillis,
-            Class<? extends AbstractExecutable> expectedClass) {
-        try {
-            List<AbstractExecutable> ret = Lists.newArrayList();
-            for (ExecutablePO po : executableDao.getJobs(timeStartInMillis, timeEndInMillis)) {
-                try {
-                    AbstractExecutable ae = parseToAbstract(po, expectedClass);
-                    ret.add(ae);
-                } catch (IllegalArgumentException e) {
-                    logger.error("error parsing one executabePO: ", e);
-                }
-            }
-            return ret;
-        } catch (PersistentException e) {
-            logger.error("error get All Jobs", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public AbstractExecutable getAbstractExecutable(String uuid, Class<? extends AbstractExecutable> expectedClass) {
-        try {
-            return parseToAbstract(executableDao.getJob(uuid), expectedClass);
-        } catch (PersistentException e) {
-            logger.error("fail to get job:" + uuid, e);
             throw new RuntimeException(e);
         }
     }
@@ -536,70 +496,40 @@ public class ExecutableManager {
             return null;
         }
         String type = executablePO.getType();
-        try {
-            Class<? extends AbstractExecutable> clazz = ClassUtil.forName(type, AbstractExecutable.class);
-            Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor();
-            AbstractExecutable result = constructor.newInstance();
-            result.initConfig(config);
-            result.setId(executablePO.getUuid());
-            result.setName(executablePO.getName());
-            result.setParams(executablePO.getParams());
-            List<ExecutablePO> tasks = executablePO.getTasks();
-            if (tasks != null && !tasks.isEmpty()) {
-                Preconditions.checkArgument(result instanceof ChainedExecutable);
-                for (ExecutablePO subTask : tasks) {
-                    ((ChainedExecutable) result).addTask(parseTo(subTask));
-                }
+        AbstractExecutable result = newExecutable(type);
+        result.initConfig(config);
+        result.setId(executablePO.getUuid());
+        result.setName(executablePO.getName());
+        result.setParams(executablePO.getParams());
+        List<ExecutablePO> tasks = executablePO.getTasks();
+        if (tasks != null && !tasks.isEmpty()) {
+            Preconditions.checkArgument(result instanceof ChainedExecutable);
+            for (ExecutablePO subTask : tasks) {
+                ((ChainedExecutable) result).addTask(parseTo(subTask));
             }
-            List<ExecutablePO> tasksForCheck = executablePO.getTasksForCheck();
-            if (tasksForCheck != null && !tasksForCheck.isEmpty()) {
-                Preconditions.checkArgument(result instanceof CheckpointExecutable);
-                for (ExecutablePO subTaskForCheck : tasksForCheck) {
-                    ((CheckpointExecutable) result).addTaskForCheck(parseTo(subTaskForCheck));
-                }
-            }
-            return result;
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("cannot parse this job:" + executablePO.getId(), e);
         }
+        List<ExecutablePO> tasksForCheck = executablePO.getTasksForCheck();
+        if (tasksForCheck != null && !tasksForCheck.isEmpty()) {
+            Preconditions.checkArgument(result instanceof CheckpointExecutable);
+            for (ExecutablePO subTaskForCheck : tasksForCheck) {
+                ((CheckpointExecutable) result).addTaskForCheck(parseTo(subTaskForCheck));
+            }
+        }
+        return result;
     }
 
-    private AbstractExecutable parseToAbstract(ExecutablePO executablePO,
-            Class<? extends AbstractExecutable> expectedClass) {
-        if (executablePO == null) {
-            logger.warn("executablePO is null");
-            return null;
-        }
-        String type = executablePO.getType();
+    private AbstractExecutable newExecutable(String type) {
+        Class<? extends AbstractExecutable> clazz;
         try {
-            Class<? extends AbstractExecutable> clazz = null;
-            try {
-                clazz = ClassUtil.forName(type, AbstractExecutable.class);
-            } catch (ClassNotFoundException e) {
-                clazz = ClassUtil.forName(expectedClass.getName(), AbstractExecutable.class);
-            }
-            Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor();
-            AbstractExecutable result = constructor.newInstance();
-            result.initConfig(config);
-            result.setId(executablePO.getUuid());
-            result.setName(executablePO.getName());
-            result.setParams(executablePO.getParams());
-            List<ExecutablePO> tasks = executablePO.getTasks();
-            if (tasks != null && !tasks.isEmpty()) {
-                Preconditions.checkArgument(result instanceof ChainedExecutable);
-                for (ExecutablePO subTask : tasks) {
-                    AbstractExecutable parseToTask = null;
-                    try {
-                        parseToTask = parseTo(subTask);
-                    } catch (IllegalStateException e) {
-                        parseToTask = parseToAbstract(subTask, DefaultChainedExecutable.class);
-                    }
-                    ((ChainedExecutable) result).addTask(parseToTask);
-                }
-            }
-            return result;
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("cannot parse this job:" + executablePO.getId(), e);
+            clazz = ClassUtil.forName(type, AbstractExecutable.class);
+        } catch (ClassNotFoundException ex) {
+            clazz = BrokenExecutable.class;
+            logger.error("Unknown executable type '" + type + "', using BrokenExecutable");
+        }
+        try {
+            return clazz.getConstructor().newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to instantiate " + clazz, e);
         }
     }
 }

@@ -259,7 +259,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     @Override
-    public final ExecutableState getStatus() {
+    public ExecutableState getStatus() {
         ExecutableManager manager = getManager();
         return manager.getOutput(this.getId()).getState();
     }

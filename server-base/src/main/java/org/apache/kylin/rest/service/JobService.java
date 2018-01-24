@@ -725,9 +725,9 @@ public class JobService extends BasicService implements InitializingBean {
     public List<CubingJob> innerSearchCubingJobs(final String cubeName, final String jobName,
             final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
             final Map<String, Output> allOutputs, final boolean nameExactMatch, final String projectName) {
-        List<CubingJob> results = Lists.newArrayList(FluentIterable.from(
-                getExecutableManager().getAllAbstractExecutables(timeStartInMillis, timeEndInMillis, CubingJob.class))
-                .filter(new Predicate<AbstractExecutable>() {
+        List<CubingJob> results = Lists.newArrayList(
+                FluentIterable.from(getExecutableManager().getAllExecutables(timeStartInMillis, timeEndInMillis))
+                        .filter(new Predicate<AbstractExecutable>() {
                     @Override
                     public boolean apply(AbstractExecutable executable) {
                         if (executable instanceof CubingJob) {
@@ -824,8 +824,7 @@ public class JobService extends BasicService implements InitializingBean {
         List<CheckpointExecutable> results = Lists
                 .newArrayList(
                         FluentIterable
-                                .from(getExecutableManager().getAllAbstractExecutables(timeStartInMillis,
-                                        timeEndInMillis, CheckpointExecutable.class))
+                                .from(getExecutableManager().getAllExecutables(timeStartInMillis, timeEndInMillis))
                                 .filter(new Predicate<AbstractExecutable>() {
                                     @Override
                                     public boolean apply(AbstractExecutable executable) {

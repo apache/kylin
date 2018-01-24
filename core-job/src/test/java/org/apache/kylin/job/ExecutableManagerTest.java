@@ -47,12 +47,6 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
     public void setup() throws Exception {
         createTestMetadata();
         service = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
-
-        for (String jobId : service.getAllJobIds()) {
-            System.out.println("deleting " + jobId);
-            service.deleteJob(jobId);
-        }
-
     }
 
     @After
@@ -63,13 +57,21 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void test() throws Exception {
         assertNotNull(service);
+        
+        // all existing are broken jobs
+        List<AbstractExecutable> existing = service.getAllExecutables();
+        for (AbstractExecutable exec : existing) {
+            assertEquals("BrokenExecutable", exec.getClass().getSimpleName());
+            assertEquals(ExecutableState.DISCARDED, exec.getStatus());
+        }
+        
         BaseTestExecutable executable = new SucceedTestExecutable();
         executable.setParam("test1", "test1");
         executable.setParam("test2", "test2");
         executable.setParam("test3", "test3");
         service.addJob(executable);
         List<AbstractExecutable> result = service.getAllExecutables();
-        assertEquals(1, result.size());
+        assertEquals(existing.size() + 1, result.size());
         AbstractExecutable another = service.getJob(executable.getId());
         assertJobEqual(executable, another);
 
