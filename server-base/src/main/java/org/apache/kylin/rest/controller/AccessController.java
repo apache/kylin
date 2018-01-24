@@ -160,23 +160,26 @@ public class AccessController extends BasicController {
      * @param accessRequest
      */
     @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE }, produces = { "application/json" })
-    public List<AccessEntryResponse> revoke(@PathVariable String entityType, @PathVariable String uuid, AccessRequest accessRequest) throws IOException {
-        AclEntity ae = accessService.getAclEntity(entityType, uuid);
+    public List<AccessEntryResponse> revoke(@PathVariable String type, @PathVariable String uuid, AccessRequest accessRequest) throws IOException {
+        AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.revoke(ae, accessRequest.getAccessEntryId());
-        String type;
+
         if (accessRequest.isPrincipal()) {
-            type = MetadataConstants.TYPE_USER;
+            revokeTableACL(type, uuid, accessRequest.getSid(), MetadataConstants.TYPE_USER);
         } else {
-            type = MetadataConstants.TYPE_GROUP;
+            revokeTableACL(type, uuid, accessRequest.getSid(), MetadataConstants.TYPE_GROUP);
         }
-        if (AclEntityType.PROJECT_INSTANCE.equals(type)) {
+
+        return accessService.generateAceResponses(acl);
+    }
+
+    private void revokeTableACL(String entityType, String uuid, String name, String identityType) throws IOException {
+        if (AclEntityType.PROJECT_INSTANCE.equals(entityType)) {
             String prj = projectService.getProjectManager().getPrjByUuid(uuid).getName();
-            String username = accessRequest.getSid();
-            if (tableACLService.exists(prj, username, type)) {
-                tableACLService.deleteFromTableACL(prj, username, type);
+            if (tableACLService.exists(prj, name, identityType)) {
+                tableACLService.deleteFromTableACL(prj, name, identityType);
             }
         }
-        return accessService.generateAceResponses(acl);
     }
 
     /**
