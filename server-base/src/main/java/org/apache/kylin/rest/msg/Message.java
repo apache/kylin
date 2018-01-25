@@ -98,7 +98,7 @@ public class Message {
     }
 
     public String getINVALID_CUBE_NAME() {
-        return "Invalid Cube name '%s', only letters, numbers and underline supported.";
+        return "Invalid Cube name '%s', only letters, numbers and underscore supported.";
     }
 
     public String getCUBE_ALREADY_EXIST() {

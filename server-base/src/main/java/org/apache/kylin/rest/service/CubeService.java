@@ -70,6 +70,7 @@ import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -96,9 +97,6 @@ public class CubeService extends BasicService implements InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
 
-    public static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
-            .toCharArray();
-
     protected Cache<String, HBaseResponse> htableInfoCache = CacheBuilder.newBuilder().build();
 
     @Autowired
@@ -121,7 +119,7 @@ public class CubeService extends BasicService implements InitializingBean {
     private AclEvaluate aclEvaluate;
 
     public boolean isCubeNameVaildate(final String cubeName) {
-        if (StringUtils.isEmpty(cubeName) || !StringUtils.containsOnly(cubeName, VALID_CUBENAME)) {
+        if (StringUtils.isEmpty(cubeName) || !ValidateUtil.isAlphanumericUnderscore(cubeName)) {
             return false;
         }
         for (CubeInstance cubeInstance : getCubeManager().listAllCubes()) {
@@ -521,8 +519,8 @@ public class CubeService extends BasicService implements InitializingBean {
 
         CubeUpdate update = new CubeUpdate(cube.latestCopyForWrite());
         update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
-        update.setCuboids(Maps.<Long, Long>newHashMap());
-        update.setCuboidsRecommend(Sets.<Long>newHashSet());
+        update.setCuboids(Maps.<Long, Long> newHashMap());
+        update.setCuboidsRecommend(Sets.<Long> newHashSet());
         CubeManager.getInstance(getConfig()).updateCube(update);
     }
 
@@ -611,8 +609,8 @@ public class CubeService extends BasicService implements InitializingBean {
             logger.info("Cube name should not be empty.");
             throw new BadRequestException(msg.getEMPTY_CUBE_NAME());
         }
-        if (!StringUtils.containsOnly(cubeName, VALID_CUBENAME)) {
-            logger.info("Invalid Cube name {}, only letters, numbers and underline supported.", cubeName);
+        if (!ValidateUtil.isAlphanumericUnderscore(cubeName)) {
+            logger.info("Invalid Cube name {}, only letters, numbers and underscore supported.", cubeName);
             throw new BadRequestException(String.format(msg.getINVALID_CUBE_NAME(), cubeName));
         }
 
@@ -766,7 +764,7 @@ public class CubeService extends BasicService implements InitializingBean {
     public CubeInstanceResponse createCubeInstanceResponse(CubeInstance cube) {
         return new CubeInstanceResponse(cube, projectService.getProjectOfCube(cube.getName()));
     }
-    
+
     public CuboidTreeResponse getCuboidTreeResponse(CuboidScheduler cuboidScheduler, Map<Long, Long> rowCountMap,
             Map<Long, Long> hitFrequencyMap, Map<Long, Long> queryMatchMap, Set<Long> currentCuboidSet) {
         long baseCuboidId = cuboidScheduler.getBaseCuboidId();

@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import static org.apache.kylin.rest.service.CubeService.VALID_CUBENAME;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -76,6 +74,7 @@ import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.QueryService;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -498,9 +497,8 @@ public class CubeController extends BasicController {
         if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
             throw new BadRequestException("Broken cube can't be cloned");
         }
-        if (!StringUtils.containsOnly(newCubeName, VALID_CUBENAME)) {
-            logger.info("Invalid Cube name {}, only letters, numbers and underline supported.", newCubeName);
-            throw new BadRequestException("Invalid Cube name, only letters, numbers and underline supported.");
+        if (!ValidateUtil.isAlphanumericUnderscore(newCubeName)) {
+            throw new BadRequestException("Invalid Cube name, only letters, numbers and underscore supported.");
         }
 
         ProjectInstance project = cubeService.getProjectManager().getProject(projectName);
@@ -589,9 +587,8 @@ public class CubeController extends BasicController {
             logger.info("Cube name should not be empty.");
             throw new BadRequestException("Cube name should not be empty.");
         }
-        if (!StringUtils.containsOnly(name, VALID_CUBENAME)) {
-            logger.info("Invalid Cube name {}, only letters, numbers and underline supported.", name);
-            throw new BadRequestException("Invalid Cube name, only letters, numbers and underline supported.");
+        if (!ValidateUtil.isAlphanumericUnderscore(name)) {
+            throw new BadRequestException("Invalid Cube name, only letters, numbers and underscore supported.");
         }
 
         try {

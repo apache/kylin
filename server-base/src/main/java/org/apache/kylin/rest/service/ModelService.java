@@ -44,6 +44,7 @@ import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,9 +64,6 @@ public class ModelService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelService.class);
 
-    public static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
-            .toCharArray();
-
     @Autowired
     @Qualifier("accessService")
     private AccessService accessService;
@@ -78,7 +76,7 @@ public class ModelService extends BasicService {
     private AclEvaluate aclEvaluate;
 
     public boolean isModelNameValidate(final String modelName) {
-        if (StringUtils.isEmpty(modelName) || !StringUtils.containsOnly(modelName, VALID_MODELNAME)) {
+        if (StringUtils.isEmpty(modelName) || !ValidateUtil.isAlphanumericUnderscore(modelName)) {
             return false;
         }
         for (DataModelDesc model : getDataModelManager().getModels()) {
@@ -140,7 +138,7 @@ public class ModelService extends BasicService {
         if (getDataModelManager().getDataModelDesc(desc.getName()) != null) {
             throw new BadRequestException(String.format(msg.getDUPLICATE_MODEL_NAME(), desc.getName()));
         }
-        
+
         DataModelDesc createdDesc = null;
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         createdDesc = getDataModelManager().createDataModelDesc(desc, projectName, owner);
@@ -345,8 +343,8 @@ public class ModelService extends BasicService {
             logger.info("Model name should not be empty.");
             throw new BadRequestException(msg.getEMPTY_MODEL_NAME());
         }
-        if (!StringUtils.containsOnly(modelName, VALID_MODELNAME)) {
-            logger.info("Invalid Model name {}, only letters, numbers and underline supported.", modelDesc.getName());
+        if (!ValidateUtil.isAlphanumericUnderscore(modelName)) {
+            logger.info("Invalid model name {}, only letters, numbers and underscore supported.", modelDesc.getName());
             throw new BadRequestException(String.format(msg.getINVALID_MODEL_NAME(), modelName));
         }
     }

@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.persistence.AclEntity;
@@ -50,6 +51,7 @@ import com.google.common.base.Preconditions;
 
 @Component("validateUtil")
 public class ValidateUtil {
+    private final static Pattern alphaNumUnderscorePattren = Pattern.compile("[a-zA-Z0-9_]+");
 
     @Autowired
     @Qualifier("userService")
@@ -70,6 +72,10 @@ public class ValidateUtil {
     @Autowired
     @Qualifier("userGroupService")
     private IUserGroupService userGroupService;
+
+    public static boolean isAlphanumericUnderscore(String toCheck) {
+        return toCheck == null ? false : alphaNumUnderscorePattren.matcher(toCheck).matches();
+    }
 
     //Identifiers may be user or user authority(you may call role or group)
     public void validateIdentifiers(String name, String type) throws IOException {
@@ -169,5 +175,4 @@ public class ValidateUtil {
         }
         return cols;
     }
-
 }

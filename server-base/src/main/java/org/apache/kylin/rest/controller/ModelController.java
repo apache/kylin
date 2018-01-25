@@ -38,6 +38,7 @@ import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,9 +65,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 @RequestMapping(value = "/models")
 public class ModelController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(ModelController.class);
-
-    private static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
-            .toCharArray();
 
     @Autowired
     @Qualifier("modelMgmtService")
@@ -114,9 +112,10 @@ public class ModelController extends BasicController {
             logger.info("Model name should not be empty.");
             throw new BadRequestException("Model name should not be empty.");
         }
-        if (!StringUtils.containsOnly(modelDesc.getName(), VALID_MODELNAME)) {
-            logger.info("Invalid Model name {}, only letters, numbers and underline supported.", modelDesc.getName());
-            throw new BadRequestException("Invalid Model name, only letters, numbers and underline supported.");
+        if (!ValidateUtil.isAlphanumericUnderscore(modelDesc.getName())) {
+            throw new BadRequestException(
+                    String.format("Invalid model name %s, only letters, numbers and underscore " + "supported."),
+                    modelDesc.getName());
         }
 
         try {
@@ -201,8 +200,9 @@ public class ModelController extends BasicController {
         if (StringUtils.isEmpty(newModelName)) {
             throw new BadRequestException("New model name should not be empty.");
         }
-        if (!StringUtils.containsOnly(newModelName, VALID_MODELNAME)) {
-            throw new BadRequestException("Invalid Model name, only letters, numbers and underline supported.");
+        if (!ValidateUtil.isAlphanumericUnderscore(newModelName)) {
+            throw new BadRequestException(String
+                    .format("Invalid model name %s, only letters, numbers and underscore supported.", newModelName));
         }
 
         DataModelDesc newModelDesc = DataModelDesc.getCopyOf(modelDesc);
