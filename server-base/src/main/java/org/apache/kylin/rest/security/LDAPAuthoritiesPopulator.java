@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.apache.kylin.rest.constant.Constant;
 import org.springframework.ldap.core.ContextSource;
+import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
@@ -47,5 +48,12 @@ public class LDAPAuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
             userAuthorities.add(new SimpleGrantedAuthority(Constant.ROLE_ADMIN));
         }
         return userAuthorities;
+    }
+
+    @Override
+    protected Set<GrantedAuthority> getAdditionalRoles(DirContextOperations user, String username) {
+        String userDn = user.getNameInNamespace();
+        username = user.getStringAttribute("cn");
+        return getGroupMembershipRoles(userDn, username);
     }
 }
