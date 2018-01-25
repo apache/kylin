@@ -31,6 +31,9 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   };
 
   this.getProperty = function (name) {
+    if(angular.isUndefined(_config)){
+      return '';
+    }
     var keyIndex = _config.indexOf('\n' + name + '=');
     var keyLength = name.length;
     var partialResult = _config.substr(keyIndex);
