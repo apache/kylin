@@ -33,7 +33,6 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConstant;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
@@ -45,6 +44,7 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -84,7 +84,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
     @Test
     public void testSSBCubeMore() throws Exception {
         testBuild("ssb", //
-                LOCALMETA_TEST_DATA + "/data/" + KylinConstant.KYLIN_INTERMEDIATE_PREFIX
+                LOCALMETA_TEST_DATA + "/data/" + MetadataConstants.KYLIN_INTERMEDIATE_PREFIX
                         + "ssb_19920101000000_19920201000000.csv",
                 7000, 4);
     }
@@ -92,7 +92,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
     @Test
     public void testSSBCube() throws Exception {
         testBuild("ssb", //
-                LOCALMETA_TEST_DATA + "/data/" + KylinConstant.KYLIN_INTERMEDIATE_PREFIX
+                LOCALMETA_TEST_DATA + "/data/" + MetadataConstants.KYLIN_INTERMEDIATE_PREFIX
                         + "ssb_19920101000000_19920201000000.csv",
                 1000, 1);
     }

@@ -32,7 +32,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConstant;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeManager;
@@ -41,6 +40,7 @@ import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -333,7 +333,7 @@ public class TableService extends BasicService {
         Iterable<String> kylinApplicationTableNames = Iterables.filter(hiveTableNames, new Predicate<String>() {
             @Override
             public boolean apply(@Nullable String input) {
-                return input != null && !input.startsWith(KylinConstant.KYLIN_INTERMEDIATE_PREFIX);
+                return input != null && !input.startsWith(MetadataConstants.KYLIN_INTERMEDIATE_PREFIX);
             }
         });
         return Lists.newArrayList(kylinApplicationTableNames);

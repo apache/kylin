@@ -22,11 +22,11 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.kylin.common.KylinConstant;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringSplitter;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +46,6 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     private static final Logger logger = LoggerFactory.getLogger(TableDesc.class);
 
     private static final String TABLE_TYPE_VIRTUAL_VIEW = "VIRTUAL_VIEW";
-    private static final String materializedTableNamePrefix = KylinConstant.KYLIN_INTERMEDIATE_PREFIX;
 
     public static String concatRawResourcePath(String nameOnPath) {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";
@@ -351,7 +350,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     }
 
     public String getMaterializedName() {
-        return materializedTableNamePrefix + database.getName() + "_" + name;
+        return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + database.getName() + "_" + name;
     }
 
     @Override

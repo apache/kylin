@@ -38,8 +38,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinConstant;
-import org.apache.kylin.common.metrics.common.MetricsConstant;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -53,6 +51,7 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
@@ -194,7 +193,7 @@ public class StorageCleanupJob extends AbstractApplication {
         JobEngineConfig engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         final CliCommandExecutor cmdExec = config.getCliCommandExecutor();
         final int uuidLength = 36;
-        final String preFix = KylinConstant.KYLIN_INTERMEDIATE_PREFIX;
+        final String preFix = MetadataConstants.KYLIN_INTERMEDIATE_PREFIX;
         final String uuidPattern = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
         ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
@@ -202,7 +201,7 @@ public class StorageCleanupJob extends AbstractApplication {
         Iterable<String> kylinIntermediates = Iterables.filter(hiveTableNames, new Predicate<String>() {
             @Override
             public boolean apply(@Nullable String input) {
-                return input != null && input.startsWith(KylinConstant.KYLIN_INTERMEDIATE_PREFIX);
+                return input != null && input.startsWith(MetadataConstants.KYLIN_INTERMEDIATE_PREFIX);
             }
         });
 
