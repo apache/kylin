@@ -33,6 +33,7 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConstant;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
@@ -83,13 +84,17 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
     @Test
     public void testSSBCubeMore() throws Exception {
         testBuild("ssb", //
-                LOCALMETA_TEST_DATA + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv", 7000, 4);
+                LOCALMETA_TEST_DATA + "/data/" + KylinConstant.KYLIN_INTERMEDIATE_PREFIX
+                        + "ssb_19920101000000_19920201000000.csv",
+                7000, 4);
     }
 
     @Test
     public void testSSBCube() throws Exception {
         testBuild("ssb", //
-                LOCALMETA_TEST_DATA + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv", 1000, 1);
+                LOCALMETA_TEST_DATA + "/data/" + KylinConstant.KYLIN_INTERMEDIATE_PREFIX
+                        + "ssb_19920101000000_19920201000000.csv",
+                1000, 1);
     }
 
     public void testBuild(String cubeName, String flatTable, int nInpRows, int nThreads) throws Exception {

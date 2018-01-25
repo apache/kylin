@@ -26,6 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConstant;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
@@ -66,7 +67,8 @@ public class ITDoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
 
         cube = cubeManager.getCube("ssb");
-        flatTable = LOCALMETA_TEST_DATA + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv";
+        flatTable = LOCALMETA_TEST_DATA + "/data/" + KylinConstant.KYLIN_INTERMEDIATE_PREFIX
+                + "ssb_19920101000000_19920201000000.csv";
         dictionaryMap = ITInMemCubeBuilderTest.getDictionaryMap(cube, flatTable);
     }
 

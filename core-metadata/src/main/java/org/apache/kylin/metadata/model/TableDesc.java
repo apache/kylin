@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.kylin.common.KylinConstant;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Pair;
@@ -45,7 +46,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     private static final Logger logger = LoggerFactory.getLogger(TableDesc.class);
 
     private static final String TABLE_TYPE_VIRTUAL_VIEW = "VIRTUAL_VIEW";
-    private static final String materializedTableNamePrefix = "kylin_intermediate_";
+    private static final String materializedTableNamePrefix = KylinConstant.KYLIN_INTERMEDIATE_PREFIX;
 
     public static String concatRawResourcePath(String nameOnPath) {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";

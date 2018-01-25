@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConstant;
 import org.apache.kylin.common.util.BytesSplitter;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -74,9 +75,9 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
 
     protected String makeTableName(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         if (cubeSegment == null) {
-            return "kylin_intermediate_" + cubeDesc.getName().toLowerCase();
+            return KylinConstant.KYLIN_INTERMEDIATE_PREFIX + cubeDesc.getName().toLowerCase();
         } else {
-            return "kylin_intermediate_" + cubeDesc.getName().toLowerCase() + "_"
+            return KylinConstant.KYLIN_INTERMEDIATE_PREFIX + cubeDesc.getName().toLowerCase() + "_"
                     + cubeSegment.getUuid().replaceAll("-", "_");
         }
     }

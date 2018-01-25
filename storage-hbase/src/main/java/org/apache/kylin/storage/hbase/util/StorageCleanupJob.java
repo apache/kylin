@@ -44,6 +44,7 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConstant;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -251,13 +252,13 @@ public class StorageCleanupJob extends AbstractApplication {
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
         final CliCommandExecutor cmdExec = config.getCliCommandExecutor();
         final int uuidLength = 36;
-        final String preFix = "kylin_intermediate_";
+        final String preFix = KylinConstant.KYLIN_INTERMEDIATE_PREFIX;
         final String uuidPattern = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
         final String useDatabaseHql = "USE " + config.getHiveDatabaseForIntermediateTable() + ";";
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement(useDatabaseHql);
-        hiveCmdBuilder.addStatement("show tables " + "\'kylin_intermediate_*\'" + "; ");
+        hiveCmdBuilder.addStatement("show tables " + "\'" + KylinConstant.KYLIN_INTERMEDIATE_PREFIX + "*\'" + "; ");
 
         Pair<Integer, String> result = cmdExec.execute(hiveCmdBuilder.build());
 
