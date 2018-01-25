@@ -65,7 +65,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 public class ModelController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(ModelController.class);
 
-    private static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
+    private static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+            .toCharArray();
 
     @Autowired
     @Qualifier("modelMgmtService")
@@ -83,7 +84,10 @@ public class ModelController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
+    public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName,
+            @RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "offset", required = false) Integer offset) {
         try {
             return modelService.getModels(modelName, projectName, limit, offset);
         } catch (IOException e) {
@@ -117,7 +121,8 @@ public class ModelController extends BasicController {
 
         try {
             modelDesc.setUuid(UUID.randomUUID().toString());
-            String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : modelRequest.getProject();
+            String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
+                    : modelRequest.getProject();
 
             modelService.createModelDesc(projectName, modelDesc);
         } catch (IOException e) {
@@ -176,27 +181,27 @@ public class ModelController extends BasicController {
     @RequestMapping(value = "/{modelName}/clone", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public ModelRequest cloneModel(@PathVariable String modelName, @RequestBody ModelRequest modelRequest) {
-        String project = modelRequest.getProject();
+        String project = StringUtils.trimToNull(modelRequest.getProject());
         DataModelManager metaManager = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc modelDesc = metaManager.getDataModelDesc(modelName);
         String newModelName = modelRequest.getModelName();
 
-        if (StringUtils.isEmpty(project)) {
-            logger.info("Project name should not be empty.");
+        if (null == project) {
             throw new BadRequestException("Project name should not be empty.");
         }
 
         if (modelDesc == null || StringUtils.isEmpty(modelName)) {
-            logger.info("Model does not exist.");
             throw new BadRequestException("Model does not exist.");
         }
 
+        if (!project.equals(modelDesc.getProject())) {
+            throw new BadRequestException("Cloning model across projects is not supported.");
+        }
+
         if (StringUtils.isEmpty(newModelName)) {
-            logger.info("New model name is empty.");
-            throw new BadRequestException("New model name is empty.");
+            throw new BadRequestException("New model name should not be empty.");
         }
         if (!StringUtils.containsOnly(newModelName, VALID_MODELNAME)) {
-            logger.info("Invalid Model name {}, only letters, numbers and underline supported.", newModelName);
             throw new BadRequestException("Invalid Model name, only letters, numbers and underline supported.");
         }
 
