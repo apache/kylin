@@ -47,6 +47,7 @@ public class AdminServiceTest extends ServiceTestBase {
         KylinConfig.setKylinConfigThreadLocal(KylinConfig.createInstanceFromUri(path));
         
         String expected = "kylin.web.link-streaming-guide=http://kylin.apache.org/\n" +
+                "kylin.web.dashboard-enabled=\n" +
                 "kylin.web.contact-mail=\n" +
                 "kylin.query.cache-enabled=true\n" +
                 "kylin.web.link-diagnostic=\n" +
@@ -54,6 +55,7 @@ public class AdminServiceTest extends ServiceTestBase {
                 "kylin.web.timezone=GMT+8\n" +
                 "kylin.server.external-acl-provider=\n" +
                 "kylin.storage.default=2\n" +
+                "kylin.cube.cubeplanner.enabled=false\n" +
                 "kylin.web.help=\n" +
                 "kylin.web.export-allow-other=true\n" +
                 "kylin.web.link-hadoop=\n" +
@@ -63,10 +65,10 @@ public class AdminServiceTest extends ServiceTestBase {
                 "kylin.env=QA\n" +
                 "kylin.web.hive-limit=20\n" +
                 "kylin.engine.default=2\n" +
-                "kylin.web.help.3=onboard|Cube Design Tutorial|\n" +
-                "kylin.web.help.2=tableau|Tableau Guide|\n" +
-                "kylin.web.help.1=odbc|ODBC Driver|\n" +
-                "kylin.web.help.0=start|Getting Started|\n" +
+                "kylin.web.help.3=onboard|Cube Design Tutorial|http://kylin.apache.org/docs21/howto/howto_optimize_cubes.html\n" +
+                "kylin.web.help.2=tableau|Tableau Guide|http://kylin.apache.org/docs21/tutorial/tableau_91.html\n" +
+                "kylin.web.help.1=odbc|ODBC Driver|http://kylin.apache.org/docs21/tutorial/odbc.html\n" +
+                "kylin.web.help.0=start|Getting Started|http://kylin.apache.org/docs21/tutorial/kylin_sample.html\n" +
                 "kylin.security.profile=testing\n";
         Assert.assertEquals(expected, adminService.getPublicConfig());
     }
