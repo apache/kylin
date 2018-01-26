@@ -203,8 +203,8 @@ public class CubeService extends BasicService implements InitializingBean {
 
         createdDesc = getCubeDescManager().createCubeDesc(desc);
 
-        if (!createdDesc.getError().isEmpty()) {
-            throw new BadRequestException(createdDesc.getErrorMsg());
+        if (createdDesc.isBroken()) {
+            throw new BadRequestException(createdDesc.getErrorsAsString());
         }
 
         int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc, false);
@@ -633,8 +633,8 @@ public class CubeService extends BasicService implements InitializingBean {
             throw new ForbiddenException(msg.getUPDATE_CUBE_NO_RIGHT());
         }
 
-        if (!desc.getError().isEmpty()) {
-            throw new BadRequestException(desc.getErrorMsg());
+        if (desc.isBroken()) {
+            throw new BadRequestException(desc.getErrorsAsString());
         }
 
         return desc;
@@ -683,8 +683,8 @@ public class CubeService extends BasicService implements InitializingBean {
             throw new ForbiddenException(msg.getUPDATE_CUBE_NO_RIGHT());
         }
 
-        if (!desc.getError().isEmpty()) {
-            throw new BadRequestException(desc.getErrorMsg());
+        if (desc.isBroken()) {
+            throw new BadRequestException(desc.getErrorsAsString());
         }
 
         return desc;

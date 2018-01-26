@@ -82,6 +82,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -1215,16 +1216,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.errors.add(message);
     }
 
-    public List<String> getError() {
-        return this.errors;
-    }
-
-    public String getErrorMsg() {
-        StringBuffer sb = new StringBuffer();
-        for (String error : errors) {
-            sb.append(error + " ");
-        }
-        return sb.toString();
+    public String getErrorsAsString() {
+        return Joiner.on("; ").join(errors);
     }
 
     public HBaseMappingDesc getHbaseMapping() {

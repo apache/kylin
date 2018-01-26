@@ -198,7 +198,7 @@ public class CubeDescManager {
             
             postProcessCubeDesc(cubeDesc);
             // Check base validation
-            if (!cubeDesc.getError().isEmpty()) {
+            if (cubeDesc.isBroken()) {
                 return cubeDesc;
             }
             // Semantic validation

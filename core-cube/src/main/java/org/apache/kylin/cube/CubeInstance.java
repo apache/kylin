@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube;
 
@@ -130,13 +130,13 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     // default constructor for jackson
     public CubeInstance() {
     }
-    
+
     public CubeInstance latestCopyForWrite() {
         CubeManager mgr = CubeManager.getInstance(config);
         CubeInstance latest = mgr.getCube(name); // in case this object is out-of-date
         return mgr.copyForWrite(latest);
     }
-    
+
     void init(KylinConfig config) {
         CubeDesc cubeDesc = CubeDescManager.getInstance(config).getCubeDesc(descName);
         checkNotNull(cubeDesc, "cube descriptor '%s' (for cube '%s') not found", descName, name);
@@ -144,9 +144,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         if (cubeDesc.isBroken()) {
             setStatus(RealizationStatusEnum.DESCBROKEN);
             logger.error("cube descriptor {} (for cube '{}') is broken", cubeDesc.getResourcePath(), name);
-            for (String error : cubeDesc.getError()) {
-                logger.error("Error: {}", error);
-            }
+            logger.error("Errors: {}", cubeDesc.getErrorsAsString());
         } else if (getStatus() == RealizationStatusEnum.DESCBROKEN) {
             setStatus(RealizationStatusEnum.DISABLED);
             logger.info("cube {} changed from DESCBROKEN to DISABLED", name);
@@ -217,7 +215,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return (getStatus() == RealizationStatusEnum.DISABLED || getStatus() == RealizationStatusEnum.DESCBROKEN)
                 && segments.isEmpty();
     }
-    
+
     @Override
     public String resourceName() {
         return name;
@@ -301,7 +299,12 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     public int getCost() {
         int countedDimensionNum = getRowKeyColumnCount();
         int c = countedDimensionNum * COST_WEIGHT_DIMENSION + getMeasures().size() * COST_WEIGHT_MEASURE;
-        for (JoinTableDesc join : getModel().getJoinTables()) {
+        DataModelDesc model = getModel();
+        if (model == null) {
+            //in case broken cube
+            return 0;
+        }
+        for (JoinTableDesc join : model.getJoinTables()) {
             if (join.getJoin().isInnerJoin())
                 c += CubeInstance.COST_WEIGHT_INNER_JOIN;
         }
@@ -356,7 +359,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
         return null;
     }
-    
+
     public CubeSegment[] regetSegments(CubeSegment... segs) {
         CubeSegment[] r = new CubeSegment[segs.length];
         for (int i = 0; i < segs.length; i++) {
@@ -477,6 +480,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     /**
      * Get cuboid level count except base cuboid
+     *
      * @return
      */
     public int getBuildLevel() {
@@ -562,7 +566,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public SegmentRange autoMergeCubeSegments() throws IOException {
-        return segments.autoMergeCubeSegments(needAutoMerge(), getName(), getDescriptor().getAutoMergeTimeRanges(), getDescriptor().getVolatileRange());
+        return segments.autoMergeCubeSegments(needAutoMerge(), getName(), getDescriptor().getAutoMergeTimeRanges(),
+                getDescriptor().getVolatileRange());
     }
 
     public Segments calculateToBeSegments(CubeSegment newSegment) {
