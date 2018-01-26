@@ -16,17 +16,20 @@
 # limitations under the License.
 #
 language: java
-
+addons:
+  sonarcloud:
+    organization: "kylin"
+    token:
+      secure: "c918989d018ae3af899798716c35f4fe125296a4"
 jdk:
   - oraclejdk8
+
+script:
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test sonar:sonar
 
 notification:
   email:
     recipients:
       - dev@kylin.apache.org
     on_failure: always
-
-#branches:
-#  only:
-#    - master
 
