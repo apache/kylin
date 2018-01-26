@@ -4,12 +4,11 @@
 
 - title: 安装
   docs:
-  - install/install_guide
   - install/manual_install_guide
 
 - title: 教程
   docs:
-  - tutorial/create_cube_cn
+  - tutorial/create_cube
   - tutorial/cube_build_job
   - tutorial/acl
   - tutorial/web
@@ -19,4 +18,10 @@
   - tutorial/odbc
   - tutorial/Qlik
 
-
+- title: 帮助
+  docs:
+  - howto/howto_backup_metadata
+  - howto/howto_build_cube_with_restapi
+  - howto/howto_cleanup_storage
+  - howto/howto_jdbc
+  - howto/howto_optimize_build

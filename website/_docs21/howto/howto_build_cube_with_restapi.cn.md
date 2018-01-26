@@ -1,5 +1,5 @@
 ---
-layout: docs21
+layout: docs21-cn
 title:  用API构建cube
 categories: 帮助
 permalink: /cn/docs21/howto/howto_build_cube_with_restapi.html

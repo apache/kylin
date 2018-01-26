@@ -1,5 +1,5 @@
 ---
-layout: docs21
+layout: docs21-cn
 title:  Kylin JDBC Driver
 categories: 帮助
 permalink: /cn/docs21/howto/howto_jdbc.html

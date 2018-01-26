@@ -1,5 +1,5 @@
 ---
-layout: docs21
+layout: docs21-cn
 title:  优化cube构建
 categories: 帮助
 permalink: /cn/docs21/howto/howto_optimize_build.html

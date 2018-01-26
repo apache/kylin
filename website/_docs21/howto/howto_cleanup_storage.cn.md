@@ -1,7 +1,7 @@
 ---
-layout: docs21
+layout: docs21-cn
 title:  清理存储
-categories: howto
+categories: 帮助
 permalink: /cn/docs21/howto/howto_cleanup_storage.html
 ---
 

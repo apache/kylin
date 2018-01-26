@@ -1,7 +1,7 @@
 ---
-layout: docs21
+layout: docs21-cn
 title:  备份元数据
-categories: howto
+categories: 帮助
 permalink: /cn/docs21/howto/howto_backup_metadata.html
 ---
 
