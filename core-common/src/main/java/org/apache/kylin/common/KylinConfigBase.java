@@ -1266,7 +1266,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getBadQueryDefaultDetectIntervalSeconds() {
-        return Integer.parseInt(getOptional("kylin.query.badquery-detect-interval", "60"));
+        int time = getQueryTimeoutSeconds() / 2; // half of query timeout
+        if (time == 0) {
+            time = 60; // 60 sec
+        }
+        return time;
     }
 
     public boolean getBadQueryPersistentEnabled() {
@@ -1324,7 +1328,12 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getQueryTimeoutSeconds() {
-        return Integer.parseInt(this.getOptional("kylin.query.timeout-seconds", "0"));
+        int time = Integer.parseInt(this.getOptional("kylin.query.timeout-seconds", "0"));
+        if (time != 0 && time <= 60) {
+            logger.warn("query timeout seconds less than 60 sec, set to 60 sec.");
+            time = 60;
+        }
+        return time;
     }
 
     public boolean isPushDownEnabled() {

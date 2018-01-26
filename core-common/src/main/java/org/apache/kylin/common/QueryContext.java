@@ -45,7 +45,6 @@ public class QueryContext {
     }
 
     private long queryStartMillis;
-    private long deadline = Long.MAX_VALUE;
 
     private final String queryId;
     private String username;
@@ -75,26 +74,10 @@ public class QueryContext {
         return queryStartMillis;
     }
 
-    public void setDeadline(long timeoutMillis) {
-        if (timeoutMillis > 0) {
-            deadline = queryStartMillis + timeoutMillis;
-        }
-    }
-
-    public long getDeadline() {
-        return deadline;
-    }
-
-    /**
-     * @return millis before deadline
-     * @throws KylinTimeoutException if deadline has passed
-     */
-    public long checkMillisBeforeDeadline() {
-        long remain = deadline - System.currentTimeMillis();
-        if (remain <= 0) {
+    public void checkMillisBeforeDeadline() {
+        if (Thread.interrupted()) {
             throw new KylinTimeoutException("Query timeout");
         }
-        return remain;
     }
 
     public String getQueryId() {

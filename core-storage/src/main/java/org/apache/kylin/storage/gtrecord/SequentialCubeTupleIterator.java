@@ -144,10 +144,9 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         if (scanCount++ % 100 == 1) {
             QueryContextFacade.current().checkMillisBeforeDeadline();
         }
-
-        if (++scanCountDelta >= 1000)
+        if (++scanCountDelta >= 1000) {
             flushScanCountDelta();
-
+        }
         return tupleIterator.next();
     }
 

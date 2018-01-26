@@ -194,6 +194,7 @@ public class QueryService extends BasicService {
         } finally {
             String badReason = (ret != null && ret.isPushDown()) ? BadQueryEntry.ADJ_PUSHDOWN : null;
             badQueryDetector.queryEnd(Thread.currentThread(), badReason);
+            Thread.interrupted(); //reset if interrupted
         }
     }
 

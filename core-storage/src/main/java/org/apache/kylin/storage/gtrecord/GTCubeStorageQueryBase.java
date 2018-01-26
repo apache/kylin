@@ -160,8 +160,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 sqlDigest.aggregations, context);
         // set whether to aggregate results from multiple partitions
         enableStreamAggregateIfBeneficial(cuboid, groupsD, context);
-        // set and check query deadline
-        QueryContextFacade.current().setDeadline(cubeInstance.getConfig().getQueryTimeoutSeconds() * 1000);
+        // check query deadline
         QueryContextFacade.current().checkMillisBeforeDeadline();
 
         // push down having clause filter if possible

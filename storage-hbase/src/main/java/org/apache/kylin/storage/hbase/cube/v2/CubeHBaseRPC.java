@@ -311,11 +311,8 @@ public abstract class CubeHBaseRPC implements IGTStorage {
             coopTimeout = (long) (rpcTimeout * 0.9);
         }
 
-        long millisBeforeDeadline = queryContext.checkMillisBeforeDeadline();
-        coopTimeout = Math.min(coopTimeout, millisBeforeDeadline);
-        
-        logger.debug("{} = {} ms, {} ms before deadline, use {} ms as timeout for coprocessor",
-                HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, millisBeforeDeadline, coopTimeout);
+        queryContext.checkMillisBeforeDeadline();
+        logger.debug("{} = {} ms, use {} ms as timeout for coprocessor", HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, coopTimeout);
         return coopTimeout;
     }
 

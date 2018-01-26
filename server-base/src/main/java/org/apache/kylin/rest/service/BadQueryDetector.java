@@ -44,7 +44,8 @@ public class BadQueryDetector extends Thread {
     private final int alertMB;
     private final int alertRunningSec;
     private KylinConfig kylinConfig;
-    private ArrayList<Notifier> notifiers = new ArrayList<Notifier>();
+    private ArrayList<Notifier> notifiers = new ArrayList<>();
+    private int queryTimeoutSeconds;
 
     public BadQueryDetector() {
         super("BadQueryDetector");
@@ -53,17 +54,19 @@ public class BadQueryDetector extends Thread {
         this.detectionInterval = kylinConfig.getBadQueryDefaultDetectIntervalSeconds() * 1000L;
         this.alertMB = 100;
         this.alertRunningSec = kylinConfig.getBadQueryDefaultAlertingSeconds();
+        this.queryTimeoutSeconds = kylinConfig.getQueryTimeoutSeconds();
 
         initNotifiers();
     }
 
-    public BadQueryDetector(long detectionInterval, int alertMB, int alertRunningSec) {
+    public BadQueryDetector(long detectionInterval, int alertMB, int alertRunningSec, int queryTimeoutSeconds) {
         super("BadQueryDetector");
         this.setDaemon(true);
         this.detectionInterval = detectionInterval;
         this.alertMB = alertMB;
         this.alertRunningSec = alertRunningSec;
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
+        this.queryTimeoutSeconds = queryTimeoutSeconds;
 
         initNotifiers();
     }
@@ -121,6 +124,7 @@ public class BadQueryDetector extends Thread {
             notify(badReason, entry);
     }
 
+    @Override
     public void run() {
         while (true) {
             try {
@@ -147,6 +151,8 @@ public class BadQueryDetector extends Thread {
         // report if query running long
         for (Entry e : entries) {
             float runningSec = (float) (now - e.startTime) / 1000;
+            setQueryThreadInterrupted(e, runningSec);
+
             if (runningSec >= alertRunningSec) {
                 notify(BadQueryEntry.ADJ_SLOW, e);
                 dumpStackTrace(e.thread);
@@ -158,6 +164,13 @@ public class BadQueryDetector extends Thread {
         // report if low memory
         if (getSystemAvailMB() < alertMB) {
             logger.info("System free memory less than " + alertMB + " MB. " + entries.size() + " queries running.");
+        }
+    }
+
+    private void setQueryThreadInterrupted(Entry e, float runningSec) {
+        if (queryTimeoutSeconds != 0 && runningSec >= queryTimeoutSeconds) {
+            e.thread.interrupt();
+            logger.error("Trying to cancel query:" + e.thread.getName());
         }
     }
 

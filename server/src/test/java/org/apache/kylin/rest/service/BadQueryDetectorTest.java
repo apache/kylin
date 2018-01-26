@@ -50,7 +50,7 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
         String mockSql = "select * from just_a_test";
         final ArrayList<String[]> alerts = new ArrayList<>();
 
-        BadQueryDetector badQueryDetector = new BadQueryDetector(alertRunningSec * 1000, alertMB, alertRunningSec);
+        BadQueryDetector badQueryDetector = new BadQueryDetector(alertRunningSec * 1000, alertMB, alertRunningSec, 1000);
         badQueryDetector.registerNotifier(new BadQueryDetector.Notifier() {
             @Override
             public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
@@ -72,7 +72,7 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
             badQueryDetector.queryEnd(Thread.currentThread(), BadQueryEntry.ADJ_PUSHDOWN);
         }
 
-        badQueryDetector.stop();
+        badQueryDetector.interrupt();
 
         assertEquals(2, alerts.size());
         // second check founds a Slow
