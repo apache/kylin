@@ -353,7 +353,7 @@ KylinApp
         }
 
         $scope.listCachedQueries = function () {
-          $scope.cachedQueries = storage.get("saved_queries");
+          $scope.cachedQueries = storage.get("saved_queries") || [];
           $scope.cachedFilterQueries = $scope.cachedQueries.filter(function (query) {
             return query.project === $scope.projectModel.selectedProject;
           });
