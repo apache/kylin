@@ -31,7 +31,9 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AclPermissionFactory;
+import org.apache.kylin.rest.service.AclServiceTest.MockAclEntity;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -43,7 +45,6 @@ import org.springframework.security.acls.model.Sid;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
- * @author xduo
  */
 public class AccessServiceTest extends ServiceTestBase {
 
@@ -74,9 +75,9 @@ public class AccessServiceTest extends ServiceTestBase {
         Assert.assertNotNull(adminSid);
         Assert.assertNotNull(AclPermissionFactory.getPermissions());
 
-        AclEntity ae = new MockAclEntity("test-domain-object");
+        AclEntity ae = new AclServiceTest.MockAclEntity("test-domain-object");
         accessService.clean(ae, true);
-        AclEntity attachedEntity = new MockAclEntity("attached-domain-object");
+        AclEntity attachedEntity = new AclServiceTest.MockAclEntity("attached-domain-object");
         accessService.clean(attachedEntity, true);
 
         // test getAcl
@@ -97,12 +98,12 @@ public class AccessServiceTest extends ServiceTestBase {
         acl = accessService.grant(ae, AclPermission.ADMINISTRATION, modeler);
         Assert.assertEquals(accessService.generateAceResponses(acl).size(), 2);
 
-        Long modelerEntryId = null;
+        int modelerEntryId = 0;
         for (AccessControlEntry ace : acl.getEntries()) {
             PrincipalSid sid = (PrincipalSid) ace.getSid();
 
             if (sid.getPrincipal().equals("MODELER")) {
-                modelerEntryId = (Long) ace.getId();
+                modelerEntryId = (Integer) ace.getId();
                 Assert.assertTrue(ace.getPermission() == AclPermission.ADMINISTRATION);
             }
         }
@@ -116,7 +117,7 @@ public class AccessServiceTest extends ServiceTestBase {
             PrincipalSid sid = (PrincipalSid) ace.getSid();
 
             if (sid.getPrincipal().equals("MODELER")) {
-                modelerEntryId = (Long) ace.getId();
+                modelerEntryId = (Integer) ace.getId();
                 Assert.assertTrue(ace.getPermission() == AclPermission.READ);
             }
         }
@@ -147,21 +148,19 @@ public class AccessServiceTest extends ServiceTestBase {
         Assert.assertNull(attachedEntityAcl);
     }
 
-    public class MockAclEntity implements AclEntity {
-
-        private String id;
-
-        /**
-         * @param id
-         */
-        public MockAclEntity(String id) {
-            super();
-            this.id = id;
-        }
-
-        @Override
-        public String getId() {
-            return id;
+    @Ignore
+    @Test
+    public void test100000Entries() throws JsonProcessingException {
+        MockAclEntity ae = new MockAclEntity("100000Entries");
+        long time = System.currentTimeMillis();
+        for (int i = 0; i < 100000; i++) {
+            if (i % 10 == 0) {
+                long now = System.currentTimeMillis();
+                System.out.println((now - time) + " ms for last 10 entries, total " + i);
+                time = now;
+            }
+            Sid sid = accessService.getSid("USER" + i, true);
+            accessService.grant(ae, AclPermission.OPERATION, sid);
         }
     }
 }

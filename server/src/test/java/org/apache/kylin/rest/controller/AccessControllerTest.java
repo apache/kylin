@@ -121,9 +121,9 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         aes = accessController.grant(CUBE_INSTANCE, "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
         Assert.assertTrue(aes.size() == 1);
 
-        Long aeId = null;
+        int aeId = 0;
         for (AccessEntryResponse ae : aes) {
-            aeId = (Long) ae.getId();
+            aeId = (Integer) ae.getId();
         }
         Assert.assertNotNull(aeId);
 
@@ -134,7 +134,7 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         aes = accessController.update(CUBE_INSTANCE, "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
         Assert.assertTrue(aes.size() == 1);
         for (AccessEntryResponse ae : aes) {
-            aeId = (Long) ae.getId();
+            aeId = (Integer) ae.getId();
         }
         Assert.assertNotNull(aeId);
 
@@ -167,7 +167,7 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         //revoke auth
         swichToAdmin();
         AccessRequest request = getAccessRequest(ANALYST, READ, true);
-        request.setAccessEntryId((Long) aes.get(0).getId());
+        request.setAccessEntryId((Integer) aes.get(0).getId());
         accessController.revoke(PROJECT_INSTANCE, project.getUuid(), request);
         swichToAnalyst();
         projects = projectController.getProjects(10000, 0);
@@ -215,7 +215,7 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
             //correct
         }
         swichToAdmin();
-        accessRequest.setAccessEntryId((Long) aes.get(0).getId());
+        accessRequest.setAccessEntryId((Integer) aes.get(0).getId());
         accessController.revoke(PROJECT_INSTANCE, projects.get(0).getUuid(), accessRequest);
         swichToAnalyst();
         try {
