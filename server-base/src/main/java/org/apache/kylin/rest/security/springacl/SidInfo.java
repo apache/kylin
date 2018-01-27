@@ -16,19 +16,29 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.service;
+package org.apache.kylin.rest.security.springacl;
 
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Sid;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
- * Created by xiefan on 17-5-2.
  */
-class SidInfo {
+@JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
+public class SidInfo {
+    
+    @JsonProperty("sid")
     private String sid;
+    @JsonProperty("principal")
     private boolean isPrincipal;
 
+    private transient Sid sidObj;
+    
+    // for Jackson
     public SidInfo() {
     }
 
@@ -39,23 +49,22 @@ class SidInfo {
         } else if (sid instanceof GrantedAuthoritySid) {
             this.sid = ((GrantedAuthoritySid) sid).getGrantedAuthority();
             this.isPrincipal = false;
-        }
+        } else
+            throw new IllegalStateException();
     }
 
     public String getSid() {
         return sid;
     }
 
-    public void setSid(String sid) {
-        this.sid = sid;
-    }
-
     public boolean isPrincipal() {
         return isPrincipal;
     }
 
-    public void setPrincipal(boolean isPrincipal) {
-        this.isPrincipal = isPrincipal;
+    public Sid getSidObj() {
+        if (sidObj == null) {
+            sidObj = isPrincipal ? new PrincipalSid(sid) : new GrantedAuthoritySid(sid);
+        }
+        return sidObj;
     }
-
 }

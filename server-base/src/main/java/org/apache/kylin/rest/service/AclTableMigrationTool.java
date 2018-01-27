@@ -40,6 +40,10 @@ import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.rest.security.AclConstant;
 import org.apache.kylin.rest.security.ManagedUser;
+import org.apache.kylin.rest.security.springacl.AclRecord;
+import org.apache.kylin.rest.security.springacl.LegacyAceInfo;
+import org.apache.kylin.rest.security.springacl.ObjectIdentityImpl;
+import org.apache.kylin.rest.security.springacl.SidInfo;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.HBaseResourceStore;
@@ -53,10 +57,10 @@ public class AclTableMigrationTool {
 
     private static final Serializer<SidInfo> sidSerializer = new Serializer<SidInfo>(SidInfo.class);
 
-    private static final Serializer<DomainObjectInfo> domainObjSerializer = new Serializer<DomainObjectInfo>(
-            DomainObjectInfo.class);
+    private static final Serializer<ObjectIdentityImpl> domainObjSerializer = new Serializer<ObjectIdentityImpl>(
+            ObjectIdentityImpl.class);
 
-    private static final Serializer<AceInfo> aceSerializer = new Serializer<AceInfo>(AceInfo.class);
+    private static final Serializer<LegacyAceInfo> aceSerializer = new Serializer<LegacyAceInfo>(LegacyAceInfo.class);
 
     private static final Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(
             UserGrantedAuthority[].class);
@@ -124,13 +128,13 @@ public class AclTableMigrationTool {
                     Result result = rs.next();
                     while (result != null) {
                         AclRecord record = new AclRecord();
-                        DomainObjectInfo object = getDomainObjectInfoFromRs(result);
+                        ObjectIdentityImpl object = getDomainObjectInfoFromRs(result);
                         record.setDomainObjectInfo(object);
                         record.setParentDomainObjectInfo(getParentDomainObjectInfoFromRs(result));
                         record.setOwnerInfo(getOwnerSidInfo(result));
                         record.setEntriesInheriting(getInheriting(result));
                         record.setAllAceInfo(getAllAceInfo(result));
-                        store.putResourceWithoutCheck(AclService.getQueryKeyById(object.getId()), record,
+                        store.putResourceWithoutCheck(AclService.resourceKey(object.getId()), record,
                                 System.currentTimeMillis(), AclService.SERIALIZER);
                         result = rs.next();
                     }
@@ -192,18 +196,16 @@ public class AclTableMigrationTool {
 
     }
 
-    private DomainObjectInfo getDomainObjectInfoFromRs(Result result) {
+    private ObjectIdentityImpl getDomainObjectInfoFromRs(Result result) {
         String type = new String(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY),
                 Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_TYPE_COLUMN)));
         String id = new String(result.getRow());
-        DomainObjectInfo newInfo = new DomainObjectInfo();
-        newInfo.setId(id);
-        newInfo.setType(type);
+        ObjectIdentityImpl newInfo = new ObjectIdentityImpl(type, id);
         return newInfo;
     }
 
-    private DomainObjectInfo getParentDomainObjectInfoFromRs(Result result) throws IOException {
-        DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(
+    private ObjectIdentityImpl getParentDomainObjectInfoFromRs(Result result) throws IOException {
+        ObjectIdentityImpl parentInfo = domainObjSerializer.deserialize(result.getValue(
                 Bytes.toBytes(AclConstant.ACL_INFO_FAMILY), Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_PARENT_COLUMN)));
         return parentInfo;
     }
@@ -220,14 +222,14 @@ public class AclTableMigrationTool {
         return owner;
     }
 
-    private Map<String, AceInfo> getAllAceInfo(Result result) throws IOException {
-        Map<String, AceInfo> allAceInfoMap = new HashMap<>();
+    private Map<String, LegacyAceInfo> getAllAceInfo(Result result) throws IOException {
+        Map<String, LegacyAceInfo> allAceInfoMap = new HashMap<>();
         NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(Bytes.toBytes(AclConstant.ACL_ACES_FAMILY));
 
         if (familyMap != null && !familyMap.isEmpty()) {
             for (Map.Entry<byte[], byte[]> entry : familyMap.entrySet()) {
                 String sid = new String(entry.getKey());
-                AceInfo aceInfo = aceSerializer.deserialize(entry.getValue());
+                LegacyAceInfo aceInfo = aceSerializer.deserialize(entry.getValue());
                 if (null != aceInfo) {
                     allAceInfoMap.put(sid, aceInfo);
                 }

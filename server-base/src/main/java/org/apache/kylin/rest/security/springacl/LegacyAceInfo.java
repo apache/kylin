@@ -16,21 +16,28 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.service;
+package org.apache.kylin.rest.security.springacl;
 
 import org.springframework.security.acls.model.AccessControlEntry;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
- * Created by xiefan on 17-5-2.
  */
-class AceInfo {
+@JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
+public class LegacyAceInfo {
+    
+    @JsonProperty("sidInfo")
     private SidInfo sidInfo;
+    @JsonProperty("permissionMask")
     private int permissionMask;
 
-    public AceInfo() {
+    public LegacyAceInfo() {
     }
 
-    public AceInfo(AccessControlEntry ace) {
+    public LegacyAceInfo(AccessControlEntry ace) {
         super();
         this.sidInfo = new SidInfo(ace.getSid());
         this.permissionMask = ace.getPermission().getMask();
@@ -40,16 +47,7 @@ class AceInfo {
         return sidInfo;
     }
 
-    public void setSidInfo(SidInfo sidInfo) {
-        this.sidInfo = sidInfo;
-    }
-
     public int getPermissionMask() {
         return permissionMask;
     }
-
-    public void setPermissionMask(int permissionMask) {
-        this.permissionMask = permissionMask;
-    }
-
 }
