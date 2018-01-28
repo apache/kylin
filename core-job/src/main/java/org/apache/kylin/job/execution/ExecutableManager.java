@@ -501,20 +501,24 @@ public class ExecutableManager {
         result.setId(executablePO.getUuid());
         result.setName(executablePO.getName());
         result.setParams(executablePO.getParams());
-        List<ExecutablePO> tasks = executablePO.getTasks();
-        if (tasks != null && !tasks.isEmpty()) {
-            Preconditions.checkArgument(result instanceof ChainedExecutable);
-            for (ExecutablePO subTask : tasks) {
-                ((ChainedExecutable) result).addTask(parseTo(subTask));
+
+        if (!(result instanceof BrokenExecutable)) {
+            List<ExecutablePO> tasks = executablePO.getTasks();
+            if (tasks != null && !tasks.isEmpty()) {
+                Preconditions.checkArgument(result instanceof ChainedExecutable);
+                for (ExecutablePO subTask : tasks) {
+                    ((ChainedExecutable) result).addTask(parseTo(subTask));
+                }
+            }
+            List<ExecutablePO> tasksForCheck = executablePO.getTasksForCheck();
+            if (tasksForCheck != null && !tasksForCheck.isEmpty()) {
+                Preconditions.checkArgument(result instanceof CheckpointExecutable);
+                for (ExecutablePO subTaskForCheck : tasksForCheck) {
+                    ((CheckpointExecutable) result).addTaskForCheck(parseTo(subTaskForCheck));
+                }
             }
         }
-        List<ExecutablePO> tasksForCheck = executablePO.getTasksForCheck();
-        if (tasksForCheck != null && !tasksForCheck.isEmpty()) {
-            Preconditions.checkArgument(result instanceof CheckpointExecutable);
-            for (ExecutablePO subTaskForCheck : tasksForCheck) {
-                ((CheckpointExecutable) result).addTaskForCheck(parseTo(subTaskForCheck));
-            }
-        }
+
         return result;
     }
 
