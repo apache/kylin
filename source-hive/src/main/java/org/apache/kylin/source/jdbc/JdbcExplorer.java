@@ -232,7 +232,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     @Override
     public ColumnDesc[] evalQueryMetadata(String query) {
         if (StringUtils.isEmpty(query)) {
-            throw new RuntimeException("Evalutate query shall not be empty.");
+            throw new RuntimeException("Evaluate query shall not be empty.");
         }
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -256,7 +256,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
             DBUtils.closeQuietly(con);
             return result;
         } catch (Exception e) {
-            throw new RuntimeException("Cannot evalutate metadata of query: " + query, e);
+            throw new RuntimeException("Cannot evaluate metadata of query: " + query, e);
         } finally {
             try {
                 logger.debug("Cleaning up.");
