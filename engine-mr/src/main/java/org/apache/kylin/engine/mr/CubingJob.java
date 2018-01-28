@@ -27,10 +27,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 
-
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.EmailTemplateEnum;
-import org.apache.kylin.common.util.EmailTemplateFactory;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -47,7 +44,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.metrics.JobMetricsFacade;
-import org.apache.kylin.job.util.ExecutableStateUtil;
+import org.apache.kylin.job.util.MailNotificationUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
@@ -205,8 +202,7 @@ public class CubingJob extends DefaultChainedExecutable {
             return null;
         }
 
-        EmailTemplateEnum templateEnum = ExecutableStateUtil.getEmailTemplateEnum(state);
-        if (templateEnum == null) {
+        if (!MailNotificationUtil.hasMailNotification(state)) {
             logger.info("Cannot find email template for job state: " + state);
             return null;
         }
@@ -215,7 +211,7 @@ public class CubingJob extends DefaultChainedExecutable {
         dataMap.put("job_name", getName());
         dataMap.put("env_name", getDeployEnvName());
         dataMap.put("submitter", StringUtil.noBlank(getSubmitter(), "missing submitter"));
-        dataMap.put("job_engine", EmailTemplateFactory.getLocalHostName());
+        dataMap.put("job_engine", MailNotificationUtil.getLocalHostName());
         dataMap.put("project_name", getProjectName());
         dataMap.put("cube_name", cubeInstance.getName());
         dataMap.put("source_records_count", String.valueOf(findSourceRecordCount()));
@@ -242,15 +238,14 @@ public class CubingJob extends DefaultChainedExecutable {
                 final String mrJobId = errorOutput.getExtra().get(ExecutableConstants.MR_JOB_ID);
                 dataMap.put("mr_job_id", StringUtil.noBlank(mrJobId, "Not initialized"));
             } else {
-                dataMap.put("mr_job_id", EmailTemplateFactory.NA);
+                dataMap.put("mr_job_id", MailNotificationUtil.NA);
             }
             dataMap.put("error_log",
                     Matcher.quoteReplacement(StringUtil.noBlank(output.getVerboseMsg(), "no error message")));
         }
 
-        String content = EmailTemplateFactory.getInstance()
-                .buildEmailContent(ExecutableStateUtil.getEmailTemplateEnum(state), dataMap);
-        String title = EmailTemplateFactory.getEmailTitle("JOB", state.toString(), getDeployEnvName(), getProjectName(),
+        String content = MailNotificationUtil.getMailContent(state, dataMap);
+        String title = MailNotificationUtil.getMailTitle("JOB", state.toString(), getDeployEnvName(), getProjectName(),
                 cubeInstance.getName());
         return Pair.newPair(title, content);
     }
@@ -279,9 +274,8 @@ public class CubingJob extends DefaultChainedExecutable {
 
     protected void updateMetrics(ExecutableContext context, ExecuteResult result, ExecutableState state) {
         JobMetricsFacade.JobStatisticsResult jobStats = new JobMetricsFacade.JobStatisticsResult();
-        jobStats.setWrapper(getSubmitter(), getProjectName(),
-                CubingExecutableUtil.getCubeName(getParams()), getId(), getJobType(),
-                getAlgorithm() == null ? "NULL" : getAlgorithm().toString());
+        jobStats.setWrapper(getSubmitter(), getProjectName(), CubingExecutableUtil.getCubeName(getParams()), getId(),
+                getJobType(), getAlgorithm() == null ? "NULL" : getAlgorithm().toString());
 
         if (state == ExecutableState.SUCCEED) {
             jobStats.setJobStats(findSourceSizeBytes(), findCubeSizeBytes(), getDuration(), getMapReduceWaitTime(),

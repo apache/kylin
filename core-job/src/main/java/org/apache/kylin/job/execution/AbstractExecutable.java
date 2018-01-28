@@ -29,14 +29,13 @@ import java.util.regex.Matcher;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.EmailTemplateEnum;
-import org.apache.kylin.common.util.EmailTemplateFactory;
 import org.apache.kylin.common.util.MailService;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
+import org.apache.kylin.job.util.MailNotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -194,13 +193,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         dataMap.put("job_name", getName());
         dataMap.put("env_name", context.getConfig().getDeployEnv());
         dataMap.put("submitter", StringUtil.noBlank(getSubmitter(), "missing submitter"));
-        dataMap.put("job_engine", EmailTemplateFactory.getLocalHostName());
+        dataMap.put("job_engine", MailNotificationUtil.getLocalHostName());
         dataMap.put("error_log",
                 Matcher.quoteReplacement(StringUtil.noBlank(exception.getMessage(), "no error message")));
 
-        String content = EmailTemplateFactory.getInstance().buildEmailContent(EmailTemplateEnum.METADATA_PERSIST_FAIL,
-                dataMap);
-        String title = EmailTemplateFactory.getEmailTitle("METADATA PERSIST", "FAIL",
+        String content = MailNotificationUtil.getMailContent(MailNotificationUtil.METADATA_PERSIST_FAIL, dataMap);
+        String title = MailNotificationUtil.getMailTitle("METADATA PERSIST", "FAIL",
                 context.getConfig().getDeployEnv());
 
         new MailService(context.getConfig()).sendMail(users, title, content);

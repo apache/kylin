@@ -20,63 +20,47 @@ package org.apache.kylin.common.util;
 
 import java.io.StringWriter;
 import java.io.Writer;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Joiner;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 
-public class EmailTemplateFactory {
+/**
+ * Use a key to find a template for email.
+ *
+ * The template file is [KEY].ftl file under /mail_templates directory with classloader.
+ */
+public class MailTemplateProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(EmailTemplateFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(MailTemplateProvider.class);
 
-    public static final String NA = "NA";
+    private static MailTemplateProvider DEFAULT_INSTANCE = new MailTemplateProvider();
 
-    private static String localHostName;
-    static {
-        try {
-            localHostName = InetAddress.getLocalHost().getCanonicalHostName();
-        } catch (UnknownHostException e) {
-            localHostName = "UNKNOWN";
-        }
-    }
-
-    public static String getLocalHostName() {
-        return localHostName;
-    }
-
-    public static String getEmailTitle(String... titleParts) {
-        return "[" + Joiner.on("]-[").join(titleParts).toString() + "]";
-    }
-
-    private static EmailTemplateFactory instance = new EmailTemplateFactory();
-
-    public static EmailTemplateFactory getInstance() {
-        return instance;
+    public static MailTemplateProvider getInstance() {
+        return DEFAULT_INSTANCE;
     }
 
     private final Configuration configuration;
 
-    private EmailTemplateFactory() {
+    private MailTemplateProvider() {
         configuration = new Configuration(Configuration.getVersion());
-        configuration.setClassForTemplateLoading(EmailTemplateFactory.class, "/templates");
+        configuration.setClassForTemplateLoading(MailTemplateProvider.class, "/mail_templates");
         configuration.setDefaultEncoding("UTF-8");
     }
 
-    public String buildEmailContent(EmailTemplateEnum state, Map<String, Object> root) {
+    public String buildMailContent(String tplKey, Map<String, Object> data) {
         try {
-            Template template = getTemplate(state);
+            Template template = getTemplate(tplKey);
             if (template == null) {
-                return "Cannot find email template for " + state;
+                return "Cannot find email template for " + tplKey;
             }
+
             try (Writer out = new StringWriter()) {
-                template.process(root, out);
+                template.process(data, out);
                 return out.toString();
             }
         } catch (Throwable e) {
@@ -84,10 +68,10 @@ public class EmailTemplateFactory {
         }
     }
 
-    private Template getTemplate(EmailTemplateEnum state) throws Throwable {
-        if (state == null) {
+    private Template getTemplate(String tplKey) throws Throwable {
+        if (StringUtils.isEmpty(tplKey)) {
             return null;
         }
-        return configuration.getTemplate(state.toString() + ".ftl");
+        return configuration.getTemplate(tplKey + ".ftl");
     }
 }
