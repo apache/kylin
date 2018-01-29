@@ -1,6 +1,6 @@
 ---
 layout: post-blog
-title:  "Get Your Interactive AnalyticsSuperpower, with Apache Kylin and Apache Superset (Incubating)"
+title:  "Get Your Interactive Analytics Superpower, with Apache Kylin and Apache Superset"
 date:   2018-01-01 12:28:00
 author: YongjieZhao, Joanna He
 categories: blog
@@ -8,7 +8,7 @@ categories: blog
 
 ## Challenge of Big Data
 
-In the big data era, all enterprises' face the growing demand and challenge of processing large volumes of data—workloads that traditional legacy systems can no longer satisfy. With the emergence of Artificial Intelligence (AI) and Internet-of-Things (IoT) technology, it has become mission critical for businesses to accelerate their pace of discovering valuable insights from their massive and ever-growing datasets. Thus, large companies are constantly searching for a solution, often turning to open source technologies.  We will introduce two open source technologies that, when combined together, can meet these pressing big data demands for large enterprises. 
+In the big data era, all enterprises' face the growing demand and challenge of processing large volumes of data—workloads that traditional legacy systems can no longer satisfy. With the emergence of Artificial Intelligence (AI) and Internet-of-Things (IoT) technology, it has become mission-critical for businesses to accelerate their pace of discovering valuable insights from their massive and ever-growing datasets. Thus, large companies are constantly searching for a solution, often turning to open source technologies.  We will introduce two open source technologies that, when combined together, can meet these pressing big data demands for large enterprises. 
 
 ## Apache Kylin: a Leading OpenSource OLAP-on-Hadoop
 Modern organizations have had a long history of applying Online Analytical Processing (OLAP) technology to analyze data and uncover business insights. These insights help businesses make informed decisions and improve their service and product. With the emergence of the Hadoop ecosystem, OLAP has also embraced new technologies in the big data era. 
@@ -17,15 +17,15 @@ Apache Kylin is one such technology that directly addresses the challenge of con
 ![](/images/Kylin-and-Superset/png/1. kylin_diagram.png)
 Figure 1: Apache Kylin Architecture
 
-With a fast-paced and rapidly-changing business environment, business users and analysts are expected to uncover insights with speed of thoughts. They can meet this expectation with Apache Kylin, and no longer subjected to the predicament of waiting for hours for one single query to return results. Such a powerful data processing engine empowers the data scientists, engineers, and business analysts of any enterprise to find insights to help reach critical business decisions. However, business decisions cannot be made without rich data visualization. To address this last-mile challenge of big data analytics, Apache Superset comes in the picture.  
+In a fast-paced and rapidly-changing business environment, business users and analysts are expected to uncover insights with speed of thoughts. They can meet this expectation with Apache Kylin, and no longer subjected to the predicament of waiting for hours for one single query to return results. Such a powerful data processing engine empowers the data scientists, engineers, and business analysts of any enterprise to find insights to help reach critical business decisions. However, business decisions cannot be made without rich data visualization. To address this last-mile challenge of big data analytics, Apache Superset comes into the picture.  
 
-## Apache Superset: Modern,Enterprise-ready Business Intelligence Platform
+## Apache Superset: Modern, Enterprise-ready Business Intelligence Platform
 
-Apache Superset isa data exploration and visualization platform designed to be visual, intuitive,and interactive. A user can access data in the following two ways: 
+Apache Superset is a data exploration and visualization platform designed to be visual, intuitive, and interactive. A user can access data in the following two ways: 
 
-1. Accessdata from the following commonly used data sources one table at a time: Kylin,Presto, Hive, Impala, SparkSQL, MySQL, Postgres, Oracle, Redshift, SQL Server,Druid. 
+1. Access data from the following commonly used data sources one table at a time: Kylin, Presto, Hive, Impala, SparkSQL, MySQL, Postgres, Oracle, Redshift, SQL Server, Druid. 
 
-2. Use arich SQL Interactive Development Environment (IDE) called SQL Lab that isdesigned for power users with the ability to write SQL queries to analyzemultiple tables. 
+2. Use a rich SQL Interactive Development Environment (IDE) called SQL Lab that is designed for power users with the ability to write SQL queries to analyze multiple tables. 
 
 Users can immediately analyze and visualize their query results using Apache Superset 's rich visualization and reporting features. 
 
@@ -37,7 +37,7 @@ Figure 3: Apache Superset Visualization Interface
 
 ## Integrating Apache Kylin and Apache Superset to Boost Your Productivity
 
-Both Apache Kylin and Apache Superset are built to provide fast and interactive analytics for their users. The combination of these two open source projects can bring that goal to reality on etabyte-scale datasets, thanks to pre-calculated Kylin Cube.
+Both Apache Kylin and Apache Superset are built to provide fast and interactive analytics for their users. The combination of these two open source projects can bring that goal to reality on petabyte-scale datasets, thanks to pre-calculated Kylin Cube.
 
 The Kyligence Data Science team has recently open sourced kylinpy, a project that makes this combination possible. Kylinpy is a Python-based Apache Kylin client library. Any application that uses SQLAlchemy can now query Apache Kylin with this library installed, specifically Apache Superset. Below is a brief tutorial that shows how to integrate Apache Kylin and Apache Superset.
 
@@ -205,7 +205,7 @@ Apache Kylin users usually need to deal with high cardinality dimension. When di
   Figure 20 Limit page length
 
 ### Visualizations
-Apache Superset provides a rich and extensive set of visualizations. From basic charts like pie chart, bar chart, line chart to advanced visualizations, like sunburst, heatmap, world map, Sankey diagram. 
+Apache Superset provides a rich and extensive set of visualizations. From basic charts like a pie chart, bar chart, line chart to advanced visualizations, like a sunburst, heatmap, world map, Sankey diagram. 
   ![](/images/Kylin-and-Superset/png/21. viz.png)
   Figure 21
 
@@ -227,7 +227,7 @@ With the right technical synergy of open source projects, you can achieve amazin
 ## References
 
 1. [Apache Kylin](http://kylin.apache.org)
-2. [kylinpyon Github](https://github.com/Kyligence/kylinpy)
+2. [kylinpy on Github](https://github.com/Kyligence/kylinpy)
 3. [Superset:Airbnb’s data exploration platform](https://medium.com/airbnb-engineering/caravel-airbnb-s-data-exploration-platform-15a72aa610e5)
 4. [Apache Superset on Github](https://github.com/apache/incubator-superset)
 
