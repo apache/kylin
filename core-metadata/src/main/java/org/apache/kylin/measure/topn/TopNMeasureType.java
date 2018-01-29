@@ -97,6 +97,10 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
         validate(functionDesc.getExpression(), functionDesc.getReturnDataType(), true);
+
+        if (functionDesc.getParameter() == null || functionDesc.getParameter().getNextParameter() == null) {
+            throw new IllegalArgumentException("Must define at least 2 parameters for function " + functionDesc.getExpression());
+        }
     }
 
     private void validate(String funcName, DataType dataType, boolean checkDataType) {

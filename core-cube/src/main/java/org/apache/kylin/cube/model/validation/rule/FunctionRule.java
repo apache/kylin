@@ -26,17 +26,13 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
-import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
-
-import com.google.common.collect.Lists;
 
 /**
  * Validate function parameter.
@@ -105,26 +101,6 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
 
             if (func.isCount())
                 countFuncs.add(func);
-
-            if (TopNMeasureType.FUNC_TOP_N.equalsIgnoreCase(func.getExpression())) {
-                if (parameter.getNextParameter() == null) {
-                    context.addResult(ResultLevel.ERROR, "Must define at least 2 parameters for function " + func.getExpression() + " in " + measure.getName());
-                    return;
-                }
-
-                ParameterDesc groupByCol = parameter.getNextParameter();
-                List<String> duplicatedCol = Lists.newArrayList();
-                while (groupByCol != null) {
-                    String embeded_groupby = groupByCol.getValue();
-                    for (DimensionDesc dimensionDesc : cube.getDimensions()) {
-                        if (dimensionDesc.getColumn() != null && dimensionDesc.getColumn().equalsIgnoreCase(embeded_groupby)) {
-                            duplicatedCol.add(embeded_groupby);
-                        }
-                    }
-                    groupByCol = groupByCol.getNextParameter();
-                }
-
-            }
         }
 
         if (countFuncs.size() != 1) {
