@@ -73,3 +73,6 @@
   - howto/howto_update_coprocessor
   - howto/howto_install_ranger_kylin_plugin
   - howto/howto_enable_zookeeper_acl
+  - howto/howto_setup_systemcube
+  - howto/howto_use_cube_planner
+  - howto/howto_use_dashboard
