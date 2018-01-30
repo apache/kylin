@@ -135,7 +135,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
             return String.format("IF NOT EXISTS (SELECT name FROM sys.schemas WHERE name = N'%s') EXEC('CREATE SCHEMA"
                     + " [%s] AUTHORIZATION [dbo]')", schemaName, schemaName);
         } else {
-            logger.error(String.format("unsupported dialect %s.", dialect));
+            logger.error("unsupported dialect {}.", dialect);
             return null;
         }
     }
@@ -156,7 +156,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
             return String.format("BULK INSERT %s FROM '%s/%s.csv' WITH(FIELDTERMINATOR = ',')", tableName, tableFileDir,
                     tableName);
         } else {
-            logger.error(String.format("unsupported dialect %s.", dialect));
+            logger.error("unsupported dialect {}.", dialect);
             return null;
         }
     }
@@ -167,7 +167,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     }
 
     private String[] generateCreateTableSql(TableDesc tableDesc) {
-        logger.info(String.format("gen create table sql:%s", tableDesc));
+        logger.info("Generate create table sql: {}", tableDesc);
         String tableIdentity = String.format("%s.%s", tableDesc.getDatabase().toUpperCase(), tableDesc.getName())
                 .toUpperCase();
         String dropsql = "DROP TABLE IF EXISTS " + tableIdentity;
@@ -207,7 +207,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
 
     private void executeSQL(String sql) throws SQLException {
         Connection con = SqlUtil.getConnection(dbconf);
-        logger.info(String.format("Executing sql : %s"), sql);
+        logger.info("Executing sql : {}", sql);
         try {
             SqlUtil.execUpdateSQL(con, sql);
         } finally {
@@ -218,7 +218,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     private void executeSQL(String[] sqls) throws SQLException {
         try (Connection con = SqlUtil.getConnection(dbconf)) {
             for (String sql : sqls) {
-                logger.info(String.format("Executing sql : %s"), sql);
+                logger.info("Executing sql : {}", sql);
                 SqlUtil.execUpdateSQL(con, sql);
             }
         }
