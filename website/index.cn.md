@@ -13,7 +13,7 @@ title: 首页
           <h4 class="section-title"><span>Apache Kylin™ 概览</span></h4>
           <div class="row" style="margin-top:-20px;">
             <div class="col-sm-12 col-md-12">              
-              <p class="title_text"> Apache Kylin™是一个开源的分布式分析引擎，提供Hadoop之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc. 开发并贡献至开源社区。它能在亚秒内查询巨大的Hive表。</p>
+              <p class="title_text"> Apache Kylin™是一个开源的分布式分析引擎，提供Hadoop/Spark之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc. 开发并贡献至开源社区。它能在亚秒内查询巨大的Hive表。</p>
               <img id="diagram" src="{{ "/assets/images/kylin_diagram.png"| prepend: site.baseurl }}"> </div>
           </div>
         </div>
@@ -34,7 +34,7 @@ title: 首页
           <div class="col-sm-12 col-md-12">
             <div align="left">
               <p> <b>- 可扩展超快OLAP引擎: </b><br/>
-              <div class="indent">Kylin是为减少在Hadoop上百亿规模数据查询延迟而设计</div>
+              <div class="indent">Kylin是为减少在Hadoop/Spark上百亿规模数据查询延迟而设计</div>
               </p>
               <p> <b>- Hadoop ANSI SQL 接口: </b><br/>
               <div class="indent">Kylin为Hadoop提供标准SQL支持大部分查询功能</div>
@@ -46,7 +46,7 @@ title: 首页
               <div class="indent">用户能够在Kylin里为百亿以上数据集定义数据模型并构建立方体</div>
               </p>
               <p> <b>- 与BI工具无缝整合:</b><br/>
-              <div class="indent">Kylin提供与BI工具，如Tableau，的整合能力，即将提供对其他工具的整合</div>
+              <div class="indent">Kylin提供与BI工具的整合能力，如Tableau，PowerBI/Excel，MSTR，QlikSense，Hue和SuperSet</div>
               </p>
               <p> <b>- 其他特性:</b> <br/>
               <div class="indent">- Job管理与监控 <br/>
@@ -55,8 +55,8 @@ title: 首页
                 - 利用HBase Coprocessor<br/>
                 - 基于HyperLogLog的Dinstinc Count近似算法 <br/>
                 - 友好的web界面以管理，监控和使用立方体 <br/>
-                - 项目及立方体级别的访问控制安全<br/>
-                - 支持LDAP </div>
+                - 项目及表级别的访问控制安全<br/>
+                - 支持LDAP、SSO </div>
               </p>
             </div>
           </div>

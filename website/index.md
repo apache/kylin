@@ -12,11 +12,11 @@ title: Home
           <h4 class="section-title"><span>Apache Kylin™ Overview</span></h4>
           <div class="row" style="margin-top:-20px;">
             <div class="col-sm-12 col-md-12">              
-              <p class="title_text">Apache Kylin™ is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets, original contributed from eBay Inc.</p>
+              <p class="title_text">Apache Kylin™ is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop/Spark supporting extremely large datasets, original contributed from eBay Inc.</p>
               <p class="title_text">Apache Kylin™ lets you query massive data set at sub-second latency in 3 steps.</p>
               <div align="left">
                 <ol>
-                  <li>Identify a Star Schema on Hadoop.</li>
+                  <li>Identify a Star/Snowfalke Schema on Hadoop.</li>
                   <li>Build Cube from the identified tables.</li>
                   <li>Query with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.</li>
                 </ol>
@@ -41,10 +41,10 @@ title: Home
           <div class="col-sm-12 col-md-12">
             <div align="left">
               <p> <b>- Extremely Fast OLAP Engine at Scale: </b><br/>
-              <div class="indent">Kylin is designed to reduce query latency on Hadoop for 10+ billions of rows of data</div>
+              <div class="indent">Kylin is designed to reduce query latency on Hadoop/Spark for 10+ billions of rows of data</div>
               </p>
               <p> <b>- ANSI SQL Interface on Hadoop: </b><br/>
-              <div class="indent">Kylin offers ANSI SQL on Hadoop and supports most ANSI SQL query functions</div>
+              <div class="indent">Kylin offers ANSI SQL on Hadoop/Spark and supports most ANSI SQL query functions</div>
               </p>
               <p> <b>- Interactive Query Capability: </b><br/>
               <div class="indent">Users can interact with Hadoop data via Kylin at sub-second latency, better than Hive queries for the same dataset</div>
@@ -53,7 +53,7 @@ title: Home
               <div class="indent">User can define a data model and pre-build in Kylin with more than 10+ billions of raw data records</div>
               </p>
               <p> <b>- Seamless Integration with BI Tools:</b><br/>
-              <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI and Excel.  Integration with Microstrategy is coming soon</div>
+              <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet. </div>
               </p>
               <p> <b>- Other Highlights:</b> <br/>
               <div class="indent">- Job Management and Monitoring <br/>
@@ -63,7 +63,7 @@ title: Home
                 - Both approximate and precise Query Capabilities for Distinct Count<br/>
                 - Approximate Top-N Query Capability<br/>
                 - Easy Web interface to manage, build, monitor and query cubes <br/>
-                - Security capability to set ACL at Cube/Project Level <br/>
+                - Security capability to set ACL at Project/Table Level <br/>
                 - Support LDAP and SAML Integration </div>
               </p>
             </div>
