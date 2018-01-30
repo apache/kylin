@@ -83,6 +83,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
@@ -836,39 +837,41 @@ public class CubeService extends BasicService implements InitializingBean {
         return CuboidRecommenderUtil.getRecommendCuboidList(cube, hitFrequencyMap, rollingUpCountSourceMap);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
+            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void migrateCube(CubeInstance cube, String projectName) {
         KylinConfig config = cube.getConfig();
+        if (!config.isAllowAutoMigrateCube()) {
+            throw new InternalErrorException("One click migration is disabled, please contact your ADMIN");
+        }
+
+        for (CubeSegment segment : cube.getSegments()) {
+            if (segment.getStatus() != SegmentStatusEnum.READY) {
+                throw new InternalErrorException(
+                        "At least one segment is not in READY state. Please check whether there are Running or Error jobs.");
+            }
+        }
+
+        String srcCfgUri = config.getAutoMigrateCubeSrcConfig();
+        String dstCfgUri = config.getAutoMigrateCubeDestConfig();
+
+        Preconditions.checkArgument(StringUtils.isNotEmpty(srcCfgUri), "Source configuration should not be empty.");
+        Preconditions.checkArgument(StringUtils.isNotEmpty(dstCfgUri),
+                "Destination configuration should not be empty.");
+
+        String stringBuilder = ("%s/bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI %s %s %s %s %s %s true true");
+        String cmd = String.format(stringBuilder, KylinConfig.getKylinHome(), srcCfgUri, dstCfgUri, cube.getName(),
+                projectName, config.isAutoMigrateCubeCopyAcl(), config.isAutoMigrateCubePurge());
+
+        logger.info("One click migration cmd: " + cmd);
+
+        CliCommandExecutor exec = new CliCommandExecutor();
+        PatternedLogger patternedLogger = new PatternedLogger(logger);
+
         try {
-            if (!config.isAllowAutoMigrateCube()) {
-                throw new InternalErrorException("This cube couldn't one click migrate cube, Please contact your ADMIN");
-            }
-
-            for (CubeSegment segment : cube.getSegments()) {
-                if (segment.getStatus() != SegmentStatusEnum.READY) {
-                    throw new InternalErrorException("At least one segment is not in READY state. Please check whether there are Running or Error jobs.");
-                }
-            }
-
-            String srcCfgUri = config.getAutoMigrateCubeSrcConfig();
-            String dstCfgUri = config.getAutoMigrateCubeDestConfig();
-
-            String stringBuilder = ("%s/bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI %s %s %s %s %s %s true true");
-            String cmd = String.format(stringBuilder, KylinConfig.getKylinHome(), srcCfgUri, dstCfgUri, cube.getName(),
-                    projectName, config.isAutoMigrateCubeCopyAcl(), config.isAutoMigrateCubePurge());
-
-            logger.info("cmd: " + cmd);
-
-            CliCommandExecutor exec = new CliCommandExecutor();
-            PatternedLogger patternedLogger = new PatternedLogger(logger);
-
-            try {
-                exec.execute(cmd, patternedLogger);
-            } catch (IOException e) {
-                throw new InternalErrorException("Migrating cube fails, Please contact your ADMIN");
-            }
-        } catch (Throwable e) {
-            throw new InternalErrorException(e.getMessage());
+            exec.execute(cmd, patternedLogger);
+        } catch (IOException e) {
+            throw new InternalErrorException("Failed to perform one-click migrating", e);
         }
     }
 }

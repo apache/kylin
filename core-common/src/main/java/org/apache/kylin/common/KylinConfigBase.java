@@ -742,7 +742,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getHiveBeelineShell() {
         return getOptional("kylin.source.hive.beeline-shell", "beeline");
     }
-    
+
     public String getHiveBeelineParams() {
         return getOptional("kylin.source.hive.beeline-params", "");
     }
@@ -750,11 +750,11 @@ abstract public class KylinConfigBase implements Serializable {
     public boolean getEnableSparkSqlForTableOps() {
         return Boolean.parseBoolean(getOptional("kylin.source.hive.enable-sparksql-for-table-ops", "false"));
     }
-    
+
     public String getSparkSqlBeelineShell() {
         return getOptional("kylin.source.hive.sparksql-beeline-shell", "");
     }
-    
+
     public String getSparkSqlBeelineParams() {
         return getOptional("kylin.source.hive.sparksql-beeline-params", "");
     }
@@ -1504,14 +1504,17 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getPropertiesWhiteList() {
-        return getOptional("kylin.web.properties.whitelist",
-                "kylin.web.timezone,kylin.query.cache-enabled,kylin.env,kylin.web.hive-limit,kylin.storage.default,kylin.engine.default,kylin.web.link-hadoop,kylin.web.link-diagnostic,"
-                        + "kylin.web.contact-mail,kylin.web.help.length,kylin.web.help.0,kylin.web.help.1,kylin.web.help.2,kylin.web.help.3,"
-                        + "kylin.web.help,kylin.web.hide-measures,kylin.web.link-streaming-guide,kylin.server.external-acl-provider,kylin.security.profile,"
-                        + "kylin.htrace.show-gui-trace-toggle,kylin.web.export-allow-admin,kylin.web.export-allow-other,"
-                        + "kylin.cube.cubeplanner.enabled,kylin.web.dashboard-enabled");
+        return getOptional("kylin.web.properties.whitelist", "kylin.web.timezone,kylin.query.cache-enabled,kylin.env,"
+                + "kylin.web.hive-limit,kylin.storage.default,"
+                + "kylin.engine.default,kylin.web.link-hadoop,kylin.web.link-diagnostic,"
+                + "kylin.web.contact-mail,kylin.web.help.length,kylin.web.help.0,kylin.web.help.1,kylin.web.help.2,"
+                + "kylin.web.help.3,"
+                + "kylin.web.help,kylin.web.hide-measures,kylin.web.link-streaming-guide,kylin.server.external-acl-provider,"
+                + "kylin.security.profile,"
+                + "kylin.htrace.show-gui-trace-toggle,kylin.web.export-allow-admin,kylin.web.export-allow-other,"
+                + "kylin.cube.cubeplanner.enabled,kylin.web.dashboard-enabled,kylin.tool.auto-migrate-cube.enabled");
     }
-    
+
     // ============================================================================
     // RESTCLIENT
     // ============================================================================
@@ -1527,7 +1530,7 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
     // Metrics
     // ============================================================================
-    
+
     public String getCoadhaleMetricsReportClassesNames() {
         return getOptional("kylin.metrics.reporter-classes",
                 "org.apache.kylin.common.metrics.metrics2.JsonFileMetricsReporter,org.apache.kylin.common.metrics.metrics2.JmxMetricsReporter");
@@ -1628,6 +1631,5 @@ abstract public class KylinConfigBase implements Serializable {
     public String getAutoMigrateCubeDestConfig() {
         return getOptional("kylin.tool.auto-migrate-cube.dest-config", "");
     }
-
 
 }
