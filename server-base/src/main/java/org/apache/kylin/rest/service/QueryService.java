@@ -323,6 +323,7 @@ public class QueryService extends BasicService {
         stringBuilder.append("Hit Exception Cache: ").append(response.isHitExceptionCache()).append(newLine);
         stringBuilder.append("Storage cache used: ").append(storageCacheUsed).append(newLine);
         stringBuilder.append("Is Query Push-Down: ").append(isPushDown).append(newLine);
+        stringBuilder.append("Is Prepare: ").append(BackdoorToggles.getPrepareOnly()).append(newLine);
         stringBuilder.append("Trace URL: ").append(response.getTraceUrl()).append(newLine);
         stringBuilder.append("Message: ").append(response.getExceptionMessage()).append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
