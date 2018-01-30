@@ -56,7 +56,6 @@ public class CubeBuildingCLI extends AbstractApplication {
 
     private final Options options;
 
-    private KylinConfig kylinConfig;
     private CubeManager cubeManager;
     private ExecutableManager executableManager;
 
@@ -67,7 +66,7 @@ public class CubeBuildingCLI extends AbstractApplication {
         options.addOption(OPTION_TIME_START);
         options.addOption(OPTION_TIME_END);
 
-        kylinConfig = KylinConfig.getInstanceFromEnv();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         cubeManager = CubeManager.getInstance(kylinConfig);
         executableManager = ExecutableManager.getInstance(kylinConfig);
     }

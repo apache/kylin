@@ -43,13 +43,12 @@ import com.codahale.metrics.Snapshot;
 public class QueryMetrics2Test extends ServiceTestBase {
 
     private static MBeanServer mBeanServer;
-    private static ObjectName objectName;
 
     @Before
     public void setup() throws Exception {
         super.setup();
 
-        objectName = new ObjectName("Hadoop:service=Kylin,name=Server_Total");
+        ObjectName objectName = new ObjectName("Hadoop:service=Kylin,name=Server_Total");
     }
 
     @Test

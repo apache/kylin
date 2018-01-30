@@ -36,14 +36,13 @@ import com.google.common.io.Files;
 
 public class ClientEnvExtractor extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(ClientEnvExtractor.class);
-    private KylinConfig kylinConfig;
     private CliCommandExecutor cmdExecutor;
 
     public ClientEnvExtractor() throws IOException {
         super();
 
         packageType = "client";
-        kylinConfig = KylinConfig.getInstanceFromEnv();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         cmdExecutor = kylinConfig.getCliCommandExecutor();
     }
 

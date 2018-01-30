@@ -56,8 +56,6 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
 
     private ProjectController projectController;
 
-    private String MODELER = "MODELER";
-
     private String ANALYST = "ANALYST";
 
     private String ADMIN = "ADMIN";
@@ -117,6 +115,7 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
                 "a24ca905-1fc6-4f67-985c-38fa5aeafd92");
         Assert.assertTrue(aes.size() == 0);
 
+        String MODELER = "MODELER";
         AccessRequest accessRequest = getAccessRequest(MODELER, ADMINISTRATION, true);
         aes = accessController.grant(CUBE_INSTANCE, "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
         Assert.assertTrue(aes.size() == 1);

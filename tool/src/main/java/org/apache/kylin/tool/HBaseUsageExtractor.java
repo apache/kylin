@@ -59,10 +59,8 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
 
     private List<String> htables = Lists.newArrayList();
     private Configuration conf;
-    private CubeManager cubeManager;
     private RealizationRegistry realizationRegistry;
     private KylinConfig kylinConfig;
-    private ProjectManager projectManager;
 
     public HBaseUsageExtractor() {
         super();
@@ -95,9 +93,9 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         kylinConfig = KylinConfig.getInstanceFromEnv();
-        cubeManager = CubeManager.getInstance(kylinConfig);
+        CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
-        projectManager = ProjectManager.getInstance(kylinConfig);
+        ProjectManager projectManager = ProjectManager.getInstance(kylinConfig);
 
         if (optionsHelper.hasOption(OPTION_PROJECT)) {
             String projectNames = optionsHelper.getOptionValue(OPTION_PROJECT);

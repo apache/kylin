@@ -123,10 +123,6 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
     private KylinConfig kylinConfig;
     private DataModelManager metadataManager;
-    private ProjectManager projectManager;
-    private HybridManager hybridManager;
-    private CubeManager cubeManager;
-    private StreamingManager streamingManager;
     private CubeDescManager cubeDescManager;
     private ExecutableDao executableDao;
     private RealizationRegistry realizationRegistry;
@@ -185,9 +181,9 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         metadataManager = DataModelManager.getInstance(kylinConfig);
-        projectManager = ProjectManager.getInstance(kylinConfig);
-        hybridManager = HybridManager.getInstance(kylinConfig);
-        cubeManager = CubeManager.getInstance(kylinConfig);
+        ProjectManager projectManager = ProjectManager.getInstance(kylinConfig);
+        HybridManager hybridManager = HybridManager.getInstance(kylinConfig);
+        CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
         cubeDescManager = CubeDescManager.getInstance(kylinConfig);
         executableDao = ExecutableDao.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
@@ -330,7 +326,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     }
 
     private void addStreamingConfig(CubeInstance cube) {
-        streamingManager = StreamingManager.getInstance(kylinConfig);
+        StreamingManager streamingManager = StreamingManager.getInstance(kylinConfig);
         for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
             if (streamingConfig.getName() != null
                     && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {

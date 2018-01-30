@@ -81,8 +81,6 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
 
     private static final int DEFAULT_PARALLEL_SIZE = 4;
 
-    private ExecutorService executorService;
-
     public DiagnosisInfoCLI() {
         super();
 
@@ -142,7 +140,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                 : DEFAULT_PERIOD;
 
         logger.info("Start diagnosis info extraction in {} threads.", threadsNum);
-        executorService = Executors.newFixedThreadPool(threadsNum);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadsNum);
 
         // export cube metadata
         executorService.execute(new Runnable() {
