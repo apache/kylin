@@ -36,6 +36,7 @@ import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.TableACLService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.AclPermissionUtil;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.domain.PrincipalSid;
@@ -56,7 +57,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  */
 @Controller
 @RequestMapping(value = "/access")
-public class AccessController extends BasicController {
+public class AccessController extends BasicController implements InitializingBean {
 
     @Autowired
     @Qualifier("accessService")
@@ -74,6 +75,13 @@ public class AccessController extends BasicController {
     @Qualifier("userService")
     private UserService userService;
 
+    
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        // init ExternalAclProvider
+        ExternalAclProvider.getInstance();
+    }
+    
     /**
      * Get current user's permission in the project
      */
