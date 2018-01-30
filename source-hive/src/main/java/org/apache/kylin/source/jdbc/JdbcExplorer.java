@@ -18,7 +18,6 @@
 
 package org.apache.kylin.source.jdbc;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -29,7 +28,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.Pair;
@@ -105,7 +103,6 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         } finally {
             DBUtils.closeQuietly(con);
         }
-
 
         TableExtDesc tableExtDesc = new TableExtDesc();
         tableExtDesc.setIdentity(tableDesc.getIdentity());
@@ -208,20 +205,23 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         return new String[] { dropView, dropTable, createSql };
     }
 
-    private void executeSQL(String sql) throws CommandNeedRetryException, IOException, SQLException {
+    private void executeSQL(String sql) throws SQLException {
         Connection con = SqlUtil.getConnection(dbconf);
-        logger.info(String.format(sql));
-        SqlUtil.execUpdateSQL(con, sql);
-        DBUtils.closeQuietly(con);
+        logger.info(String.format("Executing sql : %s"), sql);
+        try {
+            SqlUtil.execUpdateSQL(con, sql);
+        } finally {
+            DBUtils.closeQuietly(con);
+        }
     }
 
-    private void executeSQL(String[] sqls) throws CommandNeedRetryException, IOException, SQLException {
-        Connection con = SqlUtil.getConnection(dbconf);
-        for (String sql : sqls) {
-            logger.info(String.format(sql));
-            SqlUtil.execUpdateSQL(con, sql);
+    private void executeSQL(String[] sqls) throws SQLException {
+        try (Connection con = SqlUtil.getConnection(dbconf)) {
+            for (String sql : sqls) {
+                logger.info(String.format("Executing sql : %s"), sql);
+                SqlUtil.execUpdateSQL(con, sql);
+            }
         }
-        DBUtils.closeQuietly(con);
     }
 
     @Override
@@ -237,32 +237,35 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         String tmpDatabase = config.getHiveDatabaseForIntermediateTable();
-        String tmpView = tmpDatabase + ".kylin_eval_query_" + UUID.nameUUIDFromBytes(query.getBytes()).toString().replaceAll("-", "");
+        String tmpView = tmpDatabase + ".kylin_eval_query_"
+                + UUID.nameUUIDFromBytes(query.getBytes()).toString().replaceAll("-", "");
 
         String dropViewSql = "DROP VIEW IF EXISTS " + tmpView;
         String evalViewSql = "CREATE VIEW " + tmpView + " as " + query;
 
+        Connection con = null;
+        ResultSet rs = null;
         try {
             logger.debug("Removing duplicate view {}", tmpView);
             executeSQL(dropViewSql);
             logger.debug("Creating view {} for query: {}", tmpView, query);
             executeSQL(evalViewSql);
             logger.debug("Evaluating query columns' metadata");
-            Connection con = SqlUtil.getConnection(dbconf);
+            con = SqlUtil.getConnection(dbconf);
             DatabaseMetaData dbmd = con.getMetaData();
-            ResultSet rs = dbmd.getColumns(null, tmpDatabase, tmpView, null);
+            rs = dbmd.getColumns(null, tmpDatabase, tmpView, null);
             ColumnDesc[] result = extractColumnFromMeta(rs);
-            DBUtils.closeQuietly(rs);
-            DBUtils.closeQuietly(con);
             return result;
-        } catch (Exception e) {
+        } catch (SQLException e) {
             throw new RuntimeException("Cannot evaluate metadata of query: " + query, e);
         } finally {
+            DBUtils.closeQuietly(con);
+            DBUtils.closeQuietly(rs);
             try {
-                logger.debug("Cleaning up.");
+                logger.debug("Cleaning up temp view.");
                 executeSQL(dropViewSql);
-            } catch (Exception e) {
-                logger.warn("Cannot drop temp view of query: {}", query, e);
+            } catch (SQLException e) {
+                logger.warn("Failed to clean up temp view of query: {}", query, e);
             }
         }
     }
