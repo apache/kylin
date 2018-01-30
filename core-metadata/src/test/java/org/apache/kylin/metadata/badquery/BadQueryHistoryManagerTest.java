@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.NavigableSet;
+import java.util.UUID;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
@@ -65,7 +66,8 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
     public void testAddEntryToProject() throws IOException {
         KylinConfig kylinConfig = getTestConfig();
         BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
-        BadQueryEntry entry = new BadQueryEntry("sql", "adj", 1459362239992L, 100, "server", "t-0", "user");
+        BadQueryEntry entry = new BadQueryEntry("sql", "adj", 1459362239992L, 100, "server", "t-0", "user",
+                UUID.randomUUID().toString());
         BadQueryHistory history = manager.upsertEntryToProject(entry, "default");
         NavigableSet<BadQueryEntry> entries = history.getEntries();
         assertEquals(4, entries.size());
@@ -81,7 +83,8 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         assertEquals("t-0", newEntry.getThread());
 
         for (int i = 0; i < kylinConfig.getBadQueryHistoryNum(); i++) {
-            BadQueryEntry tmp = new BadQueryEntry("sql", "adj", 1459362239993L + i, 100 + i, "server", "t-0", "user");
+            BadQueryEntry tmp = new BadQueryEntry("sql", "adj", 1459362239993L + i, 100 + i, "server", "t-0", "user",
+                    UUID.randomUUID().toString());
             history = manager.upsertEntryToProject(tmp, "default");
         }
         assertEquals(kylinConfig.getBadQueryHistoryNum(), history.getEntries().size());
@@ -92,14 +95,16 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         KylinConfig kylinConfig = getTestConfig();
         BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
 
-        manager.upsertEntryToProject(new BadQueryEntry("sql", "adj", 1459362239000L, 100, "server", "t-0", "user"),
+        String queryId = UUID.randomUUID().toString();
+        manager.upsertEntryToProject(
+                new BadQueryEntry("sql", "adj", 1459362239000L, 100, "server", "t-0", "user", queryId),
                 "default");
         BadQueryHistory history = manager.upsertEntryToProject(
-                new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user"), "default");
+                new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user", queryId), "default");
 
         NavigableSet<BadQueryEntry> entries = history.getEntries();
         BadQueryEntry newEntry = entries
-                .floor(new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user"));
+                .floor(new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1", "user", queryId));
         System.out.println(newEntry);
         assertEquals("adj2", newEntry.getAdj());
         assertEquals("server2", newEntry.getServer());

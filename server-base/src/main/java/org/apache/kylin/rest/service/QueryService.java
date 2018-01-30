@@ -182,11 +182,11 @@ public class QueryService extends BasicService {
         return getMetadata(getCubeManager(), project);
     }
 
-    public SQLResponse query(SQLRequest sqlRequest) throws Exception {
+    public SQLResponse query(SQLRequest sqlRequest, String queryId) throws Exception {
         SQLResponse ret = null;
         try {
             final String user = SecurityContextHolder.getContext().getAuthentication().getName();
-            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest, user);
+            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest, user, queryId);
 
             ret = queryWithSqlMassage(sqlRequest);
             return ret;
@@ -492,7 +492,7 @@ public class QueryService extends BasicService {
         try {
             final boolean isSelect = QueryUtil.isSelectStatement(sqlRequest.getSql());
             if (isSelect) {
-                sqlResponse = query(sqlRequest);
+                sqlResponse = query(sqlRequest, queryContext.getQueryId());
                 Trace.addTimelineAnnotation("query almost done");
             } else if (kylinConfig.isPushDownEnabled() && kylinConfig.isPushDownUpdateEnabled()) {
                 sqlResponse = update(sqlRequest);
