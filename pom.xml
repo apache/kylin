@@ -1213,6 +1213,9 @@
             <id>sandbox</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>pre-commit</name>
+                </property>
             </activation>
             <build>
                 <plugins>
@@ -1420,6 +1423,11 @@
             <!-- This profile adds/overrides few features of the 'apache-release'
                  profile in the parent pom. -->
             <id>apache-release</id>
+            <activation>
+                <property>
+                    <name>pre-commit</name>
+                </property>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -1486,12 +1494,14 @@
                                 <exclude>**/src/test/resources/**</exclude>
                                 <exclude>examples/sample_cube/template/**</exclude>
                                 <exclude>examples/test_case_data/localmeta/**</exclude>
+                                <exclude>examples/test_metadata/**</exclude>
 
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
                                 <exclude>lib/**</exclude>
                                 <exclude>dist/**</exclude>
                                 <exclude>website/**</exclude>
+                                <exclude>**/dependency-reduced-pom.xml</exclude>
 
                                 <!-- text files without comments -->
                                 <exclude>**/*.csv</exclude>
@@ -1556,6 +1566,7 @@
                                 <exclude>**/*.DEF</exclude>
                                 <exclude>**/*.isl</exclude>
                                 <exclude>**/*.isproj</exclude>
+                                <exclude>**/*.bmp</exclude>
 
                                 <!-- protobuf generated -->
                                 <exclude>
