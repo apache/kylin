@@ -145,7 +145,7 @@
                 <li ng-if="job.job_status=='RUNNING' || job.job_status=='NEW' || job.job_status=='PENDING' || job.job_status=='ERROR' || job.job_status=='STOPPED'">
                   <a ng-click="cancel(job)">Discard</a>
                 </li>
-                <li ng-if="job.job_status=='FINISHED' || job.job_status=='DISCARDED' || job.job_status=='ERROR' || job.job_status=='STOPPED'">
+                <li ng-if="job.job_status=='FINISHED' || job.job_status=='DISCARDED'">
                   <a ng-click="drop(job)">Drop</a>
                 </li>
                 <li>
