@@ -204,6 +204,54 @@ public class QueryContext {
         return Lists.newArrayList(cubeSegmentStatisticsResultMap.values());
     }
 
+    public CubeSegmentStatistics getCubeSegmentStatistics(int ctxId, String cubeName, String segmentName) {
+        CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
+        if (cubeSegmentStatisticsResult == null) {
+            logger.warn("CubeSegmentStatisticsResult should be initialized for context {}", ctxId);
+            return null;
+        }
+        Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = cubeSegmentStatisticsResult.cubeSegmentStatisticsMap;
+        if (cubeSegmentStatisticsMap == null) {
+            logger.warn(
+                    "cubeSegmentStatisticsMap should be initialized for CubeSegmentStatisticsResult with query type {}", cubeSegmentStatisticsResult.queryType);
+            return null;
+        }
+        Map<String, CubeSegmentStatistics> segmentStatisticsMap = cubeSegmentStatisticsMap.get(cubeName);
+        if (segmentStatisticsMap == null) {
+            logger.warn(
+                    "cubeSegmentStatistic should be initialized for cube {}", cubeName);
+            return null;
+        }
+        CubeSegmentStatistics segmentStatistics = segmentStatisticsMap.get(segmentName);
+        if (segmentStatistics == null) {
+            logger.warn(
+                    "segmentStatistics should be initialized for cube {} with segment{}", cubeName, segmentName);
+            return null;
+        }
+        return segmentStatistics;
+    }
+
+    public void addCubeSegmentStatistics(int ctxId, CubeSegmentStatistics cubeSegmentStatistics) {
+        CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
+        if (cubeSegmentStatisticsResult == null) {
+            logger.warn("CubeSegmentStatisticsResult should be initialized for context {}", ctxId);
+            return;
+        }
+        Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = cubeSegmentStatisticsResult.cubeSegmentStatisticsMap;
+        if (cubeSegmentStatisticsMap == null) {
+            logger.warn(
+                    "cubeSegmentStatisticsMap should be initialized for CubeSegmentStatisticsResult with query type {}", cubeSegmentStatisticsResult.queryType);
+            return;
+        }
+        String cubeName = cubeSegmentStatistics.cubeName;
+        Map<String, CubeSegmentStatistics> segmentStatisticsMap = cubeSegmentStatisticsMap.get(cubeName);
+        if (segmentStatisticsMap == null) {
+            segmentStatisticsMap = Maps.newConcurrentMap();
+            cubeSegmentStatisticsMap.put(cubeName, segmentStatisticsMap);
+        }
+        segmentStatisticsMap.put(cubeSegmentStatistics.getSegmentName(), cubeSegmentStatistics);
+    }
+
     public void addRPCStatistics(int ctxId, String rpcServer, String cubeName, String segmentName, long sourceCuboidId,
             long targetCuboidId, long filterMask, Exception e, long rpcCallTimeMs, long skippedRows, long scannedRows,
             long returnedRows, long aggregatedRows, long scannedBytes) {
