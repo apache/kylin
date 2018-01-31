@@ -18,15 +18,12 @@
 
 package org.apache.kylin.dict;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.List;
-import java.util.NavigableSet;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ClassUtil;
@@ -39,12 +36,14 @@ import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.Lists;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.NavigableSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class DictionaryManager {
 
@@ -174,8 +173,12 @@ public class DictionaryManager {
 
         for (String existing : existings) {
             DictionaryInfo existingInfo = getDictionaryInfo(existing);
-            if (existingInfo != null && dict.equals(existingInfo.getDictionaryObject())) {
-                return existing;
+            if (existingInfo != null) {
+                if ((config.isDictResuable() && existingInfo.getDictionaryObject().contains(dict))
+                        || dict.equals(existingInfo.getDictionaryObject())) {
+                    return existing;
+                }
+                
             }
         }
 

@@ -394,6 +394,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.growing-enabled", "false"));
     }
 
+    public boolean isDictResuable() {
+        return Boolean.parseBoolean(this.getOptional("kylin.dictionary.resuable", "false"));
+    }
+
     public int getAppendDictEntrySize() {
         return Integer.parseInt(getOptional("kylin.dictionary.append-entry-size", "10000000"));
     }
