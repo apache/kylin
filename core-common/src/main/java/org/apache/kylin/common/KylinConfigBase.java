@@ -1328,6 +1328,19 @@ abstract public class KylinConfigBase implements Serializable {
         return getRequired("kylin.cache.memcached.hosts");
     }
 
+    public boolean isQuerySegmentCacheEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.segment-cache-enabled", "false"));
+    }
+
+    public int getQuerySegmentCacheTimeout() {
+        return Integer.parseInt(getOptional("kylin.query.segment-cache-timeout", "2000"));
+    }
+
+    // define the maximum size for each segment in one query that can be cached, in megabytes
+    public int getQuerySegmentCacheMaxSize() {
+        return Integer.parseInt(getOptional("kylin.query.segment-cache-max-size", "200"));
+    }
+
     public String getQueryAccessController() {
         return getOptional("kylin.query.access-controller", null);
     }

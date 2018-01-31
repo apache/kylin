@@ -38,7 +38,9 @@
             <property name="ignorePattern"
                       value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
         </module>
-        <module name="MethodLength"/>
+        <module name="MethodLength">
+            <property name="max" value="300"/>
+        </module>
         <module name="MethodParamPad"/>
         <module name="ParenPad"/>
         <module name="EmptyStatement"/>
