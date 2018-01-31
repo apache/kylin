@@ -29,6 +29,24 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DataFormatException;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.SerializationUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.CompressionUtils;
+import org.apache.kylin.common.util.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Shorts;
+
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ConnectionFactoryBuilder;
@@ -41,23 +59,6 @@ import net.spy.memcached.ops.LinkedOperationQueueFactory;
 import net.spy.memcached.ops.OperationQueueFactory;
 import net.spy.memcached.transcoders.SerializingTranscoder;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.SerializationUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.CompressionUtils;
-import org.apache.kylin.common.util.JsonUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Shorts;
-
 /**
  * Cache backend by Memcached. The implementation leverages spymemcached client to talk to the servers.
  * Memcached itself has a limitation to the size of the key. So the real key for cache lookup is hashed from the orginal key. 
@@ -66,11 +67,11 @@ import com.google.common.primitives.Shorts;
  * @author mingmwang
  *
  */
-public class MemcachedCache{
+public class MemcachedCache {
     private static final Logger logger = LoggerFactory.getLogger(MemcachedCache.class);
 
     private static final int DEFAULT_TTL = 7 * 24 * 3600;
-    
+
     /**
      * Create and return the MemcachedCache. Each time call this method will create a new instance.
      * @param config            The MemcachedCache configuration to control the cache behavior.
@@ -97,16 +98,12 @@ public class MemcachedCache{
             ConnectionFactory connectionFactory = new MemcachedConnectionFactoryBuilder()
                     .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
                     .setHashAlg(DefaultHashAlgorithm.FNV1A_64_HASH)
-                    .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT)
-                    .setDaemon(true)
-                    .setFailureMode(FailureMode.Redistribute)
-                    .setTranscoder(transcoder)
-                    .setShouldOptimize(true)
-                    .setOpQueueMaxBlockTime(config.getTimeout())
-                    .setOpTimeout(config.getTimeout())
-                    .setReadBufferSize(config.getReadBufferSize())
-                    .setOpQueueFactory(opQueueFactory).build();
-            return new MemcachedCache(new MemcachedClient(new MemcachedConnectionFactory(connectionFactory), AddrUtil.getAddresses(hostsStr)), config, memcachedPrefix, timeToLive);
+                    .setLocatorType(ConnectionFactoryBuilder.Locator.CONSISTENT).setDaemon(true)
+                    .setFailureMode(FailureMode.Redistribute).setTranscoder(transcoder).setShouldOptimize(true)
+                    .setOpQueueMaxBlockTime(config.getTimeout()).setOpTimeout(config.getTimeout())
+                    .setReadBufferSize(config.getReadBufferSize()).setOpQueueFactory(opQueueFactory).build();
+            return new MemcachedCache(new MemcachedClient(new MemcachedConnectionFactory(connectionFactory),
+                    AddrUtil.getAddresses(hostsStr)), config, memcachedPrefix, timeToLive);
         } catch (IOException e) {
             logger.error("Unable to create MemcachedCache instance.", e);
             throw Throwables.propagate(e);
@@ -117,7 +114,7 @@ public class MemcachedCache{
     protected final MemcachedClientIF client;
     protected final String memcachedPrefix;
     protected final int compressThreshold;
-    
+
     protected final AtomicLong hitCount = new AtomicLong(0);
     protected final AtomicLong missCount = new AtomicLong(0);
 
@@ -132,20 +129,21 @@ public class MemcachedCache{
 
     private final int timeToLiveSeconds;
 
-    public MemcachedCache(final MemcachedClientIF client, final MemcachedCacheConfig config, final String memcachedPrefix, int timeToLiveSeconds) {
-        Preconditions.checkArgument(memcachedPrefix .length() <= MAX_PREFIX_LENGTH, "memcachedPrefix length [%d] exceeds maximum length [%d]", memcachedPrefix.length(), MAX_PREFIX_LENGTH);
+    public MemcachedCache(final MemcachedClientIF client, final MemcachedCacheConfig config,
+            final String memcachedPrefix, int timeToLiveSeconds) {
+        Preconditions.checkArgument(memcachedPrefix.length() <= MAX_PREFIX_LENGTH,
+                "memcachedPrefix length [%d] exceeds maximum length [%d]", memcachedPrefix.length(), MAX_PREFIX_LENGTH);
         this.memcachedPrefix = memcachedPrefix;
         this.client = client;
         this.config = config;
-        this.compressThreshold = config.getMaxObjectSize()/2;
+        this.compressThreshold = config.getMaxObjectSize() / 2;
         this.timeToLiveSeconds = timeToLiveSeconds;
     }
-    
-    public MemcachedCache(MemcachedCache cache){
+
+    public MemcachedCache(MemcachedCache cache) {
         this(cache.client, cache.config, cache.memcachedPrefix, cache.timeToLiveSeconds);
     }
-    
-    
+
     public String getName() {
         return memcachedPrefix;
     }
@@ -154,24 +152,41 @@ public class MemcachedCache{
         return client;
     }
 
+    protected String serializeKey(Object key) {
+        try {
+            return JsonUtil.writeValueAsString(key);
+        } catch (JsonProcessingException e) {
+            logger.warn("Can not convert key to String.", e);
+        }
+        return null;
+    }
+
+    protected byte[] serializeValue(Object value) {
+        return SerializationUtils.serialize((Serializable) value);
+    }
+
+    @VisibleForTesting
+    byte[] encodeValue(String keyS, Object value) {
+        if (keyS == null) {
+            return null;
+        }
+        return encodeValue(keyS.getBytes(Charsets.UTF_8), serializeValue(value));
+    }
+
     /**
      * This method is used to get value object based on key from the Cache. It converts key to json string first.
      * And then it calls getBinary() method to compute hashed key from the original key string, and use this as the real key to do lookup from internal Cache.
      * Then decodes the real values bytes from the cache lookup result, and leverages object serializer to convert value bytes to object.  
      */
     public byte[] get(Object key) {
-        byte[] value = null;
-        try {
-            value = get(JsonUtil.writeValueAsString(key));
-        } catch (JsonProcessingException e) {
-            logger.warn("Can not convert key to String.", e);
-        }
-        return value;
+        return get(serializeKey(key));
     }
 
-    public byte[] get(String key) {
-        byte[] value = getBinary(key);
-        return value;
+    /**
+     * @param keyS should be the serialized string
+     */
+    public byte[] get(String keyS) {
+        return getBinary(keyS);
     }
 
     /**
@@ -179,31 +194,31 @@ public class MemcachedCache{
      * And then it calls putBinary() method to compute hashed key from the original key string and encode the original key bytes into value bytes for hash conflicts detection.
      */
     public void put(Object key, Object value) {
-        try {
-            put(JsonUtil.writeValueAsString(key), value);
-        } catch (JsonProcessingException e) {
-            logger.warn("Can not convert key to String.", e);
-        }
+        put(serializeKey(key), value);
     }
 
-    public void put(String key, Object value) {
-        putBinary(key, SerializationUtils.serialize((Serializable)value), timeToLiveSeconds);
+    /**
+     * @param keyS should be the serialized string
+     */
+    public void put(String keyS, Object value) {
+        if (keyS != null) {
+            putBinary(keyS, serializeValue(value), timeToLiveSeconds);
+        }
     }
 
     public void evict(Object key) {
-        if(key == null)
+        if (key == null)
             return;
-        try {
-            evict(JsonUtil.writeValueAsString(key));
-        } catch (JsonProcessingException e) {
-            logger.warn("Can not convert key to String.", e);
-        }
+        evict(serializeKey(key));
     }
 
-    public void evict(String key) {
-        if(key == null)
+    /**
+     * @param keyS should be the serialized string
+     */
+    public void evict(String keyS) {
+        if (keyS == null)
             return;
-        client.delete(computeKeyHash(key));
+        client.delete(computeKeyHash(keyS));
     }
 
     public void clear() {
@@ -214,30 +229,38 @@ public class MemcachedCache{
             logger.warn("Clear Remote Cache returned with result: " + result);
         } catch (Exception e) {
             logger.warn("Can't clear Remote Cache.", e);
-        } 
-    }
-    
-    public CacheStats getStats() {
-        return new CacheStats(readBytes.get(), cacheGetTime.get(), putCount.get(), putBytes.get(), hitCount.get(), missCount.get(), 0, timeoutCount.get(), errorCount.get());
+        }
     }
 
-    public byte[] getBinary(String key) {
-        if(Strings.isNullOrEmpty(key)){
+    public CacheStats getStats() {
+        return new CacheStats(readBytes.get(), cacheGetTime.get(), putCount.get(), putBytes.get(), hitCount.get(),
+                missCount.get(), 0, timeoutCount.get(), errorCount.get());
+    }
+
+    /**
+     * @param keyS should be the serialized string
+     * @return the serialized value
+     */
+    protected byte[] getBinary(String keyS) {
+        if (Strings.isNullOrEmpty(keyS)) {
             return null;
         }
-        byte[] bytes =  internalGet(computeKeyHash(key));
-        return decodeValue(key.getBytes(Charsets.UTF_8), bytes);
+        byte[] bytes = internalGet(computeKeyHash(keyS));
+        return decodeValue(keyS.getBytes(Charsets.UTF_8), bytes);
     }
-    
 
-    public void putBinary(String key, byte[] value, int expiration) {
-        if(Strings.isNullOrEmpty(key)){
+    /**
+     * @param keyS should be the serialized string
+     * @param valueB should be the serialized value
+     */
+    protected void putBinary(String keyS, byte[] valueB, int expiration) {
+        if (Strings.isNullOrEmpty(keyS)) {
             return;
         }
-        internalPut(computeKeyHash(key), encodeValue(key.getBytes(Charsets.UTF_8), value), expiration);
+        internalPut(computeKeyHash(keyS), encodeValue(keyS.getBytes(Charsets.UTF_8), valueB), expiration);
     }
 
-    protected byte[] internalGet(String hashedKey){
+    protected byte[] internalGet(String hashedKey) {
         Future<Object> future;
         long start = System.currentTimeMillis();
         try {
@@ -252,9 +275,9 @@ public class MemcachedCache{
             logger.error("Unable to queue cache operation.", t);
             return null;
         }
-        
+
         try {
-            byte[] result = (byte[])future.get(config.getTimeout(), TimeUnit.MILLISECONDS);
+            byte[] result = (byte[]) future.get(config.getTimeout(), TimeUnit.MILLISECONDS);
             cacheGetTime.addAndGet(System.currentTimeMillis() - start);
             if (result != null) {
                 hitCount.incrementAndGet();
@@ -276,12 +299,12 @@ public class MemcachedCache{
             return null;
         }
     }
-    
-    private void internalPut(String hashedKey, byte[] serializedValue, int expiration) {
+
+    private void internalPut(String hashedKey, byte[] encodedValue, int expiration) {
         try {
-            client.set(hashedKey, expiration, serializedValue);
+            client.set(hashedKey, expiration, encodedValue);
             putCount.incrementAndGet();
-            putBytes.addAndGet(serializedValue.length);
+            putBytes.addAndGet(encodedValue.length);
         } catch (IllegalStateException e) {
             // operation did not get queued in time (queue is full)
             errorCount.incrementAndGet();
@@ -292,11 +315,12 @@ public class MemcachedCache{
         }
     }
 
-    protected byte[] encodeValue(byte[] key, byte[] value) {
+    protected byte[] encodeValue(byte[] key, byte[] valueB) {
         byte[] compressed = null;
-        if (config.isEnableCompression() && (value.length + Ints.BYTES + key.length > compressThreshold)) {
+        if (config.isEnableCompression() && (valueB.length + Ints.BYTES + key.length > compressThreshold)) {
             try {
-                compressed = CompressionUtils.compress(ByteBuffer.allocate(Ints.BYTES + key.length + value.length).putInt(key.length).put(key).put(value).array());
+                compressed = CompressionUtils.compress(ByteBuffer.allocate(Ints.BYTES + key.length + valueB.length)
+                        .putInt(key.length).put(key).put(valueB).array());
             } catch (IOException e) {
                 compressed = null;
                 logger.warn("Compressing value bytes error.", e);
@@ -305,17 +329,18 @@ public class MemcachedCache{
         if (compressed != null) {
             return ByteBuffer.allocate(Shorts.BYTES + compressed.length).putShort((short) 1).put(compressed).array();
         } else {
-            return ByteBuffer.allocate(Shorts.BYTES + Ints.BYTES + key.length + value.length).putShort((short) 0).putInt(key.length).put(key).put(value).array();
+            return ByteBuffer.allocate(Shorts.BYTES + Ints.BYTES + key.length + valueB.length).putShort((short) 0)
+                    .putInt(key.length).put(key).put(valueB).array();
         }
     }
-    
-    protected byte[] decodeValue(byte[] key, byte[] bytes) {
-        if(bytes == null)
+
+    protected byte[] decodeValue(byte[] key, byte[] valueE) {
+        if (valueE == null)
             return null;
-        ByteBuffer buf = ByteBuffer.wrap(bytes);
+        ByteBuffer buf = ByteBuffer.wrap(valueE);
         short enableCompression = buf.getShort();
         byte[] uncompressed = null;
-        if(enableCompression == 1){
+        if (enableCompression == 1) {
             byte[] value = new byte[buf.remaining()];
             buf.get(value);
             try {
@@ -325,13 +350,13 @@ public class MemcachedCache{
                 return null;
             }
         }
-        if(uncompressed != null){
+        if (uncompressed != null) {
             buf = ByteBuffer.wrap(uncompressed);
         }
         final int keyLength = buf.getInt();
         byte[] keyBytes = new byte[keyLength];
         buf.get(keyBytes);
-        if(!Arrays.equals(keyBytes, key)){
+        if (!Arrays.equals(keyBytes, key)) {
             logger.error("Keys do not match, possible hash collision!");
             return null;
         }
@@ -342,12 +367,13 @@ public class MemcachedCache{
 
     protected String computeKeyHash(String key) {
         // hash keys to keep things under 250 characters for memcached
-        return Joiner.on(":").skipNulls().join(KylinConfig.getInstanceFromEnv().getDeployEnv(), this.memcachedPrefix , DigestUtils.shaHex(key));
+        return Joiner.on(":").skipNulls().join(KylinConfig.getInstanceFromEnv().getDeployEnv(), this.memcachedPrefix,
+                DigestUtils.shaHex(key));
 
     }
-    
+
     public static final int MAX_PREFIX_LENGTH = MemcachedClientIF.MAX_KEY_LENGTH - 40 // length of namespace hash
-    - 40 // length of key hash
-    - 2; // length of separators
+            - 40 // length of key hash
+            - 2; // length of separators
 
 }

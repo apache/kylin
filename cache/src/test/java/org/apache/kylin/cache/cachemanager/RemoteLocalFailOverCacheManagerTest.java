@@ -20,7 +20,6 @@ package org.apache.kylin.cache.cachemanager;
 
 import static org.apache.kylin.cache.cachemanager.CacheConstants.QUERY_CACHE;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -35,14 +34,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml" })
+@ContextConfiguration(locations = { "classpath:cacheContext.xml" })
 @ActiveProfiles("testing-memcached")
 public class RemoteLocalFailOverCacheManagerTest {
 
     @BeforeClass
     public static void setupResource() throws Exception {
         LocalFileMetadataTestCase.staticCreateTestMetadata();
-        KylinConfig.getInstanceFromEnv().setProperty("kylin.cache.memcached.hosts", "sandbox:11211");
     }
 
     @AfterClass
@@ -54,7 +52,7 @@ public class RemoteLocalFailOverCacheManagerTest {
     RemoteLocalFailOverCacheManager cacheManager;
 
     @Test
-    public void testGetCache() {
+    public void testCacheManager() {
         cacheManager.disableRemoteCacheManager();
         Assert.assertTrue("Memcached failover to ehcache", cacheManager.getCache(QUERY_CACHE) instanceof EhCacheCache);
         cacheManager.enableRemoteCacheManager();

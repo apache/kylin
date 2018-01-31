@@ -25,9 +25,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import net.spy.memcached.internal.BulkFuture;
-
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +39,8 @@ import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Shorts;
 
+import net.spy.memcached.internal.BulkFuture;
+
 /**
  * Subclass of MemcachedCache. It supports storing large objects.  Memcached itself has a limitation to the value size with default value of 1M.
  * This implement extends the limit to 1G and can split huge bytes to multiple chunks. It will take care of the data integrity if part of the chunks lost(due to server restart or other reasons)
@@ -47,44 +48,45 @@ import com.google.common.primitives.Shorts;
  * @author mingmwang
  *
  */
-public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLookup{
+public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLookup {
     private static final Logger logger = LoggerFactory.getLogger(MemcachedChunkingCache.class);
 
-
-
-    public MemcachedChunkingCache(MemcachedCache cache){
+    public MemcachedChunkingCache(MemcachedCache cache) {
         super(cache);
-        Preconditions.checkArgument(config.getMaxChunkSize() > 1, "maxChunkSize [%d] must be greater than 1", config.getMaxChunkSize());
-        Preconditions.checkArgument(config.getMaxObjectSize() > 261, "maxObjectSize [%d] must be greater than 261", config.getMaxObjectSize());
+        Preconditions.checkArgument(config.getMaxChunkSize() > 1, "maxChunkSize [%d] must be greater than 1",
+                config.getMaxChunkSize());
+        Preconditions.checkArgument(config.getMaxObjectSize() > 261, "maxObjectSize [%d] must be greater than 261",
+                config.getMaxObjectSize());
     }
-    
+
     /**
      * This method overrides the parent getBinary(), it gets the KeyHook from the Cache first and check the KeyHook that whether chunking is enabled or not.
      */
     @Override
-    public byte[] getBinary(String key) {
-        if(Strings.isNullOrEmpty(key)){
+    public byte[] getBinary(String keyS) {
+        if (Strings.isNullOrEmpty(keyS)) {
             return null;
         }
-        KeyHook keyHook = lookupKeyHook(key);
+        KeyHook keyHook = lookupKeyHook(keyS);
         if (keyHook == null) {
             return null;
         }
-        
-        if(keyHook.getChunkskey() == null || keyHook.getChunkskey().length == 0) {
-            if(logger.isDebugEnabled()){
-                logger.debug("Chunking not enabled, return the value bytes in the keyhook directly, value bytes size = " + keyHook.getValues().length);
+
+        if (keyHook.getChunkskey() == null || keyHook.getChunkskey().length == 0) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Chunking not enabled, return the value bytes in the keyhook directly, value bytes size = "
+                        + keyHook.getValues().length);
             }
             return keyHook.getValues();
         }
-        
+
         BulkFuture<Map<String, Object>> bulkFuture;
         long start = System.currentTimeMillis();
-        
-        if(logger.isDebugEnabled()){
+
+        if (logger.isDebugEnabled()) {
             logger.debug("Chunking enabled, chunk size = " + keyHook.getChunkskey().length);
         }
-        
+
         Map<String, String> keyLookup = computeKeyHash(Arrays.asList(keyHook.getChunkskey()));
         try {
             bulkFuture = client.asyncGetBulk(keyLookup.keySet());
@@ -98,18 +100,18 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
             logger.error("Unable to queue cache operation.", t);
             return null;
         }
-        
+
         try {
             Map<String, Object> bulkResult = bulkFuture.get(config.getTimeout(), TimeUnit.MILLISECONDS);
             cacheGetTime.addAndGet(System.currentTimeMillis() - start);
             if (bulkResult.size() != keyHook.getChunkskey().length) {
                 missCount.incrementAndGet();
-                logger.warn("Some paritial chunks missing for query key:" + key);
+                logger.warn("Some paritial chunks missing for query key:" + keyS);
                 //remove all the partital chunks here.
                 for (String partitalKey : bulkResult.keySet()) {
                     client.delete(partitalKey);
                 }
-                deleteKeyHook(key);
+                deleteKeyHook(keyS);
                 return null;
             }
             hitCount.getAndAdd(keyHook.getChunkskey().length);
@@ -117,9 +119,9 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
             for (Map.Entry<String, Object> entry : bulkResult.entrySet()) {
                 byte[] bytes = (byte[]) entry.getValue();
                 readBytes.addAndGet(bytes.length);
-                String originalKey = keyLookup.get(entry.getKey());
-                int idx = Integer.parseInt(originalKey.substring(key.length()));
-                bytesArray[idx] = decodeValue(originalKey.getBytes(Charsets.UTF_8), bytes);
+                String originalKeyS = keyLookup.get(entry.getKey());
+                int idx = Integer.parseInt(originalKeyS.substring(keyS.length()));
+                bytesArray[idx] = decodeValue(originalKeyS.getBytes(Charsets.UTF_8), bytes);
             }
             return concatBytes(bytesArray);
         } catch (TimeoutException e) {
@@ -135,89 +137,71 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
             return null;
         }
     }
-    
+
     /**
      * This method overrides the parent putBinary() method. It will split the large value bytes into multiple chunks to fit into the internal Cache.
      * It generates a KeyHook to store the splitted chunked keys. 
      */
     @Override
-    public void putBinary(String key, byte[] value, int expiration) {
-        if(Strings.isNullOrEmpty(key)){
+    public void putBinary(String keyS, byte[] valueB, int expiration) {
+        if (Strings.isNullOrEmpty(keyS)) {
             return;
         }
-        // the number 6 means the chunk number size never exceeds 6 bytes
-        final int VALUE_SIZE = config.getMaxObjectSize() - Shorts.BYTES - Ints.BYTES - key.getBytes(Charsets.UTF_8).length - 6;
-        final int MAX_VALUE_SIZE = config.getMaxChunkSize() * VALUE_SIZE;
-        Preconditions.checkArgument(value.length<=MAX_VALUE_SIZE, "the value bytes length [%d] exceeds maximum value size [%d]", value.length, MAX_VALUE_SIZE);
-        int split = (value.length%VALUE_SIZE == 0) ? (value.length/VALUE_SIZE) : (value.length/VALUE_SIZE + 1);
-        String[] chunkskey = new String[split];
-        byte[][] byteArray = splitBytes(value, VALUE_SIZE);
-        KeyHook keyHook = null;
-        if (split > 1) {
-            if(logger.isDebugEnabled()){
-                logger.debug("Enable chunking for putting large cached object values, chunk size = " + split + ", original value bytes size = " + value.length);
-            }
-            for (int i = 0; i < split; i++){
-                chunkskey[i] = key + i;
-            }
-            keyHook = new KeyHook(chunkskey, null);
-        }else{
-            if(logger.isDebugEnabled()){
-                logger.debug("Chunking not enabled, put the orignal value bytes to keyhook directly, original value bytes size = " + value.length);
-            }
-            keyHook = new KeyHook(null, value);
-        }
-        if(logger.isDebugEnabled()){
+        int nSplit = getValueSplit(config, keyS, valueB.length);
+        Pair<KeyHook, byte[][]> keyValuePair = getKeyValuePair(nSplit, keyS, valueB);
+        KeyHook keyHook = keyValuePair.getFirst();
+        byte[][] splitValueB = keyValuePair.getSecond();
+
+        if (logger.isDebugEnabled()) {
             logger.debug("put key hook:{} to cache for hash key", keyHook);
         }
-        super.putBinary(key, SerializationUtils.serialize(keyHook), expiration);
-        if (split > 1) {
-            for (int i = 0; i < split; i++) {
-                if(logger.isDebugEnabled()){
-                    logger.debug("Chunk[" + i + "] bytes size before encoding  = " + byteArray[i].length);
+        super.putBinary(keyS, serializeValue(keyHook), expiration);
+        if (nSplit > 1) {
+            for (int i = 0; i < nSplit; i++) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Chunk[" + i + "] bytes size before encoding  = " + splitValueB[i].length);
                 }
-                super.putBinary(chunkskey[i], byteArray[i], expiration);
+                super.putBinary(keyHook.getChunkskey()[i], splitValueB[i], expiration);
             }
         }
     }
 
-    public void evict(String key) {
-        if(Strings.isNullOrEmpty(key)){
+    public void evict(String keyS) {
+        if (Strings.isNullOrEmpty(keyS)) {
             return;
         }
-        KeyHook keyHook = lookupKeyHook(key);
+        KeyHook keyHook = lookupKeyHook(keyS);
         if (keyHook == null) {
             return;
         }
 
-        if(keyHook.getChunkskey() != null && keyHook.getChunkskey().length > 0) {
+        if (keyHook.getChunkskey() != null && keyHook.getChunkskey().length > 0) {
             String[] chunkKeys = keyHook.getChunkskey();
             for (String chunkKey : chunkKeys) {
                 super.evict(chunkKey);
             }
         }
-        super.evict(key);
+        super.evict(keyS);
     }
-    
-    protected Map<String, String> computeKeyHash(List<String> keyList) {
-        return Maps.uniqueIndex(keyList, new Function<String, String>() {
+
+    protected Map<String, String> computeKeyHash(List<String> keySList) {
+        return Maps.uniqueIndex(keySList, new Function<String, String>() {
             @Override
-            public String apply(String key) {
-                return computeKeyHash(key);
+            public String apply(String keyS) {
+                return computeKeyHash(keyS);
             }
         });
     }
-    
-    private void deleteKeyHook(String key) {
+
+    private void deleteKeyHook(String keyS) {
         try {
-            super.evict(key);
+            super.evict(keyS);
         } catch (IllegalStateException e) {
             // operation did not get queued in time (queue is full)
             errorCount.incrementAndGet();
             logger.error("Unable to queue cache operation: ", e);
         }
     }
-    
 
     private byte[] concatBytes(byte[]... bytesArray) {
         int length = 0;
@@ -230,32 +214,65 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
             System.arraycopy(bytes, 0, result, destPos, bytes.length);
             destPos += bytes.length;
         }
-        if(logger.isDebugEnabled()){
+        if (logger.isDebugEnabled()) {
             logger.debug("Original value bytes size for all chunks  = " + result.length);
         }
-        
+
         return result;
     }
 
-    private byte[][] splitBytes(final byte[] data, final int valueSize) {
-        final int length = data.length;
-        final byte[][] dest = new byte[(length + valueSize - 1) / valueSize][];
-        int destIndex = 0;
-        int stopIndex = 0;
+    protected static byte[][] splitBytes(final byte[] data, final int nSplit) {
+        byte[][] dest = new byte[nSplit][];
 
-        for (int startIndex = 0; startIndex + valueSize <= length; startIndex += valueSize) {
-            stopIndex += valueSize;
-            dest[destIndex++] = Arrays.copyOfRange(data, startIndex, stopIndex);
+        final int splitSize = (data.length - 1) / nSplit + 1;
+        for (int i = 0; i < nSplit - 1; i++) {
+            dest[i] = Arrays.copyOfRange(data, i * splitSize, (i + 1) * splitSize);
         }
-        if (stopIndex < length)
-            dest[destIndex] = Arrays.copyOfRange(data, stopIndex, length);
+        dest[nSplit - 1] = Arrays.copyOfRange(data, (nSplit - 1) * splitSize, data.length);
+
         return dest;
     }
 
+    protected static int getValueSplit(MemcachedCacheConfig config, String keyS, int valueBLen) {
+        // the number 6 means the chunk number size never exceeds 6 bytes
+        final int VALUE_SIZE = config.getMaxObjectSize() - Shorts.BYTES - Ints.BYTES
+                - keyS.getBytes(Charsets.UTF_8).length - 6;
+        final int MAX_VALUE_SIZE = config.getMaxChunkSize() * VALUE_SIZE;
+        Preconditions.checkArgument(valueBLen <= MAX_VALUE_SIZE,
+                "the value bytes length [%d] exceeds maximum value size [%d]", valueBLen, MAX_VALUE_SIZE);
+        return (valueBLen - 1) / VALUE_SIZE + 1;
+    }
+
+    protected static Pair<KeyHook, byte[][]> getKeyValuePair(int nSplit, String keyS, byte[] valueB) {
+        KeyHook keyHook;
+        byte[][] splitValueB = null;
+        if (nSplit > 1) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Enable chunking for putting large cached object values, chunk size = " + nSplit
+                        + ", original value bytes size = " + valueB.length);
+            }
+            String[] chunkKeySs = new String[nSplit];
+            for (int i = 0; i < nSplit; i++) {
+                chunkKeySs[i] = keyS + i;
+            }
+            keyHook = new KeyHook(chunkKeySs, null);
+            splitValueB = splitBytes(valueB, nSplit);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug(
+                        "Chunking not enabled, put the original value bytes to keyhook directly, original value bytes size = "
+                                + valueB.length);
+            }
+            keyHook = new KeyHook(null, valueB);
+        }
+
+        return new Pair<>(keyHook, splitValueB);
+    }
+
     @Override
-    public KeyHook lookupKeyHook(String key) {
-        byte[] bytes = super.getBinary(key);
-        if(bytes == null){
+    public KeyHook lookupKeyHook(String keyS) {
+        byte[] bytes = super.getBinary(keyS);
+        if (bytes == null) {
             return null;
         }
         return (KeyHook) SerializationUtils.deserialize(bytes);

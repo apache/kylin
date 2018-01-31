@@ -16,7 +16,6 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:mvc="http://www.springframework.org/schema/mvc"
-       xmlns:task="http://www.springframework.org/schema/task"
        xmlns:aop="http://www.springframework.org/schema/aop"
        xmlns:cache="http://www.springframework.org/schema/cache"
        xmlns:p="http://www.springframework.org/schema/p"
@@ -24,8 +23,8 @@
     http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
     http://www.springframework.org/schema/context
     http://www.springframework.org/schema/context/spring-context-4.3.xsd
-    http://www.springframework.org/schema/task
-    http://www.springframework.org/schema/task/spring-task-4.3.xsd
+
+
 
     http://www.springframework.org/schema/mvc
     http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
@@ -105,22 +104,6 @@
               p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
         <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
               p:cacheManager-ref="ehcache"/>
-    </beans>
-
-    <beans profile="testing-memcached">
-        <bean id="ehcache"
-              class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
-              p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
-        <bean id="localCacheManager" class="org.apache.kylin.cache.cachemanager.InstrumentedEhCacheCacheManager"
-              p:cacheManager-ref="ehcache"/>
-
-        <bean id="remoteCacheManager" class="org.apache.kylin.cache.cachemanager.MemcachedCacheManager"/>
-        <bean id="memcachedCacheConfig" class="org.apache.kylin.cache.memcached.MemcachedCacheConfig">
-            <property name="timeout" value="500"/>
-            <property name="hosts" value="${kylin.cache.memcached.hosts}"/>
-        </bean>
-
-        <bean id="cacheManager" class="org.apache.kylin.cache.cachemanager.RemoteLocalFailOverCacheManager"/>
     </beans>
 
 </beans>
