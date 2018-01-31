@@ -21,7 +21,6 @@ package org.apache.kylin.cache.memcached;
 import java.io.Serializable;
 import java.util.Arrays;
 
-
 /**
  * A Class implement this interface indicates that the key information need to be calculated from a first lookup from cache itself to get
  * a hook.
@@ -29,19 +28,19 @@ import java.util.Arrays;
  */
 public interface KeyHookLookup {
     KeyHook lookupKeyHook(String key);
-    
-    public static class KeyHook implements Serializable  {
+
+    public static class KeyHook implements Serializable {
         private static final long serialVersionUID = 2400159460862757991L;
-        
+
         private String[] chunkskey;
         private byte[] values;
 
         /**
          * For de-serialization
          */
-        public KeyHook(){
+        public KeyHook() {
         }
-        
+
         public KeyHook(String[] chunkskey, byte[] values) {
             super();
             this.chunkskey = chunkskey;
@@ -55,7 +54,7 @@ public interface KeyHookLookup {
         public void setChunkskey(String[] chunkskey) {
             this.chunkskey = chunkskey;
         }
-        
+
         public byte[] getValues() {
             return values;
         }
@@ -107,34 +106,34 @@ public interface KeyHookLookup {
         }
 
         //        @Override
-//        public void writeExternal(ObjectOutput out) throws IOException {
-//            if(chunkskey == null){
-//                out.writeInt(0);
-//            }else{
-//                out.writeInt(chunkskey.length);
-//                for (String chunkKey : chunkskey) {
-//                    out.writeUTF(chunkKey);
-//                }
-//            }
-//            if(values != null){
-//                out.write(values);
-//            }
-//        }
-//        
-//        @Override
-//        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-//            int keySize = in.readInt();
-//            if(keySize > 0){
-//                chunkskey = new String[keySize];
-//                for (int i = 0; i < keySize; i++){
-//                    chunkskey[i] = in.readUTF();
-//                }
-//            }
-//            int available = in.available();
-//            if(available > 0){
-//                values = new byte[available];
-//                in.read(values);
-//            }
-//        }
+        //        public void writeExternal(ObjectOutput out) throws IOException {
+        //            if(chunkskey == null){
+        //                out.writeInt(0);
+        //            }else{
+        //                out.writeInt(chunkskey.length);
+        //                for (String chunkKey : chunkskey) {
+        //                    out.writeUTF(chunkKey);
+        //                }
+        //            }
+        //            if(values != null){
+        //                out.write(values);
+        //            }
+        //        }
+        //        
+        //        @Override
+        //        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        //            int keySize = in.readInt();
+        //            if(keySize > 0){
+        //                chunkskey = new String[keySize];
+        //                for (int i = 0; i < keySize; i++){
+        //                    chunkskey[i] = in.readUTF();
+        //                }
+        //            }
+        //            int available = in.available();
+        //            if(available > 0){
+        //                values = new byte[available];
+        //                in.read(values);
+        //            }
+        //        }
     }
 }

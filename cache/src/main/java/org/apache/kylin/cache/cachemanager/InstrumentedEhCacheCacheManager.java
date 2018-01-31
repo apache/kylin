@@ -44,6 +44,13 @@ public class InstrumentedEhCacheCacheManager extends AbstractCacheManager {
     private boolean enableMetrics = false;
 
     /**
+     * Return the backing EhCache {@link net.sf.ehcache.CacheManager}.
+     */
+    public net.sf.ehcache.CacheManager getCacheManager() {
+        return this.cacheManager;
+    }
+
+    /**
      * Set the backing EhCache {@link net.sf.ehcache.CacheManager}.
      */
     public void setCacheManager(net.sf.ehcache.CacheManager cacheManager) {
@@ -51,13 +58,6 @@ public class InstrumentedEhCacheCacheManager extends AbstractCacheManager {
         if ("true".equalsIgnoreCase(metricsConfig.get("ehcache.enabled"))) {
             enableMetrics = true;
         }
-    }
-
-    /**
-     * Return the backing EhCache {@link net.sf.ehcache.CacheManager}.
-     */
-    public net.sf.ehcache.CacheManager getCacheManager() {
-        return this.cacheManager;
     }
 
     @Override

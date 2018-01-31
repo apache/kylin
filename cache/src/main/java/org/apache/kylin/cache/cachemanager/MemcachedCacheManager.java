@@ -18,15 +18,11 @@
 
 package org.apache.kylin.cache.cachemanager;
 
-import java.net.SocketAddress;
-import java.util.Collection;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.apache.commons.lang.SerializationUtils;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import net.spy.memcached.MemcachedClientIF;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.cache.memcached.MemcachedCache;
 import org.apache.kylin.cache.memcached.MemcachedCacheConfig;
 import org.apache.kylin.cache.memcached.MemcachedChunkingCache;
@@ -37,11 +33,13 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.support.AbstractCacheManager;
 import org.springframework.cache.support.SimpleValueWrapper;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-import net.spy.memcached.MemcachedClientIF;
+import java.net.SocketAddress;
+import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MemcachedCacheManager extends AbstractCacheManager {
 
@@ -77,26 +75,6 @@ public class MemcachedCacheManager extends AbstractCacheManager {
         timer.scheduleWithFixedDelay(new MemcachedClusterHealthChecker(), ONE_MINUTE, ONE_MINUTE,
                 TimeUnit.MILLISECONDS);
         return caches;
-    }
-
-    private class MemcachedClusterHealthChecker implements Runnable {
-        @Override
-        public void run() {
-            Cache cache = getCache(CacheConstants.QUERY_CACHE);
-            MemcachedClientIF cacheClient = (MemcachedClientIF) cache.getNativeCache();
-            Collection<SocketAddress> liveServers = cacheClient.getAvailableServers();
-            Collection<SocketAddress> deadServers = cacheClient.getUnavailableServers();
-            if (liveServers.size() == 0) {
-                clusterHealth.set(false);
-                logger.error("All the servers in MemcachedCluster is down, UnavailableServers: " + deadServers);
-            } else {
-                clusterHealth.set(true);
-                if (deadServers.size() > liveServers.size()) {
-                    logger.warn("Half of the servers in MemcachedCluster is down, LiveServers: " + liveServers
-                            + ", UnavailableServers: " + deadServers);
-                }
-            }
-        }
     }
 
     public boolean isClusterDown() {
@@ -182,5 +160,25 @@ public class MemcachedCacheManager extends AbstractCacheManager {
             }
         }
 
+    }
+
+    private class MemcachedClusterHealthChecker implements Runnable {
+        @Override
+        public void run() {
+            Cache cache = getCache(CacheConstants.QUERY_CACHE);
+            MemcachedClientIF cacheClient = (MemcachedClientIF) cache.getNativeCache();
+            Collection<SocketAddress> liveServers = cacheClient.getAvailableServers();
+            Collection<SocketAddress> deadServers = cacheClient.getUnavailableServers();
+            if (liveServers.size() == 0) {
+                clusterHealth.set(false);
+                logger.error("All the servers in MemcachedCluster is down, UnavailableServers: " + deadServers);
+            } else {
+                clusterHealth.set(true);
+                if (deadServers.size() > liveServers.size()) {
+                    logger.warn("Half of the servers in MemcachedCluster is down, LiveServers: " + liveServers
+                            + ", UnavailableServers: " + deadServers);
+                }
+            }
+        }
     }
 }

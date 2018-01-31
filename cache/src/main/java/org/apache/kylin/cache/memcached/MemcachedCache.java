@@ -18,25 +18,6 @@
 
 package org.apache.kylin.cache.memcached;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.zip.DataFormatException;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.SerializationUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.CompressionUtils;
-import org.apache.kylin.common.util.JsonUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -46,7 +27,6 @@ import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Shorts;
-
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ConnectionFactoryBuilder;
@@ -58,6 +38,24 @@ import net.spy.memcached.ops.ArrayOperationQueueFactory;
 import net.spy.memcached.ops.LinkedOperationQueueFactory;
 import net.spy.memcached.ops.OperationQueueFactory;
 import net.spy.memcached.transcoders.SerializingTranscoder;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.SerializationUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.CompressionUtils;
+import org.apache.kylin.common.util.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.zip.DataFormatException;
 
 /**
  * Cache backend by Memcached. The implementation leverages spymemcached client to talk to the servers.
@@ -68,9 +66,39 @@ import net.spy.memcached.transcoders.SerializingTranscoder;
  *
  */
 public class MemcachedCache {
+    public static final int MAX_PREFIX_LENGTH = MemcachedClientIF.MAX_KEY_LENGTH - 40 // length of namespace hash
+            - 40 // length of key hash
+            - 2; // length of separators
     private static final Logger logger = LoggerFactory.getLogger(MemcachedCache.class);
-
     private static final int DEFAULT_TTL = 7 * 24 * 3600;
+    protected final MemcachedCacheConfig config;
+    protected final MemcachedClientIF client;
+    protected final String memcachedPrefix;
+    protected final int compressThreshold;
+    protected final AtomicLong hitCount = new AtomicLong(0);
+    protected final AtomicLong missCount = new AtomicLong(0);
+    protected final AtomicLong readBytes = new AtomicLong(0);
+    protected final AtomicLong timeoutCount = new AtomicLong(0);
+    protected final AtomicLong errorCount = new AtomicLong(0);
+    protected final AtomicLong putCount = new AtomicLong(0);
+    protected final AtomicLong putBytes = new AtomicLong(0);
+    private final int timeToLiveSeconds;
+    protected AtomicLong cacheGetTime = new AtomicLong(0);
+
+    public MemcachedCache(final MemcachedClientIF client, final MemcachedCacheConfig config,
+            final String memcachedPrefix, int timeToLiveSeconds) {
+        Preconditions.checkArgument(memcachedPrefix.length() <= MAX_PREFIX_LENGTH,
+                "memcachedPrefix length [%d] exceeds maximum length [%d]", memcachedPrefix.length(), MAX_PREFIX_LENGTH);
+        this.memcachedPrefix = memcachedPrefix;
+        this.client = client;
+        this.config = config;
+        this.compressThreshold = config.getMaxObjectSize() / 2;
+        this.timeToLiveSeconds = timeToLiveSeconds;
+    }
+
+    public MemcachedCache(MemcachedCache cache) {
+        this(cache.client, cache.config, cache.memcachedPrefix, cache.timeToLiveSeconds);
+    }
 
     /**
      * Create and return the MemcachedCache. Each time call this method will create a new instance.
@@ -110,40 +138,6 @@ public class MemcachedCache {
         }
     }
 
-    protected final MemcachedCacheConfig config;
-    protected final MemcachedClientIF client;
-    protected final String memcachedPrefix;
-    protected final int compressThreshold;
-
-    protected final AtomicLong hitCount = new AtomicLong(0);
-    protected final AtomicLong missCount = new AtomicLong(0);
-
-    protected final AtomicLong readBytes = new AtomicLong(0);
-    protected final AtomicLong timeoutCount = new AtomicLong(0);
-    protected final AtomicLong errorCount = new AtomicLong(0);
-
-    protected final AtomicLong putCount = new AtomicLong(0);
-    protected final AtomicLong putBytes = new AtomicLong(0);
-
-    protected AtomicLong cacheGetTime = new AtomicLong(0);
-
-    private final int timeToLiveSeconds;
-
-    public MemcachedCache(final MemcachedClientIF client, final MemcachedCacheConfig config,
-            final String memcachedPrefix, int timeToLiveSeconds) {
-        Preconditions.checkArgument(memcachedPrefix.length() <= MAX_PREFIX_LENGTH,
-                "memcachedPrefix length [%d] exceeds maximum length [%d]", memcachedPrefix.length(), MAX_PREFIX_LENGTH);
-        this.memcachedPrefix = memcachedPrefix;
-        this.client = client;
-        this.config = config;
-        this.compressThreshold = config.getMaxObjectSize() / 2;
-        this.timeToLiveSeconds = timeToLiveSeconds;
-    }
-
-    public MemcachedCache(MemcachedCache cache) {
-        this(cache.client, cache.config, cache.memcachedPrefix, cache.timeToLiveSeconds);
-    }
-
     public String getName() {
         return memcachedPrefix;
     }
@@ -176,7 +170,7 @@ public class MemcachedCache {
     /**
      * This method is used to get value object based on key from the Cache. It converts key to json string first.
      * And then it calls getBinary() method to compute hashed key from the original key string, and use this as the real key to do lookup from internal Cache.
-     * Then decodes the real values bytes from the cache lookup result, and leverages object serializer to convert value bytes to object.  
+     * Then decodes the real values bytes from the cache lookup result, and leverages object serializer to convert value bytes to object.
      */
     public byte[] get(Object key) {
         return get(serializeKey(key));
@@ -190,7 +184,7 @@ public class MemcachedCache {
     }
 
     /**
-     * This method is used to put key/value objects to the Cache. It converts key to json string and leverages object serializer to convert value object to bytes. 
+     * This method is used to put key/value objects to the Cache. It converts key to json string and leverages object serializer to convert value object to bytes.
      * And then it calls putBinary() method to compute hashed key from the original key string and encode the original key bytes into value bytes for hash conflicts detection.
      */
     public void put(Object key, Object value) {
@@ -371,9 +365,5 @@ public class MemcachedCache {
                 DigestUtils.shaHex(key));
 
     }
-
-    public static final int MAX_PREFIX_LENGTH = MemcachedClientIF.MAX_KEY_LENGTH - 40 // length of namespace hash
-            - 40 // length of key hash
-            - 2; // length of separators
 
 }

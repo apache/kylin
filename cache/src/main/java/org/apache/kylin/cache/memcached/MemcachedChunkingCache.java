@@ -18,18 +18,6 @@
 
 package org.apache.kylin.cache.memcached;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import org.apache.commons.lang.SerializationUtils;
-import org.apache.kylin.common.util.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -38,15 +26,24 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Shorts;
-
 import net.spy.memcached.internal.BulkFuture;
+import org.apache.commons.lang3.SerializationUtils;
+import org.apache.kylin.common.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Subclass of MemcachedCache. It supports storing large objects.  Memcached itself has a limitation to the value size with default value of 1M.
  * This implement extends the limit to 1G and can split huge bytes to multiple chunks. It will take care of the data integrity if part of the chunks lost(due to server restart or other reasons)
- * 
- * @author mingmwang
  *
+ * @author mingmwang
  */
 public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLookup {
     private static final Logger logger = LoggerFactory.getLogger(MemcachedChunkingCache.class);
@@ -57,6 +54,54 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
                 config.getMaxChunkSize());
         Preconditions.checkArgument(config.getMaxObjectSize() > 261, "maxObjectSize [%d] must be greater than 261",
                 config.getMaxObjectSize());
+    }
+
+    protected static byte[][] splitBytes(final byte[] data, final int nSplit) {
+        byte[][] dest = new byte[nSplit][];
+
+        final int splitSize = (data.length - 1) / nSplit + 1;
+        for (int i = 0; i < nSplit - 1; i++) {
+            dest[i] = Arrays.copyOfRange(data, i * splitSize, (i + 1) * splitSize);
+        }
+        dest[nSplit - 1] = Arrays.copyOfRange(data, (nSplit - 1) * splitSize, data.length);
+
+        return dest;
+    }
+
+    protected static int getValueSplit(MemcachedCacheConfig config, String keyS, int valueBLen) {
+        // the number 6 means the chunk number size never exceeds 6 bytes
+        final int VALUE_SIZE = config.getMaxObjectSize() - Shorts.BYTES - Ints.BYTES
+                - keyS.getBytes(Charsets.UTF_8).length - 6;
+        final int MAX_VALUE_SIZE = config.getMaxChunkSize() * VALUE_SIZE;
+        Preconditions.checkArgument(valueBLen <= MAX_VALUE_SIZE,
+                "the value bytes length [%d] exceeds maximum value size [%d]", valueBLen, MAX_VALUE_SIZE);
+        return (valueBLen - 1) / VALUE_SIZE + 1;
+    }
+
+    protected static Pair<KeyHook, byte[][]> getKeyValuePair(int nSplit, String keyS, byte[] valueB) {
+        KeyHook keyHook;
+        byte[][] splitValueB = null;
+        if (nSplit > 1) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Enable chunking for putting large cached object values, chunk size = " + nSplit
+                        + ", original value bytes size = " + valueB.length);
+            }
+            String[] chunkKeySs = new String[nSplit];
+            for (int i = 0; i < nSplit; i++) {
+                chunkKeySs[i] = keyS + i;
+            }
+            keyHook = new KeyHook(chunkKeySs, null);
+            splitValueB = splitBytes(valueB, nSplit);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug(
+                        "Chunking not enabled, put the original value bytes to keyhook directly, original value bytes size = "
+                                + valueB.length);
+            }
+            keyHook = new KeyHook(null, valueB);
+        }
+
+        return new Pair<>(keyHook, splitValueB);
     }
 
     /**
@@ -140,7 +185,7 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
 
     /**
      * This method overrides the parent putBinary() method. It will split the large value bytes into multiple chunks to fit into the internal Cache.
-     * It generates a KeyHook to store the splitted chunked keys. 
+     * It generates a KeyHook to store the splitted chunked keys.
      */
     @Override
     public void putBinary(String keyS, byte[] valueB, int expiration) {
@@ -219,54 +264,6 @@ public class MemcachedChunkingCache extends MemcachedCache implements KeyHookLoo
         }
 
         return result;
-    }
-
-    protected static byte[][] splitBytes(final byte[] data, final int nSplit) {
-        byte[][] dest = new byte[nSplit][];
-
-        final int splitSize = (data.length - 1) / nSplit + 1;
-        for (int i = 0; i < nSplit - 1; i++) {
-            dest[i] = Arrays.copyOfRange(data, i * splitSize, (i + 1) * splitSize);
-        }
-        dest[nSplit - 1] = Arrays.copyOfRange(data, (nSplit - 1) * splitSize, data.length);
-
-        return dest;
-    }
-
-    protected static int getValueSplit(MemcachedCacheConfig config, String keyS, int valueBLen) {
-        // the number 6 means the chunk number size never exceeds 6 bytes
-        final int VALUE_SIZE = config.getMaxObjectSize() - Shorts.BYTES - Ints.BYTES
-                - keyS.getBytes(Charsets.UTF_8).length - 6;
-        final int MAX_VALUE_SIZE = config.getMaxChunkSize() * VALUE_SIZE;
-        Preconditions.checkArgument(valueBLen <= MAX_VALUE_SIZE,
-                "the value bytes length [%d] exceeds maximum value size [%d]", valueBLen, MAX_VALUE_SIZE);
-        return (valueBLen - 1) / VALUE_SIZE + 1;
-    }
-
-    protected static Pair<KeyHook, byte[][]> getKeyValuePair(int nSplit, String keyS, byte[] valueB) {
-        KeyHook keyHook;
-        byte[][] splitValueB = null;
-        if (nSplit > 1) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Enable chunking for putting large cached object values, chunk size = " + nSplit
-                        + ", original value bytes size = " + valueB.length);
-            }
-            String[] chunkKeySs = new String[nSplit];
-            for (int i = 0; i < nSplit; i++) {
-                chunkKeySs[i] = keyS + i;
-            }
-            keyHook = new KeyHook(chunkKeySs, null);
-            splitValueB = splitBytes(valueB, nSplit);
-        } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug(
-                        "Chunking not enabled, put the original value bytes to keyhook directly, original value bytes size = "
-                                + valueB.length);
-            }
-            keyHook = new KeyHook(null, valueB);
-        }
-
-        return new Pair<>(keyHook, splitValueB);
     }
 
     @Override

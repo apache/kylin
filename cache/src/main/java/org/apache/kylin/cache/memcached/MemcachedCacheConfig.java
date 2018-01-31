@@ -25,7 +25,7 @@ public class MemcachedCacheConfig {
 
     // comma delimited list of memcached servers, given as host:port combination
     private String hosts;
-    
+
     private int maxChunkSize = 1024;
 
     private int maxObjectSize = 1024 * 1024;

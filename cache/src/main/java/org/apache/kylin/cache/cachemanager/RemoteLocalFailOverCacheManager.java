@@ -35,26 +35,26 @@ public class RemoteLocalFailOverCacheManager extends AbstractCacheManager {
 
     @Autowired
     private MemcachedCacheManager remoteCacheManager;
-    
+
     @Autowired
     private CacheManager localCacheManager;
-    
+
     @Override
     public void afterPropertiesSet() {
         Preconditions.checkNotNull(localCacheManager, "localCacheManager is not injected yet");
     }
-    
+
     @Override
     protected Collection<? extends Cache> loadCaches() {
         return null;
     }
-    
+
     @Override
     public Cache getCache(String name) {
-        if(remoteCacheManager == null || remoteCacheManager.isClusterDown()){
+        if (remoteCacheManager == null || remoteCacheManager.isClusterDown()) {
             logger.info("use local cache, because remote cache is not configured or down");
             return localCacheManager.getCache(name);
-        }else{
+        } else {
             return remoteCacheManager.getCache(name);
         }
     }

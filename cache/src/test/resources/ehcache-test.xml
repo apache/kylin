@@ -17,7 +17,7 @@
            eternal="false"
            timeToIdleSeconds="86400"
            memoryStoreEvictionPolicy="LRU"
-            >
+    >
         <persistence strategy="none"/>
     </cache>
 </ehcache>

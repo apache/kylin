@@ -22,14 +22,14 @@ import static org.apache.kylin.metrics.lib.impl.MetricsSystem.Metrics;
 
 import java.util.Map;
 
-import net.spy.memcached.metrics.AbstractMetricCollector;
-import net.spy.memcached.metrics.DefaultMetricCollector;
-import net.spy.memcached.metrics.MetricCollector;
-
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.google.common.collect.Maps;
+
+import net.spy.memcached.metrics.AbstractMetricCollector;
+import net.spy.memcached.metrics.DefaultMetricCollector;
+import net.spy.memcached.metrics.MetricCollector;
 
 /**
  * A {@link MetricCollector} that uses the Codahale Metrics library.
@@ -38,102 +38,102 @@ import com.google.common.collect.Maps;
  * of the collector during runtime:
  */
 public final class MemcachedMetrics extends AbstractMetricCollector {
-    
-  /**
-   * Contains all registered {@link Counter}s.
-   */
-  private Map<String, Counter> counters;
 
-  /**
-   * Contains all registered {@link Meter}s.
-   */
-  private Map<String, Meter> meters;
+    /**
+     * Contains all registered {@link Counter}s.
+     */
+    private Map<String, Counter> counters;
 
-  /**
-   * Contains all registered {@link Histogram}s.
-   */
-  private Map<String, Histogram> histograms;
+    /**
+     * Contains all registered {@link Meter}s.
+     */
+    private Map<String, Meter> meters;
 
-  /**
-   * Create a new {@link DefaultMetricCollector}.
-   *
-   * Note that when this constructor is called, the reporter is also
-   * automatically established.
-   */
-  public MemcachedMetrics() {
-    counters = Maps.newConcurrentMap();
-    meters = Maps.newConcurrentMap();
-    histograms = Maps.newConcurrentMap();
-  }
+    /**
+     * Contains all registered {@link Histogram}s.
+     */
+    private Map<String, Histogram> histograms;
 
-  @Override
-  public void addCounter(String name) {
-    if (!counters.containsKey(name)) {
-      counters.put(name, Metrics.counter(name));
+    /**
+     * Create a new {@link DefaultMetricCollector}.
+     *
+     * Note that when this constructor is called, the reporter is also
+     * automatically established.
+     */
+    public MemcachedMetrics() {
+        counters = Maps.newConcurrentMap();
+        meters = Maps.newConcurrentMap();
+        histograms = Maps.newConcurrentMap();
     }
-  }
 
-  @Override
-  public void removeCounter(String name) {
-    if (!counters.containsKey(name)) {
-      Metrics.remove(name);
-      counters.remove(name);
+    @Override
+    public void addCounter(String name) {
+        if (!counters.containsKey(name)) {
+            counters.put(name, Metrics.counter(name));
+        }
     }
-  }
 
-  @Override
-  public void incrementCounter(String name, int amount) {
-    if (counters.containsKey(name)) {
-      counters.get(name).inc(amount);
+    @Override
+    public void removeCounter(String name) {
+        if (!counters.containsKey(name)) {
+            Metrics.remove(name);
+            counters.remove(name);
+        }
     }
-  }
 
-  @Override
-  public void decrementCounter(String name, int amount) {
-    if (counters.containsKey(name)) {
-      counters.get(name).dec(amount);
+    @Override
+    public void incrementCounter(String name, int amount) {
+        if (counters.containsKey(name)) {
+            counters.get(name).inc(amount);
+        }
     }
-  }
 
-  @Override
-  public void addMeter(String name) {
-    if (!meters.containsKey(name)) {
-      meters.put(name, Metrics.meter(name));
+    @Override
+    public void decrementCounter(String name, int amount) {
+        if (counters.containsKey(name)) {
+            counters.get(name).dec(amount);
+        }
     }
-  }
 
-  @Override
-  public void removeMeter(String name) {
-    if (meters.containsKey(name)) {
-      meters.remove(name);
+    @Override
+    public void addMeter(String name) {
+        if (!meters.containsKey(name)) {
+            meters.put(name, Metrics.meter(name));
+        }
     }
-  }
 
-  @Override
-  public void markMeter(String name) {
-    if (meters.containsKey(name)) {
-      meters.get(name).mark();
+    @Override
+    public void removeMeter(String name) {
+        if (meters.containsKey(name)) {
+            meters.remove(name);
+        }
     }
-  }
 
-  @Override
-  public void addHistogram(String name) {
-    if (!histograms.containsKey(name)) {
-      histograms.put(name, Metrics.histogram(name));
+    @Override
+    public void markMeter(String name) {
+        if (meters.containsKey(name)) {
+            meters.get(name).mark();
+        }
     }
-  }
 
-  @Override
-  public void removeHistogram(String name) {
-    if (histograms.containsKey(name)) {
-      histograms.remove(name);
+    @Override
+    public void addHistogram(String name) {
+        if (!histograms.containsKey(name)) {
+            histograms.put(name, Metrics.histogram(name));
+        }
     }
-  }
 
-  @Override
-  public void updateHistogram(String name, int amount) {
-    if (histograms.containsKey(name)) {
-      histograms.get(name).update(amount);
+    @Override
+    public void removeHistogram(String name) {
+        if (histograms.containsKey(name)) {
+            histograms.remove(name);
+        }
     }
-  }
+
+    @Override
+    public void updateHistogram(String name, int amount) {
+        if (histograms.containsKey(name)) {
+            histograms.get(name).update(amount);
+        }
+    }
 }

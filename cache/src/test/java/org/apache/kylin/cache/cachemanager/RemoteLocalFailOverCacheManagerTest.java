@@ -38,6 +38,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ActiveProfiles("testing-memcached")
 public class RemoteLocalFailOverCacheManagerTest {
 
+    @Autowired
+    @Qualifier("cacheManager")
+    RemoteLocalFailOverCacheManager cacheManager;
+
     @BeforeClass
     public static void setupResource() throws Exception {
         LocalFileMetadataTestCase.staticCreateTestMetadata();
@@ -46,10 +50,6 @@ public class RemoteLocalFailOverCacheManagerTest {
     @AfterClass
     public static void tearDownResource() {
     }
-
-    @Autowired
-    @Qualifier("cacheManager")
-    RemoteLocalFailOverCacheManager cacheManager;
 
     @Test
     public void testCacheManager() {

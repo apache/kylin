@@ -47,13 +47,12 @@ import net.spy.memcached.util.KetamaNodeLocatorConfiguration;
  */
 public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLocator {
 
-    private volatile TreeMap<Long, MemcachedNode> ketamaNodes;
-    private volatile Collection<MemcachedNode> allNodes;
-
     private final HashAlgorithm hashAlg;
     private final Map<InetSocketAddress, Integer> weights;
     private final boolean isWeightedKetama;
     private final KetamaNodeLocatorConfiguration config;
+    private volatile TreeMap<Long, MemcachedNode> ketamaNodes;
+    private volatile Collection<MemcachedNode> allNodes;
 
     /**
      * Create a new KetamaNodeLocator using specified nodes and the specifed hash

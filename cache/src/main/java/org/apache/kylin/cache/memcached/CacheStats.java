@@ -29,7 +29,8 @@ public class CacheStats {
     private final long numTimeouts;
     private final long numErrors;
 
-    public CacheStats(long getBytes, long getTime, long numPut, long putBytes, long numHits, long numMisses, long numEvictions, long numTimeouts, long numErrors) {
+    public CacheStats(long getBytes, long getTime, long numPut, long putBytes, long numHits, long numMisses,
+            long numEvictions, long numTimeouts, long numErrors) {
         this.getBytes = getBytes;
         this.getTime = getTime;
         this.numPut = numPut;
