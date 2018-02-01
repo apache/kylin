@@ -66,8 +66,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.base.Preconditions;
 
-/**
- */
 @Component("accessService")
 public class AccessService {
     @SuppressWarnings("unused")

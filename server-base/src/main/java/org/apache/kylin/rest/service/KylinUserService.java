@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 
 import org.apache.kylin.common.KylinConfig;
@@ -39,7 +40,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class KylinUserService implements UserService {
 
@@ -143,6 +146,22 @@ public class KylinUserService implements UserService {
     @Override
     public List<ManagedUser> listUsers() throws IOException {
         return aclStore.getAllResources(DIR_PREFIX, ManagedUser.class, SERIALIZER);
+    }
+
+    @Override
+    public List<String> listUsernames() throws IOException {
+        List<String> paths = new ArrayList<>();
+        paths.addAll(aclStore.listResources(ResourceStore.USER_ROOT));
+        List<String> users = Lists.transform(paths, new Function<String, String>() {
+            @Nullable
+            @Override
+            public String apply(@Nullable String input) {
+                String[] path = input.split("/");
+                Preconditions.checkArgument(path.length == 3);
+                return path[2];
+            }
+        });
+        return users;
     }
 
     @Override

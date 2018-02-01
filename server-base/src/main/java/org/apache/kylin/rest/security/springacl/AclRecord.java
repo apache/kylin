@@ -105,6 +105,11 @@ public class AclRecord extends RootPersistentEntity implements Acl, OwnershipAcl
         }
     }
 
+    @Override
+    public String resourceName() {
+        return String.valueOf(domainObjectInfo.getIdentifier());
+    }
+
     public SidInfo getOwnerInfo() {
         return ownerInfo;
     }

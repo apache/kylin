@@ -58,7 +58,7 @@ public class TableACLManager {
         logger.info("Initializing TableACLManager with config " + config);
         this.config = config;
         this.tableACLMap = new CaseInsensitiveStringCache<>(config, "table_acl");
-        this.crud = new CachedCrudAssist<TableACL>(getStore(), "/table_acl", "", TableACL.class, tableACLMap) {
+        this.crud = new CachedCrudAssist<TableACL>(getStore(), "/table_acl", "", TableACL.class, tableACLMap, true) {
             @Override
             protected TableACL initEntityAfterReload(TableACL acl, String resourceName) {
                 acl.init(resourceName);
