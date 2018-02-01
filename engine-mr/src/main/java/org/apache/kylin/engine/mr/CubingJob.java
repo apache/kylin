@@ -282,15 +282,24 @@ public class CubingJob extends DefaultChainedExecutable {
                     getPerBytesTimeCost(findSourceSizeBytes(), getDuration()));
             if (CubingJobTypeEnum.getByName(getJobType()) == CubingJobTypeEnum.BUILD) {
                 jobStats.setJobStepStats(
-                        getTaskByName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS).getDuration(),
-                        getTaskByName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY).getDuration(),
-                        getTaskByName(ExecutableConstants.STEP_NAME_BUILD_IN_MEM_CUBE).getDuration(),
-                        getTaskByName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE).getDuration());
+                        getTaskDurationByName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS),
+                        getTaskDurationByName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY),
+                        getTaskDurationByName(ExecutableConstants.STEP_NAME_BUILD_IN_MEM_CUBE),
+                        getTaskDurationByName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE));
             }
         } else if (state == ExecutableState.ERROR) {
             jobStats.setJobException(result.getThrowable() != null ? result.getThrowable() : new Exception());
         }
         JobMetricsFacade.updateMetrics(jobStats);
+    }
+
+    private long getTaskDurationByName(String name) {
+        AbstractExecutable task = getTaskByName(name);
+        if (task != null) {
+            return task.getDuration();
+        } else {
+            return 0;
+        }
     }
 
     private static double getPerBytesTimeCost(long size, long timeCost) {
