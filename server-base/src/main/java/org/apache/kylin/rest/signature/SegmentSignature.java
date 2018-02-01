@@ -16,9 +16,9 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.rest.signature;
 
-class SegmentSignature implements ComponentSignature {
+class SegmentSignature extends ComponentSignature<SegmentSignature> {
     public final String name;
     public final long lastBuildTime;
 
@@ -29,6 +29,11 @@ class SegmentSignature implements ComponentSignature {
 
     public String getKey() {
         return name;
+    }
+
+    @Override
+    public int compareTo(SegmentSignature o) {
+        return name.compareTo(o.name);
     }
 
     @Override

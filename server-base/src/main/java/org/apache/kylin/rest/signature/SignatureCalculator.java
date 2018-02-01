@@ -16,11 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.rest.signature;
 
-import java.io.Serializable;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.response.SQLResponse;
 
-interface ComponentSignature extends Serializable {
+public interface SignatureCalculator {
 
-    String getKey();
+    String calculateSignature(KylinConfig config, SQLResponse sqlResponse, ProjectInstance project);
 }

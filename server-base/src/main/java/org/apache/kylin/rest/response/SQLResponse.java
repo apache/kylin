@@ -20,12 +20,10 @@ package org.apache.kylin.rest.response;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kylin.common.QueryContext.CubeSegmentStatisticsResult;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.rest.util.RealizationSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,10 +73,10 @@ public class SQLResponse implements Serializable {
     protected boolean queryPushDown = false;
 
     protected byte[] queryStatistics;
-    
+
     protected String traceUrl = null;
 
-    protected byte[] signature;
+    protected String signature;
 
     protected long dummyTime = -1L;
 
@@ -213,22 +211,12 @@ public class SQLResponse implements Serializable {
     }
 
     @JsonIgnore
-    public Set<RealizationSignature> getSignature() {
-        try {
-            return signature == null ? null : (Set<RealizationSignature>) SerializationUtils.deserialize(signature);
-        } catch (Exception e) {
-            logger.warn("Error while deserialize signature due to " + e);
-            return null;
-        }
+    public String getSignature() {
+        return signature;
     }
 
-    public void setSignature(Set<RealizationSignature> signatureSet) {
-        try {
-            this.signature = signatureSet == null ? null : SerializationUtils.serialize((Serializable) signatureSet);
-        } catch (Exception e) { // serialize exception should not block query
-            logger.warn("Error while serialize signature due to " + e);
-            this.signature = null;
-        }
+    public void setSignature(String signature) {
+        this.signature = signature;
     }
 
     @JsonIgnore
@@ -256,8 +244,7 @@ public class SQLResponse implements Serializable {
         }
     }
 
-    public void setCubeSegmentStatisticsList(
-            List<CubeSegmentStatisticsResult> cubeSegmentStatisticsList) {
+    public void setCubeSegmentStatisticsList(List<CubeSegmentStatisticsResult> cubeSegmentStatisticsList) {
         try {
             this.queryStatistics = cubeSegmentStatisticsList == null ? null
                     : SerializationUtils.serialize((Serializable) cubeSegmentStatisticsList);

@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.rest.signature;
 
 import java.util.List;
 import java.util.Set;
@@ -34,9 +34,9 @@ import org.apache.kylin.storage.hybrid.HybridManager;
 
 import com.google.common.collect.Sets;
 
-public interface RealizationSignature extends ComponentSignature {
+public abstract class RealizationSignature extends ComponentSignature<RealizationSignature> {
 
-    class CubeSignature implements RealizationSignature {
+    static class CubeSignature extends RealizationSignature {
         public final String name;
         public final RealizationStatusEnum status;
         public final Set<SegmentSignature> segmentSignatureSet;
@@ -78,7 +78,8 @@ public interface RealizationSignature extends ComponentSignature {
 
         @Override
         public String toString() {
-            return name + "-" + status + ":" + segmentSignatureSet;
+            return name + "-" + status + ":"
+                    + (segmentSignatureSet != null ? Sets.newTreeSet(segmentSignatureSet) : null);
         }
 
         static CubeSignature getCubeSignature(KylinConfig config, String realizationName) {
@@ -98,7 +99,7 @@ public interface RealizationSignature extends ComponentSignature {
         }
     }
 
-    class HybridSignature implements RealizationSignature {
+    static class HybridSignature extends RealizationSignature {
         public final String name;
         public final Set<RealizationSignature> realizationSignatureSet;
 
@@ -136,7 +137,7 @@ public interface RealizationSignature extends ComponentSignature {
 
         @Override
         public String toString() {
-            return name + ":" + realizationSignatureSet;
+            return name + ":" + (realizationSignatureSet != null ? Sets.newTreeSet(realizationSignatureSet) : null);
         }
 
         static HybridSignature getHybridSignature(KylinConfig config, String realizationName) {

@@ -18,30 +18,30 @@
 
 package org.apache.kylin.rest.util;
 
-import java.util.Set;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.rest.util.RealizationSignature.CubeSignature;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class RealizationSignatureUtilTest extends LocalFileMetadataTestCase {
+public class SQLResponseSignatureUtilTest extends LocalFileMetadataTestCase {
+
+    public static final Logger logger = LoggerFactory.getLogger(SQLResponseSignatureUtilTest.class);
 
     private KylinConfig config;
 
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
-        this.config = KylinConfig.getInstanceFromEnv();
+        this.config = getTestConfig();
     }
 
     @After
@@ -50,22 +50,9 @@ public class RealizationSignatureUtilTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetRealizationSignature() {
-        RealizationSignature signature1 = RealizationSignatureUtil.getRealizationSignature(this.config,
-                "Test" + System.currentTimeMillis());
-        Assert.assertNull(signature1);
+    public void testCreateSignature() {
+        String projectName = "default";
 
-        CubeSignature signature2 = (CubeSignature) RealizationSignatureUtil.getRealizationSignature(this.config, "ssb");
-        Assert.assertEquals(RealizationStatusEnum.DISABLED, signature2.status);
-        Assert.assertNull(signature2.segmentSignatureSet);
-
-        CubeSignature signature3 = (CubeSignature) RealizationSignatureUtil.getRealizationSignature(this.config,
-                "test_kylin_cube_with_slr_left_join_ready");
-        Assert.assertNotNull(signature3.segmentSignatureSet);
-    }
-
-    @Test
-    public void testRealizationSignature() {
         HybridManager hybridManager = HybridManager.getInstance(config);
         HybridInstance hybrid1 = hybridManager.getHybridInstance("test_kylin_hybrid_ready");
 
@@ -74,22 +61,13 @@ public class RealizationSignatureUtilTest extends LocalFileMetadataTestCase {
         CubeInstance cube2 = cubeManager.getCube("test_kylin_cube_without_slr_ready");
 
         String cubes = hybrid1.getCanonicalName() + "," + cube1.getCanonicalName() + "," + cube2.getCanonicalName();
-        Set<RealizationSignature> signatureSet = RealizationSignatureUtil.getSignature(config, cubes);
 
         SQLResponse sqlResponse = new SQLResponse();
         sqlResponse.setCube(cubes);
-        sqlResponse.setSignature(signatureSet);
 
-        Assert.assertTrue(RealizationSignatureUtil.checkSignature(config, sqlResponse));
+        String signature = SQLResponseSignatureUtil.createSignature(config, sqlResponse, projectName);
+        sqlResponse.setSignature(signature);
 
-        cube1.setStatus(RealizationStatusEnum.DISABLED);
-        Assert.assertFalse(RealizationSignatureUtil.checkSignature(config, sqlResponse));
-
-        cube1.setStatus(RealizationStatusEnum.READY);
-        Assert.assertTrue(RealizationSignatureUtil.checkSignature(config, sqlResponse));
-
-        CubeInstance cube3 = cubeManager.getCube("test_kylin_cube_with_slr_ready_2_segments");
-        cube3.getSegments().remove(0);
-        Assert.assertFalse(RealizationSignatureUtil.checkSignature(config, sqlResponse));
+        Assert.assertTrue(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
     }
 }

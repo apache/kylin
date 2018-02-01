@@ -83,7 +83,7 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
-import org.apache.kylin.rest.util.RealizationSignatureUtil;
+import org.apache.kylin.rest.util.SQLResponseSignatureUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.shaded.htrace.org.apache.htrace.Sampler;
 import org.apache.kylin.shaded.htrace.org.apache.htrace.Trace;
@@ -208,7 +208,7 @@ public class QueryService extends BasicService {
             columnMetas.add(new SelectedColumnMeta(false, false, false, false, 1, false, Integer.MAX_VALUE, "c0", "c0",
                     null, null, null, Integer.MAX_VALUE, 128, 1, "char", false, false, false));
 
-            return buildSqlResponse(true, r.getFirst(), columnMetas);
+            return buildSqlResponse(sqlRequest.getProject(), true, r.getFirst(), columnMetas);
 
         } catch (Exception e) {
             logger.info("pushdown engine failed to finish current non-select query");
@@ -554,7 +554,7 @@ public class QueryService extends BasicService {
             logger.error("Exception while executing query", e);
             String errMsg = makeErrorMsgUserFriendly(e);
 
-            sqlResponse = buildSqlResponse(false, null, null, true, errMsg);
+            sqlResponse = buildSqlResponse(sqlRequest.getProject(), false, null, null, true, errMsg);
             sqlResponse.setThrowable(e.getCause() == null ? e : ExceptionUtils.getRootCause(e));
 
             if (queryCacheEnabled && e.getCause() != null
@@ -646,7 +646,7 @@ public class QueryService extends BasicService {
         }
 
         logger.debug("The sqlResponse is found in QUERY_CACHE");
-        if (!RealizationSignatureUtil.checkSignature(getConfig(), response)) {
+        if (!SQLResponseSignatureUtil.checkSignature(getConfig(), response, sqlRequest.getProject())) {
             logger.info("The sql response signature is changed. Remove it from QUERY_CACHE.");
             queryCache.evict(sqlRequest.getCacheKey());
             return null;
@@ -962,7 +962,8 @@ public class QueryService extends BasicService {
 
             // special case for prepare query.
             if (BackdoorToggles.getPrepareOnly()) {
-                return getPrepareOnlySqlResponse(correctedSql, conn, isPushDown, results, columnMetas);
+                return getPrepareOnlySqlResponse(sqlRequest.getProject(), correctedSql, conn, isPushDown, results,
+                        columnMetas);
             }
 
             if (isPrepareStatementWithParams(sqlRequest)) {
@@ -1026,14 +1027,15 @@ public class QueryService extends BasicService {
             close(resultSet, stat, null); //conn is passed in, not my duty to close
         }
 
-        return buildSqlResponse(isPushDown, results, columnMetas);
+        return buildSqlResponse(sqlRequest.getProject(), isPushDown, results, columnMetas);
     }
 
     protected String makeErrorMsgUserFriendly(Throwable e) {
         return QueryUtil.makeErrorMsgUserFriendly(e);
     }
 
-    private SQLResponse getPrepareOnlySqlResponse(String correctedSql, Connection conn, Boolean isPushDown,
+    private SQLResponse getPrepareOnlySqlResponse(String projectName, String correctedSql, Connection conn,
+                                                  Boolean isPushDown,
                                                   List<List<String>> results, List<SelectedColumnMeta> columnMetas) throws SQLException {
 
         CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(true);
@@ -1079,7 +1081,7 @@ public class QueryService extends BasicService {
             DBUtils.closeQuietly(preparedStatement);
         }
 
-        return buildSqlResponse(isPushDown, results, columnMetas);
+        return buildSqlResponse(projectName, isPushDown, results, columnMetas);
     }
 
     private boolean isPrepareStatementWithParams(SQLRequest sqlRequest) {
@@ -1089,14 +1091,13 @@ public class QueryService extends BasicService {
         return false;
     }
 
-    private SQLResponse buildSqlResponse(Boolean isPushDown, List<List<String>> results,
+    private SQLResponse buildSqlResponse(String projectName, Boolean isPushDown, List<List<String>> results,
                                          List<SelectedColumnMeta> columnMetas) {
-        return buildSqlResponse(isPushDown, results, columnMetas, false, null);
+        return buildSqlResponse(projectName, isPushDown, results, columnMetas, false, null);
     }
 
-    private SQLResponse buildSqlResponse(Boolean isPushDown, List<List<String>> results,
+    private SQLResponse buildSqlResponse(String projectName, Boolean isPushDown, List<List<String>> results,
                                          List<SelectedColumnMeta> columnMetas, boolean isException, String exceptionMessage) {
-
         boolean isPartialResult = false;
 
         StringBuilder cubeSb = new StringBuilder();
@@ -1127,7 +1128,7 @@ public class QueryService extends BasicService {
         response.setTotalScanCount(queryContext.getScannedRows());
         response.setTotalScanBytes(queryContext.getScannedBytes());
         response.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
-        response.setSignature(RealizationSignatureUtil.getSignature(getConfig(), response.getCube()));
+        response.setSignature(SQLResponseSignatureUtil.createSignature(getConfig(), response, projectName));
         return response;
     }
 
