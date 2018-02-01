@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.security.ManagedUser;
@@ -63,6 +64,12 @@ public class UserServiceTest extends ServiceTestBase {
 
     }
 
+    @Test
+    public void testGetAllUserNames() throws IOException {
+        List<String> users = userService.listUsernames();
+        List<String> expected = Lists.newArrayList("ADMIN", "ANALYST", "MODELER");
+        Assert.assertEquals(expected, users);
+    }
 
     @Test
     public void testDeleteAdmin() throws IOException {

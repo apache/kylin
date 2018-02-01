@@ -51,16 +51,16 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
 
     public CachedCrudAssist(ResourceStore store, String resourceRootPath, Class<T> entityType,
             SingleValueCache<String, T> cache) {
-        this(store, resourceRootPath, MetadataConstants.FILE_SURFIX, entityType, cache);
+        this(store, resourceRootPath, MetadataConstants.FILE_SURFIX, entityType, cache, false);
     }
 
     public CachedCrudAssist(ResourceStore store, String resourceRootPath, String resourcePathSuffix,
-            Class<T> entityType, SingleValueCache<String, T> cache) {
+            Class<T> entityType, SingleValueCache<String, T> cache, boolean compact) {
         this.store = store;
         this.entityType = entityType;
         this.resRootPath = resourceRootPath;
         this.resPathSuffix = resourcePathSuffix;
-        this.serializer = new JsonSerializer<T>(entityType);
+        this.serializer = new JsonSerializer<T>(entityType, compact);
         this.cache = cache;
 
         this.checkCopyOnWrite = store.getConfig().isCheckCopyOnWrite();

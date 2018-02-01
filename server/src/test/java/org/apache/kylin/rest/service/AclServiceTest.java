@@ -109,7 +109,7 @@ public class AclServiceTest extends ServiceTestBase {
         // inherit parent
         childAcl = aclService.inherit(childAcl, parentAcl);
         Assert.assertEquals(parentOid, childAcl.getAclRecord().getParentDomainObjectInfo());
-        Assert.assertEquals(null, childAclOutdated.getAclRecord().getParentDomainObjectInfo());
+        Assert.assertEquals(parentOid, childAclOutdated.getAclRecord().getParentDomainObjectInfo());
         
         // update permission on an outdated ACL, retry should keep things going
         PrincipalSid user1 = new PrincipalSid("user1");
