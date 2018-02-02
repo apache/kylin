@@ -29,6 +29,3 @@ License
 Please refer to [LICENSE](https://github.com/apache/kylin/blob/master/LICENSE) file.
 
 
-
-
-
