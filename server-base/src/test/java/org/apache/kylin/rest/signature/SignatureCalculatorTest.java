@@ -18,13 +18,14 @@
 
 package org.apache.kylin.rest.signature;
 
-import java.util.Map;
-
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -38,7 +39,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.Map;
 
 public class SignatureCalculatorTest extends LocalFileMetadataTestCase {
 
@@ -72,7 +74,7 @@ public class SignatureCalculatorTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testRealizationSetCalculator() {
+    public void testRealizationSetCalculator() throws IOException {
         KylinConfig config = KylinConfig.createKylinConfig(getTestConfig());
         Map<String, String> overrides = Maps.newHashMap();
         overrides.put("kylin.query.signature-class", "org.apache.kylin.rest.signature.RealizationSetCalculator");
@@ -84,10 +86,15 @@ public class SignatureCalculatorTest extends LocalFileMetadataTestCase {
         HybridInstance hybrid1 = hybridManager.getHybridInstance("test_kylin_hybrid_ready");
 
         CubeManager cubeManager = CubeManager.getInstance(config);
-        CubeInstance cube1 = cubeManager.getCube("test_kylin_cube_with_slr_left_join_ready");
+        CubeInstance cube1 = cubeManager.getCube("test_kylin_cube_with_slr_ready_2_segments");
         CubeInstance cube2 = cubeManager.getCube("test_kylin_cube_without_slr_ready");
+        CubeInstance cube2Clone = cloneCubeInstance(cubeManager, cube2, cube2.getName() + "_clone");
 
-        String cubes = hybrid1.getCanonicalName() + "," + cube1.getCanonicalName() + "," + cube2.getCanonicalName();
+        //Related cubes:
+        // - test_kylin_cube_with_slr_ready
+        // - test_kylin_cube_with_slr_ready_2_segments
+        // - test_kylin_cube_without_slr_ready
+        String cubes = hybrid1.getCanonicalName() + "," + cube2Clone.getCanonicalName();
 
         SQLResponse sqlResponse = new SQLResponse();
         sqlResponse.setCube(cubes);
@@ -97,14 +104,80 @@ public class SignatureCalculatorTest extends LocalFileMetadataTestCase {
 
         Assert.assertTrue(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
 
-        cube1.setStatus(RealizationStatusEnum.DISABLED);
-        Assert.assertFalse(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
+        {//Test the influence of related cubes status change
+            cube1 = cubeManager.updateCubeStatus(cube1, RealizationStatusEnum.DISABLED);
+            Assert.assertFalse(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
 
-        cube1.setStatus(RealizationStatusEnum.READY);
+            cube1 = cubeManager.updateCubeStatus(cube1, RealizationStatusEnum.READY);
+            Assert.assertTrue(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
+        }
+
+        {//Test the influence of segment changes
+            cube2Clone = cubeManager.updateCubeDropSegments(cube2Clone, cube2Clone.getSegments().get(0));
+            Assert.assertFalse(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
+        }
+    }
+
+    @Test
+    public void testFactTableRealizationSetCalculator() throws IOException {
+        KylinConfig config = KylinConfig.createKylinConfig(getTestConfig());
+        Map<String, String> overrides = Maps.newHashMap();
+        overrides.put("kylin.query.signature-class",
+                "org.apache.kylin.rest.signature.FactTableRealizationSetCalculator");
+
+        ProjectInstance projectInstance = ProjectManager.getInstance(config).getProject(projectName);
+        projectInstance.setConfig(KylinConfigExt.createInstance(config, overrides));
+
+        HybridManager hybridManager = HybridManager.getInstance(config);
+        HybridInstance hybrid1 = hybridManager.getHybridInstance("test_kylin_hybrid_ready");
+
+        CubeManager cubeManager = CubeManager.getInstance(config);
+        CubeInstance cube1 = cubeManager.getCube("test_kylin_cube_with_slr_ready_2_segments");
+        CubeInstance cube2 = cubeManager.getCube("test_kylin_cube_without_slr_ready");
+        CubeInstance cube2Clone = cloneCubeInstance(cubeManager, cube2, cube2.getName() + "_clone");
+        CubeInstance cube3 = cloneCubeInstance(cubeManager, cube2, cube2.getDescName());
+
+        //Related cubes:
+        // - test_kylin_cube_with_slr_ready
+        // - test_kylin_cube_with_slr_ready_2_segments
+        // - test_kylin_cube_without_slr_ready
+        String cubes = hybrid1.getCanonicalName() + "," + cube2Clone.getCanonicalName();
+
+        SQLResponse sqlResponse = new SQLResponse();
+        sqlResponse.setCube(cubes);
+
+        String signature = SQLResponseSignatureUtil.createSignature(config, sqlResponse, projectName);
+        sqlResponse.setSignature(signature);
+
         Assert.assertTrue(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
 
-        CubeInstance cube3 = cubeManager.getCube("test_kylin_cube_with_slr_ready_2_segments");
-        cube3.getSegments().remove(0);
-        Assert.assertFalse(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
+        {//Test the influence of related cubes status change
+            cube1 = cubeManager.updateCubeStatus(cube1, RealizationStatusEnum.DISABLED);
+            Assert.assertFalse(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
+
+            cube1 = cubeManager.updateCubeStatus(cube1, RealizationStatusEnum.READY);
+            Assert.assertTrue(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
+        }
+
+        {//Test the influence of cubes not in ${cubes} while share the same fact tables
+            cube3 = cubeManager.updateCubeStatus(cube3, RealizationStatusEnum.DISABLED);
+            Assert.assertFalse(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
+
+            cube3 = cubeManager.updateCubeStatus(cube3, RealizationStatusEnum.READY);
+            Assert.assertTrue(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
+        }
+
+        {//Test the influence of segment changes
+            cube2Clone = cubeManager.updateCubeDropSegments(cube2Clone, cube2Clone.getSegments().get(0));
+            Assert.assertFalse(SQLResponseSignatureUtil.checkSignature(config, sqlResponse, projectName));
+        }
+    }
+
+    private CubeInstance cloneCubeInstance(CubeManager cubeManager, CubeInstance cube, String name) throws IOException {
+        CubeInstance cubeClone = cubeManager.createCube(name, projectName, cube.getDescriptor(), cube.getOwner());
+        CubeUpdate cubeUpdate = new CubeUpdate(cubeClone.latestCopyForWrite());
+        cubeUpdate.setToAddSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
+        cubeUpdate.setStatus(RealizationStatusEnum.READY);
+        return cubeManager.updateCube(cubeUpdate);
     }
 }
