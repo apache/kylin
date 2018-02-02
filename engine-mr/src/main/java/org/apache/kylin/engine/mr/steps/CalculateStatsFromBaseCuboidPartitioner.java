@@ -48,7 +48,7 @@ public class CalculateStatsFromBaseCuboidPartitioner extends Partitioner<Text, T
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        hllShardBase = conf.getInt(BatchConstants.CFG_HLL_SHARD_BASE, 1);
+        hllShardBase = conf.getInt(BatchConstants.CFG_HLL_REDUCER_NUM, 1);
         logger.info("shard base for hll is " + hllShardBase);
     }
 

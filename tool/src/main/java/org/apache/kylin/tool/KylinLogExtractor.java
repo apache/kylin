@@ -59,14 +59,12 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
     private void beforeExtract() {
         // reload metadata before extract diagnosis info
         logger.info("Start to reload metadata from diagnosis.");
+        
+        config.clearManagers();
 
-        CubeManager.clearCache();
         CubeManager.getInstance(config);
-        CubeDescManager.clearCache();
         CubeDescManager.getInstance(config);
-        DataModelManager.clearCache();
         DataModelManager.getInstance(config);
-        ProjectManager.clearCache();
         ProjectManager.getInstance(config);
     }
 

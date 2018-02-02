@@ -177,7 +177,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         return $scope.userService.hasRole('ROLE_ADMIN') || $scope.hasPermission(project,$scope.permissions.ADMINISTRATION.mask);
     };
 
-
     $scope.removeElement = function (arr, element) {
         var index = arr.indexOf(element);
         if (index > -1) {

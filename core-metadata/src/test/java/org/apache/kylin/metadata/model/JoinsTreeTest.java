@@ -50,7 +50,7 @@ public class JoinsTreeTest extends LocalFileMetadataTestCase {
         DataModelDesc model = mgr.getDataModelDesc("ci_left_join_model");
         JoinsTree joinsTree = model.getJoinsTree();
         
-        Chain chain = joinsTree.tableChains.get("BUYER_COUNTRY");
+        Chain chain = joinsTree.getTableChains().get("BUYER_COUNTRY");
         assertTrue(chain.table == model.findTable("BUYER_COUNTRY"));
         assertTrue(chain.fkSide.table == model.findTable("BUYER_ACCOUNT"));
         assertTrue(chain.fkSide.fkSide.table == model.findTable("TEST_ORDER"));

@@ -25,6 +25,9 @@ package org.apache.kylin.metadata;
 public interface MetadataConstants {
 
     public static final String FILE_SURFIX = ".json";
+    //Identifier Type, user or group
+    public static final String TYPE_USER = "user";
+    public static final String TYPE_GROUP = "group";
 
     // Extended attribute keys
     public static final String TABLE_EXD_STATUS_KEY = "EXD_STATUS";
@@ -49,4 +52,5 @@ public interface MetadataConstants {
     public static final String TABLE_EXD_DELIM = "delim";
     public static final String TABLE_EXD_DEFAULT_VALUE = "unknown";
 
+    public static final String KYLIN_INTERMEDIATE_PREFIX = "kylin_intermediate_";
 }

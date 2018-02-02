@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -40,6 +41,9 @@ import org.apache.kylin.rest.response.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -105,7 +109,7 @@ public class BasicController {
 
     protected void setDownloadResponse(String downloadFile, final HttpServletResponse response) {
         File file = new File(downloadFile);
-        try (InputStream fileInputStream = new FileInputStream(file); OutputStream output = response.getOutputStream();) {
+        try (InputStream fileInputStream = new FileInputStream(file); OutputStream output = response.getOutputStream()) {
             response.reset();
             response.setContentType("application/octet-stream");
             response.setContentLength((int) (file.length()));
@@ -116,4 +120,19 @@ public class BasicController {
             throw new InternalErrorException("Failed to download file: " + e.getMessage(), e);
         }
     }
+
+    public boolean isAdmin() {
+        boolean isAdmin = false;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            for (GrantedAuthority auth : authentication.getAuthorities()) {
+                if (auth.getAuthority().equals(Constant.ROLE_ADMIN)) {
+                    isAdmin = true;
+                    break;
+                }
+            }
+        }
+        return isAdmin;
+    }
+
 }

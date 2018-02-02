@@ -50,10 +50,12 @@ public class CubeStatsWriter {
                 mapperOverlapRatio);
     }
 
+    //Be care of that the file name for partial cuboid statistics should start with BatchConstants.CFG_OUTPUT_STATISTICS,
+    //Then for later statistics merging, only files starting with BatchConstants.CFG_OUTPUT_STATISTICS will be used
     public static void writePartialCuboidStatistics(Configuration conf, Path outputPath, //
             Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage, int mapperNumber, double mapperOverlapRatio,
             int shard) throws IOException {
-        Path seqFilePath = new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME + "_" + shard);
+        Path seqFilePath = new Path(outputPath, BatchConstants.CFG_OUTPUT_STATISTICS + "_" + shard);
         writeCuboidStatisticsInner(conf, seqFilePath, cuboidHLLMap, samplingPercentage, mapperNumber,
                 mapperOverlapRatio);
     }

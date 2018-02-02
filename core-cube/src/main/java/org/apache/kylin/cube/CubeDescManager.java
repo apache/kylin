@@ -22,15 +22,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
-import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.common.util.AutoReadWriteLock;
+import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
+import org.apache.kylin.cube.cuboid.CuboidManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.CubeMetadataValidator;
 import org.apache.kylin.cube.model.validation.ValidateContext;
@@ -38,9 +38,9 @@ import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.measure.topn.TopNMeasureType;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -48,7 +48,6 @@ import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,68 +61,62 @@ public class CubeDescManager {
     private static final Logger logger = LoggerFactory.getLogger(CubeDescManager.class);
 
     public static final Serializer<CubeDesc> CUBE_DESC_SERIALIZER = new JsonSerializer<CubeDesc>(CubeDesc.class);
-
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, CubeDescManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeDescManager>();
-
+    
     public static CubeDescManager getInstance(KylinConfig config) {
-        CubeDescManager r = CACHE.get(config);
-        if (r != null) {
-            return r;
-        }
-
-        synchronized (CubeDescManager.class) {
-            r = CACHE.get(config);
-            if (r != null) {
-                return r;
-            }
-            try {
-                r = new CubeDescManager(config);
-                CACHE.put(config, r);
-                if (CACHE.size() > 1) {
-                    logger.warn("More than one singleton exist");
-                }
-                return r;
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to init CubeDescManager from " + config, e);
-            }
-        }
+        return config.getManager(CubeDescManager.class);
     }
 
-    public static void clearCache() {
-        CACHE.clear();
+    // called by reflection
+    static CubeDescManager newInstance(KylinConfig config) throws IOException {
+        return new CubeDescManager(config);
     }
-
+    
     // ============================================================================
 
     private KylinConfig config;
+    
     // name ==> CubeDesc
     private CaseInsensitiveStringCache<CubeDesc> cubeDescMap;
+    private CachedCrudAssist<CubeDesc> crud;
 
-    private CubeDescManager(KylinConfig config) throws IOException {
-        logger.info("Initializing CubeDescManager with config " + config);
-        this.config = config;
+    // protects concurrent operations around the cached map, to avoid for example
+    // writing an entity in the middle of reloading it (dirty read)
+    private AutoReadWriteLock descMapLock = new AutoReadWriteLock();
+
+    private CubeDescManager(KylinConfig cfg) throws IOException {
+        logger.info("Initializing CubeDescManager with config " + cfg);
+        this.config = cfg;
         this.cubeDescMap = new CaseInsensitiveStringCache<CubeDesc>(config, "cube_desc");
+        this.crud = new CachedCrudAssist<CubeDesc>(getStore(), ResourceStore.CUBE_DESC_RESOURCE_ROOT, CubeDesc.class,
+                cubeDescMap) {
+            @Override
+            protected CubeDesc initEntityAfterReload(CubeDesc cubeDesc, String resourceName) {
+                if (cubeDesc.isDraft())
+                    throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' must not be a draft");
+
+                try {
+                    cubeDesc.init(config);
+                } catch (Exception e) {
+                    logger.warn("Broken cube desc " + cubeDesc.resourceName(), e);
+                    cubeDesc.addError(e.getMessage());
+                }
+                return cubeDesc;
+            }
+        };
 
         // touch lower level metadata before registering my listener
-        reloadAllCubeDesc();
+        crud.reloadAll();
         Broadcaster.getInstance(config).registerListener(new CubeDescSyncListener(), "cube_desc");
     }
 
     private class CubeDescSyncListener extends Broadcaster.Listener {
 
         @Override
-        public void onClearAll(Broadcaster broadcaster) throws IOException {
-            clearCache();
-            Cuboid.clearCache();
-        }
-
-        @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
             for (IRealization real : ProjectManager.getInstance(config).listAllRealizations(project)) {
                 if (real instanceof CubeInstance) {
                     String descName = ((CubeInstance) real).getDescName();
-                    reloadCubeDescLocal(descName);
+                    reloadCubeDescQuietly(descName);
                 }
             }
         }
@@ -138,7 +131,7 @@ public class CubeDescManager {
             if (event == Event.DROP)
                 removeLocalCubeDesc(cubeDescName);
             else
-                reloadCubeDescLocal(cubeDescName);
+                reloadCubeDescQuietly(cubeDescName);
 
             for (ProjectInstance prj : ProjectManager.getInstance(config).findProjectsByModel(modelName)) {
                 broadcaster.notifyProjectSchemaUpdate(prj.getName());
@@ -147,58 +140,37 @@ public class CubeDescManager {
     }
 
     public CubeDesc getCubeDesc(String name) {
-        return cubeDescMap.get(name);
+        try (AutoLock lock = descMapLock.lockForRead()) {
+            return cubeDescMap.get(name);
+        }
     }
 
     public List<CubeDesc> listAllDesc() {
-        return new ArrayList<CubeDesc>(cubeDescMap.values());
-    }
-
-    /**
-     * Reload CubeDesc from resource store It will be triggered by an desc
-     * update event.
-     * 
-     * @param name
-     * @throws IOException
-     */
-    public CubeDesc reloadCubeDescLocal(String name) throws IOException {
-        // Broken CubeDesc is not allowed to be saved and broadcast.
-        CubeDesc ndesc = loadCubeDesc(CubeDesc.concatResourcePath(name), false);
-
-        cubeDescMap.putLocal(ndesc.getName(), ndesc);
-        Cuboid.clearCache(ndesc.getName()); // avoid calling CubeDesc.getInitialCuboidScheduler() for late initializing CuboidScheduler
-
-        // if related cube is in DESCBROKEN state before, change it back to DISABLED
-        CubeManager cubeManager = CubeManager.getInstance(config);
-        for (CubeInstance cube : cubeManager.getCubesByDesc(name)) {
-            if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
-                cubeManager.reloadCubeLocal(cube.getName());
-            }
+        try (AutoLock lock = descMapLock.lockForRead()) {
+            return new ArrayList<CubeDesc>(cubeDescMap.values());
         }
-
-        return ndesc;
     }
-
-    private CubeDesc loadCubeDesc(String path, boolean allowBroken) throws IOException {
-        ResourceStore store = getStore();
-        CubeDesc ndesc = store.getResource(path, CubeDesc.class, CUBE_DESC_SERIALIZER);
-        if (ndesc == null)
-            throw new IllegalArgumentException("No cube desc found at " + path);
-        if (ndesc.isDraft())
-            throw new IllegalArgumentException("CubeDesc '" + ndesc.getName() + "' must not be a draft");
-
-        try {
-            ndesc.init(config);
+    
+    public CubeDesc reloadCubeDescQuietly(String name) {
+        try (AutoLock lock = descMapLock.lockForWrite()) {
+            return reloadCubeDescLocal(name);
         } catch (Exception e) {
-            logger.warn("Broken cube desc " + path, e);
-            ndesc.addError(e.getMessage());
+            logger.error("Failed to reload CubeDesc " + name, e);
+            return null;
         }
+    }
 
-        if (!allowBroken && !ndesc.getError().isEmpty()) {
-            throw new IllegalStateException("Cube desc at " + path + " has issues: " + ndesc.getError());
+    public CubeDesc reloadCubeDescLocal(String name) throws IOException {
+        try (AutoLock lock = descMapLock.lockForWrite()) {
+            CubeDesc ndesc = crud.reload(name);
+            clearCuboidCache(name);
+            
+            // Broken CubeDesc is not allowed to be saved and broadcast.
+            if (ndesc.isBroken())
+                throw new IllegalStateException("CubeDesc " + name + " is broken");
+    
+            return ndesc;
         }
-
-        return ndesc;
     }
 
     /**
@@ -209,38 +181,83 @@ public class CubeDescManager {
      * @throws IOException
      */
     public CubeDesc createCubeDesc(CubeDesc cubeDesc) throws IOException {
-        if (cubeDesc.getUuid() == null || cubeDesc.getName() == null)
-            throw new IllegalArgumentException();
-        if (cubeDescMap.containsKey(cubeDesc.getName()))
-            throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' already exists");
-        if (cubeDesc.isDraft())
-            throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' must not be a draft");
+        try (AutoLock lock = descMapLock.lockForWrite()) {
+            if (cubeDesc.getUuid() == null || cubeDesc.getName() == null)
+                throw new IllegalArgumentException();
+            if (cubeDescMap.containsKey(cubeDesc.getName()))
+                throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' already exists");
+            if (cubeDesc.isDraft())
+                throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' must not be a draft");
 
-        try {
-            cubeDesc.init(config);
-        } catch (Exception e) {
-            logger.warn("Broken cube desc " + cubeDesc, e);
-            cubeDesc.addError(e.getMessage());
-        }
-        postProcessCubeDesc(cubeDesc);
-        // Check base validation
-        if (!cubeDesc.getError().isEmpty()) {
+            try {
+                cubeDesc.init(config);
+            } catch (Exception e) {
+                logger.warn("Broken cube desc " + cubeDesc, e);
+                cubeDesc.addError(e.getMessage());
+            }
+            
+            postProcessCubeDesc(cubeDesc);
+            // Check base validation
+            if (cubeDesc.isBroken()) {
+                return cubeDesc;
+            }
+            // Semantic validation
+            CubeMetadataValidator validator = new CubeMetadataValidator();
+            ValidateContext context = validator.validate(cubeDesc);
+            if (!context.ifPass()) {
+                return cubeDesc;
+            }
+
+            cubeDesc.setSignature(cubeDesc.calculateSignature());
+
+            // save resource
+            crud.save(cubeDesc);
+            
             return cubeDesc;
         }
-        // Semantic validation
-        CubeMetadataValidator validator = new CubeMetadataValidator();
-        ValidateContext context = validator.validate(cubeDesc);
-        if (!context.ifPass()) {
-            return cubeDesc;
+    }
+
+    /**
+     * Update CubeDesc with the input. Broadcast the event into cluster
+     * 
+     * @param desc
+     * @return
+     * @throws IOException
+     */
+    public CubeDesc updateCubeDesc(CubeDesc desc) throws IOException {
+        try (AutoLock lock = descMapLock.lockForWrite()) {
+            // Validate CubeDesc
+            if (desc.getUuid() == null || desc.getName() == null)
+                throw new IllegalArgumentException();
+            String name = desc.getName();
+            if (!cubeDescMap.containsKey(name))
+                throw new IllegalArgumentException("CubeDesc '" + name + "' does not exist.");
+            if (desc.isDraft())
+                throw new IllegalArgumentException("CubeDesc '" + desc.getName() + "' must not be a draft");
+
+            try {
+                desc.init(config);
+            } catch (Exception e) {
+                logger.warn("Broken cube desc " + desc, e);
+                desc.addError(e.getMessage());
+                return desc;
+            }
+
+            postProcessCubeDesc(desc);
+            // Semantic validation
+            CubeMetadataValidator validator = new CubeMetadataValidator();
+            ValidateContext context = validator.validate(desc);
+            if (!context.ifPass()) {
+                return desc;
+            }
+
+            desc.setSignature(desc.calculateSignature());
+
+            // save resource
+            crud.save(desc);
+
+            return desc;
         }
-
-        cubeDesc.setSignature(cubeDesc.calculateSignature());
-
-        String path = cubeDesc.getResourcePath();
-        getStore().putResource(path, cubeDesc, CUBE_DESC_SERIALIZER);
-        cubeDescMap.put(cubeDesc.getName(), cubeDesc);
-
-        return cubeDesc;
     }
 
     /**
@@ -289,98 +306,23 @@ public class CubeDescManager {
 
     // remove cubeDesc
     public void removeCubeDesc(CubeDesc cubeDesc) throws IOException {
-        String path = cubeDesc.getResourcePath();
-        getStore().deleteResource(path);
-        cubeDescMap.remove(cubeDesc.getName());
-        Cuboid.clearCache(cubeDesc.getName()); // avoid calling CubeDesc.getInitialCuboidScheduler() for late initializing CuboidScheduler
+        try (AutoLock lock = descMapLock.lockForWrite()) {
+            crud.delete(cubeDesc);
+            clearCuboidCache(cubeDesc.getName());
+        }
     }
 
     // remove cubeDesc
     public void removeLocalCubeDesc(String name) throws IOException {
-        cubeDescMap.removeLocal(name);
-        Cuboid.clearCache(name);
+        try (AutoLock lock = descMapLock.lockForWrite()) {
+            cubeDescMap.removeLocal(name);
+            clearCuboidCache(name);
+        }
     }
-
-    private void reloadAllCubeDesc() throws IOException {
-        ResourceStore store = getStore();
-        logger.info("Reloading Cube Metadata from folder "
-                + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
-
-        cubeDescMap.clear();
-
-        List<String> paths = store.collectResourceRecursively(ResourceStore.CUBE_DESC_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
-        for (String path : paths) {
-            CubeDesc desc = null;
-            try {
-                desc = loadCubeDesc(path, true);
-            } catch (Exception e) {
-                logger.error("Error during load cube desc, skipping " + path, e);
-                continue;
-            }
-
-            if (!path.equals(desc.getResourcePath())) {
-                logger.error(
-                        "Skip suspicious desc at " + path + ", " + desc + " should be at " + desc.getResourcePath());
-                continue;
-            }
-            if (cubeDescMap.containsKey(desc.getName())) {
-                logger.error("Dup CubeDesc name '" + desc.getName() + "' on path " + path);
-                continue;
-            }
-
-            cubeDescMap.putLocal(desc.getName(), desc);
-        }
-
-        logger.info("Loaded " + cubeDescMap.size() + " Cube(s)");
-    }
-
-    /**
-     * Update CubeDesc with the input. Broadcast the event into cluster
-     * 
-     * @param desc
-     * @return
-     * @throws IOException
-     */
-    public CubeDesc updateCubeDesc(CubeDesc desc) throws IOException {
-        // Validate CubeDesc
-        if (desc.getUuid() == null || desc.getName() == null)
-            throw new IllegalArgumentException();
-        String name = desc.getName();
-        if (!cubeDescMap.containsKey(name))
-            throw new IllegalArgumentException("CubeDesc '" + name + "' does not exist.");
-        if (desc.isDraft())
-            throw new IllegalArgumentException("CubeDesc '" + desc.getName() + "' must not be a draft");
-        desc.validateNotifyList();
-
-        try {
-            desc.init(config);
-        } catch (Exception e) {
-            logger.warn("Broken cube desc " + desc, e);
-            desc.addError(e.getMessage());
-            return desc;
-        }
-
-        postProcessCubeDesc(desc);
-        // Semantic validation
-        CubeMetadataValidator validator = new CubeMetadataValidator();
-        ValidateContext context = validator.validate(desc);
-        if (!context.ifPass()) {
-            return desc;
-        }
-
-        desc.setSignature(desc.calculateSignature());
-
-        // Save Source
-        String path = desc.getResourcePath();
-        getStore().putResource(path, desc, CUBE_DESC_SERIALIZER);
-
-        // Reload the CubeDesc
-        CubeDesc ndesc = loadCubeDesc(path, false);
-        // Here replace the old one
-        cubeDescMap.put(ndesc.getName(), desc);
-
-        return ndesc;
+    
+    private void clearCuboidCache(String descName) {
+        // avoid calling CubeDesc.getInitialCuboidScheduler() for late initializing CuboidScheduler
+        CuboidManager.getInstance(config).clearCache(descName);
     }
 
     private ResourceStore getStore() {

@@ -39,6 +39,7 @@ import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.TreeSet;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TrieDictionaryTest {
@@ -408,13 +409,34 @@ public class TrieDictionaryTest {
         String longPrefix = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789" + "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
 
         TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<String>(new StringBytesConverter());
-        String v1 = longPrefix + "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz";
-        String v2 = longPrefix + "xyz";
-
+        String v1 = longPrefix + "xyz";
         b.addValue(v1);
-        b.addValue(v2);
+
+        String strLen200 = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghid";
+        b.addValue(strLen200);
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 25; i++) {
+            sb.append(strLen200);
+        }
+        String strLen5000 = sb.toString();
+        b.addValue(strLen5000);
         TrieDictionary<String> dict = b.build(0);
         dict.dump(System.out);
+
+        sb.setLength(0);
+        for (int j = 0; j < 7; j++) {
+            sb.append(strLen5000);
+        }
+        String strLen35000 = sb.toString();
+        b.addValue(strLen35000);
+        Exception ex = null;
+        try {
+            b.build(0);
+        } catch (Exception e) {
+            ex = e;
+        }
+        Assert.assertNotNull(ex);
     }
 
     @Test

@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclEntityType;
@@ -72,6 +73,15 @@ public class AccessController extends BasicController {
     @Autowired
     @Qualifier("userService")
     private UserService userService;
+
+    /**
+     * Get current user's permission in the project
+     */
+    @RequestMapping(value = "/user/permission/{project}", method = {RequestMethod.GET}, produces = {"application/json"})
+    @ResponseBody
+    public String getUserPermissionInPrj(@PathVariable("project") String project) {
+        return accessService.getUserPermissionInPrj(project);
+    }
 
     /**
      * Get access entry list of a domain object
@@ -153,14 +163,23 @@ public class AccessController extends BasicController {
     public List<AccessEntryResponse> revoke(@PathVariable String type, @PathVariable String uuid, AccessRequest accessRequest) throws IOException {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.revoke(ae, accessRequest.getAccessEntryId());
-        if (AclEntityType.PROJECT_INSTANCE.equals(type)) {
+
+        if (accessRequest.isPrincipal()) {
+            revokeTableACL(type, uuid, accessRequest.getSid(), MetadataConstants.TYPE_USER);
+        } else {
+            revokeTableACL(type, uuid, accessRequest.getSid(), MetadataConstants.TYPE_GROUP);
+        }
+
+        return accessService.generateAceResponses(acl);
+    }
+
+    private void revokeTableACL(String entityType, String uuid, String name, String identityType) throws IOException {
+        if (AclEntityType.PROJECT_INSTANCE.equals(entityType)) {
             String prj = projectService.getProjectManager().getPrjByUuid(uuid).getName();
-            String username = accessRequest.getSid();
-            if (tableACLService.exists(prj, username)) {
-                tableACLService.deleteFromTableBlackList(prj, username);
+            if (tableACLService.exists(prj, name, identityType)) {
+                tableACLService.deleteFromTableACL(prj, name, identityType);
             }
         }
-        return accessService.generateAceResponses(acl);
     }
 
     /**

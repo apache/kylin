@@ -44,7 +44,8 @@ public class BadQueryDetector extends Thread {
     private final int alertMB;
     private final int alertRunningSec;
     private KylinConfig kylinConfig;
-    private ArrayList<Notifier> notifiers = new ArrayList<Notifier>();
+    private ArrayList<Notifier> notifiers = new ArrayList<>();
+    private int queryTimeoutSeconds;
 
     public BadQueryDetector() {
         super("BadQueryDetector");
@@ -53,17 +54,19 @@ public class BadQueryDetector extends Thread {
         this.detectionInterval = kylinConfig.getBadQueryDefaultDetectIntervalSeconds() * 1000L;
         this.alertMB = 100;
         this.alertRunningSec = kylinConfig.getBadQueryDefaultAlertingSeconds();
+        this.queryTimeoutSeconds = kylinConfig.getQueryTimeoutSeconds();
 
         initNotifiers();
     }
 
-    public BadQueryDetector(long detectionInterval, int alertMB, int alertRunningSec) {
+    public BadQueryDetector(long detectionInterval, int alertMB, int alertRunningSec, int queryTimeoutSeconds) {
         super("BadQueryDetector");
         this.setDaemon(true);
         this.detectionInterval = detectionInterval;
         this.alertMB = alertMB;
         this.alertRunningSec = alertRunningSec;
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
+        this.queryTimeoutSeconds = queryTimeoutSeconds;
 
         initNotifiers();
     }
@@ -99,15 +102,15 @@ public class BadQueryDetector extends Thread {
         for (Notifier notifier : notifiers) {
             try {
                 notifier.badQueryFound(adj, runningSec, //
-                        e.startTime, e.sqlRequest.getProject(), e.sqlRequest.getSql(), e.user, e.thread);
+                        e.startTime, e.sqlRequest.getProject(), e.sqlRequest.getSql(), e.user, e.thread, e.queryId);
             } catch (Exception ex) {
                 logger.error("", ex);
             }
         }
     }
 
-    public void queryStart(Thread thread, SQLRequest sqlRequest, String user) {
-        runningQueries.put(thread, new Entry(sqlRequest, user, thread));
+    public void queryStart(Thread thread, SQLRequest sqlRequest, String user, String queryId) {
+        runningQueries.put(thread, new Entry(sqlRequest, user, thread, queryId));
     }
 
     public void queryEnd(Thread thread) {
@@ -121,6 +124,7 @@ public class BadQueryDetector extends Thread {
             notify(badReason, entry);
     }
 
+    @Override
     public void run() {
         while (true) {
             try {
@@ -147,9 +151,11 @@ public class BadQueryDetector extends Thread {
         // report if query running long
         for (Entry e : entries) {
             float runningSec = (float) (now - e.startTime) / 1000;
+            setQueryThreadInterrupted(e, runningSec);
+
             if (runningSec >= alertRunningSec) {
                 notify(BadQueryEntry.ADJ_SLOW, e);
-                dumpStackTrace(e.thread);
+                dumpStackTrace(e.thread, e.queryId);
             } else {
                 break; // entries are sorted by startTime
             }
@@ -161,13 +167,21 @@ public class BadQueryDetector extends Thread {
         }
     }
 
+    private void setQueryThreadInterrupted(Entry e, float runningSec) {
+        if (queryTimeoutSeconds != 0 && runningSec >= queryTimeoutSeconds) {
+            e.thread.interrupt();
+            logger.error("Trying to cancel query:" + e.thread.getName());
+        }
+    }
+
     // log the stack trace of bad query thread for further analysis
-    private void dumpStackTrace(Thread t) {
+    private void dumpStackTrace(Thread t, String queryId) {
         int maxStackTraceDepth = kylinConfig.getBadQueryStackTraceDepth();
         int current = 0;
 
         StackTraceElement[] stackTrace = t.getStackTrace();
-        StringBuilder buf = new StringBuilder("Problematic thread 0x" + Long.toHexString(t.getId()));
+        StringBuilder buf = new StringBuilder(
+                "Problematic thread 0x" + Long.toHexString(t.getId()) + " " + t.getName() + ", query id: " + queryId);
         buf.append("\n");
         for (StackTraceElement e : stackTrace) {
             if (++current > maxStackTraceDepth) {
@@ -180,15 +194,15 @@ public class BadQueryDetector extends Thread {
 
     public interface Notifier {
         void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user,
-                Thread t);
+                Thread t, String queryId);
     }
 
     private class LoggerNotifier implements Notifier {
         @Override
         public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user,
-                Thread t) {
-            logger.info("{} query has been running {} seconds (project:{}, thread: 0x{}, user:{}) -- {}", adj,
-                    runningSec, project, Long.toHexString(t.getId()), user, sql);
+                Thread t, String queryId) {
+            logger.info("{} query has been running {} seconds (project:{}, thread: 0x{}, user:{}, query id:{}) -- {}",
+                    adj, runningSec, project, Long.toHexString(t.getId()), user, queryId, sql);
         }
     }
 
@@ -207,10 +221,10 @@ public class BadQueryDetector extends Thread {
 
         @Override
         public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user,
-                Thread t) {
+                Thread t, String queryId) {
             try {
                 BadQueryEntry entry = new BadQueryEntry(sql, adj, startTime, runningSec, serverHostname, t.getName(),
-                        user);
+                        user, queryId);
                 badQueryManager.upsertEntryToProject(entry, project);
             } catch (IOException e) {
                 logger.error("Error in bad query persistence.", e);
@@ -223,12 +237,14 @@ public class BadQueryDetector extends Thread {
         final long startTime;
         final Thread thread;
         final String user;
+        final String queryId;
 
-        Entry(SQLRequest sqlRequest, String user, Thread thread) {
+        Entry(SQLRequest sqlRequest, String user, Thread thread, String queryId) {
             this.sqlRequest = sqlRequest;
             this.startTime = System.currentTimeMillis();
             this.thread = thread;
             this.user = user;
+            this.queryId = queryId;
         }
 
         @Override

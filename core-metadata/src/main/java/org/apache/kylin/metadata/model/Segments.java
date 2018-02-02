@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-public class Segments<T extends ISegment> extends ArrayList<T> implements Serializable{
+public class Segments<T extends ISegment> extends ArrayList<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -42,23 +42,24 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
 
     public static ISegmentAdvisor newSegmentAdvisor(ISegment seg) {
         try {
-            Class<? extends ISegmentAdvisor> clz = ClassUtil.forName(seg.getConfig().getSegmentAdvisor(), ISegmentAdvisor.class);
+            Class<? extends ISegmentAdvisor> clz = ClassUtil.forName(seg.getConfig().getSegmentAdvisor(),
+                    ISegmentAdvisor.class);
             return clz.getConstructor(ISegment.class).newInstance(seg);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-    
+
     // ============================================================================
-    
+
     public Segments() {
         super();
     }
 
-    public Segments(Segments<T> copy) {
+    public Segments(List<T> copy) {
         super(copy);
     }
-    
+
     public T getFirstSegment() {
         if (this == null || this.size() == 0) {
             return null;
@@ -66,7 +67,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             return this.get(0);
         }
     }
-    
+
     public long getTSStart() {
         Segments<T> readySegs = getSegments(SegmentStatusEnum.READY);
 
@@ -127,7 +128,8 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
 
     public T getSegment(String name, SegmentStatusEnum status) {
         for (T segment : this) {
-            if ((null != segment.getName() && segment.getName().equals(name)) && (status == null || segment.getStatus() == status)) {
+            if ((null != segment.getName() && segment.getName().equals(name))
+                    && (status == null || segment.getStatus() == status)) {
                 return segment;
             }
         }
@@ -138,7 +140,8 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         Segments<T> buildingSegments = new Segments();
         if (null != this) {
             for (T segment : this) {
-                if (SegmentStatusEnum.NEW == segment.getStatus() || SegmentStatusEnum.READY_PENDING == segment.getStatus()) {
+                if (SegmentStatusEnum.NEW == segment.getStatus()
+                        || SegmentStatusEnum.READY_PENDING == segment.getStatus()) {
                     buildingSegments.add(segment);
                 }
             }
@@ -159,10 +162,6 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
                 continue;
 
             if (mergedSegment.getSegRange().contains(seg.getSegRange())) {
-                // make sure no holes
-                if (result.size() > 0 && !result.getLast().getSegRange().connects(seg.getSegRange()))
-                    throw new IllegalStateException("Merging segments must not have gaps between " + result.getLast() + " and " + seg);
-
                 result.add(seg);
             }
         }
@@ -429,7 +428,8 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             pre = seg;
 
             for (ISegment aReady : ready) {
-                if (seg.getSegRange().overlaps(aReady.getSegRange()) && !seg.getSegRange().contains(aReady.getSegRange()))
+                if (seg.getSegRange().overlaps(aReady.getSegRange())
+                        && !seg.getSegRange().contains(aReady.getSegRange()))
                     throw new IllegalStateException("Segments overlap: " + aReady + " and " + seg);
             }
         }
@@ -469,5 +469,20 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             endFit = true;
 
         return Pair.newPair(startFit, endFit);
+    }
+
+    // given all segments in cube, checks whether specified segment is operative (not under processing)
+    public boolean isOperative(ISegment seg) {
+        if (seg.getStatus() != SegmentStatusEnum.READY)
+            return false;
+
+        for (ISegment other : this) {
+            if (other == seg)
+                continue;
+
+            if (other.getSegRange().overlaps(seg.getSegRange()))
+                return false;
+        }
+        return true;
     }
 }

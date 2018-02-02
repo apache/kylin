@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,34 +18,17 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
-public class DataTypeTest extends LocalFileMetadataTestCase {
-
-    @Before
-    public void setUp() throws Exception {
-        this.createTestMetadata();
-    }
-
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
-    }
+public class DataTypeTest {
 
     @Test
-    public void testBasics() {
-        {
-            DataType t = DataType.getType("char(2)");
-            Assert.assertEquals("char", t.getName());
-            Assert.assertEquals(2, t.getPrecision());
-        }
-        {
-            DataType t = DataType.getType("string");
-            Assert.assertEquals("varchar", t.getName());
-        }
+    public void testComplexType() {
+        DataType arrayInt = DataType.getType("array<int>");
+        DataType arrayString = DataType.getType("array<string>");
+
+        Assert.assertTrue(DataType.isComplexType(arrayInt));
+        Assert.assertTrue(DataType.isComplexType(arrayString));
     }
 }

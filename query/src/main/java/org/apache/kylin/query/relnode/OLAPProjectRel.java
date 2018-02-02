@@ -36,6 +36,7 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
@@ -63,16 +64,17 @@ import com.google.common.collect.Lists;
  */
 public class OLAPProjectRel extends Project implements OLAPRel {
 
-    private OLAPContext context;
-    private List<RexNode> rewriteProjects;
-    private boolean rewriting;
-    private ColumnRowType columnRowType;
-    private boolean hasJoin;
-    private boolean afterJoin;
-    private boolean afterAggregate;
-    private boolean isMerelyPermutation = false;//project additionally added by OLAPJoinPushThroughJoinRule
+    OLAPContext context;
+    public List<RexNode> rewriteProjects;
+    boolean rewriting;
+    ColumnRowType columnRowType;
+    boolean hasJoin;
+    boolean afterJoin;
+    boolean afterAggregate;
+    boolean isMerelyPermutation = false;//project additionally added by OLAPJoinPushThroughJoinRule
 
-    public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, List<RexNode> exps, RelDataType rowType) {
+    public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, List<RexNode> exps,
+            RelDataType rowType) {
         super(cluster, traitSet, child, exps, rowType);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         Preconditions.checkArgument(child.getConvention() == OLAPRel.CONVENTION);
@@ -102,7 +104,8 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
         boolean hasRexOver = RexOver.containsOver(getProjects(), null);
-        return super.computeSelfCost(planner, mq).multiplyBy(.05).multiplyBy(getProjects().size() * (hasRexOver ? 50 : 1));
+        return super.computeSelfCost(planner, mq).multiplyBy(.05)
+                .multiplyBy(getProjects().size() * (hasRexOver ? 50 : 1));
     }
 
     @Override
@@ -127,7 +130,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         this.columnRowType = buildColumnRowType();
     }
 
-    private ColumnRowType buildColumnRowType() {
+    ColumnRowType buildColumnRowType() {
         List<TblColRef> columns = new ArrayList<TblColRef>();
         List<Set<TblColRef>> sourceColumns = new ArrayList<Set<TblColRef>>();
         OLAPRel olapChild = (OLAPRel) getInput();
@@ -146,7 +149,8 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         return new ColumnRowType(columns, sourceColumns);
     }
 
-    private TblColRef translateRexNode(RexNode rexNode, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
+    TblColRef translateRexNode(RexNode rexNode, ColumnRowType inputColumnRowType, String fieldName,
+            Set<TblColRef> sourceCollector) {
         TblColRef column = null;
         if (rexNode instanceof RexInputRef) {
             RexInputRef inputRef = (RexInputRef) rexNode;
@@ -163,13 +167,15 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         return column;
     }
 
-    private TblColRef translateFirstRexInputRef(RexCall call, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
+    TblColRef translateFirstRexInputRef(RexCall call, ColumnRowType inputColumnRowType, String fieldName,
+            Set<TblColRef> sourceCollector) {
         for (RexNode operand : call.getOperands()) {
             if (operand instanceof RexInputRef) {
                 return translateRexInputRef((RexInputRef) operand, inputColumnRowType, fieldName, sourceCollector);
             }
             if (operand instanceof RexCall) {
-                TblColRef r = translateFirstRexInputRef((RexCall) operand, inputColumnRowType, fieldName, sourceCollector);
+                TblColRef r = translateFirstRexInputRef((RexCall) operand, inputColumnRowType, fieldName,
+                        sourceCollector);
                 if (r != null)
                     return r;
             }
@@ -177,12 +183,14 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         return null;
     }
 
-    private TblColRef translateRexInputRef(RexInputRef inputRef, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
+    TblColRef translateRexInputRef(RexInputRef inputRef, ColumnRowType inputColumnRowType, String fieldName,
+            Set<TblColRef> sourceCollector) {
         int index = inputRef.getIndex();
         // check it for rewrite count
         if (index < inputColumnRowType.size()) {
             TblColRef column = inputColumnRowType.getColumnByIndex(index);
-            if (!column.isInnerColumn() && context.belongToContextTables(column) && !this.rewriting && !this.afterAggregate) {
+            if (!column.isInnerColumn() && context.belongToContextTables(column) && !this.rewriting
+                    && !this.afterAggregate) {
                 if (!isMerelyPermutation) {
                     context.allColumns.add(column);
                 }
@@ -190,11 +198,12 @@ public class OLAPProjectRel extends Project implements OLAPRel {
             }
             return column;
         } else {
-            throw new IllegalStateException("Can't find " + inputRef + " from child columnrowtype " + inputColumnRowType + " with fieldname " + fieldName);
+            throw new IllegalStateException("Can't find " + inputRef + " from child columnrowtype " + inputColumnRowType
+                    + " with fieldname " + fieldName);
         }
     }
 
-    private TblColRef translateRexLiteral(RexLiteral literal) {
+    TblColRef translateRexLiteral(RexLiteral literal) {
         if (RexLiteral.isNullLiteral(literal)) {
             return TblColRef.newInnerColumn("null", InnerDataTypeEnum.LITERAL);
         } else {
@@ -203,7 +212,8 @@ public class OLAPProjectRel extends Project implements OLAPRel {
 
     }
 
-    private TblColRef translateRexCall(RexCall call, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
+    TblColRef translateRexCall(RexCall call, ColumnRowType inputColumnRowType, String fieldName,
+            Set<TblColRef> sourceCollector) {
         SqlOperator operator = call.getOperator();
         if (operator == SqlStdOperatorTable.EXTRACT_DATE) {
             return translateFirstRexInputRef(call, inputColumnRowType, fieldName, sourceCollector);
@@ -222,7 +232,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     }
 
     //in most cases it will return children itself
-    private List<RexNode> limitTranslateScope(List<RexNode> children, SqlOperator operator) {
+    List<RexNode> limitTranslateScope(List<RexNode> children, SqlOperator operator) {
 
         //group by case when 1 = 1 then x 1 = 2 then y else z 
         if (operator instanceof SqlCaseOperator) {
@@ -247,7 +257,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         return children;
     }
 
-    private CompareResultType getCompareResultType(RexCall whenCall) {
+    CompareResultType getCompareResultType(RexCall whenCall) {
         List<RexNode> operands = whenCall.getOperands();
         if (SqlKind.EQUALS == whenCall.getKind() && operands != null && operands.size() == 2) {
             if (operands.get(0).equals(operands.get(1))) {
@@ -261,12 +271,13 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         return CompareResultType.Unknown;
     }
 
-    private boolean isConstant(RexNode rexNode) {
+    boolean isConstant(RexNode rexNode) {
         if (rexNode instanceof RexLiteral) {
             return true;
         }
 
-        if (rexNode instanceof RexCall && SqlKind.CAST.equals(rexNode.getKind()) && ((RexCall) rexNode).getOperands().get(0) instanceof RexLiteral) {
+        if (rexNode instanceof RexCall && SqlKind.CAST.equals(rexNode.getKind())
+                && ((RexCall) rexNode).getOperands().get(0) instanceof RexLiteral) {
             return true;
         }
 
@@ -279,13 +290,15 @@ public class OLAPProjectRel extends Project implements OLAPRel {
             // merge project & filter
             OLAPFilterRel filter = (OLAPFilterRel) getInput();
             RelNode inputOfFilter = inputs.get(0).getInput(0);
-            RexProgram program = RexProgram.create(inputOfFilter.getRowType(), this.rewriteProjects, filter.getCondition(), this.rowType, getCluster().getRexBuilder());
+            RexProgram program = RexProgram.create(inputOfFilter.getRowType(), this.rewriteProjects,
+                    filter.getCondition(), this.rowType, getCluster().getRexBuilder());
             return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
                     inputOfFilter, program);
         } else {
             // keep project for table scan
             EnumerableRel input = sole(inputs);
-            RexProgram program = RexProgram.create(input.getRowType(), this.rewriteProjects, null, this.rowType, getCluster().getRexBuilder());
+            RexProgram program = RexProgram.create(input.getRowType(), this.rewriteProjects, null, this.rowType,
+                    getCluster().getRexBuilder());
             return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
                     input, program);
         }
@@ -303,7 +316,8 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         this.rewriting = true;
 
         // project before join or is just after OLAPToEnumerableConverter
-        if (!RewriteImplementor.needRewrite(this.context) || (this.hasJoin && !this.afterJoin) || this.afterAggregate || !(this.context.hasPrecalculatedFields())) {
+        if (!RewriteImplementor.needRewrite(this.context) || (this.hasJoin && !this.afterJoin) || this.afterAggregate
+                || !(this.context.hasPrecalculatedFields())) {
             this.columnRowType = this.buildColumnRowType();
             return;
         }
@@ -371,5 +385,11 @@ public class OLAPProjectRel extends Project implements OLAPRel {
 
     public boolean isMerelyPermutation() {
         return isMerelyPermutation;
+    }
+
+    @Override
+    public RelWriter explainTerms(RelWriter pw) {
+        return super.explainTerms(pw).item("ctx",
+                context == null ? "" : String.valueOf(context.id) + "@" + context.realization);
     }
 }

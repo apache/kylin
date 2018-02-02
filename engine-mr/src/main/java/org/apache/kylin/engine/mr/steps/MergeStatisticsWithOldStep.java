@@ -86,7 +86,7 @@ public class MergeStatisticsWithOldStep extends AbstractExecutable {
             }
 
             Path[] statisticsFiles = HadoopUtil.getFilteredPath(hdfs, statisticsDirPath,
-                    BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+                    BatchConstants.CFG_OUTPUT_STATISTICS);
             if (statisticsFiles == null) {
                 throw new IOException("fail to find the statistics file in base dir: " + statisticsDirPath);
             }
@@ -134,7 +134,7 @@ public class MergeStatisticsWithOldStep extends AbstractExecutable {
                     .getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));
             StatisticsDecisionUtil.decideCubingAlgorithm(cubingJob, optimizeSegment);
 
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+            return new ExecuteResult();
         } catch (IOException e) {
             logger.error("fail to merge cuboid statistics", e);
             return ExecuteResult.createError(e);

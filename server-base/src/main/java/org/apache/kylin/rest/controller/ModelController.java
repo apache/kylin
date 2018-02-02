@@ -38,6 +38,7 @@ import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,8 +66,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 public class ModelController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(ModelController.class);
 
-    private static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
-
     @Autowired
     @Qualifier("modelMgmtService")
     private ModelService modelService;
@@ -83,7 +82,10 @@ public class ModelController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
+    public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName,
+            @RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "offset", required = false) Integer offset) {
         try {
             return modelService.getModels(modelName, projectName, limit, offset);
         } catch (IOException e) {
@@ -110,14 +112,16 @@ public class ModelController extends BasicController {
             logger.info("Model name should not be empty.");
             throw new BadRequestException("Model name should not be empty.");
         }
-        if (!StringUtils.containsOnly(modelDesc.getName(), VALID_MODELNAME)) {
-            logger.info("Invalid Model name {}, only letters, numbers and underline supported.", modelDesc.getName());
-            throw new BadRequestException("Invalid Model name, only letters, numbers and underline supported.");
+        if (!ValidateUtil.isAlphanumericUnderscore(modelDesc.getName())) {
+            throw new BadRequestException(
+                    String.format("Invalid model name %s, only letters, numbers and underscore " + "supported."),
+                    modelDesc.getName());
         }
 
         try {
             modelDesc.setUuid(UUID.randomUUID().toString());
-            String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : modelRequest.getProject();
+            String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
+                    : modelRequest.getProject();
 
             modelService.createModelDesc(projectName, modelDesc);
         } catch (IOException e) {
@@ -176,28 +180,29 @@ public class ModelController extends BasicController {
     @RequestMapping(value = "/{modelName}/clone", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public ModelRequest cloneModel(@PathVariable String modelName, @RequestBody ModelRequest modelRequest) {
-        String project = modelRequest.getProject();
+        String project = StringUtils.trimToNull(modelRequest.getProject());
         DataModelManager metaManager = DataModelManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc modelDesc = metaManager.getDataModelDesc(modelName);
         String newModelName = modelRequest.getModelName();
 
-        if (StringUtils.isEmpty(project)) {
-            logger.info("Project name should not be empty.");
+        if (null == project) {
             throw new BadRequestException("Project name should not be empty.");
         }
 
         if (modelDesc == null || StringUtils.isEmpty(modelName)) {
-            logger.info("Model does not exist.");
             throw new BadRequestException("Model does not exist.");
         }
 
-        if (StringUtils.isEmpty(newModelName)) {
-            logger.info("New model name is empty.");
-            throw new BadRequestException("New model name is empty.");
+        if (!project.equals(modelDesc.getProject())) {
+            throw new BadRequestException("Cloning model across projects is not supported.");
         }
-        if (!StringUtils.containsOnly(newModelName, VALID_MODELNAME)) {
-            logger.info("Invalid Model name {}, only letters, numbers and underline supported.", newModelName);
-            throw new BadRequestException("Invalid Model name, only letters, numbers and underline supported.");
+
+        if (StringUtils.isEmpty(newModelName)) {
+            throw new BadRequestException("New model name should not be empty.");
+        }
+        if (!ValidateUtil.isAlphanumericUnderscore(newModelName)) {
+            throw new BadRequestException(String
+                    .format("Invalid model name %s, only letters, numbers and underscore supported.", newModelName));
         }
 
         DataModelDesc newModelDesc = DataModelDesc.getCopyOf(modelDesc);
@@ -206,7 +211,7 @@ public class ModelController extends BasicController {
             newModelDesc = modelService.createModelDesc(project, newModelDesc);
 
             //reload avoid shallow
-            metaManager.reloadDataModelDescAt(DataModelDesc.concatResourcePath(newModelName));
+            metaManager.reloadDataModel(newModelName);
         } catch (IOException e) {
             throw new InternalErrorException("failed to clone DataModelDesc", e);
         }

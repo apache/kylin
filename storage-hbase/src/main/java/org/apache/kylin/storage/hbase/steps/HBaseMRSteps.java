@@ -77,29 +77,16 @@ public class HBaseMRSteps extends JobBuilderSupport {
     }
 
     public HadoopShellExecutable createCreateHTableStep(String jobId) {
-        return createCreateHTableStep(jobId, false);
+        return createCreateHTableStep(jobId, CuboidModeEnum.CURRENT);
     }
-
-    public HadoopShellExecutable createCreateHTableStepWithStats(String jobId) {
-        return createCreateHTableStep(jobId, true);
-    }
-
-    public HadoopShellExecutable createCreateHTableStepWithStats(String jobId, CuboidModeEnum cuboidMode) {
-        return createCreateHTableStep(jobId, true, cuboidMode);
-    }
-
-    private HadoopShellExecutable createCreateHTableStep(String jobId, boolean withStats) {
-        return createCreateHTableStep(jobId, withStats, CuboidModeEnum.CURRENT);
-    }
-
-    private HadoopShellExecutable createCreateHTableStep(String jobId, boolean withStats, CuboidModeEnum cuboidMode) {
+    
+    public HadoopShellExecutable createCreateHTableStep(String jobId, CuboidModeEnum cuboidMode) {
         HadoopShellExecutable createHtableStep = new HadoopShellExecutable();
         createHtableStep.setName(ExecutableConstants.STEP_NAME_CREATE_HBASE_TABLE);
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
         appendExecCmdParameters(cmd, BatchConstants.ARG_PARTITION, getRowkeyDistributionOutputPath(jobId) + "/part-r-00000");
-        appendExecCmdParameters(cmd, BatchConstants.ARG_STATS_ENABLED, String.valueOf(withStats));
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBOID_MODE, cuboidMode.toString());
 
         createHtableStep.setJobParams(cmd.toString());

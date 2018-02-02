@@ -22,6 +22,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.badquery.BadQueryEntry;
@@ -50,10 +51,11 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
         String mockSql = "select * from just_a_test";
         final ArrayList<String[]> alerts = new ArrayList<>();
 
-        BadQueryDetector badQueryDetector = new BadQueryDetector(alertRunningSec * 1000, alertMB, alertRunningSec);
+        BadQueryDetector badQueryDetector = new BadQueryDetector(alertRunningSec * 1000, alertMB, alertRunningSec, 1000);
         badQueryDetector.registerNotifier(new BadQueryDetector.Notifier() {
             @Override
-            public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
+            public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql,
+                    String user, Thread t, String queryId) {
                 alerts.add(new String[] { adj, sql });
             }
         });
@@ -64,7 +66,7 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
 
             SQLRequest sqlRequest = new SQLRequest();
             sqlRequest.setSql(mockSql);
-            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest, "user");
+            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest, "user", UUID.randomUUID().toString());
 
             // make sure bad query check happens twice
             Thread.sleep((alertRunningSec * 2 + 1) * 1000);
@@ -72,7 +74,7 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
             badQueryDetector.queryEnd(Thread.currentThread(), BadQueryEntry.ADJ_PUSHDOWN);
         }
 
-        badQueryDetector.stop();
+        badQueryDetector.interrupt();
 
         assertEquals(2, alerts.size());
         // second check founds a Slow

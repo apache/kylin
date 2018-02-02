@@ -61,8 +61,8 @@ public class RestClient {
 
     protected static Pattern fullRestPattern = Pattern.compile("(?:([^:]+)[:]([^@]+)[@])?([^:]+)(?:[:](\\d+))?");
 
-    private static final int HTTP_CONNECTION_TIMEOUT_MS = 30000;
-    private static final int HTTP_SOCKET_TIMEOUT_MS = 120000;
+    private int httpConnectionTimeoutMs = 30000;
+    private int httpSocketTimeoutMs = 120000;
 
     public static final String SCHEME_HTTP = "http://";
 
@@ -86,6 +86,10 @@ public class RestClient {
      * @param uri "user:pwd@host:port"
      */
     public RestClient(String uri) {
+        this(uri, null, null);
+    }
+
+    public RestClient(String uri, Integer httpConnectionTimeoutMs, Integer httpSocketTimeoutMs) {
         Matcher m = fullRestPattern.matcher(uri);
         if (!m.matches())
             throw new IllegalArgumentException("URI: " + uri + " -- does not match pattern " + fullRestPattern);
@@ -96,10 +100,25 @@ public class RestClient {
         String portStr = m.group(4);
         int port = Integer.parseInt(portStr == null ? "7070" : portStr);
 
+        if (httpConnectionTimeoutMs != null)
+            this.httpConnectionTimeoutMs = httpConnectionTimeoutMs;
+        if (httpSocketTimeoutMs != null)
+            this.httpSocketTimeoutMs = httpSocketTimeoutMs;
+
         init(host, port, user, pwd);
     }
 
     public RestClient(String host, int port, String userName, String password) {
+        this(host, port, userName, password, null, null);
+    }
+
+    public RestClient(String host, int port, String userName, String password, Integer httpConnectionTimeoutMs,
+            Integer httpSocketTimeoutMs) {
+        if (httpConnectionTimeoutMs != null)
+            this.httpConnectionTimeoutMs = httpConnectionTimeoutMs;
+        if (httpSocketTimeoutMs != null)
+            this.httpSocketTimeoutMs = httpSocketTimeoutMs;
+
         init(host, port, userName, password);
     }
 
@@ -111,8 +130,8 @@ public class RestClient {
         this.baseUrl = SCHEME_HTTP + host + ":" + port + KYLIN_API_PATH;
 
         final HttpParams httpParams = new BasicHttpParams();
-        HttpConnectionParams.setSoTimeout(httpParams, HTTP_SOCKET_TIMEOUT_MS);
-        HttpConnectionParams.setConnectionTimeout(httpParams, HTTP_CONNECTION_TIMEOUT_MS);
+        HttpConnectionParams.setSoTimeout(httpParams, httpSocketTimeoutMs);
+        HttpConnectionParams.setConnectionTimeout(httpParams, httpConnectionTimeoutMs);
 
         final PoolingClientConnectionManager cm = new PoolingClientConnectionManager();
         KylinConfig config = KylinConfig.getInstanceFromEnv();

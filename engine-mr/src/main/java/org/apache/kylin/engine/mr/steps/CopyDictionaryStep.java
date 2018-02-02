@@ -65,6 +65,6 @@ public class CopyDictionaryStep extends AbstractExecutable {
             return ExecuteResult.createError(e);
         }
 
-        return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+        return new ExecuteResult();
     }
 }

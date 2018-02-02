@@ -137,7 +137,7 @@ public class TableSchemaUpdateChecker {
 
         List<String> violateColumns = Lists.newArrayList();
         for (ColumnDesc column : origTable.getColumns()) {
-            if (!column.isComputedColumnn() && usedColumns.contains(column)) {
+            if (!column.isComputedColumn() && usedColumns.contains(column)) {
                 ColumnDesc newCol = newTable.findColumnByName(column.getName());
                 if (newCol == null || !isColumnCompatible(column, newCol)) {
                     violateColumns.add(column.getName());

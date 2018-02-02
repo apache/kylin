@@ -19,6 +19,8 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.util.List;
+
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metrics.MetricsManager;
@@ -38,8 +40,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.List;
 
 @Controller
 @RequestMapping(value = "/dashboard")
@@ -71,7 +71,7 @@ public class DashboardController extends BasicController {
         sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
         String sql = dashboardService.getQueryMetricsSQL(startTime, endTime, projectName, cubeName);
         sqlRequest.setSql(sql);
-        SQLResponse sqlResponse = queryService.queryWithoutSecure(sqlRequest);
+        SQLResponse sqlResponse = queryService.doQueryWithCache(sqlRequest);
         if(!sqlResponse.getIsException()){
             queryMetrics.increase("queryCount", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(0)));
             queryMetrics.increase("avgQueryLatency", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(1)));
@@ -90,7 +90,7 @@ public class DashboardController extends BasicController {
         sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
         String sql = dashboardService.getJobMetricsSQL(startTime, endTime, projectName, cubeName);
         sqlRequest.setSql(sql);
-        SQLResponse sqlResponse = queryService.queryWithoutSecure(sqlRequest);
+        SQLResponse sqlResponse = queryService.doQueryWithCache(sqlRequest);
         if(!sqlResponse.getIsException()){
             jobMetrics.increase("jobCount", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(0)));
             jobMetrics.increase("avgJobBuildTime", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(1)));
@@ -108,7 +108,7 @@ public class DashboardController extends BasicController {
         sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
         String sql = dashboardService.getChartSQL(startTime, endTime, projectName, cubeName, dimension, metric, category);
         sqlRequest.setSql(sql);
-        return dashboardService.transformChartData(queryService.queryWithoutSecure(sqlRequest));
+        return dashboardService.transformChartData(queryService.doQueryWithCache(sqlRequest));
     }
 
     private void checkAuthorization(String projectName){

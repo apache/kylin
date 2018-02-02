@@ -52,6 +52,36 @@ import com.google.common.collect.Maps;
  */
 public class DefaultScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
 
+    private static DefaultScheduler INSTANCE = null;
+
+    public static DefaultScheduler getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = createInstance();
+        }
+        return INSTANCE;
+    }
+    
+    public synchronized static DefaultScheduler createInstance() {
+        destroyInstance();
+        INSTANCE = new DefaultScheduler();
+        return INSTANCE;
+    }
+
+    public synchronized static void destroyInstance() {
+        DefaultScheduler tmp = INSTANCE;
+        INSTANCE = null;
+        if (tmp != null) {
+            try {
+                tmp.shutdown();
+            } catch (SchedulerException e) {
+                logger.error("error stop DefaultScheduler", e);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    // ============================================================================
+    
     private JobLock jobLock;
     private ExecutableManager executableManager;
     private Runnable fetcher;
@@ -62,9 +92,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private static final Logger logger = LoggerFactory.getLogger(DefaultScheduler.class);
     private volatile boolean initialized = false;
     private volatile boolean hasStarted = false;
+    volatile boolean fetchFailed = false;
     private JobEngineConfig jobEngineConfig;
-
-    private static DefaultScheduler INSTANCE = null;
 
     public DefaultScheduler() {
         if (INSTANCE != null) {
@@ -180,16 +209,19 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
         @Override
         synchronized public void run() {
-            try {
+            try (SetThreadName ignored = new SetThreadName("Scheduler %s FetcherRunner",
+                    System.identityHashCode(DefaultScheduler.this))) {
                 // logger.debug("Job Fetcher is running...");
                 Map<String, Executable> runningJobs = context.getRunningJobs();
-                if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
-                    logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
+                if (isJobPoolFull()) {
                     return;
                 }
 
                 int nRunning = 0, nReady = 0, nStopped = 0, nOthers = 0, nError = 0, nDiscarded = 0, nSUCCEED = 0;
                 for (final String id : executableManager.getAllJobIds()) {
+                    if (isJobPoolFull()) {
+                        return;
+                    }
                     if (runningJobs.containsKey(id)) {
                         // logger.debug("Job id:" + id + " is already running");
                         nRunning++;
@@ -208,7 +240,12 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         } else if (output.getState() == ExecutableState.STOPPED) {
                             nStopped++;
                         } else {
-                            nOthers++;
+                            if (fetchFailed) {
+                                executableManager.forceKillJob(id);
+                                nError++;
+                            } else {
+                                nOthers++;
+                            }
                         }
                         continue;
                     }
@@ -226,13 +263,26 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         logger.warn(jobDesc + " fail to schedule", ex);
                     }
                 }
+
+                fetchFailed = false;
                 logger.info("Job Fetcher: " + nRunning + " should running, " + runningJobs.size() + " actual running, "
                         + nStopped + " stopped, " + nReady + " ready, " + nSUCCEED + " already succeed, " + nError
                         + " error, " + nDiscarded + " discarded, " + nOthers + " others");
             } catch (Exception e) {
-                logger.warn("Job Fetcher caught a exception " + e);
+                fetchFailed = true; // this could happen when resource store is unavailable
+                logger.warn("Job Fetcher caught a exception ", e);
             }
         }
+    }
+
+    private boolean isJobPoolFull() {
+        Map<String, Executable> runningJobs = context.getRunningJobs();
+        if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
+            logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
+            return true;
+        }
+
+        return false;
     }
 
     private class JobRunner implements Runnable {
@@ -248,8 +298,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             try (SetThreadName ignored = new SetThreadName("Scheduler %s Job %s",
                     System.identityHashCode(DefaultScheduler.this), executable.getId())) {
                 executable.execute(context);
-                // trigger the next step asap
-                fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
             } catch (ExecuteException e) {
                 logger.error("ExecuteException job:" + executable.getId(), e);
             } catch (Exception e) {
@@ -257,11 +305,10 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             } finally {
                 context.removeRunningJob(executable);
             }
-        }
-    }
 
-    public static DefaultScheduler getInstance() {
-        return INSTANCE;
+            // trigger the next step asap
+            fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
+        }
     }
 
     @Override
@@ -271,25 +318,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                 shutdown();
             } catch (SchedulerException e) {
                 throw new RuntimeException("failed to shutdown scheduler", e);
-            }
-        }
-    }
-
-    public synchronized static DefaultScheduler createInstance() {
-        destroyInstance();
-        INSTANCE = new DefaultScheduler();
-        return INSTANCE;
-    }
-
-    public synchronized static void destroyInstance() {
-        DefaultScheduler tmp = INSTANCE;
-        INSTANCE = null;
-        if (tmp != null) {
-            try {
-                tmp.shutdown();
-            } catch (SchedulerException e) {
-                logger.error("error stop DefaultScheduler", e);
-                throw new RuntimeException(e);
             }
         }
     }
@@ -338,23 +366,21 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     public void shutdown() throws SchedulerException {
         logger.info("Shutting down DefaultScheduler ....");
         jobLock.unlockJobEngine();
+        initialized = false;
+        hasStarted = false;
         try {
-            fetcherPool.shutdown();
+            fetcherPool.shutdownNow();//interrupt
             fetcherPool.awaitTermination(1, TimeUnit.MINUTES);
-            jobPool.shutdown();
+        } catch (InterruptedException e) {
+            //ignore it
+            logger.warn("InterruptedException is caught!");
+        }
+        try {
+            jobPool.shutdownNow();//interrupt
             jobPool.awaitTermination(1, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             //ignore it
-        }
-    }
-
-    @Override
-    public boolean stop(AbstractExecutable executable) throws SchedulerException {
-        if (hasStarted) {
-            return true;
-        } else {
-            //TODO should try to stop this executable
-            return true;
+            logger.warn("InterruptedException is caught!");
         }
     }
 

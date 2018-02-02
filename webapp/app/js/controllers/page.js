@@ -24,6 +24,8 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   kylinConfig.init().$promise.then(function (data) {
     $log.debug(data);
     kylinConfig.initWebConfigInfo();
+    $rootScope.isShowCubeplanner = kylinConfig.getProperty('kylin.cube.cubeplanner.enabled') === 'true';
+    $rootScope.isShowDashboard = kylinConfig.getProperty('kylin.web.dashboard-enabled') === 'true'
   });
   $rootScope.userAction = {
     'islogout': false
@@ -95,20 +97,33 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   };
 
   // common acl methods
-  $scope.hasPermission = function (entity) {
+  $scope.hasPermission = function (accessType, entity) {
     var curUser = UserService.getCurUser();
     if (!curUser.userDetails) {
       return curUser;
     }
-
     var hasPermission = false;
     var masks = [];
-    for (var i = 1; i < arguments.length; i++) {
+    for (var i = 2; i < arguments.length; i++) {
       if (arguments[i]) {
         masks.push(arguments[i]);
       }
     }
-
+    var project = ''
+    var projectAccesses = ProjectModel.projects || []
+    if (accessType === 'cube') {
+      project = entity.project
+    } else if (accessType === 'project') {
+      project = entity && entity.name || entity.selectedProject
+    } else if (accessType === 'model') {
+      project =  ProjectModel.getProjectByCubeModel(entity.name)
+    }
+    for(var i = 0;i<projectAccesses.length;i++){
+      if(projectAccesses[i].name === project) {
+        entity = projectAccesses[i]
+        break;
+      }
+    }
     if (entity) {
       angular.forEach(entity.accessEntities, function (acessEntity, index) {
         if (masks.indexOf(acessEntity.permission.mask) != -1) {

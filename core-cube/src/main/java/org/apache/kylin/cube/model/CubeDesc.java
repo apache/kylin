@@ -48,12 +48,15 @@ import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.KylinVersion;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
+import org.apache.kylin.dict.GlobalDictionaryBuilder;
+import org.apache.kylin.dict.global.SegmentAppendTrieDictBuilder;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -79,6 +82,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -90,6 +94,11 @@ import com.google.common.collect.Sets;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     private static final Logger logger = LoggerFactory.getLogger(CubeDesc.class);
+
+    // Use with care! Normally you should go to CubeDescManager and don't need this.
+    public static JsonSerializer<CubeDesc> newSerializerForLowLevelAccess() {
+        return new JsonSerializer<>(CubeDesc.class);
+    }
 
     public static class CannotFilterExtendedColumnException extends RuntimeException {
         public CannotFilterExtendedColumnException(TblColRef tblColRef) {
@@ -123,6 +132,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
 
     }
+    
+    // ============================================================================
 
     private KylinConfigExt config;
     private DataModelDesc model;
@@ -168,7 +179,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("retention_range")
     private long retentionRange = 0;
     @JsonProperty("engine_type")
-    private int engineType = IEngineAware.ID_MR_V1;
+    private int engineType = IEngineAware.ID_MR_V2;
     @JsonProperty("storage_type")
     private int storageType = IStorageAware.ID_HBASE;
     @JsonProperty("override_kylin_properties")
@@ -190,11 +201,13 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<Set<String>> mandatoryDimensionSetList = Collections.emptyList();
 
-    private Set<Long> mandatoryCuboids = Sets.newHashSet();
+    // Error messages during resolving json metadata
+    private List<String> errors = new ArrayList<String>();
 
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
     private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
     private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<>();
+    private Set<Long> mandatoryCuboids = new HashSet<>();
 
     private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
@@ -203,6 +216,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     transient volatile private CuboidScheduler cuboidScheduler = null;
 
+    @Override
+    public String resourceName() {
+        return name;
+    }
+    
     public boolean isEnableSharding() {
         //in the future may extend to other storage that is shard-able
         return storageType != IStorageAware.ID_HBASE && storageType != IStorageAware.ID_HYBRID;
@@ -211,11 +229,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     public Set<TblColRef> getShardByColumns() {
         return getRowkey().getShardByColumns();
     }
-
-    /**
-     * Error messages during resolving json metadata
-     */
-    private List<String> errors = new ArrayList<String>();
 
     /**
      * @return all columns this cube can support, including derived
@@ -320,7 +333,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public String getResourcePath() {
-        return concatResourcePath(name);
+        return concatResourcePath(resourceName());
     }
 
     public static String concatResourcePath(String descName) {
@@ -553,7 +566,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     .append(JsonUtil.writeValueAsString(this.rowkey)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.aggregationGroups)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.hbaseMapping)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.engineType)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.storageType)).append("|");
 
             if (mandatoryDimensionSetList != null && !mandatoryDimensionSetList.isEmpty()) {
@@ -596,16 +608,18 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, name);
 
         // cube inherit the project override props
+        LinkedHashMap<String, String> allOverrideProps = Maps.newLinkedHashMap(overrideKylinProps);
+
         if (ownerPrj.size() == 1) {
             Map<String, String> prjOverrideProps = ownerPrj.get(0).getOverrideKylinProps();
             for (Entry<String, String> entry : prjOverrideProps.entrySet()) {
                 if (!overrideKylinProps.containsKey(entry.getKey())) {
-                    overrideKylinProps.put(entry.getKey(), entry.getValue());
+                    allOverrideProps.put(entry.getKey(), entry.getValue());
                 }
             }
         }
 
-        this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
+        this.config = KylinConfigExt.createInstance(config, allOverrideProps);
 
         checkArgument(this.rowkey.getRowKeyColumns().length <= this.config.getCubeRowkeyMaxSize(),
                 "Too many rowkeys (%s) in CubeDesc, please try to reduce dimension number or adopt derived dimensions",
@@ -1090,12 +1104,15 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     checkState(measureDescs[i] != null, "measure desc at (%s) is null", i);
                     measureIndex[i] = measureIndexLookup.get(colMeasureRefs[i]);
                     checkState(measureIndex[i] >= 0, "measure index at (%s) not positive", i);
-                    
+
                     checkState(!measureSet.contains(colMeasureRefs[i]), "measure (%s) duplicates", colMeasureRefs[i]);
                     measureSet.add(colMeasureRefs[i]);
-                    
-                    checkState(measureIndex[i] > lastMeasureIndex, "measure (%s) is not in order", colMeasureRefs[i]);
-                    lastMeasureIndex = measureIndex[i];
+
+                    if (storageType > IStorageAware.ID_SHARDED_HBASE) {
+                        checkState(measureIndex[i] > lastMeasureIndex, "measure (%s) is not in order",
+                                colMeasureRefs[i]);
+                        lastMeasureIndex = measureIndex[i];
+                    }
 
                     checkEachMeasureExist.set(measureIndex[i]);
                 }
@@ -1109,7 +1126,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             checkState(checkEachMeasureExist.get(i),
                     "measure (%s) does not exist in column family, or measure duplicates", measures.get(i));
         }
-        
+
     }
 
     private void initDictionaryDesc() {
@@ -1190,21 +1207,17 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     public void setAutoMergeTimeRanges(long[] autoMergeTimeRanges) {
         this.autoMergeTimeRanges = autoMergeTimeRanges;
     }
+    
+    public boolean isBroken() {
+        return !errors.isEmpty();
+    }
 
     public void addError(String message) {
         this.errors.add(message);
     }
 
-    public List<String> getError() {
-        return this.errors;
-    }
-
-    public String getErrorMsg() {
-        StringBuffer sb = new StringBuffer();
-        for (String error : errors) {
-            sb.append(error + " ");
-        }
-        return sb.toString();
+    public String getErrorsAsString() {
+        return Joiner.on("; ").join(errors);
     }
 
     public HBaseMappingDesc getHbaseMapping() {
@@ -1389,6 +1402,31 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
         return null;
     }
+    
+    public List<TblColRef> getAllGlobalDictColumns() {
+        List<TblColRef> globalDictCols = new ArrayList<TblColRef>();
+        List<DictionaryDesc> dictionaryDescList = getDictionaries();
+
+        if (dictionaryDescList == null) {
+            return globalDictCols;
+        }
+
+        for (DictionaryDesc dictionaryDesc : dictionaryDescList) {
+            String cls = dictionaryDesc.getBuilderClass();
+            if (GlobalDictionaryBuilder.class.getName().equals(cls) || SegmentAppendTrieDictBuilder.class.getName().equals(cls))
+                globalDictCols.add(dictionaryDesc.getColumnRef());
+        }
+        return globalDictCols;
+    }
+    
+    // UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
+    public List<TblColRef> getAllUHCColumns() {
+        List<TblColRef> uhcColumns = new ArrayList<TblColRef>();
+        uhcColumns.addAll(getAllGlobalDictColumns());
+        uhcColumns.addAll(getShardByColumns());
+        return uhcColumns;
+    }
+
 
     public String getProject() {
         return getModel().getProject();

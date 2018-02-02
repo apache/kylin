@@ -42,6 +42,7 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(GlobalDictionaryBuilder.class);
 
+    @Override
     public void init(DictionaryInfo dictInfo, int baseId, String hdfsDir) throws IOException {
         sourceColumn = dictInfo.getSourceTable() + "_" + dictInfo.getSourceColumn();
         lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();

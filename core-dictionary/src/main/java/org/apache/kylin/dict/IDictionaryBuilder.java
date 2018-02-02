@@ -28,7 +28,7 @@ import org.apache.kylin.common.util.Dictionary;
 public interface IDictionaryBuilder {
 
     /** Sets the dictionary info for the dictionary being built. Mainly for GlobalDictionaryBuilder. */
-    void init(DictionaryInfo info, int baseId, String hdfsDir) throws IOException;
+    void init(DictionaryInfo info, int baseId, String hdfsWorkingDir) throws IOException;
     
     /** Add a new value into dictionary, returns it is accepted (not null) or not. */
     boolean addValue(String value);

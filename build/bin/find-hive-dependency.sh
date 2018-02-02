@@ -29,8 +29,9 @@ hive_env=
 
 if [ "${client_mode}" == "beeline" ]
 then
+    beeline_shell=`$KYLIN_HOME/bin/get-properties.sh kylin.source.hive.beeline-shell`
     beeline_params=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.beeline-params`
-    hive_env=`beeline ${hive_conf_properties} ${beeline_params} --outputformat=dsv -e set 2>&1 | grep 'env:CLASSPATH' `
+    hive_env=`${beeline_shell} ${hive_conf_properties} ${beeline_params} --outputformat=dsv -e set 2>&1 | grep 'env:CLASSPATH' `
 else
     hive_env=`hive ${hive_conf_properties} -e set 2>&1 | grep 'env:CLASSPATH'`
 fi
@@ -148,7 +149,7 @@ then
 else
     hive_lib_dir="$HIVE_LIB"
 fi
-hive_lib=`find -L ${hive_lib_dir} -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
+hive_lib=`find -L ${hive_lib_dir} -name '*.jar' ! -name '*calcite*' ! -name '*jackson-datatype-joda*' ! -name '*derby*' -printf '%p:' | sed 's/:$//'`
 
 validateDirectory ${hive_conf_path}
 checkFileExist ${hive_lib}

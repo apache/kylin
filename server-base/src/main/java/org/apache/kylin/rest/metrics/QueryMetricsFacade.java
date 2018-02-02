@@ -28,7 +28,7 @@ import org.apache.hadoop.metrics2.MetricsException;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.metrics.MetricsManager;
 import org.apache.kylin.metrics.lib.impl.RecordEvent;
 import org.apache.kylin.metrics.lib.impl.TimedRecordEvent;
@@ -99,11 +99,11 @@ public class QueryMetricsFacade {
         if (user == null) {
             user = "unknown";
         }
-        for (QueryContext.RPCStatistics entry : QueryContext.current().getRpcStatisticsList()) {
+        for (QueryContext.RPCStatistics entry : QueryContextFacade.current().getRpcStatisticsList()) {
             RecordEvent rpcMetricsEvent = new TimedRecordEvent(
                     KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQueryRpcCall());
             setRPCWrapper(rpcMetricsEvent, //
-                    ProjectInstance.getNormalizedProjectName(sqlRequest.getProject()), entry.getRealizationName(),
+                    norm(sqlRequest.getProject()), entry.getRealizationName(),
                     entry.getRpcServer(), entry.getException());
             setRPCStats(rpcMetricsEvent, //
                     entry.getCallTimeMs(), entry.getSkippedRows(), entry.getScannedRows(), entry.getReturnedRows(),
@@ -117,7 +117,7 @@ public class QueryMetricsFacade {
                     KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQuery());
             setQueryWrapper(queryMetricsEvent, //
                     user, sqlHashCode, sqlResponse.isStorageCacheUsed() ? "CACHE" : contextEntry.getQueryType(),
-                    ProjectInstance.getNormalizedProjectName(sqlRequest.getProject()), contextEntry.getRealization(),
+                    norm(sqlRequest.getProject()), contextEntry.getRealization(),
                     contextEntry.getRealizationType(),
                     sqlResponse.getThrowable());
 
@@ -129,7 +129,7 @@ public class QueryMetricsFacade {
                             KylinConfig.getInstanceFromEnv().getKylinMetricsSubjectQueryCube());
 
                     setCubeWrapper(cubeSegmentMetricsEvent, //
-                            ProjectInstance.getNormalizedProjectName(sqlRequest.getProject()),
+                            norm(sqlRequest.getProject()),
                             segmentEntry.getCubeName(), segmentEntry.getSegmentName(), segmentEntry.getSourceCuboidId(),
                             segmentEntry.getTargetCuboidId(), segmentEntry.getFilterMask());
 
@@ -149,6 +149,10 @@ public class QueryMetricsFacade {
             //For update query level metrics
             MetricsManager.getInstance().update(queryMetricsEvent);
         }
+    }
+
+    private static String norm(String project) {
+        return project.toUpperCase();
     }
 
     private static void setRPCWrapper(RecordEvent metricsEvent, String projectName, String realizationName,

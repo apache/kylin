@@ -25,9 +25,12 @@ import java.util.List;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CubeRequest;
+import org.apache.kylin.rest.response.CubeInstanceResponse;
+import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ServiceTestBase;
@@ -118,13 +121,13 @@ public class CubeControllerTest extends ServiceTestBase {
         List<String> notifyList = Lists.newArrayList();
         notifyList.add("john@example.com");
         cubeController.updateNotifyList(newCubeName, notifyList);
-        cubeController.updateCubeCost(newCubeName, 80);
 
-        List<CubeInstance> cubeInstances = cubeController.getCubes(newCubeName, cube.getModelName(), "default", 1, 0);
+        List<CubeInstanceResponse> cubeInstances = cubeController.getCubes(newCubeName, cube.getModelName(), "default",
+                1, 0);
 
-        CubeInstance cubeInstance = cubeInstances.get(0);
+        CubeInstance cubeInstance = cubeController.getCube(cubeInstances.get(0).getName());
         Assert.assertTrue(cubeInstance.getDescriptor().getNotifyList().contains("john@example.com"));
-        Assert.assertTrue(cubeInstance.getCost() == 80);
+        Assert.assertTrue(cubeInstance.getCost() == 495);
         cubeController.deleteCube(newCubeName);
     }
 
@@ -186,8 +189,23 @@ public class CubeControllerTest extends ServiceTestBase {
 
     @Test
     public void testGetCubes() {
-        List<CubeInstance> cubes = cubeController.getCubes(null, null, null, 1, 0);
+        List<CubeInstanceResponse> cubes = cubeController.getCubes(null, null, null, 1, 0);
         Assert.assertTrue(cubes.size() == 1);
+    }
+
+    @Test
+    public void testGetSql() {
+        GeneralResponse response = cubeController.getSql("test_kylin_cube_with_slr_ready", null);
+        String sql = response.getProperty("sql");
+        CubeDesc cubeDesc = cubeDescController.getDesc("test_kylin_cube_with_slr_ready");
+
+        for (DimensionDesc dimensionDesc : cubeDesc.getDimensions()) {
+            if (dimensionDesc.getDerived() != null) {
+                for (String derivedDimension : dimensionDesc.getDerived()) {
+                    Assert.assertTrue(sql.contains(derivedDimension));
+                }
+            }
+        }
     }
 
 }

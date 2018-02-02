@@ -20,6 +20,9 @@ package org.apache.kylin.engine.mr.common;
 
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
@@ -67,10 +70,14 @@ public class JobInfoConverter {
             return null;
         }
 
+        CubingJob cubeJob = (CubingJob) job;
+        CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
+                .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
-        result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
-        result.setRelatedSegment(CubingExecutableUtil.getSegmentId(job.getParams()));
+        result.setRelatedCube(cube != null ? cube.getDisplayName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
         result.setLastModified(output.getLastModified());
         result.setSubmitter(job.getSubmitter());
         result.setUuid(job.getId());

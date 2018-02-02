@@ -99,6 +99,11 @@ public abstract class TupleFilter {
             addChild(c); // subclass overrides addChild()
     }
 
+    final public void addChildren(TupleFilter... children) {
+        for (TupleFilter c : children)
+            addChild(c); // subclass overrides addChild()
+    }
+
     public List<? extends TupleFilter> getChildren() {
         return children;
     }
@@ -118,6 +123,44 @@ public abstract class TupleFilter {
     public TupleFilter reverse() {
         logger.warn("Cannot reverse " + this + ", loosen the filter to true");
         return ConstantTupleFilter.TRUE;
+    }
+
+    /**
+     * The storage level dislike NOT logic
+     */
+    public TupleFilter removeNot() {
+        return removeNotInternal(this);
+    }
+
+    private TupleFilter removeNotInternal(TupleFilter filter) {
+        FilterOperatorEnum op = filter.getOperator();
+
+        if (!(filter instanceof LogicalTupleFilter)) {
+            return filter;
+        }
+
+        LogicalTupleFilter logicalFilter = (LogicalTupleFilter) filter;
+
+        switch (logicalFilter.operator) {
+        case NOT:
+            assert (filter.children.size() == 1);
+            TupleFilter reverse = filter.children.get(0).reverse();
+            return removeNotInternal(reverse);
+        case AND:
+            LogicalTupleFilter andFilter = new LogicalTupleFilter(FilterOperatorEnum.AND);
+            for (TupleFilter child : logicalFilter.children) {
+                andFilter.addChild(removeNotInternal(child));
+            }
+            return andFilter;
+        case OR:
+            LogicalTupleFilter orFilter = new LogicalTupleFilter(FilterOperatorEnum.OR);
+            for (TupleFilter child : logicalFilter.children) {
+                orFilter.addChild(removeNotInternal(child));
+            }
+            return orFilter;
+        default:
+            throw new IllegalStateException("This filter is unexpected: " + filter);
+        }
     }
 
     /**

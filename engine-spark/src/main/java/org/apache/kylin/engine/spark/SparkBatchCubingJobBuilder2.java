@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.spark;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
@@ -29,6 +30,9 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  */
@@ -89,6 +93,9 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
     }
 
     private static String getSegmentMetadataUrl(KylinConfig kylinConfig, String segmentID) {
-        return kylinConfig.getHdfsWorkingDirectory() + "metadata/" + segmentID + "@hdfs";
+        Map<String, String> param = new HashMap<>();
+        param.put("path", kylinConfig.getHdfsWorkingDirectory() + "metadata/" + segmentID);
+        return new StorageURL(kylinConfig.getMetadataUrl().getIdentifier(), "hdfs", param).toString();
+//        return kylinConfig.getHdfsWorkingDirectory() + "metadata/" + segmentID + "@hdfs";
     }
 }

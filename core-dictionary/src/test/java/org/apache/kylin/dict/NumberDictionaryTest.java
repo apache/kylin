@@ -149,6 +149,7 @@ public class NumberDictionaryTest extends LocalFileMetadataTestCase {
         for (int i = 0; i < sorted.size(); i++) {
             String dictNum = dict.getValueFromId(i);
             assertEquals(sorted.get(i), new BigDecimal(dictNum));
+            assertEquals(sorted.get(i), new BigDecimal(new String(dict.getValueByteFromId(i))));
         }
 
         // test rounding

@@ -1,0 +1,24 @@
+{
+  "uuid" : "8e26ed8c-aed7-4a98-ba05-28c89cfaa400",
+  "last_modified" : 1505821993483,
+  "version" : "2.2.0.20500",
+  "table_name" : "DEFAULT.TEST_COUNTRY",
+  "last_build_job_id" : null,
+  "frequency" : 0,
+  "columns_stats" : [ ],
+  "sample_rows" : [ ],
+  "last_modified_time" : 0,
+  "total_rows" : 0,
+  "mapper_rows" : [ ],
+  "data_source_properties" : {
+    "owner" : "root",
+    "skip_header_line_count" : "0",
+    "total_file_size" : "798009",
+    "hive_inputFormat" : "org.apache.hadoop.mapred.TextInputFormat",
+    "hive_outputFormat" : "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+    "location" : "hdfs://sandbox.hortonworks.com:8020/apps/hive/warehouse/kylin_sales",
+    "partition_column" : "",
+    "total_file_number" : "1",
+    "last_access_time" : "0"
+  }
+}

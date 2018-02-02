@@ -18,6 +18,12 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import static org.apache.kylin.engine.mr.steps.FactDistinctColumnsReducer.DICT_FILE_POSTFIX;
+
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
@@ -41,12 +47,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.List;
-
-import static org.apache.kylin.engine.mr.steps.FactDistinctColumnsReducer.DICT_FILE_POSTFIX;
-
 public class UHCDictionaryReducer extends KylinReducer<SelfDefineSortableKey, NullWritable, NullWritable, BytesWritable> {
     private static final Logger logger = LoggerFactory.getLogger(UHCDictionaryReducer.class);
 
@@ -65,7 +65,7 @@ public class UHCDictionaryReducer extends KylinReducer<SelfDefineSortableKey, Nu
         String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeDesc cubeDesc = cube.getDescriptor();
-        List<TblColRef> uhcColumns = CubeManager.getInstance(config).getAllUHCColumns(cubeDesc);
+        List<TblColRef> uhcColumns = cubeDesc.getAllUHCColumns();
 
         int taskId = context.getTaskAttemptID().getTaskID().getId();
         col = uhcColumns.get(taskId);

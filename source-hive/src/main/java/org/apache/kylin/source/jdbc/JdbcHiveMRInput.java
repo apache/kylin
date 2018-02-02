@@ -134,7 +134,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
             if (partitionDesc.isPartitioned()) {
                 partCol = partitionDesc.getPartitionDateColumn();//tablename.colname
                 partitionString = partitionDesc.getPartitionConditionBuilder().buildDateRangeCondition(partitionDesc,
-                        flatDesc.getSegRange());
+                        flatDesc.getSegment(), flatDesc.getSegRange());
             }
 
             String splitTable;

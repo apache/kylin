@@ -41,12 +41,12 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     public void testMassageSql() {
         {
             String sql = "select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact";
-            String s = QueryUtil.massageSql(sql, null, 0, 0, "DEFAULT");
+            String s = QueryUtil.massageSql(sql, "default", 0, 0, "DEFAULT");
             Assert.assertEquals("select ( date '2001-09-28' + interval '1' day) from test_kylin_fact", s);
         }
         {
             String sql = "select ( date '2001-09-28' + interval floor(2) month) from test_kylin_fact group by ( date '2001-09-28' + interval floor(2) month)";
-            String s = QueryUtil.massageSql(sql, null, 0, 0, "DEFAULT");
+            String s = QueryUtil.massageSql(sql, "default", 0, 0, "DEFAULT");
             Assert.assertEquals(
                     "select ( date '2001-09-28' + interval '2' month) from test_kylin_fact group by ( date '2001-09-28' + interval '2' month)",
                     s);
@@ -94,9 +94,21 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
         {
             KylinConfig.getInstanceFromEnv().setProperty("kylin.query.escape-default-keyword", "true");
             String sql = "select * from DEFAULT.TEST_KYLIN_FACT";
-            String s = QueryUtil.massageSql(sql, null, 0, 0, "DEFAULT");
+            String s = QueryUtil.massageSql(sql, "default", 0, 0, "DEFAULT");
             Assert.assertEquals("select * from \"DEFAULT\".TEST_KYLIN_FACT", s);
         }
+    }
+
+    @Test
+    public void testForceLimit() {
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.query.force-limit", "10");
+        String sql1 = "select   * \nfrom DEFAULT.TEST_KYLIN_FACT";
+        String result = QueryUtil.massageSql(sql1, "default", 0, 0, "DEFAULT");
+        Assert.assertEquals("select   * \nfrom DEFAULT.TEST_KYLIN_FACT\nLIMIT 10", result);
+
+        String sql2 = "select   2 * 8 from DEFAULT.TEST_KYLIN_FACT";
+        result = QueryUtil.massageSql(sql2, "default", 0, 0, "DEFAULT");
+        Assert.assertEquals("select   2 * 8 from DEFAULT.TEST_KYLIN_FACT", result);
     }
 
     @Test
@@ -136,5 +148,24 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
             Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
         }
 
+        {
+            String sqlWithComment = "/* comment1/comment2 */ " + originSql;
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "/* comment1 * comment2 */ " + originSql;
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "/* comment1 * comment2 */ /* comment3 / comment4 */ -- comment 5\n" + originSql;
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
+
+        {
+            String sqlWithComment = "/* comment1 * comment2 */ -- comment 5\n" + originSql + "/* comment3 / comment4 */";
+            Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
+        }
     }
 }

@@ -48,25 +48,36 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
     private static final int DEFAULT_PERIOD = 3;
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
+    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false)
+            .withDescription("Specify realizations in which project to extract").create("project");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_CONF = OptionBuilder.withArgName("includeConf").hasArg().isRequired(false).withDescription("Specify whether to include conf files to extract. Default true.").create("includeConf");
+    private static final Option OPTION_INCLUDE_CONF = OptionBuilder.withArgName("includeConf").hasArg()
+            .isRequired(false).withDescription("Specify whether to include conf files to extract. Default true.")
+            .create("includeConf");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_HBASE = OptionBuilder.withArgName("includeHBase").hasArg().isRequired(false).withDescription("Specify whether to include hbase files to extract. Default true.").create("includeHBase");
+    private static final Option OPTION_INCLUDE_HBASE = OptionBuilder.withArgName("includeHBase").hasArg()
+            .isRequired(false).withDescription("Specify whether to include hbase files to extract. Default true.")
+            .create("includeHBase");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_CLIENT = OptionBuilder.withArgName("includeClient").hasArg().isRequired(false).withDescription("Specify whether to include client info to extract. Default true.").create("includeClient");
+    private static final Option OPTION_INCLUDE_CLIENT = OptionBuilder.withArgName("includeClient").hasArg()
+            .isRequired(false).withDescription("Specify whether to include client info to extract. Default true.")
+            .create("includeClient");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false).withDescription("Specify whether to include job info to extract. Default true.").create("includeJobs");
+    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false)
+            .withDescription("Specify whether to include job info to extract. Default true.").create("includeJobs");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_THREADS = OptionBuilder.withArgName("threads").hasArg().isRequired(false).withDescription("Specify number of threads for parallel extraction.").create("threads");
+    private static final Option OPTION_THREADS = OptionBuilder.withArgName("threads").hasArg().isRequired(false)
+            .withDescription("Specify number of threads for parallel extraction.").create("threads");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_PERIOD = OptionBuilder.withArgName("period").hasArg().isRequired(false).withDescription("specify how many days of kylin info to extract. Default " + DEFAULT_PERIOD + ".").create("period");
+    private static final Option OPTION_PERIOD = OptionBuilder.withArgName("period").hasArg().isRequired(false)
+            .withDescription("specify how many days of kylin info to extract. Default " + DEFAULT_PERIOD + ".")
+            .create("period");
 
     private static final int DEFAULT_PARALLEL_SIZE = 4;
 
@@ -110,13 +121,25 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
     @Override
     protected void executeExtract(final OptionsHelper optionsHelper, final File exportDir) throws IOException {
         final String projectInput = optionsHelper.getOptionValue(options.getOption("project"));
-        final boolean includeConf = optionsHelper.hasOption(OPTION_INCLUDE_CONF) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CONF)) : true;
-        final boolean includeHBase = optionsHelper.hasOption(OPTION_INCLUDE_HBASE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_HBASE)) : true;
-        final boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT)) : true;
-        final boolean includeJob = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : true;
-        final int threadsNum = optionsHelper.hasOption(OPTION_THREADS) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_THREADS)) : DEFAULT_PARALLEL_SIZE;
+        final boolean includeConf = optionsHelper.hasOption(OPTION_INCLUDE_CONF)
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CONF))
+                : true;
+        final boolean includeHBase = optionsHelper.hasOption(OPTION_INCLUDE_HBASE)
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_HBASE))
+                : true;
+        final boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT)
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT))
+                : true;
+        final boolean includeJob = optionsHelper.hasOption(OPTION_INCLUDE_JOB)
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB))
+                : true;
+        final int threadsNum = optionsHelper.hasOption(OPTION_THREADS)
+                ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_THREADS))
+                : DEFAULT_PARALLEL_SIZE;
         final String projectNames = StringUtils.join(getProjects(projectInput), ",");
-        final int period = optionsHelper.hasOption(OPTION_PERIOD) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_PERIOD)) : DEFAULT_PERIOD;
+        final int period = optionsHelper.hasOption(OPTION_PERIOD)
+                ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_PERIOD))
+                : DEFAULT_PERIOD;
 
         logger.info("Start diagnosis info extraction in {} threads.", threadsNum);
         executorService = Executors.newFixedThreadPool(threadsNum);
@@ -127,7 +150,9 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             public void run() {
                 logger.info("Start to extract metadata.");
                 try {
-                    String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-includeJobs", "false", "-submodule", "true" };
+                    String[] cubeMetaArgs = { "-packagetype", "cubemeta", "-destDir",
+                            new File(exportDir, "metadata").getAbsolutePath(), "-project", projectNames, "-compress",
+                            "false", "-includeJobs", "false", "-submodule", "true" };
                     CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
                     logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
                     cubeMetaExtractor.execute(cubeMetaArgs);
@@ -144,7 +169,8 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                 public void run() {
                     logger.info("Start to extract jobs.");
                     try {
-                        String[] jobArgs = { "-destDir", new File(exportDir, "jobs").getAbsolutePath(), "-period", Integer.toString(period), "-compress", "false", "-submodule", "true" };
+                        String[] jobArgs = { "-destDir", new File(exportDir, "jobs").getAbsolutePath(), "-period",
+                                Integer.toString(period), "-compress", "false", "-submodule", "true" };
                         JobInstanceExtractor jobInstanceExtractor = new JobInstanceExtractor();
                         jobInstanceExtractor.execute(jobArgs);
                     } catch (Exception e) {
@@ -162,7 +188,8 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                     logger.info("Start to extract HBase usage.");
                     try {
                         // use reflection to isolate NoClassDef errors when HBase is not available
-                        String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-submodule", "true" };
+                        String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project",
+                                projectNames, "-compress", "false", "-submodule", "true" };
                         logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
                         Object extractor = ClassUtil.newInstance("org.apache.kylin.tool.HBaseUsageExtractor");
                         Method execute = extractor.getClass().getDeclaredMethod("execute", String[].class);
@@ -184,7 +211,8 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                         File destConfDir = new File(exportDir, "conf");
                         FileUtils.forceMkdir(destConfDir);
                         File srcConfDir = new File(ToolUtil.getConfFolder());
-                        Preconditions.checkState(srcConfDir.exists(), "Cannot find config dir: " + srcConfDir.getAbsolutePath());
+                        Preconditions.checkState(srcConfDir.exists(),
+                                "Cannot find config dir: " + srcConfDir.getAbsolutePath());
                         File[] confFiles = srcConfDir.listFiles();
                         if (confFiles != null) {
                             for (File confFile : confFiles) {
@@ -204,7 +232,8 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                 @Override
                 public void run() {
                     try {
-                        String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
+                        String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(),
+                                "-compress", "false", "-submodule", "true" };
                         ClientEnvExtractor clientEnvExtractor = new ClientEnvExtractor();
                         logger.info("ClientEnvExtractor args: " + Arrays.toString(clientArgs));
                         clientEnvExtractor.execute(clientArgs);
@@ -221,7 +250,8 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             public void run() {
                 logger.info("Start to extract logs.");
                 try {
-                    String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-logPeriod", Integer.toString(period), "-compress", "false", "-submodule", "true" };
+                    String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-logPeriod",
+                            Integer.toString(period), "-compress", "false", "-submodule", "true" };
                     KylinLogExtractor logExtractor = new KylinLogExtractor();
                     logger.info("KylinLogExtractor args: " + Arrays.toString(logsArgs));
                     logExtractor.execute(logsArgs);

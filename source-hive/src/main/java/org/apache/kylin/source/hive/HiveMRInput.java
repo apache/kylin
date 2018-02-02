@@ -177,7 +177,27 @@ public class HiveMRInput implements IMRInput {
         }
 
         protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
-            return JobBuilderSupport.getJobWorkingDir(hdfsWorkingDir, jobFlow.getId());
+
+            String jobWorkingDir = JobBuilderSupport.getJobWorkingDir(hdfsWorkingDir, jobFlow.getId());
+            if (KylinConfig.getInstanceFromEnv().getHiveTableDirCreateFirst()) {
+                // Create work dir to avoid hive create it,
+                // the difference is that the owners are different.
+                checkAndCreateWorkDir(jobWorkingDir);
+            }
+            return jobWorkingDir;
+        }
+
+        private void checkAndCreateWorkDir(String jobWorkingDir) {
+            try {
+                Path path = new Path(jobWorkingDir);
+                FileSystem fileSystem = HadoopUtil.getFileSystem(path);
+                if (!fileSystem.exists(path)) {
+                    logger.info("Create jobWorkDir : " + jobWorkingDir);
+                    fileSystem.mkdirs(path);
+                }
+            } catch (IOException e) {
+                logger.error("Could not create lookUp table dir : " + jobWorkingDir);
+            }
         }
 
         private AbstractExecutable createRedistributeFlatHiveTableStep(String hiveInitStatements, String cubeName) {
@@ -226,8 +246,8 @@ public class HiveMRInput implements IMRInput {
                     createIntermediateTableHql
                             .append("ALTER TABLE " + intermediate + " SET TBLPROPERTIES('auto.purge'='true');\n");
                     createIntermediateTableHql
-                            .append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + ";\n");
-                    hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
+                            .append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + "\n");
+                    hiveCmdBuilder.addStatementWithRedistributeBy(createIntermediateTableHql);
                     hiveViewIntermediateTables = hiveViewIntermediateTables + intermediate + ";";
                 }
             }
@@ -282,6 +302,12 @@ public class HiveMRInput implements IMRInput {
         private long computeRowCount(String database, String table) throws Exception {
             IHiveClient hiveClient = HiveClientFactory.getHiveClient();
             return hiveClient.getHiveTableRows(database, table);
+        }
+
+        private long getDataSize(String database, String table) throws Exception {
+            IHiveClient hiveClient = HiveClientFactory.getHiveClient();
+            long size = hiveClient.getHiveTableMeta(database, table).fileSize;
+            return size;
         }
 
         private void redistributeTable(KylinConfig config, int numReducers) throws IOException {
@@ -349,6 +375,8 @@ public class HiveMRInput implements IMRInput {
                 stepLogger.log("num reducers for RedistributeFlatHiveTableStep = " + numReducers);
 
                 redistributeTable(config, numReducers);
+                long dataSize = getDataSize(database, tableName);
+                getManager().addJobInfo(getId(), ExecutableConstants.HDFS_BYTES_WRITTEN, "" + dataSize);
                 return new ExecuteResult(ExecuteResult.State.SUCCEED, stepLogger.getBufferedLog());
 
             } catch (Exception e) {

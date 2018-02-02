@@ -28,9 +28,8 @@ public class JobBuildRequest {
 
     private boolean force;
 
-    @Deprecated
     private boolean forceMergeEmptySegment = false;
-
+    
     public long getStartTime() {
         return startTime;
     }
@@ -63,12 +62,10 @@ public class JobBuildRequest {
         this.force = force;
     }
 
-    @Deprecated
     public boolean isForceMergeEmptySegment() {
         return forceMergeEmptySegment;
     }
 
-    @Deprecated
     public void setForceMergeEmptySegment(boolean forceMergeEmptySegment) {
         this.forceMergeEmptySegment = forceMergeEmptySegment;
     }

@@ -45,7 +45,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             sub.initConfig(config);
         }
     }
-    
+
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         List<? extends Executable> executables = getTasks();
@@ -60,7 +60,8 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 // the job is paused
                 break;
             } else if (state == ExecutableState.ERROR) {
-                throw new IllegalStateException("invalid subtask state, subtask:" + subTask.getName() + ", state:" + subTask.getStatus());
+                throw new IllegalStateException(
+                        "invalid subtask state, subtask:" + subTask.getName() + ", state:" + subTask.getStatus());
             }
             if (subTask.isRunnable()) {
                 return subTask.execute(context);
@@ -90,7 +91,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         ExecutableManager mgr = getManager();
-        
+
         if (isDiscarded()) {
             setEndTime(System.currentTimeMillis());
             onStatusChange(executableContext, result, ExecutableState.DISCARDED);
@@ -101,18 +102,25 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             List<? extends Executable> jobs = getTasks();
             boolean allSucceed = true;
             boolean hasError = false;
-            boolean hasRunning = false;
             boolean hasDiscarded = false;
             for (Executable task : jobs) {
+                if (task.getStatus() == ExecutableState.RUNNING) {
+                    logger.error(
+                            "There shouldn't be a running subtask[jobId: {}, jobName: {}], \n"
+                                    + "it might cause endless state, will retry to fetch subtask's state.",
+                            task.getId(), task.getName());
+                    boolean retryRet = retryFetchTaskStatus(task);
+                    if (false == retryRet)
+                        hasError = true;
+                }
+
                 final ExecutableState status = task.getStatus();
+
                 if (status == ExecutableState.ERROR) {
                     hasError = true;
                 }
                 if (status != ExecutableState.SUCCEED) {
                     allSucceed = false;
-                }
-                if (status == ExecutableState.RUNNING) {
-                    hasRunning = true;
                 }
                 if (status == ExecutableState.DISCARDED) {
                     hasDiscarded = true;
@@ -126,8 +134,6 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 setEndTime(System.currentTimeMillis());
                 mgr.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
                 onStatusChange(executableContext, result, ExecutableState.ERROR);
-            } else if (hasRunning) {
-                mgr.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
             } else if (hasDiscarded) {
                 setEndTime(System.currentTimeMillis());
                 mgr.updateJobOutput(getId(), ExecutableState.DISCARDED, null, null);
@@ -142,17 +148,12 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     }
 
     protected void onStatusChange(ExecutableContext context, ExecuteResult result, ExecutableState state) {
-        notifyUserStatusChange(context, state);
+        super.notifyUserStatusChange(context, state);
     }
 
     @Override
     public List<AbstractExecutable> getTasks() {
         return subTasks;
-    }
-
-    @Override
-    protected boolean needRetry() {
-        return false;
     }
 
     public final AbstractExecutable getTaskByName(String name) {
@@ -170,6 +171,34 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         this.subTasks.add(executable);
     }
 
+    private boolean retryFetchTaskStatus(Executable task) {
+        boolean hasRunning = false;
+        int retry = 1;
+        while (retry <= 10) {
+            ExecutableState retryState = task.getStatus();
+            if (retryState == ExecutableState.RUNNING) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    logger.error("Failed to Sleep: ", e);
+                }
+                hasRunning = true;
+                logger.error("With {} times retry, it's state is still RUNNING", retry);
+            } else {
+                logger.info("With {} times retry, status is changed to: {}", retry, retryState);
+                hasRunning = false;
+                break;
+            }
+            retry++;
+        }
+        if (hasRunning) {
+            logger.error("Parent task: {} is finished, but it's subtask: {}'s state is still RUNNING \n"
+                    + ", mark parent task failed.", getName(), task.getName());
+            return false;
+        }
+        return true;
+    }
+    
     @Override
     public int getDefaultPriority() {
         return DEFAULT_PRIORITY;

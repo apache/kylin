@@ -52,7 +52,7 @@
 
 <div class="form-group">
     <ul class="row">
-        <li class="col-md-3" style="display: inline">
+        <li class="col-md-2" style="display: inline">
             <label>Status: &nbsp;</label>
             <span class="label label-lg label-danger arrowed" ng-if="curQuery.status=='failed'">Failed</span>
             <span class="label label-lg label-success arrowed" ng-if="curQuery.status=='success'">Success</span>
@@ -63,9 +63,9 @@
             <label>Project: &nbsp;</label>
             <span>{{curQuery.project}}</span>
         </li>
-        <li class="col-md-4 " style="display: inline">
+        <li class="col-md-5 " style="display: inline">
             <label>Cubes: &nbsp;</label>
-            <span>{{curQuery.result.cube}}</span>
+            <span>{{curQuery.result.cube | limitTo:30}}<span ng-if="curQuery.result.cube.length > 30">...  <i class="fa fa-list text-aqua" style="cursor: pointer;" popover-placement="left" popover="{{curQuery.result.cube | formatCubeName}}" popover-title="Cube Info Details"></i></span></span>
         </li>
     </ul>
 </div>
@@ -86,7 +86,7 @@
             <span ng-if="!curQuery.graph.show"><i class="fa fa-bar-chart-o"></i> Visualization</span>
             <span ng-if="curQuery.graph.show"><i class="fa fa-list-ul"></i> Grid</span>
         </button>
-        <a class="btn btn-default btn-xs" href="{{config.service.url}}query/format/csv?sql={{exportSql}}&project={{curQuery.project}}" target="_blank">
+        <a class="btn btn-default btn-xs" ng-if="(userService.hasRole('ROLE_ADMIN')&&isAdminExportAllowed)||(!userService.hasRole('ROLE_ADMIN')&&isNonAdminExportAllowed)" href="{{config.service.url}}query/format/csv?sql={{exportSql}}&project={{curQuery.project}}" target="_blank">
             <i class="fa fa-cloud-download"></i> Export</a>
         <a class="btn btn-default btn-xs" ng-click="refreshUi();">
             <i ng-class="{true: 'fa fa-compress', false: 'fa fa-expand'}[ui.fullScreen]"></i>
@@ -190,7 +190,7 @@
                 <label class="col-sm-2 control-label">Project</label>
 
                 <div class="col-sm-10">
-                    <span>{{curQuery.project}}</span>
+                    <p class="form-control-static">{{curQuery.project}}</p>
                 </div>
             </div>
             <div class="form-group">
@@ -212,7 +212,7 @@
     </div>
     <div class="modal-footer">
         <button class="btn btn-primary" ng-click="cancel()">Close</button>
-        <button class="btn btn-primary" ng-click="saveQuery(curQuery)" ng-disabled="save_query_form.$invalid">Save
+        <button class="btn btn-success" ng-click="saveQuery(curQuery)" ng-disabled="save_query_form.$invalid">Save
         </button>
     </div>
 </script>

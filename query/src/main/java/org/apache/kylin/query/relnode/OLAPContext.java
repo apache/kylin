@@ -27,11 +27,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.calcite.DataContext;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
@@ -55,9 +59,9 @@ public class OLAPContext {
     public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
     public static final String PRM_USER_AUTHEN_INFO = "UserAuthenInfo";
 
-    private static final ThreadLocal<Map<String, String>> _localPrarameters = new ThreadLocal<Map<String, String>>();
+    static final ThreadLocal<Map<String, String>> _localPrarameters = new ThreadLocal<Map<String, String>>();
 
-    private static final ThreadLocal<Map<Integer, OLAPContext>> _localContexts = new ThreadLocal<Map<Integer, OLAPContext>>();
+    static final ThreadLocal<Map<Integer, OLAPContext>> _localContexts = new ThreadLocal<Map<Integer, OLAPContext>>();
 
     public static void setParameters(Map<String, String> parameters) {
         _localPrarameters.set(parameters);
@@ -122,10 +126,12 @@ public class OLAPContext {
     public boolean limitPrecedesAggr = false;
     public boolean afterJoin = false;
     public boolean hasJoin = false;
+    public boolean hasWindow = false;
 
     // cube metadata
     public IRealization realization;
     public RealizationCheck realizationCheck;
+    public boolean fixedModel;
 
     public Set<TblColRef> allColumns = new HashSet<>();
     public List<TblColRef> groupByColumns = new ArrayList<>();
@@ -139,8 +145,8 @@ public class OLAPContext {
     public TupleFilter havingFilter;
     public List<JoinDesc> joins = new LinkedList<>();
     public JoinsTree joinsTree;
-    private List<TblColRef> sortColumns;
-    private List<SQLDigest.OrderEnum> sortOrders;
+    List<TblColRef> sortColumns;
+    List<SQLDigest.OrderEnum> sortOrders;
 
     // rewrite info
     public Map<String, RelDataType> rewriteFields = new HashMap<>();
@@ -154,7 +160,7 @@ public class OLAPContext {
         return (joins.size() == 0) && (groupByColumns.size() == 0) && (aggregations.size() == 0);
     }
 
-    private SQLDigest sqlDigest;
+    SQLDigest sqlDigest;
 
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null)
@@ -203,6 +209,54 @@ public class OLAPContext {
         }
     }
 
+    public void fixModel(DataModelDesc model, Map<String, String> aliasMap) {
+        if (fixedModel)
+            return;
+
+        for (OLAPTableScan tableScan : this.allTableScans) {
+            tableScan.fixColumnRowTypeWithModel(model, aliasMap);
+        }
+        fixedModel = true;
+    }
+
+    public void unfixModel() {
+        if (!fixedModel)
+            return;
+
+        for (OLAPTableScan tableScan : this.allTableScans) {
+            tableScan.unfixColumnRowTypeWithModel();
+        }
+        fixedModel = false;
+    }
+    public void bindVariable(DataContext dataContext) {
+        bindVariable(this.filter, dataContext);
+    }
+
+    private void bindVariable(TupleFilter filter, DataContext dataContext) {
+        if (filter == null) {
+            return;
+        }
+
+        for (TupleFilter childFilter : filter.getChildren()) {
+            bindVariable(childFilter, dataContext);
+        }
+
+        if (filter instanceof CompareTupleFilter && dataContext != null) {
+            CompareTupleFilter compFilter = (CompareTupleFilter) filter;
+            for (Map.Entry<String, Object> entry : compFilter.getVariables().entrySet()) {
+                String variable = entry.getKey();
+                Object value = dataContext.get(variable);
+                if (value != null) {
+                    String str = value.toString();
+                    if (compFilter.getColumn().getType().isDateTimeFamily())
+                        str = String.valueOf(DateFormat.stringToMillis(str));
+
+                    compFilter.bindVariable(variable, str);
+                }
+
+            }
+        }
+    }
     // ============================================================================
 
     public interface IAccessController {

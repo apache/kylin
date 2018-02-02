@@ -25,16 +25,16 @@
         <!--button-->
         <div class="col-xs-5" style="padding-left: 0px;margin-top: 20px;">
             <div class="pull-right">
-              <a class="btn btn-xs btn-primary" tooltip="Load Hive Table"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openModal()"><i class="fa fa-download"></i></a>
-              <a class="btn btn-xs btn-info" tooltip="Load Hive Table From Tree"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openTreeModal()"><i class="fa fa-download"></i></a>
-              <a class="btn btn-xs btn-primary" tooltip="Add Streaming Table"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openStreamingSourceModal()"><i class="fa fa-area-chart"></i></a>
+              <a class="btn btn-xs btn-primary" tooltip="Load Hive Table"  ng-if="userService.hasRole('ROLE_ADMIN')|| hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)"  ng-click="openModal()"><i class="fa fa-download"></i></a>
+              <a class="btn btn-xs btn-info" tooltip="Load Hive Table From Tree"  ng-if="userService.hasRole('ROLE_ADMIN')|| hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)"  ng-click="openTreeModal()"><i class="fa fa-download"></i></a>
+              <a class="btn btn-xs btn-primary" tooltip="Add Streaming Table"  ng-if="userService.hasRole('ROLE_ADMIN')|| hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)"  ng-click="openStreamingSourceModal()"><i class="fa fa-area-chart"></i></a>
             </div>
         </div>
 
     </div>
     <div class="space-4"></div>
     <!--tree-->
-    <div style="width:100%; height:{{window}}px; overflow:auto;">
+    <div style="width:100%; height:{{window}}px; overflow:auto; padding-right:35px;">
         <abn-tree
                 tree-data         = "tableModel.selectedSrcDb"
                 tree-control      = "my_tree"
@@ -63,7 +63,7 @@
       <button class="btn btn-xs btn-primary" ng-if="node.label==''&&node.id==65535" ng-click="showAllClicked($parentNode)">Show All</button>
       {{node.label}}
     </treecontrol>
-    <label> <input type="checkbox" ng-model="$parent.isCalculate" >Calculate column cardinality</label>
+    <label><input type="checkbox" ng-model="isCalculate.val" > Calculate column cardinality</label>
   </div>
 
   <div class="modal-footer">

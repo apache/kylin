@@ -248,7 +248,7 @@ public class DeployUtil {
             sampleDataDeployer.loadSampleData(tablename, tempDirAbsPath);
         }
         
-        //TODO create the view automatically here
+        // create the view automatically here
         sampleDataDeployer.createWrapperView(TABLE_SELLER_TYPE_DIM_TABLE, VIEW_SELLER_TYPE_DIM);
     }
 }

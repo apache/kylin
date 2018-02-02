@@ -18,12 +18,18 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Partitioner;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,32 +40,36 @@ public class FactDistinctColumnPartitioner extends Partitioner<SelfDefineSortabl
     private static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnPartitioner.class);
 
     private Configuration conf;
-    private int hllShardBase = 1;
-
-    @Override
-    public int getPartition(SelfDefineSortableKey skey, Text value, int numReduceTasks) {
-        Text key = skey.getText();
-        if (key.getBytes()[0] == FactDistinctColumnsMapper.MARK_FOR_HLL) {
-            // the last $hllShard reducers are for merging hll
-            Long cuboidId = Bytes.toLong(key.getBytes(), 1, Bytes.SIZEOF_LONG);
-            int shard = cuboidId.hashCode() % hllShardBase;
-            if (shard < 0) {
-                shard += hllShardBase;
-            }
-            return numReduceTasks - shard - 1;
-        } else if (key.getBytes()[0] == FactDistinctColumnsMapper.MARK_FOR_PARTITION_COL) {
-            // the last but one reducer is for partition col
-            return numReduceTasks - hllShardBase - 1;
-        } else {
-            return BytesUtil.readUnsigned(key.getBytes(), 0, 1);
-        }
-    }
+    private FactDistinctColumnsReducerMapping reducerMapping;
 
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        hllShardBase = conf.getInt(BatchConstants.CFG_HLL_SHARD_BASE, 1);
-        logger.info("shard base for hll is " + hllShardBase);
+
+        KylinConfig config;
+        try {
+            config = AbstractHadoopJob.loadKylinPropsAndMetadata();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
+        CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
+
+        reducerMapping = new FactDistinctColumnsReducerMapping(cube,
+                conf.getInt(BatchConstants.CFG_HLL_REDUCER_NUM, 1));
+    }
+
+    @Override
+    public int getPartition(SelfDefineSortableKey skey, Text value, int numReduceTasks) {
+        Text key = skey.getText();
+        if (key.getBytes()[0] == FactDistinctColumnsReducerMapping.MARK_FOR_HLL_COUNTER) {
+            Long cuboidId = Bytes.toLong(key.getBytes(), 1, Bytes.SIZEOF_LONG);
+            return reducerMapping.getReducerIdForCuboidRowCount(cuboidId);
+        } else if (key.getBytes()[0] == FactDistinctColumnsReducerMapping.MARK_FOR_PARTITION_COL) {
+            return reducerMapping.getReducerIdForDatePartitionColumn();
+        } else {
+            return BytesUtil.readUnsigned(key.getBytes(), 0, 1);
+        }
     }
 
     @Override

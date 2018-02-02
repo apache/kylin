@@ -21,9 +21,12 @@ package org.apache.kylin.metadata.cachesync;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.metadata.cachesync.Broadcaster.BroadcastEvent;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Listener;
+import org.apache.kylin.metadata.cachesync.Broadcaster.SyncErrorHandler;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -64,6 +67,7 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
 
         broadcaster.notifyListener("test", Event.UPDATE, "");
 
+        broadcaster.stopAnnounce();
         Broadcaster.staticListenerMap.clear();
     }
 
@@ -90,6 +94,45 @@ public class BroadcasterTest extends LocalFileMetadataTestCase {
 
         broadcaster.notifyNonStaticListener("test", Event.UPDATE, "");
 
+        broadcaster.stopAnnounce();
         Broadcaster.staticListenerMap.clear();
+    }
+
+    @Test
+    public void testAnnounceErrorHandler() throws IOException, InterruptedException {
+        System.setProperty("kylin.server.cluster-servers", "localhost:717");
+        System.setProperty("kylin.metadata.sync-error-handler", MockupErrHandler.class.getName());
+        try {
+            Broadcaster broadcaster = Broadcaster.getInstance(getTestConfig());
+
+            broadcaster.announce("all", "update", "all");
+            
+            for (int i = 0; i < 30 && MockupErrHandler.atom.get() == 0; i++) {
+                Thread.sleep(1000);
+            }
+
+            broadcaster.stopAnnounce();
+            Broadcaster.staticListenerMap.clear();
+        } finally {
+            System.clearProperty("kylin.server.cluster-servers");
+            System.clearProperty("kylin.metadata.sync-error-handler");
+        }
+        
+        Assert.assertTrue(MockupErrHandler.atom.get() > 0);
+    }
+    
+    public static class MockupErrHandler implements SyncErrorHandler {
+        static AtomicInteger atom = new AtomicInteger();
+        
+        @Override
+        public void init(Broadcaster broadcaster) {
+        }
+
+        @Override
+        public void handleAnnounceError(String targetNode, RestClient restClient, BroadcastEvent event) {
+            Assert.assertEquals("localhost:717", targetNode);
+            atom.incrementAndGet();
+        }
+        
     }
 }

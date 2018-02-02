@@ -26,11 +26,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -52,6 +55,7 @@ public class KylinConfig extends KylinConfigBase {
      * Kylin properties file name
      */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
+    public static final String KYLIN_DEFAULT_CONF_PROPERTIES_FILE = "kylin-defaults.properties";
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
     // static cached instances
@@ -250,7 +254,7 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public static KylinConfig createKylinConfig(KylinConfig another) {
-        return createKylinConfig(another.getAllProperties());
+        return createKylinConfig(another.getRawAllProperties());
     }
 
     public static KylinConfig createKylinConfig(Properties prop) {
@@ -382,6 +386,8 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     // ============================================================================
+    
+    Map<Class, Object> managersCache = new ConcurrentHashMap<>();
 
     private KylinConfig() {
         super();
@@ -391,18 +397,53 @@ public class KylinConfig extends KylinConfigBase {
         super(props, force);
     }
 
+    public <T> T getManager(Class<T> clz) {
+        KylinConfig base = base();
+        if (base != this)
+            return base.getManager(clz);
+        
+        Object mgr = managersCache.get(clz);
+        if (mgr != null)
+            return (T) mgr;
+        
+        synchronized (this) {
+            mgr = managersCache.get(clz);
+            if (mgr != null)
+                return (T) mgr;
+            
+            try {
+                // new manager via static Manager.newInstance()
+                Method method = clz.getDeclaredMethod("newInstance", KylinConfig.class);
+                method.setAccessible(true); // override accessibility
+                mgr = method.invoke(null, this);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            managersCache.put(clz, mgr);
+        }
+        return (T) mgr;
+    }
+    
+    public void clearManagers() {
+        KylinConfig base = base();
+        if (base != this) {
+            base.clearManagers();
+            return;
+        }
+        
+        managersCache.clear();
+    }
+
     public Properties exportToProperties() {
         Properties all = getAllProperties();
         Properties copy = new Properties();
         copy.putAll(all);
         return copy;
     }
-    
-    public String exportToString() throws IOException {
-        Properties allProps = getAllProperties();
-        OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
 
-        final StringBuilder sb = new StringBuilder();
+    public String exportAllToString() throws IOException {
+        final Properties allProps = getProperties(null);
+        final OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
 
         for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
             String key = entry.getKey().toString();
@@ -413,7 +454,27 @@ public class KylinConfig extends KylinConfigBase {
                 orderedProperties.setProperty(key, value);
             }
         }
+
+        final StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
+            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+        }
+        return sb.toString();
+
+    }
+
+    public String exportToString(Collection<String> propertyKeys) throws IOException {
+        Properties filteredProps = getProperties(propertyKeys);
+        OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
+
+        for (String key : propertyKeys) {
+            if (!filteredProps.containsKey(key)) {
+                filteredProps.put(key, orderedProperties.getProperty(key, ""));
+            }
+        }
+
+        final StringBuilder sb = new StringBuilder();
+        for (Map.Entry<Object, Object> entry : filteredProps.entrySet()) {
             sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
         }
         return sb.toString();

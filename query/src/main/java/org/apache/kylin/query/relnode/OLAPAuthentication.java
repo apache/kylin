@@ -23,8 +23,8 @@ import java.util.ArrayList;
  * Created by wangcheng on 7/8/16.
  */
 public class OLAPAuthentication {
-    private String username;
-    private ArrayList<String> roles = new ArrayList<>();
+     String username;
+     ArrayList<String> roles = new ArrayList<>();
 
     public void parseUserInfo(String userInfo) {
         String[] info = userInfo.split(",");

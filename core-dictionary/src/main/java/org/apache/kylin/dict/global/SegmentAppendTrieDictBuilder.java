@@ -43,6 +43,11 @@ public class SegmentAppendTrieDictBuilder implements IDictionaryBuilder {
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         int maxEntriesPerSlice = config.getAppendDictEntrySize();
+        if (hdfsDir == null) {
+            //build in Kylin job server
+            hdfsDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
+        }
+
         //use UUID to make each segment dict in different HDFS dir and support concurrent build
         //use timestamp to make the segment dict easily to delete
         String baseDir = hdfsDir + "resources/SegmentDict" + dictInfo.getResourceDir() + "/" + UUID.randomUUID().toString() + "_" + System.currentTimeMillis()+ "/";

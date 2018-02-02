@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.ModifiedOrder;
 import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
@@ -40,8 +42,8 @@ import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
-import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.util.ValidateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,13 +63,6 @@ public class ModelService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelService.class);
 
-    public static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
-            .toCharArray();
-
-    @Autowired
-    @Qualifier("accessService")
-    private AccessService accessService;
-
     @Autowired
     @Qualifier("cubeMgmtService")
     private CubeService cubeService;
@@ -76,7 +71,7 @@ public class ModelService extends BasicService {
     private AclEvaluate aclEvaluate;
 
     public boolean isModelNameValidate(final String modelName) {
-        if (StringUtils.isEmpty(modelName) || !StringUtils.containsOnly(modelName, VALID_MODELNAME)) {
+        if (StringUtils.isEmpty(modelName) || !ValidateUtil.isAlphanumericUnderscore(modelName)) {
             return false;
         }
         for (DataModelDesc model : getDataModelManager().getModels()) {
@@ -111,6 +106,8 @@ public class ModelService extends BasicService {
             }
         }
 
+        Collections.sort(filterModels, new ModifiedOrder());
+
         return filterModels;
     }
 
@@ -132,15 +129,14 @@ public class ModelService extends BasicService {
 
     public DataModelDesc createModelDesc(String projectName, DataModelDesc desc) throws IOException {
         aclEvaluate.hasProjectWritePermission(getProjectManager().getProject(projectName));
+        Message msg = MsgPicker.getMsg();
+        if (getDataModelManager().getDataModelDesc(desc.getName()) != null) {
+            throw new BadRequestException(String.format(msg.getDUPLICATE_MODEL_NAME(), desc.getName()));
+        }
+
         DataModelDesc createdDesc = null;
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         createdDesc = getDataModelManager().createDataModelDesc(desc, projectName, owner);
-
-        if (!desc.isDraft()) {
-            accessService.init(createdDesc, AclPermission.ADMINISTRATION);
-            ProjectInstance project = getProjectManager().getProject(projectName);
-            accessService.inherit(createdDesc, project);
-        }
         return createdDesc;
     }
 
@@ -162,8 +158,6 @@ public class ModelService extends BasicService {
         }
 
         getDataModelManager().dropModel(desc);
-
-        accessService.clean(desc, true);
     }
 
     public boolean isTableInAnyModel(TableDesc table) {
@@ -278,12 +272,12 @@ public class ModelService extends BasicService {
     private String checkIfBreakExistingCubes(DataModelDesc dataModelDesc, String project) throws IOException {
         String modelName = dataModelDesc.getName();
         List<CubeInstance> cubes = cubeService.listAllCubes(null, project, modelName, true);
-        DataModelDesc originDataModelDesc = listAllModels(modelName, project, true).get(0);
+        List<DataModelDesc> historyModels = listAllModels(modelName, project, true);
 
         StringBuilder checkRet = new StringBuilder();
-        if (cubes != null && cubes.size() != 0) {
+        if (cubes != null && cubes.size() != 0 && !historyModels.isEmpty()) {
             dataModelDesc.init(getConfig(), getTableManager().getAllTablesMap(project),
-                    getDataModelManager().listDataModels());
+                    getDataModelManager().getModels(project), false);
 
             List<String> curModelDims = getModelCols(dataModelDesc);
             List<String> curModelMeasures = getModelMeasures(dataModelDesc);
@@ -312,6 +306,7 @@ public class ModelService extends BasicService {
                 checkRet.append("\r\n");
             }
 
+            DataModelDesc originDataModelDesc = historyModels.get(0);
             if (!dataModelDesc.getRootFactTable().equals(originDataModelDesc.getRootFactTable()))
                 checkRet.append("Root fact table can't be modified. \r\n");
 
@@ -335,13 +330,14 @@ public class ModelService extends BasicService {
             logger.info("Model name should not be empty.");
             throw new BadRequestException(msg.getEMPTY_MODEL_NAME());
         }
-        if (!StringUtils.containsOnly(modelName, VALID_MODELNAME)) {
-            logger.info("Invalid Model name {}, only letters, numbers and underline supported.", modelDesc.getName());
+        if (!ValidateUtil.isAlphanumericUnderscore(modelName)) {
+            logger.info("Invalid model name {}, only letters, numbers and underscore supported.", modelDesc.getName());
             throw new BadRequestException(String.format(msg.getINVALID_MODEL_NAME(), modelName));
         }
     }
 
     public DataModelDesc updateModelToResourceStore(DataModelDesc modelDesc, String projectName) throws IOException {
+
         aclEvaluate.checkProjectWritePermission(projectName);
         Message msg = MsgPicker.getMsg();
 
@@ -404,7 +400,7 @@ public class ModelService extends BasicService {
             RootPersistentEntity e = d.getEntity();
             if (e instanceof DataModelDesc) {
                 DataModelDesc m = (DataModelDesc) e;
-                if (modelName == null || modelName.equals(m.getName()))
+                if (StringUtils.isEmpty(modelName) || modelName.equals(m.getName()))
                     result.add(d);
             }
         }

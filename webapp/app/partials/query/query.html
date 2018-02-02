@@ -19,9 +19,9 @@
 <div class="page-header" style="height: 50px;">
     <!--Project-->
     <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
-        <div class="form-group" ng-if="userService.hasRole('ROLE_MODELER')">
+        <div class="form-group" >
             <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-          <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_MODELER')" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+          <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
                 <i class="fa fa-plus"></i>
             </a>
         </div>
@@ -41,7 +41,7 @@
                     <a ng-click="mainPanel='saved';listSavedQueries()" style="cursor: pointer">Saved Queries</a>
                 </li>
                 <li class="{{mainPanel=='cached'?'active':''}}">
-                    <a ng-click="mainPanel='cached'" style="cursor: pointer">Query History</a>
+                    <a ng-click="mainPanel='cached';listCachedQueries()" style="cursor: pointer">Query History</a>
                 </li>
             </ul>
 
@@ -63,12 +63,13 @@
                     </p>
                     <div class="pull-left">
                         <h4>
-                            Project: <span class="label label-info">{{projectModel.selectedProject}}</span>
+                            Project: <span class="label label-info">{{projectModel.getSelectedProject()}}</span>
                         </h4>
                     </div>
                     <div class="pull-right">
+                        <input type="checkbox" ng-model="hasLimit" ng-change="changeLimit()">
                         <label>LIMIT</label>
-                        <input type="text" style="width:100px;" class="inline form-control" ng-model="rowsPerPage" ng-pattern="/^\d+$/" ng-blur="checkLimit()" />
+                        <input type="text" style="width:100px;" class="inline form-control" ng-model="rowsPerPage" ng-pattern="/^\d+$/" ng-blur="checkLimit()" ng-disabled="!hasLimit" />
                         <button class="btn btn-sm btn-primary" ng-click="submitQuery()" ng-disabled="query_panel.$invalid">
                             Submit
                         </button>
@@ -133,16 +134,16 @@
                 </table>
                 <pagination total-items="savedQueries.length" page="savedQueries.curPage"
                     items-per-page="savedQueries.perPage"
-                    max-size="5" class="pull-right"></pagination>
+                    max-size="5" class="pull-right" first-text="First" last-text="Last" boundary-links="true" rotate="false"></pagination>
             </div>
 
             <div ng-show="mainPanel=='cached'">
-                <div ng-if="cachedQueries.length==0">
+                <div ng-if="cachedFilterQueries.length==0">
                     <div no-result text="No Query History."></div>
                 </div>
                 <table class="table table-hover table-striped list">
-                    <tr ng-repeat="query in cachedQueries | reverse track by $index"
-                        ng-if="$index >= (cachedQueries.curPage-1)*cachedQueries.perPage && $index < cachedQueries.curPage*cachedQueries.perPage">
+                    <tr ng-repeat="query in cachedFilterQueries | reverse track by $index"
+                        ng-if="$index >= (cachedFilterQueries.curPage-1)*cachedFilterQueries.perPage && $index < cachedFilterQueries.curPage*cachedFilterQueries.perPage">
                         <td>
                             <span style="color: #808080;line-height: 25px">Queried At: {{query.savedAt}} </span><span ng-if="query.project">in Project: {{query.project}}</span>
 
@@ -176,8 +177,8 @@
                         </td>
                     </tr>
                 </table>
-                <pagination total-items="cachedQueries.length" items-per-page="cachedQueries.perPage" max-size="5"
-                    page="cachedQueries.curPage" class="pull-right"></pagination>
+                <pagination total-items="cachedFilterQueries.length" items-per-page="cachedFilterQueries.perPage" max-size="5"
+                    page="cachedFilterQueries.curPage" class="pull-right" first-text="First" last-text="Last" boundary-links="true" rotate="false"></pagination>
             </div>
         </div>
 

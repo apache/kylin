@@ -44,6 +44,7 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -83,13 +84,17 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
     @Test
     public void testSSBCubeMore() throws Exception {
         testBuild("ssb", //
-                LOCALMETA_TEST_DATA + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv", 7000, 4);
+                LOCALMETA_TEST_DATA + "/data/" + MetadataConstants.KYLIN_INTERMEDIATE_PREFIX
+                        + "ssb_19920101000000_19920201000000.csv",
+                7000, 4);
     }
 
     @Test
     public void testSSBCube() throws Exception {
         testBuild("ssb", //
-                LOCALMETA_TEST_DATA + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv", 1000, 1);
+                LOCALMETA_TEST_DATA + "/data/" + MetadataConstants.KYLIN_INTERMEDIATE_PREFIX
+                        + "ssb_19920101000000_19920201000000.csv",
+                1000, 1);
     }
 
     public void testBuild(String cubeName, String flatTable, int nInpRows, int nThreads) throws Exception {

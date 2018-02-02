@@ -56,7 +56,6 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
         BYTES
     }
 
-    protected boolean collectStatistics = false;
     protected int nRowKey;
     private Integer[][] allCuboidsBitSet = null;
     private HLLCounter[] allCuboidsHLL = null;
@@ -68,8 +67,6 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
     private CuboidStatCalculator[] cuboidStatCalculators;
 
     private static final Text EMPTY_TEXT = new Text();
-    public static final byte MARK_FOR_PARTITION_COL = (byte) 0xFE;
-    public static final byte MARK_FOR_HLL = (byte) 0xFF;
 
     private int partitionColumnIndex = -1;
     private boolean needFetchPartitionCol = true;
@@ -80,78 +77,76 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
     protected void doSetup(Context context) throws IOException {
         super.doSetup(context);
         tmpbuf = ByteBuffer.allocate(4096);
-        collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
-        if (collectStatistics) {
-            samplingPercentage = Integer
-                    .parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
-            nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
 
-            Set<Long> cuboidIdSet = Sets.newHashSet(cubeSeg.getCuboidScheduler().getAllCuboidIds());
-            if (StatisticsDecisionUtil.isAbleToOptimizeCubingPlan(cubeSeg)) {
-                // For cube planner, for every prebuilt cuboid, its related row count stats should be calculated
-                // If the precondition for trigger cube planner phase one is satisfied, we need to calculate row count stats for mandatory cuboids.
-                cuboidIdSet.addAll(cubeSeg.getCubeDesc().getMandatoryCuboids());
-            }
-            cuboidIds = cuboidIdSet.toArray(new Long[cuboidIdSet.size()]);
-            allCuboidsBitSet = CuboidUtil.getCuboidBitSet(cuboidIds, nRowKey);
+        samplingPercentage = Integer
+                .parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
+        nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
 
-            allCuboidsHLL = new HLLCounter[cuboidIds.length];
-            for (int i = 0; i < cuboidIds.length; i++) {
-                allCuboidsHLL[i] = new HLLCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision(), RegisterType.DENSE);
+        Set<Long> cuboidIdSet = Sets.newHashSet(cubeSeg.getCuboidScheduler().getAllCuboidIds());
+        if (StatisticsDecisionUtil.isAbleToOptimizeCubingPlan(cubeSeg)) {
+            // For cube planner, for every prebuilt cuboid, its related row count stats should be calculated
+            // If the precondition for trigger cube planner phase one is satisfied, we need to calculate row count stats for mandatory cuboids.
+            cuboidIdSet.addAll(cubeSeg.getCubeDesc().getMandatoryCuboids());
+        }
+        cuboidIds = cuboidIdSet.toArray(new Long[cuboidIdSet.size()]);
+        allCuboidsBitSet = CuboidUtil.getCuboidBitSet(cuboidIds, nRowKey);
+
+        allCuboidsHLL = new HLLCounter[cuboidIds.length];
+        for (int i = 0; i < cuboidIds.length; i++) {
+            allCuboidsHLL[i] = new HLLCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision(), RegisterType.DENSE);
+        }
+
+        TblColRef partitionColRef = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
+        if (partitionColRef != null) {
+            partitionColumnIndex = intermediateTableDesc.getColumnIndex(partitionColRef);
+        }
+
+        // check whether need fetch the partition col values
+        if (partitionColumnIndex < 0) {
+            // if partition col not on cube, no need
+            needFetchPartitionCol = false;
+        } else {
+            needFetchPartitionCol = true;
+        }
+        //for KYLIN-2518 backward compatibility
+        boolean isUsePutRowKeyToHllNewAlgorithm;
+        if (KylinVersion.isBefore200(cubeDesc.getVersion())) {
+            isUsePutRowKeyToHllNewAlgorithm = false;
+            logger.info("Found KylinVersion : {}. Use old algorithm for cuboid sampling.", cubeDesc.getVersion());
+        } else {
+            isUsePutRowKeyToHllNewAlgorithm = true;
+            logger.info(
+                    "Found KylinVersion : {}. Use new algorithm for cuboid sampling. About the details of the new algorithm, please refer to KYLIN-2518",
+                    cubeDesc.getVersion());
+        }
+
+        int calculatorNum = getStatsThreadNum(cuboidIds.length);
+        cuboidStatCalculators = new CuboidStatCalculator[calculatorNum];
+        int splitSize = cuboidIds.length / calculatorNum;
+        if (splitSize <= 0) {
+            splitSize = 1;
+        }
+        for (int i = 0; i < calculatorNum; i++) {
+            HLLCounter[] cuboidsHLLSplit;
+            Integer[][] cuboidsBitSetSplit;
+            Long[] cuboidIdSplit;
+            int start = i * splitSize;
+            if (start >= cuboidIds.length) {
+                break;
+            }
+            int end = (i + 1) * splitSize;
+            if (i == calculatorNum - 1) {// last split
+                end = cuboidIds.length;
             }
 
-            TblColRef partitionColRef = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
-            if (partitionColRef != null) {
-                partitionColumnIndex = intermediateTableDesc.getColumnIndex(partitionColRef);
-            }
-
-            // check whether need fetch the partition col values
-            if (partitionColumnIndex < 0) {
-                // if partition col not on cube, no need
-                needFetchPartitionCol = false;
-            } else {
-                needFetchPartitionCol = true;
-            }
-            //for KYLIN-2518 backward compatibility
-            boolean isUsePutRowKeyToHllNewAlgorithm;
-            if (KylinVersion.isBefore200(cubeDesc.getVersion())) {
-                isUsePutRowKeyToHllNewAlgorithm = false;
-                logger.info("Found KylinVersion : {}. Use old algorithm for cuboid sampling.", cubeDesc.getVersion());
-            } else {
-                isUsePutRowKeyToHllNewAlgorithm = true;
-                logger.info(
-                        "Found KylinVersion : {}. Use new algorithm for cuboid sampling. About the details of the new algorithm, please refer to KYLIN-2518",
-                        cubeDesc.getVersion());
-            }
-
-            int calculatorNum = getStatsThreadNum(cuboidIds.length);
-            cuboidStatCalculators = new CuboidStatCalculator[calculatorNum];
-            int splitSize = cuboidIds.length / calculatorNum;
-            if (splitSize <= 0) {
-                splitSize = 1;
-            }
-            for (int i = 0; i < calculatorNum; i++) {
-                HLLCounter[] cuboidsHLLSplit;
-                Integer[][] cuboidsBitSetSplit;
-                Long[] cuboidIdSplit;
-                int start = i * splitSize;
-                if (start >= cuboidIds.length) {
-                    break;
-                }
-                int end = (i + 1) * splitSize;
-                if (i == calculatorNum - 1) {// last split
-                    end = cuboidIds.length;
-                }
-
-                cuboidsHLLSplit = Arrays.copyOfRange(allCuboidsHLL, start, end);
-                cuboidsBitSetSplit = Arrays.copyOfRange(allCuboidsBitSet, start, end);
-                cuboidIdSplit = Arrays.copyOfRange(cuboidIds, start, end);
-                CuboidStatCalculator calculator = new CuboidStatCalculator(i,
-                        intermediateTableDesc.getRowKeyColumnIndexes(), cuboidIdSplit, cuboidsBitSetSplit,
-                        isUsePutRowKeyToHllNewAlgorithm, cuboidsHLLSplit);
-                cuboidStatCalculators[i] = calculator;
-                calculator.start();
-            }
+            cuboidsHLLSplit = Arrays.copyOfRange(allCuboidsHLL, start, end);
+            cuboidsBitSetSplit = Arrays.copyOfRange(allCuboidsBitSet, start, end);
+            cuboidIdSplit = Arrays.copyOfRange(cuboidIds, start, end);
+            CuboidStatCalculator calculator = new CuboidStatCalculator(i,
+                    intermediateTableDesc.getRowKeyColumnIndexes(), cuboidIdSplit, cuboidsBitSetSplit,
+                    isUsePutRowKeyToHllNewAlgorithm, cuboidsHLLSplit);
+            cuboidStatCalculators[i] = calculator;
+            calculator.start();
         }
     }
 
@@ -182,16 +177,8 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
                 if (fieldValue == null)
                     continue;
 
-                int reducerIndex;
-                if (uhcIndex[i] == 0) {
-                    //for the normal dictionary column
-                    reducerIndex = columnIndexToReducerBeginId.get(i);
-                } else {
-                    //for the uhc
-                    reducerIndex = columnIndexToReducerBeginId.get(i)
-                            + (fieldValue.hashCode() & 0x7fffffff) % uhcReducerCount;
-                }
-
+                int reducerIndex = reducerMapping.getReducerIdForDictCol(i, fieldValue);
+                
                 tmpbuf.clear();
                 byte[] valueBytes = Bytes.toBytes(fieldValue);
                 int size = valueBytes.length + 1;
@@ -213,26 +200,24 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
                 }
             }
 
-            if (collectStatistics) {
-                if (rowCount % 100 < samplingPercentage) {
-                    putRowKeyToHLL(row);
-                }
+            if (rowCount % 100 < samplingPercentage) {
+                putRowKeyToHLL(row);
+            }
 
-                if (needFetchPartitionCol == true) {
-                    String fieldValue = row[partitionColumnIndex];
-                    if (fieldValue != null) {
-                        tmpbuf.clear();
-                        byte[] valueBytes = Bytes.toBytes(fieldValue);
-                        int size = valueBytes.length + 1;
-                        if (size >= tmpbuf.capacity()) {
-                            tmpbuf = ByteBuffer.allocate(countNewSize(tmpbuf.capacity(), size));
-                        }
-                        tmpbuf.put(MARK_FOR_PARTITION_COL);
-                        tmpbuf.put(valueBytes);
-                        outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
-                        sortableKey.init(outputKey, (byte) 0);
-                        context.write(sortableKey, EMPTY_TEXT);
+            if (needFetchPartitionCol == true) {
+                String fieldValue = row[partitionColumnIndex];
+                if (fieldValue != null) {
+                    tmpbuf.clear();
+                    byte[] valueBytes = Bytes.toBytes(fieldValue);
+                    int size = valueBytes.length + 1;
+                    if (size >= tmpbuf.capacity()) {
+                        tmpbuf = ByteBuffer.allocate(countNewSize(tmpbuf.capacity(), size));
                     }
+                    tmpbuf.put((byte) FactDistinctColumnsReducerMapping.MARK_FOR_PARTITION_COL);
+                    tmpbuf.put(valueBytes);
+                    outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
+                    sortableKey.init(outputKey, (byte) 0);
+                    context.write(sortableKey, EMPTY_TEXT);
                 }
             }
             rowCount++;
@@ -256,29 +241,27 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
 
     @Override
     protected void doCleanup(Context context) throws IOException, InterruptedException {
-        if (collectStatistics) {
-            ByteBuffer hllBuf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
-            // output each cuboid's hll to reducer, key is 0 - cuboidId
-            for (CuboidStatCalculator cuboidStatCalculator : cuboidStatCalculators) {
-                cuboidStatCalculator.waitForCompletion();
-            }
-            for (CuboidStatCalculator cuboidStatCalculator : cuboidStatCalculators) {
-                Long[] cuboidIds = cuboidStatCalculator.getCuboidIds();
-                HLLCounter[] cuboidsHLL = cuboidStatCalculator.getHLLCounters();
-                HLLCounter hll;
+        ByteBuffer hllBuf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
+        // output each cuboid's hll to reducer, key is 0 - cuboidId
+        for (CuboidStatCalculator cuboidStatCalculator : cuboidStatCalculators) {
+            cuboidStatCalculator.waitForCompletion();
+        }
+        for (CuboidStatCalculator cuboidStatCalculator : cuboidStatCalculators) {
+            Long[] cuboidIds = cuboidStatCalculator.getCuboidIds();
+            HLLCounter[] cuboidsHLL = cuboidStatCalculator.getHLLCounters();
+            HLLCounter hll;
 
-                for (int i = 0; i < cuboidIds.length; i++) {
-                    hll = cuboidsHLL[i];
-                    tmpbuf.clear();
-                    tmpbuf.put(MARK_FOR_HLL); // one byte
-                    tmpbuf.putLong(cuboidIds[i]);
-                    outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
-                    hllBuf.clear();
-                    hll.writeRegisters(hllBuf);
-                    outputValue.set(hllBuf.array(), 0, hllBuf.position());
-                    sortableKey.init(outputKey, (byte) 0);
-                    context.write(sortableKey, outputValue);
-                }
+            for (int i = 0; i < cuboidIds.length; i++) {
+                hll = cuboidsHLL[i];
+                tmpbuf.clear();
+                tmpbuf.put((byte) FactDistinctColumnsReducerMapping.MARK_FOR_HLL_COUNTER); // one byte
+                tmpbuf.putLong(cuboidIds[i]);
+                outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
+                hllBuf.clear();
+                hll.writeRegisters(hllBuf);
+                outputValue.set(hllBuf.array(), 0, hllBuf.position());
+                sortableKey.init(outputKey, (byte) 0);
+                context.write(sortableKey, outputValue);
             }
         }
     }

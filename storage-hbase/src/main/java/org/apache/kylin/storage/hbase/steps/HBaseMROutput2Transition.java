@@ -67,7 +67,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
 
             @Override
             public void addStepPhase2_BuildDictionary(DefaultChainedExecutable jobFlow) {
-                jobFlow.addTask(steps.createCreateHTableStepWithStats(jobFlow.getId()));
+                jobFlow.addTask(steps.createCreateHTableStep(jobFlow.getId()));
             }
 
             @Override
@@ -129,7 +129,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
 
             @Override
             public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
-                jobFlow.addTask(steps.createCreateHTableStepWithStats(jobFlow.getId()));
+                jobFlow.addTask(steps.createCreateHTableStep(jobFlow.getId()));
             }
 
             @Override
@@ -206,7 +206,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
 
             @Override
             public void addStepPhase2_CreateHTable(DefaultChainedExecutable jobFlow) {
-                jobFlow.addTask(steps.createCreateHTableStepWithStats(jobFlow.getId(), CuboidModeEnum.RECOMMEND));
+                jobFlow.addTask(steps.createCreateHTableStep(jobFlow.getId(), CuboidModeEnum.RECOMMEND));
             }
 
             @Override

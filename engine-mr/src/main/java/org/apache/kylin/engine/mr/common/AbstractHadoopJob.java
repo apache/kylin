@@ -59,6 +59,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
@@ -108,9 +109,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_HTABLE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_HTABLE_NAME)
             .hasArg().isRequired(true).withDescription("HTable name").create(BatchConstants.ARG_HTABLE_NAME);
 
-    protected static final Option OPTION_STATISTICS_ENABLED = OptionBuilder
-            .withArgName(BatchConstants.ARG_STATS_ENABLED).hasArg().isRequired(false)
-            .withDescription("Statistics enabled").create(BatchConstants.ARG_STATS_ENABLED);
     protected static final Option OPTION_STATISTICS_OUTPUT = OptionBuilder.withArgName(BatchConstants.ARG_STATS_OUTPUT)
             .hasArg().isRequired(false).withDescription("Statistics output").create(BatchConstants.ARG_STATS_OUTPUT);
     protected static final Option OPTION_STATISTICS_SAMPLING_PERCENT = OptionBuilder
@@ -269,6 +267,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         // for KylinJobMRLibDir
         String mrLibDir = kylinConf.getKylinJobMRLibDir();
+        logger.trace("MR additional lib dir: " + mrLibDir);
         StringUtil.appendWithSeparator(kylinDependency, mrLibDir);
 
         setJobTmpJarsAndFiles(job, kylinDependency.toString());
@@ -298,7 +297,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         if (StringUtils.isBlank(kylinDependency))
             return;
 
-        String[] fNameList = kylinDependency.split(",");
+        logger.trace("setJobTmpJarsAndFiles: " + kylinDependency);
 
         try {
             Configuration jobConf = job.getConfiguration();
@@ -308,7 +307,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             StringBuilder jarList = new StringBuilder();
             StringBuilder fileList = new StringBuilder();
 
-            for (String fileName : fNameList) {
+            for (String fileName : kylinDependency.split(",")) {
                 Path p = new Path(fileName);
                 if (p.isAbsolute() == false) {
                     logger.warn("The directory of kylin dependency '" + fileName + "' is not absolute, skip");
@@ -325,6 +324,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 }
 
                 if (fs.getFileStatus(p).isDirectory()) {
+                    logger.trace("Expanding depedency directory: " + p);
                     appendTmpDir(job, fs, p, jarList, fileList);
                     continue;
                 }
@@ -461,7 +461,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
             logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            kylinConfig.setMetadataUrl(metaDir.getAbsolutePath());
+            Map<String, String> paramsMap = new HashMap<>();
+            paramsMap.put("path", metaDir.getAbsolutePath());
+            StorageURL storageURL = new StorageURL(kylinConfig.getMetadataUrl().getIdentifier(), "ifile", paramsMap);
+            kylinConfig.setMetadataUrl(storageURL.toString());
             return kylinConfig;
         } else {
             return KylinConfig.getInstanceFromEnv();
@@ -470,7 +473,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     public static KylinConfig loadKylinConfigFromHdfs(SerializableConfiguration conf, String uri) {
         HadoopUtil.setCurrentConfiguration(conf.get());
+        return loadKylinConfigFromHdfs(uri);
+    }
 
+    public static KylinConfig loadKylinConfigFromHdfs(String uri) {
         if (uri == null)
             throw new IllegalArgumentException("meta url should not be null");
 
@@ -480,8 +486,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         logger.info("Ready to load KylinConfig from uri: {}", uri);
         KylinConfig config;
         FileSystem fs;
-        int cut = uri.indexOf('@');
-        String realHdfsPath = uri.substring(0, cut) + "/" + KylinConfig.KYLIN_CONF_PROPERTIES_FILE;
+        String realHdfsPath = StorageURL.valueOf(uri).getParameter("path") + "/" + KylinConfig.KYLIN_CONF_PROPERTIES_FILE;
         try {
             fs = HadoopUtil.getFileSystem(realHdfsPath);
             InputStream is = fs.open(new Path(realHdfsPath));
@@ -692,4 +697,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return false;
     }
 
+    @Override
+    public void setConf(Configuration conf) {
+        Configuration healSickConf = HadoopUtil.healSickConfig(conf);
+        super.setConf(healSickConf);
+    }
 }

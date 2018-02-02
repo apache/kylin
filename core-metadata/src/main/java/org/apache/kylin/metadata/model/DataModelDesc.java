@@ -125,6 +125,11 @@ public class DataModelDesc extends RootPersistentEntity {
         return config;
     }
 
+    @Override
+    public String resourceName() {
+        return name;
+    }
+
     public String getName() {
         return name;
     }
@@ -333,7 +338,16 @@ public class DataModelDesc extends RootPersistentEntity {
         throw new IllegalArgumentException("Table not found by " + tableIdentity + " in model " + name);
     }
 
-    public void init(KylinConfig config, Map<String, TableDesc> tables, List<DataModelDesc> otherModels) {
+    /**
+     * @param isOnlineModel will affect the exposed view of project specific tables
+     */
+    public void init(KylinConfig config, Map<String, TableDesc> tables, List<DataModelDesc> otherModels,
+            boolean isOnlineModel) {
+        initInternal(config, tables, otherModels, isOnlineModel);
+    }
+
+    public void initInternal(KylinConfig config, Map<String, TableDesc> tables, List<DataModelDesc> otherModels,
+            boolean isOnlineModel) {
         this.config = config;
 
         initJoinTablesForUpgrade();
@@ -347,7 +361,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
         boolean reinit = validate();
         if (reinit) { // model slightly changed by validate() and must init() again
-            init(config, tables, otherModels);
+            initInternal(config, tables, otherModels, isOnlineModel);
         }
     }
 
@@ -398,11 +412,12 @@ public class DataModelDesc extends RootPersistentEntity {
             alias = alias.toUpperCase();
             join.setAlias(alias);
 
-            TableRef ref = new TableRef(this, alias, tableDesc, true);
+            boolean isLookup = join.getKind() == TableKind.LOOKUP;
+            TableRef ref = new TableRef(this, alias, tableDesc, isLookup);
 
             join.setTableRef(ref);
             addAlias(ref);
-            (join.getKind() == TableKind.LOOKUP ? lookupTableRefs : factTableRefs).add(ref);
+            (isLookup ? lookupTableRefs : factTableRefs).add(ref);
         }
 
         tableNameMap.putAll(aliasMap);
@@ -608,7 +623,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
         // validate PK/FK are in dimensions
         boolean pkfkDimAmended = false;
-        for (Chain chain : joinsTree.tableChains.values()) {
+        for (Chain chain : joinsTree.getTableChains().values()) {
             pkfkDimAmended = validatePkFkDim(chain.join, mcols) || pkfkDimAmended;
         }
         return pkfkDimAmended;
@@ -657,6 +672,13 @@ public class DataModelDesc extends RootPersistentEntity {
         }
 
         return false;
+    }
+
+    public boolean isStandardPartitionedDateColumn() {
+        if (StringUtils.isBlank(getPartitionDesc().getPartitionDateFormat())) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -713,7 +735,7 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public String getResourcePath() {
-        return concatResourcePath(name);
+        return concatResourcePath(resourceName());
     }
 
     public static String concatResourcePath(String descName) {

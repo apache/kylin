@@ -42,7 +42,7 @@ public class TableRef implements Serializable {
         this.columns = Maps.newLinkedHashMap();
 
         for (ColumnDesc col : table.getColumns()) {
-            if (!filterOutComputedColumns || !col.isComputedColumnn()) {
+            if (!filterOutComputedColumns || !col.isComputedColumn()) {
                 columns.put(col.getName(), new TblColRef(this, col));
             }
         }

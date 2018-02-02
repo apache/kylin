@@ -19,7 +19,6 @@
 package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -31,13 +30,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
@@ -79,12 +73,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
         options.addOption(OPTION_CUBE_NAME);
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_PARTITION_FILE_PATH);
-        options.addOption(OPTION_STATISTICS_ENABLED);
         options.addOption(OPTION_CUBOID_MODE);
         parseOptions(options, args);
 
         partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
-        boolean statsEnabled = Boolean.parseBoolean(getOptionValue(OPTION_STATISTICS_ENABLED));
 
         String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -95,68 +87,31 @@ public class CreateHTableJob extends AbstractHadoopJob {
         cuboidModeName = getOptionValue(OPTION_CUBOID_MODE);
         CubeSegment cubeSegment = cube.getSegmentById(segmentID);
 
-        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-
         byte[][] splitKeys;
-        if (statsEnabled) {
-            Map<Long, Double> cuboidSizeMap = new CubeStatsReader(cubeSegment, null, kylinConfig).getCuboidSizeMap();
-            Set<Long> buildingCuboids = cube.getCuboidsByMode(cuboidModeName);
-            if (buildingCuboids != null && !buildingCuboids.isEmpty()) {
-                Map<Long, Double> optimizedCuboidSizeMap = Maps.newHashMapWithExpectedSize(buildingCuboids.size());
-                for (Long cuboid : buildingCuboids) {
-                    Double cuboidSize = cuboidSizeMap.get(cuboid);
-                    if (cuboidSize == null) {
-                        logger.warn(cuboid + "cuboid's size is null will replace by 0");
-                        cuboidSize = 0.0;
-                    }
-                    optimizedCuboidSizeMap.put(cuboid, cuboidSize);
+        Map<Long, Double> cuboidSizeMap = new CubeStatsReader(cubeSegment, kylinConfig).getCuboidSizeMap();
+        
+        // for cube planner, will keep cuboidSizeMap unchanged if cube planner is disabled
+        Set<Long> buildingCuboids = cube.getCuboidsByMode(cuboidModeName);
+        if (buildingCuboids != null && !buildingCuboids.isEmpty()) {
+            Map<Long, Double> optimizedCuboidSizeMap = Maps.newHashMapWithExpectedSize(buildingCuboids.size());
+            for (Long cuboid : buildingCuboids) {
+                Double cuboidSize = cuboidSizeMap.get(cuboid);
+                if (cuboidSize == null) {
+                    logger.warn(cuboid + "cuboid's size is null will replace by 0");
+                    cuboidSize = 0.0;
                 }
-                cuboidSizeMap = optimizedCuboidSizeMap;
+                optimizedCuboidSizeMap.put(cuboid, cuboidSize);
             }
-            splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment, partitionFilePath.getParent());
-        } else {
-            splitKeys = getRegionSplits(conf, partitionFilePath);
+            cuboidSizeMap = optimizedCuboidSizeMap;
         }
+        
+        splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment,
+                partitionFilePath.getParent());
 
         CubeHTableUtil.createHTable(cubeSegment, splitKeys);
         return 0;
     }
 
-    @SuppressWarnings("deprecation")
-    public byte[][] getRegionSplits(Configuration conf, Path path) throws Exception {
-        FileSystem fs = path.getFileSystem(conf);
-        if (fs.exists(path) == false) {
-            System.err.println("Path " + path + " not found, no region split, HTable will be one region");
-            return null;
-        }
-
-        List<byte[]> rowkeyList = new ArrayList<byte[]>();
-        SequenceFile.Reader reader = null;
-        try {
-            reader = new SequenceFile.Reader(fs, path, conf);
-            Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-            Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-            while (reader.next(key, value)) {
-                rowkeyList.add(((Text) key).copyBytes());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        } finally {
-            IOUtils.closeStream(reader);
-        }
-
-        logger.info((rowkeyList.size() + 1) + " regions");
-        logger.info(rowkeyList.size() + " splits");
-        if (logger.isTraceEnabled()) {
-            for (byte[] split : rowkeyList) {
-                logger.trace(StringUtils.byteToHexString(split));
-            }
-        }
-
-        byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
-        return retValue.length == 0 ? null : retValue;
-    }
 
     //one region for one shard
     private static byte[][] getSplitsByRegionCount(int regionCount) {

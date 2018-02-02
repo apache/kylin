@@ -58,6 +58,11 @@ public class ExternalFilterDesc extends RootPersistentEntity implements ISourceA
 
     // ============================================================================
 
+    @Override
+    public String resourceName() {
+        return name;
+    }
+    
     public String getFilterResourceIdentifier() {
         return filterResourceIdentifier;
     }

@@ -18,8 +18,16 @@
 
 package org.apache.kylin.rest.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import static org.apache.kylin.rest.security.AclEntityType.PROJECT_INSTANCE;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AclPermissionFactory;
@@ -32,6 +40,8 @@ import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 /**
  * @author xduo
  */
@@ -40,6 +50,23 @@ public class AccessServiceTest extends ServiceTestBase {
     @Autowired
     @Qualifier("accessService")
     AccessService accessService;
+
+    @Autowired
+    @Qualifier("projectService")
+    ProjectService projectService;
+
+    @Test
+    public void testRevokeProjectPermission() throws IOException {
+        List<ProjectInstance> projects = projectService.listProjects(10000, 0);
+        assertTrue(projects.size() > 0);
+        ProjectInstance project = projects.get(0);
+        PrincipalSid sid = new PrincipalSid("ANALYST");
+        RootPersistentEntity ae = accessService.getAclEntity(PROJECT_INSTANCE, project.getUuid());
+        accessService.grant(ae, AclPermission.ADMINISTRATION, sid);
+        Assert.assertEquals(1, accessService.getAcl(ae).getEntries().size());
+        accessService.revokeProjectPermission("ANALYST", MetadataConstants.TYPE_USER);
+        Assert.assertEquals(0, accessService.getAcl(ae).getEntries().size());
+    }
 
     @Test
     public void testBasics() throws JsonProcessingException {

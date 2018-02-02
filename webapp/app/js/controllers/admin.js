@@ -23,7 +23,6 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
   $scope.envStr = "";
 
   $scope.isCacheEnabled = function(){
-    console.log("cache enabled?:"+kylinConfig.isCacheEnabled());
     return kylinConfig.isCacheEnabled();
   }
 

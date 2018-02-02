@@ -99,7 +99,7 @@ public class StorageURL {
         this.params = ImmutableMap.copyOf(m);
     }
 
-    private StorageURL(String identifier, String scheme, Map<String, String> params) {
+    public StorageURL(String identifier, String scheme, Map<String, String> params) {
         this.identifier = identifier;
         this.scheme = scheme;
         this.params = ImmutableMap.copyOf(params);

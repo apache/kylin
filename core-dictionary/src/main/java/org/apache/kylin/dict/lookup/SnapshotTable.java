@@ -287,4 +287,7 @@ public class SnapshotTable extends RootPersistentEntity implements IReadableTabl
         }
     }
 
+    public int getRowCount() {
+        return rowIndices.size();
+    }
 }

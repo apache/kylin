@@ -24,14 +24,18 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class JoinsTree implements Serializable {
     private static final long serialVersionUID = 1L;
+    private static final IJoinDescMatcher DEFAULT_JOINDESC_MATCHER = new DefaultJoinDescMatcher();
 
-    final Map<String, Chain> tableChains = new LinkedHashMap<>();
+    private Map<String, Chain> tableChains = new LinkedHashMap<>();
+    private IJoinDescMatcher joinDescMatcher = DEFAULT_JOINDESC_MATCHER;
 
     public JoinsTree(TableRef rootTable, List<JoinDesc> joins) {
         for (JoinDesc join : joins) {
@@ -47,6 +51,10 @@ public class JoinsTree implements Serializable {
             Chain fkSide = tableChains.get(join.getFKSide().getAlias());
             tableChains.put(pkSide.getAlias(), new Chain(pkSide, join, fkSide));
         }
+    }
+
+    public JoinsTree(Map<String, Chain> tableChains) {
+        this.tableChains = tableChains;
     }
 
     public Map<String, String> matches(JoinsTree another) {
@@ -108,7 +116,8 @@ public class JoinsTree implements Serializable {
             matches = anotherChain.join == null
                     && chain.table.getTableDesc().getIdentity().equals(anotherChain.table.getTableDesc().getIdentity());
         } else {
-            matches = chain.join.matches(anotherChain.join) && matchChain(chain.fkSide, anotherChain.fkSide, matchUp);
+            matches = joinDescMatcher.matches(chain.join, anotherChain.join)
+                    && matchChain(chain.fkSide, anotherChain.fkSide, matchUp);
         }
 
         if (matches) {
@@ -138,6 +147,26 @@ public class JoinsTree implements Serializable {
 
     public Map<String, Chain> getTableChains() {
         return tableChains;
+    }
+
+    public void setJoinDescMatcher(IJoinDescMatcher joinDescMatcher) {
+        this.joinDescMatcher = joinDescMatcher;
+    }
+
+    public JoinsTree getSubgraphByAlias(Set<String> aliases) {
+        Map<String, Chain> subgraph = Maps.newHashMap();
+        for (String alias : aliases) {
+            Chain chain = tableChains.get(alias);
+            if (chain == null)
+                throw new IllegalArgumentException("Table with alias " + alias + " is not found");
+
+            while (chain.getFkSide() != null) {
+                subgraph.put(chain.table.getAlias(), chain);
+                chain = chain.getFkSide();
+            }
+            subgraph.put(chain.table.getAlias(), chain);
+        }
+        return new JoinsTree(subgraph);
     }
 
     public static class Chain implements Serializable {
@@ -170,4 +199,45 @@ public class JoinsTree implements Serializable {
         }
     }
 
+    public static interface IJoinDescMatcher {
+        boolean matches(JoinDesc join1, JoinDesc join2);
+    }
+
+    public static class DefaultJoinDescMatcher implements IJoinDescMatcher {
+        @Override
+        public boolean matches(JoinDesc join1, JoinDesc join2) {
+            if (join1 == null) {
+                return join2 == null;
+            } else if (join2 == null) {
+                return false;
+            } else {
+
+                if (!join1.getType().equalsIgnoreCase(join2.getType()))
+                    return false;
+
+                // note pk/fk are sorted, sortByFK()
+                if (!this.columnDescEquals(join1.getForeignKeyColumns(), join2.getForeignKeyColumns()))
+                    return false;
+                if (!this.columnDescEquals(join1.getPrimaryKeyColumns(), join2.getPrimaryKeyColumns()))
+                    return false;
+
+                return true;
+            }
+        }
+
+        private boolean columnDescEquals(TblColRef[] a, TblColRef[] b) {
+            if (a.length != b.length)
+                return false;
+
+            for (int i = 0; i < a.length; i++) {
+                if (columnDescEquals(a[i].getColumnDesc(), b[i].getColumnDesc()) == false)
+                    return false;
+            }
+            return true;
+        }
+
+        protected boolean columnDescEquals(ColumnDesc a, ColumnDesc b) {
+            return a == null ? b == null : a.equals(b);
+        }
+    }
 }

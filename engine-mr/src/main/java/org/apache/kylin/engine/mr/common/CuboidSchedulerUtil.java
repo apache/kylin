@@ -34,11 +34,17 @@ import com.google.common.collect.Lists;
 public class CuboidSchedulerUtil {
 
     public static CuboidScheduler getCuboidSchedulerByMode(CubeSegment segment, String cuboidModeName) {
-        return getCuboidSchedulerByMode(segment, CuboidModeEnum.getByModeName(cuboidModeName));
+        if (cuboidModeName == null)
+            return segment.getCuboidScheduler();
+        else
+            return getCuboidSchedulerByMode(segment, CuboidModeEnum.getByModeName(cuboidModeName));
     }
 
     public static CuboidScheduler getCuboidSchedulerByMode(CubeSegment segment, CuboidModeEnum cuboidMode) {
-        return getCuboidScheduler(segment, segment.getCubeInstance().getCuboidsByMode(cuboidMode));
+        if (cuboidMode == CuboidModeEnum.CURRENT || cuboidMode == null)
+            return segment.getCuboidScheduler();
+        else
+            return getCuboidScheduler(segment, segment.getCubeInstance().getCuboidsByMode(cuboidMode));
     }
 
     public static CuboidScheduler getCuboidScheduler(CubeSegment segment, Set<Long> cuboidSet) {

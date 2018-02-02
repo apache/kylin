@@ -20,8 +20,8 @@ package org.apache.kylin.source.hive;
 
 import java.util.List;
 
-class HiveTableMeta {
-    static class HiveTableColumnMeta {
+public class HiveTableMeta {
+    public static class HiveTableColumnMeta {
         String name;
         String dataType;
         String comment;

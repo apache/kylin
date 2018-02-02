@@ -42,9 +42,9 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
-import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -206,16 +206,11 @@ public class ExtendCubeToHybridCLI {
     }
 
     private void verify() {
-        CubeDescManager.clearCache();
+        kylinConfig.clearManagers();
+        
         CubeDescManager.getInstance(kylinConfig);
-
-        CubeManager.clearCache();
         CubeManager.getInstance(kylinConfig);
-
-        ProjectManager.clearCache();
         ProjectManager.getInstance(kylinConfig);
-
-        HybridManager.clearCache();
         HybridManager.getInstance(kylinConfig);
     }
 

@@ -112,7 +112,7 @@ public class JobMetricsFacade {
         public void setWrapper(String user, String projectName, String cubeName, String jobId, String jobType,
                 String cubingType) {
             this.user = user;
-            this.projectName = projectName;
+            this.projectName = projectName == null ? null : projectName.toUpperCase();
             this.cubeName = cubeName;
             this.jobId = jobId;
             this.jobType = jobType;

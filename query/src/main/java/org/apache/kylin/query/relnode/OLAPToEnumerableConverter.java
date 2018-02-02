@@ -41,6 +41,8 @@ import org.apache.kylin.query.security.QueryInterceptorUtil;
 import com.google.common.collect.Lists;
 
 /**
+ * If you're renaming this class, please keep it ending with OLAPToEnumerableConverter
+ * see org.apache.calcite.plan.OLAPRelMdRowCount#shouldIntercept(org.apache.calcite.rel.RelNode)
  */
 public class OLAPToEnumerableConverter extends ConverterImpl implements EnumerableRel {
 
@@ -80,6 +82,12 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             intercept.intercept(contexts);
         }
 
+        if (System.getProperty("calcite.debug") != null) {
+            String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
+            System.out.println("EXECUTION PLAN AFTER OLAPCONTEXT IS SET");
+            System.out.println(dumpPlan);
+        }
+
         RealizationChooser.selectRealization(contexts);
 
         doAccessControl(contexts);
@@ -102,7 +110,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         return impl.visitChild(this, 0, inputAsEnum, pref);
     }
 
-    private List<OLAPContext> listContextsHavingScan() {
+     protected List<OLAPContext> listContextsHavingScan() {
         // Context has no table scan is created by OLAPJoinRel which looks like
         //     (sub-query) as A join (sub-query) as B
         // No realization needed for such context.
@@ -116,7 +124,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         return result;
     }
 
-    private void doAccessControl(List<OLAPContext> contexts) {
+    protected void doAccessControl(List<OLAPContext> contexts) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         String controllerCls = config.getQueryAccessController();
         if (null != controllerCls && !controllerCls.isEmpty()) {

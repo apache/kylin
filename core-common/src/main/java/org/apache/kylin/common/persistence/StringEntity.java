@@ -18,12 +18,13 @@
 
 package org.apache.kylin.common.persistence;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import org.apache.commons.lang.StringUtils;
+
+@SuppressWarnings("serial")
 public class StringEntity extends RootPersistentEntity {
 
     public static final Serializer<StringEntity> serializer = new Serializer<StringEntity>() {

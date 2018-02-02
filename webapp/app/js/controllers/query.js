@@ -25,6 +25,7 @@ KylinApp
             $scope.mainPanel = $routeParams.queryPanel;
         }
         $scope.rowsPerPage = 50000;
+        $scope.hasLimit = true;
         $scope.base64 = $base64;
         $scope.queryString = "";
         $scope.queries = [];
@@ -47,13 +48,6 @@ KylinApp
         ];
         $scope.statusFilter = null;
         $scope.savedQueries = null;
-        $scope.cachedQueries = storage.get("saved_queries");
-        if (!$scope.cachedQueries) {
-            $scope.cachedQueries = [];
-        }
-        $scope.cachedQueries.curPage = 1;
-        $scope.cachedQueries.perPage = 3;
-
         $scope.srcTables = [];
         $scope.srcColumns = [];
 
@@ -67,7 +61,7 @@ KylinApp
                 var query = {
                     originSql: sql,
                     sql: sql,
-                    project: (!!project)? project:$scope.projectModel.selectedProject,
+                    project: (!!project)? project:$scope.projectModel.getSelectedProject(),
                     status: 'executing',
                     acceptPartial: true,
                     result: {
@@ -114,14 +108,22 @@ KylinApp
         }
 
         $scope.checkLimit = function () {
-            if (!$scope.rowsPerPage) {
-                $scope.rowsPerPage = 50000;
+          if (!$scope.rowsPerPage) {
+            $scope.rowsPerPage = 50000;
+          }
+        }
+
+        $scope.changeLimit = function () {
+            if ($scope.hasLimit) {
+              $scope.rowsPerPage = 50000;
+            } else {
+              $scope.rowsPerPage = 0
             }
         }
 
         function getQuery(queries, query) {
             for (var i = 0; i < queries.length; i++) {
-                if (queries[i].sql == query.sql) {
+                if (queries[i].sql === query.sql && queries[i].project === query.project) {
                     return queries[i];
                 }
             }
@@ -320,6 +322,8 @@ KylinApp
             if (queryToRemove) {
                 var index = $scope.cachedQueries.indexOf(queryToRemove);
                 $scope.cachedQueries.splice(index, 1);
+                var indexFilter = $scope.cachedFilterQueries.indexOf(queryToRemove);
+                $scope.cachedFilterQueries.splice(indexFilter, 1);
                 storage.set("saved_queries", $scope.cachedQueries);
             }
         }
@@ -329,7 +333,6 @@ KylinApp
 
                 if ($scope.cachedQueries.length >= 99) {
                     delete $scope.cachedQueries.splice(0, 1);
-                    ;
                 }
 
                 $scope.cachedQueries.push({
@@ -342,11 +345,23 @@ KylinApp
         }
 
         $scope.listSavedQueries = function () {
-            QueryService.list({}, function (queries) {
+            QueryService.list({project: $scope.projectModel.selectedProject}, function (queries) {
                 $scope.savedQueries = queries;
                 $scope.savedQueries.curPage = 1;
                 $scope.savedQueries.perPage = 3;
             });
+        }
+
+        $scope.listCachedQueries = function () {
+          $scope.cachedQueries = storage.get("saved_queries") || [];
+          $scope.cachedFilterQueries = $scope.cachedQueries.filter(function (query) {
+            return query.project === $scope.projectModel.selectedProject;
+          });
+          if (!$scope.cachedFilterQueries) {
+            $scope.cachedFilterQueries = [];
+          }
+          $scope.cachedFilterQueries.curPage = 1;
+          $scope.cachedFilterQueries.perPage = 3;
         }
 
         $scope.removeSavedQuery = function (id) {
@@ -395,6 +410,11 @@ KylinApp
             }
         }
 
+        $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
+          $scope.listCachedQueries();
+          $scope.listSavedQueries();
+        });
+
         $scope.$on('$locationChangeStart', function (event, next, current) {
             var isExecuting = false;
             angular.forEach($scope.queries, function (query, index) {
@@ -423,7 +443,9 @@ KylinApp
 
 
     })
-    .controller('QueryResultCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, queryConfig) {
+    .controller('QueryResultCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, kylinConfig) {
+        $scope.isAdminExportAllowed = kylinConfig.isAdminExportAllowed();
+        $scope.isNonAdminExportAllowed = kylinConfig.isNonAdminExportAllowed();
         $scope.buildGraphMetadata = function (query) {
             if (!query.graph.show) {
                 return;

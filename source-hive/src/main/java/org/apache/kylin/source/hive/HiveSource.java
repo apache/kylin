@@ -64,7 +64,9 @@ public class HiveSource implements ISource {
     @Override
     public SourcePartition enrichSourcePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition) {
         SourcePartition result = SourcePartition.getCopyOf(srcPartition);
-        result.setSegRange(null);
+        if (srcPartition.getTSRange() != null) {
+            result.setSegRange(null);
+        }
         return result;
     }
 

@@ -18,17 +18,18 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,6 +57,21 @@ public class CubeInstanceTest {
         for (Long cuboid : cuboids) {
             System.out.println(cuboid + ":" + cuboidsWithRowCnt.get(cuboid));
         }
-        assertNotNull(cuboidsWithRowCnt.get(255L));
+        Assert.assertNotNull(cuboidsWithRowCnt.get(255L));
+    }
+
+    @Test
+    public void copyCubeSegmentTest() {
+        int origSegCount = cubeInstance.getSegments().size();
+        CubeInstance newCubeInstance = CubeInstance.getCopyOf(cubeInstance);
+
+        CubeSegment mockSeg = new CubeSegment();
+        mockSeg.setUuid(UUID.randomUUID().toString());
+        mockSeg.setStorageLocationIdentifier(UUID.randomUUID().toString());
+        mockSeg.setStatus(SegmentStatusEnum.READY);
+        newCubeInstance.getSegments().add(mockSeg);
+
+        Assert.assertEquals(origSegCount, cubeInstance.getSegments().size());
+        Assert.assertEquals(origSegCount + 1, newCubeInstance.getSegments().size());
     }
 }

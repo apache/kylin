@@ -22,7 +22,6 @@ package org.apache.kylin.rest.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -44,6 +43,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 @Component("dashboardService")
 public class DashboardService extends BasicService {
@@ -139,10 +139,10 @@ public class DashboardService extends BasicService {
         Float maxCubeExpansion = Float.NEGATIVE_INFINITY;
         cubeMetrics.increase("totalCube", totalCube.floatValue());
         for (CubeInstance cubeInstance : cubeInstances) {
-            if (cubeInstance.getInputRecordSize() > 0) {
+            if (cubeInstance.getInputRecordSizeMB() > 0) {
                 totalCubeSize += cubeInstance.getSizeKB();
-                totalRecoadSize += cubeInstance.getInputRecordSize();
-                Float cubeExpansion = new Float(cubeInstance.getSizeKB()) * 1024 / cubeInstance.getInputRecordSize();
+                totalRecoadSize += cubeInstance.getInputRecordSizeMB();
+                Float cubeExpansion = new Float(cubeInstance.getSizeKB()) * 1024 / cubeInstance.getInputRecordSizeMB();
                 if (cubeExpansion > maxCubeExpansion) {
                     maxCubeExpansion = cubeExpansion;
                 }
@@ -262,7 +262,7 @@ public class DashboardService extends BasicService {
         filters.add(TimePropertyEnum.DAY_DATE.toString() + " >= '" + startTime + "'");
         filters.add(TimePropertyEnum.DAY_DATE.toString() + " <= '" + endTime + "'");
         if (!Strings.isNullOrEmpty(projectName)) {
-            filters.add(project + " ='" + ProjectInstance.getNormalizedProjectName(projectName) + "'");
+            filters.add(project + " ='" + projectName.toUpperCase() + "'");
         } else {
             filters.add(project + " <> '" + MetricsManager.SYSTEM_PROJECT + "'");
         }

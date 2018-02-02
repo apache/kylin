@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -37,11 +38,11 @@ public class MapReduceUtil {
     /**
      * @return reducer number for calculating hll
      */
-    public static int getHLLShardBase(CubeSegment segment) {
-        int nCuboids = segment.getCuboidScheduler().getAllCuboidIds().size();
-        int shardBase = (nCuboids - 1) / segment.getConfig().getHadoopJobPerReducerHLLCuboidNumber() + 1;
+    public static int getCuboidHLLCounterReducerNum(CubeInstance cube) {
+        int nCuboids = cube.getCuboidScheduler().getAllCuboidIds().size();
+        int shardBase = (nCuboids - 1) / cube.getConfig().getHadoopJobPerReducerHLLCuboidNumber() + 1;
 
-        int hllMaxReducerNumber = segment.getConfig().getHadoopJobHLLMaxReducerNumber();
+        int hllMaxReducerNumber = cube.getConfig().getHadoopJobHLLMaxReducerNumber();
         if (shardBase > hllMaxReducerNumber) {
             shardBase = hllMaxReducerNumber;
         }

@@ -6,18 +6,19 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.kylin.cube.cuboid.CuboidModeEnum.CURRENT;
 import static org.apache.kylin.cube.cuboid.CuboidModeEnum.RECOMMEND;
 
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -53,6 +55,8 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -66,6 +70,8 @@ import com.google.common.collect.Lists;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity implements IRealization, IBuildable {
+    private static final Logger logger = LoggerFactory.getLogger(CubeInstance.class);
+
     public static final int COST_WEIGHT_MEASURE = 1;
     public static final int COST_WEIGHT_DIMENSION = 10;
     public static final int COST_WEIGHT_INNER_JOIN = 100;
@@ -75,6 +81,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         cubeInstance.setConfig((KylinConfigExt) cubeDesc.getConfig());
         cubeInstance.setName(cubeName);
+        cubeInstance.setDisplayName(cubeName);
         cubeInstance.setDescName(cubeDesc.getName());
         cubeInstance.setCreateTimeUTC(System.currentTimeMillis());
         cubeInstance.setSegments(new Segments<CubeSegment>());
@@ -92,6 +99,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     private String owner;
     @JsonProperty("descriptor")
     private String descName;
+    @JsonProperty("display_name")
+    private String displayName;
+    // DEPRECATED: the cost should be calculated in runtime
     // Mark cube priority for query
     @JsonProperty("cost")
     private int cost = 50;
@@ -119,6 +129,28 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     // default constructor for jackson
     public CubeInstance() {
+    }
+
+    public CubeInstance latestCopyForWrite() {
+        CubeManager mgr = CubeManager.getInstance(config);
+        CubeInstance latest = mgr.getCube(name); // in case this object is out-of-date
+        return mgr.copyForWrite(latest);
+    }
+
+    void init(KylinConfig config) {
+        CubeDesc cubeDesc = CubeDescManager.getInstance(config).getCubeDesc(descName);
+        checkNotNull(cubeDesc, "cube descriptor '%s' (for cube '%s') not found", descName, name);
+
+        if (cubeDesc.isBroken()) {
+            setStatus(RealizationStatusEnum.DESCBROKEN);
+            logger.error("cube descriptor {} (for cube '{}') is broken", cubeDesc.getResourcePath(), name);
+            logger.error("Errors: {}", cubeDesc.getErrorsAsString());
+        } else if (getStatus() == RealizationStatusEnum.DESCBROKEN) {
+            setStatus(RealizationStatusEnum.DISABLED);
+            logger.info("cube {} changed from DESCBROKEN to DISABLED", name);
+        }
+
+        setConfig((KylinConfigExt) cubeDesc.getConfig());
     }
 
     public CuboidScheduler getCuboidScheduler() {
@@ -159,6 +191,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public CubeDesc getDescriptor() {
+        if (config == null) {
+            return null;
+        }
         return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
 
@@ -184,8 +219,13 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
                 && segments.isEmpty();
     }
 
+    @Override
+    public String resourceName() {
+        return name;
+    }
+
     public String getResourcePath() {
-        return concatResourcePath(name);
+        return concatResourcePath(resourceName());
     }
 
     public static String concatResourcePath(String cubeName) {
@@ -198,39 +238,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     // ============================================================================
-
-    @JsonProperty("size_kb")
-    public long getSizeKB() {
-        long sizeKb = 0L;
-
-        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeKb += cubeSegment.getSizeKB();
-        }
-
-        return sizeKb;
-    }
-
-    @JsonProperty("input_records_count")
-    public long getInputRecordCount() {
-        long sizeRecordCount = 0L;
-
-        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeRecordCount += cubeSegment.getInputRecords();
-        }
-
-        return sizeRecordCount;
-    }
-
-    @JsonProperty("input_records_size")
-    public long getInputRecordSize() {
-        long sizeRecordSize = 0L;
-
-        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
-            sizeRecordSize += cubeSegment.getInputRecordsSize();
-        }
-
-        return sizeRecordSize;
-    }
 
     @Override
     public KylinConfig getConfig() {
@@ -280,8 +287,35 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         this.descName = descName;
     }
 
+    public String getDisplayName() {
+        if (StringUtils.isBlank(displayName)) {
+            displayName = name;
+        }
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    @Override
     public int getCost() {
-        return cost;
+        if (getDescriptor() == null) {
+            //in case not initialized
+            return 0;
+        }
+        int countedDimensionNum = getRowKeyColumnCount();
+        int c = countedDimensionNum * COST_WEIGHT_DIMENSION + getMeasures().size() * COST_WEIGHT_MEASURE;
+        DataModelDesc model = getModel();
+        if (model == null) {
+            //in case broken cube
+            return 0;
+        }
+        for (JoinTableDesc join : model.getJoinTables()) {
+            if (join.getJoin().isInnerJoin())
+                c += CubeInstance.COST_WEIGHT_INNER_JOIN;
+        }
+        return c;
     }
 
     public void setCost(int cost) {
@@ -321,7 +355,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public void setSegments(Segments segments) {
-        this.segments = segments;
+        this.segments = new Segments<>(segments);
     }
 
     public CubeSegment getSegmentById(String segmentId) {
@@ -333,12 +367,26 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return null;
     }
 
+    public CubeSegment[] regetSegments(CubeSegment... segs) {
+        CubeSegment[] r = new CubeSegment[segs.length];
+        for (int i = 0; i < segs.length; i++) {
+            r[i] = getSegmentById(segs[i].getUuid());
+        }
+        return r;
+    }
+
     public long getCreateTimeUTC() {
         return createTimeUTC;
     }
 
     public void setCreateTimeUTC(long createTimeUTC) {
         this.createTimeUTC = createTimeUTC;
+    }
+
+    public void clearCuboids() {
+        cuboidBytes = null;
+        cuboidBytesRecommend = null;
+        cuboidLastOptimized = 0L;
     }
 
     public Set<Long> getCuboidsByMode(String cuboidModeName) {
@@ -445,6 +493,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     /**
      * Get cuboid level count except base cuboid
+     *
      * @return
      */
     public int getBuildLevel() {
@@ -530,7 +579,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public SegmentRange autoMergeCubeSegments() throws IOException {
-        return segments.autoMergeCubeSegments(needAutoMerge(), getName(), getDescriptor().getAutoMergeTimeRanges(), getDescriptor().getVolatileRange());
+        return segments.autoMergeCubeSegments(needAutoMerge(), getName(), getDescriptor().getAutoMergeTimeRanges(),
+                getDescriptor().getVolatileRange());
     }
 
     public Segments calculateToBeSegments(CubeSegment newSegment) {
@@ -544,6 +594,39 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         } else {
             return existing.get(existing.size() - 1);
         }
+    }
+
+    // For JSON serialization of this attribute, use CubeInstanceResponse
+    public long getSizeKB() {
+        long sizeKb = 0L;
+
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
+            sizeKb += cubeSegment.getSizeKB();
+        }
+
+        return sizeKb;
+    }
+
+    // For JSON serialization of this attribute, use CubeInstanceResponse
+    public long getInputRecordCount() {
+        long sizeRecordCount = 0L;
+
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
+            sizeRecordCount += cubeSegment.getInputRecords();
+        }
+
+        return sizeRecordCount;
+    }
+
+    // For JSON serialization of this attribute, use CubeInstanceResponse
+    public long getInputRecordSizeMB() {
+        long sizeRecordSize = 0L;
+
+        for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
+            sizeRecordSize += cubeSegment.getInputRecordsSize();
+        }
+
+        return sizeRecordSize;
     }
 
     public String getProject() {

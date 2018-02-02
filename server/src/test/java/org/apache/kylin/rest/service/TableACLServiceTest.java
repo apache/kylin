@@ -19,11 +19,11 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
-import org.apache.kylin.metadata.acl.TableACL;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,25 +37,29 @@ public class TableACLServiceTest extends ServiceTestBase {
     private TableACLService tableACLService;
 
     @Test
-    public void testTableACL() throws IOException {
-        TableACL emptyBlackList = tableACLService.getTableACLByProject(PROJECT);
-        Assert.assertEquals(0, emptyBlackList.getUserTableBlackList().size());
+    public void testCaseIns() throws IOException {
+        tableACLService.addToTableACL(PROJECT, "ADMIN", "DB.TABLE", MetadataConstants.TYPE_USER);
+        List<String> noAccessList = tableACLService.getNoAccessList(PROJECT, "db.table", MetadataConstants.TYPE_USER);
+        System.out.println(noAccessList);
+    }
 
-        tableACLService.addToTableBlackList(PROJECT, "ADMIN", "DB.TABLE");
-        tableACLService.addToTableBlackList(PROJECT, "ADMIN", "DB.TABLE1");
-        tableACLService.addToTableBlackList(PROJECT, "ADMIN", "DB.TABLE2");
-        tableACLService.addToTableBlackList(PROJECT, "MODELER", "DB.TABLE4");
-        tableACLService.addToTableBlackList(PROJECT, "MODELER", "DB.TABLE1");
-        tableACLService.addToTableBlackList(PROJECT, "MODELER", "DB.TABLE");
-        tableACLService.addToTableBlackList(PROJECT, "ANALYST", "DB.TABLE");
-        tableACLService.addToTableBlackList(PROJECT, "ANALYST", "DB.TABLE1");
-        tableACLService.addToTableBlackList(PROJECT, "ANALYST", "DB.TABLE2");
-        tableACLService.addToTableBlackList(PROJECT, "ANALYST", "DB.TABLE4");
-        List<String> tableBlackList = tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.TABLE1");
+    @Test
+    public void testTableACL() throws IOException {
+        tableACLService.addToTableACL(PROJECT, "ADMIN", "DB.TABLE", MetadataConstants.TYPE_USER);
+        tableACLService.addToTableACL(PROJECT, "ADMIN", "DB.TABLE1", MetadataConstants.TYPE_USER);
+        tableACLService.addToTableACL(PROJECT, "ADMIN", "DB.TABLE2", MetadataConstants.TYPE_USER);
+        tableACLService.addToTableACL(PROJECT, "MODELER", "DB.TABLE4", MetadataConstants.TYPE_USER);
+        tableACLService.addToTableACL(PROJECT, "MODELER", "DB.TABLE1", MetadataConstants.TYPE_USER);
+        tableACLService.addToTableACL(PROJECT, "MODELER", "DB.TABLE", MetadataConstants.TYPE_USER);
+        tableACLService.addToTableACL(PROJECT, "ANALYST", "DB.TABLE", MetadataConstants.TYPE_USER);
+        tableACLService.addToTableACL(PROJECT, "ANALYST", "DB.TABLE1", MetadataConstants.TYPE_USER);
+        tableACLService.addToTableACL(PROJECT, "ANALYST", "DB.TABLE2", MetadataConstants.TYPE_USER);
+        tableACLService.addToTableACL(PROJECT, "ANALYST", "DB.TABLE4", MetadataConstants.TYPE_USER);
+        List<String> tableBlackList = tableACLService.getNoAccessList(PROJECT, "DB.TABLE1", MetadataConstants.TYPE_USER);
         Assert.assertEquals(3, tableBlackList.size());
 
         //test get black/white list
-        Set<String> allUsers = new HashSet<>();
+        Set<String> allUsers = new TreeSet<>();
         allUsers.add("ADMIN");
         allUsers.add("MODELER");
         allUsers.add("ANALYST");
@@ -64,29 +68,29 @@ public class TableACLServiceTest extends ServiceTestBase {
         allUsers.add("user6");
         allUsers.add("user7");
 
-        List<String> tableWhiteList = tableACLService.getUsersCanQueryTheTbl(PROJECT, "DB.TABLE1", allUsers);
+        List<String> tableWhiteList = tableACLService.getCanAccessList(PROJECT, "DB.TABLE1", allUsers, MetadataConstants.TYPE_USER);
         Assert.assertEquals(4, tableWhiteList.size());
 
-        List<String> emptyTableBlackList = tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.T");
+        List<String> emptyTableBlackList = tableACLService.getNoAccessList(PROJECT, "DB.T", MetadataConstants.TYPE_USER);
         Assert.assertEquals(0, emptyTableBlackList.size());
 
-        List<String> tableWhiteList1 = tableACLService.getUsersCanQueryTheTbl(PROJECT, "DB.T", allUsers);
+        List<String> tableWhiteList1 = tableACLService.getCanAccessList(PROJECT, "DB.T", allUsers, MetadataConstants.TYPE_USER);
         Assert.assertEquals(7, tableWhiteList1.size());
 
         //test add
-        tableACLService.addToTableBlackList(PROJECT, "user7", "DB.T7");
-        List<String> tableBlackList2 = tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.T7");
+        tableACLService.addToTableACL(PROJECT, "user7", "DB.T7", MetadataConstants.TYPE_USER);
+        List<String> tableBlackList2 = tableACLService.getNoAccessList(PROJECT, "DB.T7", MetadataConstants.TYPE_USER);
         Assert.assertTrue(tableBlackList2.contains("user7"));
 
         //test delete
-        tableACLService.deleteFromTableBlackList(PROJECT, "user7", "DB.T7");
-        List<String> tableBlackList3 = tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.T7");
+        tableACLService.deleteFromTableACL(PROJECT, "user7", "DB.T7", "user");
+        List<String> tableBlackList3 = tableACLService.getNoAccessList(PROJECT, "DB.T7", MetadataConstants.TYPE_USER);
         Assert.assertFalse(tableBlackList3.contains("user7"));
 
         //test delete
-        Assert.assertEquals(3, tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.TABLE1").size());
-        tableACLService.deleteFromTableBlackList(PROJECT, "ADMIN");
-        Assert.assertEquals(2, tableACLService.getUsersCannotQueryTheTbl(PROJECT, "DB.TABLE1").size());
+        Assert.assertEquals(3, tableACLService.getNoAccessList(PROJECT, "DB.TABLE1", MetadataConstants.TYPE_USER).size());
+        tableACLService.deleteFromTableACL(PROJECT, "ADMIN", MetadataConstants.TYPE_USER);
+        Assert.assertEquals(2, tableACLService.getNoAccessList(PROJECT, "DB.TABLE1", MetadataConstants.TYPE_USER).size());
     }
 
 }

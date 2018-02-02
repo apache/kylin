@@ -26,19 +26,16 @@ import java.util.TreeMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,9 +74,9 @@ public class RealizationChooser {
                 final DataModelDesc model = entry.getKey();
                 final Map<String, String> aliasMap = matches(model, context);
                 if (aliasMap != null) {
-                    fixModel(context, model, aliasMap);
+                    context.fixModel(model, aliasMap);
                     QueryRouter.selectRealization(context, entry.getValue());
-                    unfixModel(context);
+                    context.unfixModel();
                 }
             }
         }
@@ -88,12 +85,12 @@ public class RealizationChooser {
             final DataModelDesc model = entry.getKey();
             final Map<String, String> aliasMap = matches(model, context);
             if (aliasMap != null) {
-                fixModel(context, model, aliasMap);
+                context.fixModel(model, aliasMap);
 
                 IRealization realization = QueryRouter.selectRealization(context, entry.getValue());
                 if (realization == null) {
                     logger.info("Give up on model {} because no suitable realization is found", model);
-                    unfixModel(context);
+                    context.unfixModel();
                     continue;
                 }
 
@@ -107,8 +104,17 @@ public class RealizationChooser {
     }
 
     private static String toErrorMsg(OLAPContext ctx) {
-        StringBuilder buf = new StringBuilder();
-        buf.append(ctx.firstTableScan);
+        StringBuilder buf = new StringBuilder("OLAPContext");
+        RealizationCheck checkResult = ctx.realizationCheck;
+        for (RealizationCheck.IncapableReason reason : checkResult.getCubeIncapableReasons().values()) {
+            buf.append(", ").append(reason);
+        }
+        for (List<RealizationCheck.IncapableReason> reasons : checkResult.getModelIncapableReasons().values()) {
+            for (RealizationCheck.IncapableReason reason : reasons) {
+                buf.append(", ").append(reason);
+            }
+        }
+        buf.append(", ").append(ctx.firstTableScan);
         for (JoinDesc join : ctx.joins)
             buf.append(", ").append(join);
         return buf.toString();
@@ -144,9 +150,9 @@ public class RealizationChooser {
             return null;
         }
 
-        ctx.realizationCheck.addCapableModel(model);
         result.putAll(matchUp);
 
+        ctx.realizationCheck.addCapableModel(model, result);
         return result;
     }
 
@@ -228,18 +234,6 @@ public class RealizationChooser {
         return notContainCols;
     }
 
-    private static void fixModel(OLAPContext context, DataModelDesc model, Map<String, String> aliasMap) {
-        for (OLAPTableScan tableScan : context.allTableScans) {
-            tableScan.fixColumnRowTypeWithModel(model, aliasMap);
-        }
-    }
-
-    private static void unfixModel(OLAPContext context) {
-        for (OLAPTableScan tableScan : context.allTableScans) {
-            tableScan.unfixColumnRowTypeWithModel();
-        }
-    }
-
     private static class RealizationCost implements Comparable<RealizationCost> {
         final public int priority;
         final public int cost;
@@ -247,21 +241,7 @@ public class RealizationChooser {
         public RealizationCost(IRealization real) {
             // ref Candidate.PRIORITIES
             this.priority = Candidate.PRIORITIES.get(real.getType());
-
-            // ref CubeInstance.getCost()
-            int countedDimensionNum;
-            if (RealizationType.CUBE == real.getType()) {
-                countedDimensionNum = ((CubeInstance) real).getRowKeyColumnCount();
-            } else {
-                countedDimensionNum = real.getAllDimensions().size();
-            }
-            int c = countedDimensionNum * CubeInstance.COST_WEIGHT_DIMENSION
-                    + real.getMeasures().size() * CubeInstance.COST_WEIGHT_MEASURE;
-            for (JoinTableDesc join : real.getModel().getJoinTables()) {
-                if (join.getJoin().isInnerJoin())
-                    c += CubeInstance.COST_WEIGHT_INNER_JOIN;
-            }
-            this.cost = c;
+            this.cost = real.getCost();
         }
 
         @Override

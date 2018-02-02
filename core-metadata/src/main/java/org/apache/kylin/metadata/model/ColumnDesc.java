@@ -57,16 +57,18 @@ public class ColumnDesc implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String index;
 
+    @JsonProperty("cc_expr")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String computedColumnExpr = null;//if null, it's not a computed column
+
     // parsed from data type
     private DataType type;
-    private DataType upgradedType;
 
     private TableDesc table;
     private int zeroBasedIndex = -1;
     private boolean isNullable = true;
 
     private TblColRef ref;
-    private String computedColumnExpr = null;//if null, it's not a computed column
 
     public ColumnDesc() { // default constructor for Jackson
     }
@@ -79,6 +81,7 @@ public class ColumnDesc implements Serializable {
         this.comment = other.comment;
         this.dataGen = other.dataGen;
         this.index = other.index;
+        this.computedColumnExpr = other.computedColumnExpr;
     }
 
     public ColumnDesc(String id, String name, String datatype, String comment, String dataGen, String index,
@@ -115,16 +118,8 @@ public class ColumnDesc implements Serializable {
         type = DataType.getType(datatype);
     }
 
-    public void setUpgradedType(DataType upgradedType) {
-        this.upgradedType = upgradedType;
-    }
-
     public DataType getUpgradedType() {
-        if (this.upgradedType == null) {
-            return this.type;
-        } else {
-            return this.upgradedType;
-        }
+        return this.type;
     }
 
     public String getId() {
@@ -199,7 +194,7 @@ public class ColumnDesc implements Serializable {
         return computedColumnExpr;
     }
 
-    public boolean isComputedColumnn() {
+    public boolean isComputedColumn() {
         return computedColumnExpr != null;
     }
 

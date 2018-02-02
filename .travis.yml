@@ -17,8 +17,22 @@
 #
 language: java
 
+addons:
+  sonarcloud:
+    organization: "kylin"
+    token:
+      secure: "c918989d018ae3af899798716c35f4fe125296a4"
+
 jdk:
   - oraclejdk8
+
+script:
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test 
+  - if [[ -n "${TRAVIS_PULL_REQUEST_SLUG}" && "${TRAVIS_PULL_REQUEST_SLUG}" != "${TRAVIS_REPO_SLUG}" ]]; then
+        echo "The pull request from ${TRAVIS_PULL_REQUEST_SLUG} is an EXTERNAL pull request. Skip sonar analysis.";
+    else
+        mvn sonar:sonar;
+    fi
 
 notification:
   email:
@@ -26,7 +40,6 @@ notification:
       - dev@kylin.apache.org
     on_failure: always
 
-#branches:
-#  only:
-#    - master
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 

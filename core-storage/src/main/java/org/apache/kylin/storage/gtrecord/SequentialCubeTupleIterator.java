@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -142,12 +142,11 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     @Override
     public ITuple next() {
         if (scanCount++ % 100 == 1) {
-            QueryContext.current().checkMillisBeforeDeadline();
+            QueryContextFacade.current().checkMillisBeforeDeadline();
         }
-
-        if (++scanCountDelta >= 1000)
+        if (++scanCountDelta >= 1000) {
             flushScanCountDelta();
-
+        }
         return tupleIterator.next();
     }
 

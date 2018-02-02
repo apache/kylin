@@ -98,7 +98,7 @@ public class Message {
     }
 
     public String getINVALID_CUBE_NAME() {
-        return "Invalid Cube name '%s', only letters, numbers and underline supported.";
+        return "Invalid Cube name '%s', only letters, numbers and underscore supported.";
     }
 
     public String getCUBE_ALREADY_EXIST() {
@@ -178,6 +178,10 @@ public class Message {
         return "Invalid Model name '%s', only letters, numbers and underline supported.";
     }
 
+    public String getDUPLICATE_MODEL_NAME() {
+        return "Model name '%s' is duplicated, could not be created.";
+    }
+
     public String getDROP_REFERENCED_MODEL() {
         return "Model is referenced by Cube '%s' , could not dropped";
     }
@@ -243,6 +247,10 @@ public class Message {
 
     public String getDELETE_PROJECT_NOT_EMPTY() {
         return "Cannot modify non-empty project";
+    }
+
+    public String getPROJECT_RENAME() {
+        return "Project renaming is not allowed.";
     }
 
     // Table
@@ -343,6 +351,10 @@ public class Message {
 
     public String getCOLUMN_META_INCONSISTENT() {
         return "Column metadata inconsistent with JDBC meta.";
+    }
+
+    public String getEXPORT_RESULT_NOT_ALLOWED() {
+        return "Current user is not allowed to export query result.";
     }
 
     // Access

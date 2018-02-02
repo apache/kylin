@@ -28,7 +28,6 @@ import java.sql.Statement;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.kylin.common.util.DBUtils;
 
 import com.google.common.base.Preconditions;
@@ -115,14 +114,14 @@ public class BeelineHiveClient implements IHiveClient {
         }
         return count;
     }
-    
+
     @Override
-    public void executeHQL(String hql) throws CommandNeedRetryException, IOException {
+    public void executeHQL(String hql) throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void executeHQL(String[] hqls) throws CommandNeedRetryException, IOException {
+    public void executeHQL(String[] hqls) throws IOException {
         throw new UnsupportedOperationException();
     }
 
@@ -133,7 +132,11 @@ public class BeelineHiveClient implements IHiveClient {
 
         List<HiveTableMeta.HiveTableColumnMeta> allColumns = Lists.newArrayList();
         while (columns.next()) {
-            allColumns.add(new HiveTableMeta.HiveTableColumnMeta(columns.getString(4), columns.getString(6), columns.getString(12)));
+            String columnName = columns.getString(4);
+            String dataType = columns.getString(6);
+            String comment = columns.getString(12);
+            dataType = considerDataTypePrecision(dataType, columns.getString(7), columns.getString(9));
+            allColumns.add(new HiveTableMeta.HiveTableColumnMeta(columnName, dataType, comment));
         }
         builder.setAllColumns(allColumns);
         DBUtils.closeQuietly(columns);
@@ -142,6 +145,19 @@ public class BeelineHiveClient implements IHiveClient {
         extractHiveTableMeta(resultSet, builder);
         DBUtils.closeQuietly(resultSet);
         return builder.createHiveTableMeta();
+    }
+
+    public static String considerDataTypePrecision(String dataType, String precision, String scale) {
+        if ("VARCHAR".equalsIgnoreCase(dataType) || "CHAR".equalsIgnoreCase(dataType)) {
+            if (null != precision)
+                dataType = new StringBuilder(dataType).append("(").append(precision).append(")").toString();
+        }
+        if ("DECIMAL".equalsIgnoreCase(dataType) || "NUMERIC".equalsIgnoreCase(dataType)) {
+            if (precision != null && scale != null)
+                dataType = new StringBuilder(dataType).append("(").append(precision).append(",").append(scale)
+                        .append(")").toString();
+        }
+        return dataType;
     }
 
     private void extractHiveTableMeta(ResultSet resultSet, HiveTableMetaBuilder builder) throws SQLException {
@@ -157,7 +173,8 @@ public class BeelineHiveClient implements IHiveClient {
                     if ("".equals(resultSet.getString(1).trim())) {
                         break;
                     }
-                    partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(resultSet.getString(1).trim(), resultSet.getString(2).trim(), resultSet.getString(3).trim()));
+                    partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(resultSet.getString(1).trim(),
+                            resultSet.getString(2).trim(), resultSet.getString(3).trim()));
                 }
                 builder.setPartitionColumns(partitionColumns);
             }
@@ -214,7 +231,8 @@ public class BeelineHiveClient implements IHiveClient {
 
     public static void main(String[] args) throws SQLException {
 
-        BeelineHiveClient loader = new BeelineHiveClient("-n root --hiveconf hive.security.authorization.sqlstd.confwhitelist.append='mapreduce.job.*|dfs.*' -u 'jdbc:hive2://sandbox:10000'");
+        BeelineHiveClient loader = new BeelineHiveClient(
+                "-n root --hiveconf hive.security.authorization.sqlstd.confwhitelist.append='mapreduce.job.*|dfs.*' -u 'jdbc:hive2://sandbox:10000'");
         //BeelineHiveClient loader = new BeelineHiveClient(StringUtils.join(args, " "));
         HiveTableMeta hiveTableMeta = loader.getHiveTableMeta("default", "test_kylin_fact_part");
         System.out.println(hiveTableMeta);

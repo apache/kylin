@@ -70,7 +70,7 @@ public interface BatchConstants {
     String CFG_SPARK_META_URL = "spark.meta.url";
     String CFG_GLOBAL_DICT_BASE_DIR = "global.dict.base.dir";
 
-    String CFG_HLL_SHARD_BASE = "mapreduce.partition.hll.shard.base";
+    String CFG_HLL_REDUCER_NUM = "cuboidHLLCounterReducerNum";
 
     /**
      * command line ARGuments

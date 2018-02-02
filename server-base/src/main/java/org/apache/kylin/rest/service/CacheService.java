@@ -20,12 +20,9 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 
-import javax.sql.DataSource;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
-import org.apache.kylin.query.QueryDataSource;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -41,7 +38,6 @@ import net.sf.ehcache.CacheManager;
 public class CacheService extends BasicService implements InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
-    private static QueryDataSource queryDataSource = new QueryDataSource();
 
     @Autowired
     @Qualifier("cubeMgmtService")
@@ -53,19 +49,17 @@ public class CacheService extends BasicService implements InitializingBean {
     private Broadcaster.Listener cacheSyncListener = new Broadcaster.Listener() {
         @Override
         public void onClearAll(Broadcaster broadcaster) throws IOException {
-            removeAllOLAPDataSources();
             cleanAllDataCache();
+            HBaseConnection.clearConnCache(); // take the chance to clear HBase connection cache as well
         }
 
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
-            removeOLAPDataSource(project);
             cleanDataCache(project);
         }
 
         @Override
         public void onProjectDataChange(Broadcaster broadcaster, String project) throws IOException {
-            removeOLAPDataSource(project); // data availability (cube enabled/disabled) affects exposed schema to SQL
             cleanDataCache(project);
         }
 
@@ -75,7 +69,8 @@ public class CacheService extends BasicService implements InitializingBean {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
+                throws IOException {
             if ("cube".equals(entity) && event == Event.UPDATE) {
                 final String cubeName = cacheKey;
                 new Thread() { // do not block the event broadcast thread
@@ -111,7 +106,7 @@ public class CacheService extends BasicService implements InitializingBean {
 
     public void annouceWipeCache(String entity, String event, String cacheKey) {
         Broadcaster broadcaster = Broadcaster.getInstance(getConfig());
-        broadcaster.queue(entity, event, cacheKey);
+        broadcaster.announce(entity, event, cacheKey);
     }
 
     public void notifyMetadataChange(String entity, Event event, String cacheKey) throws IOException {
@@ -136,26 +131,6 @@ public class CacheService extends BasicService implements InitializingBean {
         } else {
             logger.warn("skip cleaning all storage cache");
         }
-    }
-
-    private void removeOLAPDataSource(String project) {
-        logger.info("removeOLAPDataSource is called for project " + project);
-        if (StringUtils.isEmpty(project))
-            throw new IllegalArgumentException("removeOLAPDataSource: project name not given");
-
-        queryDataSource.removeCache(project);
-    }
-
-    public void removeAllOLAPDataSources() {
-        // brutal, yet simplest way
-        logger.info("removeAllOLAPDataSources is called.");
-        queryDataSource.clearCache();
-    }
-
-    @Deprecated
-    public DataSource getOLAPDataSource(String project) {
-        DataSource ret = queryDataSource.get(project, getConfig());
-        return ret;
     }
 
 }

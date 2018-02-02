@@ -41,6 +41,7 @@ public class InitialTaskManager implements InitializingBean {
     }
 
     private void runInitialTasks() {
+
         // init metrics system for kylin
         QueryMetricsFacade.init();
         QueryMetrics2Facade.init();
@@ -52,7 +53,7 @@ public class InitialTaskManager implements InitializingBean {
             for (String taskClass : taskClasses) {
                 try {
                     InitialTask task = (InitialTask) Class.forName(taskClass).newInstance();
-                    logger.info("Running task: " + taskClass);
+                    logger.info("Running initial task: " + taskClass);
                     task.execute();
                 } catch (Throwable e) {
                     logger.error("Initial task failed: " + taskClass, e);

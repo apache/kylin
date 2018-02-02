@@ -187,34 +187,6 @@ public class JoinDesc implements Serializable {
         return true;
     }
 
-    // equals() without alias
-    public boolean matches(JoinDesc other) {
-        if (other == null)
-            return false;
-        
-        if (!this.type.equalsIgnoreCase(other.getType()))
-            return false;
-        
-        // note pk/fk are sorted, sortByFK()
-        if (!this.columnDescEquals(foreignKeyColumns, other.foreignKeyColumns))
-            return false;
-        if (!this.columnDescEquals(primaryKeyColumns, other.primaryKeyColumns))
-            return false;
-        
-        return true;
-    }
-
-    private boolean columnDescEquals(TblColRef[] a, TblColRef[] b) {
-        if (a.length != b.length)
-            return false;
-        
-        for (int i = 0; i < a.length; i++) {
-            if (a[i].getColumnDesc().equals(b[i].getColumnDesc()) == false)
-                return false;
-        }
-        return true;
-    }
-
     @Override
     public String toString() {
         return "JoinDesc [type=" + type + ", primary_key=" + Arrays.toString(primaryKey) + ", foreign_key=" + Arrays.toString(foreignKey) + "]";

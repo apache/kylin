@@ -130,8 +130,8 @@
       <div class="row charts">
         <div class="col-sm-6" ng-if="barChart">
           <div style="border: 2px solid #ddd; margin-top:15px;">
-            <div class="form-group" style="width: 90px; position: absolute; right: 15px; bottom: 265px;">
-              showValue: <input type="checkbox" ng-model="barChart.options.chart.showValues">
+            <div class="form-group" style="width: 96px; position: absolute; right: 15px; bottom: 265px;">
+              Show Value: <input type="checkbox" ng-model="barChart.options.chart.showValues">
             </div>
             <nvd3 options="barChart.options" data="barChart.data"></nvd3>
           </div>
@@ -139,7 +139,7 @@
         <div class="col-sm-6" ng-if="lineChart">
           <div style="border: 2px solid #ddd; margin-top:15px;">
             <div class="form-group">
-              <select class="form-control" style="width: 80px; position: absolute; right: 20px; bottom: 270px;" ng-options="option.name for option in lineChart.dimension.options track by option.value" ng-model="lineChart.dimension.selected" ng-change="changeDimensionFilter('line')">
+              <select class="form-control" style="padding: 4px;width: 80px; position: absolute; right: 20px; bottom: 270px;" ng-options="option.name for option in lineChart.dimension.options track by option.value" ng-model="lineChart.dimension.selected" ng-change="changeDimensionFilter('line')">
               </select>
             </div>
             <nvd3 options="lineChart.options" data="lineChart.data"></nvd3>

@@ -47,7 +47,6 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -91,7 +90,7 @@ public class BuildCubeWithStream {
     private KafkaConfig kafkaConfig;
     private MockKafka kafkaServer;
     private ZkConnection zkConnection;
-    private final String kafkaZkPath = "/" + UUID.randomUUID().toString();
+    private final String kafkaZkPath = "/kylin/streaming/" + UUID.randomUUID().toString();
 
     protected static boolean fastBuildMode = false;
     private volatile boolean generateData = true;
@@ -131,7 +130,7 @@ public class BuildCubeWithStream {
         BrokerConfig brokerConfig = kafkaConfig.getKafkaClusterConfigs().get(0).getBrokerConfigs().get(0);
         brokerConfig.setHost(localIp);
         kafkaConfig.setTopic(topicName);
-        KafkaConfigManager.getInstance(kylinConfig).saveKafkaConfig(kafkaConfig);
+        KafkaConfigManager.getInstance(kylinConfig).updateKafkaConfig(kafkaConfig);
 
         startEmbeddedKafka(topicName, brokerConfig);
     }
@@ -160,10 +159,7 @@ public class BuildCubeWithStream {
 
     protected void clearSegment(String cubeName) throws Exception {
         CubeInstance cube = cubeManager.getCube(cubeName);
-        // remove all existing segments
-        CubeUpdate cubeBuilder = new CubeUpdate(cube);
-        cubeBuilder.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
-        cubeManager.updateCube(cubeBuilder);
+        cubeManager.updateCubeDropSegments(cube, cube.getSegments());
     }
 
     public void build() throws Exception {
@@ -236,7 +232,8 @@ public class BuildCubeWithStream {
         for (int i = 0; i < futures.size(); i++) {
             ExecutableState result = futures.get(i).get(20, TimeUnit.MINUTES);
             logger.info("Checking building task " + i + " whose state is " + result);
-            Assert.assertTrue(result == null || result == ExecutableState.SUCCEED || result == ExecutableState.DISCARDED);
+            Assert.assertTrue(
+                    result == null || result == ExecutableState.SUCCEED || result == ExecutableState.DISCARDED);
             if (result == ExecutableState.SUCCEED)
                 succeedBuild++;
         }
@@ -253,6 +250,9 @@ public class BuildCubeWithStream {
 
             segments = cubeManager.getCube(cubeName).getSegments();
             Assert.assertTrue(segments.size() == 1);
+
+            SegmentRange.TSRange tsRange = segments.get(0).getTSRange();
+            Assert.assertTrue(tsRange.duration() > 0);
 
             CubeSegment toRefreshSeg = segments.get(0);
 
@@ -283,7 +283,8 @@ public class BuildCubeWithStream {
     protected ExecutableState buildSegment(String cubeName, long startOffset, long endOffset) throws Exception {
         CubeInstance cubeInstance = cubeManager.getCube(cubeName);
         ISource source = SourceFactory.getSource(cubeInstance);
-        SourcePartition partition = source.enrichSourcePartitionBeforeBuild(cubeInstance, new SourcePartition(null, new SegmentRange(startOffset, endOffset), null, null));
+        SourcePartition partition = source.enrichSourcePartitionBeforeBuild(cubeInstance,
+                new SourcePartition(null, new SegmentRange(startOffset, endOffset), null, null));
         CubeSegment segment = cubeManager.appendSegment(cubeManager.getCube(cubeName), partition);
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
@@ -302,7 +303,8 @@ public class BuildCubeWithStream {
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);
         if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
-            throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
+            throw new RuntimeException(
+                    "No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
         }
         HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
     }
@@ -330,7 +332,8 @@ public class BuildCubeWithStream {
     protected void waitForJob(String jobId) {
         while (true) {
             AbstractExecutable job = jobService.getJob(jobId);
-            if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR || job.getStatus() == ExecutableState.DISCARDED) {
+            if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR
+                    || job.getStatus() == ExecutableState.DISCARDED) {
                 break;
             } else {
                 try {
@@ -364,13 +367,15 @@ public class BuildCubeWithStream {
             buildCubeWithStream.before();
             buildCubeWithStream.build();
             logger.info("Build is done");
-
-            buildCubeWithStream.after();
-            buildCubeWithStream.cleanup();
-            logger.info("Going to exit");
         } catch (Throwable e) {
             logger.error("error", e);
             exitCode = 1;
+        } finally {
+            if (buildCubeWithStream != null) {
+                buildCubeWithStream.after();
+                buildCubeWithStream.cleanup();
+            }
+            logger.info("Going to exit");
         }
 
         long millis = System.currentTimeMillis() - start;

@@ -20,6 +20,7 @@ package org.apache.kylin.source.jdbc;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.Random;
@@ -50,15 +51,9 @@ public class SqlUtil {
         }
     }
 
-    public static void execUpdateSQL(Connection db, String sql) {
-        Statement statement = null;
-        try {
-            statement = db.createStatement();
+    public static void execUpdateSQL(Connection db, String sql) throws SQLException {
+        try (Statement statement = db.createStatement()) {
             statement.executeUpdate(sql);
-        } catch (Exception e) {
-            logger.error("", e);
-        } finally {
-            closeResources(null, statement);
         }
     }
 

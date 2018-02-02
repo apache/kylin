@@ -23,15 +23,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.job.exception.PersistentException;
-import org.apache.kylin.metadata.model.DataModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,36 +41,23 @@ public class ExecutableDao {
     private static final Serializer<ExecutablePO> JOB_SERIALIZER = new JsonSerializer<ExecutablePO>(ExecutablePO.class);
     private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(ExecutableOutputPO.class);
     private static final Logger logger = LoggerFactory.getLogger(ExecutableDao.class);
-    private static final ConcurrentMap<KylinConfig, ExecutableDao> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableDao>();
-
-    private ResourceStore store;
 
     public static ExecutableDao getInstance(KylinConfig config) {
-        ExecutableDao r = CACHE.get(config);
-        if (r == null) {
-            synchronized (ExecutableDao.class) {
-                r = CACHE.get(config);
-                if (r == null) {
-                    r = new ExecutableDao(config);
-                    CACHE.put(config, r);
-                    if (CACHE.size() > 1) {
-                        logger.warn("More than one singleton exist");
-                    }
-                }
-            }
-        }
-        return r;
+        return config.getManager(ExecutableDao.class);
     }
 
-    public static void clearCache() {
-        synchronized (CACHE) {
-            CACHE.clear();
-        }
+    // called by reflection
+    static ExecutableDao newInstance(KylinConfig config) throws IOException {
+        return new ExecutableDao(config);
     }
+
+    // ============================================================================
+    
+    private ResourceStore store;
 
     private ExecutableDao(KylinConfig config) {
         logger.info("Using metadata url: " + config);
-        this.store = DataModelManager.getInstance(config).getStore();
+        this.store = ResourceStore.getStore(config);
     }
 
     private String pathOfJob(ExecutablePO job) {

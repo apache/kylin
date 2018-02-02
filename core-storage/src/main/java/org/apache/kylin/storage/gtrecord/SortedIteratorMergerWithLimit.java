@@ -52,13 +52,13 @@ public class SortedIteratorMergerWithLimit<E extends Cloneable> extends SortedIt
         this.comparator = comparator;
     }
 
-    protected Iterator<E> getIteratorInternal(PriorityQueue<PeekingImpl<E>> heap) {
-        return new MergedIteratorWithLimit<E>(heap, limit, comparator);
+    public Iterator<E> getIterator() {
+        return new MergedIteratorWithLimit(limit, comparator);
     }
 
-    static class MergedIteratorWithLimit<E extends Cloneable> implements Iterator<E> {
+    class MergedIteratorWithLimit implements Iterator<E> {
 
-        private final PriorityQueue<PeekingImpl<E>> heap;
+        private PriorityQueue<PeekingImpl<E>> heap;
         private final Comparator<E> comparator;
 
         private boolean nextFetched = false;
@@ -70,14 +70,16 @@ public class SortedIteratorMergerWithLimit<E extends Cloneable> extends SortedIt
 
         private PeekingImpl<E> lastSource = null;
 
-        public MergedIteratorWithLimit(PriorityQueue<PeekingImpl<E>> heap, int limit, Comparator<E> comparator) {
-            this.heap = heap;
+        public MergedIteratorWithLimit(int limit, Comparator<E> comparator) {
             this.limit = limit;
             this.comparator = comparator;
         }
 
         @Override
         public boolean hasNext() {
+            if (heap == null) {
+                heap = getHeap();
+            }
             if (nextFetched) {
                 return true;
             }

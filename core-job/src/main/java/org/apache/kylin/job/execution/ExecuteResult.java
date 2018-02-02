@@ -32,6 +32,13 @@ public final class ExecuteResult {
     private final String output;
     private final Throwable throwable;
 
+    /**
+     * Default constructor to indicate a success ExecuteResult.
+     */
+    public ExecuteResult() {
+        this(State.SUCCEED, "succeed");
+    }
+
     public ExecuteResult(State state) {
         this(state, "");
     }

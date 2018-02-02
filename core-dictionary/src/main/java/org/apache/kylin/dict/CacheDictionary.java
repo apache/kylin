@@ -18,11 +18,11 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.Dictionary;
-
 import java.lang.ref.SoftReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.kylin.common.util.Dictionary;
 
 /**
  */
@@ -32,6 +32,8 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
     private transient SoftReference<ConcurrentHashMap> valueToIdCache;
 
     private transient SoftReference<Object[]> idToValueCache;
+
+    public transient SoftReference<byte[][]> idToValueByteCache;
 
     protected transient int baseId;
 
@@ -80,6 +82,28 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
         return bytesConvert.convertFromBytes(valueBytes, 0, valueBytes.length);
     }
 
+    @Override
+    protected byte[] getValueBytesFromIdImpl(int id) {
+        if (idToValueByteCache != null) {
+            byte[][] bytes = idToValueByteCache.get();
+            if (bytes != null) {
+                int seq = calcSeqNoFromId(id);
+                if (bytes[seq] != null) {
+                    cacheHitCount++;
+                    return bytes[seq];
+                }
+                byte[] valueBytes = getValueBytesFromIdWithoutCache(id);
+                byte[] bytes1 = bytesConvert.convertBytesValueFromBytes(valueBytes, 0, valueBytes.length);
+                bytes[seq] = bytes1;
+                cacheMissCount++;
+                return bytes1;
+            }
+        }
+        byte[] valueBytes = getValueBytesFromIdWithoutCache(id);
+        return bytesConvert.convertBytesValueFromBytes(valueBytes, 0, valueBytes.length);
+
+    }
+
     protected final int calcSeqNoFromId(int id) {
         int seq = id - baseId;
         if (seq < 0 || seq >= getSize()) {
@@ -93,6 +117,8 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
             this.valueToIdCache = new SoftReference<>(new ConcurrentHashMap());
         if (this.idToValueCache == null)
             this.idToValueCache = new SoftReference<>(new Object[getSize()]);
+        if (this.idToValueByteCache == null)
+            this.idToValueByteCache = new SoftReference<>(new byte[getSize()][]);
     }
 
     public final void disableCache() {

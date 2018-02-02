@@ -39,6 +39,10 @@ public class StorageFactory {
         return current.get(aware.getStorageType());
     }
 
+    public static void clearCache() {
+        storages.remove();
+    }
+
     public static IStorageQuery createQuery(IRealization realization) {
         return storage(realization).createQuery(realization);
     }

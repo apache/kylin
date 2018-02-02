@@ -43,8 +43,10 @@ public class HivePushDownConverter implements IPushDownConverter {
             Pattern.CASE_INSENSITIVE);
     private static final Pattern CONCAT_PATTERN = Pattern.compile("(['_a-z0-9A-Z]+)\\|\\|(['_a-z0-9A-Z]+)",
             Pattern.CASE_INSENSITIVE);
-    private static final Pattern TIMESTAMPADD_PATTERN = Pattern.compile("timestampadd\\s*\\(\\s*(.*?)\\s*,",
-            Pattern.CASE_INSENSITIVE);
+    private static final Pattern TIMESTAMP_ADD_DIFF_PATTERN = Pattern
+            .compile("timestamp(add|diff)\\s*\\(\\s*(.*?)\\s*,", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SELECT_PATTERN = Pattern.compile("^select", Pattern.CASE_INSENSITIVE);
+    private static final Pattern LIMIT_PATTERN = Pattern.compile("(limit\\s+[0-9;]+)$", Pattern.CASE_INSENSITIVE);
     private static final ImmutableSet<String> sqlKeyWordsExceptAS = ImmutableSet.of("A", "ABS", "ABSOLUTE", "ACTION",
             "ADA", "ADD", "ADMIN", "AFTER", "ALL", "ALLOCATE", "ALLOW", "ALTER", "ALWAYS", "AND", "ANY", "APPLY", "ARE",
             "ARRAY", "ARRAY_MAX_CARDINALITY", "ASC", "ASENSITIVE", "ASSERTION", "ASSIGNMENT", "ASYMMETRIC", "AT",
@@ -213,12 +215,12 @@ public class HivePushDownConverter implements IPushDownConverter {
         return replacedString;
     }
 
-    public static String timestampaddReplace(String originString) {
-        Matcher timestampaddMatcher = TIMESTAMPADD_PATTERN.matcher(originString);
+    public static String timestampAddDiffReplace(String originString) {
+        Matcher timestampaddMatcher = TIMESTAMP_ADD_DIFF_PATTERN.matcher(originString);
         String replacedString = originString;
 
         while (timestampaddMatcher.find()) {
-            String interval = timestampaddMatcher.group(1);
+            String interval = timestampaddMatcher.group(2);
             String timestampaddStr = replaceString(timestampaddMatcher.group(), interval, "'" + interval + "'");
             replacedString = replaceString(replacedString, timestampaddMatcher.group(), timestampaddStr);
         }
@@ -240,7 +242,23 @@ public class HivePushDownConverter implements IPushDownConverter {
         return replacedString;
     }
 
-    public static String doConvert(String originStr) {
+    public static String addLimit(String originString) {
+        Matcher selectMatcher = SELECT_PATTERN.matcher(originString);
+        Matcher limitMatcher = LIMIT_PATTERN.matcher(originString);
+        String replacedString = originString;
+
+        if (selectMatcher.find() && !limitMatcher.find()) {
+            if (originString.endsWith(";")) {
+                replacedString = originString.replaceAll(";+$", "");
+            }
+
+            replacedString = replacedString.concat(" limit 1");
+        }
+
+        return replacedString;
+    }
+
+    public static String doConvert(String originStr, boolean isPrepare) {
         // Step1.Replace " with `
         String convertedSql = replaceString(originStr, "\"", "`");
 
@@ -254,17 +272,23 @@ public class HivePushDownConverter implements IPushDownConverter {
         convertedSql = subqueryReplace(convertedSql);
 
         // Step5.Replace char_length with length
+        convertedSql = replaceString(convertedSql, "CHAR_LENGTH", "LENGTH");
         convertedSql = replaceString(convertedSql, "char_length", "length");
 
         // Step6.Replace "||" with concat
         convertedSql = concatReplace(convertedSql);
 
         // Step7.Add quote for interval in timestampadd
-        convertedSql = timestampaddReplace(convertedSql);
+        convertedSql = timestampAddDiffReplace(convertedSql);
 
         // Step8.Replace integer with int
         convertedSql = replaceString(convertedSql, "INTEGER", "INT");
         convertedSql = replaceString(convertedSql, "integer", "int");
+
+        // Step9.Add limit 1 for prepare select sql to speed up
+        if (isPrepare) {
+            convertedSql = addLimit(convertedSql);
+        }
 
         return convertedSql;
     }
@@ -295,7 +319,7 @@ public class HivePushDownConverter implements IPushDownConverter {
     }
 
     @Override
-    public String convert(String originSql, String project, String defaultSchema) {
-        return doConvert(originSql);
+    public String convert(String originSql, String project, String defaultSchema, boolean isPrepare) {
+        return doConvert(originSql, isPrepare);
     }
 }

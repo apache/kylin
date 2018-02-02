@@ -54,7 +54,7 @@ public class HadoopUtil {
         return conf;
     }
 
-    private static Configuration healSickConfig(Configuration conf) {
+    public static Configuration healSickConfig(Configuration conf) {
         // https://issues.apache.org/jira/browse/KYLIN-953
         if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
             conf.set("hadoop.tmp.dir", "/tmp");
@@ -62,27 +62,30 @@ public class HadoopUtil {
         if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
             conf.set("hbase.fs.tmp.dir", "/tmp");
         }
+        //  https://issues.apache.org/jira/browse/KYLIN-3064
+        conf.set("yarn.timeline-service.enabled", "false");
+
         return conf;
     }
 
     public static FileSystem getWorkingFileSystem() throws IOException {
         return getFileSystem(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
     }
-    
+
     public static FileSystem getWorkingFileSystem(Configuration conf) throws IOException {
         Path workingPath = new Path(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
         return getFileSystem(workingPath, conf);
     }
-    
+
     public static FileSystem getFileSystem(String path) throws IOException {
         return getFileSystem(new Path(makeURI(path)));
     }
-    
+
     public static FileSystem getFileSystem(Path path) throws IOException {
         Configuration conf = getCurrentConfiguration();
         return getFileSystem(path, conf);
     }
-    
+
     public static FileSystem getFileSystem(Path path, Configuration conf) {
         try {
             return path.getFileSystem(conf);

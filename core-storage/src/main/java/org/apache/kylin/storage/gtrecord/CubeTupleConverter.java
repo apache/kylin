@@ -59,16 +59,16 @@ public class CubeTupleConverter implements ITupleConverter {
     final CubeSegment cubeSeg;
     final Cuboid cuboid;
     final TupleInfo tupleInfo;
-    private final List<IDerivedColumnFiller> derivedColFillers;
+    public final List<IDerivedColumnFiller> derivedColFillers;
 
-    private final int[] gtColIdx;
-    private final int[] tupleIdx;
-    private final MeasureType<?>[] measureTypes;
+    public final int[] gtColIdx;
+    public final int[] tupleIdx;
+    public final MeasureType<?>[] measureTypes;
 
-    private final List<IAdvMeasureFiller> advMeasureFillers;
-    private final List<Integer> advMeasureIndexInGTValues;
+    public final List<IAdvMeasureFiller> advMeasureFillers;
+    public final List<Integer> advMeasureIndexInGTValues;
 
-    private final int nSelectedDims;
+    public final int nSelectedDims;
 
     public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, //
             Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, int[] gtColIdx, TupleInfo returnTupleInfo) {
@@ -178,11 +178,11 @@ public class CubeTupleConverter implements ITupleConverter {
         }
     }
 
-    private interface IDerivedColumnFiller {
+    protected interface IDerivedColumnFiller {
         public void fillDerivedColumns(Object[] gtValues, Tuple tuple);
     }
 
-    private IDerivedColumnFiller newDerivedColumnFiller(TblColRef[] hostCols, final DeriveInfo deriveInfo) {
+    protected IDerivedColumnFiller newDerivedColumnFiller(TblColRef[] hostCols, final DeriveInfo deriveInfo) {
         boolean allHostsPresent = true;
         final int[] hostTmpIdx = new int[hostCols.length];
         for (int i = 0; i < hostCols.length; i++) {
@@ -253,7 +253,7 @@ public class CubeTupleConverter implements ITupleConverter {
         }
     }
 
-    private int indexOnTheGTValues(TblColRef col) {
+    public int indexOnTheGTValues(TblColRef col) {
         List<TblColRef> cuboidDims = cuboid.getColumns();
         int cuboidIdx = cuboidDims.indexOf(col);
         for (int i = 0; i < gtColIdx.length; i++) {
@@ -286,7 +286,7 @@ public class CubeTupleConverter implements ITupleConverter {
         }
     }
 
-    private static class EnhancedStringLookupTable extends LookupStringTable {
+    public static class EnhancedStringLookupTable extends LookupStringTable {
 
         public EnhancedStringLookupTable(TableDesc tableDesc, String[] keyColumns, IReadableTable table) throws IOException {
             super(tableDesc, keyColumns, table);

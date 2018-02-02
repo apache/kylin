@@ -28,6 +28,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMRInput;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -92,19 +93,18 @@ public class KafkaSource implements ISource {
         final String topic = kafkaConfig.getTopic();
         try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cube.getName(), null)) {
             final List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
+            logger.info("Get {} partitions for topic {} ", partitionInfos.size(), topic);
             for (PartitionInfo partitionInfo : partitionInfos) {
                 if (result.getSourcePartitionOffsetStart().containsKey(partitionInfo.partition()) == false) {
-                    // has new partition added
-                    logger.debug("has new partition added");
                     long earliest = KafkaClient.getEarliestOffset(consumer, topic, partitionInfo.partition());
-                    logger.debug("new partition " + partitionInfo.partition() + " starts from " + earliest);
+                    logger.debug("New partition {} added, with start offset {}", partitionInfo.partition(), earliest);
                     result.getSourcePartitionOffsetStart().put(partitionInfo.partition(), earliest);
                 }
             }
         }
 
         if (range == null || range.end.v.equals(Long.MAX_VALUE)) {
-            logger.debug("Seek end offsets from topic");
+            logger.debug("Seek end offsets from topic {}", topic);
             Map<Integer, Long> latestOffsets = KafkaClient.getLatestOffsets(cube);
             logger.debug("The end offsets are " + latestOffsets);
 
@@ -138,7 +138,6 @@ public class KafkaSource implements ISource {
 
         result.setSegRange(new SegmentRange(totalStartOffset, totalEndOffset));
 
-        logger.debug("parsePartitionBeforeBuild() return: " + result);
         return result;
     }
 
@@ -210,6 +209,11 @@ public class KafkaSource implements ISource {
                 dependentResources.add(KafkaConfig.concatResourcePath(table.getIdentity()));
                 dependentResources.add(StreamingConfig.concatResourcePath(table.getIdentity()));
                 return dependentResources;
+            }
+
+            @Override
+            public ColumnDesc[] evalQueryMetadata(String query) {
+                throw new UnsupportedOperationException();
             }
         };
     }

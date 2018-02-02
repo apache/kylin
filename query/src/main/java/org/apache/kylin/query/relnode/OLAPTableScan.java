@@ -23,8 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import javax.annotation.Nullable;
+
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
+import org.apache.calcite.adapter.enumerable.JavaRowFormat;
 import org.apache.calcite.adapter.enumerable.PhysType;
 import org.apache.calcite.adapter.enumerable.PhysTypeImpl;
 import org.apache.calcite.linq4j.tree.Blocks;
@@ -34,6 +37,7 @@ import org.apache.calcite.linq4j.tree.Primitive;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
@@ -60,6 +64,8 @@ import org.apache.calcite.rel.rules.SortUnionTransposeRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableRef;
@@ -78,19 +84,21 @@ import org.apache.kylin.query.optrule.OLAPWindowRule;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.query.schema.OLAPTable;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
 /**
  */
 public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
-    private final OLAPTable olapTable;
+    protected final OLAPTable olapTable;
     private final String tableName;
-    private final int[] fields;
+    protected final int[] fields;
     private String alias;
     private String backupAlias;
-    private ColumnRowType columnRowType;
-    private OLAPContext context;
+    protected ColumnRowType columnRowType;
+    protected OLAPContext context;
+    private KylinConfig kylinConfig;
 
     public OLAPTableScan(RelOptCluster cluster, RelOptTable table, OLAPTable olapTable, int[] fields) {
         super(cluster, cluster.traitSetOf(OLAPRel.CONVENTION), table);
@@ -98,6 +106,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         this.fields = fields;
         this.tableName = olapTable.getTableName();
         this.rowType = getRowType();
+        this.kylinConfig = KylinConfig.getInstanceFromEnv();
     }
 
     public OLAPTable getOlapTable() {
@@ -110,6 +119,10 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     public int[] getFields() {
         return fields;
+    }
+
+    public String getBackupAlias() {
+        return backupAlias;
     }
 
     @Override
@@ -133,6 +146,8 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         OLAPContext.clearThreadLocalContexts();
 
         // register OLAP rules
+        addRules(planner, kylinConfig.getCalciteAddRule());
+
         planner.addRule(OLAPToEnumerableConverterRule.INSTANCE);
         planner.addRule(OLAPFilterRule.INSTANCE);
         planner.addRule(OLAPProjectRule.INSTANCE);
@@ -156,6 +171,8 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         //        planner.addRule(ValuesReduceRule.FILTER_INSTANCE);
         //        planner.addRule(ValuesReduceRule.PROJECT_FILTER_INSTANCE);
         //        planner.addRule(ValuesReduceRule.PROJECT_INSTANCE);
+
+        removeRules(planner, kylinConfig.getCalciteRemoveRule());
 
         // since join is the entry point, we can't push filter past join
         planner.removeRule(FilterJoinRule.FILTER_ON_JOIN);
@@ -186,6 +203,51 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.removeRule(ExpandConversionRule.INSTANCE);
     }
 
+    private void addRules(final RelOptPlanner planner, List<String> rules) {
+        modifyRules(rules, new Function<RelOptRule, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable RelOptRule input) {
+                planner.addRule(input);
+                return null;
+            }
+        });
+    }
+
+    private void removeRules(final RelOptPlanner planner, List<String> rules) {
+        modifyRules(rules, new Function<RelOptRule, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable RelOptRule input) {
+                planner.removeRule(input);
+                return null;
+            }
+        });
+    }
+
+    private void modifyRules(List<String> rules, Function<RelOptRule, Void> func) {
+        for (String rule : rules) {
+            if (StringUtils.isEmpty(rule)) {
+                continue;
+            }
+            String[] split = rule.split("#");
+            if (split.length != 2) {
+                throw new RuntimeException("Customized Rule should be in format <RuleClassName>#<FieldName>");
+            }
+            String clazz = split[0];
+            String field = split[1];
+            try {
+                func.apply((RelOptRule) Class.forName(clazz).getDeclaredField(field).get(null));
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            } catch (NoSuchFieldException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     @Override
     public RelDataType deriveRowType() {
         final List<RelDataTypeField> fieldList = table.getRowType().getFieldList();
@@ -203,7 +265,10 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("fields", Primitive.asList(fields));
+
+        return super.explainTerms(pw)
+                .item("ctx", context == null ? "" : String.valueOf(context.id) + "@" + context.realization)
+                .item("fields", Primitive.asList(fields));
     }
 
     @Override
@@ -314,6 +379,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     public void unfixColumnRowTypeWithModel() {
         this.alias = this.backupAlias;
+        this.backupAlias = null;
 
         for (TblColRef col : columnRowType.getAllColumns()) {
             TblColRef.unfixUnknownModel(col);
@@ -322,6 +388,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
+
         return this;
     }
 
@@ -331,13 +398,13 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         context.setReturnTupleInfo(rowType, columnRowType);
         String execFunction = genExecFunc();
 
-        PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), this.rowType, pref.preferArray());
+        PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), JavaRowFormat.ARRAY);
         MethodCallExpression exprCall = Expressions.call(table.getExpression(OLAPTable.class), execFunction,
                 implementor.getRootExpression(), Expressions.constant(context.id));
         return implementor.result(physType, Blocks.toBlock(exprCall));
     }
 
-    private String genExecFunc() {
+    public String genExecFunc() {
         // if the table to scan is not the fact table of cube, then it's a lookup table
         if (context.realization.getModel().isLookupTable(tableName)) {
             return "executeLookupTableQuery";
@@ -376,4 +443,5 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         this.traitSet = this.traitSet.replace(trait);
         return oldTraitSet;
     }
+
 }

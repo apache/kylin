@@ -126,11 +126,14 @@ public class SaveStatisticsStep extends AbstractExecutable {
                     mapperNumber, mapperOverlapRatio);
 
             Path statisticsFile = new Path(statisticsDir, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+            logger.info(newSegment + " stats saved to hdfs " + statisticsFile);
+            
             FSDataInputStream is = fs.open(statisticsFile);
             try {
                 // put the statistics to metadata store
-                String statisticsFileName = newSegment.getStatisticsResourcePath();
-                rs.putResource(statisticsFileName, is, System.currentTimeMillis());
+                String resPath = newSegment.getStatisticsResourcePath();
+                rs.putResource(resPath, is, System.currentTimeMillis());
+                logger.info(newSegment + " stats saved to resource " + resPath);
 
                 CubingJob cubingJob = (CubingJob) getManager()
                         .getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));

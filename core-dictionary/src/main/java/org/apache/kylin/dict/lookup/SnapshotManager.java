@@ -20,14 +20,11 @@ package org.apache.kylin.dict.lookup;
 
 import java.io.IOException;
 import java.util.NavigableSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.IReadableTable.TableSignature;
@@ -47,39 +44,21 @@ public class SnapshotManager {
 
     private static final Logger logger = LoggerFactory.getLogger(SnapshotManager.class);
 
-    // static cached instances
-    private static final ConcurrentMap<KylinConfig, SnapshotManager> SERVICE_CACHE = new ConcurrentHashMap<KylinConfig, SnapshotManager>();
-
     public static SnapshotManager getInstance(KylinConfig config) {
-        SnapshotManager r = SERVICE_CACHE.get(config);
-        if (r == null) {
-            synchronized (SnapshotManager.class) {
-                r = SERVICE_CACHE.get(config);
-                if (r == null) {
-                    r = new SnapshotManager(config);
-                    SERVICE_CACHE.put(config, r);
-                    if (SERVICE_CACHE.size() > 1) {
-                        logger.warn("More than one singleton exist");
-                    }
-                }
-            }
-        }
-        return r;
+        return config.getManager(SnapshotManager.class);
     }
 
-    public static void clearCache() {
-        synchronized (SERVICE_CACHE) {
-            SERVICE_CACHE.clear();
-        }
+    // called by reflection
+    static SnapshotManager newInstance(KylinConfig config) throws IOException {
+        return new SnapshotManager(config);
     }
 
     // ============================================================================
 
     private KylinConfig config;
-    private LoadingCache<String, SnapshotTable> snapshotCache; // resource
 
-    // path ==>
-    // SnapshotTable
+    // path ==> SnapshotTable
+    private LoadingCache<String, SnapshotTable> snapshotCache; // resource
 
     private SnapshotManager(KylinConfig config) {
         this.config = config;
@@ -116,7 +95,7 @@ public class SnapshotManager {
     }
 
     public void removeSnapshot(String resourcePath) throws IOException {
-        ResourceStore store = DataModelManager.getInstance(this.config).getStore();
+        ResourceStore store = getStore();
         store.deleteResource(resourcePath);
         snapshotCache.invalidate(resourcePath);
     }
@@ -171,7 +150,7 @@ public class SnapshotManager {
     }
 
     private String checkDupByInfo(SnapshotTable snapshot) throws IOException {
-        ResourceStore store = DataModelManager.getInstance(this.config).getStore();
+        ResourceStore store = getStore();
         String resourceDir = snapshot.getResourceDir();
         NavigableSet<String> existings = store.listResources(resourceDir);
         if (existings == null)
@@ -189,7 +168,7 @@ public class SnapshotManager {
     }
 
     private String checkDupByContent(SnapshotTable snapshot) throws IOException {
-        ResourceStore store = DataModelManager.getInstance(this.config).getStore();
+        ResourceStore store = getStore();
         String resourceDir = snapshot.getResourceDir();
         NavigableSet<String> existings = store.listResources(resourceDir);
         if (existings == null)
@@ -205,14 +184,14 @@ public class SnapshotManager {
     }
 
     private void save(SnapshotTable snapshot) throws IOException {
-        ResourceStore store = DataModelManager.getInstance(this.config).getStore();
+        ResourceStore store = getStore();
         String path = snapshot.getResourcePath();
         store.putResource(path, snapshot, SnapshotTableSerializer.FULL_SERIALIZER);
     }
 
     private SnapshotTable load(String resourcePath, boolean loadData) throws IOException {
         logger.info("Loading snapshotTable from " + resourcePath + ", with loadData: " + loadData);
-        ResourceStore store = DataModelManager.getInstance(this.config).getStore();
+        ResourceStore store = getStore();
 
         SnapshotTable table = store.getResource(resourcePath, SnapshotTable.class, loadData ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
 
@@ -222,4 +201,7 @@ public class SnapshotManager {
         return table;
     }
 
+    private ResourceStore getStore() {
+        return ResourceStore.getStore(this.config);
+    }
 }

@@ -34,12 +34,20 @@ public class QueryConnection {
 
     public static Connection getConnection(String project) throws SQLException {
         if (!isRegister) {
-            DriverManager.registerDriver(new Driver());
+            try {
+                Class<?> aClass = Thread.currentThread().getContextClassLoader()
+                        .loadClass("org.apache.calcite.jdbc.Driver");
+                Driver o = (Driver) aClass.newInstance();
+                DriverManager.registerDriver(o);
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
             isRegister = true;
         }
         File olapTmp = OLAPSchemaFactory.createTempOLAPJson(project, KylinConfig.getInstanceFromEnv());
         Properties info = new Properties();
         info.put("model", olapTmp.getAbsolutePath());
+        info.put("typeSystem", "org.apache.kylin.query.calcite.KylinRelDataTypeSystem");
         return DriverManager.getConnection("jdbc:calcite:", info);
     }
 }

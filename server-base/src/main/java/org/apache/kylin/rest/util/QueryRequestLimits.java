@@ -22,6 +22,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +37,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 
-public class QueryRequestLimits {
+public class QueryRequestLimits implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(QueryRequestLimits.class);
 
     private static LoadingCache<String, AtomicInteger> runningStats = CacheBuilder.newBuilder()
@@ -48,7 +54,7 @@ public class QueryRequestLimits {
                 }
             });
 
-    public static boolean openQueryRequest(String project, int maxConcurrentQuery) {
+    static boolean openQueryRequest(String project, int maxConcurrentQuery) {
         if (maxConcurrentQuery == 0) {
             return true;
         }
@@ -69,7 +75,7 @@ public class QueryRequestLimits {
         }
     }
 
-    public static void closeQueryRequest(String project, int maxConcurrentQuery) {
+    static void closeQueryRequest(String project, int maxConcurrentQuery) {
         if (maxConcurrentQuery == 0) {
             return;
         }
@@ -86,5 +92,30 @@ public class QueryRequestLimits {
         } else {
             return null;
         }
+    }
+    
+    // ============================================================================
+
+    final private String project;
+    final private int maxConcurrentQuery;
+    
+    public QueryRequestLimits(String project) {
+        this.project = project;
+        
+        ProjectManager mgr = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+        ProjectInstance prj = mgr.getProject(project);
+        this.maxConcurrentQuery = prj.getConfig().getQueryConcurrentRunningThresholdForProject();
+        
+        boolean ok = openQueryRequest(project, maxConcurrentQuery);
+        if (!ok) {
+            Message msg = MsgPicker.getMsg();
+            logger.warn("Directly return exception as too many concurrent query requests for project:" + project);
+            throw new BadRequestException(msg.getQUERY_TOO_MANY_RUNNING());
+        }
+    }
+
+    @Override
+    public void close() {
+        closeQueryRequest(project, maxConcurrentQuery);
     }
 }

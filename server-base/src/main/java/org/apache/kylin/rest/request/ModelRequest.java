@@ -27,6 +27,9 @@ public class ModelRequest {
     private String message;
     private String project;
 
+    private String ccInCheck;
+    private boolean isSeekingExprAdvice;
+
     public String getUuid() {
         return uuid;
     }
@@ -104,4 +107,19 @@ public class ModelRequest {
         this.project = project;
     }
 
+    public boolean isSeekingExprAdvice() {
+        return isSeekingExprAdvice;
+    }
+
+    public void setIsSeekingExprAdvice(boolean seekingExprAdvice) {
+        isSeekingExprAdvice = seekingExprAdvice;
+    }
+
+    public String getCcInCheck() {
+        return ccInCheck;
+    }
+
+    public void setCcInCheck(String ccInCheck) {
+        this.ccInCheck = ccInCheck;
+    }
 }

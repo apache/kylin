@@ -102,9 +102,9 @@ public class StatisticsDecisionUtil {
         }
 
         CubeInstance cube = segment.getCubeInstance();
-        CubeUpdate cubeBuilder = new CubeUpdate(cube);
-        cubeBuilder.setCuboids(recommendCuboidsWithStats);
-        CubeManager.getInstance(cube.getConfig()).updateCube(cubeBuilder);
+        CubeUpdate update = new CubeUpdate(cube.latestCopyForWrite());
+        update.setCuboids(recommendCuboidsWithStats);
+        CubeManager.getInstance(cube.getConfig()).updateCube(update);
     }
 
     public static boolean isAbleToOptimizeCubingPlan(CubeSegment segment) {

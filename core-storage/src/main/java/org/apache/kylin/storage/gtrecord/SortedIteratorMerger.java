@@ -30,20 +30,21 @@ import com.google.common.base.Preconditions;
 public class SortedIteratorMerger<E> {
 
     private Iterator<Iterator<E>> shardSubsets;
-    private Comparator<E> comparator;
+    protected Comparator<E> comparator;
 
-    public SortedIteratorMerger(Iterator<Iterator<E>> shardSubsets, Comparator<E> comparator) {
+    SortedIteratorMerger(Iterator<Iterator<E>> shardSubsets, Comparator<E> comparator) {
         this.shardSubsets = shardSubsets;
         this.comparator = comparator;
     }
 
-    public Iterator<E> getIterator() {
-        final PriorityQueue<PeekingImpl<E>> heap = new PriorityQueue<PeekingImpl<E>>(11, new Comparator<PeekingImpl<E>>() {
-            @Override
-            public int compare(PeekingImpl<E> o1, PeekingImpl<E> o2) {
-                return comparator.compare(o1.peek(), o2.peek());
-            }
-        });
+    PriorityQueue<PeekingImpl<E>> getHeap() {
+        final PriorityQueue<PeekingImpl<E>> heap = new PriorityQueue<PeekingImpl<E>>(11,
+                new Comparator<PeekingImpl<E>>() {
+                    @Override
+                    public int compare(PeekingImpl<E> o1, PeekingImpl<E> o2) {
+                        return comparator.compare(o1.peek(), o2.peek());
+                    }
+                });
 
         while (shardSubsets.hasNext()) {
             Iterator<E> iterator = shardSubsets.next();
@@ -52,26 +53,27 @@ public class SortedIteratorMerger<E> {
                 heap.offer(peekingIterator);
             }
         }
-
-        return getIteratorInternal(heap);
+        return heap;
     }
 
-    protected Iterator<E> getIteratorInternal(PriorityQueue<PeekingImpl<E>> heap) {
-        return new MergedIterator<E>(heap, comparator);
+    public Iterator<E> getIterator() {
+        return new MergedIterator(comparator);
     }
 
-    private static class MergedIterator<E> implements Iterator<E> {
+    private class MergedIterator implements Iterator<E> {
 
-        private final PriorityQueue<PeekingImpl<E>> heap;
+        private PriorityQueue<PeekingImpl<E>> heap;
         private final Comparator<E> comparator;
 
-        public MergedIterator(PriorityQueue<PeekingImpl<E>> heap, Comparator<E> comparator) {
-            this.heap = heap;
+        public MergedIterator(Comparator<E> comparator) {
             this.comparator = comparator;
         }
 
         @Override
         public boolean hasNext() {
+            if (heap == null) {
+                heap = getHeap();
+            }
             return !heap.isEmpty();
         }
 
@@ -82,7 +84,8 @@ public class SortedIteratorMerger<E> {
             if (poll.hasNext()) {
 
                 //TODO: remove this check when validated
-                Preconditions.checkState(comparator.compare(current, poll.peek()) < 0, "Not sorted! current: " + current + " Next: " + poll.peek());
+                Preconditions.checkState(comparator.compare(current, poll.peek()) < 0,
+                        "Not sorted! current: " + current + " Next: " + poll.peek());
 
                 heap.offer(poll);
             }
@@ -94,7 +97,6 @@ public class SortedIteratorMerger<E> {
             throw new UnsupportedOperationException();
         }
 
-     
     }
 
 }

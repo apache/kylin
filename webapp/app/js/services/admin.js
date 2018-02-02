@@ -20,6 +20,7 @@ KylinApp.factory('AdminService', ['$resource', function ($resource, config) {
   return $resource(Config.service.url + 'admin/:action', {}, {
     env: {method: 'GET', params: {action: 'env'}, isArray: false},
     config: {method: 'GET', params: {action: 'config'}, isArray: false},
+    publicConfig: {method: 'GET', params: {action: 'public_config'}, isArray: false},
     cleanStorage: {method: 'DELETE', params: {action: 'storage'}, isArray: false},
     updateConfig: {method: 'PUT', params: {action: 'config'}, isArray: false}
   });

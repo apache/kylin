@@ -178,6 +178,9 @@ public class CnMessage extends Message {
         return "非法模型名称 '%s', 仅支持字母, 数字和下划线";
     }
 
+    public String getDUPLICATE_MODEL_NAME() {
+        return "模型名称 '%s' 已存在, 不能被创建";
+    }
 
     public String getDROP_REFERENCED_MODEL() {
         return "模型被 Cube '%s' 引用, 不能被删除";

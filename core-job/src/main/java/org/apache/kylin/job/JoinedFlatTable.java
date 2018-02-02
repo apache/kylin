@@ -67,7 +67,7 @@ public class JoinedFlatTable {
     }
 
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir,
-            String storageFormat, String filedDelimiter) {
+            String storageFormat, String fieldDelimiter) {
         StringBuilder ddl = new StringBuilder();
 
         ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + flatDesc.getTableName() + "\n");
@@ -82,7 +82,7 @@ public class JoinedFlatTable {
         }
         ddl.append(")" + "\n");
         if ("TEXTFILE".equals(storageFormat)) {
-            ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '" + filedDelimiter + "'\n");
+            ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '" + fieldDelimiter + "'\n");
         }
         ddl.append("STORED AS " + storageFormat + "\n");
         ddl.append("LOCATION '" + getTableDir(flatDesc, storageDfsDir) + "';").append("\n");
@@ -116,13 +116,11 @@ public class JoinedFlatTable {
             }
         }
 
-        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc)
-                + ";\n";
+        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + "\n";
     }
 
     public static String generateInsertPartialDataStatement(IJoinedFlatTableDesc flatDesc) {
-        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc)
-                + ";\n";
+        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + "\n";
     }
 
     public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc) {
@@ -189,7 +187,7 @@ public class JoinedFlatTable {
                         if (i > 0) {
                             sql.append(" AND ");
                         }
-                        sql.append(fk[i].getIdentity() + " = " + pk[i].getIdentity());
+                        sql.append(fk[i].getExpressionInSourceDB() + " = " + pk[i].getExpressionInSourceDB());
                     }
                     sql.append(sep);
 
@@ -233,8 +231,8 @@ public class JoinedFlatTable {
 
                 if (segRange != null && !segRange.isInfinite()) {
                     whereBuilder.append(" AND (");
-                    whereBuilder.append(
-                            partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, segRange));
+                    whereBuilder.append(partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc,
+                            flatDesc.getSegment(), segRange));
                     whereBuilder.append(")" + sep);
                 }
             }

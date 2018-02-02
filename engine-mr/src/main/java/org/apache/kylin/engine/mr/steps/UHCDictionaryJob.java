@@ -18,6 +18,10 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
@@ -39,10 +43,6 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class UHCDictionaryJob extends AbstractHadoopJob {
     protected static final Logger logger = LoggerFactory.getLogger(UHCDictionaryJob.class);
@@ -72,7 +72,7 @@ public class UHCDictionaryJob extends AbstractHadoopJob {
             CubeInstance cube = cubeMgr.getCube(cubeName);
             attachCubeMetadata(cube, job.getConfiguration());
 
-            List<TblColRef> uhcColumns = cubeMgr.getAllUHCColumns(cube.getDescriptor());
+            List<TblColRef> uhcColumns = cube.getDescriptor().getAllUHCColumns();
             int reducerCount = uhcColumns.size();
 
             //Note! handle uhc columns is null.

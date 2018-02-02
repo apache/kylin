@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
@@ -38,6 +40,7 @@ import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -61,6 +64,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
@@ -74,10 +79,6 @@ public class TableService extends BasicService {
     @Autowired
     @Qualifier("modelMgmtService")
     private ModelService modelService;
-
-    @Autowired
-    @Qualifier("projectService")
-    private ProjectService projectService;
 
     @Autowired
     @Qualifier("streamingMgmtService")
@@ -115,27 +116,11 @@ public class TableService extends BasicService {
 
     public String[] loadHiveTablesToProject(String[] tables, String project) throws Exception {
         aclEvaluate.checkProjectAdminPermission(project);
-        // de-dup
-        SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
-        for (String fullTableName : tables) {
-            String[] parts = HadoopUtil.parseHiveTableName(fullTableName);
-            db2tables.put(parts[0], parts[1]);
-        }
+        List<Pair<TableDesc, TableExtDesc>> allMeta = getAllMeta(tables, project);
+        return loadHiveTablesToProject(project, allMeta);
+    }
 
-        // load all tables first
-        List<Pair<TableDesc, TableExtDesc>> allMeta = Lists.newArrayList();
-        ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
-        for (Map.Entry<String, String> entry : db2tables.entries()) {
-            Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue(), project);
-            TableDesc tableDesc = pair.getFirst();
-            Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey().toUpperCase()));
-            Preconditions.checkState(tableDesc.getName().equals(entry.getValue().toUpperCase()));
-            Preconditions.checkState(tableDesc.getIdentity().equals(entry.getKey().toUpperCase() + "." + entry.getValue().toUpperCase()));
-            TableExtDesc extDesc = pair.getSecond();
-            Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getIdentity()));
-            allMeta.add(pair);
-        }
-
+    String[] loadHiveTablesToProject(String project, List<Pair<TableDesc, TableExtDesc>> allMeta) throws Exception {
         // do schema check
         TableMetadataManager metaMgr = getTableManager();
         CubeManager cubeMgr = getCubeManager();
@@ -177,10 +162,35 @@ public class TableService extends BasicService {
         }
 
         String[] result = (String[]) saved.toArray(new String[saved.size()]);
-        syncTableToProject(result, project);
+        addTableToProject(result, project);
         return result;
     }
-    
+
+    private List<Pair<TableDesc, TableExtDesc>> getAllMeta(String[] tables, String project) throws Exception {
+        // de-dup
+        SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
+        for (String fullTableName : tables) {
+            String[] parts = HadoopUtil.parseHiveTableName(fullTableName);
+            db2tables.put(parts[0], parts[1]);
+        }
+
+        // load all tables first
+        List<Pair<TableDesc, TableExtDesc>> allMeta = Lists.newArrayList();
+        ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
+        for (Map.Entry<String, String> entry : db2tables.entries()) {
+            Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue(), project);
+            TableDesc tableDesc = pair.getFirst();
+            Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey().toUpperCase()));
+            Preconditions.checkState(tableDesc.getName().equals(entry.getValue().toUpperCase()));
+            Preconditions.checkState(tableDesc.getIdentity().equals(entry.getKey().toUpperCase() + "." + entry
+                .getValue().toUpperCase()));
+            TableExtDesc extDesc = pair.getSecond();
+            Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getIdentity()));
+            allMeta.add(pair);
+        }
+        return allMeta;
+    }
+
     public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile) throws Exception {
         aclEvaluate.checkProjectAdminPermission(project);
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -223,7 +233,7 @@ public class TableService extends BasicService {
         return result;
     }
 
-    private void syncTableToProject(String[] tables, String project) throws IOException {
+    private void addTableToProject(String[] tables, String project) throws IOException {
         getProjectManager().addTableDescToProject(tables, project);
     }
 
@@ -298,7 +308,7 @@ public class TableService extends BasicService {
         aclEvaluate.checkProjectAdminPermission(project);
         desc.setUuid(UUID.randomUUID().toString());
         getTableManager().saveSourceTable(desc, project);
-        syncTableToProject(new String[] { desc.getIdentity() }, project);
+        addTableToProject(new String[] { desc.getIdentity() }, project);
     }
 
     /**
@@ -319,7 +329,14 @@ public class TableService extends BasicService {
      */
     public List<String> getHiveTableNames(String database) throws Exception {
         ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
-        return explr.listTables(database);
+        List<String> hiveTableNames = explr.listTables(database);
+        Iterable<String> kylinApplicationTableNames = Iterables.filter(hiveTableNames, new Predicate<String>() {
+            @Override
+            public boolean apply(@Nullable String input) {
+                return input != null && !input.startsWith(MetadataConstants.KYLIN_INTERMEDIATE_PREFIX);
+            }
+        });
+        return Lists.newArrayList(kylinApplicationTableNames);
     }
 
     private TableDescResponse cloneTableDesc(TableDesc table, String prj) {

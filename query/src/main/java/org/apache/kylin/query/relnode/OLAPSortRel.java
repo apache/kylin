@@ -31,6 +31,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexNode;
@@ -44,17 +45,19 @@ import com.google.common.base.Preconditions;
  */
 public class OLAPSortRel extends Sort implements OLAPRel {
 
-    private ColumnRowType columnRowType;
-    private OLAPContext context;
+    ColumnRowType columnRowType;
+    OLAPContext context;
 
-    public OLAPSortRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RelCollation collation, RexNode offset, RexNode fetch) {
+    public OLAPSortRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RelCollation collation,
+            RexNode offset, RexNode fetch) {
         super(cluster, traitSet, child, collation, offset, fetch);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         Preconditions.checkArgument(getConvention() == child.getConvention());
     }
 
     @Override
-    public OLAPSortRel copy(RelTraitSet traitSet, RelNode newInput, RelCollation newCollation, RexNode offset, RexNode fetch) {
+    public OLAPSortRel copy(RelTraitSet traitSet, RelNode newInput, RelCollation newCollation, RexNode offset,
+            RexNode fetch) {
         return new OLAPSortRel(getCluster(), traitSet, newInput, newCollation, offset, fetch);
     }
 
@@ -72,7 +75,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
         this.columnRowType = buildColumnRowType();
     }
 
-    private ColumnRowType buildColumnRowType() {
+    ColumnRowType buildColumnRowType() {
         OLAPRel olapChild = (OLAPRel) getInput();
         ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
         return inputColumnRowType;
@@ -100,7 +103,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
         this.columnRowType = buildColumnRowType();
     }
 
-    private SQLDigest.OrderEnum getOrderEnum(RelFieldCollation.Direction direction) {
+    SQLDigest.OrderEnum getOrderEnum(RelFieldCollation.Direction direction) {
         if (direction == RelFieldCollation.Direction.DESCENDING) {
             return SQLDigest.OrderEnum.DESCENDING;
         } else {
@@ -109,7 +112,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
     }
 
     @SuppressWarnings("unused")
-    private MeasureDesc findMeasure(TblColRef col) {
+    MeasureDesc findMeasure(TblColRef col) {
         for (MeasureDesc measure : this.context.realization.getMeasures()) {
             if (col.getName().equals(measure.getFunction().getRewriteFieldName())) {
                 return measure;
@@ -120,7 +123,8 @@ public class OLAPSortRel extends Sort implements OLAPRel {
 
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
-        return new EnumerableSort(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE).replace(collation), //
+        return new EnumerableSort(getCluster(),
+                getCluster().traitSetOf(EnumerableConvention.INSTANCE).replace(collation), //
                 sole(inputs), collation, offset, fetch);
     }
 
@@ -147,4 +151,9 @@ public class OLAPSortRel extends Sort implements OLAPRel {
         return oldTraitSet;
     }
 
+    @Override
+    public RelWriter explainTerms(RelWriter pw) {
+        return super.explainTerms(pw).item("ctx",
+                context == null ? "" : String.valueOf(context.id) + "@" + context.realization);
+    }
 }

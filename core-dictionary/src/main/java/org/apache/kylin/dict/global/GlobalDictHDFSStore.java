@@ -46,8 +46,8 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
 
     static final Logger logger = LoggerFactory.getLogger(GlobalDictHDFSStore.class);
     static final String V1_INDEX_NAME = ".index";
-    static final String V2_INDEX_NAME = ".index_v2";
-    static final String VERSION_PREFIX = "version_";
+    public static final String V2_INDEX_NAME = ".index_v2";
+    public static final String VERSION_PREFIX = "version_";
     static final int BUFFER_SIZE = 8 * 1024 * 1024;
 
     private final Path basePath;
@@ -295,7 +295,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         protected final FileSystem fs;
         protected final Configuration conf;
 
-        protected IndexFormatV1(FileSystem fs, Configuration conf) {
+        public IndexFormatV1(FileSystem fs, Configuration conf) {
             this.fs = fs;
             this.conf = conf;
         }

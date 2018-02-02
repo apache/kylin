@@ -374,7 +374,7 @@
             <div class="col-xs-12 col-sm-6">
               <select style="width: 100%" chosen
                       ng-model="cubeMetaFrame.engine_type"
-                      ng-if="state.mode=='edit'"  ng-disabled="instance.segments.length>0"
+                      ng-if="state.mode=='edit'"
                       ng-options="et.value as et.name for et in cubeConfig.engineType">
                 <option value="">--Select Engine Type--</option>
               </select>

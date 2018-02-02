@@ -79,7 +79,7 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
             public Dictionary<String> getDictionary(TblColRef col) throws IOException {
                 CubeManager cubeManager = CubeManager.getInstance(config);
                 CubeInstance cube = cubeManager.getCube(cubeName);
-                List<TblColRef> uhcColumns = CubeManager.getInstance(config).getAllUHCColumns(cube.getDescriptor());
+                List<TblColRef> uhcColumns = cube.getDescriptor().getAllUHCColumns();
 
                 Path colDir;
                 if (uhcColumns.contains(col)) {

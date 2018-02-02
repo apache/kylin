@@ -30,6 +30,7 @@ import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -76,7 +77,7 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         this.cubeSeg = (CubeSegment) segment;
         this.cuboid = cuboid;
         this.fullGTInfo = fullGTInfo;
-        this.queryContext = QueryContext.current();
+        this.queryContext = QueryContextFacade.current();
         this.storageContext = context;
 
         this.fuzzyKeyEncoder = new FuzzyKeyEncoder(cubeSeg, cuboid);
@@ -292,7 +293,7 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         if (BackdoorToggles.getQueryTimeout() != -1) {
             coopTimeout = BackdoorToggles.getQueryTimeout();
         } else {
-            coopTimeout = cubeSeg.getConfig().getQueryCoprocessorTimeoutSeconds() * 1000;
+            coopTimeout = cubeSeg.getConfig().getQueryCoprocessorTimeoutSeconds() * 1000L;
         }
         
         int rpcTimeout;
@@ -310,11 +311,8 @@ public abstract class CubeHBaseRPC implements IGTStorage {
             coopTimeout = (long) (rpcTimeout * 0.9);
         }
 
-        long millisBeforeDeadline = queryContext.checkMillisBeforeDeadline();
-        coopTimeout = Math.min(coopTimeout, millisBeforeDeadline);
-        
-        logger.debug("{} = {} ms, {} ms before deadline, use {} ms as timeout for coprocessor",
-                HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, millisBeforeDeadline, coopTimeout);
+        queryContext.checkMillisBeforeDeadline();
+        logger.debug("{} = {} ms, use {} ms as timeout for coprocessor", HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, coopTimeout);
         return coopTimeout;
     }
 

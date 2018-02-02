@@ -97,7 +97,9 @@ sed -i "s/%default_version%/${kylin_version}/g" ${KYLIN_HOME}/sample_cube/metada
 
 #### Replace the 'DEFAULT' with kylin.source.hive.database-for-flat-table
 sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
+sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_streaming_cube.json
 sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/model_desc/kylin_sales_model.json
+sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/model_desc/kylin_streaming_model.json
 sed -i "s/DEFAULT./$sample_database./g" ${KYLIN_HOME}/sample_cube/metadata/project/learn_kylin.json
 sed -i "s/DEFAULT/$sample_database/g" ${KYLIN_HOME}/sample_cube/metadata/table/*.json
 cd ${KYLIN_HOME}/sample_cube/metadata/table

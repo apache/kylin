@@ -20,7 +20,9 @@ package org.apache.kylin.metadata.model;
 
 public interface IEngineAware {
 
+    @Deprecated
     public static final int ID_MR_V1 = 0;
+
     public static final int ID_MR_V2 = 2;
     public static final int ID_MR_II = 3;
     public static final int ID_SPARK = 4;

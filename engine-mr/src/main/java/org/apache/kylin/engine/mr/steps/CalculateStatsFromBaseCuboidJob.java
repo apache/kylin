@@ -103,8 +103,8 @@ public class CalculateStatsFromBaseCuboidJob extends AbstractHadoopJob {
     }
 
     private void setupReducer(Path output, CubeSegment cubeSeg) throws IOException {
-        int hllShardBase = MapReduceUtil.getHLLShardBase(cubeSeg);
-        job.getConfiguration().setInt(BatchConstants.CFG_HLL_SHARD_BASE, hllShardBase);
+        int hllShardBase = MapReduceUtil.getCuboidHLLCounterReducerNum(cubeSeg.getCubeInstance());
+        job.getConfiguration().setInt(BatchConstants.CFG_HLL_REDUCER_NUM, hllShardBase);
 
         job.setReducerClass(CalculateStatsFromBaseCuboidReducer.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);

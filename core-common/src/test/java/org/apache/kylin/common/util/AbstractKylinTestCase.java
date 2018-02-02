@@ -18,8 +18,6 @@
 
 package org.apache.kylin.common.util;
 
-import java.lang.reflect.Method;
-
 import org.apache.kylin.common.KylinConfig;
 
 /**
@@ -28,23 +26,11 @@ import org.apache.kylin.common.KylinConfig;
  */
 public abstract class AbstractKylinTestCase {
 
-    public static final String[] SERVICES_WITH_CACHE = { //
-            "org.apache.kylin.cube.CubeManager", //
-            "org.apache.kylin.cube.CubeDescManager", //
-            "org.apache.kylin.dict.lookup.SnapshotManager", //
-            "org.apache.kylin.dict.DictionaryManager", //
-            "org.apache.kylin.storage.hybrid.HybridManager", //
-            "org.apache.kylin.metadata.realization.RealizationRegistry", //
-            "org.apache.kylin.metadata.project.ProjectManager", //
-            "org.apache.kylin.metadata.MetadataManager", //
-            "org.apache.kylin.metadata.cachesync.Broadcaster", //
-            "org.apache.kylin.metadata.badquery.BadQueryHistoryManager", //
-            "org.apache.kylin.job.impl.threadpool.DistributedScheduler", //
-            "org.apache.kylin.job.execution.ExecutableManager", //
-            "org.apache.kylin.job.dao.ExecutableDao" //
-    };
+    static {
+        System.setProperty("needCheckCC", "true");
+    }
 
-    public abstract void createTestMetadata() throws Exception;
+    public abstract void createTestMetadata(String... overlayMetadataDirs) throws Exception;
 
     public abstract void cleanupTestMetadata() throws Exception;
 
@@ -53,24 +39,8 @@ public abstract class AbstractKylinTestCase {
     }
 
     public static void staticCleanupTestMetadata() {
-        cleanupCache();
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destroyInstance();
     }
 
-    private static void cleanupCache() {
-
-        for (String serviceClass : SERVICES_WITH_CACHE) {
-            try {
-                Class<?> cls = Class.forName(serviceClass);
-                Method method = cls.getDeclaredMethod("clearCache");
-                method.invoke(null);
-            } catch (ClassNotFoundException e) {
-                // acceptable because lower module test does have CubeManager etc on classpath
-            } catch (Exception e) {
-                System.err.println("Error clean up cache " + serviceClass);
-                e.printStackTrace();
-            }
-        }
-    }
 }

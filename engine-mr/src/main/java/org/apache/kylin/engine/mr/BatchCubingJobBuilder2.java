@@ -18,7 +18,8 @@
 
 package org.apache.kylin.engine.mr;
 
-import org.apache.kylin.cube.CubeManager;
+import java.util.List;
+
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidUtil;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
@@ -36,8 +37,6 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public class BatchCubingJobBuilder2 extends JobBuilderSupport {
     private static final Logger logger = LoggerFactory.getLogger(BatchCubingJobBuilder2.class);
@@ -62,7 +61,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         inputSide.addStepPhase1_CreateFlatTable(result);
 
         // Phase 2: Build Dictionary
-        result.addTask(createFactDistinctColumnsStepWithStats(jobId));
+        result.addTask(createFactDistinctColumnsStep(jobId));
 
         if (isEnableUHCDictStep()) {
             result.addTask(createBuildUHCDictStep(jobId));
@@ -90,7 +89,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
             return false;
         }
 
-        List<TblColRef> uhcColumns = CubeManager.getInstance(config.getConfig()).getAllUHCColumns(seg.getCubeDesc());
+        List<TblColRef> uhcColumns = seg.getCubeDesc().getAllUHCColumns();
         if (uhcColumns.size() == 0) {
             return false;
         }

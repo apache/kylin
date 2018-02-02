@@ -26,7 +26,7 @@
             <a href="" ng-click="cube.visiblePage='sql';getCubeSql(cube)">SQL</a>
         </li>
         <li class="{{cube.visiblePage=='json'? 'active':''}}"
-            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">
+            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, 16) && !newAccess">
             <a href="" ng-click="cube.visiblePage='json';">JSON(Cube)</a>
         </li>
         <!--<li class="{{cube.visiblePage=='access'? 'active':''}}"-->
@@ -34,14 +34,14 @@
             <!--<a href="" ng-click="cube.visiblePage='access';listAccess(cube, 'CubeInstance');">Access</a>-->
         <!--</li>-->
         <li class="{{cube.visiblePage=='notification'? 'active':''}}"
-            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">
+            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, 16) && !newAccess">
             <a href="" ng-click="cube.visiblePage='notification';getNotifyListString(cube);">Notification</a>
         </li>
         <li class="{{cube.visiblePage=='hbase'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN')">
             <a href="" ng-click="cube.visiblePage='hbase';getHbaseInfo(cube)">Storage</a>
         </li>
-        <li class="{{cube.visiblePage=='planner'? 'active':''}}" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask)">
+        <li class="{{cube.visiblePage=='planner'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask)) && isShowCubeplanner">
             <a href="" ng-click="cube.visiblePage='planner';getCubePlanner(cube);">Planner</a>
         </li>
     </ul>

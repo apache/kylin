@@ -50,6 +50,10 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+        </dependency>
 
         <!-- Provided -->
         <dependency>
@@ -61,14 +65,19 @@
             <artifactId>jsch</artifactId>
         </dependency>
 
-    
+        <!-- Metric & Tracing -->
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-external-htrace</artifactId>
+        </dependency>
+
         <!-- Env & Test -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-jvm</artifactId>

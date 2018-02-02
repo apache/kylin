@@ -18,11 +18,7 @@
 
 package org.apache.kylin.common.util;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,8 +26,6 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
@@ -42,26 +36,38 @@ import org.w3c.dom.NodeList;
 import com.google.common.collect.Lists;
 
 public class HiveCmdBuilder {
-    private static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
+    public static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
 
     public static final String HIVE_CONF_FILENAME = "kylin_hive_conf";
+    static final String CREATE_HQL_TMP_FILE_TEMPLATE = "cat >%s<<EOL\n%sEOL";
 
     public enum HiveClientMode {
         CLI, BEELINE
     }
 
-    private HiveClientMode clientMode;
     private KylinConfig kylinConfig;
     final private Map<String, String> hiveConfProps = new HashMap<>();
     final private ArrayList<String> statements = Lists.newArrayList();
 
     public HiveCmdBuilder() {
         kylinConfig = KylinConfig.getInstanceFromEnv();
-        clientMode = HiveClientMode.valueOf(kylinConfig.getHiveClientMode().toUpperCase());
         loadHiveConfiguration();
     }
 
     public String build() {
+        HiveClientMode clientMode = HiveClientMode.valueOf(kylinConfig.getHiveClientMode().toUpperCase());
+        String beelineShell = kylinConfig.getHiveBeelineShell();
+        String beelineParams = kylinConfig.getHiveBeelineParams();
+        if (kylinConfig.getEnableSparkSqlForTableOps()) {
+            clientMode = HiveClientMode.BEELINE;
+            beelineShell = kylinConfig.getSparkSqlBeelineShell();
+            beelineParams = kylinConfig.getSparkSqlBeelineParams();
+            if (StringUtils.isBlank(beelineShell)) {
+                throw new IllegalStateException(
+                        "Missing config 'kylin.source.hive.sparksql-beeline-shell', please check kylin.properties");
+            }
+        }
+
         StringBuffer buf = new StringBuffer();
 
         switch (clientMode) {
@@ -74,36 +80,28 @@ public class HiveCmdBuilder {
             buf.append(parseProps());
             break;
         case BEELINE:
-            BufferedWriter bw = null;
-            File tmpHql = null;
+            String tmpHqlPath = null;
+            StringBuilder hql = new StringBuilder();
             try {
-                tmpHql = File.createTempFile("beeline_", ".hql");
-                bw = new BufferedWriter(new FileWriter(tmpHql));
+                tmpHqlPath = "/tmp/" + System.currentTimeMillis() + ".hql";
                 for (String statement : statements) {
-                    bw.write(statement);
-                    bw.newLine();
+                    hql.append(statement);
+                    hql.append("\n");
                 }
-                buf.append("beeline ");
-                buf.append(kylinConfig.getHiveBeelineParams());
+                String createFileCmd = String.format(CREATE_HQL_TMP_FILE_TEMPLATE, tmpHqlPath, hql);
+                buf.append(createFileCmd);
+                buf.append("\n");
+                buf.append(beelineShell);
+                buf.append(" ");
+                buf.append(beelineParams);
                 buf.append(parseProps());
                 buf.append(" -f ");
-                buf.append(tmpHql.getAbsolutePath());
+                buf.append(tmpHqlPath);
                 buf.append(";ret_code=$?;rm -f ");
-                buf.append(tmpHql.getAbsolutePath());
+                buf.append(tmpHqlPath);
                 buf.append(";exit $ret_code");
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             } finally {
-                IOUtils.closeQuietly(bw);
-
-                if (tmpHql != null && logger.isDebugEnabled()) {
-                    String hql = null;
-                    try {
-                        hql = FileUtils.readFileToString(tmpHql, Charset.defaultCharset());
-                    } catch (IOException e) {
-                        // ignore
-                    }
+                if (tmpHqlPath != null && logger.isDebugEnabled()) {
                     logger.debug("The SQL to execute in beeline: \n" + hql);
                 }
             }
@@ -144,6 +142,22 @@ public class HiveCmdBuilder {
         statements.add(statement);
     }
 
+    public void addStatementWithRedistributeBy(String statement) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(statement);
+        addStatementWithRedistributeBy(builder);
+    }
+
+    public void addStatementWithRedistributeBy(StringBuilder statement) {
+        /**
+         * When hive.execution.engine is tez and table is a view of union-all struct, it generates
+         * subdirectories in output, which causes file not found exception.
+         * Use "DISTRIBUTE BY RAND()" to workaround this issue.
+         */
+        statement.append("DISTRIBUTE BY RAND()").append(";\n");
+        statements.add(statement.toString());
+    }
+
     public void addStatements(String[] stats) {
         for (String s : stats) {
             statements.add(s);
@@ -172,8 +186,8 @@ public class HiveCmdBuilder {
             hiveConfFile = new File(path + File.separator + "conf", hiveConfFileName);
         }
 
-        if (hiveConfFile == null || !hiveConfFile.exists()) {
-            throw new RuntimeException("Failed to read " + HIVE_CONF_FILENAME + ".xml");
+        if (!hiveConfFile.exists()) {
+            throw new RuntimeException("Missing config file: " + hiveConfFile.getAbsolutePath());
         }
 
         String fileUrl = OptionsHelper.convertToFileURL(hiveConfFile.getAbsolutePath());

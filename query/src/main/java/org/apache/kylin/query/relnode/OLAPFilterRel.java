@@ -36,6 +36,7 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
@@ -77,9 +78,9 @@ import com.google.common.collect.Sets;
  */
 public class OLAPFilterRel extends Filter implements OLAPRel {
 
-    private static class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
+    static class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
 
-        private final ColumnRowType inputRowType;
+        final ColumnRowType inputRowType;
 
         public TupleFilterVisitor(ColumnRowType inputRowType) {
             super(true);
@@ -179,7 +180,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         }
 
         //KYLIN-2597 - Deal with trivial expression in filters like x = 1 + 2 
-        private TupleFilter dealWithTrivialExpr(RexCall call) {
+        TupleFilter dealWithTrivialExpr(RexCall call) {
             ImmutableList<RexNode> operators = call.operands;
             if (operators.size() != 2) {
                 return null;
@@ -206,7 +207,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
 
             Preconditions.checkNotNull(left);
             Preconditions.checkNotNull(right);
-            
+
             switch (call.op.getKind()) {
             case PLUS:
                 return new ConstantTupleFilter(left.add(right).toString());
@@ -221,14 +222,15 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             }
         }
 
-        private TupleFilter cast(TupleFilter filter, RelDataType type) {
+        TupleFilter cast(TupleFilter filter, RelDataType type) {
             if ((filter instanceof ConstantTupleFilter) == false) {
                 return filter;
             }
 
             ConstantTupleFilter constFilter = (ConstantTupleFilter) filter;
 
-            if (type.getFamily() == SqlTypeFamily.DATE || type.getFamily() == SqlTypeFamily.DATETIME || type.getFamily() == SqlTypeFamily.TIMESTAMP) {
+            if (type.getFamily() == SqlTypeFamily.DATE || type.getFamily() == SqlTypeFamily.DATETIME
+                    || type.getFamily() == SqlTypeFamily.TIMESTAMP) {
                 List<String> newValues = Lists.newArrayList();
                 for (Object v : constFilter.getValues()) {
                     if (v == null)
@@ -241,7 +243,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             return constFilter;
         }
 
-        private CompareTupleFilter mergeToInClause(TupleFilter filter) {
+        CompareTupleFilter mergeToInClause(TupleFilter filter) {
             List<? extends TupleFilter> children = filter.getChildren();
             TblColRef inColumn = null;
             List<Object> inValues = new LinkedList<Object>();
@@ -286,7 +288,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         }
 
         @SuppressWarnings("unused")
-        private String normToTwoDigits(int i) {
+        String normToTwoDigits(int i) {
             if (i < 10)
                 return "0" + i;
             else
@@ -323,8 +325,8 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         }
     }
 
-    private ColumnRowType columnRowType;
-    private OLAPContext context;
+    ColumnRowType columnRowType;
+    OLAPContext context;
 
     public OLAPFilterRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
         super(cluster, traits, child, condition);
@@ -356,7 +358,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             translateFilter(context);
         } else {
             context.afterHavingClauseFilter = true;
-            
+
             TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType);
             TupleFilter havingFilter = this.condition.accept(visitor);
             if (context.havingFilter == null)
@@ -364,23 +366,23 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         }
     }
 
-    private ColumnRowType buildColumnRowType() {
+    ColumnRowType buildColumnRowType() {
         OLAPRel olapChild = (OLAPRel) getInput();
         ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
         return inputColumnRowType;
     }
 
-    private void translateFilter(OLAPContext context) {
+    void translateFilter(OLAPContext context) {
         if (this.condition == null) {
             return;
         }
 
         TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType);
         TupleFilter filter = this.condition.accept(visitor);
-        
+
         // optimize the filter, the optimization has to be segment-irrelevant
         filter = new FilterOptimizeTransformer().transform(filter);
-        
+
         Set<TblColRef> filterColumns = Sets.newHashSet();
         TupleFilter.collectColumns(filter, filterColumns);
         for (TblColRef tblColRef : filterColumns) {
@@ -436,5 +438,11 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         RelTraitSet oldTraitSet = this.traitSet;
         this.traitSet = this.traitSet.replace(trait);
         return oldTraitSet;
+    }
+
+    @Override
+    public RelWriter explainTerms(RelWriter pw) {
+        return super.explainTerms(pw).item("ctx",
+                context == null ? "" : String.valueOf(context.id) + "@" + context.realization);
     }
 }

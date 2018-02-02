@@ -20,9 +20,9 @@
   <!--Project: -->
   <div class="col-xs-3">
     <form ng-if="userService.isAuthorized()">
-      <div class="form-group" ng-if="userService.hasRole('ROLE_MODELER')" >
-        <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-        <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_MODELER')" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+      <div class="form-group" >
+        <a class="btn btn-xs btn-info"  href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+        <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')"  style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
           <i class="fa fa-plus"></i>
         </a>
       </div>

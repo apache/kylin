@@ -63,4 +63,6 @@ public interface IRealization extends IStorageAware {
     public boolean supportsLimitPushDown();
 
     public KylinConfig getConfig();
+
+    public int getCost();
 }
