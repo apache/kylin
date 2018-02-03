@@ -17,11 +17,6 @@
 */
 
 KylinApp.service('UserService', function ($http, $q) {
-    var roles = {
-        'ROLE_MODELER': '/models',
-        'ROLE_ANALYST': '/models',
-        'ROLE_ADMIN': '/models'
-    };
     var curUser = {};
 
     this.getCurUser = function () {
@@ -46,14 +41,6 @@ KylinApp.service('UserService', function ($http, $q) {
         return  curUser.userDetails && curUser.userDetails.authorities && curUser.userDetails.authorities.length > 0;
     };
     this.getHomePage = function () {
-        var homePage = "/login";
-
-        if (curUser.userDetails && curUser.userDetails.authorities) {
-            angular.forEach(curUser.userDetails.authorities, function (authority, index) {
-                homePage = (!!roles[authority.authority]) ? roles[authority.authority] : homePage;
-            });
-        }
-
-        return homePage;
+        return this.isAuthorized()? "/models" : "/login";
     }
 });
