@@ -52,8 +52,9 @@ import com.google.common.collect.Lists;
  * By default it will parse the timestamp col value as Unix time. If the format isn't Unix time, need specify the time parser
  * with property StreamingParser#PROPERTY_TS_PARSER.
  * <p>
- * It also support embedded JSON format; Use a separator (customized by StreamingParser#EMBEDDED_PROPERTY_SEPARATOR) to concat
- * the property names.
+ * It also support embedded JSON format; Use TimedJsonStreamParser#EMBEDDED_PROPERTY_SEPARATOR) to separate them and save into
+ * the column's "comment" filed. For example: "{ 'user' : { 'first_name': 'Tom'}}"; The 'first_name' field is expressed as
+ * 'user_first_name' field, and its comment value is 'user|first_name'.
  */
 public final class TimedJsonStreamParser extends StreamingParser {
 
@@ -64,13 +65,17 @@ public final class TimedJsonStreamParser extends StreamingParser {
     private String tsColName = null;
     private String tsParser = null;
     private String separator = null;
+    private boolean strictCheck = true;
     private final Map<String, Object> root = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private final Map<String, Object> tempMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private final Map<String, String[]> nameMap = new HashMap<>();
+    public static final String EMBEDDED_PROPERTY_SEPARATOR = "|";
 
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
 
     private AbstractTimeParser streamTimeParser;
+    
+    private long vcounter = 0;
 
     public TimedJsonStreamParser(List<TblColRef> allColumns, Map<String, String> properties) {
         this.allColumns = allColumns;
@@ -80,7 +85,8 @@ public final class TimedJsonStreamParser extends StreamingParser {
 
         tsColName = properties.get(PROPERTY_TS_COLUMN_NAME);
         tsParser = properties.get(PROPERTY_TS_PARSER);
-        separator = properties.get(EMBEDDED_PROPERTY_SEPARATOR);
+        separator = properties.get(PROPERTY_EMBEDDED_SEPARATOR);
+        strictCheck = Boolean.parseBoolean(properties.get(PROPERTY_STRICT_CHECK));
 
         if (!StringUtils.isEmpty(tsParser)) {
             try {
@@ -112,7 +118,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
             for (TblColRef column : allColumns) {
                 final String columnName = column.getName().toLowerCase();
                 if (populateDerivedTimeColumns(columnName, result, t) == false) {
-                    result.add(getValueByKey(columnName, root));
+                    result.add(getValueByKey(column, root));
                 }
             }
 
@@ -131,16 +137,30 @@ public final class TimedJsonStreamParser extends StreamingParser {
         return true;
     }
 
-    protected String getValueByKey(String key, Map<String, Object> rootMap) throws IOException {
+    public String[] getEmbeddedPropertyNames(TblColRef column) {
+        final String colName = column.getName().toLowerCase();
+        String[] names = nameMap.get(colName);
+        if (names == null) {
+            String comment = column.getColumnDesc().getComment(); // use comment to parse the structure
+            if (!StringUtils.isEmpty(comment) && comment.contains(EMBEDDED_PROPERTY_SEPARATOR)) {
+                names = comment.toLowerCase().split("\\" + EMBEDDED_PROPERTY_SEPARATOR);
+                nameMap.put(colName, names);
+            } else if (colName.contains(separator)) { // deprecated, just be compitable for old version
+                names = colName.toLowerCase().split(separator);
+                nameMap.put(colName, names);
+            }
+        }
+
+        return names;
+    }
+
+    protected String getValueByKey(TblColRef column, Map<String, Object> rootMap) throws IOException {
+        final String key = column.getName().toLowerCase();
         if (rootMap.containsKey(key)) {
             return objToString(rootMap.get(key));
         }
 
-        String[] names = nameMap.get(key);
-        if (names == null && key.contains(separator)) {
-            names = key.toLowerCase().split(separator);
-            nameMap.put(key, names);
-        }
+        String[] names = getEmbeddedPropertyNames(column);
 
         if (names != null && names.length > 0) {
             tempMap.clear();
@@ -150,8 +170,11 @@ public final class TimedJsonStreamParser extends StreamingParser {
                 if (o instanceof Map) {
                     tempMap.clear();
                     tempMap.putAll((Map<String, Object>) o);
-                } else {
-                    throw new IOException("Property '" + names[i] + "' is not embedded format");
+                } else if (strictCheck || vcounter++ % 100 == 0) {
+                    final String msg = "Property '" + names[i] + "' value is not embedded JSON format. ";
+                    logger.warn(msg);
+                    if (strictCheck)
+                        throw new IOException(msg);
                 }
             }
             Object finalObject = tempMap.get(names[names.length - 1]);

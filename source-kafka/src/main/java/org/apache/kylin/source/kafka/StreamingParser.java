@@ -42,7 +42,8 @@ public abstract class StreamingParser {
     public static final String PROPERTY_TS_COLUMN_NAME = "tsColName";
     public static final String PROPERTY_TS_PARSER = "tsParser";
     public static final String PROPERTY_TS_PATTERN = "tsPattern";
-    public static final String EMBEDDED_PROPERTY_SEPARATOR = "separator";
+    public static final String PROPERTY_EMBEDDED_SEPARATOR = "separator";
+    public static final String PROPERTY_STRICT_CHECK = "strictCheck"; // whether need check each column strictly, default be false (fault tolerant).
 
     public static final Map<String, String> defaultProperties = Maps.newHashMap();
     public static final Map<String, Integer> derivedTimeColumns = Maps.newHashMap();
@@ -57,7 +58,8 @@ public abstract class StreamingParser {
         defaultProperties.put(PROPERTY_TS_COLUMN_NAME, "timestamp");
         defaultProperties.put(PROPERTY_TS_PARSER, "org.apache.kylin.source.kafka.DefaultTimeParser");
         defaultProperties.put(PROPERTY_TS_PATTERN, DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
-        defaultProperties.put(EMBEDDED_PROPERTY_SEPARATOR, "_");
+        defaultProperties.put(PROPERTY_EMBEDDED_SEPARATOR, "_");
+        defaultProperties.put(PROPERTY_STRICT_CHECK, "false");
     }
 
     /**

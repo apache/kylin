@@ -96,12 +96,18 @@ public class TblColRef implements Serializable {
 
     // for test mainly
     public static TblColRef mockup(TableDesc table, int oneBasedColumnIndex, String name, String datatype) {
+        return mockup(table, oneBasedColumnIndex, name, datatype, null);
+    }
+
+    // for test mainly
+    public static TblColRef mockup(TableDesc table, int oneBasedColumnIndex, String name, String datatype, String comment) {
         ColumnDesc desc = new ColumnDesc();
         String id = "" + oneBasedColumnIndex;
         desc.setId(id);
         desc.setName(name);
         desc.setDatatype(datatype);
         desc.init(table);
+        desc.setComment(comment);
         return new TblColRef(desc);
     }
 
