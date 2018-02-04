@@ -32,7 +32,6 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.service.ProjectService;
@@ -54,10 +53,6 @@ public class ValidateUtil {
     private final static Pattern alphaNumUnderscorePattren = Pattern.compile("[a-zA-Z0-9_]+");
 
     @Autowired
-    @Qualifier("userService")
-    private UserService userService;
-
-    @Autowired
     @Qualifier("tableService")
     private TableService tableService;
 
@@ -70,6 +65,10 @@ public class ValidateUtil {
     private AccessService accessService;
 
     @Autowired
+    @Qualifier("userService")
+    private UserService userService;
+
+    @Autowired
     @Qualifier("userGroupService")
     private IUserGroupService userGroupService;
 
@@ -77,18 +76,25 @@ public class ValidateUtil {
         return toCheck == null ? false : alphaNumUnderscorePattren.matcher(toCheck).matches();
     }
 
-    //Identifiers may be user or user authority(you may call role or group)
-    public void validateIdentifiers(String name, String type) throws IOException {
-        if (type.equalsIgnoreCase(MetadataConstants.TYPE_USER) && !userService.userExists(name)) {
-            throw new RuntimeException("Operation failed, user:" + name + " not exists");
+    public void checkIdentifiersExists(String name, boolean isPrincipal) throws IOException {
+        if (isPrincipal && !userService.userExists(name)) {
+            throw new RuntimeException("Operation failed, user:" + name + " not exists, please add first.");
         }
-        if (type.equalsIgnoreCase(MetadataConstants.TYPE_GROUP) && !userGroupService.exists(name)) {
-            throw new RuntimeException("Operation failed, group:" + name + " not exists");
+        if (!isPrincipal && !userGroupService.exists(name)) {
+            throw new RuntimeException("Operation failed, group:" + name + " not exists, please add first.");
+        }
+    }
+
+    //Identifiers may be user or user authority(you may call role or group)
+    public void validateIdentifiers(String prj, String name, String type) throws IOException {
+        Set<String> allIdentifiers = getAllIdentifiersInPrj(prj, type);
+        if (!allIdentifiers.contains(name)) {
+            throw new RuntimeException("Operation failed, identifiers:" + name + " not exists");
         }
     }
 
     //get all users/user authorities that has permission in the project
-    public Set<String> getAllIdentifiers(String project, String type) throws IOException {
+    public Set<String> getAllIdentifiersInPrj(String project, String type) throws IOException {
         List<Sid> allSids = getAllSids(project);
         if (type.equalsIgnoreCase(MetadataConstants.TYPE_USER)) {
             return getUsersInPrj(allSids);
@@ -99,7 +105,6 @@ public class ValidateUtil {
 
     private Set<String> getAuthoritiesInPrj(List<Sid> allSids) {
         Set<String> allAuthorities = new TreeSet<>();
-        allAuthorities.add(Constant.ROLE_ADMIN);
         for (Sid sid : allSids) {
             if (sid instanceof GrantedAuthoritySid) {
                 allAuthorities.add(((GrantedAuthoritySid) sid).getGrantedAuthority());
@@ -110,7 +115,6 @@ public class ValidateUtil {
 
     private Set<String> getUsersInPrj(List<Sid> allSids) throws IOException {
         Set<String> allUsers = new TreeSet<>();
-        allUsers.addAll(userService.listAdminUsers());
         for (Sid sid : allSids) {
             if (sid instanceof PrincipalSid) {
                 allUsers.add(((PrincipalSid) sid).getPrincipal());
