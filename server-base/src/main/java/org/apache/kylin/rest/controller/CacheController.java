@@ -69,6 +69,16 @@ public class CacheController extends BasicController {
         cacheService.notifyMetadataChange(entity, Broadcaster.Event.getEvent(event), cacheKey);
     }
 
+    /**
+     * If cacheKey has "/", will lead to this method.
+     */
+    @RequestMapping(value = "/{entity}/{event}", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @ResponseBody
+    public void wipeCacheWithRequestBody(@PathVariable String entity, @PathVariable String event,
+            @RequestBody String cacheKey) throws IOException {
+        cacheService.notifyMetadataChange(entity, Broadcaster.Event.getEvent(event), cacheKey);
+    }
+
     @RequestMapping(value = "/announce/config", method = { RequestMethod.POST }, produces = { "application/json" })
     public void hotLoadKylinConfig() throws IOException {
         KylinConfig.getInstanceFromEnv().reloadFromSiteProperties();

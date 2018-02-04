@@ -18,7 +18,9 @@
 
 package org.apache.kylin.rest.broadcaster;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +47,7 @@ public class BroadcasterReceiveServlet extends HttpServlet {
     }
 
     private static final Pattern PATTERN = Pattern.compile("/(.+)/(.+)/(.+)");
+    private static final Pattern PATTERN2 = Pattern.compile("/(.+)/(.+)");
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -61,14 +64,26 @@ public class BroadcasterReceiveServlet extends HttpServlet {
         final String requestURI = req.getRequestURI();
         final String substring = requestURI.substring(requestURI.indexOf(startString) + startString.length());
         final Matcher matcher = PATTERN.matcher(substring);
+        final Matcher matcher2 = PATTERN2.matcher(substring);
+
         if (matcher.matches()) {
             String type = matcher.group(1);
-            String name = matcher.group(2);
+            String cacheKey = matcher.group(2);
             String event = matcher.group(3);
             if (handler != null) {
-                handler.handle(type, name, event);
+                handler.handle(type, cacheKey, event);
             }
-            resp.getWriter().write("type:" + type + " name:" + name + " event:" + event);
+            resp.getWriter().write("type:" + type + " name:" + cacheKey + " event:" + event);
+        } else if (matcher2.matches()) {
+            String type = matcher2.group(1);
+            String event = matcher2.group(2);
+            BufferedReader br = new BufferedReader(new InputStreamReader(req.getInputStream(), "utf-8"));
+            String cacheKey = br.readLine();
+            br.close();
+            if (handler != null) {
+                handler.handle(type, cacheKey, event);
+            }
+            resp.getWriter().write("type:" + type + " name:" + cacheKey + " event:" + event);
         } else {
             resp.getWriter().write("not valid uri");
         }
