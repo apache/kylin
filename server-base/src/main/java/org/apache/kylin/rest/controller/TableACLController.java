@@ -22,7 +22,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import static org.apache.kylin.metadata.MetadataConstants.TYPE_USER;
+
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.service.TableACLService;
+import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.ValidateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,7 +38,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping(value = "/acl")
-public class TableAclController extends BasicController {
+public class TableACLController extends BasicController {
 
     @Autowired
     @Qualifier("TableAclService")
@@ -44,12 +48,22 @@ public class TableAclController extends BasicController {
     @Qualifier("validateUtil")
     private ValidateUtil validateUtil;
 
+    @Autowired
+    @Qualifier("userService")
+    private UserService userService;
+
     @RequestMapping(value = "/table/{project}/{type}/{table:.+}", method = {RequestMethod.GET}, produces = {"application/json"})
     @ResponseBody
     public List<String> getUsersCanQueryTheTbl(@PathVariable String project, @PathVariable String type, @PathVariable String table) throws IOException {
         validateUtil.validateArgs(project, table);
         validateUtil.validateTable(project, table);
-        Set<String> allIdentifiers = validateUtil.getAllIdentifiers(project, type);
+        Set<String> allIdentifiers = validateUtil.getAllIdentifiersInPrj(project, type);
+        // add global admins
+        if (type.equals(TYPE_USER)) {
+            allIdentifiers.addAll(userService.listAdminUsers());
+        } else {
+            allIdentifiers.add(Constant.ROLE_ADMIN);
+        }
         return tableACLService.getCanAccessList(project, table, allIdentifiers, type);
     }
 
@@ -70,7 +84,7 @@ public class TableAclController extends BasicController {
             @PathVariable String table,
             @PathVariable String name) throws IOException {
         validateUtil.validateArgs(project, table, name);
-        validateUtil.validateIdentifiers(name, type);
+        validateUtil.validateIdentifiers(project, name, type);
         validateUtil.validateTable(project, table);
         tableACLService.addToTableACL(project, name, table, type);
     }
@@ -84,7 +98,7 @@ public class TableAclController extends BasicController {
             @PathVariable String table,
             @PathVariable String name) throws IOException {
         validateUtil.validateArgs(project, table, name);
-        validateUtil.validateIdentifiers(name, type);
+        validateUtil.validateIdentifiers(project, name, type);
         validateUtil.validateTable(project, table);
         tableACLService.deleteFromTableACL(project, name, table, type);
     }
