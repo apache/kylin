@@ -175,15 +175,15 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
     }
 
     @Test
-    public void tesMetaStoreRecover() throws Exception {
+    public void testMetaStoreRecover() throws Exception {
         logger.info("tesMetaStoreRecover");
         NoErrorStatusExecutable job = new NoErrorStatusExecutable();
         ErrorTestExecutable task = new ErrorTestExecutable();
         job.addTask(task);
         execMgr.addJob(job);
-        Thread.sleep(2000);
+        Thread.sleep(2500);
         runningJobToError(job.getId());
-        Thread.sleep(2000);
+        Thread.sleep(2500);
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
     }
 
