@@ -38,6 +38,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -149,8 +150,16 @@ public class RestClient {
     }
 
     public void wipeCache(String entity, String event, String cacheKey) throws IOException {
-        String url = baseUrl + "/cache/" + entity + "/" + cacheKey + "/" + event;
-        HttpPut request = new HttpPut(url);
+        HttpPut request;
+        String url;
+        if (cacheKey.contains("/")) {
+            url = baseUrl + "/cache/" + entity + "/" + event;
+            request = new HttpPut(url);
+            request.setEntity(new StringEntity(cacheKey, ContentType.create("application/json", "UTF-8")));
+        } else {
+            url = baseUrl + "/cache/" + entity + "/" + cacheKey + "/" + event;
+            request = new HttpPut(url);
+        }
 
         HttpResponse response = null;
         try {
