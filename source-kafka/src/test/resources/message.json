@@ -36,7 +36,7 @@
   "user": {
     "id": 4853763947,
     "description": "Noticias",
-    "isDefaultProfileImage": false,
+    "is_Default_Profile_Image": false,
     "isProtected": false
   }
 }
