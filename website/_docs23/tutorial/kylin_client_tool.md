@@ -1,23 +1,24 @@
 ---
-layout: docs-cn
-title:  Kylin Python 客户端工具库
-categories: 教程
-permalink: /cn/docs/tutorial/kylin_client_tool.html
+layout: docs23
+title:  Kylin Python Client Library
+categories: tutorial
+permalink: /docs23/tutorial/kylin_client_tool.html
 ---
 
-Apache Kylin Python 客户端工具库是基于Python可访问Kylin的客户端. 此工具库包含两个可使用原件. 想要了解更多关于此工具库信息请点击[Github仓库](https://github.com/Kyligence/kylinpy).
+Apache Kylin Python Client Library is a python-based Apache Kylin client. There are two components in Apache Kylin Python Client Library. You can get more detail from [Github Repo](https://github.com/Kyligence/kylinpy).
 
-* Apache Kylin 命令行工具
-* Apache Kylin SQLAchemy方言
+* Apache Kylin command line tools
+* Apache Kylin dialect for SQLAlchemy
 
-## 安装
-请确保您python解释器版本在2.7+, 或者3.4+以上. 最方便安装Apache Kylin python客户端工具库的方法是使用pip命令
+## Installation
+Make sure python version above 2.7+, 3.4+ installed. The easiest way to install Apache Kylin Python Client Library is to use pip
+
 ```
     pip install --upgrade kylinpy
 ```
 
-## Kylinpy 命令行工具
-安装完kylinpy后, 立即可以在终端下访问kylinpy
+## Kylinpy CLI
+After installing Apache Kylin Python Client Library you may run kylinpy in terminal
 
 ```
     $ kylinpy
@@ -49,64 +50,64 @@ Apache Kylin Python 客户端工具库是基于Python可访问Kylin的客户端.
       users          list all users. Need admin role. KAP only
 ```
 
-## Kylinpy命令行工具示例
+## Examples for Kylinpy CLI
 
-1. 访问Apache Kylin
+1. To get all user info from Apache Kylin with debug mode
 ```
 kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug auth
 ```
 
-2. 访问选定cube所有的维度信息
+2. To get all cube columns from Apache Kylin with debug mode
 ```
 kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_columns --name kylin_sales_cube
 ```
 
-3. 访问选定的cube描述
+3. To get cube description of selected cube from Apache Kylin with debug mode
 ```
 kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_desc --name kylin_sales_cube
 ```
 
-4. 访问所有cube名称
+4. To get all cube names from Apache Kylin with debug mode
 ```
 kylinpy -h kap.kapdemo.com -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_names
 ```
 
-5. 访问选定cube的SQL定义
+5. To get cube SQL of selected cube from Apache Kylin with debug mode
 ```
 kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_sql --name kylin_sales_cube
 ```
 
-6. 列出Kylin中所有项目
+6. To list all projects from Apache Kylin with debug mode
 ```
 kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug projects
 ```
 
-7. 访问选定表所有的维度信息
+7. To list all tables column of selected cube from Apache Kylin with debug mode
 ```
 kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug table_columns --name KYLIN_SALES
 ```
 
-8. 访问所有表名
+8. To get all table names from kylin
 ```
 kylinpy -h kap.kapdemo.com -u ADMIN -p KYLIN --project learn_kylin --api1 table_names
 ```
 
-9. 访问所选模型信息
+9. To get the model description of the selected model from Apache Kylin with debug mode
 ```
 kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug model_desc --name kylin_sales_model
 ```
 
-## Apache Kylin SQLAlchemy方言
+## Kylin dialect for SQLAlchemy
 
-任何一个使用SQLAlchemy的应用程序都可以通过此`方言`访问到Kylin, 您之前如果已经安装了kylinpy那么现在就已经集成好了SQLAlchemy Dialect. 请使用如下DSN模板访问Kylin
+Any application that uses SQLAlchemy can now query Apache Kylin with this Apache Kylin dialect installed. It is part of the Apache Kylin Python Client Library, so if you already installed this library in the previous step, you are ready to use. You may use below template to build DSN to connect Apache Kylin
 
 ```
 kylin://<username>:<password>@<hostname>:<port>/<project>?version=<v1|v2>&prefix=</kylin/api>
 ```
 
-## SQLAlchemy 实例
-测试Apache Kylin连接
+## Examples for SQLAlchemy
 
+Test connection with Apache Kylin
 ```
     $ python
     >>> import sqlalchemy as sa

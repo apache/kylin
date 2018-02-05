@@ -1,8 +1,8 @@
 ---
-layout: docs-cn
+layout: docs21-cn
 title:  Kylin Python 客户端工具库
 categories: 教程
-permalink: /cn/docs/tutorial/kylin_client_tool.html
+permalink: /cn/docs21/tutorial/kylin_client_tool.html
 ---
 
 Apache Kylin Python 客户端工具库是基于Python可访问Kylin的客户端. 此工具库包含两个可使用原件. 想要了解更多关于此工具库信息请点击[Github仓库](https://github.com/Kyligence/kylinpy).

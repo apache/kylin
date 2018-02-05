@@ -45,6 +45,7 @@
   - tutorial/project_level_acl
   - tutorial/cube_spark
   - tutorial/cube_build_performance
+  - tutorial/kylin_client_tool
 
 - title: Integration
   docs:
