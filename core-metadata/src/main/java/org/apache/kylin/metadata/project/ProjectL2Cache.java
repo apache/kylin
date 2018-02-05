@@ -187,7 +187,7 @@ class ProjectL2Cache {
         return result;
     }
 
-    public void reloadCacheByProject(String project) {
+    void reloadCacheByProject(String project) {
         projectCaches.put(project, loadCache(project));
     }
 

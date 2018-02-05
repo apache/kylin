@@ -151,7 +151,7 @@ public class TableMetadataManager {
         }
     }
 
-    public void reloadSourceTable(String table, String project) {
+    public void reloadSourceTableQuietly(String table, String project) {
         try (AutoLock lock = srcTableMapLock.lockForWrite()) {
             srcTableCrud.reloadQuietly(TableDesc.concatResourcePath(table, project));
         }
@@ -320,7 +320,7 @@ public class TableMetadataManager {
         }
     }
 
-    public void reloadTableExt(String table, String project) {
+    public void reloadTableExtQuietly(String table, String project) {
         try (AutoLock lock = srcExtMapLock.lockForWrite()) {
             srcExtCrud.reloadQuietly(TableExtDesc.concatResourcePath(table, project));
         }
