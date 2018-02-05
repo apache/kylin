@@ -202,6 +202,10 @@ public class Message {
         return "Project name should not be empty.";
     }
 
+    public String getNULL_EMPTY_SQL() {
+        return "SQL should not be empty.";
+    }
+
     public String getEMPTY_NEW_MODEL_NAME() {
         return "New model name should not be empty.";
     }
