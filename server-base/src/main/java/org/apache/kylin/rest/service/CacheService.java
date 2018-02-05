@@ -140,8 +140,8 @@ public class CacheService extends BasicService implements InitializingBean {
         //table must before model
         for (Map.Entry<String, String> entry : tableToProjects.entrySet()) {
             //For KYLIN-2717 compatibility, use tableProject not project
-            getTableManager().reloadSourceTable(entry.getKey(), entry.getValue());
-            getTableManager().reloadTableExt(entry.getKey(), entry.getValue());
+            getTableManager().reloadSourceTableQuietly(entry.getKey(), entry.getValue());
+            getTableManager().reloadTableExtQuietly(entry.getKey(), entry.getValue());
         }
         logger.info("reload table cache done");
 
