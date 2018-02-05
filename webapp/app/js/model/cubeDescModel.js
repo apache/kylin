@@ -20,6 +20,18 @@ KylinApp.service('CubeDescModel', function (kylinConfig) {
 
   this.cubeMetaFrame = {};
   this.createNew = function (defaultPara) {
+    var engineType;
+    var storageType;
+    if (kylinConfig.isInitialized()) {
+    	engineType = kylinConfig.getCubeEng();
+    	storageType = kylinConfig.getStorageEng();
+    } else { 
+      kylinConfig.init().$promise.then(function (data) {
+      	kylinConfig.initWebConfigInfo();
+    	engineType = kylinConfig.getCubeEng();
+    	storageType = kylinConfig.getStorageEng();
+      });
+    }
     var cubeMeta = {
       "name": "",
       "model_name": "",
@@ -56,8 +68,8 @@ KylinApp.service('CubeDescModel', function (kylinConfig) {
       "retention_range": "0",
       "status_need_notify":['ERROR', 'DISCARDED', 'SUCCEED'],
       "auto_merge_time_ranges": [604800000, 2419200000],
-      "engine_type": kylinConfig.getCubeEng(),
-      "storage_type":kylinConfig.getStorageEng(),
+      "engine_type": engineType,
+      "storage_type": storageType,
       "override_kylin_properties":{}
     };
 
