@@ -773,14 +773,21 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     });
 
     //remove deprecated distinct measures
-    angular.forEach($scope.cubeMetaFrame.dictionaries, function (dict, index) {
-      if (distinctMeasures.indexOf(dict.column) === -1 && reuseColumns.indexOf(dict.column) === -1) {
-        $scope.cubeMetaFrame.dictionaries.splice(index, 1);
+    for (var i = $scope.cubeMetaFrame.dictionaries.length - 1; i >= 0; i--) {
+      var dictColumn = $scope.cubeMetaFrame.dictionaries[i].column;
+      if (distinctMeasures.indexOf(dictColumn) === -1 && reuseColumns.indexOf(dictColumn) === -1) {
+        $scope.cubeMetaFrame.dictionaries.splice(i, 1);
       }
-    });
+    }
   }
 
   $scope.$on('MeasuresEdited', function (event) {
+    if ($scope.cubeMetaFrame) {
+      reGenerateAdvancedDict();
+    }
+  });
+
+  $scope.$on('AdvancedSettingEdited', function (event) {
     if ($scope.cubeMetaFrame) {
       reGenerateAdvancedDict();
     }
