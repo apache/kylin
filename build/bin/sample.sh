@@ -87,6 +87,8 @@ cp -rf ${KYLIN_HOME}/sample_cube/template/* ${KYLIN_HOME}/sample_cube/metadata
 
 sed -i "s/%default_storage_type%/${default_storage_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
 sed -i "s/%default_engine_type%/${default_engine_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
+sed -i "s/%default_storage_type%/${default_storage_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_streaming_cube.json
+sed -i "s/%default_engine_type%/${default_engine_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_streaming_cube.json
 
 #### Add version info into cubes
 kylin_version_str=`bash ${KYLIN_HOME}/bin/kylin.sh version | grep kylin.version`
