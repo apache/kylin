@@ -440,4 +440,9 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     }
   };
 
+  if ($scope.state.mode == 'edit') {
+    $scope.$on('$destroy', function () {
+      $scope.$emit('AdvancedSettingEdited');
+    });
+  }
 });
