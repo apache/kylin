@@ -34,6 +34,7 @@ import org.apache.kylin.rest.security.AclEntityType;
 import org.apache.kylin.rest.security.AclPermissionType;
 import org.apache.kylin.rest.security.ManagedUser;
 import org.apache.kylin.rest.service.CubeService;
+import org.apache.kylin.rest.service.IUserGroupService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.apache.kylin.rest.service.UserService;
@@ -78,6 +79,10 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
     @Qualifier("userService")
     UserService userService;
 
+    @Autowired
+    @Qualifier("userGroupService")
+    private IUserGroupService userGroupService;
+
     @Before
     public void setup() throws Exception {
         super.setup();
@@ -88,11 +93,11 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
     }
 
     @Test
-    public void testGetUserPermissionInPrj() {
+    public void testGetUserPermissionInPrj() throws IOException {
         List<ProjectInstance> projects = projectController.getProjects(10000, 0);
         assertTrue(projects.size() > 0);
         ProjectInstance project = projects.get(0);
-        ManagedUser user = new ManagedUser("u", "kylin", false, "all_users");
+        ManagedUser user = new ManagedUser("u", "kylin", false, "all_users", "g1", "g2", "g3", "g4");
         userService.createUser(user);
 
         grantPermission("g1", READ, project.getUuid());
@@ -249,7 +254,7 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         return accessRequest;
     }
 
-    private void grantPermission(String sid, String permission, String uuid) {
+    private void grantPermission(String sid, String permission, String uuid) throws IOException {
         swichToAdmin();
         AccessRequest groupAccessRequest = getAccessRequest(sid, permission, false);
         accessController.grant(PROJECT_INSTANCE, uuid, groupAccessRequest);

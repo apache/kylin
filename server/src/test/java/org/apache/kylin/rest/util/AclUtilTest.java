@@ -32,6 +32,8 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.io.IOException;
+
 public class AclUtilTest extends ServiceTestBase {
     @Autowired
     AccessController accessController;
@@ -40,7 +42,7 @@ public class AclUtilTest extends ServiceTestBase {
     AclUtil aclUtil;
 
     @Test
-    public void testBasic() {
+    public void testBasic() throws IOException {
         final String PROJECT = "default";
         final String ANALYST = "ANALYST";
         final String ADMIN = "ADMIN";
