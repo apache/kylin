@@ -89,7 +89,7 @@ public class ValidateUtil {
     public void validateIdentifiers(String prj, String name, String type) throws IOException {
         Set<String> allIdentifiers = getAllIdentifiersInPrj(prj, type);
         if (!allIdentifiers.contains(name)) {
-            throw new RuntimeException("Operation failed, identifiers:" + name + " not exists");
+            throw new RuntimeException("Operation failed, " + type + ":" + name + " not exists in project.");
         }
     }
 
