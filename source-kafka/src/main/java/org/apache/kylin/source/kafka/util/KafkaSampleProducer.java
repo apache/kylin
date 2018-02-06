@@ -129,6 +129,7 @@ public class KafkaSampleProducer {
             user.put("id", UUID.randomUUID().toString());
             user.put("gender", genders.get(rnd.nextInt(2)));
             user.put("age", rnd.nextInt(20) + 10);
+            user.put("first_name", "unknown");
             record.put("user", user);
             //send message
             ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
