@@ -149,7 +149,7 @@ public class QueryController extends BasicController {
             List<String> headerList = new ArrayList<String>();
 
             for (SelectedColumnMeta column : result.getColumnMetas()) {
-                headerList.add(column.getName());
+                headerList.add(column.getLabel());
             }
 
             String[] headers = new String[headerList.size()];
