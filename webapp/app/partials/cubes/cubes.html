@@ -102,9 +102,9 @@
                         <li ng-if="cube.status=='READY' && isAutoMigrateCubeEnabled() && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)) "><a ng-click="migrateCube(cube)">Migrate</a></li>
 
                     </ul>
-                    <ul ng-if="!(userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))" class="dropdown-menu" role="menu">
-                        <li><a>N/A</a></li>
-                    </ul>
+                    <span ng-if="!(userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))" class="dropdown-menu" role="menu">
+                      N/A
+                    </span>
                 </div>
             </td>
             <td >
