@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -168,14 +167,7 @@ public class ProjectService extends BasicService {
             if (projectInstance == null) {
                 continue;
             }
-
-            boolean hasProjectPermission = false;
-            try {
-                hasProjectPermission = aclEvaluate.hasProjectReadPermission(projectInstance);
-            } catch (AccessDeniedException e) {
-                //ignore to continue
-            }
-
+            boolean hasProjectPermission = aclEvaluate.hasProjectReadPermission(projectInstance);
             if (hasProjectPermission) {
                 readableProjects.add(projectInstance);
             }

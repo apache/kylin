@@ -37,7 +37,6 @@ import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.msg.Message;
@@ -85,13 +84,12 @@ public class ModelService extends BasicService {
     public List<DataModelDesc> listAllModels(final String modelName, final String projectName, boolean exactMatch)
             throws IOException {
         List<DataModelDesc> models;
-        ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
-        if (null == project) {
+        if (null == projectName) {
             aclEvaluate.checkIsGlobalAdmin();
             models = getDataModelManager().getModels();
         } else {
-            aclEvaluate.hasProjectReadPermission(project);
+            aclEvaluate.checkProjectReadPermission(projectName);
             models = getDataModelManager().getModels(projectName);
         }
 
@@ -128,7 +126,7 @@ public class ModelService extends BasicService {
     }
 
     public DataModelDesc createModelDesc(String projectName, DataModelDesc desc) throws IOException {
-        aclEvaluate.hasProjectWritePermission(getProjectManager().getProject(projectName));
+        aclEvaluate.checkProjectWritePermission(projectName);
         Message msg = MsgPicker.getMsg();
         if (getDataModelManager().getDataModelDesc(desc.getName()) != null) {
             throw new BadRequestException(String.format(msg.getDUPLICATE_MODEL_NAME(), desc.getName()));
@@ -147,7 +145,7 @@ public class ModelService extends BasicService {
     }
 
     public void dropModel(DataModelDesc desc) throws IOException {
-        aclEvaluate.hasProjectWritePermission(desc.getProjectInstance());
+        aclEvaluate.checkProjectWritePermission(desc.getProjectInstance().getName());
         Message msg = MsgPicker.getMsg();
         //check cube desc exist
         List<CubeDesc> cubeDescs = getCubeDescManager().listAllDesc();
@@ -369,11 +367,10 @@ public class ModelService extends BasicService {
     }
 
     public DataModelDesc getModel(final String modelName, final String projectName) throws IOException {
-        ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
-        if (null == project) {
+        if (null == projectName) {
             aclEvaluate.checkIsGlobalAdmin();
         } else {
-            aclEvaluate.hasProjectReadPermission(project);
+            aclEvaluate.checkProjectReadPermission(projectName);
         }
 
         return getDataModelManager().getDataModelDesc(modelName);
@@ -387,11 +384,10 @@ public class ModelService extends BasicService {
     }
 
     public List<Draft> listModelDrafts(String modelName, String projectName) throws IOException {
-        ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
-        if (null == project) {
+        if (null == projectName) {
             aclEvaluate.checkIsGlobalAdmin();
         } else {
-            aclEvaluate.hasProjectReadPermission(project);
+            aclEvaluate.checkProjectReadPermission(projectName);
         }
 
         List<Draft> result = new ArrayList<>();

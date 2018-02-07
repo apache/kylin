@@ -132,14 +132,13 @@ public class CubeService extends BasicService implements InitializingBean {
     public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName,
             boolean exactMatch) {
         List<CubeInstance> cubeInstances = null;
-        ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
-        if (null == project) {
+        if (null == projectName) {
             cubeInstances = getCubeManager().listAllCubes();
             aclEvaluate.checkIsGlobalAdmin();
         } else {
             cubeInstances = listAllCubes(projectName);
-            aclEvaluate.hasProjectReadPermission(project);
+            aclEvaluate.checkProjectReadPermission(projectName);
         }
 
         List<CubeInstance> filterModelCubes = new ArrayList<CubeInstance>();
@@ -170,7 +169,7 @@ public class CubeService extends BasicService implements InitializingBean {
     }
 
     public CubeInstance updateCubeCost(CubeInstance cube, int cost) throws IOException {
-        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
+        aclEvaluate.checkProjectWritePermission(cube);
         if (cube.getCost() == cost) {
             // Do nothing
             return cube;
@@ -258,7 +257,7 @@ public class CubeService extends BasicService implements InitializingBean {
 
     public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName, boolean forceUpdate)
             throws IOException {
-        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
+        aclEvaluate.checkProjectWritePermission(cube);
         Message msg = MsgPicker.getMsg();
 
         final List<CubingJob> cubingJobs = jobService.listJobsByRealizationName(cube.getName(), null,
@@ -287,7 +286,7 @@ public class CubeService extends BasicService implements InitializingBean {
     }
 
     public void deleteCube(CubeInstance cube) throws IOException {
-        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
+        aclEvaluate.checkProjectWritePermission(cube);
         Message msg = MsgPicker.getMsg();
 
         final List<CubingJob> cubingJobs = jobService.listJobsByRealizationName(cube.getName(), null,
@@ -316,7 +315,7 @@ public class CubeService extends BasicService implements InitializingBean {
      * @throws JobException
      */
     public CubeInstance purgeCube(CubeInstance cube) throws IOException {
-        aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
+        aclEvaluate.checkProjectOperationPermission(cube);
         Message msg = MsgPicker.getMsg();
 
         String cubeName = cube.getName();
@@ -345,7 +344,7 @@ public class CubeService extends BasicService implements InitializingBean {
      * @throws JobException
      */
     public CubeInstance disableCube(CubeInstance cube) throws IOException {
-        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
+        aclEvaluate.checkProjectWritePermission(cube);
         Message msg = MsgPicker.getMsg();
 
         String cubeName = cube.getName();
@@ -359,7 +358,7 @@ public class CubeService extends BasicService implements InitializingBean {
     }
 
     public void checkEnableCubeCondition(CubeInstance cube) {
-        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
+        aclEvaluate.checkProjectWritePermission(cube);
         Message msg = MsgPicker.getMsg();
         String cubeName = cube.getName();
 
@@ -447,7 +446,7 @@ public class CubeService extends BasicService implements InitializingBean {
     }
 
     public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException {
-        aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
+        aclEvaluate.checkProjectOperationPermission(cube);
         CubeDesc desc = cube.getDescriptor();
         desc.setNotifyList(notifyList);
         getCubeDescManager().updateCubeDesc(desc);
@@ -455,7 +454,7 @@ public class CubeService extends BasicService implements InitializingBean {
 
     public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable)
             throws IOException {
-        aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
+        aclEvaluate.checkProjectOperationPermission(cube);
         CubeSegment seg = cube.getSegment(segmentName, SegmentStatusEnum.READY);
         getCubeManager().buildSnapshotTable(seg, lookupTable);
 
@@ -463,7 +462,7 @@ public class CubeService extends BasicService implements InitializingBean {
     }
 
     public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
-        aclEvaluate.hasProjectOperationPermission(cube.getProjectInstance());
+        aclEvaluate.checkProjectOperationPermission(cube);
         Message msg = MsgPicker.getMsg();
 
         CubeSegment toDelete = null;
@@ -663,12 +662,12 @@ public class CubeService extends BasicService implements InitializingBean {
     }
 
     public void deleteDraft(Draft draft) throws IOException {
-        aclEvaluate.hasProjectWritePermission(getProjectManager().getProject(draft.getProject()));
+        aclEvaluate.checkProjectWritePermission(draft.getProject());
         getDraftManager().delete(draft.getUuid());
     }
 
     public CubeDesc updateCube(CubeInstance cube, CubeDesc desc, ProjectInstance project) throws IOException {
-        aclEvaluate.hasProjectWritePermission(cube.getProjectInstance());
+        aclEvaluate.checkProjectWritePermission(cube);
         Message msg = MsgPicker.getMsg();
         String projectName = project.getName();
 
@@ -703,7 +702,7 @@ public class CubeService extends BasicService implements InitializingBean {
         if (null == project) {
             aclEvaluate.checkIsGlobalAdmin();
         } else {
-            aclEvaluate.hasProjectReadPermission(getProjectManager().getProject(project));
+            aclEvaluate.checkProjectReadPermission(project);
         }
         List<Draft> result = new ArrayList<>();
 

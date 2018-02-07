@@ -28,6 +28,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 @Component("aclEvaluate")
@@ -51,52 +52,51 @@ public class AclEvaluate {
         return getProjectInstance(projectName);
     }
 
-    public boolean checkProjectAdminPermission(String projectName) {
+    public void checkProjectAdminPermission(String projectName) {
         ProjectInstance projectInstance = getProjectInstance(projectName);
-        return aclUtil.hasProjectAdminPermission(projectInstance);
+        aclUtil.hasProjectAdminPermission(projectInstance);
     }
 
     //for raw project
-    public boolean checkProjectReadPermission(String projectName) {
+    public void checkProjectReadPermission(String projectName) {
         ProjectInstance projectInstance = getProjectInstance(projectName);
-        return aclUtil.hasProjectReadPermission(projectInstance);
+        aclUtil.hasProjectReadPermission(projectInstance);
     }
 
-    public boolean checkProjectWritePermission(String projectName) {
+    public void checkProjectWritePermission(String projectName) {
         ProjectInstance projectInstance = getProjectInstance(projectName);
-        return aclUtil.hasProjectWritePermission(projectInstance);
+        aclUtil.hasProjectWritePermission(projectInstance);
     }
 
-    public boolean checkProjectOperationPermission(String projectName) {
+    public void checkProjectOperationPermission(String projectName) {
         ProjectInstance projectInstance = getProjectInstance(projectName);
-        return aclUtil.hasProjectOperationPermission(projectInstance);
+        aclUtil.hasProjectOperationPermission(projectInstance);
     }
 
     //for cube acl entity
-    public boolean checkProjectReadPermission(CubeInstance cube) {
-        return aclUtil.hasProjectReadPermission(cube.getProjectInstance());
+    public void checkProjectReadPermission(CubeInstance cube) {
+        aclUtil.hasProjectReadPermission(cube.getProjectInstance());
     }
 
-
-    public boolean checkProjectWritePermission(CubeInstance cube) {
-        return aclUtil.hasProjectWritePermission(cube.getProjectInstance());
+    public void checkProjectWritePermission(CubeInstance cube) {
+        aclUtil.hasProjectWritePermission(cube.getProjectInstance());
     }
 
-    public boolean checkProjectOperationPermission(CubeInstance cube) {
-        return aclUtil.hasProjectOperationPermission(cube.getProjectInstance());
+    public void checkProjectOperationPermission(CubeInstance cube) {
+        aclUtil.hasProjectOperationPermission(cube.getProjectInstance());
     }
 
     //for job acl entity
-    public boolean checkProjectReadPermission(JobInstance job) {
-        return aclUtil.hasProjectReadPermission(getProjectByJob(job));
+    public void checkProjectReadPermission(JobInstance job) {
+        aclUtil.hasProjectReadPermission(getProjectByJob(job));
     }
 
-    public boolean checkProjectWritePermission(JobInstance job) {
-        return aclUtil.hasProjectWritePermission(getProjectByJob(job));
+    public void checkProjectWritePermission(JobInstance job) {
+        aclUtil.hasProjectWritePermission(getProjectByJob(job));
     }
 
-    public boolean checkProjectOperationPermission(JobInstance job) {
-        return aclUtil.hasProjectOperationPermission(getProjectByJob(job));
+    public void checkProjectOperationPermission(JobInstance job) {
+        aclUtil.hasProjectOperationPermission(getProjectByJob(job));
     }
 
     // ACL util's method, so that you can use AclEvaluate
@@ -109,23 +109,47 @@ public class AclEvaluate {
     }
 
     public boolean hasProjectReadPermission(ProjectInstance project) {
-        return aclUtil.hasProjectReadPermission(project);
+        boolean _hasProjectReadPermission = false;
+        try {
+            _hasProjectReadPermission = aclUtil.hasProjectReadPermission(project);
+        } catch (AccessDeniedException e) {
+            //ignore to continue
+        }
+        return _hasProjectReadPermission;
     }
 
     public boolean hasProjectOperationPermission(ProjectInstance project) {
-        return aclUtil.hasProjectOperationPermission(project);
+        boolean _hasProjectOperationPermission = false;
+        try {
+            _hasProjectOperationPermission = aclUtil.hasProjectOperationPermission(project);
+        } catch (AccessDeniedException e) {
+            //ignore to continue
+        }
+        return _hasProjectOperationPermission;
     }
 
     public boolean hasProjectWritePermission(ProjectInstance project) {
-        return aclUtil.hasProjectWritePermission(project);
+        boolean _hasProjectWritePermission = false;
+        try {
+            _hasProjectWritePermission = aclUtil.hasProjectWritePermission(project);
+        } catch (AccessDeniedException e) {
+            //ignore to continue
+        }
+        return _hasProjectWritePermission;
     }
 
     public boolean hasProjectAdminPermission(ProjectInstance project) {
-        return aclUtil.hasProjectAdminPermission(project);
+        boolean _hasProjectAdminPermission = false;
+        try {
+            _hasProjectAdminPermission = aclUtil.hasProjectAdminPermission(project);
+        } catch (AccessDeniedException e) {
+            //ignore to continue
+        }
+        return _hasProjectAdminPermission;
     }
 
-    public boolean checkIsGlobalAdmin() {
-        return aclUtil.checkIsGlobalAdmin();
+    public void checkIsGlobalAdmin() {
+        aclUtil.checkIsGlobalAdmin();
     }
 
 }
