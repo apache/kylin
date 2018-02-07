@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -97,14 +96,7 @@ public class ProjectController extends BasicController {
             if (projectInstance == null) {
                 continue;
             }
-
-            boolean hasProjectPermission = false;
-            try {
-                hasProjectPermission = aclEvaluate.hasProjectReadPermission(projectInstance);
-            } catch (AccessDeniedException e) {
-                //ignore to continue
-            }
-
+            boolean hasProjectPermission = aclEvaluate.hasProjectReadPermission(projectInstance);
             if (hasProjectPermission) {
                 readableProjects.add(projectInstance);
             }
