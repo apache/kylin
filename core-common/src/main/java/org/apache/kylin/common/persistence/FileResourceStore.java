@@ -66,7 +66,6 @@ public class FileResourceStore extends ResourceStore {
             String[] names = file.list();
             // not a directory
             if (names == null)
-                // fixme should return empty set, like HBase implement.
                 return null;
             String prefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
             if (recursive) {

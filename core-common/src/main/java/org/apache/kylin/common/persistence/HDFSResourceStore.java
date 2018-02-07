@@ -31,7 +31,9 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -89,20 +91,37 @@ public class HDFSResourceStore extends ResourceStore {
 
     @Override
     protected NavigableSet<String> listResourcesImpl(String folderPath, boolean recursive) throws IOException {
-        if (recursive) {
-            throw new IllegalArgumentException("Not support fullPath yet");
-        }
         Path p = getRealHDFSPath(folderPath);
+        String prefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
         if (!fs.exists(p) || !fs.isDirectory(p)) {
             return null;
         }
-        TreeSet<String> r = new TreeSet<>();
-        FileStatus[] statuses = fs.listStatus(p);
-        String prefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
-        for (FileStatus status : statuses) {
-            r.add(prefix + status.getPath().getName());
+        TreeSet<String> r;
+
+        if (recursive) {
+            r = getAllFilePath(p, prefix);
+        } else {
+            r = getFilePath(p, prefix);
         }
-        return r;
+        return r.isEmpty() ? null : r;
+    }
+
+    private TreeSet<String> getFilePath(Path p, String prefix) throws IOException {
+        TreeSet<String> fileList = new TreeSet<>();
+        for (FileStatus fileStat : fs.listStatus(p)) {
+            fileList.add(prefix + fileStat.getPath().getName());
+        }
+        return fileList;
+    }
+
+    TreeSet<String> getAllFilePath(Path filePath, String prefix) throws IOException {
+        TreeSet<String> fileList = new TreeSet<>();
+        RemoteIterator<LocatedFileStatus> it = fs.listFiles(filePath, true);
+        while (it.hasNext()) {
+            String[] path = it.next().getPath().toString().split(prefix, 2);
+            fileList.add(prefix + path[1]);
+        }
+        return fileList;
     }
 
     @Override
