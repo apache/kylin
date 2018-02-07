@@ -134,7 +134,7 @@ public class CubeController extends BasicController {
             @RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", required = false) Integer offset) {
-        List<CubeInstance> cubes = cubeService.listAllCubes(cubeName, projectName, modelName, true);
+        List<CubeInstance> cubes = cubeService.listAllCubes(cubeName, projectName, modelName, false);
 
         List<CubeInstanceResponse> response = Lists.newArrayListWithExpectedSize(cubes.size());
         for (CubeInstance cube : cubes) {
