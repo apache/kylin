@@ -45,7 +45,7 @@ public class AdminServiceTest extends ServiceTestBase {
         FileUtils.touch(file);
         String path = Thread.currentThread().getContextClassLoader().getResource("kylin.properties").getPath();
         KylinConfig.setKylinConfigThreadLocal(KylinConfig.createInstanceFromUri(path));
-        
+
         String expected = "kylin.web.link-streaming-guide=http://kylin.apache.org/\n" +
                 "kylin.web.dashboard-enabled=\n" +
                 "kylin.web.contact-mail=\n" +
@@ -54,6 +54,7 @@ public class AdminServiceTest extends ServiceTestBase {
                 "kylin.web.help.length=4\n" +
                 "kylin.web.timezone=GMT+8\n" +
                 "kylin.server.external-acl-provider=\n" +
+                "kylin.tool.auto-migrate-cube.enabled=\n" +
                 "kylin.storage.default=2\n" +
                 "kylin.cube.cubeplanner.enabled=false\n" +
                 "kylin.web.help=\n" +
