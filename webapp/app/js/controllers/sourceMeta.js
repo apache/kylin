@@ -683,14 +683,15 @@ KylinApp
 
         //streaming table data change structure
         var columnList=[]
-        function changeObjTree(obj,base){
+        function changeObjTree(obj,base,comment){
           base=base?base+"_":"";
+          comment= comment?comment+"|":""
           for(var i in obj){
             if(Object.prototype.toString.call(obj[i])=="[object Object]"){
-              changeObjTree(obj[i],base+i);
+              changeObjTree(obj[i],base+i,comment+i);
               continue;
             }
-            columnList.push(createNewObj(base+i,obj[i]));
+            columnList.push(createNewObj(base+i,obj[i],comment+i));
           }
         }
 
@@ -722,12 +723,13 @@ KylinApp
           return defaultType;
         }
 
-        function createNewObj(key,val){
+        function createNewObj(key,val,comment){
           var obj={};
           obj.name=key;
           obj.type=checkValType(val,key);
           obj.fromSource="Y";
           obj.checked="Y";
+          obj.comment=comment;
           if(Object.prototype.toString.call(val)=="[object Array]"){
             obj.checked="N";
           }
@@ -798,6 +800,7 @@ KylinApp
             var columnInstance = {
               "id": ++$index,
               "name": column.name,
+              "comment": /[|]/.test(column.comment)? column.comment : "",
               "datatype": column.type
             }
             columns.push(columnInstance);
