@@ -113,6 +113,11 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
         caterLegacy();
     }
 
+    @Override
+    public String resourceName() {
+        return username;
+    }
+
     public String getUsername() {
         return username;
     }

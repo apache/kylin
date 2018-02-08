@@ -32,8 +32,6 @@ public interface UserService extends UserDetailsManager {
 
     List<ManagedUser> listUsers() throws IOException;
 
-    List<String> listUsernames() throws IOException;
-
     List<String> listAdminUsers() throws IOException;
 
     //For performance consideration, list all users may be incomplete(eg. not load user's authorities until authorities has benn used).
