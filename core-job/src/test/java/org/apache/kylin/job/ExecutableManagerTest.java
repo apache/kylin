@@ -45,7 +45,7 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
-        createTestMetadata();
+        createTestMetadata("../server/src/test/resources/ut_meta/broken_executable");
         service = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
     }
 

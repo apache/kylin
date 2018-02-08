@@ -33,7 +33,7 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
     @Override
     public void createTestMetadata(String... overlayMetadataDirs) {
         //overlayMetadataDirs is useless yet
-        staticCreateTestMetadata();
+        staticCreateTestMetadata(overlayMetadataDirs);
     }
 
     public static void staticCreateTestMetadata(String... overlayMetadataDirs) {
@@ -44,6 +44,10 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
         try {
             FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
             FileUtils.copyDirectory(new File(testDataFolder), new File(tempTestMetadataUrl));
+
+            for (String overlay : overlayMetadataDirs) {
+                FileUtils.copyDirectory(new File(overlay), new File(tempTestMetadataUrl));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
