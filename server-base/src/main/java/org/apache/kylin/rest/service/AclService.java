@@ -243,6 +243,17 @@ public class AclService implements MutableAclService, InitializingBean {
         });
     }
 
+    void batchUpsertAce(MutableAclRecord acl, final Map<Sid, Permission> sidToPerm) {
+        updateAclWithRetry(acl, new AclRecordUpdater() {
+            @Override
+            public void update(AclRecord record) {
+                for (Sid sid : sidToPerm.keySet()) {
+                    record.upsertAce(sidToPerm.get(sid), sid);
+                }
+            }
+        });
+    }
+
     MutableAclRecord inherit(MutableAclRecord acl, final MutableAclRecord parentAcl) {
         return updateAclWithRetry(acl, new AclRecordUpdater() {
             @Override

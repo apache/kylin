@@ -20,8 +20,11 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -153,6 +156,28 @@ public class AccessController extends BasicController implements InitializingBea
         Acl acl = accessService.grant(ae, permission, sid);
 
         return accessService.generateAceResponses(acl);
+    }
+
+    /**
+     * Batch API.Grant a new access on a domain object to a user/role
+     */
+    @RequestMapping(value = "batch/{type}/{uuid}", method = { RequestMethod.POST }, produces = { "application/json" })
+    @ResponseBody
+    public void batchGrant(@PathVariable String type, @PathVariable String uuid,
+            @RequestBody List<Object[]> reqs) throws IOException {
+        Map<Sid, Permission> sidToPerm = new HashMap<>();
+        AclEntity ae = accessService.getAclEntity(type, uuid);
+        for (Object[] req : reqs) {
+            Preconditions.checkArgument(req.length == 3, "error access requests.");
+            String name = (String) req[0];
+            boolean isPrincipal = (boolean) req[1];
+            validateUtil.checkIdentifiersExists(name, isPrincipal);
+
+            Sid sid = accessService.getSid(name, isPrincipal);
+            Permission permission = AclPermissionFactory.getPermission((String) req[2]);
+            sidToPerm.put(sid, permission);
+        }
+        accessService.batchGrant(ae, sidToPerm);
     }
 
     /**

@@ -100,6 +100,29 @@ public class AccessService {
 
     @Transactional
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
+    public void batchGrant(AclEntity ae, Map<Sid, Permission> sidToPerm) {
+        Message msg = MsgPicker.getMsg();
+
+        if (ae == null)
+            throw new BadRequestException(msg.getACL_DOMAIN_NOT_FOUND());
+        if (sidToPerm == null)
+            throw new BadRequestException(msg.getACL_PERMISSION_REQUIRED());
+
+        MutableAclRecord acl;
+        try {
+            acl = aclService.readAcl(new ObjectIdentityImpl(ae));
+        } catch (NotFoundException e) {
+            acl = init(ae, null);
+        }
+
+        for (Sid sid : sidToPerm.keySet()) {
+            secureOwner(acl, sid);
+        }
+        aclService.batchUpsertAce(acl, sidToPerm);
+    }
+
+    @Transactional
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
     public MutableAclRecord grant(AclEntity ae, Permission permission, Sid sid) {
         Message msg = MsgPicker.getMsg();
 
@@ -304,9 +327,6 @@ public class AccessService {
 
     /**
      * Protect admin permission granted to acl owner.
-     *
-     * @param acl
-     * @param indexOfAce
      */
     private void secureOwner(MutableAclRecord acl, Sid sid) {
         Message msg = MsgPicker.getMsg();

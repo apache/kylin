@@ -18,7 +18,10 @@
 
 package org.apache.kylin.rest.service;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.rest.security.AclPermission;
@@ -33,8 +36,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.AlreadyExistsException;
 import org.springframework.security.acls.model.NotFoundException;
+import org.springframework.security.acls.model.ObjectIdentity;
+import org.springframework.security.acls.model.Permission;
+import org.springframework.security.acls.model.Sid;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -129,6 +136,26 @@ public class AclServiceTest extends ServiceTestBase {
             Assert.fail();
         } catch (NotFoundException ex) {
             // expected
+        }
+    }
+
+    @Test
+    public void testBatchUpsertAce() {
+        switchToAdmin();
+        ObjectIdentity oid = oid("acl");
+        MutableAclRecord acl = (MutableAclRecord) aclService.createAcl(oid);
+        final Map<Sid, Permission> sidToPerm = new HashMap<>();
+        for (int i = 0; i < 10; i++) {
+            sidToPerm.put(new PrincipalSid("u" + i), AclPermission.ADMINISTRATION);
+        }
+        aclService.batchUpsertAce(acl, sidToPerm);
+
+        for (Acl a : aclService.readAclsById(Collections.singletonList(oid)).values()) {
+            List<AccessControlEntry> e = a.getEntries();
+            Assert.assertEquals(10, e.size());
+            for (int i = 0; i < e.size(); i++) {
+                Assert.assertEquals(new PrincipalSid("u" + i), e.get(i).getSid());
+            }
         }
     }
 

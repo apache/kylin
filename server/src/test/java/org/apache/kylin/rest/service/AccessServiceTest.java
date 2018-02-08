@@ -22,7 +22,9 @@ import static org.apache.kylin.rest.security.AclEntityType.PROJECT_INSTANCE;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -31,6 +33,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.AclPermissionFactory;
+import org.apache.kylin.rest.security.springacl.MutableAclRecord;
 import org.apache.kylin.rest.service.AclServiceTest.MockAclEntity;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -40,6 +43,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -146,6 +150,22 @@ public class AccessServiceTest extends ServiceTestBase {
 
         attachedEntityAcl = accessService.getAcl(attachedEntity);
         Assert.assertNull(attachedEntityAcl);
+    }
+
+    @Test
+    public void testBatchGrant() {
+        AclEntity ae = new AclServiceTest.MockAclEntity("batch-grant");
+        final Map<Sid, Permission> sidToPerm = new HashMap<>();
+        for (int i = 0; i < 10; i++) {
+            sidToPerm.put(new PrincipalSid("u" + i), AclPermission.ADMINISTRATION);
+        }
+        accessService.batchGrant(ae, sidToPerm);
+        MutableAclRecord acl = accessService.getAcl(ae);
+        List<AccessControlEntry> e = acl.getEntries();
+        Assert.assertEquals(10, e.size());
+        for (int i = 0; i < e.size(); i++) {
+            Assert.assertEquals(new PrincipalSid("u" + i), e.get(i).getSid());
+        }
     }
 
     @Ignore
