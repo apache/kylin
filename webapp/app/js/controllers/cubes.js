@@ -36,7 +36,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
     $scope.action = {};
 
     $scope.state = {
-      filterAttr: 'create_time', filterReverse: true, reverseColumn: 'create_time',
+      filterAttr: 'create_time_utc', filterReverse: true, reverseColumn: 'create_time_utc',
       dimensionFilter: '', measureFilter: ''
     };
 
