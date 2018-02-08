@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.security.ManagedUser;
@@ -34,9 +33,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-/**
- * 
- */
 public class UserServiceTest extends ServiceTestBase {
 
     @Autowired
@@ -62,13 +58,6 @@ public class UserServiceTest extends ServiceTestBase {
         Assert.assertEquals(Constant.ROLE_ADMIN, ud.getAuthorities().iterator().next().getAuthority());
         Assert.assertEquals(1, ud.getAuthorities().size());
 
-    }
-
-    @Test
-    public void testGetAllUserNames() throws IOException {
-        List<String> users = userService.listUsernames();
-        List<String> expected = Lists.newArrayList("ADMIN", "ANALYST", "MODELER");
-        Assert.assertEquals(expected, users);
     }
 
     @Test

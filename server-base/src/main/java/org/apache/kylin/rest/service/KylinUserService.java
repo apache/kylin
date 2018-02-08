@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 
 import org.apache.kylin.common.KylinConfig;
@@ -33,6 +32,7 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
+import org.apache.kylin.rest.security.KylinUserManager;
 import org.apache.kylin.rest.security.ManagedUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +40,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class KylinUserService implements UserService {
 
@@ -84,29 +82,20 @@ public class KylinUserService implements UserService {
     public void updateUser(UserDetails user) {
         Preconditions.checkState(user instanceof ManagedUser, "User {} is not ManagedUser", user);
         ManagedUser managedUser = (ManagedUser) user;
-        try {
-            String id = getId(user.getUsername());
-            aclStore.putResourceWithoutCheck(id, managedUser, System.currentTimeMillis(), SERIALIZER);
-            logger.trace("update user : {}", user.getUsername());
-            setEvictCacheFlag(true);
-        } catch (IOException e) {
-            throw new InternalErrorException(e);
-        }
+        getKylinUserManager().update(managedUser);
+        logger.trace("update user : {}", user.getUsername());
+        setEvictCacheFlag(true);
     }
 
     @Override
     public void deleteUser(String userName) {
-        if (userName.equals(SUPER_ADMIN))
+        if (userName.equals(SUPER_ADMIN)) {
             throw new InternalErrorException("User " + userName + " is not allowed to be deleted.");
-
-        try {
-            String id = getId(userName);
-            aclStore.deleteResource(id);
-            logger.trace("delete user : {}", userName);
-            setEvictCacheFlag(true);
-        } catch (IOException e) {
-            throw new InternalErrorException(e);
         }
+
+        getKylinUserManager().delete(userName);
+        logger.trace("delete user : {}", userName);
+        setEvictCacheFlag(true);
     }
 
     @Override
@@ -116,12 +105,8 @@ public class KylinUserService implements UserService {
 
     @Override
     public boolean userExists(String userName) {
-        try {
-            logger.trace("judge user exist: {}", userName);
-            return aclStore.exists(getId(userName));
-        } catch (IOException e) {
-            throw new InternalErrorException(e);
-        }
+        logger.trace("judge user exist: {}", userName);
+        return getKylinUserManager().exists(userName);
     }
 
     /**
@@ -131,37 +116,17 @@ public class KylinUserService implements UserService {
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         Message msg = MsgPicker.getMsg();
-        try {
-            ManagedUser managedUser = aclStore.getResource(getId(userName), ManagedUser.class, SERIALIZER);
-            if (managedUser == null) {
-                throw new UsernameNotFoundException(String.format(msg.getUSER_NOT_FOUND(), userName));
-            }
-            logger.trace("load user : {}", userName);
-            return managedUser;
-        } catch (IOException e) {
-            throw new InternalErrorException(e);
+        ManagedUser managedUser = getKylinUserManager().get(userName);
+        if (managedUser == null) {
+            throw new UsernameNotFoundException(String.format(msg.getUSER_NOT_FOUND(), userName));
         }
+        logger.trace("load user : {}", userName);
+        return managedUser;
     }
 
     @Override
     public List<ManagedUser> listUsers() throws IOException {
-        return aclStore.getAllResources(DIR_PREFIX, ManagedUser.class, SERIALIZER);
-    }
-
-    @Override
-    public List<String> listUsernames() throws IOException {
-        List<String> paths = new ArrayList<>();
-        paths.addAll(aclStore.listResources(ResourceStore.USER_ROOT));
-        List<String> users = Lists.transform(paths, new Function<String, String>() {
-            @Nullable
-            @Override
-            public String apply(@Nullable String input) {
-                String[] path = input.split("/");
-                Preconditions.checkArgument(path.length == 3);
-                return path[2];
-            }
-        });
-        return users;
+        return getKylinUserManager().list();
     }
 
     @Override
@@ -183,4 +148,7 @@ public class KylinUserService implements UserService {
         return DIR_PREFIX + userName;
     }
 
+    private KylinUserManager getKylinUserManager() {
+        return KylinUserManager.getInstance(KylinConfig.getInstanceFromEnv());
+    }
 }
