@@ -302,7 +302,7 @@ public class KylinConfig extends KylinConfigBase {
 
         OrderedProperties orderedProperties = buildSiteOrderedProps();
         for (Map.Entry<String, String> each : orderedProperties.entrySet()) {
-            conf.put(each.getKey(), each.getValue());
+            conf.put(each.getKey(), each.getValue().trim());
         }
 
         return conf;
