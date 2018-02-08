@@ -63,6 +63,10 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
         this(cubeSegment.getCubeDesc(), cubeSegment, false);
     }
 
+    public CubeJoinedFlatTableDesc(CubeSegment cubeSegment, boolean includingDerived) {
+        this(cubeSegment.getCubeDesc(), cubeSegment, includingDerived);
+    }
+    
     private CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment /* can be null */,
             boolean includingDerived) {
         this.cubeDesc = cubeDesc;

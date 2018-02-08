@@ -195,7 +195,7 @@ public class CubeControllerTest extends ServiceTestBase {
 
     @Test
     public void testGetSql() {
-        GeneralResponse response = cubeController.getSql("test_kylin_cube_with_slr_ready", null);
+        GeneralResponse response = cubeController.getSql("test_kylin_cube_with_slr_ready");
         String sql = response.getProperty("sql");
         CubeDesc cubeDesc = cubeDescController.getDesc("test_kylin_cube_with_slr_ready");
 

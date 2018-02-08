@@ -42,7 +42,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
-import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.common.CuboidStatsReaderUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
@@ -196,7 +195,7 @@ public class CubeController extends BasicController {
         if (cube == null) {
             throw new InternalErrorException("Cannot find cube " + cubeName);
         }
-        IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
+        IJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), true);
         String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
 
         GeneralResponse response = new GeneralResponse();
@@ -218,7 +217,16 @@ public class CubeController extends BasicController {
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName, @PathVariable String segmentName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        IJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), true);
+        if (cube == null) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+
+        CubeSegment segment = cube.getSegment(segmentName, null);
+        if (segment == null) {
+            throw new InternalErrorException("Cannot find segment " + segmentName);
+        }
+
+        IJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(segment, true);
         String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
 
         GeneralResponse response = new GeneralResponse();
