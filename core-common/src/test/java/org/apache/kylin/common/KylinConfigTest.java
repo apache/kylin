@@ -133,7 +133,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testUnexpectedBlankInPro() {
+    public void testUnexpectedBlackInPro() {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
         Map<String, String> override = conf.getPropertiesByPrefix("kylin.engine.mr.config-override.");
         assertEquals(2, override.size());
