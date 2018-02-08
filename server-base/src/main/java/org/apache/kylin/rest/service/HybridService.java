@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -35,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.security.access.AccessDeniedException;
 
 @Component("hybridService")
 public class HybridService extends BasicService {
@@ -113,32 +113,51 @@ public class HybridService extends BasicService {
     }
 
     public List<HybridInstance> listHybrids(final String projectName, final String modelName) {
-        aclEvaluate.checkProjectReadPermission(projectName);
-        ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
-        List<HybridInstance> hybridsInProject = new ArrayList<HybridInstance>();
-
+        List<HybridInstance> allHybrids = new ArrayList<HybridInstance>();
         if (StringUtils.isEmpty(projectName)) {
-            hybridsInProject = new ArrayList(getHybridManager().listHybridInstances());
-        } else if (project == null) {
-            return Collections.emptyList();
+            List<ProjectInstance> allProjectInstances = getProjectManager().listAllProjects();
+            List<ProjectInstance> readableProjects = new ArrayList<ProjectInstance>();
+            for (ProjectInstance projectInstance : allProjectInstances) {
+                if (projectInstance == null) {
+                    continue;
+                }
+                boolean hasReadAccess = false;
+                try {
+                    hasReadAccess = aclEvaluate.hasProjectReadPermission(projectInstance);
+                } catch (AccessDeniedException e) {
+                    //ignore to continue
+                }
+                if (hasReadAccess) {
+                    readableProjects.add(projectInstance);
+                }
+            }
+            for (ProjectInstance projectInstance : readableProjects) {
+                List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries(RealizationType.HYBRID);
+                if (realizationEntries != null) {
+                    for (RealizationEntry entry : realizationEntries) {
+                        HybridInstance instance = getHybridManager().getHybridInstance(entry.getRealization());
+                        allHybrids.add(instance);
+                    }
+                }
+            }
         } else {
-            List<RealizationEntry> realizationEntries = project.getRealizationEntries(RealizationType.HYBRID);
+            aclEvaluate.checkProjectReadPermission(projectName);
+            ProjectInstance projectInstance = getProjectManager().getProject(projectName);
+            List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries(RealizationType.HYBRID);
             if (realizationEntries != null) {
                 for (RealizationEntry entry : realizationEntries) {
                     HybridInstance instance = getHybridManager().getHybridInstance(entry.getRealization());
-                    hybridsInProject.add(instance);
+                    allHybrids.add(instance);
                 }
             }
         }
 
-        DataModelDesc model = (null != modelName) ? getDataModelManager().getDataModelDesc(modelName) : null;
         if (StringUtils.isEmpty(modelName)) {
-            return hybridsInProject;
-        } else if (model == null) {
-            return Collections.emptyList();
+            return allHybrids;
         } else {
+            DataModelDesc model = getMetadataManager().getDataModelDesc(modelName);
             List<HybridInstance> hybridsInModel = new ArrayList<HybridInstance>();
-            for (HybridInstance hybridInstance : hybridsInProject) {
+            for (HybridInstance hybridInstance : allHybrids) {
                 boolean hybridInModel = false;
                 for (RealizationEntry entry : hybridInstance.getRealizationEntries()) {
                     CubeDesc cubeDesc = getCubeDescManager().getCubeDesc(entry.getRealization());
