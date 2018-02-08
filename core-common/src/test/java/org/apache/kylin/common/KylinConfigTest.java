@@ -131,4 +131,13 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
         String hdfsWorkingDirectory = conf.getHdfsWorkingDirectory();
         assertTrue(hdfsWorkingDirectory.startsWith("file:/"));
     }
+
+    @Test
+    public void testUnexpectedBlankInPro() {
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        Map<String, String> override = conf.getPropertiesByPrefix("kylin.engine.mr.config-override.");
+        assertEquals(2, override.size());
+        String s = override.get("test2");
+        assertEquals("test2", s);
+    }
 }
