@@ -33,7 +33,6 @@ import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 @Component("hybridService")
@@ -123,13 +122,8 @@ public class HybridService extends BasicService {
                 if (projectInstance == null) {
                     continue;
                 }
-                boolean hasReadAccess = false;
-                try {
-                    hasReadAccess = aclEvaluate.hasProjectReadPermission(projectInstance);
-                } catch (AccessDeniedException e) {
-                    //ignore to continue
-                }
-                if (hasReadAccess) {
+                boolean hasProjectReadAccess = aclEvaluate.hasProjectReadPermission(projectInstance);
+                if (hasProjectReadAccess) {
                     readableProjects.add(projectInstance);
                 }
             }
