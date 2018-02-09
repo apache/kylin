@@ -520,8 +520,25 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
           }
         });
       })
-    }
+    };
 
+    $scope.startDeleteSegment = function (cube) {
+          $scope.metaModel={
+            model:modelsManager.getModelByCube(cube.name)
+          };
+          $modal.open({
+            templateUrl: 'deleteSegment.html',
+            controller: deleteSegmentCtrl,
+            resolve: {
+              cube: function () {
+                return cube;
+              },
+              scope: function() {
+                return $scope;
+              }
+            }
+          });
+        };
 
   });
 
@@ -715,4 +732,49 @@ var streamingBuildCtrl = function ($scope, $modalInstance,kylinConfig) {
   $scope.cancel = function () {
     $modalInstance.dismiss('cancel');
   };
-}
+};
+
+var deleteSegmentCtrl = function($scope, $modalInstance, CubeService, SweetAlert, loadingRequest, cube, scope) {
+  $scope.cube = cube;
+  $scope.deleteSegments = [];
+  $scope.segment = {};
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  $scope.deleteSegment = function() {
+    SweetAlert.swal({
+      title: '',
+      text: 'Are you sure to delete segment ['+$scope.segment.selected.name+']? ',
+      type: '',
+      showCancelButton: true,
+      confirmButtonColor: '#DD6B55',
+      confirmButtonText: "Yes",
+      closeOnConfirm: true
+    }, function(isConfirm) {
+      if(isConfirm){
+        loadingRequest.show();
+        CubeService.deleteSegment({cubeId: cube.name, propValue: $scope.segment.selected.name}, {}, function (result) {
+          loadingRequest.hide();
+          $modalInstance.dismiss('cancel');
+          scope.refreshCube(cube).then(function(_cube){
+           if(_cube && _cube.name){
+              scope.cubeList.cubes[scope.cubeList.cubes.indexOf(cube)] = _cube;
+           }
+          });
+          SweetAlert.swal('Success!', 'Delete segment successfully', 'success');
+        },function(e){
+          loadingRequest.hide();
+          if(e.data&& e.data.exception){
+            var message =e.data.exception;
+            var msg = !!(message) ? message : 'Failed to delete segment.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          }else{
+            SweetAlert.swal('Oops...', 'Failed to delete segment.', 'error');
+          }
+        });
+      }
+    });
+  };
+};
