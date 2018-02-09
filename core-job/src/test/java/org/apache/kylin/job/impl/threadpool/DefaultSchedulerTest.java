@@ -18,6 +18,16 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.FileNotFoundException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.BaseTestExecutable;
 import org.apache.kylin.job.ErrorTestExecutable;
@@ -38,16 +48,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.FileNotFoundException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  */
@@ -184,14 +184,14 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
 
     @Test
     public void testMetaStoreRecover() throws Exception {
-        logger.info("tesMetaStoreRecover");
+        logger.info("testMetaStoreRecover");
         NoErrorStatusExecutable job = new NoErrorStatusExecutable();
         ErrorTestExecutable task = new ErrorTestExecutable();
         job.addTask(task);
         execMgr.addJob(job);
         Thread.sleep(2500);
         runningJobToError(job.getId());
-        Thread.sleep(2500);
+        waitForJobFinish(job.getId(), 10000);
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
     }
 
