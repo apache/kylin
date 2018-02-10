@@ -24,6 +24,8 @@ import org.apache.kylin.cube.cuboid.algorithm.generic.BitsChromosome;
 import org.apache.kylin.cube.cuboid.algorithm.generic.GeneticAlgorithm;
 
 /**
+ * Modified from the BinaryMutation.java in https://github.com/apache/commons-math
+ *
  * Mutation for {@link BitsChromosome}s. Randomly changes one gene.
  *
  */

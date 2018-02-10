@@ -19,6 +19,8 @@
 package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
 
 /**
+ * Modified from the SelectionPolicy.java in https://github.com/apache/commons-math
+ *
  * Algorithm used to select a chromosome pair from a population.
  *
  */

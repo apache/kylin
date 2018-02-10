@@ -19,6 +19,8 @@
 package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
 
 /**
+ * Modified from the MutationPolicy.java in https://github.com/apache/commons-math
+ *
  * Algorithm used to mutate a chromosome.
  *
  */

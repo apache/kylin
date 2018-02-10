@@ -19,6 +19,8 @@
 package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
 
 /**
+ * Modified from the StoppingCondition.java in https://github.com/apache/commons-math
+ *
  * Algorithm used to determine when to stop evolution.
  *
  */

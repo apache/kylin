@@ -19,6 +19,8 @@
 package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
 
 /**
+ * Modified from the Fitness.java in https://github.com/apache/commons-math
+ *
  * Fitness of a chromosome.
  *
  */

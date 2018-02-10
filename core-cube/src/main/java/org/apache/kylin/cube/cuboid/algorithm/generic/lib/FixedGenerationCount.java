@@ -21,6 +21,8 @@ package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
 import org.apache.commons.math3.exception.NumberIsTooSmallException;
 
 /**
+ * Modified from the FixedGenerationCount.java in https://github.com/apache/commons-math
+ *
  * Stops after a fixed number of generations. Each time {@link #isSatisfied(Population)} is invoked, a generation
  * counter is incremented. Once the counter reaches the configured <code>maxGenerations</code> value,
  * {@link #isSatisfied(Population)} returns true.

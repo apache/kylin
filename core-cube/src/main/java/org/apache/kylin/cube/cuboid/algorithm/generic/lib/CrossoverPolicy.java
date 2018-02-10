@@ -19,6 +19,8 @@
 package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
 
 /**
+ * Modified from the CrossoverPolicy.java in https://github.com/apache/commons-math
+ *
  * Policy used to create a pair of new chromosomes by performing a crossover
  * operation on a source pair of chromosomes.
  *

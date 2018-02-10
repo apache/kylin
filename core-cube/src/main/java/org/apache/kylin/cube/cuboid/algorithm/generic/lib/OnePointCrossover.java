@@ -24,6 +24,8 @@ import org.apache.kylin.cube.cuboid.algorithm.generic.BitsChromosome;
 import org.apache.kylin.cube.cuboid.algorithm.generic.GeneticAlgorithm;
 
 /**
+ * Modified from the OnePointCrossover.java in https://github.com/apache/commons-math
+ *
  * One point crossover policy. A random crossover point is selected and the
  * first part from each parent is copied to the corresponding child, and the
  * second parts are copied crosswise.
