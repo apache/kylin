@@ -29,6 +29,8 @@ import org.apache.commons.math3.exception.util.LocalizedFormats;
 import org.apache.commons.math3.util.FastMath;
 
 /**
+ * Modified from the ElitisticListPopulation.java in https://github.com/apache/commons-math
+ *
  * Population of chromosomes which uses elitism (certain percentage of the best
  * chromosomes is directly copied to the next generation).
  *

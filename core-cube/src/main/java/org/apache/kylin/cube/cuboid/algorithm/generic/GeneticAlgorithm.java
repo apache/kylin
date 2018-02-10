@@ -42,6 +42,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 /**
+ * Modified from the GeneticAlgorithm.java in https://github.com/apache/commons-math
+ *
  * Implementation of a genetic algorithm to recommend a list of cuboids. All factors that govern the processing
  * of the algorithm can be configured.
  *

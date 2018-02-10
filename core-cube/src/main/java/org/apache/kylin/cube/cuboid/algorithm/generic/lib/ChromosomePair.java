@@ -19,6 +19,8 @@
 package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
 
 /**
+ * Modified from the ChromosomePair.java in https://github.com/apache/commons-math
+ *
  * A pair of {@link Chromosome} objects.
  *
  */

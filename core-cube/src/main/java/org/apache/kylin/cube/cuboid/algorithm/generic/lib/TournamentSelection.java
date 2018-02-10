@@ -25,6 +25,8 @@ import org.apache.kylin.cube.cuboid.algorithm.generic.GeneticAlgorithm;
 import com.google.common.collect.Lists;
 
 /**
+ * Modified from the TournamentSelection.java in https://github.com/apache/commons-math
+ *
  * Tournament selection scheme. Each of the two selected chromosomes is selected
  * based on n-ary tournament -- this is done by drawing {@link #arity} random
  * chromosomes without replacement from the population, and then selecting the

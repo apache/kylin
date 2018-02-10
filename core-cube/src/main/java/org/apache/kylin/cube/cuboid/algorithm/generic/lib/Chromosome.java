@@ -19,6 +19,8 @@
 package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
 
 /**
+ * Modified from the Chromosome.java in https://github.com/apache/commons-math
+ *
  * Individual in a population. Chromosomes are compared based on their fitness.
  * <p>
  * The chromosomes are IMMUTABLE, and so their fitness is also immutable and

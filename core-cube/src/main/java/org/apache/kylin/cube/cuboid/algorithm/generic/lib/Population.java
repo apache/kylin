@@ -21,6 +21,8 @@ package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
 import org.apache.commons.math3.exception.NumberIsTooLargeException;
 
 /**
+ * Modified from the Population.java in https://github.com/apache/commons-math
+ *
  * A collection of chromosomes that facilitates generational evolution.
  *
  */
