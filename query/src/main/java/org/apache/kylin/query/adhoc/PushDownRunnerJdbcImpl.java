@@ -27,6 +27,7 @@ import java.sql.Types;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -64,11 +65,26 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
 
             // fill in selected column meta
             for (int i = 1; i <= columnCount; ++i) {
+                String tableName = null;
+                String columnLabel = metaData.getColumnLabel(i);
+
+                try {
+                    tableName = metaData.getTableName(i);
+                } catch (SQLException e) {
+                    if (columnLabel.contains(".")) {
+                        tableName = StringUtils.substringBeforeLast(columnLabel, ".");
+                    }
+                }
+
+                if (columnLabel.contains(".")) {
+                    columnLabel = StringUtils.substringAfterLast(columnLabel, ".");
+                }
+
                 columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), false,
                         metaData.isCurrency(i), metaData.isNullable(i), false, metaData.getColumnDisplaySize(i),
-                        metaData.getColumnLabel(i), metaData.getColumnName(i), null, null, null,
-                        metaData.getPrecision(i), metaData.getScale(i), toSqlType(metaData.getColumnTypeName(i)),
-                        metaData.getColumnTypeName(i), metaData.isReadOnly(i), false, false));
+                        columnLabel, metaData.getColumnName(i), null, null, tableName, metaData.getPrecision(i),
+                        metaData.getScale(i), toSqlType(metaData.getColumnTypeName(i)), metaData.getColumnTypeName(i),
+                        metaData.isReadOnly(i), false, false));
             }
         } finally {
             DBUtils.closeQuietly(resultSet);
