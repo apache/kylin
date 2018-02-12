@@ -11,7 +11,7 @@ By following this tutorial, you will be able to build kylin test cubes by runnin
 
 ## Environment on the Hadoop CLI
 
-Off-Hadoop-CLI installation requires you having a hadoop CLI machine (or a hadoop sandbox) as well as your local develop machine. To make things easier we strongly recommend you starting with running Kylin on a hadoop sandbox, like <http://hortonworks.com/products/hortonworks-sandbox/>. In the following tutorial we'll go with **Hortonworks Sandbox 2.2.4**. It is recommended that you provide enough memory to your sandbox, 8G or more is preferred.
+Off-Hadoop-CLI installation requires you having a hadoop CLI machine (or a hadoop sandbox) as well as your local develop machine. To make things easier we strongly recommend you starting with running Kylin on a hadoop sandbox, like <http://hortonworks.com/products/hortonworks-sandbox/>. In the following tutorial we'll go with **Hortonworks Sandbox 2.4.0.0-169**. It is recommended that you provide enough memory to your sandbox, 8G or more is preferred.
 
 ### Start Hadoop
 
@@ -44,21 +44,15 @@ ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
 
 ### Install Spark
 
-Manually install spark-1.6.3-bin-hadoop2.6 in a local folder like /usr/local/spark
+Manually install spark-2.1.2-bin-hadoop2.7 in a local folder like /usr/local/spark
 
 {% highlight Groff markup %}
-wget -O /tmp/spark-1.6.3-bin-hadoop2.6.tgz http://d3kbcqa49mib13.cloudfront.net/spark-1.6.3-bin-hadoop2.6.tgz
+wget -O /tmp/spark-2.1.2-bin-hadoop2.7.tgz http://d3kbcqa49mib13.cloudfront.net/spark-2.1.2-bin-hadoop2.7.tgz
 cd /usr/local
-tar -zxvf /tmp/spark-1.6.3-bin-hadoop2.6.tgz
-ln -s spark-1.6.3-bin-hadoop2.6 spark
+tar -zxvf /tmp/spark-2.1.2-bin-hadoop2.7.tgz
+ln -s spark-2.1.2-bin-hadoop2.7 spark
 {% endhighlight %}
 
-Upload the spark-assembly jar to HDFS as /kylin/spark/spark-assembly-1.6.3-hadoop2.6.0.jar (avoid repeatedly uploading the jar to HDFS):
-
-{% highlight Groff markup %}
-hadoop fs -mkdir /kylin/spark/
-hadoop fs -put /usr/local/spark/lib/spark-assembly-1.6.3-hadoop2.6.0.jar /kylin/spark/
-{% endhighlight %}
 
 Create local temp folder for hbase client (if it doesn't exist):
 

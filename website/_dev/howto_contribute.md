@@ -12,11 +12,27 @@ Apache Kylin is always looking for contributions of not only code, but also usag
 Both code and document are under Git source control. Note the purpose of different branches.
 
 * `master`: Main development branch for new features
-* `2.0.x`: Maintenance branch for a certain release
+* `2.[n].x`: Maintenance branch for a certain major release
 * `document`: Document branch
 
+## Components and owners
+Apache Kylin has several sub-components. And for each component we will arrange one or multiple component owners. 
 
-## Pick an Open Task
+Component owners is listed in the description field on this Apache Kylin [JIRA components page](https://issues.apache.org/jira/projects/KYLIN?selectedItem=com.atlassian.jira.jira-projects-plugin:components-page). The owners are listed in the 'Description' field rather than in the 'Component Lead' field because the latter only allows us to list one individual whereas it is encouraged that components have multiple owners. 
+
+- Component owners are volunteers who are expert in their component domain and may have an agenda on how they think their Apache Kylin component should evolve. The owner needs to be an Apache Kylin committer at this moment.
+
+- Owners will try and review patches that land within their component’s scope.
+
+- Owners can rotate, based on his aspiration.
+
+- When nominate or vote a new committer, the nominator needs to state which component the candidate can be the owner.
+
+- If you're already an Apache Kylin committer and would like to be a volunteer as a component owner, just write to the dev list and we’ll sign you up. 
+
+- If you think the component list need be updated (add, remove, rename, etc), write to the dev list and we’ll review that.
+
+## Pick a task
 There are open tasks waiting to be done, tracked by JIRA. To make it easier to search, there are a few JIRA filters.
 
 * [A list of tasks](https://issues.apache.org/jira/issues/?filter=12339895) managed by Yang Li.
@@ -25,6 +41,16 @@ There are open tasks waiting to be done, tracked by JIRA. To make it easier to s
 
 Do not forget to discuss in [mailing list](/community/index.html) before working on a big task.
 
+If create a new JIRA for bug or feature, remember to provide enough information for the community:
+
+* A well summary for the problem or feature
+* A detail description, which may include:
+	- the environment of this problem occurred 
+	- the steps to reproduce the problem
+	- the error trace or log files (as attachment)
+	- the metadata of the model or cube
+* Related components: we will arrange reviewer based on this selection.
+* Affected version: which Kylin you're using.
 
 ## Making Code Changes
 * [Setup dev env](/development/dev_env.html)
@@ -32,7 +58,7 @@ Do not forget to discuss in [mailing list](/community/index.html) before working
 * Discuss with others in mailing list or issue comments, make sure the proposed changes fit in with what others are doing and have planned for the project
 * Make changes in your fork
 	* No strict code style at the moment, but the general rule is keep consistent with existing files. E.g. use 4-space indent for java files.
-	* Add unit test for your code change as much as possible.
+	* Add test case for your code change as much as possible.
 	* Make sure "mvn clean package" and "mvn test" can get success.
 	* Sufficient unit test and integration test is a mandatory part of code change. 
 * [Run tests](/development/howto_test.html) to ensure your change is in good quality and does not break anything. If your patch was generated incorrectly or your code does not adhere to the code guidelines, you may be asked to redo some work.
@@ -52,6 +78,26 @@ $ ./dev-support/submit-patch.py -jid KYLIN-xxxxx -b master -srb
 * To install required python dependencies, execute `pip install -r dev-support/python-requirements.txt` from the master branch.
 
 * Alternatively, you can also manually generate a patch. Please use `git rebase -i` first, to combine (squash) smaller commits into a single larger one. Then use `git format-patch` command to generate the patch, for a detail guide you can refer to [How to create and apply a patch with Git](https://ariejan.net/2009/10/26/how-to-create-and-apply-a-patch-with-git/)
+
+## Code Review
+The reviewer need to review the patch from the following perspectives:
+
+* _Functionality_: the patch MUST address the issue and has been verified by the contributor before submitting for review.
+* _Test coverage_: the change MUST be covered by a UT or the Integration test, otherwise it is not maintainable. Execptional case includes GUI, shell script, etc.
+* _Performance_: the change SHOULD NOT downgrade Kylin's performance.
+* _Metadata compatibility_: the change should support old metadata definition. Otherwise, a metadata migration tool and documentation is required.
+* _API compatibility_: the change SHOULD NOT break public API's functionality and behavior; If an old API need be replaced by the new one, print warning message there.
+* _Documentation_: if the Kylin document need be updated together, create another JIRA with "Document" as the component to track. In the document JIRA, attach the doc change patch which is againt the "document" branch.
+
+A patch which doesn't comply with the above rules may not get merged.
+
+## Patch +1 Policy
+
+Patches that fit within the scope of a single component require, at least, a +1 by one of the component’s owners before commit. If owners are absent — busy or otherwise — two +1s by non-owners but committers will suffice.
+
+Patches that span components need at least two +1s before they can be committed, preferably +1s by owners of components touched by the x-component patch.
+
+Any -1 on a patch by anyone vetoes a patch; it cannot be committed until the justification for the -1 is addressed.
 
 
 ## Apply Patch

@@ -26,29 +26,29 @@ Download the Kylin v1.6 from download page, expand the tar ball in /usr/local/ f
 
 ## Create sample Kafka topic and populate data
 
-Create a sample topic "kylindemo", with 3 partitions:
+Create a sample topic "kylin_streaming_topic", with 3 partitions:
 
 {% highlight Groff markup %}
 
-bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 3 --topic kylindemo
-Created topic "kylindemo".
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 3 --topic kylin_streaming_topic
+Created topic "kylin_streaming_topic".
 {% endhighlight %}
 
 Put sample data to this topic; Kylin has an utility class which can do this;
 
 {% highlight Groff markup %}
 export KAFKA_HOME=/usr/local/kafka_2.10-0.10.0.0
-export KYLIN_HOME=/usr/local/apache-kylin-1.6.0-bin
+export KYLIN_HOME=/usr/local/apache-kylin-2.1.0-bin
 
 cd $KYLIN_HOME
-./bin/kylin.sh org.apache.kylin.source.kafka.util.KafkaSampleProducer --topic kylindemo --broker localhost:9092
+./bin/kylin.sh org.apache.kylin.source.kafka.util.KafkaSampleProducer --topic kylin_streaming_topic --broker localhost:9092
 {% endhighlight %}
 
 This tool will send 100 records to Kafka every second. Please keep it running during this tutorial. You can check the sample message with kafka-console-consumer.sh now:
 
 {% highlight Groff markup %}
 cd $KAFKA_HOME
-bin/kafka-console-consumer.sh --zookeeper localhost:2181 --bootstrap-server localhost:9092 --topic kylindemo --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic kylin_streaming_topic --from-beginning
 {"amount":63.50375137330458,"category":"TOY","order_time":1477415932581,"device":"Other","qty":4,"user":{"id":"bf249f36-f593-4307-b156-240b3094a1c3","age":21,"gender":"Male"},"currency":"USD","country":"CHINA"}
 {"amount":22.806058795736583,"category":"ELECTRONIC","order_time":1477415932591,"device":"Andriod","qty":1,"user":{"id":"00283efe-027e-4ec1-bbed-c2bbda873f1d","age":27,"gender":"Female"},"currency":"USD","country":"INDIA"}
 
@@ -70,7 +70,7 @@ Notice that Kylin supports structured (or say "embedded") message from v1.6, it 
    ![](/images/tutorial/1.6/Kylin-Cube-Streaming-Tutorial/2_Define_streaming_table.png)
 
 
-Click "Next". On this page, provide the Kafka cluster information; Enter "kylindemo" as "Topic" name; The cluster has 1 broker, whose host name is "sandbox", port is "9092", click "Save".
+Click "Next". On this page, provide the Kafka cluster information; Enter "kylin_streaming_topic" as "Topic" name; The cluster has 1 broker, whose host name is "sandbox", port is "9092", click "Save".
 
    ![](/images/tutorial/1.6/Kylin-Cube-Streaming-Tutorial/3_Kafka_setting.png)
 
