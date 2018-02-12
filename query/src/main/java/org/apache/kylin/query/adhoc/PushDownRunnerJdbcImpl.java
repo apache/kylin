@@ -27,6 +27,7 @@ import java.sql.Types;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -64,17 +65,157 @@ public class PushDownRunnerJdbcImpl implements IPushDownRunner {
 
             // fill in selected column meta
             for (int i = 1; i <= columnCount; ++i) {
-                columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), false,
-                        metaData.isCurrency(i), metaData.isNullable(i), false, metaData.getColumnDisplaySize(i),
-                        metaData.getColumnLabel(i), metaData.getColumnName(i), null, null, null,
-                        metaData.getPrecision(i), metaData.getScale(i), toSqlType(metaData.getColumnTypeName(i)),
-                        metaData.getColumnTypeName(i), metaData.isReadOnly(i), false, false));
+                SelectedColumnMeta columnMeta = extractColumnMeta(metaData, i);
+                columnMetas.add(columnMeta);
             }
         } finally {
             DBUtils.closeQuietly(resultSet);
             DBUtils.closeQuietly(statement);
             manager.close(connection);
         }
+    }
+
+    private SelectedColumnMeta extractColumnMeta(ResultSetMetaData resultSetMetaData, int columnIndex) throws SQLException {
+        boolean isAutoIncrement = false;
+        try {
+            isAutoIncrement = resultSetMetaData.isAutoIncrement(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        boolean isCaseSensitive = false;
+        try {
+            isCaseSensitive = resultSetMetaData.isCaseSensitive(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        boolean isSearchable = false;
+        try {
+            isSearchable = resultSetMetaData.isSearchable(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        boolean isCurrency = false;
+        try {
+            isCurrency = resultSetMetaData.isCurrency(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        int isNullable = ResultSetMetaData.columnNullableUnknown;
+        try {
+            isNullable = resultSetMetaData.isNullable(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        boolean isSigned = false;
+        try {
+            isSigned = resultSetMetaData.isSigned(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        int columnDisplaySize = 0;
+        try {
+            columnDisplaySize = resultSetMetaData.getColumnDisplaySize(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        String columnLabel = null;
+        try {
+            columnLabel = resultSetMetaData.getColumnLabel(columnIndex);
+            // Suppose column label has format [table name].[column name]
+            if (columnLabel.contains(".")) {
+                columnLabel = StringUtils.substringAfterLast(columnLabel, ".");
+            }
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        String columnName = null;
+        try {
+            columnName = resultSetMetaData.getColumnName(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        String schemaName = null;
+        try {
+            schemaName = resultSetMetaData.getSchemaName(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        String catelogName = null;
+        try {
+            catelogName = resultSetMetaData.getCatalogName(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        String tableName = null;
+        try {
+            tableName = resultSetMetaData.getTableName(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+            // Suppose column label contains table name
+            if (columnLabel.contains(".")) {
+                tableName = StringUtils.substringBeforeLast(columnLabel, ".");
+            }
+        }
+
+        int precision = 0;
+        try {
+            precision = resultSetMetaData.getPrecision(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        int scale = 0;
+        try {
+            scale = resultSetMetaData.getScale(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        String columnTypeName = null;
+        try {
+            columnTypeName = resultSetMetaData.getColumnTypeName(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        int columnType = toSqlType(columnTypeName);
+
+        boolean isReadOnly = false;
+        try {
+            isReadOnly = resultSetMetaData.isReadOnly(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        boolean isWritable = false;
+        try {
+            isWritable = resultSetMetaData.isWritable(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        boolean isDefinitelyWritable = false;
+        try {
+            isDefinitelyWritable = resultSetMetaData.isDefinitelyWritable(columnIndex);
+        } catch (SQLException e) {
+            // Fall back to default value
+        }
+
+        SelectedColumnMeta columnMeta = new SelectedColumnMeta(isAutoIncrement, isCaseSensitive, isSearchable,
+                isCurrency, isNullable, isSigned, columnDisplaySize, columnLabel, columnName, schemaName, catelogName,
+                tableName, precision, scale, columnType, columnTypeName, isReadOnly, isWritable, isDefinitelyWritable);
+        return columnMeta;
     }
 
     // calcite does not understand all java SqlTypes, for example LONGNVARCHAR -16, thus need this mapping (KYLIN-2966)
