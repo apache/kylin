@@ -17,7 +17,7 @@ Kylin Dashboard shows useful cube usage statistics, which are very important to 
 
 To enable Dashboard on WebUI, you need to ensure these are all set:
 * Set **kylin.web.dashboard-enabled=true** in **kylin.properties**.
-* Setup system cubes according to ![toturial](howto_setup_systemcube.html).
+* Setup system cubes according to [toturial](howto_setup_systemcube.html).
 
 ## How to use it
 
