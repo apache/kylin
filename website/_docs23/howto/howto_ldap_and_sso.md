@@ -36,16 +36,18 @@ ldap.user.groupSearchBase=OU=Group,DC=mycompany,DC=com
 
 If you have service accounts (e.g, for system integration) which also need be authenticated, configure them in ldap.service.*; Otherwise, leave them be empty;
 
-### Configure the administrator group and default role
+### Configure the administrator group
 
-To map an LDAP group to the admin group in Kylin, need set the "kylin.security.acl.admin-role" to "ROLE_" + GROUP_NAME. For example, in LDAP the group "KYLIN-ADMIN-GROUP" is the list of administrators, here need set it as:
+To map an LDAP group to the admin group in Kylin, need set the "kylin.security.acl.admin-role" to the LDAP group name(shall keep the original case), and the users in this group will be global admin in Kylin.
+
+For example, in LDAP the group "KYLIN-ADMIN-GROUP" is the list of administrators, here need set it as:
 
 ```
-kylin.security.acl.admin-role=ROLE_KYLIN-ADMIN-GROUP
-kylin.security.acl.default-role=ROLE_ANALYST,ROLE_MODELER
+kylin.security.acl.admin-role=KYLIN-ADMIN-GROUP
 ```
 
-The "kylin.security.acl.default-role" is a list of the default roles that grant to everyone, keep it as-is.
+
+*Attention: When upgrading from Kylin 2.3 ealier version to 2.3 or later, please remove the "ROLE_" in this setting as this required in the 2.3 earlier version and keep the group name in original case. And the kylin.security.acl.default-role is deprecated.*
 
 #### Enable LDAP
 
