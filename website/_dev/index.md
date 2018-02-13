@@ -11,9 +11,9 @@ Check out the [How to Contribute](/development/howto_contribute.html) document.
 
 ### Source Repository
 Apache Kylin™ source code is version controlled using Git version control:
-Commits [Summary](https://git-wip-us.apache.org/repos/asf?p=kylin.git;a=summary)  
-Source Repo: [https://git-wip-us.apache.org/repos/asf/kylin.git](https://git-wip-us.apache.org/repos/asf/kylin.git)  
-Mirrored to Github: [https://github.com/apache/kylin](https://github.com/apache/kylin)
+Commits [Summary](https://github.com/apache/kylin/commits/master)  
+Source Repo: [https://github.com/apache/kylin ](https://github.com/apache/kylin )  
+Mirrored to Gitbox: [https://gitbox.apache.org/repos/asf?p=kylin.git ](https://gitbox.apache.org/repos/asf?p=kylin.git )
 
 ### CI and Code Analysis
 UT on master branch with JDK 1.7(deprecated): [Kylin-Master-JDK-1.7](https://builds.apache.org/job/Kylin-Master-JDK-1.7/) 
