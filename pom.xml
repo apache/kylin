@@ -1022,7 +1022,7 @@
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.7.8</version>
+                    <version>0.8.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -1257,12 +1257,6 @@
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
-                        <configuration>
-                            <append>true</append>
-                            <destFile>
-                                ${sonar.jacoco.reportPath}
-                            </destFile>
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>pre-test</id>
@@ -1270,6 +1264,8 @@
                                     <goal>prepare-agent</goal>
                                 </goals>
                                 <configuration>
+                                    <append>true</append>
+                                    <destFile>${sonar.jacoco.reportPath}</destFile>
                                     <propertyName>surefireArgLine</propertyName>
                                 </configuration>
                             </execution>
@@ -1279,6 +1275,9 @@
                                 <goals>
                                     <goal>report</goal>
                                 </goals>
+                                <configuration>
+                                    <dataFile>${sonar.jacoco.reportPath}</dataFile>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -1309,6 +1308,11 @@
                                 ${argLine} ${surefireArgLine}
                             </argLine>
                         </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.eluder.coveralls</groupId>
+                        <artifactId>coveralls-maven-plugin</artifactId>
+                        <version>4.2.0</version>
                     </plugin>
                 </plugins>
             </build>
@@ -1388,7 +1392,6 @@
                             </execution>
                         </executions>
                     </plugin>
-
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
