@@ -16,21 +16,23 @@ Both code and document are under Git source control. Note the purpose of differe
 * `document`: Document branch
 
 ## Components and owners
-Apache Kylin has several sub-components. And for each component we will arrange one or multiple component owners. 
+Apache Kylin has several sub-components. To better help the community's growth, we arrange one or multiple component owners for each component. 
 
-Component owners is listed in the description field on this Apache Kylin [JIRA components page](https://issues.apache.org/jira/projects/KYLIN?selectedItem=com.atlassian.jira.jira-projects-plugin:components-page). The owners are listed in the 'Description' field rather than in the 'Component Lead' field because the latter only allows us to list one individual whereas it is encouraged that components have multiple owners. 
-
-- Component owners are volunteers who are expert in their component domain and may have an agenda on how they think their Apache Kylin component should evolve. The owner needs to be an Apache Kylin committer at this moment.
+- Component owners are volunteers who are expert in their component domain. The owner needs to be an Apache Kylin committer or PMC at this moment. 
 
 - Owners will try and review patches that land within their component’s scope.
 
-- Owners can rotate, based on his aspiration.
+- Owners can rotate, based on his aspiration and community need.
 
 - When nominate or vote a new committer, the nominator needs to state which component the candidate can be the owner.
 
-- If you're already an Apache Kylin committer and would like to be a volunteer as a component owner, just write to the dev list and we’ll sign you up. 
+- If you're already an Apache Kylin committer or PMC memeber and would like to be a volunteer as a component owner, just write to the dev list and we’ll sign you up. 
+
+- All the project plan, decisions are still managed by Apache Kylin PMC.
 
 - If you think the component list need be updated (add, remove, rename, etc), write to the dev list and we’ll review that.
+
+Component owners is listed in the description field on this Apache Kylin [JIRA components page](https://issues.apache.org/jira/projects/KYLIN?selectedItem=com.atlassian.jira.jira-projects-plugin:components-page). The owners are listed in the 'Description' field rather than in the 'Component Lead' field because the latter only allows us to list one individual whereas it is encouraged that components have multiple owners.
 
 ## Pick a task
 There are open tasks waiting to be done, tracked by JIRA. To make it easier to search, there are a few JIRA filters.
