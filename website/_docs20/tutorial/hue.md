@@ -1,6 +1,6 @@
 ---
 layout: docs20
-title: Connect from Apache Hue
+title: Connect from Hue
 categories: tutorial
 permalink: /docs20/tutorial/hue.html
 ---
@@ -18,11 +18,11 @@ You can check:
 
 
 ### Used Software:
-* [Apache Hue](http://gethue.com/) v3.10.0
+* [Hue](http://gethue.com/) v3.10.0
 * [Apache Kylin](http://kylin.apache.org/) v1.5.2
 
 
-### Install Apache Hue
+### Install Hue
 If you have Hue installed, you can skip this step
 
 To install Hue on Ubuntu 16.04 LTS. The [official Instructions](http://gethue.com/how-to-build-hue-on-ubuntu-14-04-trusty/) didn’t work but [this](https://github.com/cloudera/hue/blob/master/tools/docker/hue-base/Dockerfile) works fine:
@@ -107,7 +107,7 @@ We will use Hue / Hue as login / pass
   You can use *ps -ef | grep hue*, to find the PID and kill
 
 
-### Configure Apache Hue for Kylin
+### Configure Hue for Kylin
 The purpose is to add a snipped in a notebook with Kylin queries
 
 References:

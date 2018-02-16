@@ -50,7 +50,7 @@ Connectivity and APIs
 8. [Connect from Tableau 9](tutorial/tableau_91.html)
 9. [Connect from SQuirreL](tutorial/squirrel.html)
 10. [Connect from Apache Flink](tutorial/flink.html)
-11. [Connect from Apache Hue](tutorial/hue.html)
+11. [Connect from Hue](tutorial/hue.html)
 
 Operations
 ------------  
