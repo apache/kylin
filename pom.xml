@@ -189,10 +189,10 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git</connection>
-        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git
+        <connection>scm:git:git://github.com/apache/kylin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/apache/kylin.git
         </developerConnection>
-        <url>https://git-wip-us.apache.org/repos/asf/kylin.git</url>
+        <url>https://github.com/apache/kylin</url>
         <tag>HEAD</tag>
     </scm>
 
