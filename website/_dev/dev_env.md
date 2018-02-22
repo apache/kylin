@@ -5,13 +5,13 @@ categories: development
 permalink: /development/dev_env.html
 ---
 
-Developers want to run kylin test cases or applications at their development machine. 
+Developers want to run Kylin test cases or applications at their development machine. 
 
-By following this tutorial, you will be able to build kylin test cubes by running a specific test case, and you can further run other test cases against the cubes having been built.
+By following this tutorial, you will be able to build Kylin test cubes by running a specific test case, and you can further run other test cases against the cubes having been built.
 
 ## Environment on the Hadoop CLI
 
-Off-Hadoop-CLI installation requires you having a hadoop CLI machine (or a hadoop sandbox) as well as your local develop machine. To make things easier we strongly recommend you starting with running Kylin on a hadoop sandbox, like <http://hortonworks.com/products/hortonworks-sandbox/>. In the following tutorial we'll go with **Hortonworks Sandbox 2.4.0.0-169**. It is recommended that you provide enough memory to your sandbox, 8G or more is preferred.
+Off-Hadoop-CLI installation requires you having a hadoop CLI machine (or a hadoop sandbox) as well as your local develop machine. To make things easier we strongly recommend you starting with running Kylin on a hadoop sandbox. In the following tutorial we'll go with **Hortonworks® Sandbox 2.4.0.0-169**, you can download it from [Hortonworks download page](https://hortonworks.com/downloads/#sandbox), expand the "Hortonworks Sandbox Archive" link, and then search "HDP® 2.4 on Hortonworks Sandbox" to download. It is recommended that you provide enough memory to your sandbox vm, 8G or more is preferred.
 
 ### Start Hadoop
 
@@ -22,7 +22,7 @@ ambari-agent start
 ambari-server start
 {% endhighlight %}
 	
-With both command successfully run you can go to ambari home page at <http://yoursandboxip:8080> (user:admin,password:admin) to check everything's status. By default ambari disables HBase, you'll need manually start the `HBase` service.
+With both command successfully run you can go to ambari home page at <http://yoursandboxip:8080> to check everything's status. By default ambari disables HBase, you need to manually start the `HBase` service.
 ![start hbase in ambari](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/installation/starthbase.png)
 
 For other hadoop distribution, basically start the hadoop cluster, make sure HDFS, YARN, Hive, HBase are running.

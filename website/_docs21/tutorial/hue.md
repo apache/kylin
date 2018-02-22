@@ -5,12 +5,12 @@ categories: tutorial
 permalink: /docs21/tutorial/hue.html
 ---
 ### Introduction
- In [Hue-2745](https://issues.cloudera.org/browse/HUE-2745) v3.10, add jdbc support like Phoenix, Kylin, Redshift, Solr Parallel SQL, …
+ In [Hue-2745](https://issues.cloudera.org/browse/HUE-2745) v3.10, add JDBC support like Phoenix, Kylin, Redshift, Solr Parallel SQL, …
 
-However, there isn’t any manual to use with Kylin 	:(
+However, there isn’t any manual to use with Kylin.
 
 ### Pre-requisites
-Build a cube sample of Kylin with: [Quick Start with Sample Cube](http://kylin.apache.org/docs15/tutorial/kylin_sample.html), will be enough
+Build a cube sample of Kylin with: [Quick Start with Sample Cube](http://kylin.apache.org/docs23/tutorial/kylin_sample.html), will be enough.
 
 You can check: 
 
@@ -23,14 +23,14 @@ You can check:
 
 
 ### Install Hue
-If you have Hue installed, you can skip this step
+If you have Hue installed, you can skip this step.
 
 To install Hue on Ubuntu 16.04 LTS. The [official Instructions](http://gethue.com/how-to-build-hue-on-ubuntu-14-04-trusty/) didn’t work but [this](https://github.com/cloudera/hue/blob/master/tools/docker/hue-base/Dockerfile) works fine:
 
-There isn’t any binary package thus  [pre-requisites](https://github.com/cloudera/hue#development-prerequisites) must be installed and compile with the command *make*
+There isn’t any binary package thus [pre-requisites](https://github.com/cloudera/hue#development-prerequisites) must be installed and compile with the command *make*
 
 {% highlight Groff markup %}
-    Sudo apt-get install --fix-missing -q -y \
+    sudo apt-get install --fix-missing -q -y \
     git \
     ant \
     gcc \
@@ -197,7 +197,7 @@ In Hue 3.11 there is a bug [Hue 4716](https://issues.cloudera.org/browse/HUE-471
 In Hue 3.10 with Kylin, I don’t have any problem   :)
 
 
-## Test query Example
+## Test query example
 Add Kylin JDBC as source in the Kylin’s notebook:
 
  ![alt text](/images/tutorial/2.0/hue/15.png) > ![alt text](/images/tutorial/2.0/hue/16.png)  > ![alt text](/images/tutorial/2.0/hue/17.png)  > ![alt text](/images/tutorial/2.0/hue/18.png) 
@@ -220,8 +220,7 @@ And Execute with: ![alt text](/images/tutorial/2.0/hue/19.png)
 
   ![](/images/tutorial/2.0/hue/21.png)
 
-There is a bug,not solved since 27 Aug 2016, nor in 3.10 and 3.11, 
-but the solution is very easy (Thanks to Shahab Tajik)
+There is a bug, not solved since 27 Aug 2016, nor in 3.10 and 3.11, but the solution is very easy:
 
 [Link](https://github.com/cloudera/hue/pull/369): 
 You only need to change 3 lines in  *<HuePath>/desktop/libs/librdbms/src/librdbms/jdbc.py*
@@ -230,35 +229,18 @@ You only need to change 3 lines in  *<HuePath>/desktop/libs/librdbms/src/librdbm
 ## Limits
 In Hue 3.10 and 3.11
 * Auto-complete doesn’t work on JDBC interfaces
-* Max 1.000 records. There is a limitation on JDBC interfaces, because Hue does not support result pagination [Hue 3419](https://issues.cloudera.org/browse/HUE-3419)
-* Obviously:  It’s read-only 
+* Max 1000 records. There is a limitation on JDBC interfaces, because Hue does not support result pagination [Hue 3419](https://issues.cloudera.org/browse/HUE-3419). 
 
 
 ### Future Work
 
 **Dashboards**
-There is an amazing feature of Hue: [Search Dasboards](http://gethue.com/search-dashboards/) / [Dynamic Dashboards](http://gethue.com/hadoop-search-dynamic-search-dashboards-with-solr/). You can ‘play’ with this [Demo On-line](http://demo.gethue.com/search/admin/collections) … **But this only works with SolR**
+There is an amazing feature of Hue: [Search Dasboards](http://gethue.com/search-dashboards/) / [Dynamic Dashboards](http://gethue.com/hadoop-search-dynamic-search-dashboards-with-solr/). You can ‘play’ with this [Demo On-line](http://demo.gethue.com/search/admin/collections). But this only works with SolR.
 
-There is a Jira to solve this: [Hue 3228](https://issues.cloudera.org/browse/HUE-3228), is in RoadMap for 4.1. Check Hue MailList[MailList](https://groups.google.com/a/cloudera.org/forum/#!topic/hue-user/B6FWBeoqK7I)  and add Dashboards to JDBC connections
+There is a JIRA to solve this: [Hue 3228](https://issues.cloudera.org/browse/HUE-3228), is in roadmap for 4.1. Check Hue MailList[MailList](https://groups.google.com/a/cloudera.org/forum/#!topic/hue-user/B6FWBeoqK7I) and add Dashboards to JDBC connections.
 
 **Chart & Dynamic Filter**
-Nowadays, It isn’t compatible, you only can work with Grid
-
-I think the problem is that Hue doesn’t know how to read Kylin Metadata  [Hue 4011](https://issues.cloudera.org/browse/HUE-4011)
-
-  ![](/images/tutorial/2.0/hue/22.png)
-
+Nowadays, it isn’t compatible, you only can work with Grid.
 
 **DB Query**
- ![alt text](/images/tutorial/2.0/hue/23.png) > ![alt text](/images/tutorial/2.0/hue/24.png) , is not yet supported with JDBC 
-
-Now it only supports [Django Databases](https://docs.djangoproject.com/en/1.9/topics/install/#database-installation)
-
-
-
-
-
-**For any suggestions, feel free to contact me**
-
-**Thanks, Alberto**
-
+ DB Query does not yet support JDBC.

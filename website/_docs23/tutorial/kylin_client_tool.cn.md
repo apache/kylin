@@ -5,13 +5,15 @@ categories: 教程
 permalink: /cn/docs23/tutorial/kylin_client_tool.html
 ---
 
-Apache Kylin Python 客户端工具库是基于Python可访问Kylin的客户端. 此工具库包含两个可使用原件. 想要了解更多关于此工具库信息请点击[Github仓库](https://github.com/Kyligence/kylinpy).
+Apache Kylin Python 客户端工具库是基于Python可访问Kylin的客户端. 此工具库包含两个可使用组件. 
 
 * Apache Kylin 命令行工具
 * Apache Kylin SQLAchemy方言
 
+想要了解更多关于此工具库信息请点击[Github仓库](https://github.com/Kyligence/kylinpy).
+
 ## 安装
-请确保您python解释器版本在2.7+, 或者3.4+以上. 最方便安装Apache Kylin python客户端工具库的方法是使用pip命令
+请确保您python解释器版本在2.7+, 或者3.4+以上. 最方便安装Apache Kylin Python客户端工具库的方法是使用pip命令
 ```
     pip install --upgrade kylinpy
 ```
@@ -24,15 +26,14 @@ Apache Kylin Python 客户端工具库是基于Python可访问Kylin的客户端.
     Usage: kylinpy [OPTIONS] COMMAND [ARGS]...
 
     Options:
-      -h, --host TEXT       kylin/kap host name  [required]
-      -P, --port INTEGER    kylin/kap port, default: 7070
-      -u, --username TEXT   kylin/kap username  [required]
-      -p, --password TEXT   kylin/kap password  [required]
-      --project TEXT        kylin/kap project  [required]
-      --prefix TEXT         kylin/kap RESTful prefix of url, default: /kylin/api
+      -h, --host TEXT       Kylin host name  [required]
+      -P, --port INTEGER    Kylin port, default: 7070
+      -u, --username TEXT   Kylin username  [required]
+      -p, --password TEXT   Kylin password  [required]
+      --project TEXT        Kylin project  [required]
+      --prefix TEXT         Kylin RESTful prefix of url, default: /kylin/api
       --debug / --no-debug  show debug infomation
-      --api2 / --api1       API version; default is api1; --api1 used by Apache KYLIN;
-                        --api2 used by KAP
+      --api1 / --api2       API version; default is "api1"; "api1" 适用于 Apache Kylin
       --help                Show this message and exit.
 
     Commands:
@@ -40,60 +41,58 @@ Apache Kylin Python 客户端工具库是基于Python可访问Kylin的客户端.
       cube_columns   list cube columns
       cube_desc      show cube description
       cube_names     list cube names
-      cube_sql       get sample sql of cube. KAP only
       model_desc     show model description
       projects       list all projects
       query          sql query
       table_columns  list table columns
       table_names    list all table names
-      users          list all users. Need admin role. KAP only
 ```
 
 ## Kylinpy命令行工具示例
 
 1. 访问Apache Kylin
 ```
-kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug auth
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug auth
 ```
 
 2. 访问选定cube所有的维度信息
 ```
-kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_columns --name kylin_sales_cube
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_columns --name kylin_sales_cube
 ```
 
 3. 访问选定的cube描述
 ```
-kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_desc --name kylin_sales_cube
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_desc --name kylin_sales_cube
 ```
 
 4. 访问所有cube名称
 ```
-kylinpy -h kap.kapdemo.com -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_names
+kylinpy -h hostname -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_names
 ```
 
 5. 访问选定cube的SQL定义
 ```
-kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_sql --name kylin_sales_cube
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug cube_sql --name kylin_sales_cube
 ```
 
 6. 列出Kylin中所有项目
 ```
-kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug projects
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug projects
 ```
 
 7. 访问选定表所有的维度信息
 ```
-kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug table_columns --name KYLIN_SALES
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug table_columns --name KYLIN_SALES
 ```
 
 8. 访问所有表名
 ```
-kylinpy -h kap.kapdemo.com -u ADMIN -p KYLIN --project learn_kylin --api1 table_names
+kylinpy -h hostname -u ADMIN -p KYLIN --project learn_kylin --api1 table_names
 ```
 
 9. 访问所选模型信息
 ```
-kylinpy -h kap.kapdemo.com -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug model_desc --name kylin_sales_model
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --api1 --debug model_desc --name kylin_sales_model
 ```
 
 ## Apache Kylin SQLAlchemy方言
