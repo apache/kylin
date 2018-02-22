@@ -21,6 +21,7 @@ package org.apache.kylin.provision;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
@@ -107,9 +108,8 @@ public class BuildCubeWithEngine {
         logger.info("Adding to classpath: " + new File(confDir).getAbsolutePath());
         ClassUtil.addClasspath(new File(confDir).getAbsolutePath());
 
-        String fastModeStr = System.getProperty("fastBuildMode");
-        if (fastModeStr != null && fastModeStr.equalsIgnoreCase("true")) {
-            fastBuildMode = true;
+        fastBuildMode = isFastBuildMode();
+        if (fastBuildMode) {
             logger.info("Will use fast build mode");
         } else {
             logger.info("Will not use fast build mode");
@@ -143,6 +143,14 @@ public class BuildCubeWithEngine {
         } catch (IOException e) {
             throw new RuntimeException("failed to create kylin.env.hdfs-working-dir, Please make sure the user has right to access " + KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory(), e);
         }
+    }
+
+    private static boolean isFastBuildMode() {
+        String fastModeStr = System.getProperty("fastBuildMode");
+        if (fastModeStr == null)
+            fastModeStr = System.getenv("KYLIN_CI_FASTBUILD");
+        
+        return "true".equalsIgnoreCase(fastModeStr);
     }
 
     protected void deployEnv() throws IOException {
@@ -268,28 +276,43 @@ public class BuildCubeWithEngine {
     private boolean testLeftJoinCube() throws Exception {
         String cubeName = "ci_left_join_cube";
         clearSegment(cubeName);
-        // ci_left_join_cube has percentile which isn't supported by Spark engine now
-        // updateCubeEngineType(cubeName);
+        
+        // NOTE: ci_left_join_cube has percentile which isn't supported by Spark engine now
 
+        return doBuildAndMergeOnCube(cubeName);
+    }
+
+    private boolean doBuildAndMergeOnCube(String cubeName) throws ParseException, Exception {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         long date1 = 0;
-        long date2 = f.parse("2013-01-01").getTime();
+        long date2 = f.parse("2012-06-01").getTime();
         long date3 = f.parse("2013-07-01").getTime();
         long date4 = f.parse("2022-01-01").getTime();
+        long date5 = f.parse("2023-01-01").getTime();
+        long date6 = f.parse("2024-01-01").getTime();
 
-        if (fastBuildMode) {
+        if (fastBuildMode)
             return buildSegment(cubeName, date1, date4);
-        } else {
-            if (buildSegment(cubeName, date1, date2) == true) {
-                if (buildSegment(cubeName, date2, date3) == true) {
-                    if (buildSegment(cubeName, date3, date4) == true) {
-                        return mergeSegment(cubeName, date1, date3); // don't merge all segments
-                    }
-                }
-            }
-        }
-        return false;
+        
+        if (!buildSegment(cubeName, date1, date2))
+            return false;
+        if (!buildSegment(cubeName, date2, date3))
+            return false;
+        if (!buildSegment(cubeName, date3, date4))
+            return false;
+        if (!buildSegment(cubeName, date4, date5)) // one empty segment
+            return false;
+        if (!buildSegment(cubeName, date5, date6)) // another empty segment
+            return false;
+
+        if (!mergeSegment(cubeName, date2, date4)) // merge 2 normal segments
+            return false;
+        if (!mergeSegment(cubeName, date2, date5)) // merge normal and empty
+            return false;
+        
+        // now have 2 normal segments [date1, date2) [date2, date5) and 1 empty segment [date5, date6)
+        return true;
     }
 
     @SuppressWarnings("unused")
@@ -298,22 +321,8 @@ public class BuildCubeWithEngine {
 
         String cubeName = "ci_inner_join_cube";
         clearSegment(cubeName);
-        //updateCubeEngineType(cubeName);
-
-        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
-        f.setTimeZone(TimeZone.getTimeZone("GMT"));
-        long date1 = 0;
-        long date2 = f.parse("2022-07-01").getTime();
-        long date3 = f.parse("2023-01-01").getTime();
-
-        if (fastBuildMode) {
-            return buildSegment(cubeName, date1, date3);
-        } else {
-            if (buildSegment(cubeName, date1, date2) == true) { // all-in-one build
-                return buildSegment(cubeName, date2, date3); // empty segment
-            }
-        }
-        return false;
+        
+        return doBuildAndMergeOnCube(cubeName);
     }
 
     @SuppressWarnings("unused")
