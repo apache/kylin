@@ -21,7 +21,7 @@ package org.apache.kylin.cache.memcached;
 import net.spy.memcached.DefaultConnectionFactory;
 
 public class MemcachedCacheConfig {
-    private int timeout = 500;
+    private long timeout = 500L;
 
     // comma delimited list of memcached servers, given as host:port combination
     private String hosts;
@@ -39,11 +39,11 @@ public class MemcachedCacheConfig {
     // whether enable compress the value data or not
     private boolean enableCompression = true;
 
-    public int getTimeout() {
+    public long getTimeout() {
         return timeout;
     }
 
-    public void setTimeout(int timeout) {
+    public void setTimeout(long timeout) {
         this.timeout = timeout;
     }
 

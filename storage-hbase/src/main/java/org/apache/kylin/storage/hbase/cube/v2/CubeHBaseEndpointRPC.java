@@ -175,7 +175,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         final boolean querySegmentCacheEnabled = isSegmentLevelCacheEnabled();
         final SegmentQueryResult.Builder segmentQueryResultBuilder = new SegmentQueryResult.Builder(shardNum, cubeSeg
-                .getConfig().getQuerySegmentCacheMaxSize() * 1024 * 1024);
+                .getConfig().getQuerySegmentCacheMaxMB() * 1024 * 1024);
         String calculatedSegmentQueryCacheKey = null;
         if (querySegmentCacheEnabled) {
             try {

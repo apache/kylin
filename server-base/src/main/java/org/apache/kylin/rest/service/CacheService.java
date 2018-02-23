@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.cache.cachemanager.CacheConstants.QUERY_CACHE;
+
 import java.io.IOException;
 
 import java.util.Map;
@@ -117,8 +119,12 @@ public class CacheService extends BasicService implements InitializingBean {
 
     public void cleanDataCache(String project) {
         if (cacheManager != null) {
-            logger.info("cleaning cache for project " + project + " (currently remove nothing)");
-            //            cacheManager.getCache(QueryService.QUERY_CACHE).removeAll();
+            if (getConfig().isQueryCacheSignatureEnabled()) {
+                logger.info("cleaning cache for project " + project + " (currently remove nothing)");
+            } else {
+                logger.info("cleaning cache for project " + project + " (currently remove all entries)");
+                cacheManager.getCache(QUERY_CACHE).removeAll();
+            }
         } else {
             logger.warn("skip cleaning cache for project " + project);
         }

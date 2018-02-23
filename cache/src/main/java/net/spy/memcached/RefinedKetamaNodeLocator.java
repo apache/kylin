@@ -18,6 +18,10 @@
 
 package net.spy.memcached;
 
+import net.spy.memcached.compat.SpyObject;
+import net.spy.memcached.util.DefaultKetamaNodeLocatorConfiguration;
+import net.spy.memcached.util.KetamaNodeLocatorConfiguration;
+
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,11 +32,10 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import net.spy.memcached.compat.SpyObject;
-import net.spy.memcached.util.DefaultKetamaNodeLocatorConfiguration;
-import net.spy.memcached.util.KetamaNodeLocatorConfiguration;
-
 /**
+ * Copyright (C) 2006-2009 Dustin Sallings
+ * Copyright (C) 2009-2011 Couchbase, Inc.
+ *
  * This is a modified version of the Ketama consistent hash strategy from
  * last.fm. This implementation may not be compatible with libketama as hashing
  * is considered separate from node location.

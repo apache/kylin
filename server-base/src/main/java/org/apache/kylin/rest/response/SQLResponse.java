@@ -76,9 +76,12 @@ public class SQLResponse implements Serializable {
 
     protected String traceUrl = null;
 
+    // it's sql response signature for cache checking, no need to return and should be JsonIgnore
     protected String signature;
 
-    protected long dummyTime = -1L;
+    // it's a temporary flag, no need to return and should be JsonIgnore
+    // indicating the lazy query start time, -1 indicating not enabled
+    protected long lazyQueryStartTime = -1L;
 
     public SQLResponse() {
     }
@@ -220,17 +223,17 @@ public class SQLResponse implements Serializable {
     }
 
     @JsonIgnore
-    public long getDummyTime() {
-        return dummyTime;
+    public long getLazyQueryStartTime() {
+        return lazyQueryStartTime;
     }
 
-    public void setDummyTime(long dummyTime) {
-        this.dummyTime = dummyTime;
+    public void setLazyQueryStartTime(long lazyQueryStartTime) {
+        this.lazyQueryStartTime = lazyQueryStartTime;
     }
 
     @JsonIgnore
     public boolean isRunning() {
-        return this.dummyTime >= 0;
+        return this.lazyQueryStartTime >= 0;
     }
 
     @JsonIgnore

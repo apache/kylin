@@ -32,6 +32,7 @@ import org.apache.calcite.prepare.CalcitePrepareImpl;
 import org.apache.calcite.prepare.OnlyPrepareEarlyAbortException;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -297,7 +298,7 @@ public class QueryService extends BasicService {
 
         if (realizationNames.isEmpty()) {
             if (!Strings.isNullOrEmpty(response.getCube())) {
-                realizationNames.addAll(Lists.newArrayList(response.getCube().split(",")));
+                CollectionUtils.addAll(realizationNames, response.getCube().split(","));
             }
         }
 
@@ -495,13 +496,13 @@ public class QueryService extends BasicService {
         Message msg = MsgPicker.getMsg();
         final QueryContext queryContext = QueryContextFacade.current();
 
-        boolean isDummpyResponseEnabled = queryCacheEnabled && kylinConfig.isQueryDuplicationDummpyResponseEnabled();
+        boolean isLazyQueryEnabled = queryCacheEnabled && kylinConfig.isLazyQueryEnabled();
         SQLResponse sqlResponse = null;
         try {
             // Add dummy response which will be updated or evicted when query finishes
-            if (isDummpyResponseEnabled) {
+            if (isLazyQueryEnabled) {
                 SQLResponse dummyResponse = new SQLResponse();
-                dummyResponse.setDummyTime(System.currentTimeMillis());
+                dummyResponse.setLazyQueryStartTime(System.currentTimeMillis());
                 cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), dummyResponse);
             }
 
@@ -543,7 +544,7 @@ public class QueryService extends BasicService {
                     "query response is too large: {} ({})", sqlResponse.getResults().size(),
                     kylinConfig.getLargeQueryThreshold())) {
                 cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
-            } else if (isDummpyResponseEnabled) {
+            } else if (isLazyQueryEnabled) {
                 cacheManager.getCache(QUERY_CACHE).evict(sqlRequest.getCacheKey());
             }
             Trace.addTimelineAnnotation("response from execution");
@@ -561,7 +562,7 @@ public class QueryService extends BasicService {
                     && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
                 Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
                 exceptionCache.put(sqlRequest.getCacheKey(), sqlResponse);
-            } else if (isDummpyResponseEnabled) {
+            } else if (isLazyQueryEnabled) {
                 cacheManager.getCache(QUERY_CACHE).evict(sqlRequest.getCacheKey());
             }
             Trace.addTimelineAnnotation("error response");
@@ -624,7 +625,8 @@ public class QueryService extends BasicService {
         // Check whether duplicate query exists
         while (response.isRunning()) {
             // Wait at most one minute
-            if (System.currentTimeMillis() - response.getDummyTime() >= 60000L) {
+            if (System.currentTimeMillis() - response.getLazyQueryStartTime() >= getConfig()
+                    .getLazyQueryWaitingTimeoutMilliSeconds()) {
                 queryCache.evict(sqlRequest.getCacheKey());
                 return null;
             }
@@ -646,7 +648,8 @@ public class QueryService extends BasicService {
         }
 
         logger.debug("The sqlResponse is found in QUERY_CACHE");
-        if (!SQLResponseSignatureUtil.checkSignature(getConfig(), response, sqlRequest.getProject())) {
+        if (getConfig().isQueryCacheSignatureEnabled()
+                && !SQLResponseSignatureUtil.checkSignature(getConfig(), response, sqlRequest.getProject())) {
             logger.info("The sql response signature is changed. Remove it from QUERY_CACHE.");
             queryCache.evict(sqlRequest.getCacheKey());
             return null;
@@ -1128,7 +1131,9 @@ public class QueryService extends BasicService {
         response.setTotalScanCount(queryContext.getScannedRows());
         response.setTotalScanBytes(queryContext.getScannedBytes());
         response.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
-        response.setSignature(SQLResponseSignatureUtil.createSignature(getConfig(), response, projectName));
+        if (getConfig().isQueryCacheSignatureEnabled()) {
+            response.setSignature(SQLResponseSignatureUtil.createSignature(getConfig(), response, projectName));
+        }
         return response;
     }
 

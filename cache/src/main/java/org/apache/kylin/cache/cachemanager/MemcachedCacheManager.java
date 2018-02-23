@@ -150,6 +150,7 @@ public class MemcachedCacheManager extends AbstractCacheManager {
 
         @Override
         //TODO implementation here doesn't guarantee the atomicity.
+        //Without atomicity, this method should not be invoked
         public ValueWrapper putIfAbsent(Object key, Object value) {
             byte[] existing = memcachedCache.get(key);
             if (existing == null) {

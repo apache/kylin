@@ -42,7 +42,7 @@ public class SegmentQueryCache {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         MemcachedCacheConfig memcachedCacheConfig = new MemcachedCacheConfig();
         String configHosts = kylinConfig.getMemCachedHosts();
-        memcachedCacheConfig.setTimeout(kylinConfig.getQuerySegmentCacheTimeout());
+        memcachedCacheConfig.setTimeout(kylinConfig.getQuerySegmentCacheTimeoutMilliSeconds());
         // set max object size a little less than 1024 * 1024, because the key of the segment result cache is long
         // if set to 1024 * 1024 will cause memcached client exceed max size error
         memcachedCacheConfig.setMaxObjectSize(1040000);
