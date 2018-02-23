@@ -18,25 +18,16 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.BaseTestExecutable;
 import org.apache.kylin.job.ErrorTestExecutable;
 import org.apache.kylin.job.FailedTestExecutable;
 import org.apache.kylin.job.FiveSecondSucceedTestExecutable;
 import org.apache.kylin.job.NoErrorStatusExecutable;
-import org.apache.kylin.job.RetryableTestExecutable;
 import org.apache.kylin.job.RunningTestExecutable;
 import org.apache.kylin.job.SelfStopExecutable;
 import org.apache.kylin.job.SucceedTestExecutable;
+import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -48,10 +39,27 @@ import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 /**
  */
 public class DefaultSchedulerTest extends BaseSchedulerTest {
     private static final Logger logger = LoggerFactory.getLogger(DefaultSchedulerTest.class);
+
+    @Override
+    public void after() throws Exception {
+        super.after();
+        System.clearProperty("kylin.job.retry");
+        System.clearProperty("kylin.job.retry-exception-classes");
+    }
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -227,19 +235,16 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
     }
-    
+
+    @Test
     public void testRetryableException() throws Exception {
-        System.setProperty("kylin.job.retry-exception-classes", "java.io.FileNotFoundException");
         System.setProperty("kylin.job.retry", "3");
-        DefaultChainedExecutable job = new DefaultChainedExecutable();
-        BaseTestExecutable task1 = new SucceedTestExecutable();
-        BaseTestExecutable task2 = new RetryableTestExecutable();
-        job.addTask(task1);
-        job.addTask(task2);
-        execMgr.addJob(job);
-        waitForJobFinish(job.getId(), 10000);
-        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
-        Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(task2.getId()).getState());
-        Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
+        Assert.assertTrue(AbstractExecutable.needRetry(1, new Exception("")));
+        Assert.assertFalse(AbstractExecutable.needRetry(1, null));
+        Assert.assertFalse(AbstractExecutable.needRetry(4, new Exception("")));
+
+        System.setProperty("kylin.job.retry-exception-classes", "java.io.FileNotFoundException");
+        Assert.assertTrue(AbstractExecutable.needRetry(1, new FileNotFoundException()));
+        Assert.assertFalse(AbstractExecutable.needRetry(1, new Exception("")));
     }
 }
