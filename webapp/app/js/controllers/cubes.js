@@ -522,23 +522,25 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
       })
     };
 
-    $scope.startDeleteSegment = function (cube) {
-          $scope.metaModel={
-            model:modelsManager.getModelByCube(cube.name)
-          };
-          $modal.open({
-            templateUrl: 'deleteSegment.html',
-            controller: deleteSegmentCtrl,
-            resolve: {
-              cube: function () {
-                return cube;
-              },
-              scope: function() {
-                return $scope;
-              }
-            }
-          });
-        };
+     $scope.startDeleteSegment = function (cube) {
+       $scope.loadDetail(cube).then(function () {
+         $scope.metaModel={
+           model:modelsManager.getModelByCube(cube.name)
+         };
+         $modal.open({
+           templateUrl: 'deleteSegment.html',
+           controller: deleteSegmentCtrl,
+           resolve: {
+             cube: function () {
+               return cube;
+             },
+             scope: function() {
+               return $scope;
+             }
+           }
+         });
+       });
+     };
 
   });
 
