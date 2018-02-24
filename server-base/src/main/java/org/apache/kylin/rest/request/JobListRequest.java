@@ -32,6 +32,7 @@ public class JobListRequest {
     private Integer offset;
     private Integer limit;
     private Integer timeFilter;
+    private String jobSearchMode;
 
     public JobListRequest() {
     }
@@ -83,4 +84,13 @@ public class JobListRequest {
     public void setTimeFilter(Integer timeFilter) {
         this.timeFilter = timeFilter;
     }
+
+    public String getJobSearchMode() {
+        return jobSearchMode;
+    }
+
+    public void setJobSearchMode(String jobSearchMode) {
+        this.jobSearchMode = jobSearchMode;
+    }
+
 }

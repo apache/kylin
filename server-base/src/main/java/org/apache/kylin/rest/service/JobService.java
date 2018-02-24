@@ -18,18 +18,12 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
@@ -78,12 +72,16 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * @author ysong1
@@ -633,10 +631,10 @@ public class JobService extends BasicService implements InitializingBean {
      */
     public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName,
             final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue,
-            final JobTimeFilterEnum timeFilter) {
+            final JobTimeFilterEnum timeFilter, JobSearchMode jobSearchMode) {
         Integer limit = (null == limitValue) ? 30 : limitValue;
         Integer offset = (null == offsetValue) ? 0 : offsetValue;
-        List<JobInstance> jobs = searchJobsByCubeName(cubeNameSubstring, projectName, statusList, timeFilter);
+        List<JobInstance> jobs = searchJobsByCubeName(cubeNameSubstring, projectName, statusList, timeFilter, jobSearchMode);
 
         Collections.sort(jobs);
 
@@ -653,11 +651,11 @@ public class JobService extends BasicService implements InitializingBean {
 
     public List<JobInstance> searchJobsByCubeName(final String cubeNameSubstring, final String projectName,
             final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
-        return searchJobsByCubeName(cubeNameSubstring, projectName, statusList, timeFilter, JobSearchMode.ALL);
+        return searchJobsByCubeName(cubeNameSubstring, projectName, statusList, timeFilter, JobSearchMode.CUBING_ONLY);
     }
 
     public List<JobInstance> searchJobsByCubeName(final String cubeNameSubstring, final String projectName,
-            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter, JobSearchMode jobSearchMode) {
+            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter, final JobSearchMode jobSearchMode) {
         return innerSearchJobs(cubeNameSubstring, null, projectName, statusList, timeFilter, jobSearchMode);
     }
 
@@ -675,16 +673,16 @@ public class JobService extends BasicService implements InitializingBean {
             final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter, JobSearchMode jobSearchMode) {
         List<JobInstance> result = Lists.newArrayList();
         switch (jobSearchMode) {
-        case CUBING_ONLY:
+        case ALL:
             result.addAll(innerSearchCubingJobs(cubeName, jobName, projectName, statusList, timeFilter));
+            result.addAll(innerSearchCheckpointJobs(cubeName, jobName, projectName, statusList, timeFilter));
             break;
         case CHECKPOINT_ONLY:
             result.addAll(innerSearchCheckpointJobs(cubeName, jobName, projectName, statusList, timeFilter));
             break;
-        case ALL:
+        case CUBING_ONLY:
         default:
             result.addAll(innerSearchCubingJobs(cubeName, jobName, projectName, statusList, timeFilter));
-            result.addAll(innerSearchCheckpointJobs(cubeName, jobName, projectName, statusList, timeFilter));
         }
         return result;
     }
