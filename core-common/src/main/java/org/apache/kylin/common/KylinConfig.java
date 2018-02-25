@@ -406,7 +406,7 @@ public class KylinConfig extends KylinConfigBase {
         if (mgr != null)
             return (T) mgr;
         
-        synchronized (this) {
+        synchronized (clz) {
             mgr = managersCache.get(clz);
             if (mgr != null)
                 return (T) mgr;
