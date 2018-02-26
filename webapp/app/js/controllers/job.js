@@ -28,6 +28,7 @@ KylinApp
         //$scope.projects = [];
         $scope.action = {};
         $scope.timeFilter = jobConfig.timeFilter[JobList.jobFilter.timeFilterId];
+        $scope.searchMode = jobConfig.searchMode[JobList.jobFilter.searchModeId];
         if ($routeParams.jobTimeFilter) {
             $scope.timeFilter = jobConfig.timeFilter[$routeParams.jobTimeFilter];
         }
@@ -82,6 +83,7 @@ KylinApp
             $scope.cubeName=$scope.cubeName == ""?null:$scope.cubeName;
             JobList.jobFilter.cubeName = $scope.cubeName;
             JobList.jobFilter.timeFilterId = $scope.timeFilter.value;
+            JobList.jobFilter.searchModeId = _.indexOf(jobConfig.searchMode, $scope.searchMode);
             JobList.jobFilter.statusIds = statusIds;
 
             var jobRequest = {
@@ -90,7 +92,8 @@ KylinApp
                 status: statusIds,
                 offset: offset,
                 limit: limit,
-                timeFilter: $scope.timeFilter.value
+                timeFilter: $scope.timeFilter.value,
+                jobSearchMode: $scope.searchMode.value
             };
             $scope.state.loading = true;
 
