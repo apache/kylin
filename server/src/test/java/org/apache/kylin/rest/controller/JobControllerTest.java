@@ -18,11 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import static org.junit.Assert.assertNotNull;
-
-import java.io.IOException;
-import java.util.Date;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -42,6 +37,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+
+import java.io.IOException;
+import java.util.Date;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author xduo
@@ -95,6 +95,17 @@ public class JobControllerTest extends ServiceTestBase {
 
         JobListRequest jobRequest = new JobListRequest();
         jobRequest.setTimeFilter(4);
+        Assert.assertNotNull(jobSchedulerController.list(jobRequest));
+
+        jobRequest.setJobSearchMode("ALL");
+        Assert.assertNotNull(jobSchedulerController.list(jobRequest));
+
+
+        jobRequest.setJobSearchMode("");
+        Assert.assertNotNull(jobSchedulerController.list(jobRequest));
+
+
+        jobRequest.setJobSearchMode("wrong-input");
         Assert.assertNotNull(jobSchedulerController.list(jobRequest));
 
         JobBuildRequest jobBuildRequest = new JobBuildRequest();
