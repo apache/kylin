@@ -27,37 +27,40 @@ import org.apache.kylin.common.persistence.ResourceStore;
 
 public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
 
-    public static String LOCALMETA_TEST_DATA = "../examples/test_case_data/localmeta";
-    public static String LOCALMETA_TEMP_DATA = "../examples/test_metadata/";
+    public static final String LOCALMETA_TEST_DATA = "../examples/test_case_data/localmeta";
+    public static final String LOCALMETA_TEMP_DATA = "../examples/test_metadata/";
 
     @Override
     public void createTestMetadata(String... overlayMetadataDirs) {
-        //overlayMetadataDirs is useless yet
-        staticCreateTestMetadata(overlayMetadataDirs);
+        staticCreateTestMetadata(true, new OverlayMetaHook(overlayMetadataDirs));
     }
 
     public static void staticCreateTestMetadata(String... overlayMetadataDirs) {
-        String testDataFolder = LOCALMETA_TEST_DATA;
-        KylinConfig.destroyInstance();
+        staticCreateTestMetadata(true, new OverlayMetaHook(overlayMetadataDirs));
+    }
 
-        String tempTestMetadataUrl = LOCALMETA_TEMP_DATA;
+    public static void staticCreateTestMetadata(boolean useTestMeta, MetadataTestCaseHook hook) {
         try {
-            FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
-            FileUtils.copyDirectory(new File(testDataFolder), new File(tempTestMetadataUrl));
+            KylinConfig.destroyInstance();
 
-            for (String overlay : overlayMetadataDirs) {
-                FileUtils.copyDirectory(new File(overlay), new File(tempTestMetadataUrl));
+            FileUtils.deleteDirectory(new File(LOCALMETA_TEMP_DATA));
+            if (useTestMeta) {
+                FileUtils.copyDirectory(new File(LOCALMETA_TEST_DATA), new File(LOCALMETA_TEMP_DATA));
             }
+
+            if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null) {
+                System.setProperty(KylinConfig.KYLIN_CONF, LOCALMETA_TEMP_DATA);
+            }
+
+            if (hook != null) {
+                hook.hook();
+            }
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            config.setMetadataUrl(LOCALMETA_TEMP_DATA);
+            config.setProperty("kylin.env.hdfs-working-dir", "file:///tmp/kylin");
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
-        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
-            System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
-
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        config.setMetadataUrl(tempTestMetadataUrl);
-        config.setProperty("kylin.env.hdfs-working-dir", "file:///tmp/kylin");
     }
 
     public static void cleanAfterClass() {
@@ -89,5 +92,41 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
 
     protected ResourceStore getStore() {
         return ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
+    }
+
+    public interface MetadataTestCaseHook {
+        void hook() throws IOException;
+    }
+
+    public static class OverlayMetaHook implements MetadataTestCaseHook {
+        private String[] overlayMetadataDirs;
+
+        public OverlayMetaHook(String... overlayMetadataDirs) {
+            this.overlayMetadataDirs = overlayMetadataDirs;
+        }
+
+        @Override
+        public void hook() throws IOException {
+            //some test cases may require additional metadata entries besides standard test metadata in test_case_data/localmeta
+            for (String overlay : overlayMetadataDirs) {
+                FileUtils.copyDirectory(new File(overlay), new File(LOCALMETA_TEMP_DATA));
+            }
+        }
+    }
+
+    public static class ExcludeMetaHook implements MetadataTestCaseHook {
+        private String[] excludeMetadataDirs;
+
+        public ExcludeMetaHook(String... excludeMetadataDirs) {
+            this.excludeMetadataDirs = excludeMetadataDirs;
+        }
+
+        @Override
+        public void hook() throws IOException {
+            //some test cases may want exclude metadata entries besides standard test metadata in test_case_data/localmeta
+            for (String exclude : excludeMetadataDirs) {
+                FileUtils.deleteQuietly(new File(exclude));
+            }
+        }
     }
 }

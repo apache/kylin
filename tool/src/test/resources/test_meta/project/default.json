@@ -1,0 +1,35 @@
+{
+  "uuid": "1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b",
+  "name": "default",
+  "realizations": [
+    {
+      "name": "ci_inner_join_cube",
+      "type": "CUBE",
+      "realization": "ci_inner_join_cube"
+    }
+  ],
+  "tables": [
+    "DEFAULT.TEST_KYLIN_FACT",
+    "DEFAULT.TEST_ORDER",
+    "DEFAULT.TEST_ACCOUNT",
+    "DEFAULT.TEST_COUNTRY",
+    "EDW.TEST_CAL_DT",
+    "DEFAULT.TEST_CATEGORY_GROUPINGS",
+    "EDW.TEST_SITES",
+    "EDW.TEST_SELLER_TYPE_DIM",
+    "DEFAULT.STREAMING_TABLE",
+    "SSB.CUSTOMER",
+    "SSB.DATES",
+    "SSB.PART",
+    "SSB.SUPPLIER",
+    "SSB.V_LINEORDER",
+    "DEFAULT.FIFTY_DIM",
+    "DEFAULT.WIDE_TABLE"
+  ],
+  "models": [
+    "ci_inner_join_model"
+  ],
+  "override_kylin_properties" :{
+    "kylin.storage.hbase.owner-tag": "kylin@kylin.apache.org"
+  }
+}

@@ -41,30 +41,23 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-/**
- */
 public class MetadataCleanupJob extends AbstractHadoopJob {
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused metadata").create("delete");
+    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false)
+            .withDescription("Delete the unused metadata").create("delete");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_THRESHOLD_FOR_JOB = OptionBuilder.withArgName("jobThreshold").hasArg().isRequired(false).withDescription("Specify how many days of job metadata keeping. Default 30 days").create("jobThreshold");
+    private static final Option OPTION_THRESHOLD_FOR_JOB = OptionBuilder.withArgName("jobThreshold").hasArg()
+            .isRequired(false).withDescription("Specify how many days of job metadata keeping. Default 30 days")
+            .create("jobThreshold");
 
     protected static final Logger logger = LoggerFactory.getLogger(MetadataCleanupJob.class);
-
-    boolean delete = false;
-
+    private boolean delete = false;
     private KylinConfig config = null;
-
     private static final long TIME_THREADSHOLD = 1 * 3600 * 1000L; // 1 hour
-    private static final int DEFAULT_DAY_THREADSHOLD_FOR_JOB = 30 ; // 30 days
+    private static final int DEFAULT_DAY_THREADSHOLD_FOR_JOB = 30; // 30 days
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.hadoop.util.Tool#run(java.lang.String[])
-     */
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
@@ -78,11 +71,10 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         logger.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
         logger.info("jobThreshold option value: '" + getOptionValue(OPTION_THRESHOLD_FOR_JOB) + "'");
         delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
-
-        config = KylinConfig.getInstanceFromEnv();
-
-        cleanup();
-
+        int jobThresholdDay = optionsHelper.hasOption(OPTION_THRESHOLD_FOR_JOB)
+                ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_THRESHOLD_FOR_JOB))
+                : DEFAULT_DAY_THREADSHOLD_FOR_JOB;
+        cleanup(delete, jobThresholdDay);
         return 0;
     }
 
@@ -92,19 +84,17 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
 
     private boolean isOlderThanThreshold(long resourceTime) {
         long currentTime = System.currentTimeMillis();
-
-        if (currentTime - resourceTime > TIME_THREADSHOLD)
-            return true;
-        return false;
+        return currentTime - resourceTime > TIME_THREADSHOLD;
     }
 
-    public void cleanup() throws Exception {
-        CubeManager cubeManager = CubeManager.getInstance(config);
-
+    public List<String> cleanup(boolean delete, int jobThresholdDay) throws Exception {
+        config = KylinConfig.getInstanceFromEnv();
+        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         List<String> toDeleteResource = Lists.newArrayList();
 
         // two level resources, snapshot tables and cube statistics
-        for (String resourceRoot : new String[] { ResourceStore.SNAPSHOT_RESOURCE_ROOT, ResourceStore.CUBE_STATISTICS_ROOT }) {
+        for (String resourceRoot : new String[]{ResourceStore.SNAPSHOT_RESOURCE_ROOT,
+                ResourceStore.CUBE_STATISTICS_ROOT}) {
             NavigableSet<String> snapshotTables = getStore().listResources(resourceRoot);
 
             if (snapshotTables != null) {
@@ -153,10 +143,11 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         for (ExecutablePO executable : allExecutable) {
             long lastModified = executable.getLastModified();
             ExecutableOutputPO output = executableDao.getJobOutput(executable.getUuid());
-            int jobThresholdDay = optionsHelper.hasOption(OPTION_THRESHOLD_FOR_JOB) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_THRESHOLD_FOR_JOB)) : DEFAULT_DAY_THREADSHOLD_FOR_JOB;
             long jobThresholdTime = jobThresholdDay * 24 * 3600 * 1000L;
 
-            if (System.currentTimeMillis() - lastModified > jobThresholdTime && (ExecutableState.SUCCEED.toString().equals(output.getStatus()) || ExecutableState.DISCARDED.toString().equals(output.getStatus()))) {
+            if (System.currentTimeMillis() - lastModified > jobThresholdTime
+                    && (ExecutableState.SUCCEED.toString().equals(output.getStatus())
+                    || ExecutableState.DISCARDED.toString().equals(output.getStatus()))) {
                 toDeleteResource.add(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executable.getUuid());
                 toDeleteResource.add(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executable.getUuid());
 
@@ -167,18 +158,19 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         }
 
         if (toDeleteResource.size() > 0) {
-            logger.info("The following resources have no reference or is too old, will be cleaned from metadata store: \n");
+            logger.info(
+                    "The following resources have no reference or is too old, will be cleaned from metadata store: \n");
 
             for (String s : toDeleteResource) {
                 logger.info(s);
-                if (delete == true) {
+                if (delete) {
                     getStore().deleteResource(s);
                 }
             }
         } else {
             logger.info("No resource to be cleaned up from metadata store;");
         }
-
+        return toDeleteResource;
     }
 
     public static void main(String[] args) throws Exception {

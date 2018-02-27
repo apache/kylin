@@ -1,0 +1,60 @@
+{
+  "uuid" : "8372c3b7-a33e-4b69-83dd-0bb8b1f8117e",
+  "last_modified" : 0,
+  "name" : "ci_inner_join_cube",
+  "owner" : null,
+  "descriptor" : "ci_inner_join_cube",
+  "display_name" : "ci_inner_join_cube",
+  "cost" : 50,
+  "status" : "READY",
+  "segments" : [{
+    "uuid" : "adb2275e-c1d5-498b-b8ea-0201586868aa",
+    "name" : "19700101000000_20220701000000",
+    "storage_location_identifier" : "KYLIN_J9TE08D9IA",
+    "date_range_start" : 0,
+    "date_range_end" : 1656633600000,
+    "source_offset_start" : 0,
+    "source_offset_end" : 0,
+    "status" : "READY",
+    "size_kb" : 78965,
+    "input_records" : 9911,
+    "input_records_size" : 3955601,
+    "last_build_time" : 1511364122982,
+    "last_build_job_id" : "b58ed952-3041-4431-b560-09b78fa1fca0",
+    "create_time_utc" : 1511363249614,
+    "cuboid_shard_nums" : {
+      "7864320" : 2,
+      "8847375" : 6,
+      "41943504" : 6,
+      "458784" : 2,
+      "3145728" : 2,
+      "8323104" : 4,
+      "2097152" : 2,
+      "8388608" : 2,
+      "16252928" : 6,
+      "25230848" : 6,
+      "3670016" : 2,
+      "67108863" : 6
+    },
+    "total_shards" : 0,
+    "blackout_cuboids" : [ ],
+    "binary_signature" : null,
+    "dictionaries" : {
+      "BUYER_COUNTRY.NAME" : "/dict/DEFAULT.TEST_COUNTRY/NAME/64ca8fea-b859-4e63-aea3-bfb4c6ee0c9d.dict"
+    },
+    "snapshots" : {
+      "DEFAULT.TEST_COUNTRY" : "/table_snapshot/DEFAULT.TEST_COUNTRY/7ecdb07b-a8d0-49d8-892b-fe2dd75512ca.snapshot"
+    },
+    "rowkey_stats" : [ [ "TEST_KYLIN_FACT.LEAF_CATEG_ID", 134, 1 ], [ "TEST_CATEGORY_GROUPINGS.META_CATEG_NAME", 44, 1 ], [ "TEST_CATEGORY_GROUPINGS.CATEG_LVL2_NAME", 94, 1 ], [ "TEST_CATEGORY_GROUPINGS.CATEG_LVL3_NAME", 127, 1 ], [ "TEST_KYLIN_FACT.LSTG_SITE_ID", 8, 1 ], [ "TEST_KYLIN_FACT.SLR_SEGMENT_CD", 8, 1 ], [ "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL", 5, 1 ], [ "BUYER_ACCOUNT.ACCOUNT_SELLER_LEVEL", 5, 1 ], [ "BUYER_ACCOUNT.ACCOUNT_COUNTRY", 8, 1 ], [ "BUYER_COUNTRY.NAME", 8, 1 ], [ "SELLER_ACCOUNT.ACCOUNT_BUYER_LEVEL", 5, 1 ], [ "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL", 5, 1 ], [ "SELLER_ACCOUNT.ACCOUNT_COUNTRY", 8, 1 ], [ "SELLER_COUNTRY.NAME", 8, 1 ], [ "TEST_KYLIN_FACT.SELLER_COUNTRY_ABBR", 7, 1 ], [ "TEST_KYLIN_FACT.BUYER_COUNTRY_ABBR", 7, 1 ], [ "TEST_KYLIN_FACT.SELLER_ID_AND_COUNTRY_NAME", 1000, 2 ], [ "TEST_KYLIN_FACT.BUYER_ID_AND_COUNTRY_NAME", 990, 2 ], [ "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP", 1001, 4 ], [ "TEST_KYLIN_FACT.TRANS_ID", 9911, 2 ], [ "TEST_KYLIN_FACT.PRICE", 9479, 2 ], [ "TEST_KYLIN_FACT.CAL_DT", 3652427, 3 ] ],
+    "additionalInfo" : {
+      "storageType" : "99",
+      "segmentPath" : "file:///Users/imad/mock_kylin/metastore/ci_cube/parquet/8372c3b7-a33e-4b69-83dd-0bb8b1f8117e/adb2275e-c1d5-498b-b8ea-0201586868aa/",
+      "storageFileCount" : "30",
+      "storageSizeBytes" : "80860160",
+      "tableIndexSegmentPath" : "file:///Users/imad/mock_kylin/metastore/ci_cube/parquet/2993d0d2-ee05-4e3a-8247-b121a1bdf7bc/adb2275e-c1d5-498b-b8ea-0201586868aa/",
+      "tableIndexFileCount" : "7",
+      "tableIndexStorageSizeBytes" : "8700293"
+    }
+  }],
+  "create_time" : null
+}
