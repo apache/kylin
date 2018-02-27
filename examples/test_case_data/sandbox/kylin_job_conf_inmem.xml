@@ -16,6 +16,10 @@
   limitations under the License.
 -->
 <configuration>
+    <property>
+        <name>mapreduce.job.is-mem-hungry</name>
+        <value>true</value>
+    </property>
 
     <property>
         <name>mapreduce.job.split.metainfo.maxsize</name>

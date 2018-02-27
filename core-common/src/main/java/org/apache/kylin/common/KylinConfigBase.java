@@ -1079,6 +1079,11 @@ abstract public class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.engine.mr.config-override.");
     }
 
+    // used for some mem-hungry step
+    public Map<String, String> getMemHungryConfigOverride() {
+        return getPropertiesByPrefix("kylin.engine.mr.mem-hungry-config-override.");
+    }
+
     public Map<String, String> getUHCMRConfigOverride() {
         return getPropertiesByPrefix("kylin.engine.mr.uhc-config-override.");
     }

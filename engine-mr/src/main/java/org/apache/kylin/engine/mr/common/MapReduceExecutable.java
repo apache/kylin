@@ -120,7 +120,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                 job = new Cluster(conf).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
                 logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID) + " resumed");
             } else {
-                final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil.forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
+                final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil
+                        .forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
                 final AbstractHadoopJob hadoopJob = constructor.newInstance();
                 hadoopJob.setConf(conf);
                 hadoopJob.setAsync(true); // so the ToolRunner.run() returns right away
@@ -154,7 +155,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                     mgr.updateJobOutput(getId(), ExecutableState.ERROR, hadoopCmdOutput.getInfo(), "killed by admin");
                     return new ExecuteResult(ExecuteResult.State.FAILED, "killed by admin");
                 }
-                if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
+                if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED
+                        || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
                     final long waitTime = System.currentTimeMillis() - getStartTime();
                     setMapReduceWaitTime(waitTime);
                 }
@@ -262,24 +264,31 @@ public class MapReduceExecutable extends AbstractExecutable {
         options.addOption(OPTION_CUBE_NAME);
         CustomParser parser = new CustomParser();
         CommandLine commandLine = parser.parse(options, jobParams);
-        
+
         String confFile = commandLine.getOptionValue(BatchConstants.ARG_CONF);
         String cubeName = commandLine.getOptionValue(BatchConstants.ARG_CUBE_NAME);
         List<String> remainingArgs = Lists.newArrayList();
-        
+
         if (StringUtils.isNotBlank(confFile)) {
             conf.addResource(new Path(confFile));
         }
-        
+
         if (StringUtils.isNotBlank(cubeName)) {
             for (Map.Entry<String, String> entry : CubeManager.getInstance(config).getCube(cubeName).getConfig()
                     .getMRConfigOverride().entrySet()) {
                 conf.set(entry.getKey(), entry.getValue());
             }
+            if (conf.get("mapreduce.job.is-mem-hungry") != null
+                    && Boolean.valueOf(conf.get("mapreduce.job.is-mem-hungry"))) {
+                for (Map.Entry<String, String> entry : CubeManager.getInstance(config).getCube(cubeName).getConfig()
+                        .getMemHungryConfigOverride().entrySet()) {
+                    conf.set(entry.getKey(), entry.getValue());
+                }
+            }
             remainingArgs.add("-" + BatchConstants.ARG_CUBE_NAME);
             remainingArgs.add(cubeName);
         }
-        
+
         remainingArgs.addAll(parser.getRemainingArgs());
         return (String[]) remainingArgs.toArray(new String[remainingArgs.size()]);
     }
