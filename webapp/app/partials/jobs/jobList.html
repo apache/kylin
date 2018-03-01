@@ -45,6 +45,9 @@
               <select data-ng-model="timeFilter"
                       data-ng-options="s.name for s in jobConfig.timeFilter">
               </select>
+              <select data-ng-model="searchMode"
+                      data-ng-options="s.name for s in jobConfig.searchMode">
+              </select>
             </label>
             <label ng-repeat="s in jobConfig.allStatus" class="checkbox-inline" >
               <input  type="checkbox"
