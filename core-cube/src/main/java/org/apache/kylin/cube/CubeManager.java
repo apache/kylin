@@ -348,6 +348,10 @@ public class CubeManager implements IRealizationProvider {
             cube.setCuboids(update.getCuboids());
         }
 
+        if (update.getCuboidsRecommend() != null) {
+            cube.setCuboidsRecommend(update.getCuboidsRecommend());
+        }
+
         try {
             cube = crud.save(cube);
         } catch (IllegalStateException ise) {
@@ -637,19 +641,21 @@ public class CubeManager implements IRealizationProvider {
         }
 
         public CubeSegment[] optimizeSegments(CubeInstance cube, Set<Long> cuboidsRecommend) throws IOException {
-            checkReadyForOptimize(cube);
+            CubeInstance cubeCopy = cube.latestCopyForWrite(); // get a latest copy
 
-            List<CubeSegment> readySegments = cube.getSegments(SegmentStatusEnum.READY);
+            checkReadyForOptimize(cubeCopy);
+
+            List<CubeSegment> readySegments = cubeCopy.getSegments(SegmentStatusEnum.READY);
             CubeSegment[] optimizeSegments = new CubeSegment[readySegments.size()];
             int i = 0;
             for (CubeSegment segment : readySegments) {
-                CubeSegment newSegment = newSegment(cube, segment.getTSRange(), null);
-                validateNewSegments(cube, newSegment);
+                CubeSegment newSegment = newSegment(cubeCopy, segment.getTSRange(), null);
+                validateNewSegments(cubeCopy, newSegment);
 
                 optimizeSegments[i++] = newSegment;
             }
 
-            CubeUpdate update = new CubeUpdate(cube);
+            CubeUpdate update = new CubeUpdate(cubeCopy);
             update.setCuboidsRecommend(cuboidsRecommend);
             update.setToAddSegs(optimizeSegments);
             updateCube(update);

@@ -18,19 +18,9 @@
 
 package org.apache.kylin.provision;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -44,12 +34,15 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.EngineFactory;
+import org.apache.kylin.engine.mr.BatchOptimizeJobCheckpointBuilder;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -62,7 +55,20 @@ import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class BuildCubeWithEngine {
 
@@ -102,7 +108,7 @@ public class BuildCubeWithEngine {
     public static void beforeClass() throws Exception {
         beforeClass(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
     }
-    
+
     public static void beforeClass(String confDir) throws Exception {
         logger.info("Adding to classpath: " + new File(confDir).getAbsolutePath());
         ClassUtil.addClasspath(new File(confDir).getAbsolutePath());
@@ -163,7 +169,8 @@ public class BuildCubeWithEngine {
         }
         cubeManager = CubeManager.getInstance(kylinConfig);
         for (String jobId : jobService.getAllJobIds()) {
-            if (jobService.getJob(jobId) instanceof CubingJob) {
+            AbstractExecutable executable = jobService.getJob(jobId);
+            if (executable instanceof CubingJob || executable instanceof CheckpointExecutable) {
                 jobService.deleteJob(jobId);
             }
         }
@@ -220,7 +227,7 @@ public class BuildCubeWithEngine {
             for (int i = 0; i < tasks.size(); ++i) {
                 Future<Boolean> task = tasks.get(i);
                 final Boolean result = task.get();
-                if (result == false) {
+                if (!result) {
                     throw new RuntimeException("The test '" + testCase[i] + "' is failed.");
                 }
             }
@@ -281,10 +288,12 @@ public class BuildCubeWithEngine {
         if (fastBuildMode) {
             return buildSegment(cubeName, date1, date4);
         } else {
-            if (buildSegment(cubeName, date1, date2) == true) {
-                if (buildSegment(cubeName, date2, date3) == true) {
-                    if (buildSegment(cubeName, date3, date4) == true) {
-                        return mergeSegment(cubeName, date1, date3); // don't merge all segments
+            if (buildSegment(cubeName, date1, date2)) {
+                if (buildSegment(cubeName, date2, date3)) {
+                    if (optimizeCube(cubeName)) {
+                        if (buildSegment(cubeName, date3, date4)) {
+                            return mergeSegment(cubeName, date1, date3); // don't merge all segments
+                        }
                     }
                 }
             }
@@ -309,7 +318,7 @@ public class BuildCubeWithEngine {
         if (fastBuildMode) {
             return buildSegment(cubeName, date1, date3);
         } else {
-            if (buildSegment(cubeName, date1, date2) == true) { // all-in-one build
+            if (buildSegment(cubeName, date1, date2)) { // all-in-one build
                 return buildSegment(cubeName, date2, date3); // empty segment
             }
         }
@@ -323,6 +332,24 @@ public class BuildCubeWithEngine {
             cubeDesc.setEngineType(engineType);
             cubeDescManager.updateCubeDesc(cubeDesc);
         }
+    }
+
+    private Boolean optimizeCube(String cubeName) throws Exception {
+        CubeInstance cubeInstance = cubeManager.getCube(cubeName);
+        Set<Long> cuboidsRecommend = mockRecommendCuboids(cubeInstance, 0.05, 255);
+        CubeSegment[] optimizeSegments = cubeManager.optimizeSegments(cubeInstance, cuboidsRecommend);
+        List<AbstractExecutable> optimizeJobList = Lists.newArrayListWithExpectedSize(optimizeSegments.length);
+        for (CubeSegment optimizeSegment : optimizeSegments) {
+            DefaultChainedExecutable optimizeJob = EngineFactory.createBatchOptimizeJob(optimizeSegment, "TEST");
+            jobService.addJob(optimizeJob);
+            optimizeJobList.add(optimizeJob);
+            optimizeSegment.setLastBuildJobID(optimizeJob.getId());
+        }
+        CheckpointExecutable checkpointJob = new BatchOptimizeJobCheckpointBuilder(cubeInstance, "TEST").build();
+        checkpointJob.addTaskListForCheck(optimizeJobList);
+        jobService.addJob(checkpointJob);
+        ExecutableState state = waitForJob(checkpointJob.getId());
+        return Boolean.valueOf(ExecutableState.SUCCEED == state);
     }
 
     private void clearSegment(String cubeName) throws Exception {
@@ -347,9 +374,45 @@ public class BuildCubeWithEngine {
         return Boolean.valueOf(ExecutableState.SUCCEED == state);
     }
 
+    private Set<Long> mockRecommendCuboids(CubeInstance cubeInstance, double maxRatio, int maxNumber) {
+        Preconditions.checkArgument(maxRatio > 0.0 && maxRatio < 1.0);
+        Preconditions.checkArgument(maxNumber > 0);
+        Set<Long> cuboidsRecommend;
+        Random rnd = new Random();
+
+        // add some mandatory cuboids which are for other unit test
+        // - org.apache.kylin.query.ITCombinationTest.testLimitEnabled
+        // - org.apache.kylin.query.ITFailfastQueryTest.testPartitionNotExceedMaxScanBytes
+        // - org.apache.kylin.query.ITFailfastQueryTest.testQueryNotExceedMaxScanBytes
+        List<Set<String>> mandatoryDimensionSetList = Lists.newLinkedList();
+        mandatoryDimensionSetList.add(Sets.newHashSet("CAL_DT"));
+        mandatoryDimensionSetList.add(Sets.newHashSet("seller_id", "CAL_DT"));
+        mandatoryDimensionSetList.add(Sets.newHashSet("LSTG_FORMAT_NAME", "slr_segment_cd"));
+        Set<Long> mandatoryCuboids = cubeInstance.getDescriptor().generateMandatoryCuboids(mandatoryDimensionSetList);
+
+        CuboidScheduler cuboidScheduler = cubeInstance.getCuboidScheduler();
+        Set<Long> cuboidsCurrent = cuboidScheduler.getAllCuboidIds();
+        long baseCuboid = cuboidScheduler.getBaseCuboidId();
+        do {
+            cuboidsRecommend = Sets.newHashSet();
+            cuboidsRecommend.add(baseCuboid);
+            cuboidsRecommend.addAll(mandatoryCuboids);
+            for (long i = 1; i < baseCuboid; i++) {
+                if (rnd.nextDouble() < maxRatio) { // add 5% cuboids
+                    cuboidsRecommend.add(i);
+                }
+                if (cuboidsRecommend.size() > maxNumber) {
+                    break;
+                }
+            }
+        } while (cuboidsRecommend.equals(cuboidsCurrent));
+
+        return cuboidsRecommend;
+    }
+
     @SuppressWarnings("unused")
     private int cleanupOldStorage() throws Exception {
-        String[] args = { "--delete", "true" };
+        String[] args = {"--delete", "true"};
 
         StorageCleanupJob cli = new StorageCleanupJob();
         cli.execute(args);
