@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -32,15 +33,21 @@ import org.apache.kylin.common.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class ResourceTool {
 
     private static String[] includes = null;
     private static String[] excludes = null;
+    private static final TreeSet<String> pathsSkipChildrenCheck = new TreeSet<>();
+
     private static final Logger logger = LoggerFactory.getLogger(ResourceTool.class);
 
     private static final Set<String> IMMUTABLE_PREFIX = Sets.newHashSet("/UUID");
+
+    private static final List<String> SKIP_CHILDREN_CHECK_RESOURCE_ROOT = Lists
+            .newArrayList(ResourceStore.EXECUTE_RESOURCE_ROOT, ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
 
     public static void main(String[] args) throws IOException {
         args = StringUtil.filterSystemArgs(args);
@@ -166,6 +173,9 @@ public class ResourceTool {
 
         logger.info("Copy from {} to {}", src, dst);
 
+        for (String resourceRoot : SKIP_CHILDREN_CHECK_RESOURCE_ROOT) {
+            pathsSkipChildrenCheck.addAll(src.listResourcesRecursively(resourceRoot));
+        }
         copyR(src, dst, path, copyImmutableResource);
     }
 
@@ -203,7 +213,11 @@ public class ResourceTool {
             return;
         }
 
-        NavigableSet<String> children = src.listResources(path);
+        NavigableSet<String> children = null;
+
+        if (!pathsSkipChildrenCheck.contains(path)) {
+            children = src.listResources(path);
+        }
 
         if (children == null) {
             // case of resource (not a folder)
