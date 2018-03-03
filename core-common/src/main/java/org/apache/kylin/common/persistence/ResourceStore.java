@@ -128,13 +128,21 @@ abstract public class ResourceStore {
      */
     final public NavigableSet<String> listResources(String folderPath) throws IOException {
         String path = norm(folderPath);
-        return listResourcesImpl(path);
+        return listResourcesImpl(path, false);
+    }
+
+    /**
+     * List resources and its full path, only support HBase now.
+     */
+    final public NavigableSet<String> listResourcesRecursively(String folderPath) throws IOException {
+        String path = norm(folderPath);
+        return listResourcesImpl(path, true);
     }
 
     /**
      * return null if given path is not a folder or not exists
      */
-    abstract protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException;
+    abstract protected NavigableSet<String> listResourcesImpl(String folderPath, boolean recursive) throws IOException;
 
     protected String createMetaStoreUUID() throws IOException {
         return UUID.randomUUID().toString();

@@ -88,7 +88,10 @@ public class HDFSResourceStore extends ResourceStore {
     }
 
     @Override
-    protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException {
+    protected NavigableSet<String> listResourcesImpl(String folderPath, boolean recursive) throws IOException {
+        if (recursive) {
+            throw new IllegalArgumentException("Not support fullPath yet");
+        }
         Path p = getRealHDFSPath(folderPath);
         if (!fs.exists(p) || !fs.isDirectory(p)) {
             return null;
