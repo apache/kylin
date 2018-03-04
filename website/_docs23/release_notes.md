@@ -15,9 +15,9 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
-## v2.3.0 - 2018-02-XX
-_Tag:_ [kylin-2.3.0](https://github.com/apache/kylin/tree/kylin-2.2.0)
-This is a major release after 2.2, with more than 200 bug fixes and enhancement. Check [How to upgrade](/docs23/howto/howto_upgrade.html).
+## v2.3.0 - 2018-03-04
+_Tag:_ [kylin-2.3.0](https://github.com/apache/kylin/tree/kylin-2.3.0)
+This is a major release after 2.2, with more than 250 bug fixes and enhancement. Check [How to upgrade](/docs23/howto/howto_upgrade.html).
 
 __New Feature__
 * [KYLIN-3125] - Support SparkSql in Cube building step "Create Intermediate Flat Hive Table"
@@ -32,8 +32,15 @@ __New Feature__
 * [KYLIN-1892] - Support volatile range for segments auto merge
 
 __Improvement__
+* [KYLIN-3265] - Add "jobSearchMode" as a condition to "/kylin/api/jobs" API
+* [KYLIN-3245] - Searching cube support fuzzy search
+* [KYLIN-3243] - Optimize the code and keep the code consistent in the access.html
+* [KYLIN-3239] - Refactor the ACL code about "checkPermission" and "hasPermission"
+* [KYLIN-3215] - Remove 'drop' option when job status is stopped and error
+* [KYLIN-3214] - Initialize ExternalAclProvider when starting kylin
 * [KYLIN-3209] - Optimize job partial statistics path be consistent with existing one
 * [KYLIN-3196] - Replace StringUtils.containsOnly with Regex
+* [KYLIN-3194] - Tolerate broken job metadata caused by executable ClassNotFoundException
 * [KYLIN-3193] - No model clone across projects
 * [KYLIN-3182] - Update Kylin help menu links
 * [KYLIN-3181] - The submit button status of refreshing cube is not suitable when the start time is equal or more than the end time.
@@ -43,6 +50,7 @@ __Improvement__
 * [KYLIN-3157] - Enhance query timeout to entire query life cycle
 * [KYLIN-3151] - Enable 'Query History' to show items filtered by different projects
 * [KYLIN-3150] - Support different compression in PercentileCounter measure
+* [KYLIN-3145] - Support Kafka JSON message whose property name includes "_"
 * [KYLIN-3144] - Adopt Collections.emptyList() for empty list values
 * [KYLIN-3129] - Fix the joda library conflicts during Kylin start on EMR 5.8+
 * [KYLIN-3128] - Configs for allowing export query results for admin/nonadmin user
@@ -101,8 +109,8 @@ __Improvement__
 * [KYLIN-2913] - Enable job retry for configurable exceptions
 * [KYLIN-2912] - Remove "hfile" folder after bulk load to HBase
 * [KYLIN-2909] - Refine Email Template for notification by freemarker
+* [KYLIN-2908] - Add one option for migration tool to indicate whether to migrate segment data
 * [KYLIN-2905] - Refine the process of submitting a job
-* [KYLIN-2895] - Refine query cache
 * [KYLIN-2884] - Add delete segment function for portal
 * [KYLIN-2881] - Improve hbase coprocessor exception handling at kylin server side 
 * [KYLIN-2875] - Cube e-mail notification Validation
@@ -124,7 +132,25 @@ __Improvement__
 * [KYLIN-1872] - Make query visible and interruptible, improve server's stablility
 
 __Bug__
+* [KYLIN-3268] - Tomcat Security Vulnerability Alert. The version of the tomcat for kylin should upgrade to 7.0.85.
+* [KYLIN-3263] - AbstractExecutable's retry has problem
+* [KYLIN-3247] - REST API 'GET /api/cubes/{cubeName}/segs/{segmentName}/sql' should return a cube segment sql
+* [KYLIN-3242] - export result should use alias too
+* [KYLIN-3241] - When refresh on 'Add Cube Page', a blank page will appear.
+* [KYLIN-3228] - Should remove the related segment when deleting a job
+* [KYLIN-3227] - Automatically remove the blank at the end of lines in properties files
+* [KYLIN-3226] - When user logs in with only query permission, 'N/A' is displayed in the cube's action list.
+* [KYLIN-3224] - data can't show when use kylin pushdown model 
+* [KYLIN-3223] - Query for the list of hybrid cubes results in NPE
+* [KYLIN-3222] - The function of editing 'Advanced Dictionaries' in cube is unavailable.
+* [KYLIN-3219] - Fix NPE when updating metrics during Spark CubingJob
+* [KYLIN-3216] - Remove the hard-code of spark-history path in 'check-env.sh'
+* [KYLIN-3213] - Kylin help has duplicate items
+* [KYLIN-3211] - Class IntegerDimEnc shuould give more exception information when the length is exceed the max or less than the min
+* [KYLIN-3210] - The project shows '_null' in result page.
 * [KYLIN-3205] - Allow one column is used for both dimension and precisely count distinct measure
+* [KYLIN-3204] - Potentially unclosed resources in JdbcExplorer#evalQueryMetadata
+* [KYLIN-3199] - The login dialog should be closed when ldap user with no permission login correctly
 * [KYLIN-3190] - Fix wrong parameter in revoke access API
 * [KYLIN-3184] - Fix '_null' project on the query page
 * [KYLIN-3183] - Fix the bug of the 'Remove' button in 'Query History'
@@ -137,6 +163,7 @@ __Bug__
 * [KYLIN-3165] - Fix the IllegalArgumentException during segments auto merge
 * [KYLIN-3164] - HBase connection must be closed when clearing connection pool
 * [KYLIN-3143] - Wrong use of Preconditions.checkNotNull() in ManagedUser#removeAuthoritie
+* [KYLIN-3139] - Failure in map-reduce job due to undefined hdp.version variable when using HDP stack and remote HBase cluster
 * [KYLIN-3136] - Endless status while subtask happens to be the illegal RUNNING
 * [KYLIN-3135] - Fix regular expression bug in SQL comments
 * [KYLIN-3131] - After refresh the page,the cubes can't sort by 'create_time'
@@ -168,7 +195,6 @@ __Bug__
 * [KYLIN-3053] - When aggregation group verification failed, the error message about aggregation group number does not match with the actual on the Advanced Setting page
 * [KYLIN-3049] - Filter the invalid zero value of "Auto Merge Thresholds" parameter when you create or upate a cube.
 * [KYLIN-3047] - Wrong column type when sync hive table via beeline
-* [KYLIN-3045] - Too many open files raised from new Configuration()
 * [KYLIN-3042] - In query results page, the results data table should resize when click "fullScreen" button
 * [KYLIN-3040] - Refresh a non-partitioned cube changes the segment name to "19700101000000_2922789940817071255"
 * [KYLIN-3038] - cannot support sum of type-converted column SQL
@@ -193,7 +219,7 @@ __Bug__
 * [KYLIN-2969] - Fix the wrong NumberBytesCodec cache in Number2BytesConverter 
 * [KYLIN-2968] - misspelled word in table_load.html
 * [KYLIN-2967] - Add the dependency check when deleting a  project
-* [KYLIN-2964] - AclEntity operation issue 
+* [KYLIN-2962] - drop error job not delete segment
 * [KYLIN-2959] - SAML logout issue
 * [KYLIN-2956] - building trie dictionary blocked on value of length over 4095 
 * [KYLIN-2953] - List readable project not correct if add limit and offset
@@ -214,8 +240,6 @@ __Bug__
 * [KYLIN-2835] - Unclosed resources in JdbcExplorer
 * [KYLIN-2794] - MultipleDictionaryValueEnumerator should output values in sorted order
 * [KYLIN-2756] - Let "LIMIT" be optional in "Inspect" page
-* [KYLIN-2744] - Should return correct type for SUM measure in web
-* [KYLIN-2679] - Report error when a dimension using "dict" encoding and also configured Global dictionary for "distinct_count" measure
 * [KYLIN-2470] - cube build failed when 0 bytes input for non-partition fact table
 * [KYLIN-1664] - Harden security check for '/kylin/api/admin/config' API
 
@@ -235,6 +259,7 @@ __Task__
 * [KYLIN-2796] - Remove the legacy "statisticsenabled" codes in FactDistinctColumnsJob
 
 __Sub-Task__
+* [KYLIN-3235] - add null check for SQL
 * [KYLIN-3202] - Doc directory for 2.3
 * [KYLIN-3155] - Create a document for how to use dashboard
 * [KYLIN-3154] - Create a document for cube planner
@@ -242,9 +267,6 @@ __Sub-Task__
 * [KYLIN-3018] - Change maxLevel for layered cubing
 * [KYLIN-2946] - Introduce a tool for batch incremental building of system cubes
 * [KYLIN-2934] - Provide user guide for KYLIN-2656(Support Zookeeper ACL)
-* [KYLIN-2899] - Enable segment level query cache
-* [KYLIN-2898] - Introduce memcached as a distributed cache for queries
-* [KYLIN-2894] - Change the query cache expiration strategy by signature checking
 * [KYLIN-2822] - Introduce sunburst chart to show cuboid tree
 * [KYLIN-2746] - Separate filter row count & aggregated row count for metrics collection returned by coprocessor
 * [KYLIN-2735] - Introduce an option to make job scheduler consider job priority
