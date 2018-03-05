@@ -89,7 +89,12 @@ public class AdminService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void cleanupStorage() {
-        StorageCleanupJob job = new StorageCleanupJob();
+        StorageCleanupJob job = null;
+        try {
+            job = new StorageCleanupJob();
+        } catch (IOException e) {
+            logger.error("can not init StorageCleanupJob", e);
+        }
         String[] args = new String[] { "-delete", "true" };
         job.execute(args);
     }

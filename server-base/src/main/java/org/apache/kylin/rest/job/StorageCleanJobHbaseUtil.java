@@ -28,7 +28,6 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -45,11 +44,16 @@ public class StorageCleanJobHbaseUtil {
     protected static final Logger logger = LoggerFactory.getLogger(StorageCleanJobHbaseUtil.class);
 
     public static void cleanUnusedHBaseTables(boolean delete, int deleteTimeout) throws IOException {
-        Configuration conf = HBaseConfiguration.create();
+        try (HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create())) {
+            cleanUnusedHBaseTables(hbaseAdmin, delete, deleteTimeout);
+        }
+    }
+
+    static void cleanUnusedHBaseTables(HBaseAdmin hbaseAdmin, boolean delete, int deleteTimeout) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
         // get all kylin hbase tables
-        try (HBaseAdmin hbaseAdmin = new HBaseAdmin(conf)) {
+        try {
             String namespace = kylinConfig.getHBaseStorageNameSpace();
             String tableNamePrefix = (namespace.equals("default") || namespace.equals(""))
                     ? kylinConfig.getHBaseTableNamePrefix() : (namespace + ":" + kylinConfig.getHBaseTableNamePrefix());

@@ -1,0 +1,14 @@
+{
+  "uuid" : "f8edd777-8756-40d5-be19-3159120e4f7b",
+  "last_modified" : 1508914247021,
+  "version" : "2.3.0.20500",
+  "content" : "Create and distribute table, cmd: \nhive -e \"USE default;\n\nDROP TABLE IF EXISTS kylin_intermediate_sample_cube_2838c7fc_722a_48fa_9d1a_8ab37837a952;\nCREATE EXTERNAL TABLE IF NOT EXISTS kylin_intermediate_sample_cube_2838c7fc_722a_48fa_9d1a_8ab37837a952\n(\nSAMPLE_07_DESCRIPTION string\n,SAMPLE_07_TOTAL_EMP int\n,SAMPLE_07_SALARY int\n)\nSTORED AS SEQUENCEFILE\nLOCATION 'hdfs://sandbox.hortonworks.com:8020/kylin/g-dev_kylinmaster_ci_instance/kylin-f8edd777-8756-40d5-be19-3159120e4f7b/kylin_intermediate_sample_cube_2838c7fc_722a_48fa_9d1a_8ab37837a952';\nINSERT OVERWRITE TABLE kylin_intermediate_sample_cube_2838c7fc_722a_48fa_9d1a_8ab37837a952 SELECT\nSAMPLE_07.DESCRIPTION as SAMPLE_07_DESCRIPTION\n,SAMPLE_07.TOTAL_EMP as SAMPLE_07_TOTAL_EMP\n,SAMPLE_07.SALARY as SAMPLE_07_SALARY\nFROM DEFAULT.SAMPLE_07 as SAMPLE_07 \n;\n\n\" --hiveconf mapreduce.map.output.compress.codec=org.apache.hadoop.io.compress.SnappyCodec --hiveconf dfs.replication=2 --hiveconf hive.exec.compress.output=true\n/bin/bash: hive: command not found\n",
+  "status" : "SUCCEED",
+  "info" : {
+    "startTime" : "1508913834417",
+    "mapReduceWaitTime" : "88082",
+    "interruptTime" : "193157",
+    "algorithm" : "LAYER",
+    "endTime" : "1508914247000"
+  }
+}
