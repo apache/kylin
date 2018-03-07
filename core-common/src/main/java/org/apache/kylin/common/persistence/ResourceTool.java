@@ -174,7 +174,10 @@ public class ResourceTool {
         logger.info("Copy from {} to {}", src, dst);
 
         for (String resourceRoot : SKIP_CHILDREN_CHECK_RESOURCE_ROOT) {
-            pathsSkipChildrenCheck.addAll(src.listResourcesRecursively(resourceRoot));
+            NavigableSet<String> all = src.listResourcesRecursively(resourceRoot);
+            if (all != null) {
+                pathsSkipChildrenCheck.addAll(src.listResourcesRecursively(resourceRoot));
+            }
         }
         copyR(src, dst, path, copyImmutableResource);
     }
