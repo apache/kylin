@@ -46,12 +46,12 @@ public class HiveCmdBuilder {
     }
 
     private KylinConfig kylinConfig;
-    final private Map<String, String> hiveConfProps = new HashMap<>();
+    final private Map<String, String> hiveConfProps;
     final private ArrayList<String> statements = Lists.newArrayList();
 
     public HiveCmdBuilder() {
         kylinConfig = KylinConfig.getInstanceFromEnv();
-        loadHiveConfiguration();
+        hiveConfProps = HiveConfigurationUtil.loadHiveConfiguration();
     }
 
     public String build() {
@@ -153,47 +153,4 @@ public class HiveCmdBuilder {
         return build();
     }
 
-    private void loadHiveConfiguration() {
-
-        File hiveConfFile;
-        String hiveConfFileName = (HIVE_CONF_FILENAME + ".xml");
-        String path = System.getProperty(KylinConfig.KYLIN_CONF);
-
-        if (StringUtils.isNotEmpty(path)) {
-            hiveConfFile = new File(path, hiveConfFileName);
-        } else {
-            path = KylinConfig.getKylinHome();
-            if (StringUtils.isEmpty(path)) {
-                logger.error("KYLIN_HOME is not set, can not locate hive conf: {}.xml", HIVE_CONF_FILENAME);
-                return;
-            }
-            hiveConfFile = new File(path + File.separator + "conf", hiveConfFileName);
-        }
-
-        if (!hiveConfFile.exists()) {
-            throw new RuntimeException("Missing config file: " + hiveConfFile.getAbsolutePath());
-        }
-
-        String fileUrl = OptionsHelper.convertToFileURL(hiveConfFile.getAbsolutePath());
-
-        try {
-            File file = new File(fileUrl);
-            if (file.exists()) {
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                Document doc = builder.parse(file);
-                NodeList nl = doc.getElementsByTagName("property");
-                hiveConfProps.clear();
-                for (int i = 0; i < nl.getLength(); i++) {
-                    String key = doc.getElementsByTagName("name").item(i).getFirstChild().getNodeValue();
-                    String value = doc.getElementsByTagName("value").item(i).getFirstChild().getNodeValue();
-                    if (!key.equals("tmpjars")) {
-                        hiveConfProps.put(key, value);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse hive conf file ", e);
-        }
-    }
 }

@@ -26,25 +26,30 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DBUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.apache.kylin.common.util.HiveConfigurationUtil;
 
 public class BeelineHiveClient implements IHiveClient {
 
+    private static final String HIVE_AUTH_USER = "user";
+    private static final String HIVE_AUTH_PASSWD = "password";
     private Connection cnct;
     private Statement stmt;
     private DatabaseMetaData metaData;
+
 
     public BeelineHiveClient(String beelineParams) {
         if (StringUtils.isEmpty(beelineParams)) {
             throw new IllegalArgumentException("BeelineParames cannot be empty");
         }
         String[] splits = StringUtils.split(beelineParams);
-        String url = null, username = null, password = null;
+        String url = "", username = "", password = "";
         for (int i = 0; i < splits.length; i++) {
             if ("-u".equals(splits[i])) {
                 url = stripQuotes(splits[i + 1]);
@@ -56,13 +61,16 @@ public class BeelineHiveClient implements IHiveClient {
                 password = stripQuotes(splits[i + 1]);
             }
         }
-        this.init(url, username, password);
+        Properties jdbcProperties = HiveConfigurationUtil.loadHiveJDBCProperties();
+        jdbcProperties.put(HIVE_AUTH_PASSWD, password);
+        jdbcProperties.put(HIVE_AUTH_USER, username);
+        this.init(url, jdbcProperties);
     }
 
-    private void init(String url, String username, String password) {
+    private void init(String url, Properties hiveProperties) {
         try {
             Class.forName("org.apache.hive.jdbc.HiveDriver");
-            cnct = DriverManager.getConnection(url, username, password);
+            cnct = DriverManager.getConnection(url, hiveProperties);
             stmt = cnct.createStatement();
             metaData = cnct.getMetaData();
         } catch (SQLException | ClassNotFoundException e) {
