@@ -16,18 +16,20 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
+package org.apache.kylin.cube.cuboid.algorithm.generic;
+
+import org.apache.commons.math3.exception.MathIllegalArgumentException;
+import org.apache.commons.math3.exception.util.DummyLocalizable;
+import org.apache.commons.math3.genetics.Chromosome;
+import org.apache.commons.math3.genetics.GeneticAlgorithm;
+import org.apache.commons.math3.genetics.MutationPolicy;
 
 import java.util.BitSet;
 
-import org.apache.kylin.cube.cuboid.algorithm.generic.BitsChromosome;
-import org.apache.kylin.cube.cuboid.algorithm.generic.GeneticAlgorithm;
-
 /**
  * Modified from the BinaryMutation.java in https://github.com/apache/commons-math
- *
+ * <p>
  * Mutation for {@link BitsChromosome}s. Randomly changes one gene.
- *
  */
 public class BitsMutation implements MutationPolicy {
 
@@ -40,22 +42,18 @@ public class BitsMutation implements MutationPolicy {
      */
     public Chromosome mutate(Chromosome original) throws IllegalArgumentException {
         if (!(original instanceof BitsChromosome)) {
-            throw new IllegalArgumentException("Chromosome " + original.getClass() + " must be of type BitsChromosome.");
+            throw new MathIllegalArgumentException(new DummyLocalizable("bits mutation only works on BitsChromosome"));
         }
 
         BitsChromosome origChrom = (BitsChromosome) original;
-        BitSet newNey = (BitSet) origChrom.getKey().clone();
+        BitSet newNey = (BitSet) origChrom.getRepresentation().clone();
 
         // randomly select a gene
-        int geneIndex = getMutationGeneIndex(origChrom);
+        int geneIndex = GeneticAlgorithm.getRandomGenerator().nextInt(origChrom.getLength());
         // change it
-        boolean value = newNey.get(geneIndex);
-        newNey.set(geneIndex, !value);
+        newNey.set(geneIndex, !newNey.get(geneIndex));
+
         Chromosome newChrom = origChrom.newBitsChromosome(newNey);
         return newChrom;
-    }
-
-    protected int getMutationGeneIndex(BitsChromosome origChrom) {
-        return GeneticAlgorithm.RANDGEN.get().nextInt(origChrom.getLength());
     }
 }

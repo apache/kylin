@@ -18,18 +18,17 @@
 
 package org.apache.kylin.cube.cuboid.algorithm;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class CuboidStats {
     private static final Logger logger = LoggerFactory.getLogger(CuboidStats.class);
@@ -67,7 +66,7 @@ public class CuboidStats {
         }
 
         public Builder setRollingUpCountSourceMap(Map<Long, Map<Long, Long>> rollingUpCountSourceMap,
-                long rollUpThresholdForMandatory) {
+                                                  long rollUpThresholdForMandatory) {
             this.rollingUpCountSourceMap = rollingUpCountSourceMap;
             this.rollUpThresholdForMandatory = rollUpThresholdForMandatory;
             return this;
@@ -125,7 +124,7 @@ public class CuboidStats {
     private Map<Long, Set<Long>> allDescendantsCache;
 
     private CuboidStats(String key, long baseCuboidId, Set<Long> mandatoryCuboids, Map<Long, Long> statistics,
-            Map<Long, Double> size, Map<Long, Long> hitFrequencyMap, Map<Long, Map<Long, Long>> scanCountSourceMap) {
+                        Map<Long, Double> size, Map<Long, Long> hitFrequencyMap, Map<Long, Map<Long, Long>> scanCountSourceMap) {
 
         this.key = key;
         this.baseCuboid = baseCuboidId;
@@ -142,8 +141,8 @@ public class CuboidStats {
         cuboidsForSelection.removeAll(cuboidsForMandatory);
 
         //There's no overlap between mandatoryCuboidSet and selectionCuboidSet
-        this.mandatoryCuboidSet = ImmutableSet.<Long> builder().addAll(cuboidsForMandatory).build();
-        this.selectionCuboidSet = ImmutableSet.<Long> builder().addAll(cuboidsForSelection).build();
+        this.mandatoryCuboidSet = ImmutableSet.<Long>builder().addAll(cuboidsForMandatory).build();
+        this.selectionCuboidSet = ImmutableSet.<Long>builder().addAll(cuboidsForSelection).build();
         if (selectionCuboidSet.isEmpty()) {
             logger.warn("The selection set should not be empty!!!");
         }
@@ -151,8 +150,8 @@ public class CuboidStats {
         /** Initialize row count for mandatory cuboids */
         CuboidStatsUtil.complementRowCountForMandatoryCuboids(statistics, baseCuboid, mandatoryCuboidSet);
 
-        this.cuboidCountMap = ImmutableMap.<Long, Long> builder().putAll(statistics).build();
-        this.cuboidSizeMap = ImmutableMap.<Long, Double> builder().putAll(size).build();
+        this.cuboidCountMap = ImmutableMap.<Long, Long>builder().putAll(statistics).build();
+        this.cuboidSizeMap = ImmutableMap.<Long, Double>builder().putAll(size).build();
 
         /** Initialize the hit probability for each selection cuboid */
         Map<Long, Double> tmpCuboidHitProbabilityMap = Maps.newHashMapWithExpectedSize(selectionCuboidSet.size());
@@ -179,7 +178,7 @@ public class CuboidStats {
                 tmpCuboidHitProbabilityMap.put(cuboid, 1.0 / selectionCuboidSet.size());
             }
         }
-        this.cuboidHitProbabilityMap = ImmutableMap.<Long, Double> builder().putAll(tmpCuboidHitProbabilityMap).build();
+        this.cuboidHitProbabilityMap = ImmutableMap.<Long, Double>builder().putAll(tmpCuboidHitProbabilityMap).build();
 
         /** Initialize the scan count when query for each selection cuboid + one base cuboid */
         Map<Long, Long> tmpCuboidScanCountMap = Maps.newHashMapWithExpectedSize(1 + selectionCuboidSet.size());
@@ -187,16 +186,16 @@ public class CuboidStats {
         for (Long cuboid : selectionCuboidSet) {
             tmpCuboidScanCountMap.put(cuboid, getExpScanCount(cuboid, statistics, scanCountSourceMap));
         }
-        this.cuboidScanCountMap = ImmutableMap.<Long, Long> builder().putAll(tmpCuboidScanCountMap).build();
+        this.cuboidScanCountMap = ImmutableMap.<Long, Long>builder().putAll(tmpCuboidScanCountMap).build();
 
-        this.directChildrenCache = ImmutableMap.<Long, List<Long>> builder()
+        this.directChildrenCache = ImmutableMap.<Long, List<Long>>builder()
                 .putAll(CuboidStatsUtil.createDirectChildrenCache(statistics.keySet())).build();
 
         this.allDescendantsCache = Maps.newConcurrentMap();
     }
 
     private long getExpScanCount(long sourceCuboid, Map<Long, Long> statistics,
-            Map<Long, Map<Long, Long>> scanCountSourceMap) {
+                                 Map<Long, Map<Long, Long>> scanCountSourceMap) {
         Preconditions.checkNotNull(statistics.get(sourceCuboid),
                 "The statistics for source cuboid " + sourceCuboid + " does not exist!!!");
         if (scanCountSourceMap == null || scanCountSourceMap.get(sourceCuboid) == null
@@ -240,11 +239,11 @@ public class CuboidStats {
         }
     }
 
-    public Set<Long> getAllCuboidsForSelection() {
+    public ImmutableSet<Long> getAllCuboidsForSelection() {
         return selectionCuboidSet;
     }
 
-    public Set<Long> getAllCuboidsForMandatory() {
+    public ImmutableSet<Long> getAllCuboidsForMandatory() {
         return mandatoryCuboidSet;
     }
 

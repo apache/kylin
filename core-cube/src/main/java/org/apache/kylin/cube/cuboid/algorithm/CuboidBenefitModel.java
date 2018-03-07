@@ -33,11 +33,11 @@ public class CuboidBenefitModel {
     }
 
     public Long getCuboidId() {
-        return cuboidModel == null ? null : cuboidModel.getCuboidId();
+        return cuboidModel == null ? null : cuboidModel.cuboidId;
     }
 
     public Double getBenefit() {
-        return benefitModel == null ? null : benefitModel.getBenefit();
+        return benefitModel == null ? null : benefitModel.benefit;
     }
 
     @Override
@@ -45,45 +45,14 @@ public class CuboidBenefitModel {
         return "CuboidBenefitModel [cuboidModel=" + cuboidModel + ", benefitModel=" + benefitModel + "]";
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((cuboidModel == null) ? 0 : cuboidModel.hashCode());
-        result = prime * result + ((benefitModel == null) ? 0 : benefitModel.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        CuboidBenefitModel other = (CuboidBenefitModel) obj;
-        if (cuboidModel == null) {
-            if (other.cuboidModel != null)
-                return false;
-        } else if (!cuboidModel.equals(other.cuboidModel))
-            return false;
-        if (benefitModel == null) {
-            if (other.benefitModel != null)
-                return false;
-        } else if (!benefitModel.equals(other.benefitModel))
-            return false;
-        return true;
-    }
-
     public static class CuboidModel {
-        private long cuboidId;
+        public final long cuboidId;
 
-        private long recordCount;
-        private double spaceSize;
+        public final long recordCount;
+        public final double spaceSize;
 
-        private double hitProbability;
-        private long scanCount;
+        public final double hitProbability;
+        public final long scanCount;
 
         public CuboidModel(long cuboId, long recordCount, double spaceSize, double hitProbability, long scanCount) {
             this.cuboidId = cuboId;
@@ -93,118 +62,25 @@ public class CuboidBenefitModel {
             this.scanCount = scanCount;
         }
 
-        public long getCuboidId() {
-            return cuboidId;
-        }
-
-        public long getRecordCount() {
-            return recordCount;
-        }
-
-        public double getSpaceSize() {
-            return spaceSize;
-        }
-
-        public double getHitProbability() {
-            return hitProbability;
-        }
-
-        public long getScanCount() {
-            return scanCount;
-        }
-
         @Override
         public String toString() {
             return "CuboidModel [cuboidId=" + cuboidId + ", recordCount=" + recordCount + ", spaceSize=" + spaceSize
                     + ", hitProbability=" + hitProbability + ", scanCount=" + scanCount + "]";
         }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + (int) (cuboidId ^ (cuboidId >>> 32));
-            result = prime * result + (int) (recordCount ^ (recordCount >>> 32));
-            long temp;
-            temp = Double.doubleToLongBits(spaceSize);
-            result = prime * result + (int) (temp ^ (temp >>> 32));
-            temp = Double.doubleToLongBits(hitProbability);
-            result = prime * result + (int) (temp ^ (temp >>> 32));
-            result = prime * result + (int) (scanCount ^ (scanCount >>> 32));
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-
-            CuboidModel other = (CuboidModel) obj;
-            if (cuboidId != other.cuboidId)
-                return false;
-            if (recordCount != other.recordCount)
-                return false;
-            if (Double.doubleToLongBits(spaceSize) != Double.doubleToLongBits(other.spaceSize))
-                return false;
-            if (hitProbability != other.hitProbability)
-                return false;
-            if (scanCount != other.scanCount)
-                return false;
-            return true;
-        }
     }
 
     public static class BenefitModel {
-        private double benefit;
-        private int benefitCount;
+        public final double benefit;
+        public final int benefitCount;
 
         public BenefitModel(double benefit, int benefitCount) {
             this.benefit = benefit;
             this.benefitCount = benefitCount;
         }
 
-        public double getBenefit() {
-            return benefit;
-        }
-
-        public int getBenefitCount() {
-            return benefitCount;
-        }
-
         @Override
         public String toString() {
             return "BenefitModel [benefit=" + benefit + ", benefitCount=" + benefitCount + "]";
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            long temp;
-            temp = Double.doubleToLongBits(benefit);
-            result = prime * result + (int) (temp ^ (temp >>> 32));
-            result = prime * result + benefitCount;
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            BenefitModel other = (BenefitModel) obj;
-            if (Double.doubleToLongBits(benefit) != Double.doubleToLongBits(other.benefit))
-                return false;
-            if (benefitCount != other.benefitCount)
-                return false;
-            return true;
         }
     }
 }

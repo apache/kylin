@@ -18,7 +18,6 @@
 
 package org.apache.kylin.cube.cuboid.algorithm;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,15 +26,29 @@ import java.util.Set;
 */
 public interface BenefitPolicy {
 
+    /**
+     * @return a cloned instance with initial status
+     */
     public BenefitPolicy getInstance();
 
-    public void initBeforeStart();
-
+    /**
+     * @param selected should not be changed
+     *                 Will not change the inner instance status
+     */
     public CuboidBenefitModel.BenefitModel calculateBenefit(long cuboid, Set<Long> selected);
 
-    public CuboidBenefitModel.BenefitModel calculateBenefitTotal(List<Long> cuboidsToAdd, Set<Long> selected);
+    /**
+     * @param cuboidsToAdd should not be changed
+     * @param selected     should not be changed
+     *                     Will not change the inner instance status
+     */
+    public CuboidBenefitModel.BenefitModel calculateBenefitTotal(Set<Long> cuboidsToAdd, Set<Long> selected);
 
     public boolean ifEfficient(CuboidBenefitModel best);
 
+    /**
+     * @param selected should not be changed
+     * Will update the inner instance status
+     */
     public void propagateAggregationCost(long cuboid, Set<Long> selected);
 }

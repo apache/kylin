@@ -16,20 +16,25 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.cube.cuboid.algorithm.generic.lib;
+package org.apache.kylin.cube.cuboid.algorithm.generic;
+
+import org.apache.commons.math3.exception.DimensionMismatchException;
+import org.apache.commons.math3.exception.MathIllegalArgumentException;
+import org.apache.commons.math3.exception.util.DummyLocalizable;
+import org.apache.commons.math3.genetics.Chromosome;
+import org.apache.commons.math3.genetics.ChromosomePair;
+import org.apache.commons.math3.genetics.CrossoverPolicy;
+import org.apache.commons.math3.genetics.GeneticAlgorithm;
 
 import java.util.BitSet;
 
-import org.apache.kylin.cube.cuboid.algorithm.generic.BitsChromosome;
-import org.apache.kylin.cube.cuboid.algorithm.generic.GeneticAlgorithm;
-
 /**
  * Modified from the OnePointCrossover.java in https://github.com/apache/commons-math
- *
+ * <p>
  * One point crossover policy. A random crossover point is selected and the
  * first part from each parent is copied to the corresponding child, and the
  * second parts are copied crosswise.
- *
+ * <p>
  * Example:
  * <pre>
  * -C- denotes a crossover point
@@ -41,19 +46,17 @@ import org.apache.kylin.cube.cuboid.algorithm.generic.GeneticAlgorithm;
  *      /------------\ /-----\              /------------\ /-----\
  * c1 = (1 0 1 0 0 1  | 1 1 1)    X    c2 = (0 1 1 0 1 0  | 0 1 1)
  * </pre>
- *
+ * <p>
  * This policy works only on {@link BitsChromosome}, and therefore it
  * is parameterized by T. Moreover, the chromosomes must have same lengths.
- *
- *
  */
-public class OnePointCrossover implements CrossoverPolicy {
+public class BitsOnePointCrossover implements CrossoverPolicy {
 
     /**
      * Performs one point crossover. A random crossover point is selected and the
      * first part from each parent is copied to the corresponding child, and the
      * second parts are copied crosswise.
-     *
+     * <p>
      * Example:
      * <pre>
      * -C- denotes a crossover point
@@ -66,20 +69,20 @@ public class OnePointCrossover implements CrossoverPolicy {
      * c1 = (1 0 1 0 0 1  | 1 1 1)    X    c2 = (0 1 1 0 1 0  | 0 1 1)
      * </pre>
      *
-     * @param first first parent (p1)
+     * @param first  first parent (p1)
      * @param second second parent (p2)
      * @return pair of two children (c1,c2)
-     * @throws IllegalArgumentException if one of the chromosomes is
-     *   not an instance of {@link BitsChromosome}
-     * @throws ChromosomeMismatchException if the length of the two chromosomes is different
+     * @throws IllegalArgumentException     if one of the chromosomes is
+     *                                      not an instance of {@link BitsChromosome}
+     * @throws MathIllegalArgumentException if the length of the two chromosomes is different
      */
     @SuppressWarnings("unchecked") // OK because of instanceof checks
     public ChromosomePair crossover(final Chromosome first, final Chromosome second)
-            throws IllegalArgumentException, ChromosomeMismatchException {
+            throws DimensionMismatchException, MathIllegalArgumentException {
 
         if (!(first instanceof BitsChromosome && second instanceof BitsChromosome)) {
-            throw new IllegalArgumentException("Chromosome first " + first.getClass() + " and second "
-                    + second.getClass() + " must be of type BitsChromosome.");
+            throw new MathIllegalArgumentException(
+                    new DummyLocalizable("bits one-point crossover only works on BitsChromosome"));
         }
         return crossover((BitsChromosome) first, (BitsChromosome) second);
     }
@@ -87,26 +90,26 @@ public class OnePointCrossover implements CrossoverPolicy {
     /**
      * Helper for {@link #crossover(Chromosome, Chromosome)}. Performs the actual crossover.
      *
-     * @param first the first chromosome.
+     * @param first  the first chromosome.
      * @param second the second chromosome.
      * @return the pair of new chromosomes that resulted from the crossover.
-     * @throws ChromosomeMismatchException if the length of the two chromosomes is different
+     * @throws DimensionMismatchException if the length of the two chromosomes is different
      */
     private ChromosomePair crossover(final BitsChromosome first, final BitsChromosome second)
-            throws ChromosomeMismatchException {
+            throws DimensionMismatchException {
         final int length = first.getLength();
         if (length != second.getLength()) {
-            throw new ChromosomeMismatchException("BitsChromosome length mismatch.", second.getLength(), length);
+            throw new DimensionMismatchException(second.getLength(), length);
         }
 
-        final BitSet parent1Key = first.getKey();
-        final BitSet parent2Key = second.getKey();
+        final BitSet parent1Key = first.getRepresentation();
+        final BitSet parent2Key = second.getRepresentation();
 
         final BitSet child1Key = new BitSet(length);
         final BitSet child2Key = new BitSet(length);
 
         // select a crossover point at random (0 and length makes no sense)
-        final int crossoverIndex = 1 + (GeneticAlgorithm.RANDGEN.get().nextInt(length - 2));
+        final int crossoverIndex = 1 + (GeneticAlgorithm.getRandomGenerator().nextInt(length - 2));
 
         BitSet a = (BitSet) parent1Key.clone();
         a.clear(crossoverIndex, length);
