@@ -18,13 +18,10 @@
 
 package org.apache.kylin.cube.cuboid.algorithm.greedy;
 
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.kylin.cube.cuboid.algorithm.AbstractRecommendAlgorithm;
 import org.apache.kylin.cube.cuboid.algorithm.BenefitPolicy;
 import org.apache.kylin.cube.cuboid.algorithm.CuboidBenefitModel;
@@ -32,15 +29,17 @@ import org.apache.kylin.cube.cuboid.algorithm.CuboidStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
-* A simple implementation of the Greedy Algorithm , it chooses the cuboids which give
-* the greatest benefit based on expansion rate and time limitation.
-*/
+ * A simple implementation of the Greedy Algorithm , it chooses the cuboids which give
+ * the greatest benefit based on expansion rate and time limitation.
+ */
 public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
     private static final Logger logger = LoggerFactory.getLogger(GreedyAlgorithm.class);
 
@@ -55,31 +54,23 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
     }
 
     @Override
-    public List<Long> recommend(double expansionRate) {
-        double spaceLimit = getCuboidStats().getBaseCuboidSize() * expansionRate;
-        return start(spaceLimit);
-    }
-
-    @Override
     public List<Long> start(double spaceLimit) {
         logger.info("Greedy Algorithm started.");
         executor = Executors.newFixedThreadPool(THREAD_NUM,
                 new ThreadFactoryBuilder().setNameFormat("greedy-algorithm-benefit-calculator-pool-%d").build());
 
-        getBenefitPolicy().initBeforeStart();
-
         //Initial mandatory cuboids
         selected.clear();
         double remainingSpace = spaceLimit;
-        for (Long mandatoryOne : getCuboidStats().getAllCuboidsForMandatory()) {
+        for (Long mandatoryOne : cuboidStats.getAllCuboidsForMandatory()) {
             selected.add(mandatoryOne);
-            if (getCuboidStats().getCuboidSize(mandatoryOne) != null) {
-                remainingSpace -= getCuboidStats().getCuboidSize(mandatoryOne);
+            if (cuboidStats.getCuboidSize(mandatoryOne) != null) {
+                remainingSpace -= cuboidStats.getCuboidSize(mandatoryOne);
             }
         }
         //Initial remaining cuboid set
         remaining.clear();
-        remaining.addAll(getCuboidStats().getAllCuboidsForSelection());
+        remaining.addAll(cuboidStats.getAllCuboidsForSelection());
 
         long round = 0;
         while (true) {
@@ -95,18 +86,18 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
             // If we finally find the cuboid selected does not meet a minimum threshold of benefit (for
             // example, a cuboid with 0.99M roll up from a parent cuboid with 1M
             // rows), then we should finish the process and return
-            if (!getBenefitPolicy().ifEfficient(best)) {
+            if (!benefitPolicy.ifEfficient(best)) {
                 break;
             }
 
-            remainingSpace -= getCuboidStats().getCuboidSize(best.getCuboidId());
+            remainingSpace -= cuboidStats.getCuboidSize(best.getCuboidId());
             // If we finally find there is no remaining space,  then we should finish the process and return
             if (remainingSpace <= 0) {
                 break;
             }
             selected.add(best.getCuboidId());
             remaining.remove(best.getCuboidId());
-            getBenefitPolicy().propagateAggregationCost(best.getCuboidId(), selected);
+            benefitPolicy.propagateAggregationCost(best.getCuboidId(), selected);
             round++;
             if (logger.isTraceEnabled()) {
                 logger.trace(String.format("Recommend in round %d : %s", round, best.toString()));
@@ -126,10 +117,10 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
             logger.trace("Excluded cuboidId detail:");
             for (Long cuboid : excluded) {
                 logger.trace(String.format("cuboidId %d and Cost: %d and Space: %f", cuboid,
-                        getCuboidStats().getCuboidQueryCost(cuboid), getCuboidStats().getCuboidSize(cuboid)));
+                        cuboidStats.getCuboidQueryCost(cuboid), cuboidStats.getCuboidSize(cuboid)));
             }
             logger.trace("Total Space:" + (spaceLimit - remainingSpace));
-            logger.trace("Space Expansion Rate:" + (spaceLimit - remainingSpace) / getCuboidStats().getBaseCuboidSize());
+            logger.trace("Space Expansion Rate:" + (spaceLimit - remainingSpace) / cuboidStats.getBaseCuboidSize());
         }
         return Lists.newArrayList(selected);
     }
@@ -145,13 +136,13 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
                 public void run() {
                     CuboidBenefitModel currentBest = best.get();
                     assert (selected.size() == selectedSize);
-                    CuboidBenefitModel.BenefitModel benefitModel = getBenefitPolicy().calculateBenefit(cuboid, selected);
+                    CuboidBenefitModel.BenefitModel benefitModel = benefitPolicy.calculateBenefit(cuboid, selected);
                     if (benefitModel != null && (currentBest == null || currentBest.getBenefit() == null
-                            || benefitModel.getBenefit() > currentBest.getBenefit())) {
+                            || benefitModel.benefit > currentBest.getBenefit())) {
                         while (!best.compareAndSet(currentBest,
-                                new CuboidBenefitModel(getCuboidStats().getCuboidModel(cuboid), benefitModel))) {
+                                new CuboidBenefitModel(cuboidStats.getCuboidModel(cuboid), benefitModel))) {
                             currentBest = best.get();
-                            if (benefitModel.getBenefit() <= currentBest.getBenefit()) {
+                            if (benefitModel.benefit <= currentBest.getBenefit()) {
                                 break;
                             }
                         }

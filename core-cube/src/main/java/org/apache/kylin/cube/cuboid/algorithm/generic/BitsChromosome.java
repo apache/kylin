@@ -18,70 +18,72 @@
 
 package org.apache.kylin.cube.cuboid.algorithm.generic;
 
-import java.util.BitSet;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import org.apache.commons.math3.genetics.Chromosome;
 import org.apache.kylin.cube.cuboid.algorithm.BenefitPolicy;
 import org.apache.kylin.cube.cuboid.algorithm.CuboidBenefitModel;
-import org.apache.kylin.cube.cuboid.algorithm.generic.lib.Chromosome;
-import org.apache.kylin.cube.cuboid.algorithm.CuboidStats;
 
-import com.google.common.collect.Sets;
+import java.util.BitSet;
 
 public class BitsChromosome extends Chromosome {
 
-    private BitSet key;
-    private int length;
-    private BenefitPolicy benefitPolicy;
-    private CuboidStats cuboidStats;
-    private CuboidEncoder cuboidEncoder;
-    private double spaceLimit;
-    private double spaceCost;
-    private double fitness = -1;
+    /**
+     * Global unmodified
+     */
+    private final BitsChromosomeHelper helper;
 
-    public BitsChromosome(final BitSet key, final BenefitPolicy benefitPolicy, final CuboidStats cuboidStats,
-            final double spaceLimit) {
-        super();
-        this.key = key;
-        this.length = cuboidStats.getAllCuboidsForSelection().size();
-        this.benefitPolicy = benefitPolicy.getInstance();
-        this.cuboidStats = cuboidStats;
-        this.cuboidEncoder = new CuboidEncoder(cuboidStats);
-        this.spaceLimit = spaceLimit;
-        initSpaceCost();
+    /**
+     * BitSet representing the chromosome
+     */
+    private final BitSet representation;
+    private final ImmutableSet<Long> cuboids;
+
+    private final BenefitPolicy benefitPolicy;
+
+    private final double spaceCost;
+
+    public BitsChromosome(final BitSet representation, final BenefitPolicy benefitPolicy, BitsChromosomeHelper helper) {
+        this.helper = helper;
+
+        this.representation = representation;
+        this.cuboids = ImmutableSet.copyOf(helper.toCuboidList(representation));
+
+        this.benefitPolicy = benefitPolicy;
+
+        this.spaceCost = helper.getCuboidSize(Sets.newHashSet(cuboids));
     }
 
-    public BitsChromosome newBitsChromosome(BitSet newkey) {
-        return new BitsChromosome(newkey, this.benefitPolicy, this.cuboidStats, this.spaceLimit);
+    public BitsChromosome newBitsChromosome(BitSet newRepresentation) {
+        return new BitsChromosome(newRepresentation, benefitPolicy.getInstance(), helper);
     }
 
-    private void initSpaceCost() {
-        spaceCost = 0;
-        List<Long> remainingCuboids = cuboidEncoder.toCuboidList(key);
-        for (Long cuboid : remainingCuboids) {
-            spaceCost += cuboidStats.getCuboidSize(cuboid);
-        }
+    public BitSet getRepresentation() {
+        return representation;
     }
 
-    public BitSet getKey() {
-        return key;
-    }
-
+    /**
+     * Returns the length of the chromosome.
+     *
+     * @return the length of the chromosome
+     */
     public int getLength() {
-        return length;
+        return helper.getLength();
     }
 
-    public CuboidEncoder getCuboidEncoder() {
-        return cuboidEncoder;
+    public ImmutableSet<Long> getCuboids() {
+        return cuboids;
     }
 
     @Override
-    public double fitness() {
-        if (fitness == -1) {
-            fitness = calculateFitness();
+    public synchronized double fitness() {
+        CuboidBenefitModel.BenefitModel benefitModel = benefitPolicy.calculateBenefitTotal(cuboids,
+                helper.getMandatoryCuboids());
+        double totalBenefit = benefitModel.benefit;
+        if (spaceCost > helper.spaceLimit) {
+            totalBenefit = totalBenefit * helper.spaceLimit / spaceCost;
         }
-        return fitness;
+        return totalBenefit;
     }
 
     @Override
@@ -89,45 +91,25 @@ public class BitsChromosome extends Chromosome {
         return this.equals(another);
     }
 
-    private synchronized double calculateFitness() {
-        List<Long> remainingCuboids = cuboidEncoder.toCuboidList(key);
-        Set<Long> selectedCuboidSets = Sets.newHashSet();
-        selectedCuboidSets.addAll(cuboidStats.getAllCuboidsForMandatory());
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
-        CuboidBenefitModel.BenefitModel benefitModel = benefitPolicy.calculateBenefitTotal(remainingCuboids, selectedCuboidSets);
-        double totalBenefit = benefitModel.getBenefit();
-        if (spaceCost > spaceLimit) {
-            totalBenefit = totalBenefit * spaceLimit / spaceCost;
-        }
-        return totalBenefit;
+        BitsChromosome that = (BitsChromosome) o;
+
+        if (helper != null ? !helper.equals(that.helper) : that.helper != null)
+            return false;
+        return representation != null ? representation.equals(that.representation) : that.representation == null;
+
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((key == null) ? 0 : key.hashCode());
-        result = prime * result + length;
+        int result = helper != null ? helper.hashCode() : 0;
+        result = 31 * result + (representation != null ? representation.hashCode() : 0);
         return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        BitsChromosome other = (BitsChromosome) obj;
-        if (length != other.length) {
-            return false;
-        }
-        if (key == null) {
-            if (other.key != null)
-                return false;
-        } else if (!key.equals(other.key))
-            return false;
-        return true;
     }
 }

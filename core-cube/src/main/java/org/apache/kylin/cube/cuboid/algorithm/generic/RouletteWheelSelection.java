@@ -19,11 +19,12 @@
 package org.apache.kylin.cube.cuboid.algorithm.generic;
 
 import com.google.common.collect.Lists;
-import org.apache.kylin.cube.cuboid.algorithm.generic.lib.Chromosome;
-import org.apache.kylin.cube.cuboid.algorithm.generic.lib.ChromosomePair;
-import org.apache.kylin.cube.cuboid.algorithm.generic.lib.ListPopulation;
-import org.apache.kylin.cube.cuboid.algorithm.generic.lib.Population;
-import org.apache.kylin.cube.cuboid.algorithm.generic.lib.SelectionPolicy;
+import org.apache.commons.math3.genetics.Chromosome;
+import org.apache.commons.math3.genetics.ChromosomePair;
+import org.apache.commons.math3.genetics.GeneticAlgorithm;
+import org.apache.commons.math3.genetics.ListPopulation;
+import org.apache.commons.math3.genetics.Population;
+import org.apache.commons.math3.genetics.SelectionPolicy;
 
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class RouletteWheelSelection implements SelectionPolicy {
     }
 
     private Chromosome rouletteWheel(final List<Chromosome> chromosomes, final double totalFitness) {
-        double rnd = (GeneticAlgorithm.RANDGEN.get().nextDouble() * totalFitness);
+        double rnd = (GeneticAlgorithm.getRandomGenerator().nextDouble() * totalFitness);
         double runningScore = 0;
         for (Chromosome o : chromosomes) {
             if (rnd >= runningScore && rnd <= runningScore + o.getFitness()) {

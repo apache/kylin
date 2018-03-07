@@ -19,6 +19,7 @@
 package org.apache.kylin.cube.cuboid.algorithm;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Calculate the benefit based on Benefit Per Unit Space with query probability distribution.
@@ -27,6 +28,10 @@ public class PBPUSCalculator extends BPUSCalculator {
 
     public PBPUSCalculator(final CuboidStats cuboidStats) {
         super(cuboidStats);
+    }
+
+    protected PBPUSCalculator(CuboidStats cuboidStats, ImmutableMap<Long, Long> initCuboidAggCostMap) {
+        super(cuboidStats, initCuboidAggCostMap);
     }
 
     @Override
@@ -39,15 +44,14 @@ public class PBPUSCalculator extends BPUSCalculator {
     }
 
     public double getMinBenefitRatio() {
-        Preconditions.checkArgument(cuboidStats.getAllCuboidsForSelection().size() > 0,
+        int cuboidDomainSize = cuboidStats.getAllCuboidsForSelection().size();
+        Preconditions.checkArgument(cuboidDomainSize > 0,
                 "The set of cuboids for selection is empty!!!");
-        return super.getMinBenefitRatio() / cuboidStats.getAllCuboidsForSelection().size();
+        return super.getMinBenefitRatio() / cuboidDomainSize;
     }
 
     @Override
     public BenefitPolicy getInstance() {
-        PBPUSCalculator pbpusCalculator = new PBPUSCalculator(cuboidStats);
-        pbpusCalculator.cuboidAggCostMap.putAll(this.cuboidAggCostMap);
-        return pbpusCalculator;
+        return new PBPUSCalculator(this.cuboidStats, this.initCuboidAggCostMap);
     }
 }

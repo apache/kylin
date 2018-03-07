@@ -30,7 +30,6 @@ import org.apache.kylin.cube.cuboid.TreeCuboidScheduler.CuboidCostComparator;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler.CuboidTree;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -55,14 +54,6 @@ public class ITAlgorithmTestBase {
 
     @After
     public void after() throws Exception {
-    }
-
-    @Test
-    public void testMandatoryRowCountEstimation() {
-        for (long mandatoryCuboid : mandatoryCuboids) {
-            System.out.println("Cuboid id: " + mandatoryCuboid + "; Row Count: "
-                    + cuboidStats.getStatistics().get(mandatoryCuboid));
-        }
     }
 
     /** better if closer to 1, worse if closer to 0*/

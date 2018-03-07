@@ -18,6 +18,8 @@
 
 package org.apache.kylin.cube.cuboid.algorithm;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Calculate the benefit based on Benefit Per Unit Space with query probability distribution and updated cost.
  */
@@ -27,6 +29,10 @@ public class SPBPUSCalculator extends PBPUSCalculator {
         super(cuboidStats);
     }
 
+    protected SPBPUSCalculator(CuboidStats cuboidStats, ImmutableMap<Long, Long> initCuboidAggCostMap) {
+        super(cuboidStats, initCuboidAggCostMap);
+    }
+
     @Override
     protected Long getCuboidCost(long cuboid) {
         return cuboidStats.getCuboidQueryCost(cuboid);
@@ -34,8 +40,6 @@ public class SPBPUSCalculator extends PBPUSCalculator {
 
     @Override
     public BenefitPolicy getInstance() {
-        SPBPUSCalculator spbpusCalculator = new SPBPUSCalculator(cuboidStats);
-        spbpusCalculator.cuboidAggCostMap.putAll(this.cuboidAggCostMap);
-        return spbpusCalculator;
+        return new SPBPUSCalculator(this.cuboidStats, this.initCuboidAggCostMap);
     }
 }
