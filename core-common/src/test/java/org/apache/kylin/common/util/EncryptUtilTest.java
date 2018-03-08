@@ -16,18 +16,19 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.security;
+package org.apache.kylin.common.util;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class PasswordPlaceHolderConfigurerTest {
+public class EncryptUtilTest {
 
     @Test
     public void testAESEncrypt(){
         String input = "hello world";
-        String result = PasswordPlaceholderConfigurer.encrypt(input);
+        String result = EncryptUtil.encrypt(input);
         Assert.assertEquals("4stv/RRleOtvie/8SLHmXA==", result);
     }
 
 }
+
