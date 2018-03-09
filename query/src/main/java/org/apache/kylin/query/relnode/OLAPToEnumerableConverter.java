@@ -33,6 +33,7 @@ import org.apache.calcite.rel.convert.ConverterImpl;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.query.routing.RealizationChooser;
 import org.apache.kylin.query.security.QueryInterceptor;
@@ -107,6 +108,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
             System.out.println("EXECUTION PLAN AFTER REWRITE");
             System.out.println(dumpPlan);
+            QueryContextFacade.current().setCalcitePlan(this.copy(getTraitSet(), getInputs()));
         }
 
         return impl.visitChild(this, 0, inputAsEnum, pref);

@@ -166,10 +166,12 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.addRule(AggregateProjectReduceRule.INSTANCE);
 
         // CalcitePrepareImpl.CONSTANT_REDUCTION_RULES
-        planner.addRule(ReduceExpressionsRule.PROJECT_INSTANCE);
-        planner.addRule(ReduceExpressionsRule.FILTER_INSTANCE);
-        planner.addRule(ReduceExpressionsRule.CALC_INSTANCE);
-        planner.addRule(ReduceExpressionsRule.JOIN_INSTANCE);
+        if(kylinConfig.isReduceExpressionsRulesEnabled()) {
+            planner.addRule(ReduceExpressionsRule.PROJECT_INSTANCE);
+            planner.addRule(ReduceExpressionsRule.FILTER_INSTANCE);
+            planner.addRule(ReduceExpressionsRule.CALC_INSTANCE);
+            planner.addRule(ReduceExpressionsRule.JOIN_INSTANCE);
+        }
         // the ValuesReduceRule breaks query test somehow...
         //        planner.addRule(ValuesReduceRule.FILTER_INSTANCE);
         //        planner.addRule(ValuesReduceRule.PROJECT_FILTER_INSTANCE);

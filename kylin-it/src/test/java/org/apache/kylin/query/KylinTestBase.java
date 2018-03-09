@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query;
 
+import static org.apache.calcite.sql.SqlDialect.CALCITE;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,6 +44,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.LogManager;
 
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContextFacade;
@@ -54,6 +59,7 @@ import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 import org.apache.kylin.query.util.PushDownUtil;
+import org.apache.parquet.Strings;
 import org.dbunit.DatabaseUnitException;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
@@ -544,6 +550,70 @@ public class KylinTestBase {
                 }
             }
         });
+    }
+
+
+    protected void execAndCompPlan(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
+        execAndCompPlan(queryFolder, exclusiveQuerys, needSort, new ICompareQueryTranslator() {
+            @Override
+            public String transform(File f) {
+                try {
+                    return KylinTestBase.getTextFromFile(f);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+    }
+
+    protected void execAndCompPlan(String queryFolder, String[] exclusiveQuerys, boolean needSort,
+            ICompareQueryTranslator translator) throws Exception {
+        logger.info("---------- test folder: " + new File(queryFolder).getAbsolutePath());
+        Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
+
+        List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
+        for (File sqlFile : sqlFiles) {
+            String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
+            if (exclusiveSet.contains(queryName)) {
+                continue;
+            }
+            String sql1 = getTextFromFile(sqlFile);
+            String sql2 = translator.transform(sqlFile);
+
+            // execute Kylin
+            logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sql1, needSort);
+            RelNode calcitePlan = (RelNode) QueryContextFacade.current().getCalcitePlan();
+            if (calcitePlan == null)
+                throw new NullPointerException();
+
+            // execute H2
+            logger.info("Query Result from H2 - " + queryName);
+            long currentTime = System.currentTimeMillis();
+            ITable h2Table = executeQuery(newH2Connection(), queryName, sql2, needSort);
+            logger.info("H2 spent " + (System.currentTimeMillis() - currentTime) + " mili-seconds.");
+
+            try {
+                // compare the result
+                assertTableEquals(h2Table, kylinTable);
+            } catch (Throwable t) {
+                logger.info("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
+                throw t;
+            }
+
+            RelToSqlConverter converter = new RelToSqlConverter(CALCITE);
+            SqlNode sqlNode = converter.visitChild(0, calcitePlan.getInput(0)).asStatement();
+            String optimizedSQL = sqlNode.toSqlString(CALCITE).getSql();
+            String expectedSQL = Strings.join(Files.readLines(
+                    new File(sqlFile.getParent(), sqlFile.getName() + ".expected"), Charset.forName("utf-8")), "\n");
+            Assert.assertEquals(expectedSQL, optimizedSQL);
+            compQueryCount++;
+            if (kylinTable.getRowCount() == 0) {
+                zeroResultQueries.add(sql1);
+            }
+        }
     }
 
     protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort,
