@@ -415,4 +415,10 @@ public class ITKylinQueryTest extends KylinTestBase {
         batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_percentile");
     }
 
+
+    @Test
+    public void testValues() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_values", null, true);
+    }
+
 }

@@ -77,9 +77,11 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         List<OLAPContext> contexts = listContextsHavingScan();
 
         // intercept query
-        List<QueryInterceptor> intercepts = QueryInterceptorUtil.getQueryInterceptors();
-        for (QueryInterceptor intercept : intercepts) {
-            intercept.intercept(contexts);
+        if (contexts.size() > 0) {
+            List<QueryInterceptor> intercepts = QueryInterceptorUtil.getQueryInterceptors();
+            for (QueryInterceptor intercept : intercepts) {
+                intercept.intercept(contexts);
+            }
         }
 
         if (System.getProperty("calcite.debug") != null) {
