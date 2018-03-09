@@ -18,33 +18,52 @@
 
 package org.apache.kylin.query.optrule;
 
+import java.util.List;
+
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationTraitDef;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rel.metadata.RelMdCollation;
 import org.apache.kylin.query.relnode.OLAPProjectRel;
 import org.apache.kylin.query.relnode.OLAPRel;
 
+import com.google.common.base.Supplier;
+
 /**
  */
-public class OLAPProjectRule extends RelOptRule {
+public class OLAPProjectRule extends ConverterRule {
 
     public static final RelOptRule INSTANCE = new OLAPProjectRule();
 
     public OLAPProjectRule() {
-        super(operand(LogicalProject.class, any()));
+        super(LogicalProject.class, RelOptUtil.PROJECT_PREDICATE, Convention.NONE, OLAPRel.CONVENTION,
+                "OLAPProjectRule");
     }
 
     @Override
-    public void onMatch(RelOptRuleCall call) {
-        LogicalProject project = call.rel(0);
+    public RelNode convert(final RelNode rel) {
 
-        RelTraitSet origTraitSet = project.getTraitSet();
-        RelTraitSet traitSet = origTraitSet.replace(OLAPRel.CONVENTION).simplify();
-
-        OLAPProjectRel olapProj = new OLAPProjectRel(project.getCluster(), traitSet, //
-                convert(project.getInput(), traitSet), project.getProjects(), project.getRowType());
-        call.transformTo(olapProj);
+        //  KYLIN-3281
+        //  OLAPProjectRule can't normal working with projectRel[input=sortRel]
+        final LogicalProject project = (LogicalProject) rel;
+        final RelNode convertChild = convert(project.getInput(),
+                project.getInput().getTraitSet().replace(OLAPRel.CONVENTION));
+        final RelOptCluster cluster = convertChild.getCluster();
+        final RelTraitSet traitSet = cluster.traitSet().replace(OLAPRel.CONVENTION)
+                .replaceIfs(RelCollationTraitDef.INSTANCE, new Supplier<List<RelCollation>>() {
+                    public List<RelCollation> get() {
+                        //  CALCITE-88
+                        return RelMdCollation.project(cluster.getMetadataQuery(), convertChild, project.getProjects());
+                    }
+                });
+        return new OLAPProjectRel(convertChild.getCluster(), traitSet, convertChild, project.getProjects(),
+                project.getRowType());
     }
-
 }
