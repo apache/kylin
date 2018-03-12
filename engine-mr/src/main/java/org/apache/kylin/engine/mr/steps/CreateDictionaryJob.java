@@ -82,7 +82,7 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
                 List<TblColRef> uhcColumns = cube.getDescriptor().getAllUHCColumns();
 
                 Path colDir;
-                if (uhcColumns.contains(col)) {
+                if (config.isBuildUHCDictWithMREnabled() && uhcColumns.contains(col)) {
                     colDir = new Path(dictPath, col.getIdentity());
                 } else {
                     colDir = new Path(factColumnsInputPath, col.getIdentity());
