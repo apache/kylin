@@ -301,6 +301,33 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     }
 
+    @Test
+    public void testPreparedStatementWithCache() throws Exception {
+        Connection conn = getConnection();
+
+        PreparedStatement statement = conn
+                .prepareStatement("select count(1) as TRANS_CNT from test_kylin_fact where LSTG_FORMAT_NAME = ?");
+
+        statement.setString(1, "ABIN");
+        ResultSet rs = statement.executeQuery();
+        Assert.assertTrue(rs.next());
+        Object object = rs.getObject(1);
+        long countFirst = (long) object;
+
+        statement.setString(1, "FP-GTC");
+        rs = statement.executeQuery();
+        Assert.assertTrue(rs.next());
+        object = rs.getObject(1);
+        long countSecond = (long) object;
+
+        Assert.assertTrue(countFirst > countSecond);
+
+        rs.close();
+        statement.close();
+        conn.close();
+
+    }
+
     private static class SystemPropertiesOverride {
         HashMap<String, String> backup = new HashMap<String, String>();
 
