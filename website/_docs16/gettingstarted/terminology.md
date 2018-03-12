@@ -8,7 +8,7 @@ since: v0.5.x
  
 
 Here are some domain terms we are using in Apache Kylin, please check them for your reference.   
-They are basic knowledge of Apache Kylin which also will help to well understand such concerpt, term, knowledge, theory and others about Data Warehouse, Business Intelligence for analycits. 
+They are basic knowledge of Apache Kylin which also will help to well understand such concept, term, knowledge, theory and others about Data Warehouse, Business Intelligence for analycits. 
 
 * __Data Warehouse__: a data warehouse (DW or DWH), also known as an enterprise data warehouse (EDW), is a system used for reporting and data analysis, [wikipedia](https://en.wikipedia.org/wiki/Data_warehouse)
 * __Business Intelligence__: Business intelligence (BI) is the set of techniques and tools for the transformation of raw data into meaningful and useful information for business analysis purposes, [wikipedia](https://en.wikipedia.org/wiki/Business_intelligence)
