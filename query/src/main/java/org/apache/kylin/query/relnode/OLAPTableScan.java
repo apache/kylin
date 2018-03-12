@@ -42,6 +42,7 @@ import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.volcano.AbstractConverter.ExpandConversionRule;
+import org.apache.calcite.prepare.CalcitePrepareImpl;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.TableScan;
@@ -98,7 +99,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     private String backupAlias;
     protected ColumnRowType columnRowType;
     protected OLAPContext context;
-    private KylinConfig kylinConfig;
+    protected KylinConfig kylinConfig;
 
     public OLAPTableScan(RelOptCluster cluster, RelOptTable table, OLAPTable olapTable, int[] fields) {
         super(cluster, cluster.traitSetOf(OLAPRel.CONVENTION), table);
@@ -173,7 +174,11 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         //        planner.addRule(ValuesReduceRule.PROJECT_INSTANCE);
 
         removeRules(planner, kylinConfig.getCalciteRemoveRule());
-
+        if(!kylinConfig.isEnumerableRulesEnabled()) {
+            for (RelOptRule rule : CalcitePrepareImpl.ENUMERABLE_RULES) {
+                planner.removeRule(rule);
+            }
+        }
         // since join is the entry point, we can't push filter past join
         planner.removeRule(FilterJoinRule.FILTER_ON_JOIN);
         planner.removeRule(FilterJoinRule.JOIN);
@@ -203,7 +208,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.removeRule(ExpandConversionRule.INSTANCE);
     }
 
-    private void addRules(final RelOptPlanner planner, List<String> rules) {
+    protected void addRules(final RelOptPlanner planner, List<String> rules) {
         modifyRules(rules, new Function<RelOptRule, Void>() {
             @Nullable
             @Override
@@ -214,7 +219,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         });
     }
 
-    private void removeRules(final RelOptPlanner planner, List<String> rules) {
+    protected void removeRules(final RelOptPlanner planner, List<String> rules) {
         modifyRules(rules, new Function<RelOptRule, Void>() {
             @Nullable
             @Override

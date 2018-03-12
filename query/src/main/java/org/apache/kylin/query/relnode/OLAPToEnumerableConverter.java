@@ -58,7 +58,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
         // huge cost to ensure OLAPToEnumerableConverter only appears once in rel tree
-        return planner.getCostFactory().makeCost(1E100, 0, 0);
+        return super.computeSelfCost(planner, mq).multiplyBy(0.05);
     }
 
     @Override
