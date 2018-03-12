@@ -39,7 +39,7 @@ public class SQLRequest implements Serializable {
 
     private Map<String, String> backdoorToggles;
 
-    private volatile Object cacheKey = null;
+    protected volatile Object cacheKey = null;
 
     public SQLRequest() {
     }
