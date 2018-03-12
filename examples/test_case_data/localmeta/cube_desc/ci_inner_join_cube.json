@@ -342,7 +342,8 @@
       },
       {
         "column": "TEST_KYLIN_FACT.LEAF_CATEG_ID",
-        "encoding": "dict"
+        "encoding": "dict",
+        "isShardBy" : true
       },
       {
         "column": "TEST_CATEGORY_GROUPINGS.META_CATEG_NAME",
