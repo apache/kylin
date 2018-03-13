@@ -50,22 +50,29 @@ public class QueryUtil {
         ProjectManager projectManager = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
         ProjectInstance projectInstance = projectManager.getProject(project);
         KylinConfig kylinConfig = projectInstance.getConfig();
-
+        sql = removeCommentInSql(sql);
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
 
-        if (limit > 0 && !sql.toLowerCase().contains("limit")) {
-            sql += ("\nLIMIT " + limit);
-        }
+        String sql1=sql;
+        final String suffixPattern = "^.+?\\s(limit\\s\\d+)?\\s(offset\\s\\d+)?\\s*$";
+        sql = sql.replaceAll("\\s+", " ");
+        Pattern pattern = Pattern.compile(suffixPattern);
+        Matcher matcher = pattern.matcher(sql.toLowerCase() + "  ");
 
-        if (offset > 0 && !sql.toLowerCase().contains("offset")) {
-            sql += ("\nOFFSET " + offset);
+        if (matcher.find()) {
+            if (limit > 0 && matcher.group(1) == null) {
+                sql1 += ("\nLIMIT " + limit);
+            }
+            if (offset > 0 && matcher.group(2) == null) {
+                sql1 += ("\nOFFSET " + offset);
+            }
         }
 
         // https://issues.apache.org/jira/browse/KYLIN-2649
-        if (kylinConfig.getForceLimit() > 0 && !sql.toLowerCase().contains("limit")
-                && sql.toLowerCase().matches("^select\\s+\\*\\p{all}*")) {
-            sql += ("\nLIMIT " + kylinConfig.getForceLimit());
+        if (kylinConfig.getForceLimit() > 0 && limit <= 0 && matcher.group(1) == null
+                && sql1.toLowerCase().matches("^select\\s+\\*\\p{all}*")) {
+            sql1 += ("\nLIMIT " + kylinConfig.getForceLimit());
         }
 
         // customizable SQL transformation
@@ -73,9 +80,9 @@ public class QueryUtil {
             initQueryTransformers();
         }
         for (IQueryTransformer t : queryTransformers) {
-            sql = t.transform(sql, project, defaultSchema);
+            sql1 = t.transform(sql1, project, defaultSchema);
         }
-        return sql;
+        return sql1;
     }
 
     private static void initQueryTransformers() {
