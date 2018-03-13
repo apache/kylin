@@ -83,7 +83,7 @@
 
     <div class="modal-footer">
         <button class="btn btn-primary" ng-click="cancel()">Close</button>
-        <button class="btn btn-success" ng-click="deleteSegment()">Delete
+        <button class="btn btn-success" ng-click="deleteSegment()" ng-disabled="!(cube.segments && cube.segments.length > 0)">Delete
         </button>
     </div>
 </script>
