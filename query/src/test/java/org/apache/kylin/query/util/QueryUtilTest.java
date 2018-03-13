@@ -51,6 +51,58 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
                     "select ( date '2001-09-28' + interval '2' month) from test_kylin_fact group by ( date '2001-09-28' + interval '2' month)",
                     s);
         }
+        {
+            String sql = "select count(*) test_limit from test_kylin_fact where price > 10.0";
+            String s = QueryUtil.massageSql(sql, "default", 50000, 0, "DEFAULT");
+            Assert.assertEquals(
+                    "select count(*) test_limit from test_kylin_fact where price > 10.0\n" +
+                            "LIMIT 50000",
+                    s);
+        }
+        {
+            String sql = "select count(*) test_offset from test_kylin_fact where price > 10.0";
+            String s = QueryUtil.massageSql(sql, "default", 0, 50, "DEFAULT");
+            Assert.assertEquals(
+                    "select count(*) test_offset from test_kylin_fact where price > 10.0\n" +
+                            "OFFSET 50",
+                    s);
+        }
+        {
+            String sql = "select count(*) test_limit_and_offset from test_kylin_fact where price > 10.0";
+            String s = QueryUtil.massageSql(sql, "default", 50000, 50, "DEFAULT");
+            Assert.assertEquals(
+                    "select count(*) test_limit_and_offset from test_kylin_fact where price > 10.0\n" +
+                            "LIMIT 50000\nOFFSET 50",
+                    s);
+        }
+
+        {
+            String newLine = System.getProperty("line.separator");
+            String sql = "select count(*)     test_limit from " + newLine + "test_kylin_fact where price > 10.0";
+            newLine = newLine.replace("\r", " ").replace("\n", newLine);
+            String s = QueryUtil.massageSql(sql, "default", 50000, 0, "DEFAULT");
+            Assert.assertEquals(
+                    "select count(*)     test_limit from " + newLine + "test_kylin_fact where price > 10.0\nLIMIT 50000",
+                    s);
+        }
+        {
+            String newLine = System.getProperty("line.separator");
+            String sql = "select count(*)     test_offset from " + newLine + "test_kylin_fact where price > 10.0";
+            newLine = newLine.replace("\r", " ").replace("\n", newLine);
+            String s = QueryUtil.massageSql(sql, "default", 50000, 0, "DEFAULT");
+            Assert.assertEquals(
+                    "select count(*)     test_offset from " + newLine + "test_kylin_fact where price > 10.0\nLIMIT 50000",
+                    s);
+        }
+        {
+            String newLine = System.getProperty("line.separator");
+            String sql = "select count(*)     test_limit_and_offset from " + newLine + "test_kylin_fact where price > 10.0";
+            newLine = newLine.replace("\r", " ").replace("\n", newLine);
+            String s = QueryUtil.massageSql(sql, "default", 50000, 0, "DEFAULT");
+            Assert.assertEquals(
+                    "select count(*)     test_limit_and_offset from " + newLine + "test_kylin_fact where price > 10.0\nLIMIT 50000",
+                    s);
+        }
     }
 
     @Test
