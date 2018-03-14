@@ -93,7 +93,7 @@ public class AdminService extends BasicService {
         try {
             job = new StorageCleanupJob();
         } catch (IOException e) {
-            logger.error("can not init StorageCleanupJob", e);
+            throw new RuntimeException("Can not init StorageCleanupJob", e);
         }
         String[] args = new String[] { "-delete", "true" };
         job.execute(args);
