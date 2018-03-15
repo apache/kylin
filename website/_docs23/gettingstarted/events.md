@@ -20,5 +20,7 @@ __Conferences__
 
 __Meetup__
 
+
+* [Apache Kylin & Alluxio Meetup @Shanghai](http://huiyi.csdn.net/activity/product/goods_list?project_id=3746), in Shanghai, China, 1:00PM - 17:30PM, Sunday, 2018-1-21
 * [Apache Kylin Meetup @Bay Area](http://www.meetup.com/Cloud-at-ebayinc/events/218914395/), in San Jose, US, 6:00PM - 7:30PM, Thursday, 2014-12-04
 

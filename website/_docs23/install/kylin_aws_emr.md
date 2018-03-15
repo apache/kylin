@@ -9,7 +9,7 @@ Many users run Hadoop on public Cloud like AWS today. Apache Kylin, compiled wit
 
 ### Recommended Version
 * AWS EMR 5.7 (for EMR 5.8 and above, please check [KYLIN-3129](https://issues.apache.org/jira/browse/KYLIN-3129))
-* Apache Kylin v2.2.0 for HBase 1.x
+* Apache Kylin v2.2.0 or above for HBase 1.x
 
 ### Start EMR cluster
 
@@ -162,6 +162,3 @@ To restart a cluster with the same HBase data, specify the same Amazon S3 locati
 
 Running Kylin in a dedicated client node (not master, core or task) is recommended. You can start a separate EC2 instance within the same VPC and subnet as your EMR, copy the Hadoop clients from master node to it, and then install Kylin in it. This can improve the stability of services in master node as well as Kylin itself. 
 	
-## Known issues on EMR
-* [KYLIN-3028](https://issues.apache.org/jira/browse/KYLIN-3028)
-* [KYLIN-3032](https://issues.apache.org/jira/browse/KYLIN-3032)

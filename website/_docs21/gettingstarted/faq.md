@@ -115,5 +115,39 @@ group by a.slr_sgmt
   * User may get this error when first time run hbase client, please check the error trace to see whether there is an error saying couldn't access a folder like "/hadoop/hbase/local/jars"; If that folder doesn't exist, create it.
 
 
+#### 14. How to update the default password for 'ADMIN'?
+  * By default, Kylin uses a simple, configuration based user registry; The default administrator 'ADMIN' with password 'KYLIN' is hard-coded in `kylinSecurity.xml`. To modify the password, you need firstly get the new password's encrypted value (with BCrypt), and then set it in `kylinSecurity.xml`. Here is a sample with password 'ABCDE'
+  
+{% highlight Groff markup %}
 
+cd $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib
+
+java -classpath kylin-server-base-2.2.0.jar:spring-beans-4.3.10.RELEASE.jar:spring-core-4.3.10.RELEASE.jar:spring-security-core-4.2.3.RELEASE.jar:commons-codec-1.7.jar:commons-logging-1.1.3.jar org.apache.kylin.rest.security.PasswordPlaceholderConfigurer BCrypt ABCDE
+
+BCrypt encrypted password is:
+$2a$10$A7.J.GIEOQknHmJhEeXUdOnj2wrdG4jhopBgqShTgDkJDMoKxYHVu
+
+{% endhighlight %}
+
+Then you can set it into `kylinSecurity.xml'
+
+{% highlight Groff markup %}
+
+vi ./tomcat/webapps/kylin/WEB-INF/classes/kylinSecurity.xml
+
+{% endhighlight %}
+
+Replace the origin encrypted password with the new one: 
+{% highlight Groff markup %}
+
+        <bean class="org.springframework.security.core.userdetails.User" id="adminUser">
+            <constructor-arg value="ADMIN"/>
+            <constructor-arg
+                    value="$2a$10$A7.J.GIEOQknHmJhEeXUdOnj2wrdG4jhopBgqShTgDkJDMoKxYHVu"/>
+            <constructor-arg ref="adminAuthorities"/>
+        </bean>
+        
+{% endhighlight %}
+
+Restart Kylin to take effective. If you have multiple Kylin server as a cluster, do the same on each instance. 
 
