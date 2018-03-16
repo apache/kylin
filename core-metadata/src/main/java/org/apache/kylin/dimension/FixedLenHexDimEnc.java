@@ -40,7 +40,7 @@ import com.google.common.base.Preconditions;
  * <p>
  * 1. "FFFF" will become null encode and decode
  * 2. "AB" will become "AB00"
- * 
+ *
  * <p>
  * Due to these limitations hex representation of hash values(with no padding, better with even characters) is more suitable
  */
@@ -166,7 +166,7 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
         byte[] value = Bytes.toBytes(valueStr);
         int valueLen = value.length;
         int endOffset = outputOffset + bytelen;
-        
+
         if (valueLen > hexLength) {
             if (avoidVerbose++ % 10000 == 0) {
                 logger.warn("Expect at most " + hexLength + " bytes, but got " + valueLen + ", will truncate, value string: " + Bytes.toString(value, 0, valueLen) + " times:" + avoidVerbose);
@@ -274,11 +274,13 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeShort(hexLength);
+        out.writeShort(bytelen);
     }
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         hexLength = in.readShort();
+        bytelen = in.readShort();
     }
 
     private boolean isF(byte[] value, int offset, int length) {
