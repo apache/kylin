@@ -117,7 +117,6 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
     // ============================================================================
 
     private int hexLength;
-    private int bytelen;
 
     transient private int avoidVerbose = 0;
     transient private int avoidVerbose2 = 0;
@@ -131,7 +130,6 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
             throw new IllegalArgumentException("len has to be positive: " + len);
         }
         this.hexLength = len;
-        this.bytelen = (hexLength + 1) / 2;
     }
 
     @Override
@@ -153,20 +151,20 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
 
     @Override
     public int getLengthOfEncoding() {
-        return bytelen;
+        return getByteLen();
     }
 
     @Override
     public void encode(String valueStr, byte[] output, int outputOffset) {
         if (valueStr == null) {
-            Arrays.fill(output, outputOffset, outputOffset + bytelen, NULL);
+            Arrays.fill(output, outputOffset, outputOffset + getByteLen(), NULL);
             return;
         }
 
         byte[] value = Bytes.toBytes(valueStr);
         int valueLen = value.length;
-        int endOffset = outputOffset + bytelen;
-        
+        int endOffset = outputOffset + getByteLen();
+
         if (valueLen > hexLength) {
             if (avoidVerbose++ % 10000 == 0) {
                 logger.warn("Expect at most " + hexLength + " bytes, but got " + valueLen + ", will truncate, value string: " + Bytes.toString(value, 0, valueLen) + " times:" + avoidVerbose);
@@ -199,7 +197,7 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
 
     @Override
     public String decode(byte[] bytes, int offset, int len) {
-        Preconditions.checkArgument(len == bytelen, "len " + len + " not equals " + bytelen);
+        Preconditions.checkArgument(len == getByteLen(), "len " + len + " not equals " + getByteLen());
 
         if (isNull(bytes, offset, len)) {
             return null;
@@ -229,7 +227,7 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
         private byte[] currentBuf() {
             byte[] buf = (byte[]) current.get();
             if (buf == null) {
-                buf = new byte[bytelen];
+                buf = new byte[getByteLen()];
                 current.set(buf);
             }
             return buf;
@@ -252,17 +250,17 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
 
         @Override
         public int peekLength(ByteBuffer in) {
-            return bytelen;
+            return getByteLen();
         }
 
         @Override
         public int maxLength() {
-            return bytelen;
+            return getByteLen();
         }
 
         @Override
         public int getStorageBytesEstimate() {
-            return bytelen;
+            return getByteLen();
         }
 
         @Override
@@ -290,4 +288,7 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
         return true;
     }
 
+    private int getByteLen() {
+        return (this.hexLength + 1) / 2;
+    }
 }
