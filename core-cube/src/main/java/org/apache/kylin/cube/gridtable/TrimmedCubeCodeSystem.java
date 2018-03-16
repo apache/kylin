@@ -51,7 +51,7 @@ public class TrimmedCubeCodeSystem extends CubeCodeSystem {
         serializer.serialize(value, buf);
     }
 
-    private static void writeDimensionEncoding(DimensionEncoding encoding, ByteBuffer out) {
+    public static void writeDimensionEncoding(DimensionEncoding encoding, ByteBuffer out) {
         try {
             if (encoding == null) {
                 BytesUtil.writeVInt(1, out);
@@ -71,7 +71,7 @@ public class TrimmedCubeCodeSystem extends CubeCodeSystem {
         }
     }
 
-    private static DimensionEncoding readDimensionEncoding(ByteBuffer in) {
+    public static DimensionEncoding readDimensionEncoding(ByteBuffer in) {
         try {
             int isNull = BytesUtil.readVInt(in);
             if (isNull == 1) {
