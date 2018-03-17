@@ -27,7 +27,8 @@ public class EncryptUtil {
     /**
      * thisIsAsecretKey
      */
-    private static byte[] key = { 0x74, 0x68, 0x69, 0x73, 0x49, 0x73, 0x41, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79 };
+    private static byte[] key = { 0x74, 0x68, 0x69, 0x73, 0x49, 0x73, 0x41, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b,
+            0x65, 0x79 };
 
     public static String encrypt(String strToEncrypt) {
         try {
@@ -51,5 +52,20 @@ public class EncryptUtil {
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    private static void printUsage() {
+        System.out.println("Usage: java org.apache.kylin.common.util <your_password>");
+    }
+
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            printUsage();
+            System.exit(1);
+        }
+
+        String passwordTxt = args[0];
+        // for encrypt password like LDAP password
+        System.out.println(EncryptUtil.encrypt(passwordTxt));
     }
 }
