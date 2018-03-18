@@ -48,8 +48,8 @@ public class OLAPJoinRule extends ConverterRule {
         RelNode right = join.getInput(1);
 
         RelTraitSet traitSet = join.getTraitSet().replace(OLAPRel.CONVENTION);
-        left = convert(left, traitSet);
-        right = convert(right, traitSet);
+        left = convert(left, left.getTraitSet().replace(OLAPRel.CONVENTION));
+        right = convert(right, right.getTraitSet().replace(OLAPRel.CONVENTION));
 
         final JoinInfo info = JoinInfo.of(left, right, join.getCondition());
         if (!info.isEqui() && join.getJoinType() != JoinRelType.INNER) {

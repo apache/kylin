@@ -415,4 +415,21 @@ public class ITKylinQueryTest extends KylinTestBase {
         batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_percentile");
     }
 
+
+    @Test
+    public void testValues() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_values", null, true);
+    }
+
+
+
+    @Test
+    public void testPlan() throws Exception {
+        String originProp = System.getProperty("calcite.debug");
+        System.setProperty("calcite.debug", "true");
+        execAndCompPlan(getQueryFolderPrefix() + "src/test/resources/query/sql_plan", null, true);
+        if (originProp == null || "false".equals(originProp))
+            System.setProperty("calcite.debug", "false");
+    }
 }
+                                                  

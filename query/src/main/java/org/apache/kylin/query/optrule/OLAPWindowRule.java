@@ -41,6 +41,8 @@ public class OLAPWindowRule extends ConverterRule {
         final Window window = (Window) rel;
         final RelTraitSet traitSet = window.getTraitSet().replace(OLAPRel.CONVENTION);
         final RelNode input = window.getInput();
-        return new OLAPWindowRel(rel.getCluster(), traitSet, convert(input, OLAPRel.CONVENTION), window.constants, window.getRowType(), window.groups);
+        return new OLAPWindowRel(rel.getCluster(), traitSet,
+                convert(input, input.getTraitSet().replace(OLAPRel.CONVENTION)), window.constants, window.getRowType(),
+                window.groups);
     }
 }

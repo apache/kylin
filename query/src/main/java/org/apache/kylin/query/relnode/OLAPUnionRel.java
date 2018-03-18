@@ -131,7 +131,7 @@ public class OLAPUnionRel extends Union implements OLAPRel {
             }
             relInputs.add(input);
         }
-        return new EnumerableUnion(getCluster(), traitSet, relInputs, localAll);
+        return new EnumerableUnion(getCluster(), traitSet.replace(EnumerableConvention.INSTANCE), relInputs, localAll);
     }
 
     @Override

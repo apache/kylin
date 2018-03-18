@@ -1187,6 +1187,14 @@ abstract public class KylinConfigBase implements Serializable {
     // QUERY
     // ============================================================================
 
+    public Boolean isEnumerableRulesEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.calcite.enumerable-rules-enabled", "false"));
+    }
+    
+    public boolean isReduceExpressionsRulesEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.calcite.reduce-rules-enabled", "true"));
+    }
+    
     public boolean isConvertCreateTableToWith() {
         return Boolean.valueOf(getOptional("kylin.query.convert-create-table-to-with", "false"));
     }
@@ -1636,5 +1644,4 @@ abstract public class KylinConfigBase implements Serializable {
     public String getAutoMigrateCubeDestConfig() {
         return getOptional("kylin.tool.auto-migrate-cube.dest-config", "");
     }
-
 }

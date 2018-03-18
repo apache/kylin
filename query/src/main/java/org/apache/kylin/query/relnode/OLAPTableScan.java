@@ -42,6 +42,7 @@ import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.volcano.AbstractConverter.ExpandConversionRule;
+import org.apache.calcite.prepare.CalcitePrepareImpl;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.TableScan;
@@ -80,6 +81,7 @@ import org.apache.kylin.query.optrule.OLAPProjectRule;
 import org.apache.kylin.query.optrule.OLAPSortRule;
 import org.apache.kylin.query.optrule.OLAPToEnumerableConverterRule;
 import org.apache.kylin.query.optrule.OLAPUnionRule;
+import org.apache.kylin.query.optrule.OLAPValuesRule;
 import org.apache.kylin.query.optrule.OLAPWindowRule;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.query.schema.OLAPTable;
@@ -98,7 +100,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     private String backupAlias;
     protected ColumnRowType columnRowType;
     protected OLAPContext context;
-    private KylinConfig kylinConfig;
+    protected KylinConfig kylinConfig;
 
     public OLAPTableScan(RelOptCluster cluster, RelOptTable table, OLAPTable olapTable, int[] fields) {
         super(cluster, cluster.traitSetOf(OLAPRel.CONVENTION), table);
@@ -157,23 +159,30 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.addRule(OLAPSortRule.INSTANCE);
         planner.addRule(OLAPUnionRule.INSTANCE);
         planner.addRule(OLAPWindowRule.INSTANCE);
-
+        planner.addRule(OLAPValuesRule.INSTANCE);
+        
         // Support translate the grouping aggregate into union of simple aggregates
         planner.addRule(AggregateMultipleExpandRule.INSTANCE);
         planner.addRule(AggregateProjectReduceRule.INSTANCE);
 
         // CalcitePrepareImpl.CONSTANT_REDUCTION_RULES
-        planner.addRule(ReduceExpressionsRule.PROJECT_INSTANCE);
-        planner.addRule(ReduceExpressionsRule.FILTER_INSTANCE);
-        planner.addRule(ReduceExpressionsRule.CALC_INSTANCE);
-        planner.addRule(ReduceExpressionsRule.JOIN_INSTANCE);
+        if(kylinConfig.isReduceExpressionsRulesEnabled()) {
+            planner.addRule(ReduceExpressionsRule.PROJECT_INSTANCE);
+            planner.addRule(ReduceExpressionsRule.FILTER_INSTANCE);
+            planner.addRule(ReduceExpressionsRule.CALC_INSTANCE);
+            planner.addRule(ReduceExpressionsRule.JOIN_INSTANCE);
+        }
         // the ValuesReduceRule breaks query test somehow...
         //        planner.addRule(ValuesReduceRule.FILTER_INSTANCE);
         //        planner.addRule(ValuesReduceRule.PROJECT_FILTER_INSTANCE);
         //        planner.addRule(ValuesReduceRule.PROJECT_INSTANCE);
 
         removeRules(planner, kylinConfig.getCalciteRemoveRule());
-
+        if(!kylinConfig.isEnumerableRulesEnabled()) {
+            for (RelOptRule rule : CalcitePrepareImpl.ENUMERABLE_RULES) {
+                planner.removeRule(rule);
+            }
+        }
         // since join is the entry point, we can't push filter past join
         planner.removeRule(FilterJoinRule.FILTER_ON_JOIN);
         planner.removeRule(FilterJoinRule.JOIN);
@@ -203,7 +212,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.removeRule(ExpandConversionRule.INSTANCE);
     }
 
-    private void addRules(final RelOptPlanner planner, List<String> rules) {
+    protected void addRules(final RelOptPlanner planner, List<String> rules) {
         modifyRules(rules, new Function<RelOptRule, Void>() {
             @Nullable
             @Override
@@ -214,7 +223,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         });
     }
 
-    private void removeRules(final RelOptPlanner planner, List<String> rules) {
+    protected void removeRules(final RelOptPlanner planner, List<String> rules) {
         modifyRules(rules, new Function<RelOptRule, Void>() {
             @Nullable
             @Override

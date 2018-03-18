@@ -33,6 +33,7 @@ import org.apache.calcite.rel.convert.ConverterImpl;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.query.routing.RealizationChooser;
 import org.apache.kylin.query.security.QueryInterceptor;
@@ -58,7 +59,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
         // huge cost to ensure OLAPToEnumerableConverter only appears once in rel tree
-        return planner.getCostFactory().makeCost(1E100, 0, 0);
+        return super.computeSelfCost(planner, mq).multiplyBy(0.05);
     }
 
     @Override
@@ -77,9 +78,11 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         List<OLAPContext> contexts = listContextsHavingScan();
 
         // intercept query
-        List<QueryInterceptor> intercepts = QueryInterceptorUtil.getQueryInterceptors();
-        for (QueryInterceptor intercept : intercepts) {
-            intercept.intercept(contexts);
+        if (contexts.size() > 0) {
+            List<QueryInterceptor> intercepts = QueryInterceptorUtil.getQueryInterceptors();
+            for (QueryInterceptor intercept : intercepts) {
+                intercept.intercept(contexts);
+            }
         }
 
         if (System.getProperty("calcite.debug") != null) {
@@ -105,6 +108,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
             System.out.println("EXECUTION PLAN AFTER REWRITE");
             System.out.println(dumpPlan);
+            QueryContextFacade.current().setCalcitePlan(this.copy(getTraitSet(), getInputs()));
         }
 
         return impl.visitChild(this, 0, inputAsEnum, pref);

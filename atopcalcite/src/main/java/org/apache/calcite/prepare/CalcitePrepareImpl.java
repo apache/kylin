@@ -146,6 +146,7 @@ import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.calcite.tools.Frameworks;
+import org.apache.calcite.tools.RelUtils;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
@@ -1165,10 +1166,13 @@ public class CalcitePrepareImpl implements CalcitePrepare {
 
       final List<Materialization> materializations = ImmutableList.of();
       final List<LatticeEntry> lattices = ImmutableList.of();
+      long start = System.currentTimeMillis();
+      LOGGER.info("Begin optimize");
       root = optimize(root, materializations, lattices);
+      LOGGER.info("End optimize, take : " + (System.currentTimeMillis() - start));
 
       if (timingTracer != null) {
-        timingTracer.traceTime("end optimization");
+          timingTracer.traceTime("end optimization");
       }
 
       return implement(root);
@@ -1250,6 +1254,10 @@ public class CalcitePrepareImpl implements CalcitePrepare {
     }
 
     @Override protected PreparedResult implement(RelRoot root) {
+      if(RelUtils.findOLAPRel(root.rel) && !root.rel.getClass().getName().contains("OLAPToEnumerableConverter")){
+        String dumpPlan = RelOptUtil.dumpPlan("", root.rel, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
+        throw new IllegalArgumentException("Error planer:" + dumpPlan);
+      }
       RelDataType resultType = root.rel.getRowType();
       boolean isDml = root.kind.belongsTo(SqlKind.DML);
       final Bindable bindable;

@@ -54,6 +54,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlCaseOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+import org.apache.calcite.tools.RelUtils;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 
@@ -72,6 +73,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     boolean afterJoin;
     boolean afterAggregate;
     boolean isMerelyPermutation = false;//project additionally added by OLAPJoinPushThroughJoinRule
+    private int caseCount = 0;
 
     public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, List<RexNode> exps,
             RelDataType rowType) {
@@ -82,6 +84,9 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         this.hasJoin = false;
         this.afterJoin = false;
         this.rowType = getRowType();
+        for (RexNode exp : exps) {
+                caseCount += RelUtils.countOperatorCall(SqlCaseOperator.INSTANCE, exp);
+        }
     }
 
     @Override
@@ -104,8 +109,10 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
         boolean hasRexOver = RexOver.containsOver(getProjects(), null);
-        return super.computeSelfCost(planner, mq).multiplyBy(.05)
-                .multiplyBy(getProjects().size() * (hasRexOver ? 50 : 1));
+        RelOptCost relOptCost = super.computeSelfCost(planner, mq).multiplyBy(.05)
+                .multiplyBy(getProjects().size() * (hasRexOver ? 50 : 1))
+                .plus(planner.getCostFactory().makeCost(0.1 * caseCount, 0, 0));
+        return planner.getCostFactory().makeCost(relOptCost.getRows(), 0, 0);
     }
 
     @Override

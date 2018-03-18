@@ -52,6 +52,7 @@ public class QueryContext {
     private AtomicLong scannedRows = new AtomicLong();
     private AtomicLong returnedRows = new AtomicLong();
     private AtomicLong scannedBytes = new AtomicLong();
+    private Object calcitePlan;
 
     private AtomicBoolean isRunning = new AtomicBoolean(true);
     private volatile Throwable throwable;
@@ -102,6 +103,14 @@ public class QueryContext {
 
     public void setGroups(Set<String> groups) {
         this.groups = groups;
+    }
+
+    public Object getCalcitePlan() {
+        return calcitePlan;
+    }
+
+    public void setCalcitePlan(Object calcitePlan) {
+        this.calcitePlan = calcitePlan;
     }
 
     public long getScannedRows() {

@@ -14,20 +14,27 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-package org.apache.kylin.rest.security;
+package org.apache.kylin.query.optrule;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.kylin.query.relnode.OLAPRel;
+import org.apache.kylin.query.relnode.OLAPValuesRel;
 
-public class PasswordPlaceHolderConfigurerTest {
+public class OLAPValuesRule extends ConverterRule {
+    public static final OLAPValuesRule INSTANCE = new OLAPValuesRule();
 
-    @Test
-    public void testAESEncrypt(){
-        String input = "hello world";
-        String result = PasswordPlaceholderConfigurer.encrypt(input);
-        Assert.assertEquals("4stv/RRleOtvie/8SLHmXA==", result);
+    OLAPValuesRule() {
+        super(LogicalValues.class, Convention.NONE, OLAPRel.CONVENTION, "OLAPValuesRule");
     }
 
+    @Override
+    public RelNode convert(RelNode rel) {
+        LogicalValues values = (LogicalValues) rel;
+        return OLAPValuesRel.create(values.getCluster(), values.getRowType(), values.getTuples());
+    }
 }
