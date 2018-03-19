@@ -46,7 +46,6 @@ public class FuzzyValueCombination {
     }
 
     public static <E> List<Map<TblColRef, E>> calculate(Map<TblColRef, Set<E>> fuzzyValues, long cap) {
-        Collections.emptyMap();
         Dim[] dims = toDims(fuzzyValues);
         // If a query has many IN clause and each IN clause has many values, then it will easily generate 
         // thousands of fuzzy keys. When there are lots of fuzzy keys, the scan performance is bottle necked 
