@@ -186,7 +186,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
             JoinRelType joinRelType = this.getJoinType();
             String joinType = joinRelType == JoinRelType.INNER ? "INNER"
-                    : joinRelType == JoinRelType.LEFT ? "LEFT" : null;
+                    : joinRelType == JoinRelType.LEFT ? "LEFT" : joinRelType == JoinRelType.RIGHT ? "RIGHT" : "FULL";
             join.setType(joinType);
 
             this.context.joins.add(join);
