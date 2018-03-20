@@ -246,15 +246,11 @@ public class MockHTable implements Table {
 
     }
 
-<<<<<<< HEAD
     @Override
-    public <R> Object[] batchCallback(List<? extends Row> actions, Batch.Callback<R> callback)
-            throws IOException, InterruptedException {
+    public <R> Object[] batchCallback(List<? extends Row> actions, Batch.Callback<R> callback) throws IOException, InterruptedException {
         return new Object[0];
     }
 
-=======
->>>>>>> KYLIN-2565, upgrade to Hadoop3.0
     /**
      * {@inheritDoc}
      */
@@ -495,25 +491,9 @@ public class MockHTable implements Table {
     @Override
     public void put(Put put) throws IOException {
         byte[] row = put.getRow();
-<<<<<<< HEAD
-        NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> rowData = forceFind(data, row,
-                new TreeMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>>(Bytes.BYTES_COMPARATOR));
-        for (byte[] family : put.getFamilyMap().keySet()) {
-            if (columnFamilies.contains(new String(family, StandardCharsets.UTF_8)) == false) {
-                throw new RuntimeException("Not Exists columnFamily : " + new String(family, StandardCharsets.UTF_8));
-            }
-            NavigableMap<byte[], NavigableMap<Long, byte[]>> familyData = forceFind(rowData, family,
-                    new TreeMap<byte[], NavigableMap<Long, byte[]>>(Bytes.BYTES_COMPARATOR));
-            for (KeyValue kv : put.getFamilyMap().get(family)) {
-                kv.updateLatestStamp(Bytes.toBytes(System.currentTimeMillis()));
-                byte[] qualifier = kv.getQualifier();
-                NavigableMap<Long, byte[]> qualifierData = forceFind(familyData, qualifier,
-                        new TreeMap<Long, byte[]>());
-                qualifierData.put(kv.getTimestamp(), kv.getValue());
-=======
         NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> rowData = forceFind(data, row, new TreeMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>>(Bytes.BYTES_COMPARATOR));
         for (byte[] family : put.getFamilyCellMap().keySet()) {
-            if (columnFamilies.contains(new String(family)) == false) {
+            if (columnFamilies.contains(new String(family, StandardCharsets.UTF_8)) == false) {
                 throw new RuntimeException("Not Exists columnFamily : " + new String(family));
             }
             NavigableMap<byte[], NavigableMap<Long, byte[]>> familyData = forceFind(rowData, family, new TreeMap<byte[], NavigableMap<Long, byte[]>>(Bytes.BYTES_COMPARATOR));
@@ -522,7 +502,6 @@ public class MockHTable implements Table {
                 byte[] qualifier = kv.getQualifierArray();
                 NavigableMap<Long, byte[]> qualifierData = forceFind(familyData, qualifier, new TreeMap<Long, byte[]>());
                 qualifierData.put(kv.getTimestamp(), kv.getValueArray());
->>>>>>> KYLIN-2565, upgrade to Hadoop3.0
             }
         }
     }
