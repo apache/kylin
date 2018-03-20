@@ -253,7 +253,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             region = (HRegion) env.getRegion();
             region.startRegionOperation();
 
-            debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);
+            debugGitTag = region.getTableDescriptor().getValue(IRealizationConstants.HTableGitTag);
 
             final GTScanRequest scanReq = GTScanRequest.serializer
                     .deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));

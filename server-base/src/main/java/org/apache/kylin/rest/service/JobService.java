@@ -18,23 +18,16 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -83,12 +76,17 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * @author ysong1
@@ -823,7 +821,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtil.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -921,7 +919,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtil.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -1121,7 +1119,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtil.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -1194,7 +1192,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtil.isEmpty(jobName)) {
                                     return true;
                                 }
 

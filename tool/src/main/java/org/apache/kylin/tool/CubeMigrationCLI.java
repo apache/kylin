@@ -26,14 +26,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -87,7 +88,7 @@ public class CubeMigrationCLI extends AbstractApplication {
     protected ResourceStore srcStore;
     protected ResourceStore dstStore;
     protected FileSystem hdfsFS;
-    private HBaseAdmin hbaseAdmin;
+    private Admin hbaseAdmin;
     protected boolean doAclCopy = false;
     protected boolean doOverwrite = false;
     protected boolean doMigrateSegment = true;
@@ -174,7 +175,8 @@ public class CubeMigrationCLI extends AbstractApplication {
         checkAndGetHbaseUrl();
 
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        hbaseAdmin = new HBaseAdmin(conf);
+        Connection conn = HBaseConnection.get(srcCfg.getStorageUrl());
+        hbaseAdmin = conn.getAdmin();
 
         hdfsFS = HadoopUtil.getWorkingFileSystem();
         operations = new ArrayList<Opt>();
@@ -347,7 +349,7 @@ public class CubeMigrationCLI extends AbstractApplication {
     }
 
     @Override
-    protected void execute(OptionsHelper optionsHelper) throws Exception {
+    protected void execute(OptionsHelper optionsHelper) {
     }
 
     protected enum OptType {

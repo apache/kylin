@@ -30,9 +30,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -40,6 +41,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,17 +49,18 @@ public class StorageCleanJobHbaseUtil {
 
     protected static final Logger logger = LoggerFactory.getLogger(StorageCleanJobHbaseUtil.class);
 
-    @SuppressWarnings("deprecation")
-    public static List<String> cleanUnusedHBaseTables(boolean delete, int deleteTimeout) throws IOException {
-        try (HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create())) {
-            return cleanUnusedHBaseTables(hbaseAdmin, delete, deleteTimeout);
+    public static void cleanUnusedHBaseTables(boolean delete, int deleteTimeout) throws IOException {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        Connection connection = HBaseConnection.get(kylinConfig.getStorageUrl());
+        try (Admin hbaseAdmin = connection.getAdmin()) {
+            cleanUnusedHBaseTables(hbaseAdmin, delete, deleteTimeout);
         }
     }
 
-    static List<String> cleanUnusedHBaseTables(HBaseAdmin hbaseAdmin, boolean delete, int deleteTimeout) throws IOException {
+    static void cleanUnusedHBaseTables(Admin hbaseAdmin, boolean delete, int deleteTimeout) throws IOException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeManager cubeMgr = CubeManager.getInstance(config);
-        
+
         // get all kylin hbase tables
         String namespace = config.getHBaseStorageNameSpace();
         String tableNamePrefix = (namespace.equals("default") || namespace.equals(""))
@@ -94,7 +97,6 @@ public class StorageCleanJobHbaseUtil {
         
         if (allTablesNeedToBeDropped.isEmpty()) {
             logger.info("No HTable to clean up");
-            return allTablesNeedToBeDropped;
         }
         
         logger.info(allTablesNeedToBeDropped.size() + " HTable(s) to clean up");
@@ -128,7 +130,6 @@ public class StorageCleanJobHbaseUtil {
             }
         }
         
-        return allTablesNeedToBeDropped;
     }
 
     private static List<String> getAllUsedExtLookupTables() throws IOException {
@@ -153,12 +154,12 @@ public class StorageCleanJobHbaseUtil {
     }
 
     static class DeleteHTableRunnable implements Callable {
-        HBaseAdmin hbaseAdmin;
-        String htableName;
+        Admin hbaseAdmin;
+        TableName htableName;
 
-        DeleteHTableRunnable(HBaseAdmin hbaseAdmin, String htableName) {
+        DeleteHTableRunnable(Admin hbaseAdmin, String htableName) {
             this.hbaseAdmin = hbaseAdmin;
-            this.htableName = htableName;
+            this.htableName = TableName.valueOf(htableName);
         }
 
         public Object call() throws Exception {
