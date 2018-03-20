@@ -18,8 +18,6 @@
 
 package org.apache.kylin.source.hive;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
-
 public class DBConnConf {
     public static final String KEY_DRIVER = "driver";
     public static final String KEY_URL = "url";
@@ -32,13 +30,6 @@ public class DBConnConf {
     private String pass;
 
     public DBConnConf() {
-    }
-
-    public DBConnConf(String prefix, PropertiesConfiguration pc) {
-        driver = pc.getString(prefix + KEY_DRIVER);
-        url = pc.getString(prefix + KEY_URL);
-        user = pc.getString(prefix + KEY_USER);
-        pass = pc.getString(prefix + KEY_PASS);
     }
 
     public DBConnConf(String driver, String url, String user, String pass) {
