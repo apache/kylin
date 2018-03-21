@@ -82,7 +82,7 @@
         <commons-collections.version>3.2.2</commons-collections.version>
 
         <!-- Calcite deps, keep compatible with calcite.version -->
-        <jackson.version>2.6.3</jackson.version>
+        <jackson.version>2.6.7.1</jackson.version>
 
         <!-- Test Dependency versions -->
         <antlr.version>3.4</antlr.version>
