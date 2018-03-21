@@ -246,8 +246,8 @@ public class HiveMRInput implements IMRInput {
                     createIntermediateTableHql
                             .append("ALTER TABLE " + intermediate + " SET TBLPROPERTIES('auto.purge'='true');\n");
                     createIntermediateTableHql
-                            .append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + "\n");
-                    hiveCmdBuilder.addStatementWithRedistributeBy(createIntermediateTableHql);
+                            .append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + ";\n");
+                    hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
                     hiveViewIntermediateTables = hiveViewIntermediateTables + intermediate + ";";
                 }
             }

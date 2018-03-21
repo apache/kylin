@@ -142,22 +142,6 @@ public class HiveCmdBuilder {
         statements.add(statement);
     }
 
-    public void addStatementWithRedistributeBy(String statement) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(statement);
-        addStatementWithRedistributeBy(builder);
-    }
-
-    public void addStatementWithRedistributeBy(StringBuilder statement) {
-        /**
-         * When hive.execution.engine is tez and table is a view of union-all struct, it generates
-         * subdirectories in output, which causes file not found exception.
-         * Use "DISTRIBUTE BY RAND()" to workaround this issue.
-         */
-        statement.append("DISTRIBUTE BY RAND()").append(";\n");
-        statements.add(statement.toString());
-    }
-
     public void addStatements(String[] stats) {
         for (String s : stats) {
             statements.add(s);

@@ -116,11 +116,13 @@ public class JoinedFlatTable {
             }
         }
 
-        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + "\n";
+        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc)
+                + ";\n";
     }
 
     public static String generateInsertPartialDataStatement(IJoinedFlatTableDesc flatDesc) {
-        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + "\n";
+        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc)
+                + ";\n";
     }
 
     public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc) {
