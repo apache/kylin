@@ -52,12 +52,14 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  */
+@Ignore ("This test case is unstable")
 public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     private static Server server;
