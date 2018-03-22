@@ -907,13 +907,17 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 ## Get job list
 `GET /kylin/api/jobs`
 
-#### Path Variable
-* cubeName - `required` `string` Cube name.
+#### Request Variables
+* cubeName - `optional` `string` Cube name.
 * projectName - `required` `string` Project name.
-* status - `required` `int` Job status, e.g. (NEW: 0, PENDING: 1, RUNNING: 2, STOPPED: 32, FINISHED: 4, ERROR: 8, DISCARDED: 16)
+* status - `optional` `int` Job status, e.g. (NEW: 0, PENDING: 1, RUNNING: 2, STOPPED: 32, FINISHED: 4, ERROR: 8, DISCARDED: 16)
 * offset - `required` `int` Offset used by pagination.
 * limit - `required` `int` Jobs per page.
 * timeFilter - `required` `int`, e.g. (LAST ONE DAY: 0, LAST ONE WEEK: 1, LAST ONE MONTH: 2, LAST ONE YEAR: 3, ALL: 4)
+
+For example, to get the job list in project 'learn_kylin' for cube 'kylin_sales_cube' in lastone week: 
+
+`GET: /kylin/api/jobs?cubeName=kylin_sales_cube&limit=15&offset=0&projectName=learn_kylin&timeFilter=1`
 
 #### Response Sample
 ```
@@ -973,7 +977,7 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 ## Get Hive Table
 `GET /kylin/api/tables/{project}/{tableName}`
 
-#### Request Parameters
+#### Path Parameters
 * project - `required` `string` project name
 * tableName - `required` `string` table name to find.
 
