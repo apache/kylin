@@ -123,7 +123,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" ng-click="update()">Update</button>
+      <button class="btn btn-primary" ng-click="update()" ng-disabled="config_update_form.key_input.$invalid || config_update_form.value_input.$invalid">Update</button>
       <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
     </div>
   </ng-form>
