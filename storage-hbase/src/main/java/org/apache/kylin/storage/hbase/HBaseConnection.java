@@ -49,7 +49,6 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.lock.DistributedLock;
-import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -269,7 +268,7 @@ public class HBaseConnection {
 
         } catch (Throwable t) {
             logger.error("Error when open connection " + url, t);
-            throw new StorageException("Error when open connection " + url, t);
+            throw new RuntimeException("Error when open connection " + url, t);
         }
 
         return connection;

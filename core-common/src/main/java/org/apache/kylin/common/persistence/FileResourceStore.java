@@ -31,13 +31,13 @@ import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class FileResourceStore extends ResourceStore {
@@ -176,12 +176,12 @@ public class FileResourceStore extends ResourceStore {
 
     @Override
     protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
-            throws IOException, IllegalStateException {
+            throws IOException, WriteConflictException {
         synchronized (FileResourceStore.class) {
 
             File f = file(resPath);
             if ((f.exists() && f.lastModified() != oldTS) || (f.exists() == false && oldTS != 0))
-                throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS
+                throw new WriteConflictException("Overwriting conflict " + resPath + ", expect old TS " + oldTS
                         + ", but found " + f.lastModified());
 
             putResourceImpl(resPath, new ByteArrayInputStream(content), newTS);
