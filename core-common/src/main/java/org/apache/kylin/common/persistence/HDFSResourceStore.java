@@ -207,7 +207,7 @@ public class HDFSResourceStore extends ResourceStore {
     }
 
     @Override
-    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException {
+    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, WriteConflictException {
         Path p = getRealHDFSPath(resPath);
         if (!fs.exists(p)) {
             if (oldTS != 0) {
@@ -217,7 +217,7 @@ public class HDFSResourceStore extends ResourceStore {
         } else {
             long realLastModify = getResourceTimestamp(resPath);
             if (realLastModify != oldTS) {
-                throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but found " + realLastModify);
+                throw new WriteConflictException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but found " + realLastModify);
             }
         }
         putResourceImpl(resPath, new ByteArrayInputStream(content), newTS);

@@ -137,7 +137,7 @@ public class ResourceStoreTest {
             t.setLastModified(t.getLastModified() - 1);
             store.putResource(path2, t, StringEntity.serializer);
             fail("write conflict should trigger IllegalStateException");
-        } catch (IllegalStateException e) {
+        } catch (WriteConflictException e) {
             // expected
         }
 

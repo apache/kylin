@@ -19,19 +19,16 @@
 package org.apache.kylin.common.persistence;
 
 /**
- * 
- * @author xjiang
- * 
  */
-public class StorageException extends RuntimeException {
+public class WriteConflictException extends RuntimeException {
 
     private static final long serialVersionUID = -3748712888242406257L;
 
-    public StorageException(String msg, Throwable t) {
+    public WriteConflictException(String msg, Throwable t) {
         super(msg, t);
     }
 
-    public StorageException(String msg) {
+    public WriteConflictException(String msg) {
         super(msg);
     }
 

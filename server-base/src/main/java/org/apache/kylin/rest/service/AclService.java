@@ -32,6 +32,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
@@ -305,7 +306,7 @@ public class AclService implements MutableAclService, InitializingBean {
                 crud.save(record);
                 return acl; // here we are done
 
-            } catch (IllegalStateException ise) {
+            } catch (WriteConflictException ise) {
                 if (retry <= 0) {
                     logger.error("Retry is out, till got error, abandoning...", ise);
                     throw ise;

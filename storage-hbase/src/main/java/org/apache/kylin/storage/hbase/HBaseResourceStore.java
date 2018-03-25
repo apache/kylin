@@ -54,6 +54,7 @@ import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
+import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -321,7 +322,7 @@ public class HBaseResourceStore extends ResourceStore {
                     + ", operation result: " + ok);
             if (!ok) {
                 long real = getResourceTimestampImpl(resPath);
-                throw new IllegalStateException(
+                throw new WriteConflictException(
                         "Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but it is " + real);
             }
 

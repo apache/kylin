@@ -37,6 +37,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.common.util.Dictionary;
@@ -354,7 +355,7 @@ public class CubeManager implements IRealizationProvider {
 
         try {
             cube = crud.save(cube);
-        } catch (IllegalStateException ise) {
+        } catch (WriteConflictException ise) {
             logger.warn("Write conflict to update cube " + cube.getName() + " at try " + retry + ", will retry...");
             if (retry >= 7) {
                 logger.error("Retried 7 times till got error, abandoning...", ise);

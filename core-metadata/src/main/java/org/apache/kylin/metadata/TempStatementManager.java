@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
@@ -136,7 +137,7 @@ public class TempStatementManager {
     private void updateTempStatementWithRetry(TempStatementEntity entity, int retry) throws IOException {
         try {
             crud.save(entity);
-        } catch (IllegalStateException ise) {
+        } catch (WriteConflictException ise) {
             logger.warn("Write conflict to update temp statement" + entity.statementId + " at try " + retry
                     + ", will retry...");
             if (retry >= 7) {
