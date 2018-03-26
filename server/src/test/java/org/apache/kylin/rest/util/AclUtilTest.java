@@ -42,6 +42,18 @@ public class AclUtilTest extends ServiceTestBase {
     AclUtil aclUtil;
 
     @Test
+    public void testNull() {
+        // ADMIN will go into hasRole first.
+        swichUser("ANALYST", Constant.ROLE_ANALYST);
+        try {
+            aclUtil.hasProjectAdminPermission(null);
+            Assert.fail("expecting some AlreadyExistsException here");
+        } catch (Exception e) {
+            Assert.assertEquals("Access is denied", e.getMessage());
+        }
+    }
+
+    @Test
     public void testBasic() throws IOException {
         final String PROJECT = "default";
         final String ANALYST = "ANALYST";
