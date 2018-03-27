@@ -18,20 +18,21 @@
 
 package org.apache.kylin.common.util;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
+import static org.apache.kylin.common.util.HiveCmdBuilder.HIVE_CONF_FILENAME;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.apache.kylin.common.util.HiveCmdBuilder.HIVE_CONF_FILENAME;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 /**
  * @author ycq
@@ -97,5 +98,3 @@ public class HiveConfigurationUtil {
     }
 
 }
-
-
