@@ -30,10 +30,10 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.common.util.HiveConfigurationUtil;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.kylin.common.util.HiveConfigurationUtil;
 
 public class BeelineHiveClient implements IHiveClient {
 
@@ -42,7 +42,6 @@ public class BeelineHiveClient implements IHiveClient {
     private Connection cnct;
     private Statement stmt;
     private DatabaseMetaData metaData;
-
 
     public BeelineHiveClient(String beelineParams) {
         if (StringUtils.isEmpty(beelineParams)) {
