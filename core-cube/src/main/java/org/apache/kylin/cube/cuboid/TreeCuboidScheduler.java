@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -36,7 +34,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -122,13 +119,11 @@ public class TreeCuboidScheduler extends CuboidScheduler {
                 throw new IllegalArgumentException("the cuboid:" + cuboidId + " is not exist in the tree");
             }
 
-            return Lists.transform(node.children, new Function<TreeNode, Long>() {
-                @Nullable
-                @Override
-                public Long apply(@Nullable TreeNode input) {
-                    return input.cuboidId;
-                }
-            });
+            List<Long> result = Lists.newArrayList();
+            for (TreeNode child : node.children) {
+                result.add(child.cuboidId);
+            }
+            return result;
         }
 
         public long findBestMatchCuboid(long cuboidId) {
