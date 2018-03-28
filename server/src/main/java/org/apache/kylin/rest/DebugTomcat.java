@@ -105,7 +105,14 @@ public class DebugTomcat {
 
         int port = 7070;
         if (args.length >= 1) {
-            port = Integer.parseInt(args[0]);
+            for (String arg : args) {
+                String[] kwarg = arg.split("=");
+                if (kwarg[0].equals("port")) {
+                    port = Integer.parseInt(kwarg[1]);
+                    continue;
+                }
+                System.setProperty(kwarg[0], kwarg[1]);
+            }
         }
 
         File webBase = new File("../webapp/app");
