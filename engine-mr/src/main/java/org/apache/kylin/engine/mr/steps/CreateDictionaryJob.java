@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.ArrayPrimitiveWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.util.ToolRunner;
@@ -97,10 +97,10 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
 
                 try (SequenceFile.Reader reader = new SequenceFile.Reader(HadoopUtil.getCurrentConfiguration(), SequenceFile.Reader.file(dictFile))) {
                     NullWritable key = NullWritable.get();
-                    BytesWritable value = new BytesWritable();
+                    ArrayPrimitiveWritable value = new ArrayPrimitiveWritable();
                     reader.next(key, value);
 
-                    ByteBuffer buffer = new ByteArray(value.getBytes()).asBuffer();
+                    ByteBuffer buffer = new ByteArray((byte[]) value.get()).asBuffer();
                     try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(buffer))) {
                         String dictClassName = is.readUTF();
                         Dictionary<String> dict = (Dictionary<String>) ClassUtil.newInstance(dictClassName);

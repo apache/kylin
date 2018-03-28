@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.ArrayPrimitiveWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -106,7 +107,7 @@ public class UHCDictionaryReducer extends KylinReducer<SelfDefineSortableKey, Nu
             outputStream.writeUTF(dict.getClass().getName());
             dict.write(outputStream);
 
-            mos.write(BatchConstants.CFG_OUTPUT_DICT, NullWritable.get(), new BytesWritable(baos.toByteArray()), dictFileName);
+            mos.write(BatchConstants.CFG_OUTPUT_DICT, NullWritable.get(), new ArrayPrimitiveWritable(baos.toByteArray()), dictFileName);
         }
         mos.close();
     }
