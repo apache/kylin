@@ -829,7 +829,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getJdbcSourceDialect() {
-        return getOptional("kylin.source.jdbc.dialect");
+        return getOptional("kylin.source.jdbc.dialect", "default");
     }
 
     public String getJdbcSourceUser() {

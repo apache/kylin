@@ -18,17 +18,11 @@
 
 package org.apache.kylin.source.jdbc;
 
-import static org.junit.Assert.assertTrue;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.DataModelManager;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -40,6 +34,12 @@ import org.apache.kylin.source.datagen.ModelDataGenerator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+import static org.junit.Assert.assertTrue;
 
 public class ITJdbcSourceTableLoaderTest extends LocalFileMetadataTestCase implements ISourceAware {
 
@@ -94,7 +94,7 @@ public class ITJdbcSourceTableLoaderTest extends LocalFileMetadataTestCase imple
     @Test
     public void test() throws Exception {
 
-        ISource source = SourceManager.getSource(new ITJdbcSourceTableLoaderTest());
+        ISource source = SourceManager.getSource(this);
         ISourceMetadataExplorer explr = source.getSourceMetadataExplorer();
         Pair<TableDesc, TableExtDesc> pair;
 
