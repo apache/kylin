@@ -5,8 +5,8 @@
   "name" : "kylin_sales_cube",
   "owner" : null,
   "descriptor" : "kylin_sales_cube",
+  "display_name" : "kylin_sales_cube",
   "status" : "DISABLED",
   "segments" : [ ],
-  "create_time" : null,
-  "auto_merge_time_ranges" : [604800000, 2419200000]
+  "create_time_utc" : 0
 }

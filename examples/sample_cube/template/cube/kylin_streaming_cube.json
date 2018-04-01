@@ -7,6 +7,7 @@
   "segments": [],
   "last_modified": 0,
   "descriptor": "kylin_streaming_cube",
+  "display_name" : "kylin_streaming_cube",
   "size_kb": 0,
   "input_records_count": 0,
   "input_records_size": 0
