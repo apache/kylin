@@ -3,8 +3,9 @@
   "last_modified" : 1451468470824,
   "version": "%default_version%",
   "name" : "kylin_sales_cube",
+  "is_draft" : false,
   "model_name" : "kylin_sales_model",
-  "description" : null,
+  "description" : "",
   "null_string" : null,
   "dimensions" : [ {
     "name" : "TRANS_ID",
@@ -264,14 +265,19 @@
                        [ "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL", "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL" ], [ "LSTG_FORMAT_NAME", "LSTG_SITE_ID" ], [ "OPS_USER_ID", "OPS_REGION" ] ]
     }
   } ],
-  "notify_list" : null,
+  "notify_list" : [ ],
   "status_need_notify" : [ ],
   "partition_date_start" : 1325376000000,
-  "auto_merge_time_ranges" : null,
+  "partition_date_end" : 3153600000000,
+  "auto_merge_time_ranges" : [ ],
+  "volatile_range" : 0,
   "retention_range" : 0,
   "engine_type" : %default_engine_type%,
   "storage_type" : %default_storage_type%,
   "override_kylin_properties" : {
     "kylin.cube.aggrgroup.is-mandatory-only-valid" : "true"
-  }
+  },
+  "cuboid_black_list" : [ ],
+  "parent_forward" : 3,
+  "mandatory_dimension_set_list" : [ ]
 }
