@@ -28,7 +28,7 @@ import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.IReadableTable.TableReader;
-import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.SourceManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,7 +56,7 @@ public class ITSnapshotManagerTest extends HBaseMetadataTestCase {
     public void basicTest() throws Exception {
         String tableName = "EDW.TEST_SITES";
         TableDesc tableDesc = TableMetadataManager.getInstance(getTestConfig()).getTableDesc(tableName, "default");
-        IReadableTable hiveTable = SourceFactory.createReadableTable(tableDesc);
+        IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc);
         String snapshotPath = snapshotMgr.buildSnapshot(hiveTable, tableDesc).getResourcePath();
 
         snapshotMgr.wipeoutCache();

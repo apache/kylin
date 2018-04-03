@@ -31,6 +31,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.realization.RealizationType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -47,7 +48,7 @@ import com.google.common.collect.Lists;
  */
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class ProjectInstance extends RootPersistentEntity {
+public class ProjectInstance extends RootPersistentEntity implements ISourceAware {
 
     public static final String DEFAULT_PROJECT_NAME = "default";
 
@@ -338,4 +339,8 @@ public class ProjectInstance extends RootPersistentEntity {
         return "ProjectDesc [name=" + name + "]";
     }
 
+    @Override
+    public int getSourceType() {
+        return getConfig().getDefaultSource();
+    }
 }

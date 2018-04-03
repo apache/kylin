@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Pair;
@@ -98,6 +99,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     private String dataGen;
 
     private String project;
+    private KylinConfig config;
     private DatabaseDesc database = new DatabaseDesc();
     private String identity = null;
     private boolean isBorrowedFromGlobal = false;
@@ -121,6 +123,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         }
 
         this.project = other.project;
+        this.config = other.config;
         this.database.setName(other.getDatabase());
         this.identity = other.identity;
     }
@@ -287,9 +290,10 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return dataGen;
     }
 
-    public void init(String project) {
+    public void init(KylinConfig config, String project) {
         this.project = project;
-
+        this.config = config;
+        
         if (name != null)
             name = name.toUpperCase();
 
@@ -370,6 +374,11 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     @Override
     public int getSourceType() {
         return sourceType;
+    }
+
+    @Override
+    public KylinConfig getConfig() {
+        return config;
     }
 
     public void setSourceType(int sourceType) {

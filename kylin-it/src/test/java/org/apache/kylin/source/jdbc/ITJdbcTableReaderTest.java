@@ -106,4 +106,9 @@ public class ITJdbcTableReaderTest extends LocalFileMetadataTestCase implements 
         return ISourceAware.ID_JDBC;
     }
 
+    @Override
+    public KylinConfig getConfig() {
+        return getTestConfig();
+    }
+
 }

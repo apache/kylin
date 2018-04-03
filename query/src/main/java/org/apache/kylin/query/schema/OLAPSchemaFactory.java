@@ -49,19 +49,22 @@ public class OLAPSchemaFactory implements SchemaFactory {
     @Override
     public Schema create(SchemaPlus parentSchema, String schemaName, Map<String, Object> operand) {
         String project = (String) operand.get(SCHEMA_PROJECT);
-        Schema newSchema = new OLAPSchema(project, schemaName, exposeMore());
+        Schema newSchema = new OLAPSchema(project, schemaName, exposeMore(project));
         return newSchema;
     }
 
     private static Map<String, File> cachedJsons = Maps.newConcurrentMap();
 
-    public static boolean exposeMore() {
-        return KylinConfig.getInstanceFromEnv().isPushDownEnabled();
+    public static boolean exposeMore(String project) {
+        return ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project).getConfig()
+                .isPushDownEnabled();
     }
 
     public static File createTempOLAPJson(String project, KylinConfig config) {
 
-        Collection<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project, exposeMore());
+        ProjectManager projectManager = ProjectManager.getInstance(config);
+        KylinConfig projConfig = projectManager.getProject(project).getConfig();
+        Collection<TableDesc> tables = projectManager.listExposedTables(project, exposeMore(project));
 
         // "database" in TableDesc correspond to our schema
         // the logic to decide which schema to be "default" in calcite:
@@ -92,17 +95,16 @@ public class OLAPSchemaFactory implements SchemaFactory {
 
             int counter = 0;
 
-
-
+            String schemaFactory = projConfig.getSchemaFactory();
             for (String schemaName : schemaCounts.keySet()) {
                 out.append("        {\n");
                 out.append("            \"type\": \"custom\",\n");
                 out.append("            \"name\": \"" + schemaName + "\",\n");
-                out.append("            \"factory\": \"" + KylinConfig.getInstanceFromEnv().getSchemaFactory()+ "\",\n");
+                out.append("            \"factory\": \"" + schemaFactory + "\",\n");
                 out.append("            \"operand\": {\n");
                 out.append("                \"" + SCHEMA_PROJECT + "\": \"" + project + "\"\n");
                 out.append("            },\n");
-                createOLAPSchemaFunctions(out);
+                createOLAPSchemaFunctions(projConfig.getUDFs(), out);
                 out.append("        }\n");
 
                 if (++counter != schemaCounts.size()) {
@@ -132,9 +134,12 @@ public class OLAPSchemaFactory implements SchemaFactory {
         }
     }
 
-    private static void createOLAPSchemaFunctions(StringBuilder out) throws IOException {
+    private static void createOLAPSchemaFunctions(Map<String, String> definedUdfs, StringBuilder out)
+            throws IOException {
         Map<String, String> udfs = Maps.newHashMap();
-        udfs.putAll(KylinConfig.getInstanceFromEnv().getUDFs());
+        if (definedUdfs != null)
+            udfs.putAll(definedUdfs);
+
         for (Entry<String, Class<?>> entry : MeasureTypeFactory.getUDAFs().entrySet()) {
             udfs.put(entry.getKey(), entry.getValue().getName());
         }

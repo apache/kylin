@@ -18,6 +18,8 @@
 
 package org.apache.kylin.source.hive;
 
+import java.io.IOException;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.metadata.model.IBuildable;
@@ -28,8 +30,10 @@ import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
 
-//used by reflection
 public class HiveSource implements ISource {
+    //used by reflection
+    public HiveSource(KylinConfig config) {
+    }
 
     @Override
     public ISourceMetadataExplorer getSourceMetadataExplorer() {
@@ -53,7 +57,7 @@ public class HiveSource implements ISource {
         if (tableDesc.isView()) {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             String tableName = tableDesc.getMaterializedName();
-            
+
             tableDesc = new TableDesc();
             tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
             tableDesc.setName(tableName);
@@ -75,4 +79,8 @@ public class HiveSource implements ISource {
         return new HiveMetadataExplorer();
     }
 
+    @Override
+    public void close() throws IOException {
+        // not needed
+    }
 }

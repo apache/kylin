@@ -47,6 +47,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.tool.CalciteParser;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.realization.NoRealizationFoundException;
 import org.apache.kylin.metadata.realization.RoutingIndicatorException;
@@ -74,7 +75,7 @@ public class PushDownUtil {
     private static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownQuery(String project, String sql,
             String defaultSchema, SQLException sqlException, boolean isSelect, boolean isPrepare) throws Exception {
 
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        KylinConfig kylinConfig = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject(project).getConfig();
 
         if (!kylinConfig.isPushDownEnabled())
             return null;

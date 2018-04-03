@@ -35,7 +35,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.H2Database;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.datagen.ModelDataGenerator;
 import org.junit.After;
 import org.junit.Before;
@@ -94,7 +94,7 @@ public class ITJdbcSourceTableLoaderTest extends LocalFileMetadataTestCase imple
     @Test
     public void test() throws Exception {
 
-        ISource source = SourceFactory.getSource(new ITJdbcSourceTableLoaderTest());
+        ISource source = SourceManager.getSource(new ITJdbcSourceTableLoaderTest());
         ISourceMetadataExplorer explr = source.getSourceMetadataExplorer();
         Pair<TableDesc, TableExtDesc> pair;
 
@@ -109,6 +109,11 @@ public class ITJdbcSourceTableLoaderTest extends LocalFileMetadataTestCase imple
     @Override
     public int getSourceType() {
         return ISourceAware.ID_JDBC;
+    }
+
+    @Override
+    public KylinConfig getConfig() {
+        return config;
     }
 
 }

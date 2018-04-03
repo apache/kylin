@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
@@ -40,11 +38,11 @@ import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
@@ -52,7 +50,7 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.ISourceMetadataExplorer;
-import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob;
 import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityUpdateJob;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
@@ -64,8 +62,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
@@ -136,7 +132,7 @@ public class TableService extends BasicService {
         for (Pair<TableDesc, TableExtDesc> pair : allMeta) {
             TableDesc tableDesc = pair.getFirst();
             TableExtDesc extDesc = pair.getSecond();
-            
+
             TableDesc origTable = metaMgr.getTableDesc(tableDesc.getIdentity(), project);
             if (origTable == null || origTable.getProject() == null) {
                 tableDesc.setUuid(UUID.randomUUID().toString());
@@ -157,7 +153,7 @@ public class TableService extends BasicService {
             }
             extDesc.init(project);
             metaMgr.saveTableExt(extDesc, project);
-            
+
             saved.add(tableDesc.getIdentity());
         }
 
@@ -176,14 +172,15 @@ public class TableService extends BasicService {
 
         // load all tables first
         List<Pair<TableDesc, TableExtDesc>> allMeta = Lists.newArrayList();
-        ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
+        ProjectInstance projectInstance = getProjectManager().getProject(project);
+        ISourceMetadataExplorer explr = SourceManager.getSource(projectInstance).getSourceMetadataExplorer();
         for (Map.Entry<String, String> entry : db2tables.entries()) {
             Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue(), project);
             TableDesc tableDesc = pair.getFirst();
             Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey().toUpperCase()));
             Preconditions.checkState(tableDesc.getName().equals(entry.getValue().toUpperCase()));
-            Preconditions.checkState(tableDesc.getIdentity().equals(entry.getKey().toUpperCase() + "." + entry
-                .getValue().toUpperCase()));
+            Preconditions.checkState(tableDesc.getIdentity()
+                    .equals(entry.getKey().toUpperCase() + "." + entry.getValue().toUpperCase()));
             TableExtDesc extDesc = pair.getSecond();
             Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getIdentity()));
             allMeta.add(pair);
@@ -191,7 +188,8 @@ public class TableService extends BasicService {
         return allMeta;
     }
 
-    public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile) throws Exception {
+    public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile)
+            throws Exception {
         aclEvaluate.checkProjectAdminPermission(project);
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         Map<String, String[]> result = new HashMap<String, String[]>();
@@ -258,13 +256,14 @@ public class TableService extends BasicService {
 
         tableName = normalizeHiveTableName(tableName);
         TableDesc desc = getTableManager().getTableDesc(tableName, project);
-        
+
         // unload of legacy global table is not supported for now
         if (desc == null || desc.getProject() == null) {
-            logger.warn("Unload Table {} in Project {} failed, could not find TableDesc or related Project", tableName, project);
+            logger.warn("Unload Table {} in Project {} failed, could not find TableDesc or related Project", tableName,
+                    project);
             return false;
         }
-        
+
         tableType = desc.getSourceType();
 
         if (!modelService.isTableInModel(desc, project)) {
@@ -274,7 +273,7 @@ public class TableService extends BasicService {
             List<String> models = modelService.getModelsUsingTable(desc, project);
             throw new BadRequestException(String.format(msg.getTABLE_IN_USE_BY_MODEL(), models));
         }
-        
+
         // it is a project local table, ready to remove since no model is using it within the project
         TableMetadataManager metaMgr = getTableManager();
         metaMgr.removeTableExt(tableName, project);
@@ -313,30 +312,27 @@ public class TableService extends BasicService {
 
     /**
      *
+     * @param project
      * @return
      * @throws Exception
      */
-    public List<String> getHiveDbNames() throws Exception {
-        ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
+    public List<String> getSourceDbNames(String project) throws Exception {
+        ISourceMetadataExplorer explr = SourceManager.getInstance(getConfig()).getProjectSource(project)
+                .getSourceMetadataExplorer();
         return explr.listDatabases();
     }
 
     /**
      *
+     * @param project
      * @param database
      * @return
      * @throws Exception
      */
-    public List<String> getHiveTableNames(String database) throws Exception {
-        ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
-        List<String> hiveTableNames = explr.listTables(database);
-        Iterable<String> kylinApplicationTableNames = Iterables.filter(hiveTableNames, new Predicate<String>() {
-            @Override
-            public boolean apply(@Nullable String input) {
-                return input != null && !input.startsWith(MetadataConstants.KYLIN_INTERMEDIATE_PREFIX);
-            }
-        });
-        return Lists.newArrayList(kylinApplicationTableNames);
+    public List<String> getSourceTableNames(String project, String database) throws Exception {
+        ISourceMetadataExplorer explr = SourceManager.getInstance(getConfig()).getProjectSource(project)
+                .getSourceMetadataExplorer();
+        return explr.listTables(database);
     }
 
     private TableDescResponse cloneTableDesc(TableDesc table, String prj) {
@@ -355,7 +351,8 @@ public class TableService extends BasicService {
                 if (cards.length > i) {
                     cardinality.put(columnDesc.getName(), Long.parseLong(cards[i]));
                 } else {
-                    logger.error("The result cardinality is not identical with hive table metadata, cardinality : " + scard + " column array length: " + cdescs.length);
+                    logger.error("The result cardinality is not identical with hive table metadata, cardinality : "
+                            + scard + " column array length: " + cdescs.length);
                     break;
                 }
             }

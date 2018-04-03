@@ -47,7 +47,7 @@ import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ISampleDataDeployer;
-import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.datagen.ModelDataGenerator;
 import org.apache.kylin.source.kafka.TimedJsonStreamParser;
 import org.apache.maven.model.Model;
@@ -231,7 +231,7 @@ public class DeployUtil {
         }
         tempDir.deleteOnExit();
 
-        ISampleDataDeployer sampleDataDeployer = SourceFactory.getSource(model.getRootFactTable().getTableDesc())
+        ISampleDataDeployer sampleDataDeployer = SourceManager.getSource(model.getRootFactTable().getTableDesc())
                 .getSampleDataDeployer();
         
         // create hive tables

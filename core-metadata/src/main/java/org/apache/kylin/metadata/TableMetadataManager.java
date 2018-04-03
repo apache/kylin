@@ -118,7 +118,7 @@ public class TableMetadataManager {
             @Override
             protected TableDesc initEntityAfterReload(TableDesc t, String resourceName) {
                 String prj = TableDesc.parseResourcePath(resourceName).getSecond();
-                t.init(prj);
+                t.init(config, prj);
                 return t;
             }
         };
@@ -237,7 +237,7 @@ public class TableMetadataManager {
 
     public void saveSourceTable(TableDesc srcTable, String prj) throws IOException {
         try (AutoLock lock = srcTableMapLock.lockForWrite()) {
-            srcTable.init(prj);
+            srcTable.init(config, prj);
             srcTableCrud.save(srcTable);
         }
     }
