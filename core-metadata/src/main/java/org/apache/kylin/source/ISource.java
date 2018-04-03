@@ -18,13 +18,15 @@
 
 package org.apache.kylin.source;
 
+import java.io.Closeable;
+
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * Represents a kind of source to Kylin, like Hive.
  */
-public interface ISource {
+public interface ISource extends Closeable {
 
     /** 
      * Return an explorer to sync table metadata from the data source.
@@ -41,13 +43,13 @@ public interface ISource {
      * Return a ReadableTable that can iterate through the rows of given table.
      */
     IReadableTable createReadableTable(TableDesc tableDesc);
-    
+
     /**
      * Give the source a chance to enrich a SourcePartition before build start.
      * Particularly, Kafka source use this chance to define start/end offsets within each partition.
      */
     SourcePartition enrichSourcePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition);
-    
+
     /**
      * Return an object that is responsible for deploying sample (CSV) data to the source database.
      * For testing purpose.

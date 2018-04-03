@@ -18,6 +18,9 @@
 
 package org.apache.kylin.source.jdbc;
 
+import java.io.IOException;
+
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -27,8 +30,10 @@ import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
 
-//used by reflection
 public class JdbcSource implements ISource {
+    //used by reflection
+    public JdbcSource(KylinConfig config) {
+    }
 
     @Override
     public ISourceMetadataExplorer getSourceMetadataExplorer() {
@@ -62,4 +67,8 @@ public class JdbcSource implements ISource {
         return new JdbcExplorer();
     }
 
+    @Override
+    public void close() throws IOException {
+        // not needed
+    }
 }

@@ -182,9 +182,9 @@ public class TableController extends BasicController {
      */
     @RequestMapping(value = "/hive", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    private List<String> showHiveDatabases() throws IOException {
+    private List<String> showHiveDatabases(@RequestParam(value = "project", required = false) String project) throws IOException {
         try {
-            return tableService.getHiveDbNames();
+            return tableService.getSourceDbNames(project);
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
@@ -199,9 +199,9 @@ public class TableController extends BasicController {
      */
     @RequestMapping(value = "/hive/{database}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    private List<String> showHiveTables(@PathVariable String database) throws IOException {
+    private List<String> showHiveTables(@PathVariable String database, @RequestParam(value = "project", required = false) String project) throws IOException {
         try {
-            return tableService.getHiveTableNames(database);
+            return tableService.getSourceTableNames(project, database);
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());

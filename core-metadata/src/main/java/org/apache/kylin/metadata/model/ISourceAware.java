@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.model;
 
+import org.apache.kylin.common.KylinConfig;
+
 public interface ISourceAware {
 
     public static final int ID_HIVE = 0;
@@ -27,4 +29,6 @@ public interface ISourceAware {
     public static final int ID_JDBC = 8;
 
     int getSourceType();
+
+    KylinConfig getConfig();
 }

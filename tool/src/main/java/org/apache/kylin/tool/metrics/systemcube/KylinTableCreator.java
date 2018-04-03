@@ -54,38 +54,39 @@ public class KylinTableCreator {
         List<Pair<String, String>> columns = Lists.newLinkedList();
         columns.addAll(HiveTableCreator.getHiveColumnsForMetricsQuery());
         columns.addAll(HiveTableCreator.getPartitionKVsForHiveTable());
-        return generateKylinTable(sinkTool, kylinConfig.getKylinMetricsSubjectQuery(), columns);
+        return generateKylinTable(kylinConfig, sinkTool, kylinConfig.getKylinMetricsSubjectQuery(), columns);
     }
 
     public static TableDesc generateKylinTableForMetricsQueryCube(KylinConfig kylinConfig, SinkTool sinkTool) {
         List<Pair<String, String>> columns = Lists.newLinkedList();
         columns.addAll(HiveTableCreator.getHiveColumnsForMetricsQueryCube());
         columns.addAll(HiveTableCreator.getPartitionKVsForHiveTable());
-        return generateKylinTable(sinkTool, kylinConfig.getKylinMetricsSubjectQueryCube(), columns);
+        return generateKylinTable(kylinConfig, sinkTool, kylinConfig.getKylinMetricsSubjectQueryCube(), columns);
     }
 
     public static TableDesc generateKylinTableForMetricsQueryRPC(KylinConfig kylinConfig, SinkTool sinkTool) {
         List<Pair<String, String>> columns = Lists.newLinkedList();
         columns.addAll(HiveTableCreator.getHiveColumnsForMetricsQueryRPC());
         columns.addAll(HiveTableCreator.getPartitionKVsForHiveTable());
-        return generateKylinTable(sinkTool, kylinConfig.getKylinMetricsSubjectQueryRpcCall(), columns);
+        return generateKylinTable(kylinConfig, sinkTool, kylinConfig.getKylinMetricsSubjectQueryRpcCall(), columns);
     }
 
     public static TableDesc generateKylinTableForMetricsJob(KylinConfig kylinConfig, SinkTool sinkTool) {
         List<Pair<String, String>> columns = Lists.newLinkedList();
         columns.addAll(HiveTableCreator.getHiveColumnsForMetricsJob());
         columns.addAll(HiveTableCreator.getPartitionKVsForHiveTable());
-        return generateKylinTable(sinkTool, kylinConfig.getKylinMetricsSubjectJob(), columns);
+        return generateKylinTable(kylinConfig, sinkTool, kylinConfig.getKylinMetricsSubjectJob(), columns);
     }
 
     public static TableDesc generateKylinTableForMetricsJobException(KylinConfig kylinConfig, SinkTool sinkTool) {
         List<Pair<String, String>> columns = Lists.newLinkedList();
         columns.addAll(HiveTableCreator.getHiveColumnsForMetricsJobException());
         columns.addAll(HiveTableCreator.getPartitionKVsForHiveTable());
-        return generateKylinTable(sinkTool, kylinConfig.getKylinMetricsSubjectJobException(), columns);
+        return generateKylinTable(kylinConfig, sinkTool, kylinConfig.getKylinMetricsSubjectJobException(), columns);
     }
 
-    public static TableDesc generateKylinTable(SinkTool sinkTool, String subject, List<Pair<String, String>> columns) {
+    public static TableDesc generateKylinTable(KylinConfig kylinConfig, SinkTool sinkTool, String subject,
+            List<Pair<String, String>> columns) {
         TableDesc kylinTable = new TableDesc();
 
         Pair<String, String> tableNameSplits = ActiveReservoirReporter
@@ -107,7 +108,7 @@ public class KylinTableCreator {
         }
         kylinTable.setColumns(columnDescs);
 
-        kylinTable.init(MetricsManager.SYSTEM_PROJECT);
+        kylinTable.init(kylinConfig, MetricsManager.SYSTEM_PROJECT);
 
         return kylinTable;
     }
