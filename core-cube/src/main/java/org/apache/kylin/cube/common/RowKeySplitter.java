@@ -124,8 +124,6 @@ public class RowKeySplitter implements java.io.Serializable {
             int colLength = colIO.getColumnLength(col);
             SplittedBytes split = this.splitBuffers[this.bufferSize++];
             split.length = colLength;
-            if(split.length > split.value.length)
-                split.value = new byte[split.length];
             System.arraycopy(bytes, offset, split.value, 0, colLength);
             offset += colLength;
         }
