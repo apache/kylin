@@ -192,7 +192,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                                 projectNames, "-compress", "false", "-submodule", "true" };
                         logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
                         Object extractor = ClassUtil.newInstance("org.apache.kylin.tool.HBaseUsageExtractor");
-                        Method execute = extractor.getClass().getDeclaredMethod("execute", String[].class);
+                        Method execute = extractor.getClass().getMethod("execute", String[].class);
                         execute.invoke(extractor, (Object) hbaseArgs);
                     } catch (Throwable e) {
                         logger.error("Error in export HBase usage.", e);
