@@ -98,7 +98,7 @@ public class CubeDescManager {
                     cubeDesc.init(config);
                 } catch (Exception e) {
                     logger.warn("Broken cube desc " + cubeDesc.resourceName(), e);
-                    cubeDesc.addError(e.getMessage());
+                    cubeDesc.addError(e.toString());
                 }
                 return cubeDesc;
             }
@@ -193,7 +193,7 @@ public class CubeDescManager {
                 cubeDesc.init(config);
             } catch (Exception e) {
                 logger.warn("Broken cube desc " + cubeDesc, e);
-                cubeDesc.addError(e.getMessage());
+                cubeDesc.addError(e.toString());
             }
             
             postProcessCubeDesc(cubeDesc);
@@ -239,7 +239,7 @@ public class CubeDescManager {
                 desc.init(config);
             } catch (Exception e) {
                 logger.warn("Broken cube desc " + desc, e);
-                desc.addError(e.getMessage());
+                desc.addError(e.toString());
                 return desc;
             }
 

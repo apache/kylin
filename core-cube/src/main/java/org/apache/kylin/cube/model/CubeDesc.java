@@ -652,8 +652,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 Method initMeasureReferenceToColumnFamilyMethod = hbaseMappingAdapterClass.getMethod("initMeasureReferenceToColumnFamilyWithChecking", CubeDesc.class);
                 initMeasureReferenceToColumnFamilyMethod.invoke(null, this);
             } catch (Exception e) {
-                logger.error("Wrong configuration for kylin.metadata.hbasemapping-adapter: class "
-                        + hbaseMappingAdapterName + " not found. ");
+                throw new RuntimeException("Error during adapting hbase mapping", e);
             }
         } else {
             if (hbaseMapping != null) {
