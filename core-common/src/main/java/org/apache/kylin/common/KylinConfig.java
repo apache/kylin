@@ -239,18 +239,31 @@ public class KylinConfig extends KylinConfigBase {
         setKylinConfigInEnvIfMissing(props);
     }
 
-    public static void setKylinConfigThreadLocal(KylinConfig config) {
-        THREAD_ENV_INSTANCE.set(config);
+    // auto-closeable API to remind that a thread local config must always be removed
+    public static SetAndUnsetThreadLocalConfig setAndUnsetThreadLocalConfig(KylinConfig config) {
+        return new SetAndUnsetThreadLocalConfig(config);
+    }
+    
+    public static class SetAndUnsetThreadLocalConfig implements AutoCloseable {
+
+        public SetAndUnsetThreadLocalConfig(KylinConfig config) {
+            THREAD_ENV_INSTANCE.set(config);
+        }
+
+        @Override
+        public void close() {
+            THREAD_ENV_INSTANCE.remove();
+        }
     }
 
-    public static void removeKylinConfigThreadLocal() {
-        THREAD_ENV_INSTANCE.remove();
-    }
-
-    public static KylinConfig createKylinConfig(String propsInStr) throws IOException {
-        Properties props = new Properties();
-        props.load(new StringReader(propsInStr));
-        return createKylinConfig(props);
+    public static KylinConfig createKylinConfig(String propsInStr) {
+        try {
+            Properties props = new Properties();
+            props.load(new StringReader(propsInStr));
+            return createKylinConfig(props);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create KylinConfig from string: " + propsInStr, e);
+        }
     }
 
     public static KylinConfig createKylinConfig(KylinConfig another) {

@@ -42,6 +42,7 @@ import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
 import org.apache.kylin.common.util.Bytes;
@@ -239,17 +240,18 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
         CubeVisitProtos.CubeVisitResponse.ErrorInfo errorInfo = null;
 
+        // if user change kylin.properties on kylin server, need to manually redeploy coprocessor jar to update KylinConfig of Env.
+        KylinConfig kylinConfig = KylinConfig.createKylinConfig(request.getKylinProperties());
+        
         String queryId = request.hasQueryId() ? request.getQueryId() : "UnknownId";
         logger.info("start query {} in thread {}", queryId, Thread.currentThread().getName());
-        try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
+        try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
+                SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
+            
             final long serviceStartTime = System.currentTimeMillis();
 
             region = (HRegion) env.getRegion();
             region.startRegionOperation();
-
-            // if user change kylin.properties on kylin server, need to manually redeploy coprocessor jar to update KylinConfig of Env.
-            KylinConfig kylinConfig = KylinConfig.createKylinConfig(request.getKylinProperties());
-            KylinConfig.setKylinConfigThreadLocal(kylinConfig);
 
             debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);
 

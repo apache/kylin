@@ -59,6 +59,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -495,7 +496,12 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        KylinConfig.setKylinConfigThreadLocal(config);
+        
+        // This is a bad example where the thread local KylinConfig cannot be auto-closed due to 
+        // limitation of MR API. It works because MR task runs its own process. Do not copy.
+        @SuppressWarnings("unused")
+        SetAndUnsetThreadLocalConfig shouldAutoClose = KylinConfig.setAndUnsetThreadLocalConfig(config);
+        
         return config;
     }
 
