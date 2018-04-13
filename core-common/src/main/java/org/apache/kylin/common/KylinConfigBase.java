@@ -306,7 +306,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getCacheSyncErrorHandler() {
         return getOptional("kylin.metadata.sync-error-handler");
     }
-    
+
     // for test only
     public void setMetadataUrl(String metadataUrl) {
         setProperty("kylin.metadata.url", metadataUrl);

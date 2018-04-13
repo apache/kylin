@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.tool;
+package org.apache.kylin.rest.job;
 
 import static org.apache.kylin.common.util.LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA;
 import static org.apache.kylin.common.util.LocalFileMetadataTestCase.cleanAfterClass;

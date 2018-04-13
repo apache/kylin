@@ -412,6 +412,8 @@ public class KylinConfig extends KylinConfigBase {
                 return (T) mgr;
             
             try {
+                logger.info("Creating new manager instance of " + clz);
+                
                 // new manager via static Manager.newInstance()
                 Method method = clz.getDeclaredMethod("newInstance", KylinConfig.class);
                 method.setAccessible(true); // override accessibility

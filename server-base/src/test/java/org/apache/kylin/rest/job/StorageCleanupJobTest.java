@@ -35,6 +35,7 @@ import java.util.List;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase.OverlayMetaHook;
 import org.junit.After;
@@ -61,7 +62,7 @@ public class StorageCleanupJobTest {
         prepareUnusedIntermediateHiveTable(mockFs);
         prepareUnusedHDFSFiles(mockFs);
 
-        MockStorageCleanupJob job = new MockStorageCleanupJob(mockFs, mockFs);
+        MockStorageCleanupJob job = new MockStorageCleanupJob(KylinConfig.getInstanceFromEnv(), mockFs, mockFs);
         job.execute(new String[] { "--delete", "true" });
 
         ArgumentCaptor<Path> pathCaptor = ArgumentCaptor.forClass(Path.class);
@@ -104,8 +105,8 @@ public class StorageCleanupJobTest {
 
     class MockStorageCleanupJob extends StorageCleanupJob {
 
-        MockStorageCleanupJob(FileSystem defaultFs, FileSystem hbaseFs) {
-            super(defaultFs, hbaseFs);
+        MockStorageCleanupJob(KylinConfig config, FileSystem defaultFs, FileSystem hbaseFs) {
+            super(config, defaultFs, hbaseFs);
         }
 
         @Override

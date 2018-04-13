@@ -81,6 +81,10 @@ public class HadoopUtil {
         return getFileSystem(new Path(makeURI(path)));
     }
 
+    public static FileSystem getFileSystem(String path, Configuration conf) throws IOException {
+        return getFileSystem(new Path(makeURI(path)), conf);
+    }
+    
     public static FileSystem getFileSystem(Path path) throws IOException {
         Configuration conf = getCurrentConfiguration();
         return getFileSystem(path, conf);
