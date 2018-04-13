@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,33 +45,36 @@ public class AdminServiceTest extends ServiceTestBase {
         FileUtils.deleteQuietly(file);
         FileUtils.touch(file);
         String path = Thread.currentThread().getContextClassLoader().getResource("kylin.properties").getPath();
-        KylinConfig.setKylinConfigThreadLocal(KylinConfig.createInstanceFromUri(path));
 
-        String expected = "kylin.web.link-streaming-guide=http://kylin.apache.org/\n" +
-                "kylin.web.dashboard-enabled=\n" +
-                "kylin.web.contact-mail=\n" +
-                "kylin.query.cache-enabled=true\n" +
-                "kylin.web.link-diagnostic=\n" +
-                "kylin.web.help.length=4\n" +
-                "kylin.web.timezone=GMT+8\n" +
-                "kylin.server.external-acl-provider=\n" +
-                "kylin.tool.auto-migrate-cube.enabled=\n" +
-                "kylin.storage.default=2\n" +
-                "kylin.cube.cubeplanner.enabled=false\n" +
-                "kylin.web.help=\n" +
-                "kylin.web.export-allow-other=true\n" +
-                "kylin.web.link-hadoop=\n" +
-                "kylin.web.hide-measures=RAW\n" +
-                "kylin.htrace.show-gui-trace-toggle=false\n" +
-                "kylin.web.export-allow-admin=true\n" +
-                "kylin.env=QA\n" +
-                "kylin.web.hive-limit=20\n" +
-                "kylin.engine.default=2\n" +
-                "kylin.web.help.3=onboard|Cube Design Tutorial|http://kylin.apache.org/docs21/howto/howto_optimize_cubes.html\n" +
-                "kylin.web.help.2=tableau|Tableau Guide|http://kylin.apache.org/docs21/tutorial/tableau_91.html\n" +
-                "kylin.web.help.1=odbc|ODBC Driver|http://kylin.apache.org/docs21/tutorial/odbc.html\n" +
-                "kylin.web.help.0=start|Getting Started|http://kylin.apache.org/docs21/tutorial/kylin_sample.html\n" +
-                "kylin.security.profile=testing\n";
-        Assert.assertEquals(expected, adminService.getPublicConfig());
+        KylinConfig config = KylinConfig.createInstanceFromUri(path);
+        try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(config)) {
+        
+            String expected = "kylin.web.link-streaming-guide=http://kylin.apache.org/\n" +
+                    "kylin.web.dashboard-enabled=\n" +
+                    "kylin.web.contact-mail=\n" +
+                    "kylin.query.cache-enabled=true\n" +
+                    "kylin.web.link-diagnostic=\n" +
+                    "kylin.web.help.length=4\n" +
+                    "kylin.web.timezone=GMT+8\n" +
+                    "kylin.server.external-acl-provider=\n" +
+                    "kylin.tool.auto-migrate-cube.enabled=\n" +
+                    "kylin.storage.default=2\n" +
+                    "kylin.cube.cubeplanner.enabled=false\n" +
+                    "kylin.web.help=\n" +
+                    "kylin.web.export-allow-other=true\n" +
+                    "kylin.web.link-hadoop=\n" +
+                    "kylin.web.hide-measures=RAW\n" +
+                    "kylin.htrace.show-gui-trace-toggle=false\n" +
+                    "kylin.web.export-allow-admin=true\n" +
+                    "kylin.env=QA\n" +
+                    "kylin.web.hive-limit=20\n" +
+                    "kylin.engine.default=2\n" +
+                    "kylin.web.help.3=onboard|Cube Design Tutorial|http://kylin.apache.org/docs21/howto/howto_optimize_cubes.html\n" +
+                    "kylin.web.help.2=tableau|Tableau Guide|http://kylin.apache.org/docs21/tutorial/tableau_91.html\n" +
+                    "kylin.web.help.1=odbc|ODBC Driver|http://kylin.apache.org/docs21/tutorial/odbc.html\n" +
+                    "kylin.web.help.0=start|Getting Started|http://kylin.apache.org/docs21/tutorial/kylin_sample.html\n" +
+                    "kylin.security.profile=testing\n";
+            Assert.assertEquals(expected, adminService.getPublicConfig());
+        }
     }
 }

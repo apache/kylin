@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -98,7 +99,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     }
 
     @Test
-    public void testThreadLocalOverride() {
+    public void testThreadLocalOverride() throws InterruptedException {
         final String metadata1 = "meta1";
         final String metadata2 = "meta2";
 
@@ -111,18 +112,23 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
         // test thread-local override
         KylinConfig threadConfig = KylinConfig.createKylinConfig(new Properties());
         threadConfig.setMetadataUrl(metadata2);
-        KylinConfig.setKylinConfigThreadLocal(threadConfig);
+        
+        try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(threadConfig)) {
 
-        assertEquals(metadata2, KylinConfig.getInstanceFromEnv().getMetadataUrl().toString());
-
-        // other threads still use system KylinConfig
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Started new thread.");
-                assertEquals(metadata1, KylinConfig.getInstanceFromEnv().getMetadataUrl().toString());
-            }
-        }).start();
+            assertEquals(metadata2, KylinConfig.getInstanceFromEnv().getMetadataUrl().toString());
+    
+            // other threads still use system KylinConfig
+            final String[] holder = new String[1];
+            Thread child = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    holder[0] = KylinConfig.getInstanceFromEnv().getMetadataUrl().toString();
+                }
+            });
+            child.start();
+            child.join();
+            assertEquals(metadata1, holder[0]);
+        }
     }
 
     @Test

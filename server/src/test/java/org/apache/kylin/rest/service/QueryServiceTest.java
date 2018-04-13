@@ -21,8 +21,9 @@ package org.apache.kylin.rest.service;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -79,21 +80,22 @@ public class QueryServiceTest extends ServiceTestBase {
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setProperty("kylin.query.convert-create-table-to-with", "true");
-        KylinConfig.setKylinConfigThreadLocal(config);
+        try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(config)) {
 
-        SQLRequest request = new SQLRequest();
-        request.setProject("default");
-        request.setSql(create_table1);
-        queryService.doQueryWithCache(request);
+            SQLRequest request = new SQLRequest();
+            request.setProject("default");
+            request.setSql(create_table1);
+            queryService.doQueryWithCache(request);
 
-        request.setSql(create_table2);
-        queryService.doQueryWithCache(request);
+            request.setSql(create_table2);
+            queryService.doQueryWithCache(request);
 
-        request.setSql(select_table);
-        SQLResponse response = queryService.doQueryWithCache(request, true);
+            request.setSql(select_table);
+            SQLResponse response = queryService.doQueryWithCache(request, true);
 
-        Assert.assertEquals(
-                "WITH tableId as (select * from some_table1) , tableId2 AS (select * FROM some_table2) select * from tableId join tableId2 on tableId.a = tableId2.b;",
-                response.getExceptionMessage());
+            Assert.assertEquals(
+                    "WITH tableId as (select * from some_table1) , tableId2 AS (select * FROM some_table2) select * from tableId join tableId2 on tableId.a = tableId2.b;",
+                    response.getExceptionMessage());
+        }
     }
 }
