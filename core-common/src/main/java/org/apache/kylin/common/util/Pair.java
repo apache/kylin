@@ -70,6 +70,10 @@ public class Pair<T1, T2> implements Serializable {
     public T1 getFirst() {
         return first;
     }
+    
+    public T1 getKey() {
+        return first;
+    }
 
     /**
      * Replace the first element of the pair.
@@ -84,6 +88,10 @@ public class Pair<T1, T2> implements Serializable {
      * @return T2
      */
     public T2 getSecond() {
+        return second;
+    }
+    
+    public T2 getValue() {
         return second;
     }
 
