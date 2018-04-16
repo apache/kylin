@@ -238,16 +238,8 @@ public class HiveMRInput implements IMRInput {
                 String identity = lookUpTableDesc.getIdentity();
                 String intermediate = lookUpTableDesc.getMaterializedName();
                 if (lookUpTableDesc.isView()) {
-                    StringBuilder createIntermediateTableHql = new StringBuilder();
-                    createIntermediateTableHql.append("DROP TABLE IF EXISTS " + intermediate + ";\n");
-                    createIntermediateTableHql
-                            .append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediate + " LIKE " + identity + "\n");
-                    createIntermediateTableHql.append("LOCATION '" + jobWorkingDir + "/" + intermediate + "';\n");
-                    createIntermediateTableHql
-                            .append("ALTER TABLE " + intermediate + " SET TBLPROPERTIES('auto.purge'='true');\n");
-                    createIntermediateTableHql
-                            .append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + ";\n");
-                    hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
+                    String materializeViewHql = materializeViewHql(intermediate, identity, jobWorkingDir);
+                    hiveCmdBuilder.addStatement(materializeViewHql);
                     hiveViewIntermediateTables = hiveViewIntermediateTables + intermediate + ";";
                 }
             }
@@ -257,6 +249,18 @@ public class HiveMRInput implements IMRInput {
 
             step.setCmd(hiveCmdBuilder.build());
             return step;
+        }
+
+        // each append must be a complete hql.
+        public static String materializeViewHql(String viewName, String tableName, String jobWorkingDir) {
+            StringBuilder createIntermediateTableHql = new StringBuilder();
+            createIntermediateTableHql.append("DROP TABLE IF EXISTS " + viewName + ";\n");
+            createIntermediateTableHql.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + viewName + " LIKE " + tableName
+                    + " LOCATION '" + jobWorkingDir + "/" + viewName + "';\n");
+            createIntermediateTableHql.append("ALTER TABLE " + viewName + " SET TBLPROPERTIES('auto.purge'='true');\n");
+            createIntermediateTableHql
+                    .append("INSERT OVERWRITE TABLE " + viewName + " SELECT * FROM " + tableName + ";\n");
+            return createIntermediateTableHql.toString();
         }
 
         private AbstractExecutable createFlatHiveTableStep(String hiveInitStatements, String jobWorkingDir,
