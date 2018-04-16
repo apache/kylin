@@ -56,4 +56,23 @@ public class HiveMRInputTest {
         }
     }
 
+    @Test
+    public void testMaterializeViewHql() {
+        final int viewSize = 2;
+        String[] mockedViewNames = { "mockedView1", "mockedView2" };
+        String[] mockedTalbeNames = { "mockedTable1", "mockedTable2" };
+        String mockedWorkingDir = "mockedWorkingDir";
+
+        StringBuilder hqls = new StringBuilder();
+        for (int i = 0; i < viewSize; i++) {
+            String hql = HiveMRInput.BatchCubingInputSide.materializeViewHql(mockedViewNames[i], mockedTalbeNames[i],
+                    mockedWorkingDir);
+            hqls.append(hql);
+        }
+
+        for (String sub : hqls.toString().split("\n")) {
+            Assert.assertTrue(sub.endsWith(";"));
+        }
+    }
+
 }
