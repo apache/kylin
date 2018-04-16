@@ -483,6 +483,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cube.gtscanrequest-serialization-level", "1"));
     }
 
+    public boolean isAutoMergeEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.is-automerge-enabled", "true"));
+    }
+
     // ============================================================================
     // Cube Planner
     // ============================================================================
