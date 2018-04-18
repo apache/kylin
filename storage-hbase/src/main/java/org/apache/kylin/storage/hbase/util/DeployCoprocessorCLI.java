@@ -100,7 +100,7 @@ public class DeployCoprocessorCLI {
             if ("default".equals(args[curIdx++])) {
                 localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
             } else {
-                localCoprocessorJar = new File(args[curIdx++]).getAbsolutePath();
+                localCoprocessorJar = new File(args[curIdx]).getAbsolutePath();
             }
 
             logger.info("Identify coprocessor jar " + localCoprocessorJar);
