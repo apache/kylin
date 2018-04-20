@@ -161,5 +161,12 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     return false;
   }
 
+  this.getSourceType = function(){
+    this.sourceType = this.getProperty("kylin.source.default").trim();
+    if (!this.sourceType) {
+      return 0;
+    }
+    return this.sourceType;
+  }
 });
 
