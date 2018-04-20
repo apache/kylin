@@ -261,7 +261,7 @@ KylinApp
       $scope.selectedNodes = [];
       $scope.hiveLimit =  kylinConfig.getHiveLimit();
       $scope.sourceType =  kylinConfig.getSourceType();
-      if ($scope.sourceType !== 0) {
+      if ($scope.sourceType !== '0') {
         $scope.isCalculate.val = false
       }
 

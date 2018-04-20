@@ -63,7 +63,7 @@
       <button class="btn btn-xs btn-primary" ng-if="node.label==''&&node.id==65535" ng-click="showAllClicked($parentNode)">Show All</button>
       {{node.label}}
     </treecontrol>
-    <label ng-if="sourceType === 0"><input type="checkbox" ng-model="isCalculate.val" > Calculate column cardinality</label>
+    <label ng-if="sourceType === '0'"><input type="checkbox" ng-model="isCalculate.val" > Calculate column cardinality</label>
   </div>
 
   <div class="modal-footer">
