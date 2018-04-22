@@ -28,6 +28,8 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StringSplitter;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +53,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public static String concatRawResourcePath(String nameOnPath) {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";
     }
-    
+
     public static String makeResourceName(String tableIdentity, String prj) {
         return prj == null ? tableIdentity : tableIdentity + "--" + prj;
     }
@@ -132,7 +134,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public String resourceName() {
         return makeResourceName(getIdentity(), getProject());
     }
-    
+
     public TableDesc appendColumns(ColumnDesc[] computedColumns, boolean makeCopy) {
         if (computedColumns == null || computedColumns.length == 0) {
             return this;
@@ -193,7 +195,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         if (isBorrowedFromGlobal()) {
             return concatResourcePath(getIdentity(), null);
         }
-        
+
         return concatResourcePath(getIdentity(), project);
     }
 
@@ -292,8 +294,13 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     public void init(KylinConfig config, String project) {
         this.project = project;
-        this.config = config;
-        
+        if (project == null) {
+            this.config = config;
+        } else {
+            ProjectInstance projInstance = ProjectManager.getInstance(config).getProject(project);
+            this.config = projInstance == null ? config : projInstance.getConfig();
+        }
+
         if (name != null)
             name = name.toUpperCase();
 
