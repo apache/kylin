@@ -83,42 +83,45 @@ When the system cube is created, we need to build the cube regularly.
   
 	For example:
 
-	```
-	#!/bin/bash
+{% highlight Groff markup %}
+#!/bin/bash
 
-	dir=$(dirname ${0})
-	export KYLIN_HOME=${dir}/../
+dir=$(dirname ${0})
+export KYLIN_HOME=${dir}/../
 
-	CUBE=$1
-	INTERVAL=$2
-	DELAY=$3
-	CURRENT_TIME_IN_SECOND=`date +%s`
-	CURRENT_TIME=$((CURRENT_TIME_IN_SECOND * 1000))
-	END_TIME=$((CURRENT_TIME-DELAY))
-	END=$((END_TIME - END_TIME%INTERVAL))
+CUBE=$1
+INTERVAL=$2
+DELAY=$3
+CURRENT_TIME_IN_SECOND=`date +%s`
+CURRENT_TIME=$((CURRENT_TIME_IN_SECOND * 1000))
+END_TIME=$((CURRENT_TIME-DELAY))
+END=$((END_TIME - END_TIME%INTERVAL))
 
-	ID="$END"
-	echo "building for ${CUBE}_${ID}" >> ${KYLIN_HOME}/logs/build_trace.log
-	sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube ${CUBE} --endTime ${END} > ${KYLIN_HOME}/logs/system_cube_${CUBE}_${END}.log 2>&1 &
-	```
+ID="$END"
+echo "building for ${CUBE}_${ID}" >> ${KYLIN_HOME}/logs/build_trace.log
+sh ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.job.CubeBuildingCLI --cube ${CUBE} --endTime ${END} > ${KYLIN_HOME}/logs/system_cube_${CUBE}_${END}.log 2>&1 &
+
+{% endhighlight %}
 
 2. Then run this shell script regularly
 
 	For example, add a cron job as follows:
 
-	```
-	0 */2 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_QUERY_DEV 3600000 1200000
+{% highlight Groff markup %}
+0 */2 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_QUERY_DEV 3600000 1200000
 
-	20 */2 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_QUERY_CUBE_DEV 3600000 1200000
+20 */2 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_QUERY_CUBE_DEV 3600000 1200000
 
-	40 */4 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_QUERY_RPC_DEV 3600000 1200000
+40 */4 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_QUERY_RPC_DEV 3600000 1200000
 
-	30 */4 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_JOB_DEV 3600000 1200000
+30 */4 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_JOB_DEV 3600000 1200000
 
-	50 */12 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_JOB_EXCEPTION_DEV 3600000 12000
-	```
+50 */12 * * * sh ${KYLIN_HOME}/bin/system_cube_build.sh KYLIN_HIVE_METRICS_JOB_EXCEPTION_DEV 3600000 12000
+
+{% endhighlight %}
 
 ## Details of System Cube
+
 ### Common Dimension
 For all of these cube, admins can query at four time granularities. From higher level to lower, it's as follows:
 
