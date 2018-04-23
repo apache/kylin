@@ -260,6 +260,10 @@ KylinApp
       $scope.treeOptions = {multiSelection: true};
       $scope.selectedNodes = [];
       $scope.hiveLimit =  kylinConfig.getHiveLimit();
+      $scope.sourceType =  kylinConfig.getSourceType();
+      if ($scope.sourceType !== '0') {
+        $scope.isCalculate.val = false
+      }
 
       $scope.loadHive = function () {
         if($scope.hiveLoaded)

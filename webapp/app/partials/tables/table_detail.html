@@ -47,7 +47,7 @@
                 <td>{{ tableModel.selectedSrcTable.name}}</td>
               </tr>
               <tr>
-                <th>Hive DATABASE</th>
+                <th>DATABASE</th>
                 <td>{{tableModel.selectedSrcTable.database}}</td>
               </tr>
               <tr>
@@ -205,8 +205,8 @@
       </div>
       <div class="box-body">
         <div>
-          <a tooltip="Load Hive Table" href="javascript:void(0);" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)"
-             ng-click="openModal()">Click here to load your hive table</a>
+          <a tooltip="Load Table" href="javascript:void(0);" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask)"
+             ng-click="openModal()">Click here to load your table</a>
         </div>
       </div>
       <!-- /.box-body -->
