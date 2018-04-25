@@ -18,6 +18,7 @@
 
 package org.apache.kylin.measure.basic;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
@@ -35,7 +36,7 @@ public class LongIngester extends MeasureIngester<Long> {
         if (values[0] == null || values[0].length() == 0)
             return new Long(0L);
         else
-            return Long.valueOf(values[0]);
+            return new BigDecimal(values[0]).longValue();
     }
 
     @Override
