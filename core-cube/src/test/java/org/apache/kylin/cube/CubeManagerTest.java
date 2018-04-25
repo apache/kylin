@@ -211,6 +211,9 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeSegment seg4 = mgr.appendSegment(cube, null, new SegmentRange(3000L, 4000L), m3, m4);
         mgr.updateCubeSegStatus(seg4, SegmentStatusEnum.READY);
 
+        cube = mgr.getCube(cube.getName());
+        assertTrue(cube.getSegments().size() == 4);
+        
         CubeSegment merge1 = mgr.mergeSegments(cube, null, new SegmentRange(0L, 2000L), true);
         merge1.setStatus(SegmentStatusEnum.NEW);
         merge1.setLastBuildJobID("test");
