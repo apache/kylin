@@ -18,6 +18,7 @@
 
 package org.apache.kylin.measure.basic;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
@@ -35,7 +36,7 @@ public class DoubleIngester extends MeasureIngester<Double> {
         if (values[0] == null || values[0].length() == 0)
             return new Double(0);
         else
-            return Double.parseDouble(values[0]);
+            return new BigDecimal(values[0]).doubleValue();
     }
 
     @Override
