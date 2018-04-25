@@ -802,10 +802,12 @@ public class CubeManager implements IRealizationProvider {
             return segment;
         }
 
-        public void promoteNewlyBuiltSegments(CubeInstance cube, CubeSegment newSegment) throws IOException {
-            // work on copy instead of cached objects
-            CubeInstance cubeCopy = cube.latestCopyForWrite(); // get a latest copy
-            CubeSegment newSegCopy = cubeCopy.getSegmentById(newSegment.getUuid());
+        public void promoteNewlyBuiltSegments(CubeInstance cube, CubeSegment newSegCopy) throws IOException {
+            // double check the updating objects are not on cache
+            if (newSegCopy.getCubeInstance().isCachedAndShared())
+                throw new IllegalStateException();
+
+            CubeInstance cubeCopy = getCube(cube.getName()).latestCopyForWrite();
 
             if (StringUtils.isBlank(newSegCopy.getStorageLocationIdentifier()))
                 throw new IllegalStateException(
