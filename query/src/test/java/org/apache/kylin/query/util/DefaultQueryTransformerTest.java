@@ -100,5 +100,9 @@ public class DefaultQueryTransformerTest {
         String fnConvertSumSql = "select {fn EXTRACT(YEAR from PART_DT)} from KYLIN_SALES";
         String correctSql = transformer.transform(fnConvertSumSql, "", "");
         assertTrue("select EXTRACT(YEAR from PART_DT) from KYLIN_SALES".equalsIgnoreCase(correctSql));
+
+        fnConvertSumSql = "SELECT {fn CURRENT_TIMESTAMP(0)}";
+        correctSql = transformer.transform(fnConvertSumSql, "", "");
+        assertTrue("SELECT CURRENT_TIMESTAMP".equalsIgnoreCase(correctSql));
     }
 }
