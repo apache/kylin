@@ -43,15 +43,13 @@ public class DefaultQueryTransformer implements IQueryTransformer {
     private static final Pattern PTN_INTERVAL = Pattern.compile(
             "interval" + SM + "(floor\\()([\\d\\.]+)(\\))" + SM + "(second|minute|hour|day|month|year)",
             Pattern.CASE_INSENSITIVE);
-    private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + SM + "(EXTRACT\\(.*?\\))" + "\\}",
+    private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + SM + "(EXTRACT\\(.*?\\)||CURRENT_TIMESTAMP\\(.*?\\))" + "\\}",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern PIN_SUM_OF_CAST = Pattern.compile(S0 + "SUM" + S0 + "\\(" + S0 + "CAST" + S0 + "\\("
             + S0 + "([^\\s,]+)" + S0 + "AS" + SM + "DOUBLE" + S0 + "\\)" + S0 + "\\)", Pattern.CASE_INSENSITIVE);
     private static final Pattern PIN_SUM_OF_FN_CONVERT = Pattern
             .compile(S0 + "SUM" + S0 + "\\(" + S0 + "\\{\\s*fn" + SM + "convert" + S0 + "\\(" + S0 + "([^\\s,]+)" + S0
                     + "," + S0 + "SQL_DOUBLE" + S0 + "\\)" + S0 + "\\}" + S0 + "\\)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern PTN_HAVING_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}",
-            Pattern.CASE_INSENSITIVE);
 
     @Override
     public String transform(String sql, String project, String defaultSchema) {
@@ -138,13 +136,6 @@ public class DefaultQueryTransformer implements IQueryTransformer {
 
             int value = (int) Math.floor(Double.valueOf(m.group(2)));
             sql = sql.substring(0, m.start(1)) + "'" + value + "'" + sql.substring(m.end(3));
-        }
-
-        while (true) {
-            m = PTN_HAVING_FUNCTION.matcher(sql);
-            if (!m.find())
-                break;
-            sql = sql.substring(0, m.start()) + m.group(1) + sql.substring(m.end());
         }
         
         return sql;
