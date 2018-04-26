@@ -103,7 +103,7 @@ public class DefaultQueryTransformerTest {
 
         fnConvertSumSql = "SELECT {fn CURRENT_TIMESTAMP(0)}";
         correctSql = transformer.transform(fnConvertSumSql, "", "");
-        assertTrue("SELECT CURRENT_TIMESTAMP".equalsIgnoreCase(correctSql));
+        assertTrue("SELECT CURRENT_TIMESTAMP(0)".equalsIgnoreCase(correctSql));
 
     }
 }
