@@ -33,6 +33,7 @@ import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.FilterOptimizeTransformer;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -154,8 +155,7 @@ public class GTUtil {
             // In case of NOT(unEvaluatableFilter), we should immediately replace it as TRUE,
             // Otherwise, unEvaluatableFilter will later be replace with TRUE and NOT(unEvaluatableFilter)
             // will always return FALSE.
-            if (filter.getOperator() == TupleFilter.FilterOperatorEnum.NOT
-                    && !TupleFilter.isEvaluableRecursively(filter)) {
+            if (filter.getOperator() == FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
                 TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
                 return ConstantTupleFilter.TRUE;
             }
@@ -181,7 +181,6 @@ public class GTUtil {
             return filter;
         }
 
-        @SuppressWarnings({ "rawtypes", "unchecked" })
         protected TupleFilter encodeConstants(CompareTupleFilter oldCompareFilter) {
             // extract ColumnFilter & ConstantFilter
             TblColRef externalCol = oldCompareFilter.getColumn();
@@ -249,9 +248,13 @@ public class GTUtil {
                 }
                 break;
             case LT:
-                code = translate(col, firstValue, 1);
+                code = translate(col, firstValue, 0);
                 if (code == null) {
-                    result = ConstantTupleFilter.TRUE;
+                    code = translate(col, firstValue, -1);
+                    if (code == null)
+                        result = ConstantTupleFilter.FALSE;
+                    else
+                        result = newCompareFilter(FilterOperatorEnum.LTE, externalCol, code);
                 } else {
                     newCompareFilter.addChild(new ConstantTupleFilter(code));
                     result = newCompareFilter;
@@ -267,9 +270,13 @@ public class GTUtil {
                 }
                 break;
             case GT:
-                code = translate(col, firstValue, -1);
+                code = translate(col, firstValue, 0);
                 if (code == null) {
-                    result = ConstantTupleFilter.TRUE;
+                    code = translate(col, firstValue, 1);
+                    if (code == null)
+                        result = ConstantTupleFilter.FALSE;
+                    else
+                        result = newCompareFilter(FilterOperatorEnum.GTE, externalCol, code);
                 } else {
                     newCompareFilter.addChild(new ConstantTupleFilter(code));
                     result = newCompareFilter;
@@ -288,6 +295,13 @@ public class GTUtil {
                 throw new IllegalStateException("Cannot handle operator " + newCompareFilter.getOperator());
             }
             return result;
+        }
+
+        private TupleFilter newCompareFilter(FilterOperatorEnum op, TblColRef col, ByteArray code) {
+            CompareTupleFilter r = new CompareTupleFilter(op);
+            r.addChild(new ColumnTupleFilter(col));
+            r.addChild(new ConstantTupleFilter(code));
+            return r;
         }
 
         transient ByteBuffer buf;
