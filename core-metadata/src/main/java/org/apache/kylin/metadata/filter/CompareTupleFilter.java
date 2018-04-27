@@ -154,7 +154,6 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
 
     // TODO requires generalize, currently only evaluates COLUMN {op} CONST
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public boolean evaluate(IEvaluatableTuple tuple, IFilterCodeSystem cs) {
         // extract tuple value
         Object tupleValue = null;

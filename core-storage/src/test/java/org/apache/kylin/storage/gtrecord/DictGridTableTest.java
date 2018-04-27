@@ -34,7 +34,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.gridtable.CubeCodeSystem;
-import org.apache.kylin.dict.NumberDictionaryBuilder;
+import org.apache.kylin.dict.NumberDictionaryForestBuilder;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.dict.TrieDictionaryBuilder;
 import org.apache.kylin.dimension.DictionaryDimEnc;
@@ -441,19 +441,61 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         TblColRef extColA = TblColRef.mockup(extTable, 1, "A", "timestamp");
         TblColRef extColB = TblColRef.mockup(extTable, 2, "B", "integer");
 
-        CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
-        CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.LT, "9");
-        LogicalTupleFilter filter = and(fComp1, fComp2);
-
         List<TblColRef> colMapping = Lists.newArrayList();
         colMapping.add(extColA);
         colMapping.add(extColB);
+        
+        CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
+        
+        // $1<"9" round down to FALSE
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.LT, "9"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(ConstantTupleFilter.FALSE, newFilter);
+        }
 
-        // $1<"9" round up to $1<"10"
-        TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
-        assertEquals(
-                "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 LT [\\x00]]",
-                newFilter.toString());
+        // $1<"10" needs no rounding
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.LT, "10"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(
+                    "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 LT [\\x00]]",
+                    newFilter.toString());
+        }
+        
+        // $1<"11" round down to <="10"
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.LT, "11"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(
+                    "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 LTE [\\x00]]",
+                    newFilter.toString());
+        }
+        
+        // $1<="9" round down to FALSE
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.LTE, "9"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(ConstantTupleFilter.FALSE, newFilter);
+        }
+        
+        // $1<="10" needs no rounding
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.LTE, "10"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(
+                    "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 LTE [\\x00]]",
+                    newFilter.toString());
+        }
+        
+        // $1<="11" round down to <="10"
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.LTE, "11"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(
+                    "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 LTE [\\x00]]",
+                    newFilter.toString());
+        }
     }
 
     @Test
@@ -464,17 +506,61 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         TblColRef extColA = TblColRef.mockup(extTable, 1, "A", "timestamp");
         TblColRef extColB = TblColRef.mockup(extTable, 2, "B", "integer");
 
-        CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
-        CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.LTE, "9");
-        LogicalTupleFilter filter = and(fComp1, fComp2);
-
         List<TblColRef> colMapping = Lists.newArrayList();
         colMapping.add(extColA);
         colMapping.add(extColB);
+        
+        CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
+        
+        // $1>"101" round up to FALSE
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.GT, "101"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(ConstantTupleFilter.FALSE, newFilter);
+        }
 
-        // $1<="9" round down to FALSE
-        TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
-        assertEquals(ConstantTupleFilter.FALSE, newFilter);
+        // $1>"100" needs no rounding
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.GT, "100"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(
+                    "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 GT [\\x09]]",
+                    newFilter.toString());
+        }
+        
+        // $1>"99" round up to >="100"
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.GT, "99"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(
+                    "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 GTE [\\x09]]",
+                    newFilter.toString());
+        }
+        
+        // $1>="101" round up to FALSE
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.GTE, "101"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(ConstantTupleFilter.FALSE, newFilter);
+        }
+        
+        // $1>="100" needs no rounding
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.GTE, "100"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(
+                    "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 GTE [\\x09]]",
+                    newFilter.toString());
+        }
+        
+        // $1>="99" round up to >="100"
+        {
+            LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.GTE, "99"));
+            TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+            assertEquals(
+                    "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 GTE [\\x09]]",
+                    newFilter.toString());
+        }
     }
 
     @Test
@@ -639,7 +725,6 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         return info;
     }
 
-    @SuppressWarnings("unchecked")
     private static CubeCodeSystem newDictCodeSystem() {
         DimensionEncoding[] dimEncs = new DimensionEncoding[3];
         dimEncs[1] = new DictionaryDimEnc(newDictionaryOfInteger());
@@ -647,7 +732,6 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         return new CubeCodeSystem(dimEncs);
     }
 
-    @SuppressWarnings("rawtypes")
     private static Dictionary newDictionaryOfString() {
         TrieDictionaryBuilder<String> builder = new TrieDictionaryBuilder<>(new StringBytesConverter());
         builder.addValue("Dong");
@@ -663,9 +747,8 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         return builder.build(0);
     }
 
-    @SuppressWarnings("rawtypes")
     private static Dictionary newDictionaryOfInteger() {
-        NumberDictionaryBuilder builder = new NumberDictionaryBuilder();
+        NumberDictionaryForestBuilder builder = new NumberDictionaryForestBuilder();
         builder.addValue("10");
         builder.addValue("20");
         builder.addValue("30");
@@ -676,7 +759,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         builder.addValue("80");
         builder.addValue("90");
         builder.addValue("100");
-        return builder.build(0);
+        return builder.build();
     }
 
     public static ImmutableBitSet setOf(int... values) {
