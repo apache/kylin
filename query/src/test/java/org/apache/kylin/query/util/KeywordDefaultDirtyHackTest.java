@@ -56,5 +56,15 @@ public class KeywordDefaultDirtyHackTest extends LocalFileMetadataTestCase {
             String s = kwDefaultHack.transform(sql, null, "DEFAULT");
             Assert.assertEquals("select count(*) from \"DEFAULT\".test_kylin_fact", s);
         }
+        {
+            String sql = "select count(*) from defaultCatalog.default.test_kylin_fact";
+            String s = kwDefaultHack.transform(sql, null, "DEFAULT");
+            Assert.assertEquals("select count(*) from \"DEFAULT\".test_kylin_fact", s);
+        }
+        {
+            String sql = "select count(*) from \"defaultCatalog\".default.test_kylin_fact";
+            String s = kwDefaultHack.transform(sql, null, "DEFAULT");
+            Assert.assertEquals("select count(*) from \"DEFAULT\".test_kylin_fact", s);
+        }
     }
 }
