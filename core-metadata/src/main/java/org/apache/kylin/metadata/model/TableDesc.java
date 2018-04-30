@@ -53,7 +53,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public static String concatRawResourcePath(String nameOnPath) {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";
     }
-
+    
     public static String makeResourceName(String tableIdentity, String prj) {
         return prj == null ? tableIdentity : tableIdentity + "--" + prj;
     }
@@ -134,7 +134,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public String resourceName() {
         return makeResourceName(getIdentity(), getProject());
     }
-
+    
     public TableDesc appendColumns(ColumnDesc[] computedColumns, boolean makeCopy) {
         if (computedColumns == null || computedColumns.length == 0) {
             return this;
@@ -195,7 +195,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         if (isBorrowedFromGlobal()) {
             return concatResourcePath(getIdentity(), null);
         }
-
+        
         return concatResourcePath(getIdentity(), project);
     }
 
@@ -294,13 +294,8 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     public void init(KylinConfig config, String project) {
         this.project = project;
-        if (project == null) {
-            this.config = config;
-        } else {
-            ProjectInstance projInstance = ProjectManager.getInstance(config).getProject(project);
-            this.config = projInstance == null ? config : projInstance.getConfig();
-        }
-
+        this.config = config;
+        
         if (name != null)
             name = name.toUpperCase();
 
@@ -383,9 +378,15 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return sourceType;
     }
 
+    // cannot set config in init() due to cascade lock() on projectManager
     @Override
     public KylinConfig getConfig() {
-        return config;
+        if (project == null) {
+            return config;
+        } else {
+            ProjectInstance projInstance = ProjectManager.getInstance(config).getProject(project);
+            return projInstance == null ? config : projInstance.getConfig();
+        }
     }
 
     public void setSourceType(int sourceType) {
