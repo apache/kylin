@@ -686,6 +686,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.job.metadata-persist-retry", "5"));
     }
 
+    public boolean isJobAutoReadyCubeEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.job.cube-auto-ready-enabled", "true"));
+    }
+
     // ============================================================================
     // SOURCE.HIVE
     // ============================================================================
