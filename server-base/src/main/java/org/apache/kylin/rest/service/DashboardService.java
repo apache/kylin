@@ -139,10 +139,10 @@ public class DashboardService extends BasicService {
         Float maxCubeExpansion = Float.NEGATIVE_INFINITY;
         cubeMetrics.increase("totalCube", totalCube.floatValue());
         for (CubeInstance cubeInstance : cubeInstances) {
-            if (cubeInstance.getInputRecordSizeMB() > 0) {
+            if (cubeInstance.getInputRecordSizeBytes() > 0) {
                 totalCubeSize += cubeInstance.getSizeKB();
-                totalRecoadSize += cubeInstance.getInputRecordSizeMB();
-                Float cubeExpansion = new Float(cubeInstance.getSizeKB()) * 1024 / cubeInstance.getInputRecordSizeMB();
+                totalRecoadSize += cubeInstance.getInputRecordSizeBytes();
+                Float cubeExpansion = new Float(cubeInstance.getSizeKB()) * 1024 / cubeInstance.getInputRecordSizeBytes();
                 if (cubeExpansion > maxCubeExpansion) {
                     maxCubeExpansion = cubeExpansion;
                 }

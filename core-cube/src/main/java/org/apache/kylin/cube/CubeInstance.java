@@ -642,7 +642,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     // For JSON serialization of this attribute, use CubeInstanceResponse
-    public long getInputRecordSizeMB() {
+    public long getInputRecordSizeBytes() {
         long sizeRecordSize = 0L;
 
         for (CubeSegment cubeSegment : this.getSegments(SegmentStatusEnum.READY)) {
