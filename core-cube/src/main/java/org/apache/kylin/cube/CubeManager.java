@@ -894,7 +894,10 @@ public class CubeManager implements IRealizationProvider {
 
             CubeUpdate update = new CubeUpdate(cubeCopy);
             update.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()]))
-                    .setToUpdateSegs(newSegCopy).setStatus(RealizationStatusEnum.READY);
+                    .setToUpdateSegs(newSegCopy);
+            if (cube.getConfig().isJobAutoReadyCubeEnabled()) {
+                update.setStatus(RealizationStatusEnum.READY);
+            }
             updateCube(update);
         }
 
@@ -944,9 +947,11 @@ public class CubeManager implements IRealizationProvider {
             CubeUpdate update = new CubeUpdate(cubeCopy);
             update.setToRemoveSegs(originalSegments) //
                     .setToUpdateSegs(optSegCopy) //
-                    .setStatus(RealizationStatusEnum.READY) //
                     .setCuboids(recommendCuboids) //
                     .setCuboidsRecommend(Sets.<Long> newHashSet());
+            if (cube.getConfig().isJobAutoReadyCubeEnabled()) {
+                update.setStatus(RealizationStatusEnum.READY);
+            }
             updateCube(update);
         }
 
