@@ -61,6 +61,7 @@ import org.apache.hadoop.hbase.client.Row;
 import org.apache.hadoop.hbase.client.RowMutations;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
+import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.ipc.CoprocessorRpcChannel;
@@ -387,6 +388,14 @@ public class MockHTable implements Table {
 
             public void close() {
             }
+
+            public boolean renewLease() {
+                throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+            }
+
+            public ScanMetrics getScanMetrics() {
+                throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+            }
         };
     }
 
@@ -665,4 +674,41 @@ public class MockHTable implements Table {
         throw new NotImplementedException();
 
     }
+
+    public void setOperationTimeout(int operationTimeout) {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    public int getOperationTimeout() {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    /** @deprecated */
+    @Deprecated
+    public int getRpcTimeout() {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    /** @deprecated */
+    @Deprecated
+    public void setRpcTimeout(int rpcTimeout) {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    public int getWriteRpcTimeout() {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    public void setWriteRpcTimeout(int writeRpcTimeout) {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    public int getReadRpcTimeout() {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
+    public void setReadRpcTimeout(int readRpcTimeout) {
+        throw new RuntimeException(this.getClass() + " does NOT implement this method.");
+    }
+
 }
