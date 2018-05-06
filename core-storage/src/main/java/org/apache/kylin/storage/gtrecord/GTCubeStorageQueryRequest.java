@@ -19,10 +19,12 @@
 package org.apache.kylin.storage.gtrecord;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.StorageContext;
@@ -34,17 +36,20 @@ public class GTCubeStorageQueryRequest implements Serializable {
     private Set<TblColRef> groups;
     private Set<TblColRef> filterCols;
     private Set<FunctionDesc> metrics;
+    private List<DynamicFunctionDesc> dynFuncs;
     private TupleFilter filter;
     private TupleFilter havingFilter;
     private StorageContext context;
 
     public GTCubeStorageQueryRequest(Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
-            Set<TblColRef> filterCols, Set<FunctionDesc> metrics, TupleFilter filter, TupleFilter havingFilter, StorageContext context) {
+            Set<TblColRef> filterCols, Set<FunctionDesc> metrics, List<DynamicFunctionDesc> dynFuncs, //
+            TupleFilter filter, TupleFilter havingFilter, StorageContext context) {
         this.cuboid = cuboid;
         this.dimensions = dimensions;
         this.groups = groups;
         this.filterCols = filterCols;
         this.metrics = metrics;
+        this.dynFuncs = dynFuncs;
         this.filter = filter;
         this.havingFilter = havingFilter;
         this.context = context;
@@ -80,6 +85,10 @@ public class GTCubeStorageQueryRequest implements Serializable {
 
     public void setMetrics(Set<FunctionDesc> metrics) {
         this.metrics = metrics;
+    }
+
+    public List<DynamicFunctionDesc> getDynFuncs() {
+        return dynFuncs;
     }
 
     public TupleFilter getFilter() {

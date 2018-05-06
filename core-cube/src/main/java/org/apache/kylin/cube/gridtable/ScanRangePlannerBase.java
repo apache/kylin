@@ -32,6 +32,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
@@ -60,6 +61,10 @@ public abstract class ScanRangePlannerBase {
     protected RecordComparator rangeStartComparator;
     protected RecordComparator rangeEndComparator;
     protected RecordComparator rangeStartEndComparator;
+
+    protected ImmutableBitSet gtDynColumns;
+    protected ImmutableBitSet gtRtAggrMetrics;
+    protected List<TupleExpression> tupleExpressionList;
 
     public abstract GTScanRequest planScanRequest();
 

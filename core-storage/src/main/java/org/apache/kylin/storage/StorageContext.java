@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.gridtable.StorageLimitLevel;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryBase;
@@ -56,6 +57,7 @@ public class StorageContext {
     private IStorageQuery storageQuery;
     private AtomicLong processedRowCount = new AtomicLong();
     private Cuboid cuboid;
+    private CuboidToGridTableMapping mapping;
     private boolean partialResultReturned = false;
 
     private Range<Long> reusedPeriod;
@@ -187,6 +189,14 @@ public class StorageContext {
 
     public Cuboid getCuboid() {
         return cuboid;
+    }
+
+    public CuboidToGridTableMapping getMapping() {
+        return mapping;
+    }
+
+    public void setMapping(CuboidToGridTableMapping mapping) {
+        this.mapping = mapping;
     }
 
     public long getProcessedRowCount() {

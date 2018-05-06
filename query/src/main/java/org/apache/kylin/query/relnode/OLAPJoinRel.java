@@ -49,6 +49,7 @@ import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
@@ -62,6 +63,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.schema.OLAPTable;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -333,9 +335,8 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
         this.rowType = this.deriveRowType();
 
-        if (this.isTopJoin && RewriteImplementor.needRewrite(this.context)) {
-            if (this.context.hasPrecalculatedFields()) {
-
+        if (this.isTopJoin) {
+            if (RewriteImplementor.needRewrite(this.context) && this.context.hasPrecalculatedFields()) {
                 // find missed rewrite fields
                 int paramIndex = this.rowType.getFieldList().size();
                 List<RelDataTypeField> newFieldList = new LinkedList<RelDataTypeField>();
@@ -356,6 +357,30 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
                 // rebuild columns
                 this.columnRowType = this.buildColumnRowType();
+            }
+
+            // add dynamic field
+            Map<TblColRef, RelDataType> dynFields = this.context.dynamicFields;
+            if (!dynFields.isEmpty()) {
+                List<TblColRef> newCols = Lists.newArrayList(this.columnRowType.getAllColumns());
+                List<RelDataTypeField> newFieldList = Lists.newArrayList();
+                int paramIndex = this.rowType.getFieldList().size();
+                for (TblColRef fieldCol : dynFields.keySet()) {
+                    RelDataType fieldType = dynFields.get(fieldCol);
+
+                    RelDataTypeField newField = new RelDataTypeFieldImpl(fieldCol.getName(), paramIndex++, fieldType);
+                    newFieldList.add(newField);
+
+                    newCols.add(fieldCol);
+                }
+
+                // rebuild row type
+                RelDataTypeFactory.FieldInfoBuilder fieldInfo = getCluster().getTypeFactory().builder();
+                fieldInfo.addAll(this.rowType.getFieldList());
+                fieldInfo.addAll(newFieldList);
+                this.rowType = getCluster().getTypeFactory().createStructType(fieldInfo);
+
+                this.columnRowType = new ColumnRowType(newCols);
             }
         }
     }

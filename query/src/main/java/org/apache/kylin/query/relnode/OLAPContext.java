@@ -36,6 +36,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
@@ -151,6 +152,9 @@ public class OLAPContext {
     // rewrite info
     public Map<String, RelDataType> rewriteFields = new HashMap<>();
 
+    // dynamic columns info, note that the name of TblColRef will be the field name
+    public Map<TblColRef, RelDataType> dynamicFields = new HashMap<>();
+
     // hive query
     public String sql = "";
 
@@ -163,13 +167,26 @@ public class OLAPContext {
     SQLDigest sqlDigest;
 
     public SQLDigest getSQLDigest() {
-        if (sqlDigest == null)
+        if (sqlDigest == null) {
+            Set<TblColRef> rtDimColumns = new HashSet<>();
+            Set<TblColRef> rtMetricColumns = new HashSet<>();
+            List<DynamicFunctionDesc> dynFuncs = Lists.newLinkedList();
+            for (FunctionDesc functionDesc : aggregations) {
+                if (functionDesc instanceof DynamicFunctionDesc) {
+                    DynamicFunctionDesc dynFunc = (DynamicFunctionDesc) functionDesc;
+                    rtMetricColumns.addAll(dynFunc.getMeasureColumnSet());
+                    rtDimColumns.addAll(dynFunc.getFilterColumnSet());
+                    dynFuncs.add(dynFunc);
+                }
+            }
             sqlDigest = new SQLDigest(firstTableScan.getTableName(), allColumns, joins, // model
                     groupByColumns, subqueryJoinParticipants, // group by
-                    metricsColumns, aggregations, aggrSqlCalls, // aggregation
+                    metricsColumns, aggregations, aggrSqlCalls, dynFuncs, // aggregation
+                    rtDimColumns, rtMetricColumns, // runtime related columns
                     filterColumns, filter, havingFilter, // filter
                     sortColumns, sortOrders, limitPrecedesAggr, // sort & limit
                     involvedMeasure);
+        }
         return sqlDigest;
     }
 

@@ -48,6 +48,8 @@ import org.apache.calcite.schema.impl.AggregateFunctionImpl;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.fun.SqlSumAggFunction;
+import org.apache.calcite.sql.fun.SqlSumEmptyIsZeroAggFunction;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.InferTypes;
 import org.apache.calcite.sql.type.OperandTypes;
@@ -58,15 +60,23 @@ import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.ParamAsMeasureCount;
+import org.apache.kylin.metadata.expression.ColumnTupleExpression;
+import org.apache.kylin.metadata.expression.ExpressionColCollector;
+import org.apache.kylin.metadata.expression.ExpressionCountDistributor;
+import org.apache.kylin.metadata.expression.NumberTupleExpression;
+import org.apache.kylin.metadata.expression.TupleExpression;
+import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.SumDynamicFunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 import org.apache.kylin.query.schema.OLAPTable;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -123,6 +133,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     private List<AggregateCall> rewriteAggCalls;
     private List<TblColRef> groups;
     private List<FunctionDesc> aggregations;
+    private boolean rewriting;
 
     public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator,
             ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls)
@@ -245,20 +256,26 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     void buildGroups() {
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
-        this.groups = new ArrayList<TblColRef>();
+        this.groups = Lists.newArrayList();
         for (int i = getGroupSet().nextSetBit(0); i >= 0; i = getGroupSet().nextSetBit(i + 1)) {
-            Set<TblColRef> columns = inputColumnRowType.getSourceColumnsByIndex(i);
-            this.groups.addAll(columns);
+            TupleExpression tupleExpression = inputColumnRowType.getSourceColumnsByIndex(i);
+            Set<TblColRef> srcCols = ExpressionColCollector.collectColumns(tupleExpression);
+            // if no source columns, use target column instead
+            if (srcCols.isEmpty()) {
+                srcCols.add(inputColumnRowType.getColumnByIndex(i));
+            }
+            this.groups.addAll(srcCols);
         }
     }
 
     void buildAggregations() {
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
-        this.aggregations = new ArrayList<FunctionDesc>();
+        this.aggregations = Lists.newArrayList();
         for (AggregateCall aggCall : this.rewriteAggCalls) {
             ParameterDesc parameter = null;
+            List<Integer> argList = aggCall.getArgList();
             // By default all args are included, UDFs can define their own in getParamAsMeasureCount method.
-            if (!aggCall.getArgList().isEmpty()) {
+            if (!argList.isEmpty()) {
                 List<TblColRef> columns = Lists.newArrayList();
                 String funcName = getSqlFuncName(aggCall);
                 int columnsCount = aggCall.getArgList().size();
@@ -276,6 +293,22 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 }
                 if (!columns.isEmpty()) {
                     parameter = ParameterDesc.newInstance(columns.toArray(new TblColRef[columns.size()]));
+                }
+            }
+            // Check dynamic aggregation
+            if (!afterAggregate && !rewriting && argList.size() == 1) {
+                int iRowIdx = argList.get(0);
+                TupleExpression tupleExpr = inputColumnRowType.getSourceColumnsByIndex(iRowIdx);
+                if (aggCall.getAggregation() instanceof SqlSumAggFunction
+                        || aggCall.getAggregation() instanceof SqlSumEmptyIsZeroAggFunction) {
+                    if (!(tupleExpr instanceof NumberTupleExpression || tupleExpr instanceof ColumnTupleExpression)) {
+                        ColumnTupleExpression cntExpr = new ColumnTupleExpression(SumDynamicFunctionDesc.mockCntCol);
+                        ExpressionCountDistributor cntDistributor = new ExpressionCountDistributor(cntExpr);
+                        tupleExpr = tupleExpr.accept(cntDistributor);
+                        SumDynamicFunctionDesc sumDynFunc = new SumDynamicFunctionDesc(parameter, tupleExpr);
+                        this.aggregations.add(sumDynFunc);
+                        continue;
+                    }
                 }
             }
             String expression = getAggrFuncName(aggCall);
@@ -298,6 +331,9 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         }
 
         implementor.visitChild(this, getInput());
+
+        this.rewriting = true;
+
         // only rewrite the innermost aggregation
         if (needRewrite()) {
             // rewrite the aggCalls
@@ -332,6 +368,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         this.rowType = this.deriveRowType();
         this.columnRowType = this.buildColumnRowType();
 
+        this.rewriting = false;
     }
 
     SQLCall toSqlCall(AggregateCall aggCall) {
@@ -352,7 +389,18 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             List<MeasureDesc> measures = this.context.realization.getMeasures();
             List<FunctionDesc> newAggrs = Lists.newArrayList();
             for (FunctionDesc aggFunc : this.aggregations) {
-                newAggrs.add(findInMeasures(aggFunc, measures));
+                if (aggFunc instanceof DynamicFunctionDesc) {
+                    DynamicFunctionDesc rtAggFunc = (DynamicFunctionDesc) aggFunc;
+                    Map<TblColRef, FunctionDesc> innerOldAggrs = rtAggFunc.getRuntimeFuncMap();
+                    Map<TblColRef, FunctionDesc> innerNewAggrs = Maps.newHashMapWithExpectedSize(innerOldAggrs.size());
+                    for (TblColRef key : innerOldAggrs.keySet()) {
+                        innerNewAggrs.put(key, findInMeasures(innerOldAggrs.get(key), measures));
+                    }
+                    rtAggFunc.setRuntimeFuncMap(innerNewAggrs);
+                    newAggrs.add(rtAggFunc);
+                } else {
+                    newAggrs.add(findInMeasures(aggFunc, measures));
+                }
             }
             this.aggregations.clear();
             this.aggregations.addAll(newAggrs);
@@ -406,7 +454,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     void addToContextGroupBy(List<TblColRef> colRefs) {
         for (TblColRef col : colRefs) {
-            if (col.isInnerColumn() == false && this.context.belongToContextTables(col))
+            if (!col.isInnerColumn() && this.context.belongToContextTables(col))
                 this.context.groupByColumns.add(col);
         }
     }

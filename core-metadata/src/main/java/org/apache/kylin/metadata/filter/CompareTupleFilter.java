@@ -273,4 +273,41 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
         return transformer.visit(this);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        CompareTupleFilter that = (CompareTupleFilter) o;
+
+        if (operator != that.operator)
+            return false;
+        if (column != null ? !column.equals(that.column) : that.column != null)
+            return false;
+        if (function != null ? !function.equals(that.function) : that.function != null)
+            return false;
+        if (secondColumn != null ? !secondColumn.equals(that.secondColumn) : that.secondColumn != null)
+            return false;
+        if (conditionValues != null ? !conditionValues.equals(that.conditionValues) : that.conditionValues != null)
+            return false;
+        if (firstCondValue != null ? !firstCondValue.equals(that.firstCondValue) : that.firstCondValue != null)
+            return false;
+        return dynamicVariables != null ? dynamicVariables.equals(that.dynamicVariables)
+                : that.dynamicVariables == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = operator != null ? operator.hashCode() : 0;
+        result = 31 * result + (column != null ? column.hashCode() : 0);
+        result = 31 * result + (function != null ? function.hashCode() : 0);
+        result = 31 * result + (secondColumn != null ? secondColumn.hashCode() : 0);
+        result = 31 * result + (conditionValues != null ? conditionValues.hashCode() : 0);
+        result = 31 * result + (firstCondValue != null ? firstCondValue.hashCode() : 0);
+        result = 31 * result + (dynamicVariables != null ? dynamicVariables.hashCode() : 0);
+        return result;
+    }
 }

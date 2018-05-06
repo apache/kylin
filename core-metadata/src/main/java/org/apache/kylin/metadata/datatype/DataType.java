@@ -153,6 +153,10 @@ public class DataType implements Serializable {
         return cached;
     }
 
+    public static boolean isNumberFamily(String name) {
+        return NUMBER_FAMILY.contains(name);
+    }
+
     // ============================================================================
 
     private String name;

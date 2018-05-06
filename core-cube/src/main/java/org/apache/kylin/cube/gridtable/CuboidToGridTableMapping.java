@@ -38,6 +38,7 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -201,17 +202,17 @@ public class CuboidToGridTableMapping {
     public ImmutableBitSet makeGridTableColumns(Set<TblColRef> dimensions) {
         BitSet result = new BitSet();
         for (TblColRef dim : dimensions) {
-            int idx = this.getIndexOf(dim);
+            int idx = getIndexOf(dim);
             if (idx >= 0)
                 result.set(idx);
         }
         return new ImmutableBitSet(result);
     }
 
-    public ImmutableBitSet makeGridTableColumns(Collection<FunctionDesc> metrics) {
+    public ImmutableBitSet makeGridTableColumns(Collection<? extends FunctionDesc> metrics) {
         BitSet result = new BitSet();
         for (FunctionDesc metric : metrics) {
-            int idx = this.getIndexOf(metric);
+            int idx = getIndexOf(metric);
             if (idx < 0)
                 throw new IllegalStateException(metric + " not found in " + this);
             result.set(idx);
@@ -227,8 +228,8 @@ public class CuboidToGridTableMapping {
         Collections.sort(metricList, new Comparator<FunctionDesc>() {
             @Override
             public int compare(FunctionDesc o1, FunctionDesc o2) {
-                int a = CuboidToGridTableMapping.this.getIndexOf(o1);
-                int b = CuboidToGridTableMapping.this.getIndexOf(o2);
+                int a = getIndexOf(o1);
+                int b = getIndexOf(o2);
                 return a - b;
             }
         });
@@ -241,4 +242,7 @@ public class CuboidToGridTableMapping {
         return result;
     }
 
+    public Map<TblColRef, Integer> getDim2gt() {
+        return ImmutableMap.copyOf(dim2gt);
+    }
 }
