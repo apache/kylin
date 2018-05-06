@@ -32,8 +32,11 @@ import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.SerializeToByteBuffer;
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.expression.TupleExpression;
+import org.apache.kylin.metadata.expression.TupleExpressionSerializer;
 import org.apache.kylin.metadata.filter.StringCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
@@ -52,10 +55,17 @@ public class GTScanRequest {
     //changing it might break org.apache.kylin.query.ITKylinQueryTest.testTimeoutQuery()
     public static final int terminateCheckInterval = 100;
 
+    private CuboidToGridTableMapping mapping;
     private GTInfo info;
     private List<GTScanRange> ranges;
     private ImmutableBitSet columns;
     private transient ImmutableBitSet selectedColBlocks;
+
+    // optional expression
+    private ImmutableBitSet rtAggrMetrics;
+
+    private ImmutableBitSet dynamicCols;
+    private List<TupleExpression> tupleExpressionList;
 
     // optional filtering
     private TupleFilter filterPushDown;
@@ -81,8 +91,9 @@ public class GTScanRequest {
     private transient boolean doingStorageAggregation = false;
 
     GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
-            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown,
-            TupleFilter havingFilterPushDown, // 
+            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, ImmutableBitSet rtAggrMetrics, //
+            ImmutableBitSet dynamicCols, List<TupleExpression> tupleExpressionList, //
+            TupleFilter filterPushDown, TupleFilter havingFilterPushDown, //
             boolean allowStorageAggregation, double aggCacheMemThreshold, int storageScanRowNumThreshold, //
             int storagePushDownLimit, StorageLimitLevel storageLimitLevel, String storageBehavior, long startTime,
             long timeout) {
@@ -100,6 +111,11 @@ public class GTScanRequest {
         this.aggrMetrics = aggrMetrics;
         this.aggrMetricsFuncs = aggrMetricsFuncs;
 
+        this.rtAggrMetrics = rtAggrMetrics;
+
+        this.dynamicCols = dynamicCols;
+        this.tupleExpressionList = tupleExpressionList;
+
         this.storageBehavior = storageBehavior;
         this.startTime = startTime;
         this.timeout = timeout;
@@ -114,7 +130,7 @@ public class GTScanRequest {
 
     private void validate(GTInfo info) {
         if (hasAggregation()) {
-            if (aggrGroupBy.intersects(aggrMetrics))
+            if (aggrGroupBy.intersects(aggrMetrics) || aggrGroupBy.intersects(rtAggrMetrics))
                 throw new IllegalStateException();
             if (aggrMetrics.cardinality() != aggrMetricsFuncs.length)
                 throw new IllegalStateException();
@@ -133,7 +149,7 @@ public class GTScanRequest {
             validateFilterPushDown(info);
         }
 
-        this.selectedColBlocks = info.selectColumnBlocks(columns);
+        this.selectedColBlocks = info.selectColumnBlocks(columns.or(rtAggrMetrics).andNot(dynamicCols));
 
     }
 
@@ -201,6 +217,11 @@ public class GTScanRequest {
                 result = new GTForwardingScanner(result);//need its check function
             }
 
+            if (dynamicCols != null && dynamicCols.cardinality() > 0) {
+                logger.info("GTFunctionScanner will be used with expressions " + tupleExpressionList);
+                result = new GTFunctionScanner(result, this);
+            }
+
             if (!aggrToggledOn) {//Skip reading this section if you're not profiling! 
                 lookAndForget(result);
                 return new EmptyGTScanner();
@@ -263,6 +284,14 @@ public class GTScanRequest {
         return !aggrGroupBy.isEmpty() || !aggrMetrics.isEmpty();
     }
 
+    public CuboidToGridTableMapping getMapping() {
+        return mapping;
+    }
+
+    public void setMapping(CuboidToGridTableMapping mapping) {
+        this.mapping = mapping;
+    }
+
     public GTInfo getInfo() {
         return info;
     }
@@ -292,7 +321,7 @@ public class GTScanRequest {
     }
 
     public ImmutableBitSet getDimensions() {
-        return this.getColumns().andNot(this.getAggrMetrics());
+        return this.columns.andNot(this.aggrMetrics);
     }
 
     public ImmutableBitSet getAggrGroupBy() {
@@ -305,6 +334,18 @@ public class GTScanRequest {
 
     public String[] getAggrMetricsFuncs() {
         return aggrMetricsFuncs;
+    }
+
+    public ImmutableBitSet getDynamicCols() {
+        return dynamicCols;
+    }
+
+    public ImmutableBitSet getRtAggrMetrics() {
+        return rtAggrMetrics;
+    }
+
+    public List<TupleExpression> getTupleExpressionList() {
+        return tupleExpressionList;
     }
 
     public boolean isAllowStorageAggregation() {
@@ -402,6 +443,14 @@ public class GTScanRequest {
             BytesUtil.writeVLong(value.startTime, out);
             BytesUtil.writeVLong(value.timeout, out);
             BytesUtil.writeUTFString(value.storageBehavior, out);
+
+            // for dynamic related info
+            ImmutableBitSet.serializer.serialize(value.dynamicCols, out);
+            for (TupleExpression tupleExpr : value.tupleExpressionList) {
+                BytesUtil.writeByteArray(TupleExpressionSerializer.serialize(tupleExpr,
+                        GTUtil.wrap(value.info.codeSystem.getComparator())), out);
+            }
+            ImmutableBitSet.serializer.serialize(value.rtAggrMetrics, out);
         }
 
         @Override
@@ -445,8 +494,18 @@ public class GTScanRequest {
             long timeout = BytesUtil.readVLong(in);
             String storageBehavior = BytesUtil.readUTFString(in);
 
+            ImmutableBitSet aDynCols = ImmutableBitSet.serializer.deserialize(in);
+            int nDynCols = aDynCols.cardinality();
+            List<TupleExpression> sTupleExprList = Lists.newArrayListWithExpectedSize(nDynCols);
+            for (int i = 0; i < nDynCols; i++) {
+                sTupleExprList.add(TupleExpressionSerializer.deserialize(BytesUtil.readByteArray(in),
+                        GTUtil.wrap(sInfo.codeSystem.getComparator())));
+            }
+            ImmutableBitSet aRuntimeAggrMetrics = ImmutableBitSet.serializer.deserialize(in);
+
             return new GTScanRequestBuilder().setInfo(sInfo).setRanges(sRanges).setDimensions(sColumns)
                     .setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs)
+                    .setRtAggrMetrics(aRuntimeAggrMetrics).setDynamicColumns(aDynCols).setExprsPushDown(sTupleExprList)
                     .setFilterPushDown(sGTFilter).setHavingFilterPushDown(sGTHavingFilter)
                     .setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB)
                     .setStorageScanRowNumThreshold(storageScanRowNumThreshold)

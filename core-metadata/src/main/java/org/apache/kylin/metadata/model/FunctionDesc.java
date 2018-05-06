@@ -272,6 +272,7 @@ public class FunctionDesc implements Serializable {
 
     public void setReturnType(String returnType) {
         this.returnType = returnType;
+        this.returnDataType = DataType.getType(returnType);
     }
 
     public DataType getReturnDataType() {

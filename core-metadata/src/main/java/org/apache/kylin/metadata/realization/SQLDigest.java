@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -61,6 +62,10 @@ public class SQLDigest {
     public List<FunctionDesc> aggregations; // storage level measure type, on top of which various sql aggr function may apply
     public List<SQLCall> aggrSqlCalls; // sql level aggregation function call
 
+    public List<DynamicFunctionDesc> dynAggregations;
+    public Set<TblColRef> rtDimensionColumns; // dynamic col related dimension columns
+    public Set<TblColRef> rtMetricColumns; // dynamic col related metric columns
+
     // filter
     public Set<TblColRef> filterColumns;
     public TupleFilter filter;
@@ -77,6 +82,8 @@ public class SQLDigest {
     public SQLDigest(String factTable, Set<TblColRef> allColumns, List<JoinDesc> joinDescs, // model
             List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants, // group by
             Set<TblColRef> metricColumns, List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, // aggregation
+            List<DynamicFunctionDesc> dynAggregations, //
+            Set<TblColRef> rtDimensionColumns, Set<TblColRef> rtMetricColumns, // dynamic col related columns
             Set<TblColRef> filterColumns, TupleFilter filter, TupleFilter havingFilter, // filter
             List<TblColRef> sortColumns, List<OrderEnum> sortOrders, boolean limitPrecedesAggr, // sort & limit
             Set<MeasureDesc> involvedMeasure
@@ -91,6 +98,11 @@ public class SQLDigest {
         this.metricColumns = metricColumns;
         this.aggregations = aggregations;
         this.aggrSqlCalls = aggrSqlCalls;
+
+        this.dynAggregations = dynAggregations;
+
+        this.rtDimensionColumns = rtDimensionColumns;
+        this.rtMetricColumns = rtMetricColumns;
 
         this.filterColumns = filterColumns;
         this.filter = filter;

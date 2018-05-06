@@ -60,12 +60,33 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  */
 public class OLAPTable extends AbstractQueryableTable implements TranslatableTable {
 
     protected static final Logger logger = LoggerFactory.getLogger(OLAPTable.class);
+
+    public static final Map<SqlTypeName, String> DATATYPE_MAPPING = Maps.newHashMap();
+
+    static {
+        DATATYPE_MAPPING.put(SqlTypeName.CHAR, "char");
+        DATATYPE_MAPPING.put(SqlTypeName.VARCHAR, "varchar");
+        DATATYPE_MAPPING.put(SqlTypeName.BOOLEAN, "boolean");
+        DATATYPE_MAPPING.put(SqlTypeName.INTEGER, "integer");
+        DATATYPE_MAPPING.put(SqlTypeName.TINYINT, "tinyint");
+        DATATYPE_MAPPING.put(SqlTypeName.SMALLINT, "smallint");
+        DATATYPE_MAPPING.put(SqlTypeName.BIGINT, "bigint");
+        DATATYPE_MAPPING.put(SqlTypeName.DECIMAL, "decimal");
+        DATATYPE_MAPPING.put(SqlTypeName.FLOAT, "float");
+        DATATYPE_MAPPING.put(SqlTypeName.REAL, "real");
+        DATATYPE_MAPPING.put(SqlTypeName.DOUBLE, "double");
+        DATATYPE_MAPPING.put(SqlTypeName.DATE, "date");
+        DATATYPE_MAPPING.put(SqlTypeName.TIME, "time");
+        DATATYPE_MAPPING.put(SqlTypeName.TIMESTAMP, "timestamp");
+        DATATYPE_MAPPING.put(SqlTypeName.ANY, "any");
+    }
 
     private static Map<String, SqlTypeName> SQLTYPE_MAPPING = new HashMap<String, SqlTypeName>();
     private static Map<String, SqlTypeName> REGEX_SQLTYPE_MAPPING = new HashMap<String, SqlTypeName>();

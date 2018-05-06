@@ -29,6 +29,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
+import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -155,10 +156,12 @@ public class CubeCapabilityChecker {
     private static Collection<TblColRef> getDimensionColumns(SQLDigest sqlDigest) {
         Collection<TblColRef> groupByColumns = sqlDigest.groupbyColumns;
         Collection<TblColRef> filterColumns = sqlDigest.filterColumns;
+        Collection<TblColRef> rtDimColumns = sqlDigest.rtDimensionColumns;
 
         Collection<TblColRef> dimensionColumns = new HashSet<TblColRef>();
         dimensionColumns.addAll(groupByColumns);
         dimensionColumns.addAll(filterColumns);
+        dimensionColumns.addAll(rtDimColumns);
         return dimensionColumns;
     }
 
@@ -171,8 +174,39 @@ public class CubeCapabilityChecker {
 
     private static Set<FunctionDesc> unmatchedAggregations(Collection<FunctionDesc> aggregations, CubeInstance cube) {
         HashSet<FunctionDesc> result = Sets.newHashSet(aggregations);
+
         CubeDesc cubeDesc = cube.getDescriptor();
-        result.removeAll(cubeDesc.listAllFunctions());
+        List<FunctionDesc> definedFuncs = cubeDesc.listAllFunctions();
+
+        // check normal aggregations
+        result.removeAll(definedFuncs);
+
+        // check dynamic aggregations
+        Iterator<FunctionDesc> funcIterator = result.iterator();
+        while (funcIterator.hasNext()) {
+            FunctionDesc entry = funcIterator.next();
+            if (entry instanceof DynamicFunctionDesc) {
+                DynamicFunctionDesc dynFunc = (DynamicFunctionDesc) entry;
+                // Filter columns cannot be derived
+                Collection<TblColRef> definedCols = dynFunc.ifFriendlyForDerivedFilter()
+                        ? cubeDesc.listDimensionColumnsIncludingDerived()
+                        : cubeDesc.listDimensionColumnsExcludingDerived(true);
+                Set<TblColRef> filterCols = Sets.newHashSet(dynFunc.getFilterColumnSet());
+                filterCols.removeAll(definedCols);
+                if (!filterCols.isEmpty()) {
+                    continue;
+                }
+
+                // All inner funcs should be defined
+                Set<FunctionDesc> innerFuncSet = Sets.newHashSet(dynFunc.getRuntimeFuncs());
+                innerFuncSet.removeAll(definedFuncs);
+                if (!innerFuncSet.isEmpty()) {
+                    continue;
+                }
+
+                funcIterator.remove();
+            }
+        }
         return result;
     }
 

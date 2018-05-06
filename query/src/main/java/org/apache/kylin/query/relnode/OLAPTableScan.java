@@ -65,6 +65,7 @@ import org.apache.calcite.rel.rules.SortUnionTransposeRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -88,6 +89,7 @@ import org.apache.kylin.query.schema.OLAPTable;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -438,6 +440,27 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
                 RelDataType fieldType = field.getType();
                 rewriteField.setValue(fieldType);
             }
+        }
+        // add dynamic field to the table scan if join not exist
+        if (!this.context.hasJoin && !this.context.dynamicFields.isEmpty()) {
+            Map<TblColRef, RelDataType> dynFields = this.context.dynamicFields;
+            List<TblColRef> newCols = Lists.newArrayList(this.columnRowType.getAllColumns());
+            List<RelDataTypeField> newFieldList = Lists.newArrayList(this.rowType.getFieldList());
+            int paramIndex = this.rowType.getFieldList().size();
+            for (TblColRef fieldCol : dynFields.keySet()) {
+                newCols.add(fieldCol);
+
+                RelDataType fieldType = dynFields.get(fieldCol);
+                RelDataTypeField newField = new RelDataTypeFieldImpl(fieldCol.getName(), paramIndex++, fieldType);
+                newFieldList.add(newField);
+            }
+
+            // rebuild row type
+            RelDataTypeFactory.FieldInfoBuilder fieldInfo = getCluster().getTypeFactory().builder();
+            fieldInfo.addAll(newFieldList);
+            this.rowType = getCluster().getTypeFactory().createStructType(fieldInfo);
+
+            this.columnRowType = new ColumnRowType(newCols);
         }
     }
 

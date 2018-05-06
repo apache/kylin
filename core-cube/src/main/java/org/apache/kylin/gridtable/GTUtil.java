@@ -20,13 +20,15 @@ package org.apache.kylin.gridtable;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
+import org.apache.kylin.metadata.expression.TupleExpression;
+import org.apache.kylin.metadata.expression.TupleExpressionSerializer;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
@@ -35,9 +37,11 @@ import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class GTUtil {
@@ -66,7 +70,12 @@ public class GTUtil {
     public static TupleFilter convertFilterColumnsAndConstants(TupleFilter rootFilter, GTInfo info, //
             List<TblColRef> colMapping, Set<TblColRef> unevaluatableColumnCollector) {
         Map<TblColRef, Integer> map = colListToMap(colMapping);
-        TupleFilter filter = convertFilter(rootFilter, info, map, true, unevaluatableColumnCollector);
+        return convertFilterColumnsAndConstants(rootFilter, info, map, unevaluatableColumnCollector);
+    }
+
+    public static TupleFilter convertFilterColumnsAndConstants(TupleFilter rootFilter, GTInfo info, //
+            Map<TblColRef, Integer> colMapping, Set<TblColRef> unevaluatableColumnCollector) {
+        TupleFilter filter = convertFilter(rootFilter, info, colMapping, true, unevaluatableColumnCollector);
 
         // optimize the filter: after translating with dictionary, some filters become determined
         // e.g.
@@ -78,7 +87,7 @@ public class GTUtil {
     }
 
     protected static Map<TblColRef, Integer> colListToMap(List<TblColRef> colMapping) {
-        Map<TblColRef, Integer> map = new HashMap<>();
+        Map<TblColRef, Integer> map = Maps.newHashMap();
         for (int i = 0; i < colMapping.size(); i++) {
             map.put(colMapping.get(i), i);
         }
@@ -97,6 +106,51 @@ public class GTUtil {
 
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, decorator, filterCodeSystem);
         return TupleFilterSerializer.deserialize(bytes, filterCodeSystem);
+    }
+
+    public static TupleExpression convertFilterColumnsAndConstants(TupleExpression rootExpression, GTInfo info,
+            CuboidToGridTableMapping mapping, Set<TblColRef> unevaluatableColumnCollector) {
+        Map<TblColRef, FunctionDesc> innerFuncMap = Maps.newHashMap();
+        return convertFilterColumnsAndConstants(rootExpression, info, mapping, innerFuncMap,
+                unevaluatableColumnCollector);
+    }
+
+    public static TupleExpression convertFilterColumnsAndConstants(TupleExpression rootExpression, GTInfo info,
+            CuboidToGridTableMapping mapping, //
+            Map<TblColRef, FunctionDesc> innerFuncMap, Set<TblColRef> unevaluatableColumnCollector) {
+        return convertExpression(rootExpression, info, mapping, innerFuncMap, true, unevaluatableColumnCollector);
+    }
+
+    private static TupleExpression convertExpression(TupleExpression rootExpression, final GTInfo info,
+            final CuboidToGridTableMapping mapping, //
+            final Map<TblColRef, FunctionDesc> innerFuncMap, final boolean encodeConstants,
+            final Set<TblColRef> unevaluatableColumnCollector) {
+        IFilterCodeSystem<ByteArray> filterCodeSystem = wrap(info.codeSystem.getComparator());
+
+        final TupleExpressionSerializer.Decorator decorator = new TupleExpressionSerializer.Decorator() {
+            @Override
+            public TupleFilter convertInnerFilter(TupleFilter filter) {
+                return convertFilter(filter, info, mapping.getDim2gt(), encodeConstants, unevaluatableColumnCollector);
+            }
+
+            @Override
+            public TupleExpression convertInnerExpression(TupleExpression expression) {
+                return convertFilterColumnsAndConstants(expression, info, mapping, innerFuncMap,
+                        unevaluatableColumnCollector);
+            }
+
+            @Override
+            public TblColRef mapCol(TblColRef col) {
+                int gtColIdx = mapping.getIndexOf(col);
+                if (gtColIdx < 0 && innerFuncMap.get(col) != null) {
+                    gtColIdx = mapping.getIndexOf(innerFuncMap.get(col));
+                }
+                return info.colRef(gtColIdx);
+            }
+        };
+
+        byte[] bytes = TupleExpressionSerializer.serialize(rootExpression, decorator, filterCodeSystem);
+        return TupleExpressionSerializer.deserialize(bytes, filterCodeSystem);
     }
 
     public static IFilterCodeSystem<ByteArray> wrap(final IGTComparator comp) {

@@ -354,7 +354,7 @@ public class GTAggregateScanner implements IGTScanner, IGTBypassChecker {
             for (int i = 0; i < dimensions.trueBitCount(); i++) {
                 int c = dimensions.trueBitAt(i);
                 int l = info.codeSystem.maxCodeLength(c);
-                boolean m = groupBy.get(c) ? true : false;
+                boolean m = groupBy.get(c);
                 for (int j = 0; j < l; j++) {
                     mask[p++] = m;
                 }

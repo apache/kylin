@@ -18,10 +18,11 @@
 
 package org.apache.kylin.query.relnode;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
+import org.apache.kylin.metadata.expression.ColumnTupleExpression;
+import org.apache.kylin.metadata.expression.NoneTupleExpression;
+import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
@@ -34,13 +35,13 @@ public class ColumnRowType {
     private List<TblColRef> columns;
     // for calculated column, like (CASE LSTG_FORMAT_NAME WHEN 'Auction' THEN '111' ELSE '222' END)
     // source columns are the contributing physical columns, here the LSTG_FORMAT_NAME
-    private List<Set<TblColRef>> sourceColumns;
+    private List<TupleExpression> sourceColumns;
 
     public ColumnRowType(List<TblColRef> columns) {
         this(columns, null);
     }
 
-    public ColumnRowType(List<TblColRef> columns, List<Set<TblColRef>> sourceColumns) {
+    public ColumnRowType(List<TblColRef> columns, List<TupleExpression> sourceColumns) {
         this.columns = columns;
         this.sourceColumns = sourceColumns;
     }
@@ -69,13 +70,13 @@ public class ColumnRowType {
         return -1;
     }
 
-    public Set<TblColRef> getSourceColumnsByIndex(int i) {
-        Set<TblColRef> result = null;
+    public TupleExpression getSourceColumnsByIndex(int i) {
+        TupleExpression result = null;
         if (sourceColumns != null) {
             result = sourceColumns.get(i);
         }
-        if (result == null || result.isEmpty()) {
-            result = Collections.singleton(getColumnByIndex(i));
+        if (result == null || result instanceof NoneTupleExpression) {
+            result = new ColumnTupleExpression(getColumnByIndex(i));
         }
         return result;
     }

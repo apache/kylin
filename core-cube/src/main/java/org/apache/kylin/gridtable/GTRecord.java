@@ -61,12 +61,24 @@ public class GTRecord implements Comparable<GTRecord> {
         return cols[i];
     }
 
+    public Object getValue(int i) {
+        return info.codeSystem.decodeColumnValue(i, cols[i].asBuffer());
+    }
+
     public ByteArray[] getInternal() {
         return cols;
     }
 
     public void set(int i, ByteArray data) {
         cols[i].reset(data.array(), data.offset(), data.length());
+    }
+
+    public void setValue(int i, Object value) {
+        ByteArray space = new ByteArray(info.codeSystem.maxCodeLength(i));
+        ByteBuffer buf = space.asBuffer();
+        info.codeSystem.encodeColumnValue(i, value, buf);
+        set(i, space);
+        cols[i].reset(buf.array(), buf.arrayOffset(), buf.position());
     }
 
     /** set record to the codes of specified values, new space allocated to hold the codes */
