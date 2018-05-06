@@ -46,6 +46,12 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
 
     @Override
     public void serialize(BigDecimal value, ByteBuffer out) {
+        if (value == null) {
+            BytesUtil.writeVInt(0, out);
+            BytesUtil.writeVInt(-1, out);
+            return;
+        }
+
         if (value.scale() > type.getScale()) {
             if (avoidVerbose++ % 10000 == 0) {
                 logger.warn("value's scale has exceeded the " + type.getScale() + ", cut it off, to ensure encoded value do not exceed maxLength " + maxLength + " times:" + (avoidVerbose));
@@ -66,6 +72,10 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
     public BigDecimal deserialize(ByteBuffer in) {
         int scale = BytesUtil.readVInt(in);
         int n = BytesUtil.readVInt(in);
+
+        if (n < 0) {
+            return null;
+        }
 
         byte[] bytes = new byte[n];
         in.get(bytes);
