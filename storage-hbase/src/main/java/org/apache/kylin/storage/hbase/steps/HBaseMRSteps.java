@@ -18,9 +18,8 @@
 
 package org.apache.kylin.storage.hbase.steps;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -36,44 +35,13 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HBaseMRSteps extends JobBuilderSupport {
 
     public HBaseMRSteps(CubeSegment seg) {
         super(seg, null);
-    }
-
-    public void addSaveCuboidToHTableSteps(DefaultChainedExecutable jobFlow, String cuboidRootPath) {
-        String jobId = jobFlow.getId();
-
-        // calculate key distribution
-        jobFlow.addTask(createRangeRowkeyDistributionStep(cuboidRootPath, jobId));
-        // create htable step
-        jobFlow.addTask(createCreateHTableStep(jobId));
-        // generate hfiles step
-        jobFlow.addTask(createConvertCuboidToHfileStep(jobId));
-        // bulk load step
-        jobFlow.addTask(createBulkLoadStep(jobId));
-    }
-
-    public MapReduceExecutable createRangeRowkeyDistributionStep(String cuboidRootPath, String jobId) {
-        String inputPath = cuboidRootPath + (cuboidRootPath.endsWith("/") ? "" : "/") + "*";
-
-        MapReduceExecutable rowkeyDistributionStep = new MapReduceExecutable();
-        rowkeyDistributionStep.setName(ExecutableConstants.STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION);
-        StringBuilder cmd = new StringBuilder();
-
-        appendMapReduceParameters(cmd);
-        appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, inputPath);
-        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, getRowkeyDistributionOutputPath(jobId));
-        appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
-        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Region_Splits_Calculator_" + seg.getRealization().getName() + "_Step");
-
-        rowkeyDistributionStep.setMapReduceParams(cmd.toString());
-        rowkeyDistributionStep.setMapReduceJobClass(RangeKeyDistributionJob.class);
-        return rowkeyDistributionStep;
     }
 
     public HadoopShellExecutable createCreateHTableStep(String jobId) {

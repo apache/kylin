@@ -18,23 +18,20 @@
 
 package org.apache.kylin.storage.hbase;
 
+import com.google.common.base.Preconditions;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.engine.mr.IMROutput;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.DataModelManager;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.IStorage;
 import org.apache.kylin.storage.IStorageQuery;
-import org.apache.kylin.storage.hbase.steps.HBaseMROutput;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput2Transition;
-
-import com.google.common.base.Preconditions;
 
 @SuppressWarnings("unused")
 //used by reflection
@@ -81,9 +78,7 @@ public class HBaseStorage implements IStorage {
     @SuppressWarnings("unchecked")
     @Override
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
-        if (engineInterface == IMROutput.class) {
-            return (I) new HBaseMROutput();
-        } else if (engineInterface == IMROutput2.class) {
+        if (engineInterface == IMROutput2.class) {
             return (I) new HBaseMROutput2Transition();
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);

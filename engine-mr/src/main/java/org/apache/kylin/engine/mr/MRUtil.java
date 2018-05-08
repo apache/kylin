@@ -26,8 +26,6 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
-import org.apache.kylin.engine.mr.IMROutput.IMRBatchCubingOutputSide;
-import org.apache.kylin.engine.mr.IMROutput.IMRBatchMergeOutputSide;
 import org.apache.kylin.engine.mr.IMROutput2.IMRBatchCubingOutputSide2;
 import org.apache.kylin.engine.mr.IMROutput2.IMRBatchMergeOutputSide2;
 import org.apache.kylin.metadata.TableMetadataManager;
@@ -54,14 +52,6 @@ public class MRUtil {
 
     private static TableDesc getTableDesc(String tableName, String prj) {
         return TableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(tableName, prj);
-    }
-
-    public static IMRBatchCubingOutputSide getBatchCubingOutputSide(CubeSegment seg) {
-        return StorageFactory.createEngineAdapter(seg, IMROutput.class).getBatchCubingOutputSide(seg);
-    }
-
-    public static IMRBatchMergeOutputSide getBatchMergeOutputSide(CubeSegment seg) {
-        return StorageFactory.createEngineAdapter(seg, IMROutput.class).getBatchMergeOutputSide(seg);
     }
 
     public static IMRBatchCubingOutputSide2 getBatchCubingOutputSide2(CubeSegment seg) {
