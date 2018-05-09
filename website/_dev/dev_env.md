@@ -123,6 +123,12 @@ npm install -g bower
 bower --allow-root install
 {% endhighlight %}
 
+Note, if on Windows, after install bower, need to add the path of "bower.cmd" to system environment variable 'PATH', and then run:
+
+{% highlight Groff markup %}
+bower.cmd --allow-root install
+{% endhighlight %}
+
 In IDE, launch `org.apache.kylin.rest.DebugTomcat` with working directory set to the /server folder. (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
 
 Check Kylin Web at `http://localhost:7070/kylin` (user:ADMIN, password:KYLIN)

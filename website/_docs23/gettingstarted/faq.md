@@ -140,3 +140,9 @@ Replace the origin encrypted password with the new one:
 {% endhighlight %}
 
 Restart Kylin to take effective. If you have multiple Kylin server as a cluster, do the same on each instance. 
+
+#### 13. What kind of data be left in 'kylin.env.hdfs-working-dir' ? We often execute kylin cleanup storage command, but now our working dir folder is about 300 GB size, can we delete old data manually?
+
+The data in 'hdfs-working-dir' ('hdfs:///kylin/kylin_metadata/' by default) includes intermediate files (will be GC) and Cuboid data (won't be GC). The Cuboid data is kept for the further segments' merge, as Kylin couldn't merge from HBase. If you're sure those segments won't be merged, you can move them to other paths or even delete.
+
+Please pay attention to the "resources" sub-folder under 'hdfs-working-dir', which persists some big metadata files like  dictionaries and lookup tables' snapshots. They shouldn't be moved.
