@@ -19,12 +19,15 @@
 package org.apache.kylin.dict.lookup;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.NavigableSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.IReadableTable.TableSignature;
@@ -92,6 +95,18 @@ public class SnapshotManager {
         } catch (ExecutionException e) {
             throw new RuntimeException(e.getCause());
         }
+    }
+
+    public List<SnapshotTable> getSnapshots(String tableName, TableSignature sourceTableSignature) throws IOException {
+        List<SnapshotTable> result = Lists.newArrayList();
+        String tableSnapshotsPath = SnapshotTable.getResourceDir(tableName);
+        ResourceStore store = TableMetadataManager.getInstance(this.config).getStore();
+        result.addAll(store.getAllResources(tableSnapshotsPath, SnapshotTable.class, SnapshotTableSerializer.INFO_SERIALIZER));
+        if (sourceTableSignature != null) {
+            String oldTableSnapshotsPath = SnapshotTable.getOldResourceDir(sourceTableSignature);
+            result.addAll(store.getAllResources(oldTableSnapshotsPath, SnapshotTable.class, SnapshotTableSerializer.INFO_SERIALIZER));
+        }
+        return result;
     }
 
     public void removeSnapshot(String resourcePath) throws IOException {

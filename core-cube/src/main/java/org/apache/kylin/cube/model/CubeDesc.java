@@ -203,6 +203,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     // Error messages during resolving json metadata
     private List<String> errors = new ArrayList<String>();
 
+    @JsonProperty("snapshot_table_desc_list")
+    private List<SnapshotTableDesc> snapshotTableDescList = Collections.emptyList();
+
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
     private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
     private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<>();
@@ -1371,6 +1374,49 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return null;
     }
 
+    public List<SnapshotTableDesc> getSnapshotTableDescList() {
+        return snapshotTableDescList;
+    }
+
+    public void setSnapshotTableDescList(List<SnapshotTableDesc> snapshotTableDescList) {
+        this.snapshotTableDescList = snapshotTableDescList;
+    }
+
+    public SnapshotTableDesc getSnapshotTableDesc(String tableName) {
+        for (SnapshotTableDesc snapshotTableDesc : snapshotTableDescList) {
+            if (snapshotTableDesc.getTableName().equalsIgnoreCase(tableName)) {
+                return snapshotTableDesc;
+            }
+        }
+        return null;
+    }
+
+    public boolean isGlobalSnapshotTable(String tableName) {
+        SnapshotTableDesc desc = getSnapshotTableDesc(tableName);
+        if (desc == null) {
+            return false;
+        }
+        return desc.isGlobal();
+    }
+
+    public boolean isExtSnapshotTable(String tableName) {
+        SnapshotTableDesc desc = getSnapshotTableDesc(tableName);
+        if (desc == null) {
+            return false;
+        }
+        return desc.isExtSnapshotTable();
+    }
+    
+    public List<String> getAllExtLookupSnapshotTypes() {
+        List<String> result = Lists.newArrayList();
+        for (SnapshotTableDesc snapshotTableDesc : snapshotTableDescList) {
+            if (snapshotTableDesc.isExtSnapshotTable()) {
+                result.add(snapshotTableDesc.getStorageType());
+            }
+        }
+        return result;
+    }
+
     /** Get a column which can be used to cluster the source table.
      * To reduce memory footprint in base cuboid for global dict */
     // TODO handle more than one ultra high cardinality columns use global dict in one cube
@@ -1465,6 +1511,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setPartitionOffsetStart(cubeDesc.getPartitionOffsetStart());
         newCubeDesc.setVersion(cubeDesc.getVersion());
         newCubeDesc.setParentForward(cubeDesc.getParentForward());
+        newCubeDesc.setSnapshotTableDescList(cubeDesc.getSnapshotTableDescList());
         newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }
