@@ -925,3 +925,31 @@ KylinApp
 
   });
 
+/*snapshot controller*/
+KylinApp
+  .controller('TableSnapshotCtrl', function ($scope, TableService, CubeService, uiGridConstants) {
+    $scope.initSnapshots = function() {
+      var tableFullName = $scope.tableModel.selectedSrcTable.database + '.' + $scope.tableModel.selectedSrcTable.name
+      TableService.getSnapshots({tableName: tableFullName, pro: $scope.projectModel.selectedProject}, {}, function (data) {
+        var orgData = JSON.parse(angular.toJson(data));
+        angular.forEach(orgData, function(snapshot) {
+          if(!!snapshot.cubesAndSegmentsUsage && snapshot.cubesAndSegmentsUsage.length > 0) {
+            snapshot.usageInfo = '';
+            angular.forEach(snapshot.cubesAndSegmentsUsage, function(info) {
+              snapshot.usageInfo += info;
+              snapshot.usageInfo += '</br>';
+            });
+          } else {
+            snapshot.usageInfo = 'No Usage Info';
+          }
+        });
+        $scope.tableSnapshots = orgData;
+      });
+    };
+    $scope.$watch('tableModel.selectedSrcTable', function (newValue, oldValue) {
+      if (!newValue || !newValue.name) {
+        return;
+      }
+      $scope.initSnapshots();
+    });
+  }); 

@@ -1627,7 +1627,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
                   }
                 }
             }
-            if (angular.equals(result.toUpperCase(),value.toUpperCase())){
+            if (angular.equals((typeof result =='string') ? result.toUpperCase() : result, (typeof value == 'string') ? value.toUpperCase() : value)) {
               resultMultiple.unshift(list[p]);
               return true;
             }

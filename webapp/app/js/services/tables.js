@@ -24,6 +24,7 @@ KylinApp.factory('TableService', ['$resource', function ($resource, config) {
     unLoadHiveTable: {method: 'DELETE', params: {}, isArray: false},
     genCardinality: {method: 'PUT', params: {action: 'cardinality'}, isArray: false},
     showHiveDatabases: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true},
-    showHiveTables: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true}
+    showHiveTables: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true},
+    getSnapshots: {method: 'GET', params: {action: 'snapshots'}, isArray: true}
   });
 }]);

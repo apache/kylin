@@ -1,0 +1,71 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<script type="text/ng-template" id="lookupRefresh.html">
+  <div class="modal-header">
+    <h4 tooltip="refresh">LOOKUP REFRESH CONFIRM</h4>
+  </div>
+  <div class="modal-body" style="background-color: white">
+    <div ng-if="!!cube.detail.snapshot_table_desc_list" class="row">
+      <div class="col-md-2"></div>
+      <div class="col-md-8">
+        <table class="table table-striped list">
+          <tbody>
+            <tr>
+              <td style="width:30%">Lookup Table</td>
+              <td style="width:70%" colspan="2">
+                <select style="width:95%" chosen ng-model="lookup.select.table_name"
+                  ng-change="updateLookupTable(lookup.select.table_name)"
+                  ng-options="lookup as lookup for lookup in cubeLookups">
+                  <option value=""></option>
+                </select>
+              </td>
+            </tr>
+            <tr ng-if="dispalySegment">
+              <td style="width:30%">Segments</td>
+              <td style="width:60%">
+                <ui-select multiple ng-model="lookup.select.segments" theme="bootstrap" sortable="true" close-on-select="false" class="form-control">
+                  <ui-select-match placeholder="Select Segments...">{{$item.name}}</ui-select-match>
+                  <ui-select-choices repeat="segment in cube.segments | filter:getReadySegment">
+                    <div ng-bind-html="segment.name | highlight: $select.search"></div>
+                  </ui-select-choices>
+                </ui-select>
+              </td>
+              <td style="width:10%">
+                <input type="checkbox" ng-change="selectAllSegments(allSegments)" ng-model="allSegments">&nbsp;All
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="col-md-2"></div>
+    </div>
+    <div ng-if="!cube.detail.snapshot_table_desc_list" class="row">
+      <div class="col-md-2"></div>
+      <div class="col-md-8">
+        <span>No lookup table defined. Please configurate lookup in model</span>
+      </div>
+      <div class="col-md-2"></div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="cancel()">Close</button>
+    <button ng-if="!!cube.detail.snapshot_table_desc_list" class="btn btn-success" ng-click="refresh()">Submit</button>
+  </div>
+</script>
