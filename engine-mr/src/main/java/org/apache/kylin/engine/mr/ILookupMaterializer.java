@@ -16,28 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.realization;
+package org.apache.kylin.engine.mr;
 
-/**
- */
-public class IRealizationConstants {
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
-    public final static String LookupHbaseStorageLocationPrefix = "LOOKUP_";
+public interface ILookupMaterializer {
+    void materializeLookupTable(DefaultChainedExecutable jobFlow, CubeInstance cube, String lookupTableName);
 
-    /**
-     * For each cube htable, we leverage htable's metadata to keep track of
-     * which kylin server(represented by its kylin_metadata prefix) owns this htable
-     */
-    public final static String HTableTag = "KYLIN_HOST";
-
-    public final static String HTableOwner = "OWNER";
-
-    public final static String HTableUser = "USER";
-
-    public final static String HTableCreationTime = "CREATION_TIME";
-
-    public final static String HTableSegmentTag = "SEGMENT";
-
-    public final static String HTableGitTag = "GIT_COMMIT";
-
+    void materializeLookupTablesForCube(DefaultChainedExecutable jobFlow, CubeInstance cube);
 }

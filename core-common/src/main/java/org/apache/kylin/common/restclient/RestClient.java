@@ -303,6 +303,27 @@ public class RestClient {
         }
     }
 
+    public void buildLookupSnapshotCache(String project, String lookupTableName, String snapshotID) throws IOException {
+        String url = baseUrl + "/tables/" + project + "/" + lookupTableName + "/" + snapshotID + "/snapshotLocalCache";
+        HttpPut put = new HttpPut(url);
+        HttpResponse response = client.execute(put);
+        getContent(response);
+        if (response.getStatusLine().getStatusCode() != 200) {
+            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url + "\n");
+        }
+    }
+
+    public String getLookupSnapshotCacheState(String lookupTableName, String snapshotID) throws IOException {
+        String url = baseUrl + "/tables/" + lookupTableName + "/" + snapshotID + "/snapshotLocalCache/state";
+        HttpGet get = new HttpGet(url);
+        HttpResponse response = client.execute(get);
+        String content = getContent(response);
+        if (response.getStatusLine().getStatusCode() != 200) {
+            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url + "\n");
+        }
+        return content;
+    }
+
     private HashMap dealResponse(HttpResponse response) throws IOException {
         if (response.getStatusLine().getStatusCode() != 200) {
             throw new IOException("Invalid response " + response.getStatusLine().getStatusCode());

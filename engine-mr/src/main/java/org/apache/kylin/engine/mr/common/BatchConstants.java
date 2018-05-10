@@ -72,6 +72,8 @@ public interface BatchConstants {
 
     String CFG_HLL_REDUCER_NUM = "cuboidHLLCounterReducerNum";
 
+    String CFG_SHARD_NUM = "shard.num";
+
     /**
      * command line ARGuments
      */
@@ -95,6 +97,8 @@ public interface BatchConstants {
     String ARG_LEVEL = "level";
     String ARG_CONF = "conf";
     String ARG_DICT_PATH = "dictPath";
+    String ARG_TABLE_NAME = "tableName";
+    String ARG_LOOKUP_SNAPSHOT_ID = "snapshotID";
 
     /**
      * logger and counter
@@ -106,4 +110,11 @@ public interface BatchConstants {
      * dictionaries builder class
      */
     String GLOBAL_DICTIONNARY_CLASS = "org.apache.kylin.dict.GlobalDictionaryBuilder";
+
+    /**
+     * the prefix of ext lookup table snapshot resource path that stored in the build context
+     */
+    String LOOKUP_EXT_SNAPSHOT_CONTEXT_PFX = "lookup.ext.snapshot.res.path.";
+
+    String LOOKUP_EXT_SNAPSHOT_SRC_RECORD_CNT_PFX = "lookup.ext.snapshot.src.record.cnt.";
 }

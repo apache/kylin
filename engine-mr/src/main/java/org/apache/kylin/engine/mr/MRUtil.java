@@ -23,6 +23,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.dict.lookup.LookupProviderFactory;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
@@ -68,6 +69,10 @@ public class MRUtil {
 
     public static IMROutput2.IMRBatchOptimizeOutputSide2 getBatchOptimizeOutputSide2(CubeSegment seg) {
         return StorageFactory.createEngineAdapter(seg, IMROutput2.class).getBatchOptimizeOutputSide(seg);
+    }
+
+    public static ILookupMaterializer getExtLookupMaterializer(String lookupStorageType) {
+        return LookupProviderFactory.createEngineAdapter(lookupStorageType, ILookupMaterializer.class);
     }
     
     // use this method instead of ToolRunner.run() because ToolRunner.run() is not thread-sale

@@ -16,28 +16,21 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.realization;
+package org.apache.kylin.dict.lookup;
 
-/**
- */
-public class IRealizationConstants {
+import org.apache.kylin.metadata.model.TableDesc;
 
-    public final static String LookupHbaseStorageLocationPrefix = "LOOKUP_";
+public interface IExtLookupProvider {
+    ILookupTable getLookupTable(TableDesc tableDesc, ExtTableSnapshotInfo extTableSnapshot);
 
     /**
-     * For each cube htable, we leverage htable's metadata to keep track of
-     * which kylin server(represented by its kylin_metadata prefix) owns this htable
+     * @return the local cache if the provider has, return null if no local cache exist
      */
-    public final static String HTableTag = "KYLIN_HOST";
+    IExtLookupTableCache getLocalCache();
 
-    public final static String HTableOwner = "OWNER";
-
-    public final static String HTableUser = "USER";
-
-    public final static String HTableCreationTime = "CREATION_TIME";
-
-    public final static String HTableSegmentTag = "SEGMENT";
-
-    public final static String HTableGitTag = "GIT_COMMIT";
-
+    /**
+     * Return an adaptor that implements specified interface as requested by the build engine.
+     * The ILookupMaterializer in particular, is required by the MR build engine.
+     */
+    <I> I adaptToBuildEngine(Class<I> engineInterface);
 }

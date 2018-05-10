@@ -120,6 +120,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_NEED_UPDATE_BASE_CUBOID_SHARD = OptionBuilder
             .withArgName(BatchConstants.ARG_UPDATE_SHARD).hasArg().isRequired(false)
             .withDescription("If need to update base cuboid shard").create(BatchConstants.ARG_UPDATE_SHARD);
+    protected static final Option OPTION_TABLE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_TABLE_NAME).hasArg().isRequired(true).withDescription("Table name. For exmaple, default.table1").create(BatchConstants.ARG_TABLE_NAME);
+    protected static final Option OPTION_LOOKUP_SNAPSHOT_ID = OptionBuilder.withArgName(BatchConstants.ARG_LOOKUP_SNAPSHOT_ID).hasArg()
+            .isRequired(true).withDescription("Lookup table snapshotID")
+            .create(BatchConstants.ARG_LOOKUP_SNAPSHOT_ID);
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 

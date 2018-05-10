@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidUtil;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
 import org.apache.kylin.engine.mr.IMROutput2.IMRBatchCubingOutputSide2;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
@@ -69,6 +70,10 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
 
         result.addTask(createBuildDictionaryStep(jobId));
         result.addTask(createSaveStatisticsStep(jobId));
+
+        // add materialize lookup tables if needed
+        addMaterializeLookupTableSteps(result);
+
         outputSide.addStepPhase2_BuildDictionary(result);
 
         // Phase 3: Build Cube
@@ -95,6 +100,18 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         }
 
         return true;
+    }
+
+    private void addMaterializeLookupTableSteps(final CubingJob result) {
+        CubeDesc cubeDesc = seg.getCubeDesc();
+        List<String> allSnapshotTypes = cubeDesc.getAllExtLookupSnapshotTypes();
+        if (allSnapshotTypes.isEmpty()) {
+            return;
+        }
+        for (String snapshotType : allSnapshotTypes) {
+            ILookupMaterializer materializer = MRUtil.getExtLookupMaterializer(snapshotType);
+            materializer.materializeLookupTablesForCube(result, seg.getCubeInstance());
+        }
     }
 
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {

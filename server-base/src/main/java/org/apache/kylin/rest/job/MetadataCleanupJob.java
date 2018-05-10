@@ -73,7 +73,7 @@ public class MetadataCleanupJob {
 
         // two level resources, snapshot tables and cube statistics
         for (String resourceRoot : new String[] { ResourceStore.SNAPSHOT_RESOURCE_ROOT,
-                ResourceStore.CUBE_STATISTICS_ROOT }) {
+                ResourceStore.CUBE_STATISTICS_ROOT, ResourceStore.EXT_SNAPSHOT_RESOURCE_ROOT}) {
             for (String dir : noNull(store.listResources(resourceRoot))) {
                 for (String res : noNull(store.listResources(dir))) {
                     if (store.getResourceTimestamp(res) < newResourceTimeCut)
@@ -97,6 +97,7 @@ public class MetadataCleanupJob {
         // exclude resources in use
         Set<String> activeResources = Sets.newHashSet();
         for (CubeInstance cube : cubeManager.listAllCubes()) {
+            activeResources.addAll(cube.getSnapshots().values());
             for (CubeSegment segment : cube.getSegments()) {
                 activeResources.addAll(segment.getSnapshotPaths());
                 activeResources.addAll(segment.getDictionaryPaths());

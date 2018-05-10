@@ -16,28 +16,24 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.realization;
+package org.apache.kylin.dict.lookup;
 
-/**
- */
-public class IRealizationConstants {
+import org.apache.kylin.metadata.model.TableDesc;
 
-    public final static String LookupHbaseStorageLocationPrefix = "LOOKUP_";
+public interface IExtLookupTableCache {
+    enum CacheState {NONE, IN_BUILDING, AVAILABLE}
 
     /**
-     * For each cube htable, we leverage htable's metadata to keep track of
-     * which kylin server(represented by its kylin_metadata prefix) owns this htable
+     * @param tableDesc
+     * @param extTableSnapshotInfo
+     * @param buildIfNotExist if true, when the cached lookup table not exist, build it.
+     * @return null if no cached lookup table exist
      */
-    public final static String HTableTag = "KYLIN_HOST";
+    ILookupTable getCachedLookupTable(TableDesc tableDesc, ExtTableSnapshotInfo extTableSnapshotInfo, boolean buildIfNotExist);
 
-    public final static String HTableOwner = "OWNER";
+    void buildSnapshotCache(TableDesc tableDesc, ExtTableSnapshotInfo extTableSnapshotInfo, ILookupTable sourceTable);
 
-    public final static String HTableUser = "USER";
+    void removeSnapshotCache(ExtTableSnapshotInfo extTableSnapshotInfo);
 
-    public final static String HTableCreationTime = "CREATION_TIME";
-
-    public final static String HTableSegmentTag = "SEGMENT";
-
-    public final static String HTableGitTag = "GIT_COMMIT";
-
+    CacheState getCacheState(ExtTableSnapshotInfo extTableSnapshotInfo);
 }

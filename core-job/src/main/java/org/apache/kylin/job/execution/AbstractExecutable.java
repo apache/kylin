@@ -399,8 +399,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         }
     }
 
-    protected final void addExtraInfo(String key, String value) {
+    public final void addExtraInfo(String key, String value) {
         getManager().addJobInfo(getId(), key, value);
+    }
+
+    public final String getExtraInfo(String key) {
+        return getExtraInfo().get(key);
     }
 
     protected final Map<String, String> getExtraInfo() {

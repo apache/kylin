@@ -21,6 +21,7 @@ package org.apache.kylin.rest.job;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,6 +29,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -35,6 +37,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,10 +64,17 @@ public class StorageCleanJobHbaseUtil {
                 ? config.getHBaseTableNamePrefix()
                 : (namespace + ":" + config.getHBaseTableNamePrefix());
         HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
+
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
+
+        boolean hasExtLookupTable = false;
         for (HTableDescriptor desc : tableDescriptors) {
             String host = desc.getValue(IRealizationConstants.HTableTag);
             if (config.getMetadataUrlPrefix().equalsIgnoreCase(host)) {
+                // check if there are hbase lookup table
+                if (desc.getTableName().getNameAsString().contains(IRealizationConstants.LookupHbaseStorageLocationPrefix)) {
+                    hasExtLookupTable = true;
+                }
                 //only take care htables that belongs to self, and created more than 2 days
                 allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
             }
@@ -88,6 +99,11 @@ public class StorageCleanJobHbaseUtil {
         
         logger.info(allTablesNeedToBeDropped.size() + " HTable(s) to clean up");
 
+        if (hasExtLookupTable) {
+            List<String> useExtLookupTables = getAllUsedExtLookupTables();
+            logger.info("Exclude tables:{}, as they are referred by snapshots.", useExtLookupTables);
+            allTablesNeedToBeDropped.removeAll(useExtLookupTables);
+        }
         if (delete) {
             // drop tables
             ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -113,6 +129,27 @@ public class StorageCleanJobHbaseUtil {
         }
         
         return allTablesNeedToBeDropped;
+    }
+
+    private static List<String> getAllUsedExtLookupTables() throws IOException {
+        List<String> result = Lists.newArrayList();
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        final Set<String> activeSnapshotSet = ExtTableSnapshotInfoManager.getInstance(config).getAllExtSnapshotResPaths();
+
+        for (String extSnapshotResource : activeSnapshotSet) {
+            try {
+                ExtTableSnapshotInfo extTableSnapshot = ExtTableSnapshotInfoManager.getInstance(config).getSnapshot(
+                        extSnapshotResource);
+                if (extTableSnapshot != null) {
+                    if (ExtTableSnapshotInfo.STORAGE_TYPE_HBASE.equals(extTableSnapshot.getStorageType())) {
+                        result.add(extTableSnapshot.getStorageLocationIdentifier());
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("error fetch ext table snapshot:" + extSnapshotResource, e);
+            }
+        }
+        return result;
     }
 
     static class DeleteHTableRunnable implements Callable {
