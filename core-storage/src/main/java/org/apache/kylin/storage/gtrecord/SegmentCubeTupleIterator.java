@@ -202,6 +202,7 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
     protected void close(CubeSegmentScanner scanner) {
         try {
             scanner.close();
+            cubeTupleConverter.close();
         } catch (IOException e) {
             logger.error("Exception when close CubeScanner", e);
         }

@@ -75,7 +75,7 @@ public class CubeCapabilityChecker {
             }
         } else {
             //for non query-on-facttable 
-            if (cube.getSegments().get(0).getSnapshots().containsKey(digest.factTable)) {
+            if (cube.getSegments().get(0).getSnapshots().containsKey(digest.factTable) || cube.getSnapshots().containsKey(digest.factTable)) {
 
                 Set<TblColRef> dimCols = Sets.newHashSet(cube.getModel().findFirstTable(digest.factTable).getColumns());
 
