@@ -50,6 +50,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class SnapshotTable extends RootPersistentEntity implements IReadableTable {
+    public static final String STORAGE_TYPE_METASTORE = "metaStore";
 
     @JsonProperty("tableName")
     private String tableName;
@@ -57,6 +58,8 @@ public class SnapshotTable extends RootPersistentEntity implements IReadableTabl
     private TableSignature signature;
     @JsonProperty("useDictionary")
     private boolean useDictionary;
+    @JsonProperty("last_build_time")
+    private long lastBuildTime;
 
     private ArrayList<int[]> rowIndices;
     private Dictionary<String> dict;
@@ -69,6 +72,18 @@ public class SnapshotTable extends RootPersistentEntity implements IReadableTabl
         this.tableName = tableName;
         this.signature = table.getSignature();
         this.useDictionary = true;
+    }
+
+    public long getLastBuildTime() {
+        return lastBuildTime;
+    }
+
+    public void setLastBuildTime(long lastBuildTime) {
+        this.lastBuildTime = lastBuildTime;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
     }
 
     public void takeSnapshot(IReadableTable table, TableDesc tableDesc) throws IOException {
@@ -121,13 +136,17 @@ public class SnapshotTable extends RootPersistentEntity implements IReadableTabl
 
     public String getResourceDir() {
         if (Strings.isNullOrEmpty(tableName)) {
-            return getOldResourceDir();
+            return getOldResourceDir(signature);
         } else {
-            return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + tableName;
+            return getResourceDir(tableName);
         }
     }
 
-    private String getOldResourceDir() {
+    public static String getResourceDir(String tableName) {
+        return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + tableName;
+    }
+
+    public static String getOldResourceDir(TableSignature signature) {
         return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new File(signature.getPath()).getName();
     }
 

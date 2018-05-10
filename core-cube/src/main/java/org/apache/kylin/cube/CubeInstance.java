@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -123,6 +124,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     @JsonProperty("cuboid_last_optimized")
     private long cuboidLastOptimized;
+
+    @JsonProperty("snapshots")
+    private Map<String, String> snapshots = Maps.newHashMap();
 
     // cuboid scheduler lazy built
     transient private CuboidScheduler cuboidScheduler;
@@ -673,6 +677,20 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     @Override
     public int getEngineType() {
         return getDescriptor().getEngineType();
+    }
+
+    public Map<String, String> getSnapshots() {
+        if (snapshots == null)
+            snapshots = Maps.newHashMap();
+        return snapshots;
+    }
+
+    public String getSnapshotResPath(String tableName) {
+        return getSnapshots().get(tableName);
+    }
+
+    public void putSnapshotResPath(String table, String snapshotResPath) {
+        getSnapshots().put(table, snapshotResPath);
     }
 
     public static CubeInstance getCopyOf(CubeInstance cubeInstance) {
