@@ -32,6 +32,7 @@ import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CardinalityRequest;
 import org.apache.kylin.rest.request.HiveTableRequest;
 import org.apache.kylin.rest.service.TableACLService;
+import org.apache.kylin.rest.response.TableSnapshotResponse;
 import org.apache.kylin.rest.service.TableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -208,4 +209,31 @@ public class TableController extends BasicController {
         }
     }
 
+    @RequestMapping(value = "/{project}/{tableName}/{snapshotID}/snapshotLocalCache", method = { RequestMethod.PUT })
+    @ResponseBody
+    public void updateSnapshotLocalCache(@PathVariable final String project, @PathVariable final String tableName, @PathVariable final String snapshotID) {
+        tableService.updateSnapshotLocalCache(project, tableName, snapshotID);
+    }
+
+    @RequestMapping(value = "/{tableName}/{snapshotID}/snapshotLocalCache/state", method = { RequestMethod.GET })
+    @ResponseBody
+    public String getSnapshotLocalCacheState(@PathVariable final String tableName, @PathVariable final String snapshotID) {
+        return tableService.getSnapshotLocalCacheState(tableName, snapshotID);
+    }
+
+    @RequestMapping(value = "/{tableName}/{snapshotID}/snapshotLocalCache", method = { RequestMethod.DELETE })
+    @ResponseBody
+    public void removeSnapshotLocalCache(@PathVariable final String tableName, @PathVariable final String snapshotID) {
+        tableService.removeSnapshotLocalCache(tableName, snapshotID);
+    }
+
+    @RequestMapping(value = "/{project}/{tableName}/snapshots", method = { RequestMethod.GET })
+    @ResponseBody
+    public List<TableSnapshotResponse> getTableSnapshots(@PathVariable final String project, @PathVariable final String tableName) throws IOException {
+        return tableService.getLookupTableSnapshots(project, tableName);
+    }
+
+    public void setTableService(TableService tableService) {
+        this.tableService = tableService;
+    }
 }

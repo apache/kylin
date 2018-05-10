@@ -64,6 +64,7 @@ import org.apache.kylin.rest.request.JobBuildRequest2;
 import org.apache.kylin.rest.request.JobOptimizeRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
+import org.apache.kylin.rest.request.LookupSnapshotBuildRequest;
 import org.apache.kylin.rest.response.CuboidTreeResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
@@ -292,6 +293,25 @@ public class CubeController extends BasicController {
             final CubeManager cubeMgr = cubeService.getCubeManager();
             final CubeInstance cube = cubeMgr.getCube(cubeName);
             return cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable);
+        } catch (IOException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage());
+        }
+    }
+
+    /**
+     * Force rebuild a cube's lookup table snapshot
+     *
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/refresh_lookup", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @ResponseBody
+    public JobInstance reBuildLookupSnapshot(@PathVariable String cubeName, @RequestBody LookupSnapshotBuildRequest request) {
+        try {
+            final CubeManager cubeMgr = cubeService.getCubeManager();
+            final CubeInstance cube = cubeMgr.getCube(cubeName);
+            String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+            return jobService.submitLookupSnapshotJob(cube, request.getLookupTableName(), request.getSegmentIDs(), submitter);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());

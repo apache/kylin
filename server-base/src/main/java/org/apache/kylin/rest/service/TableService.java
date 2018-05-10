@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,10 +30,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
+import org.apache.kylin.dict.lookup.IExtLookupTableCache.CacheState;
+import org.apache.kylin.dict.lookup.LookupProviderFactory;
+import org.apache.kylin.dict.lookup.SnapshotManager;
+import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -49,6 +59,9 @@ import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
+import org.apache.kylin.rest.response.TableSnapshotResponse;
+import org.apache.kylin.source.IReadableTable;
+import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob;
@@ -385,6 +398,109 @@ public class TableService extends BasicService {
                 calculateCardinality(table, submitter, prj);
             }
         }
+    }
+
+    public void updateSnapshotLocalCache(String project, String tableName, String snapshotID) {
+        ExtTableSnapshotInfoManager snapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
+        ExtTableSnapshotInfo extTableSnapshotInfo = snapshotInfoManager.getSnapshot(tableName, snapshotID);
+        TableDesc tableDesc = getTableManager().getTableDesc(tableName, project);
+        if (extTableSnapshotInfo == null) {
+            throw new IllegalArgumentException("cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
+        }
+        LookupProviderFactory.rebuildLocalCache(tableDesc, extTableSnapshotInfo);
+    }
+
+    public void removeSnapshotLocalCache(String tableName, String snapshotID) {
+        ExtTableSnapshotInfoManager snapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
+        ExtTableSnapshotInfo extTableSnapshotInfo = snapshotInfoManager.getSnapshot(tableName, snapshotID);
+        if (extTableSnapshotInfo == null) {
+            throw new IllegalArgumentException("cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
+        }
+        LookupProviderFactory.removeLocalCache(extTableSnapshotInfo);
+    }
+
+    public String getSnapshotLocalCacheState(String tableName, String snapshotID) {
+        ExtTableSnapshotInfoManager snapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
+        ExtTableSnapshotInfo extTableSnapshotInfo = snapshotInfoManager.getSnapshot(tableName, snapshotID);
+        if (extTableSnapshotInfo == null) {
+            throw new IllegalArgumentException("cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
+        }
+        CacheState cacheState = LookupProviderFactory.getCacheState(extTableSnapshotInfo);
+        return cacheState.name();
+    }
+
+    public List<TableSnapshotResponse> getLookupTableSnapshots(String project, String tableName) throws IOException {
+        TableDesc tableDesc = getTableManager().getTableDesc(tableName, project);
+        IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc);
+        TableSignature signature = hiveTable.getSignature();
+        return internalGetLookupTableSnapshots(tableName, signature);
+    }
+
+    List<TableSnapshotResponse> internalGetLookupTableSnapshots(String tableName, TableSignature signature) throws IOException {
+        ExtTableSnapshotInfoManager extSnapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
+        SnapshotManager snapshotManager = SnapshotManager.getInstance(getConfig());
+        List<ExtTableSnapshotInfo> extTableSnapshots = extSnapshotInfoManager.getSnapshots(tableName);
+        List<SnapshotTable> metaStoreTableSnapshots = snapshotManager.getSnapshots(tableName, signature);
+
+        Map<String, List<String>> snapshotUsageMap = getSnapshotUsages();
+
+        List<TableSnapshotResponse> result = Lists.newArrayList();
+        for (ExtTableSnapshotInfo extTableSnapshot : extTableSnapshots) {
+            TableSnapshotResponse response = new TableSnapshotResponse();
+            response.setSnapshotID(extTableSnapshot.getId());
+            response.setSnapshotType(TableSnapshotResponse.TYPE_EXT);
+            response.setLastBuildTime(extTableSnapshot.getLastBuildTime());
+            response.setStorageType(extTableSnapshot.getStorageType());
+            response.setSourceTableSize(extTableSnapshot.getSignature().getSize());
+            response.setSourceTableLastModifyTime(extTableSnapshot.getSignature().getLastModifiedTime());
+            response.setCubesAndSegmentsUsage(snapshotUsageMap.get(extTableSnapshot.getResourcePath()));
+            result.add(response);
+        }
+
+        for (SnapshotTable metaStoreTableSnapshot : metaStoreTableSnapshots) {
+            TableSnapshotResponse response = new TableSnapshotResponse();
+            response.setSnapshotID(metaStoreTableSnapshot.getId());
+            response.setSnapshotType(TableSnapshotResponse.TYPE_INNER);
+            response.setLastBuildTime(metaStoreTableSnapshot.getLastBuildTime());
+            response.setStorageType(SnapshotTable.STORAGE_TYPE_METASTORE);
+            response.setSourceTableSize(metaStoreTableSnapshot.getSignature().getSize());
+            response.setSourceTableLastModifyTime(metaStoreTableSnapshot.getSignature().getLastModifiedTime());
+            response.setCubesAndSegmentsUsage(snapshotUsageMap.get(metaStoreTableSnapshot.getResourcePath()));
+            result.add(response);
+        }
+
+        return result;
+    }
+
+    /**
+     * @return Map of SnapshotID, CubeName or SegmentName list
+     */
+    private Map<String, List<String>> getSnapshotUsages() {
+        CubeManager cubeManager = CubeManager.getInstance(getConfig());
+        Map<String, List<String>> snapshotCubeSegmentMap = Maps.newHashMap();
+        for (CubeInstance cube : cubeManager.listAllCubes()) {
+            Collection<String> cubeSnapshots = cube.getSnapshots().values();
+            for (String cubeSnapshot : cubeSnapshots) {
+                List<String> usages = snapshotCubeSegmentMap.get(cubeSnapshot);
+                if (usages == null) {
+                    usages = Lists.newArrayList();
+                    snapshotCubeSegmentMap.put(cubeSnapshot, usages);
+                }
+                usages.add(cube.getName());
+            }
+            for (CubeSegment segment : cube.getSegments()) {
+                Collection<String> segmentSnapshots = segment.getSnapshotPaths();
+                for (String segmentSnapshot : segmentSnapshots) {
+                    List<String> usages = snapshotCubeSegmentMap.get(segmentSnapshot);
+                    if (usages == null) {
+                        usages = Lists.newArrayList();
+                        snapshotCubeSegmentMap.put(segmentSnapshot, usages);
+                    }
+                    usages.add(cube.getName() + ":" + segment.getName());
+                }
+            }
+        }
+        return snapshotCubeSegmentMap;
     }
 
     /**
