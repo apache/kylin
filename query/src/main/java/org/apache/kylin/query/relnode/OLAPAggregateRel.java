@@ -47,6 +47,7 @@ import org.apache.calcite.schema.FunctionParameter;
 import org.apache.calcite.schema.impl.AggregateFunctionImpl;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.fun.SqlCountAggFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.fun.SqlSumAggFunction;
 import org.apache.calcite.sql.fun.SqlSumEmptyIsZeroAggFunction;
@@ -58,13 +59,18 @@ import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.ParamAsMeasureCount;
+import org.apache.kylin.metadata.expression.CaseTupleExpression;
 import org.apache.kylin.metadata.expression.ColumnTupleExpression;
 import org.apache.kylin.metadata.expression.ExpressionColCollector;
 import org.apache.kylin.metadata.expression.ExpressionCountDistributor;
 import org.apache.kylin.metadata.expression.NumberTupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpression;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -130,6 +136,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     OLAPContext context;
     ColumnRowType columnRowType;
     private boolean afterAggregate;
+    private Map<Integer, AggregateCall> hackAggCalls;
     private List<AggregateCall> rewriteAggCalls;
     private List<TblColRef> groups;
     private List<FunctionDesc> aggregations;
@@ -271,7 +278,9 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     void buildAggregations() {
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
         this.aggregations = Lists.newArrayList();
-        for (AggregateCall aggCall : this.rewriteAggCalls) {
+        this.hackAggCalls = Maps.newHashMap();
+        for (int i = 0; i < this.rewriteAggCalls.size(); i++) {
+            AggregateCall aggCall = this.rewriteAggCalls.get(i);
             ParameterDesc parameter = null;
             List<Integer> argList = aggCall.getArgList();
             // By default all args are included, UDFs can define their own in getParamAsMeasureCount method.
@@ -309,6 +318,30 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                         this.aggregations.add(sumDynFunc);
                         continue;
                     }
+                } else if (aggCall.getAggregation() instanceof SqlCountAggFunction && !aggCall.isDistinct()) {
+                    if (tupleExpr instanceof ColumnTupleExpression) {
+                        TblColRef srcCol = ((ColumnTupleExpression) tupleExpr).getColumn();
+                        if (this.context.belongToFactTable(srcCol)) {
+                            tupleExpr = getCountColumnExpression(srcCol);
+
+                            TblColRef column = TblColRef.newInnerColumn(tupleExpr.getDigest(),
+                                    TblColRef.InnerDataTypeEnum.LITERAL);
+
+                            SumDynamicFunctionDesc sumDynFunc = new SumDynamicFunctionDesc(
+                                    ParameterDesc.newInstance(column), tupleExpr);
+
+                            inputColumnRowType.replaceColumnByIndex(iRowIdx, column, tupleExpr);
+
+                            AggregateCall newAggCall = AggregateCall.create(SqlStdOperatorTable.SUM, false,
+                                    aggCall.getArgList(), -1, aggCall.getType(), aggCall.getName());
+                            this.hackAggCalls.put(i, newAggCall);
+
+                            this.context.dynamicFields.put(column, aggCall.getType());
+
+                            this.aggregations.add(sumDynFunc);
+                            continue;
+                        }
+                    }
                 }
             }
             String expression = getAggrFuncName(aggCall);
@@ -337,9 +370,10 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         // only rewrite the innermost aggregation
         if (needRewrite()) {
             // rewrite the aggCalls
-            this.rewriteAggCalls = new ArrayList<AggregateCall>(aggCalls.size());
+            this.rewriteAggCalls = Lists.newArrayListWithExpectedSize(aggCalls.size());
             for (int i = 0; i < this.aggCalls.size(); i++) {
-                AggregateCall aggCall = this.aggCalls.get(i);
+                AggregateCall aggCall = this.hackAggCalls.get(i) != null ? this.hackAggCalls.get(i)
+                        : this.aggCalls.get(i);
                 FunctionDesc cubeFunc = this.context.aggregations.get(i);
                 // filter needn,t rewrite aggfunc
                 // if it's not a cube, then the "needRewriteField func" should not resort to any rewrite fields,
@@ -567,5 +601,17 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw).item("ctx",
                 context == null ? "" : String.valueOf(context.id) + "@" + context.realization);
+    }
+
+    private TupleExpression getCountColumnExpression(TblColRef colRef) {
+        List<Pair<TupleFilter, TupleExpression>> whenList = Lists.newArrayListWithExpectedSize(1);
+        TupleFilter whenFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.ISNULL);
+        whenFilter.addChild(new ColumnTupleFilter(colRef));
+        whenList.add(new Pair<TupleFilter, TupleExpression>(whenFilter, new NumberTupleExpression(0)));
+
+        TupleExpression elseExpr = new ColumnTupleExpression(SumDynamicFunctionDesc.mockCntCol);
+        TupleExpression ret = new CaseTupleExpression(whenList, elseExpr);
+        ret.setDigest("_KY_COUNT(" + colRef.getName() + ")");
+        return ret;
     }
 }

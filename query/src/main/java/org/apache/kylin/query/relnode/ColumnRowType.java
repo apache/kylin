@@ -20,6 +20,7 @@ package org.apache.kylin.query.relnode;
 
 import java.util.List;
 
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.expression.ColumnTupleExpression;
 import org.apache.kylin.metadata.expression.NoneTupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpression;
@@ -68,6 +69,16 @@ public class ColumnRowType {
             }
         }
         return -1;
+    }
+
+    public Pair<TblColRef, TupleExpression> replaceColumnByIndex(int index, TblColRef newColumn,
+            TupleExpression newTupleExpr) {
+        if (index < 0 || index >= columns.size()) {
+            return null;
+        }
+        TblColRef oldCol = columns.set(index, newColumn);
+        TupleExpression oldExpr = sourceColumns.set(index, newTupleExpr);
+        return new Pair<>(oldCol, oldExpr);
     }
 
     public TupleExpression getSourceColumnsByIndex(int i) {

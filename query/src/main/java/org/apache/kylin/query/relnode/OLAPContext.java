@@ -41,7 +41,9 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
@@ -52,6 +54,7 @@ import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -205,6 +208,38 @@ public class OLAPContext {
             }
         }
 
+        return false;
+    }
+
+    public boolean belongToFactTable(TblColRef tblColRef) {
+        if (!belongToContextTables(tblColRef)) {
+            return false;
+        }
+        KylinConfig kylinConfig = olapSchema.getConfig();
+        String projectName = olapSchema.getProjectName();
+        String factTableName = firstTableScan.getOlapTable().getTableName();
+        Set<IRealization> realizations = ProjectManager.getInstance(kylinConfig).getRealizationsByTable(projectName,
+                factTableName);
+        for (IRealization real : realizations) {
+            DataModelDesc model = real.getModel();
+            TblColRef.fixUnknownModel(model, tblColRef.getTableRef().getTableIdentity(), tblColRef);
+
+            // cannot be a measure column
+            Set<String> metrics = Sets.newHashSet(model.getMetrics());
+            if (metrics.contains(tblColRef.getIdentity())) {
+                tblColRef.unfixTableRef();
+                return false;
+            }
+
+            // must belong to a fact table
+            for (TableRef factTable : model.getFactTables()) {
+                if (factTable.getColumns().contains(tblColRef)) {
+                    tblColRef.unfixTableRef();
+                    return true;
+                }
+            }
+            tblColRef.unfixTableRef();
+        }
         return false;
     }
 

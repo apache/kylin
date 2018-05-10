@@ -4996,7 +4996,7 @@ public class SqlToRelConverter {
           // special case for COUNT(*):  delete the *
           if (operand instanceof SqlIdentifier) {
             SqlIdentifier id = (SqlIdentifier) operand;
-            if (id.isStar() || isSimpleCount(call)) { /* OVERRIDE POINT */
+            if (id.isStar()) {
               assert call.operandCount() == 1;
               assert args.isEmpty();
               break;
