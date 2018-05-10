@@ -36,6 +36,7 @@ public class CubeUpdate {
     private int cost = -1;
     private Map<Long, Long> cuboids = null;
     private Set<Long> cuboidsRecommend = null;
+    private Map<String, String> updateTableSnapshotPath = null;
 
     public CubeUpdate(CubeInstance cubeInstance) {
         setCubeInstance(cubeInstance);
@@ -123,5 +124,13 @@ public class CubeUpdate {
     public CubeUpdate setCuboidsRecommend(Set<Long> cuboidsRecommend) {
         this.cuboidsRecommend = cuboidsRecommend;
         return this;
+    }
+
+    public Map<String, String> getUpdateTableSnapshotPath() {
+        return updateTableSnapshotPath;
+    }
+
+    public void setUpdateTableSnapshotPath(Map<String, String> updateTableSnapshotPath) {
+        this.updateTableSnapshotPath = updateTableSnapshotPath;
     }
 }

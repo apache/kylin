@@ -16,28 +16,17 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.realization;
+package org.apache.kylin.dict.lookup;
 
-/**
- */
-public class IRealizationConstants {
+import org.apache.kylin.common.util.Array;
 
-    public final static String LookupHbaseStorageLocationPrefix = "LOOKUP_";
+import java.io.Closeable;
 
+public interface ILookupTable extends Iterable<String[]>, Closeable {
     /**
-     * For each cube htable, we leverage htable's metadata to keep track of
-     * which kylin server(represented by its kylin_metadata prefix) owns this htable
+     * get row according the key
+     * @param key
+     * @return
      */
-    public final static String HTableTag = "KYLIN_HOST";
-
-    public final static String HTableOwner = "OWNER";
-
-    public final static String HTableUser = "USER";
-
-    public final static String HTableCreationTime = "CREATION_TIME";
-
-    public final static String HTableSegmentTag = "SEGMENT";
-
-    public final static String HTableGitTag = "GIT_COMMIT";
-
+    String[] getRow(Array<String> key);
 }

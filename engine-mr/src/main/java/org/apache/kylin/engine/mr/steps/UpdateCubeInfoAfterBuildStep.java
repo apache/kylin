@@ -21,6 +21,7 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -30,6 +31,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -71,6 +73,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         segment.setInputRecordsSize(sourceSizeBytes);
 
         try {
+            saveExtSnapshotIfNeeded(cubeManager, cubingJob, cube, segment);
             if (segment.isOffsetCube()) {
                 updateTimeRange(segment);
             }
@@ -80,6 +83,26 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         } catch (IOException e) {
             logger.error("fail to update cube after build", e);
             return ExecuteResult.createError(e);
+        }
+    }
+
+    private void saveExtSnapshotIfNeeded(CubeManager cubeManager, CubingJob cubingJob, CubeInstance cube, CubeSegment segment) throws IOException {
+        List<SnapshotTableDesc> snapshotTableDescList = cube.getDescriptor().getSnapshotTableDescList();
+        for (SnapshotTableDesc snapshotTableDesc : snapshotTableDescList) {
+            String tableName = snapshotTableDesc.getTableName();
+            if (snapshotTableDesc.isExtSnapshotTable()) {
+                String contextKey = BatchConstants.LOOKUP_EXT_SNAPSHOT_CONTEXT_PFX + tableName;
+                String newSnapshotResPath = cubingJob.getExtraInfo(contextKey);
+                if (newSnapshotResPath == null) {
+                    continue;
+                }
+
+                if (snapshotTableDesc.isGlobal()) {
+                    cubeManager.updateCubeLookupSnapshot(cube, tableName, newSnapshotResPath);
+                } else {
+                    segment.putSnapshotResPath(tableName, newSnapshotResPath);
+                }
+            }
         }
     }
 

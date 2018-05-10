@@ -32,6 +32,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -44,9 +45,13 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
+import org.apache.kylin.dict.lookup.ILookupTable;
+import org.apache.kylin.dict.lookup.LookupProviderFactory;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.metadata.TableMetadataManager;
@@ -290,6 +295,18 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    public CubeInstance updateCubeLookupSnapshot(CubeInstance cube, String lookupTableName, String newSnapshotResPath) throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            cube = cube.latestCopyForWrite();
+
+            CubeUpdate update = new CubeUpdate(cube);
+            Map<String, String> map = Maps.newHashMap();
+            map.put(lookupTableName, newSnapshotResPath);
+            update.setUpdateTableSnapshotPath(map);
+            return updateCube(update);
+        }
+    }
+
     private CubeInstance updateCubeWithRetry(CubeUpdate update, int retry) throws IOException {
         if (update == null || update.getCubeInstance() == null)
             throw new IllegalStateException();
@@ -351,6 +368,12 @@ public class CubeManager implements IRealizationProvider {
 
         if (update.getCuboidsRecommend() != null) {
             cube.setCuboidsRecommend(update.getCuboidsRecommend());
+        }
+
+        if (update.getUpdateTableSnapshotPath() != null) {
+            for(Map.Entry<String, String> lookupSnapshotPathEntry : update.getUpdateTableSnapshotPath().entrySet()) {
+                cube.putSnapshotResPath(lookupSnapshotPathEntry.getKey(), lookupSnapshotPathEntry.getValue());
+            }
         }
 
         try {
@@ -433,6 +456,55 @@ public class CubeManager implements IRealizationProvider {
 
             return cube;
         }
+    }
+
+    public ILookupTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {
+        String tableName = join.getPKSide().getTableIdentity();
+        CubeDesc cubeDesc = cubeSegment.getCubeDesc();
+        SnapshotTableDesc snapshotTableDesc = cubeDesc.getSnapshotTableDesc(tableName);
+        if (snapshotTableDesc == null || !snapshotTableDesc.isExtSnapshotTable()) {
+            return getInMemLookupTable(cubeSegment, join, snapshotTableDesc);
+        } else {
+            return getExtLookupTable(cubeSegment, tableName, snapshotTableDesc);
+        }
+    }
+
+    private ILookupTable getInMemLookupTable(CubeSegment cubeSegment, JoinDesc join, SnapshotTableDesc snapshotTableDesc) {
+        String tableName = join.getPKSide().getTableIdentity();
+        String snapshotResPath = getSnapshotResPath(cubeSegment, tableName, snapshotTableDesc);
+        String[] pkCols = join.getPrimaryKey();
+
+        try {
+            SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
+            TableDesc tableDesc = getMetadataManager().getTableDesc(tableName, cubeSegment.getProject());
+            return LookupProviderFactory.getInMemLookupTable(tableDesc, pkCols, snapshot);
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "Failed to load lookup table " + tableName + " from snapshot " + snapshotResPath, e);
+        }
+    }
+
+    private ILookupTable getExtLookupTable(CubeSegment cubeSegment, String tableName, SnapshotTableDesc snapshotTableDesc) {
+        String snapshotResPath = getSnapshotResPath(cubeSegment, tableName, snapshotTableDesc);
+
+        ExtTableSnapshotInfo extTableSnapshot = ExtTableSnapshotInfoManager.getInstance(config).getSnapshot(
+                snapshotResPath);
+        TableDesc tableDesc = getMetadataManager().getTableDesc(tableName, cubeSegment.getProject());
+        return LookupProviderFactory.getExtLookupTable(tableDesc, extTableSnapshot);
+    }
+
+    private String getSnapshotResPath(CubeSegment cubeSegment, String tableName, SnapshotTableDesc snapshotTableDesc) {
+        String snapshotResPath;
+        if (snapshotTableDesc == null || !snapshotTableDesc.isGlobal()) {
+            snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
+        } else {
+            snapshotResPath = cubeSegment.getCubeInstance().getSnapshotResPath(tableName);
+        }
+        if (snapshotResPath == null) {
+            throw new IllegalStateException("No snapshot for table '" + tableName + "' found on cube segment"
+                    + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);
+        }
+        return snapshotResPath;
     }
 
     @VisibleForTesting
@@ -972,8 +1044,8 @@ public class CubeManager implements IRealizationProvider {
         return dictAssist.buildSnapshotTable(cubeSeg, lookupTable);
     }
 
-    public LookupStringTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {
-        return dictAssist.getLookupTable(cubeSegment, join);
+    private TableMetadataManager getMetadataManager() {
+        return TableMetadataManager.getInstance(config);
     }
 
     private class DictionaryAssist {
@@ -1055,31 +1127,25 @@ public class CubeManager implements IRealizationProvider {
             IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc);
             SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc);
 
-            segCopy.putSnapshotResPath(lookupTable, snapshot.getResourcePath());
-            CubeUpdate update = new CubeUpdate(cubeCopy);
-            update.setToUpdateSegs(segCopy);
-            updateCube(update);
+            CubeDesc cubeDesc = cubeSeg.getCubeDesc();
+            if (!cubeDesc.isGlobalSnapshotTable(lookupTable)) {
+                segCopy.putSnapshotResPath(lookupTable, snapshot.getResourcePath());
+                CubeUpdate update = new CubeUpdate(cubeCopy);
+                update.setToUpdateSegs(segCopy);
+                updateCube(update);
 
-            return snapshot;
-        }
+                // Update the input cubeSeg after the resource store updated
+                cubeSeg.putSnapshotResPath(lookupTable, segCopy.getSnapshotResPath(lookupTable));
+            } else {
+                CubeUpdate cubeUpdate = new CubeUpdate(cubeCopy);
+                Map<String, String> map = Maps.newHashMap();
+                map.put(lookupTable, snapshot.getResourcePath());
+                cubeUpdate.setUpdateTableSnapshotPath(map);
+                updateCube(cubeUpdate);
 
-        public LookupStringTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {
-
-            String tableName = join.getPKSide().getTableIdentity();
-            String[] pkCols = join.getPrimaryKey();
-            String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
-            if (snapshotResPath == null)
-                throw new IllegalStateException("No snapshot for table '" + tableName + "' found on cube segment"
-                        + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);
-
-            try {
-                SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
-                TableDesc tableDesc = getTableManager().getTableDesc(tableName, cubeSegment.getProject());
-                return new LookupStringTable(tableDesc, pkCols, snapshot);
-            } catch (IOException e) {
-                throw new IllegalStateException(
-                        "Failed to load lookup table " + tableName + " from snapshot " + snapshotResPath, e);
+                cubeSeg.getCubeInstance().putSnapshotResPath(lookupTable, snapshot.getResourcePath());
             }
+            return snapshot;
         }
     }
 

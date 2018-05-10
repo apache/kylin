@@ -77,8 +77,11 @@ public class DictionaryGeneratorCLI {
         for (DimensionDesc dim : cubeSeg.getCubeDesc().getDimensions()) {
             TableRef table = dim.getTableRef();
             if (cubeSeg.getModel().isLookupTable(table)) {
-                toSnapshot.add(table.getTableIdentity());
-                toCheckLookup.add(table);
+                // only the snapshot desc is not ext type, need to take snapshot
+                if (!cubeSeg.getCubeDesc().isExtSnapshotTable(table.getTableIdentity())) {
+                    toSnapshot.add(table.getTableIdentity());
+                    toCheckLookup.add(table);
+                }
             }
         }
 

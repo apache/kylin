@@ -18,6 +18,8 @@
 
 package org.apache.kylin.job.execution;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -202,5 +204,29 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     @Override
     public int getDefaultPriority() {
         return DEFAULT_PRIORITY;
+    }
+
+    public String findExtraInfo(String key, String dft) {
+        return findExtraInfo(key, dft, false);
+    }
+
+    public String findExtraInfoBackward(String key, String dft) {
+        return findExtraInfo(key, dft, true);
+    }
+
+    private String findExtraInfo(String key, String dft, boolean backward) {
+        ArrayList<AbstractExecutable> tasks = new ArrayList<AbstractExecutable>(getTasks());
+
+        if (backward) {
+            Collections.reverse(tasks);
+        }
+
+        for (AbstractExecutable child : tasks) {
+            Output output = getManager().getOutput(child.getId());
+            String value = output.getExtra().get(key);
+            if (value != null)
+                return value;
+        }
+        return dft;
     }
 }
