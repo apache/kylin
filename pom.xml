@@ -114,6 +114,7 @@
         <tomcat.version>7.0.85</tomcat.version>
         <t-digest.version>3.1</t-digest.version>
         <freemarker.version>2.3.23</freemarker.version>
+        <rocksdb.version>5.9.2</rocksdb.version>
         <!--metric-->
         <dropwizard.version>3.1.2</dropwizard.version>
         <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
@@ -664,6 +665,11 @@
                 <groupId>org.freemarker</groupId>
                 <artifactId>freemarker</artifactId>
                 <version>${freemarker.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.rocksdb</groupId>
+                <artifactId>rocksdbjni</artifactId>
+                <version>${rocksdb.version}</version>
             </dependency>
 
             <!-- Logging -->

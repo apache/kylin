@@ -22,10 +22,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.util.Array;
@@ -53,7 +53,7 @@ abstract public class LookupTable<T> {
         this.tableDesc = tableDesc;
         this.keyColumns = keyColumns;
         this.table = table;
-        this.data = new ConcurrentHashMap<Array<T>, T[]>();
+        this.data = new HashMap<Array<T>, T[]>();
         init();
     }
 

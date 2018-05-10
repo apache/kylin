@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.gtrecord;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,7 +37,7 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.RowKeyColDesc;
-import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.gridtable.StorageLimitLevel;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
@@ -363,9 +364,16 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             return compf;
 
         DeriveInfo hostInfo = cubeDesc.getHostInfo(derived);
-        LookupStringTable lookup = cubeDesc.getHostInfo(derived).type == CubeDesc.DeriveType.PK_FK ? null
+        ILookupTable lookup = cubeDesc.getHostInfo(derived).type == CubeDesc.DeriveType.PK_FK ? null
                 : getLookupStringTableForDerived(derived, hostInfo);
         Pair<TupleFilter, Boolean> translated = DerivedFilterTranslator.translate(lookup, hostInfo, compf);
+        try {
+            if (lookup != null) {
+                lookup.close();
+            }
+        } catch (IOException e) {
+            logger.error("error when close lookup table.", e);
+        }
         TupleFilter translatedFilter = translated.getFirst();
         boolean loosened = translated.getSecond();
         if (loosened) {
@@ -375,7 +383,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     }
 
     @SuppressWarnings("unchecked")
-    protected LookupStringTable getLookupStringTableForDerived(TblColRef derived, DeriveInfo hostInfo) {
+    protected ILookupTable getLookupStringTableForDerived(TblColRef derived, DeriveInfo hostInfo) {
         CubeManager cubeMgr = CubeManager.getInstance(this.cubeInstance.getConfig());
         CubeSegment seg = cubeInstance.getLatestReadySegment();
         return cubeMgr.getLookupTable(seg, hostInfo.join);
