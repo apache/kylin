@@ -542,6 +542,27 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
        });
      };
 
+    $scope.startLookupRefresh = function(cube) {
+      $scope.loadDetail(cube).then(function () {
+        $scope.metaModel={
+          model:cube.model
+        };
+        $modal.open({
+          templateUrl: 'lookupRefresh.html',
+          controller: lookupRefreshCtrl,
+          resolve: {
+            cube: function () {
+              return cube;
+            },
+            scope:function(){
+              return $scope;
+            }
+          }
+        });
+        }
+      );
+    };
+
   });
 
 
@@ -779,4 +800,110 @@ var deleteSegmentCtrl = function($scope, $modalInstance, CubeService, SweetAlert
       }
     });
   };
+};
+
+var lookupRefreshCtrl = function($scope, scope, CubeList, $modalInstance, CubeService, cube, SweetAlert, loadingRequest) {
+  $scope.cubeList = CubeList;
+  $scope.cube = cube;
+  $scope.dispalySegment = false;
+
+  $scope.getLookups = function() {
+    var modelLookups = cube.model ? cube.model.lookups : [];
+    var cubeLookups = [];
+    angular.forEach(modelLookups, function(modelLookup, index) {
+      var dimensionTables = _.find(cube.detail.dimensions, function(dimension){ return dimension.table === modelLookup.alias;});
+      if (!!dimensionTables) {
+        if (cubeLookups.indexOf(modelLookup.table) === -1) {
+          cubeLookups.push(modelLookup.table);
+        }
+      }
+    });
+    return cubeLookups;
+  };
+
+  $scope.cubeLookups = $scope.getLookups();
+
+  $scope.lookup = {
+    select: {}
+  };
+
+  $scope.getReadySegment = function(segment) {
+    return segment.status === 'READY';
+  };
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  $scope.updateLookupTable = function(tableName) {
+    var lookupTable = _.find(cube.detail.snapshot_table_desc_list, function(table){ return table.table_name == tableName});
+    if (!!lookupTable && lookupTable.global) {
+      $scope.dispalySegment = false;
+      $scope.lookup.select.segments = [];
+    } else {
+      $scope.dispalySegment = true;
+    }
+  };
+
+  $scope.selectAllSegments = function(allSegments) {
+    if (allSegments) {
+      $scope.lookup.select.segments = $scope.cube.segments;
+    } else {
+      $scope.lookup.select.segments = [];
+    }
+  };
+
+  $scope.refresh = function() {
+    if (!$scope.lookup.select.table_name) {
+      SweetAlert.swal('Warning', 'Lookup table should not be empty', 'warning');
+      return;
+    }
+
+    // cube advance lookup table
+    var lookupTable = _.find(cube.detail.snapshot_table_desc_list, function(table){ return table.table_name == $scope.lookup.select.table_name});
+    if (!!lookupTable) {
+      if (!lookupTable.global && $scope.lookup.select.segments.length == 0) {
+        SweetAlert.swal('Warning', 'Segment should not be empty', 'warning');
+        return;
+      }
+    } else {
+      // cube lookup table
+      lookupTable = _.find($scope.cubeLookups, function(table){ return table == $scope.lookup.select.table_name});
+      if (!lookupTable) {
+        SweetAlert.swal('Warning', 'Lookup table not existed in cube', 'warning');
+        return;
+      } else {
+        if ($scope.lookup.select.segments.length == 0) {
+          SweetAlert.swal('Warning', 'Segment should not be empty', 'warning');
+          return;
+        }
+      }
+    }
+
+    var lookupSnapshotBuildRequest = {
+      lookupTableName: $scope.lookup.select.table_name,
+      segmentIDs: _.map($scope.lookup.select.segments, function(segment){ return segment.uuid})
+    };
+
+    loadingRequest.show();
+    CubeService.lookupRefresh({cubeId: cube.name}, lookupSnapshotBuildRequest, function (job) {
+      loadingRequest.hide();
+      $modalInstance.dismiss('cancel');
+      SweetAlert.swal('Success!', 'Lookup refresh job was submitted successfully', 'success');
+      scope.refreshCube(cube).then(function(_cube){
+          $scope.cubeList.cubes[$scope.cubeList.cubes.indexOf(cube)] = _cube;
+        });
+    }, function (e) {
+       loadingRequest.hide();
+      if (e.data && e.data.exception) {
+        var message = e.data.exception;
+
+        var msg = !!(message) ? message : 'Failed to take action.';
+        SweetAlert.swal('Oops...', msg, 'error');
+      } else {
+        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+      }
+    });
+  };
+
 };

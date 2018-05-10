@@ -35,6 +35,9 @@
         <li>
           <a data-toggle="tab"  href="#access">Access</a>
         </li>
+        <li>
+          <a data-toggle="tab" href="#snapshot">Snapshot</a>
+        </li>
       </ul>
       <div class="tab-content">
         <!--Schema-->
@@ -184,8 +187,53 @@
               </div>
             </div>
           </div>
+        </div>
 
-
+        <!--snapshot-->
+        <div id="snapshot" class="tab-pane" ng-controller="TableSnapshotCtrl">
+          <div ng-if="tableSnapshots.length > 0">
+            <table class="table table-hover table-striped list">
+              <thead>
+                <tr style="cursor: pointer">
+                  <th ng-repeat="theaditem in tableConfig.snapshotTheaditems"
+                    ng-click="state.filterAttr= theaditem.attr;state.reverseColumn=theaditem.attr;state.filterReverse=!state.filterReverse;">
+                  {{theaditem.name}}
+                    <i ng-if="state.reverseColumn!= theaditem.attr"
+                       class="fa fa-unsorted"></i>
+                    <i ng-if="state.reverseColumn== theaditem.attr && !state.filterReverse"
+                       class="fa fa-sort-asc"></i>
+                    <i ng-if="state.reverseColumn== theaditem.attr && state.filterReverse"
+                       class="fa fa-sort-desc"></i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="snapshot in tableSnapshots | filter: columnName | orderObjectBy:state.filterAttr:state.filterReverse">
+                  <td style="{{(snapshot.snapshotID == snapshot.snapshotID)? 'background-color:#EBF9FE':''}}">
+                    {{snapshot.snapshotID}}
+                  </td>
+                  <td style="{{(snapshot.snapshotID == snapshot.snapshotID)? 'background-color:#EBF9FE':''}}">
+                    {{snapshot.storageType}}
+                  </td>
+                  <td style="{{(snapshot.snapshotID == snapshot.snapshotID)? 'background-color:#EBF9FE':''}}">
+                    {{snapshot.lastBuildTime | utcToConfigTimeZone}}
+                  </td>
+                  <td style="{{(snapshot.snapshotID == snapshot.snapshotID)? 'background-color:#EBF9FE':''}}">
+                    {{snapshot.sourceTableLastModifyTime | utcToConfigTimeZone}}
+                  </td>
+                  <td style="{{(snapshot.snapshotID == snapshot.snapshotID)? 'background-color:#EBF9FE':''}}">
+                    {{snapshot.sourceTableSize | bytes}}
+                  </td>
+                  <td style="{{(snapshot.snapshotID == snapshot.snapshotID)? 'background-color:#EBF9FE':''}}" class="snapshot-usage">
+                    <i class="fa fa-list text-aqua" style="cursor: pointer;"  aria-hidden="true" tooltip-placement="left" tooltip-html-unsafe="<div style='text-align:left'>{{snapshot.usageInfo}}</div>"></i>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div ng-if="tableSnapshots.length == 0">
+            <div no-result text="No Snapshot Info."></div>
+          </div>
         </div>
       </div>
 

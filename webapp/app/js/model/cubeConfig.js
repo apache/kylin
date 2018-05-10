@@ -114,6 +114,10 @@ KylinApp.constant('cubeConfig', {
     {name:"Segment Dictionary", value:"org.apache.kylin.dict.global.SegmentAppendTrieDictBuilder"}
   ],
   needSetLengthEncodingList:['fixed_length','fixed_length_hex','int','integer'],
+  snapshotStorageTypes: [
+    {name: 'Meta Store', value: 'metaStore'},
+    {name: 'HBase', value: 'hbase'}
+  ],
   baseChartOptions: {
     chart: {
       type: 'sunburstChart',

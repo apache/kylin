@@ -503,6 +503,99 @@
              <button class="btn btn-link" ng-click="clearNewDictionaries()">Cancel</button>
            </div>
          </div>
+         <!-- Advanced Lookup Table-->
+         <div class="form-group large-popover" style="margin-bottom:30px;">
+           <h3 style="margin-left:42px;margin-bottom:30px;">Advanced Snapshot Table  <i kylinpopover placement="right" title="Cube Engine" template="AdvanceSnapshotTableTip.html" class="fa fa-info-circle"></i></h3>
+           <div style="margin-left:42px">
+             <!-- edit mode-->
+             <div ng-if="state.mode=='edit'" class="box-body">
+               <table class="table table-hover table-bordered list" style="table-layout: fixed;margin-left:42px;width:92%;">
+                 <thead>
+                   <tr>
+                     <th style="width:60%">Snapshot Table</th>
+                     <th style="width:25%">Type</th>
+                     <th style="width:10%">Global</th>
+                     <th style="width:5%"></th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   <tr ng-repeat="snapshot in cubeMetaFrame.snapshot_table_desc_list track by $index">
+                     <td>
+                       <select style="width:95%" chosen ng-model="snapshot.table_name"
+                               ng-change="changeSnapshotTable(snapshot, '{{snapshot.table_name}}', {{cubeMetaFrame.snapshot_table_desc_list}})"
+                               ng-options="tableName as tableName for tableName in cubeLookups">
+                         <option value=""></option>
+                       </select>
+                     </td>
+                     <td>
+                       <select style="width:95%" chosen ng-model="snapshot.storage_type"
+                               ng-change="changeSnapshotStorage(snapshot)"
+                               ng-options="storageType.value as storageType.name for storageType in cubeConfig.snapshotStorageTypes">
+                         <option value=""></option>
+                       </select>
+                     </td>
+                     <td>
+                       <input type="checkbox" ng-model="snapshot.global" ng-disabled="(snapshot.storage_type == 'hbase')">
+                     </td>
+                     <td>
+                       <button class="btn btn-xs btn-info" ng-click="removeSnapshotTable($index)">
+                         <i class="fa fa-minus"></i>
+                       </button>
+                     </td>
+                   </tr>
+                   <tr>
+                     <td>
+                       <select style="width:95%" chosen ng-model="newSnapshot.select.table_name"
+                               ng-options="tableName as tableName for tableName in cubeLookups">
+                         <option value=""></option>
+                       </select>
+                     </td>
+                     <td>
+                       <select style="width:95%" chosen ng-model="newSnapshot.select.storage_type"
+                               ng-change="changeSnapshotStorage(newSnapshot.select)"
+                               ng-options="storageType.value as storageType.name for storageType in cubeConfig.snapshotStorageTypes">
+                         <option value=""></option>
+                       </select>
+                     </td>
+                     <td>
+                       <input type="checkbox" ng-model="newSnapshot.select.global" ng-disabled="(newSnapshot.select.storage_type == 'hbase')">
+                     </td>
+                     <td>
+                       <button class="btn btn-xs btn-info" ng-click="addSnapshot(newSnapshot.select)">
+                         <i class="fa fa-plus"></i>
+                       </button>
+                     </td>
+                   </tr>
+                 </tbody>
+               </table>
+             </div>
+             <!-- view-->
+             <div ng-if="state.mode=='view'" class="box-body">
+               <table class="table table-hover table-bordered list" style="table-layout: fixed;margin-left:42px;width:92%;">
+                  <thead>
+                   <tr>
+                     <th style="width:60%">Snapshot Table</th>
+                     <th style="width:25%">Type</th>
+                     <th style="width:10%">Global</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   <tr ng-repeat="snapshot in cubeMetaFrame.snapshot_table_desc_list track by $index">
+                     <td>
+                         <p>{{snapshot.table_name}}</p>
+                     </td>
+                     <td>
+                         <p>{{snapshot.storage_type}}</p>
+                     </td>
+                     <td>
+                         <input type="checkbox" ng-model="snapshot.global" disabled="true">
+                     </td>
+                   </tr>
+                 </tbody>
+               </table>
+             </div>
+           </div>
+         </div>
          <!--Edit ColumnFamily-->
          <div class="form-group large-popover" >
            <h3 style="margin-left:42px">Advanced ColumnFamily  <i kylinpopover placement="right" title="Advanced ColumnFamily" template="AdvancedColumnFamilyTip.html" class="fa fa-info-circle"></i></h3>
@@ -645,5 +738,11 @@
     <h4>
        Select cube engine for building cube.
     </h4>
+  </div>
+</script>
+
+<script type="text/ng-template" id="AdvanceSnapshotTableTip.html">
+  <div>
+    <h4>Advance snapshot design for global lookup table and provide different storage type.</h4>
   </div>
 </script>
