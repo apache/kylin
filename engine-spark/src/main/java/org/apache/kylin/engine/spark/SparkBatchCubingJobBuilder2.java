@@ -67,7 +67,7 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
         return "";
     }
 
-    public static void configureSparkJob(final CubeSegment seg, final SparkExecutable sparkExecutable,
+    public void configureSparkJob(final CubeSegment seg, final SparkExecutable sparkExecutable,
             final String jobId, final String cuboidRootPath) {
         IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(seg);
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
@@ -75,15 +75,12 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_INPUT_TABLE.getOpt(),
                 seg.getConfig().getHiveDatabaseForIntermediateTable() + "." + flatTableDesc.getTableName());
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_META_URL.getOpt(),
-                getSegmentMetadataUrl(seg.getConfig(), seg.getUuid()));
+                getSegmentMetadataUrl(seg.getConfig(), jobId));
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_OUTPUT_PATH.getOpt(), cuboidRootPath);
         sparkExecutable.setJobId(jobId);
 
         StringBuilder jars = new StringBuilder();
 
-        StringUtil.appendWithSeparator(jars, findJar("org.htrace.HTraceConfiguration", null)); // htrace-core.jar
-        StringUtil.appendWithSeparator(jars, findJar("org.apache.htrace.Trace", null)); // htrace-core.jar
-        StringUtil.appendWithSeparator(jars, findJar("org.cloudera.htrace.HTraceConfiguration", null)); // htrace-core.jar
         StringUtil.appendWithSeparator(jars, findJar("com.yammer.metrics.core.Gauge", null)); // metrics-core.jar
         StringUtil.appendWithSeparator(jars, findJar("com.google.common.collect.Maps", "guava")); //guava.jar
 
@@ -92,10 +89,9 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
         sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE);
     }
 
-    private static String getSegmentMetadataUrl(KylinConfig kylinConfig, String segmentID) {
+    private String getSegmentMetadataUrl(KylinConfig kylinConfig, String jobId) {
         Map<String, String> param = new HashMap<>();
-        param.put("path", kylinConfig.getHdfsWorkingDirectory() + "metadata/" + segmentID);
+        param.put("path", getDumpMetadataPath(jobId));
         return new StorageURL(kylinConfig.getMetadataUrl().getIdentifier(), "hdfs", param).toString();
-//        return kylinConfig.getHdfsWorkingDirectory() + "metadata/" + segmentID + "@hdfs";
     }
 }

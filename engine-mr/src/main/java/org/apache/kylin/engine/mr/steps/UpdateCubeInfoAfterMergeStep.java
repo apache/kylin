@@ -21,7 +21,6 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -39,14 +38,13 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(UpdateCubeInfoAfterMergeStep.class);
 
-    private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-
     public UpdateCubeInfoAfterMergeStep() {
         super();
     }
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        final CubeManager cubeManager = CubeManager.getInstance(context.getConfig());
         final CubeInstance cube = cubeManager.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
 
         CubeSegment mergedSegment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));

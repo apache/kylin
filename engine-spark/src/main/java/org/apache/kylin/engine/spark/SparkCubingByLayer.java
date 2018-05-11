@@ -33,6 +33,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -488,9 +489,8 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
     }
 
     protected void deleteHDFSMeta(String metaUrl) throws IOException {
-        int cut = metaUrl.indexOf('@');
-        String path = metaUrl.substring(0, cut);
-        HadoopUtil.getFileSystem(path).delete(new Path(path), true);
-        logger.info("Delete metadata in HDFS for this job: " + path);
+        String realHdfsPath = StorageURL.valueOf(metaUrl).getParameter("path");
+        HadoopUtil.getFileSystem(realHdfsPath).delete(new Path(realHdfsPath), true);
+        logger.info("Delete metadata in HDFS for this job: " + realHdfsPath);
     }
 }
