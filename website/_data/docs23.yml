@@ -75,5 +75,6 @@
   - howto/howto_install_ranger_kylin_plugin
   - howto/howto_enable_zookeeper_acl
   - howto/howto_setup_systemcube
+  - howto/howto_setup_jdbc_datasource
   - howto/howto_use_cube_planner
   - howto/howto_use_dashboard
