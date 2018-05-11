@@ -18,10 +18,9 @@
 package org.apache.kylin.source.kafka;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -33,8 +32,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.StreamingMessageRow;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.mr.IMRInput;
@@ -96,17 +95,13 @@ public class KafkaMRInput implements IMRInput {
 
     public static class KafkaTableInputFormat implements IMRTableInputFormat {
         private final CubeSegment cubeSegment;
-        private StreamingParser streamingParser;
         private final JobEngineConfig conf;
+        private final String delimiter;
 
         public KafkaTableInputFormat(CubeSegment cubeSegment, List<TblColRef> columns, KafkaConfig kafkaConfig, JobEngineConfig conf) {
             this.cubeSegment = cubeSegment;
             this.conf = conf;
-            try {
-                streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getAllParserProperties(), columns);
-            } catch (ReflectiveOperationException e) {
-                throw new IllegalArgumentException(e);
-            }
+            this.delimiter = cubeSegment.getConfig().getFlatTableFieldDelimiter();
         }
 
         @Override
@@ -125,15 +120,8 @@ public class KafkaMRInput implements IMRInput {
         @Override
         public Collection<String[]> parseMapperInput(Object mapperInput) {
             Text text = (Text) mapperInput;
-            ByteBuffer buffer = ByteBuffer.wrap(text.getBytes(), 0, text.getLength());
-            List<StreamingMessageRow>  streamingMessageRowList = streamingParser.parse(buffer);
-            List<String[]> parsedDataCollection = new ArrayList<>();
-
-            for (StreamingMessageRow row: streamingMessageRowList) {
-                parsedDataCollection.add(row.getData().toArray(new String[row.getData().size()]));
-            }
-
-            return parsedDataCollection;
+            String[] columns  = Bytes.toString(text.getBytes()).split(delimiter);
+            return Collections.singletonList(columns);
         }
 
     }

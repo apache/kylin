@@ -119,6 +119,7 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
             org.apache.log4j.Logger.getRootLogger().info("Output hdfs compression: " + true);
             job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
 
+            attachCubeMetadata(cube, job.getConfiguration());
             deletePath(job.getConfiguration(), output);
             return waitForCompletion(job);
 

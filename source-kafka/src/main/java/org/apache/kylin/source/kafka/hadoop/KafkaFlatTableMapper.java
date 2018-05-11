@@ -19,29 +19,73 @@
 package org.apache.kylin.source.kafka.hadoop;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.StreamingMessageRow;
+import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.mr.KylinMapper;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.source.kafka.KafkaConfigManager;
+import org.apache.kylin.source.kafka.StreamingParser;
+import org.apache.kylin.source.kafka.config.KafkaConfig;
 
 public class KafkaFlatTableMapper extends KylinMapper<LongWritable, BytesWritable, Text, Text> {
 
     private Text outKey = new Text();
     private Text outValue = new Text();
+    private KylinConfig config;
+    private CubeSegment cubeSegment;
+    private StreamingParser streamingParser;
+    private String data;
+    private String delimiter;
 
     @Override
     protected void doSetup(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         bindCurrentConfiguration(conf);
+
+        config = AbstractHadoopJob.loadKylinPropsAndMetadata();
+        String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
+        CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
+        this.cubeSegment = cube.getSegmentById(conf.get(BatchConstants.CFG_CUBE_SEGMENT_ID));
+        this.delimiter = cubeSegment.getConfig().getFlatTableFieldDelimiter();
+        KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(config);
+        KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(cubeSegment.getCubeInstance().getRootFactTable());
+        List<TblColRef> columns = new CubeJoinedFlatTableDesc(cubeSegment).getAllColumns();
+
+        try {
+            streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getAllParserProperties(), columns);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalArgumentException(e);
+        }
+
     }
 
     @Override
     public void doMap(LongWritable key, BytesWritable value, Context context) throws IOException, InterruptedException {
         outKey.set(Bytes.toBytes(key.get()));
-        outValue.set(value.getBytes(), 0, value.getLength());
+        ByteBuffer buffer = ByteBuffer.wrap(value.getBytes(), 0, value.getLength());
+        StreamingMessageRow row = streamingParser.parse(buffer).get(0);
+        if (row == null) {
+            throw new IllegalArgumentException("");
+        }
+
+        data = StringUtil.join(row.getData(), delimiter);
+        // output this row to value
+        outValue.set(Bytes.toBytes(data));
         context.write(outKey, outValue);
     }
 }
