@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
@@ -42,9 +43,9 @@ import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.StreamingParser;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 
-public class KafkaFlatTableMapper extends KylinMapper<LongWritable, BytesWritable, Text, Text> {
+public class KafkaFlatTableMapper extends KylinMapper<LongWritable, BytesWritable, NullWritable, Text> {
 
-    private Text outKey = new Text();
+    private NullWritable outKey = NullWritable.get();
     private Text outValue = new Text();
     private KylinConfig config;
     private CubeSegment cubeSegment;
@@ -76,7 +77,6 @@ public class KafkaFlatTableMapper extends KylinMapper<LongWritable, BytesWritabl
 
     @Override
     public void doMap(LongWritable key, BytesWritable value, Context context) throws IOException, InterruptedException {
-        outKey.set(Bytes.toBytes(key.get()));
         ByteBuffer buffer = ByteBuffer.wrap(value.getBytes(), 0, value.getLength());
         StreamingMessageRow row = streamingParser.parse(buffer).get(0);
         if (row == null) {

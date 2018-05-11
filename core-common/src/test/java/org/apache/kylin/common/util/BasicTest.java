@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,7 +35,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -221,6 +224,18 @@ public class BasicTest {
         String timeStr = "Jul 20, 2016 9:59:17 AM";
 
         System.out.println(formatter.parse(timeStr).getTime());
+    }
+
+    @Test
+    public void testStringSplit() throws Exception {
+
+        String[] origin = new String[] {"ab,c", "cd|e"};
+
+        String delimiter = "\u001F"; // "\t";
+        String concated = StringUtils.join(Arrays.asList(origin), delimiter);
+        String[] newValues = concated.split(delimiter);
+
+        Assert.assertEquals(origin, newValues);
     }
 
     private static String time(long t) {

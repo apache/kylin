@@ -732,7 +732,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getFlatTableFieldDelimiter() {
-        return this.getOptional("kylin.source.hive.flat-table-field-delimiter", "\\u001F");
+        return this.getOptional("kylin.source.hive.flat-table-field-delimiter", "\u001F");
     }
 
     public boolean isHiveRedistributeEnabled() {

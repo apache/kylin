@@ -18,12 +18,9 @@
 package org.apache.kylin.source.kafka;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -49,7 +46,6 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -59,9 +55,6 @@ import org.apache.kylin.source.kafka.hadoop.KafkaFlatTableJob;
 import org.apache.kylin.source.kafka.job.MergeOffsetStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 
 public class KafkaMRInput implements IMRInput {
 
@@ -75,17 +68,8 @@ public class KafkaMRInput implements IMRInput {
 
     @Override
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
-        KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv());
-        KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(table.getIdentity());
-        List<TblColRef> columns = Lists.transform(Arrays.asList(table.getColumns()), new Function<ColumnDesc, TblColRef>() {
-            @Nullable
-            @Override
-            public TblColRef apply(ColumnDesc input) {
-                return input.getRef();
-            }
-        });
 
-        return new KafkaTableInputFormat(cubeSegment, columns, kafkaConfig, null);
+        return new KafkaTableInputFormat(cubeSegment, null, null, null);
     }
 
     @Override
@@ -120,7 +104,7 @@ public class KafkaMRInput implements IMRInput {
         @Override
         public Collection<String[]> parseMapperInput(Object mapperInput) {
             Text text = (Text) mapperInput;
-            String[] columns  = Bytes.toString(text.getBytes()).split(delimiter);
+            String[] columns  = Bytes.toString(text.getBytes(), 0, text.getLength()).split(delimiter);
             return Collections.singletonList(columns);
         }
 
