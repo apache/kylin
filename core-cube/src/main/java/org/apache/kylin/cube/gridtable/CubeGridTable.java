@@ -44,7 +44,9 @@ public class CubeGridTable {
         builder.setColumns(mapping.getDataTypes());
         builder.setPrimaryKey(mapping.getPrimaryKey());
         builder.enableColumnBlock(mapping.getColumnBlocks());
-
+        if (mapping instanceof CuboidToGridTableMappingExt) {
+            builder.enableDynamicDims(((CuboidToGridTableMappingExt) mapping).getDynamicDims());
+        }
         return builder.build();
     }
 }

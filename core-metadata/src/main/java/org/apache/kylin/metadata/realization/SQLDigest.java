@@ -19,8 +19,10 @@
 package org.apache.kylin.metadata.realization;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -57,6 +59,8 @@ public class SQLDigest {
     public List<TblColRef> groupbyColumns;
     public Set<TblColRef> subqueryJoinParticipants;
 
+    public Map<TblColRef, TupleExpression> dynGroupbyColumns;
+
     // aggregation
     public Set<TblColRef> metricColumns;
     public List<FunctionDesc> aggregations; // storage level measure type, on top of which various sql aggr function may apply
@@ -80,7 +84,8 @@ public class SQLDigest {
     public Set<MeasureDesc> involvedMeasure;
 
     public SQLDigest(String factTable, Set<TblColRef> allColumns, List<JoinDesc> joinDescs, // model
-            List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants, // group by
+            List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants,
+            Map<TblColRef, TupleExpression> dynGroupByColumns, // group by
             Set<TblColRef> metricColumns, List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, // aggregation
             List<DynamicFunctionDesc> dynAggregations, //
             Set<TblColRef> rtDimensionColumns, Set<TblColRef> rtMetricColumns, // dynamic col related columns
@@ -94,6 +99,8 @@ public class SQLDigest {
 
         this.groupbyColumns = groupbyColumns;
         this.subqueryJoinParticipants = subqueryJoinParticipants;
+
+        this.dynGroupbyColumns = dynGroupByColumns;
 
         this.metricColumns = metricColumns;
         this.aggregations = aggregations;

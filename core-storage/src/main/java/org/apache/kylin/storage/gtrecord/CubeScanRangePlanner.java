@@ -49,6 +49,7 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.GTUtil;
 import org.apache.kylin.gridtable.IGTComparator;
+import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -75,7 +76,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
     protected Cuboid cuboid;
 
     public CubeScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions, //
-            Set<TblColRef> groupByDims, //
+            Set<TblColRef> groupByDims, List<TblColRef> dynGroupsDims, List<TupleExpression> dynGroupExprs, //
             Collection<FunctionDesc> metrics, List<DynamicFunctionDesc> dynFuncs, //
             TupleFilter havingFilter, StorageContext context) {
         this.context = context;
@@ -102,6 +103,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
 
         //replace the constant values in filter to dictionary codes
         Set<TblColRef> groupByPushDown = Sets.newHashSet(groupByDims);
+        groupByPushDown.addAll(dynGroupsDims);
         this.gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, gtInfo, mapping.getDim2gt(), groupByPushDown);
         this.havingFilter = havingFilter;
 
@@ -112,10 +114,16 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
 
         // for dynamic cols, which are as appended columns to GTInfo
         BitSet tmpGtDynCols = new BitSet();
+        tmpGtDynCols.or(mapping.makeGridTableColumns(Sets.newHashSet(dynGroupsDims)).mutable());
         tmpGtDynCols.or(mapping.makeGridTableColumns(dynFuncs).mutable());
         this.gtDynColumns = new ImmutableBitSet(tmpGtDynCols);
 
-        this.tupleExpressionList = Lists.newArrayListWithExpectedSize(dynFuncs.size());
+        this.tupleExpressionList = Lists.newArrayListWithExpectedSize(dynGroupExprs.size() + dynFuncs.size());
+        // for dynamic dimensions
+        for (TupleExpression rtGroupExpr : dynGroupExprs) {
+            this.tupleExpressionList
+                    .add(GTUtil.convertFilterColumnsAndConstants(rtGroupExpr, gtInfo, mapping, groupByPushDown));
+        }
 
         // for dynamic measures
         Set<FunctionDesc> tmpRtAggrMetrics = Sets.newHashSet();
