@@ -35,7 +35,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class CuboidToGridTableMappingExt extends CuboidToGridTableMapping {
+    private final List<TblColRef> dynDims;
     private final List<DynamicFunctionDesc> dynFuncs;
+
+    private ImmutableBitSet dynamicDims;
 
     private List<DataType> dynGtDataTypes;
     private List<ImmutableBitSet> dynGtColBlocks;
@@ -44,8 +47,9 @@ public class CuboidToGridTableMappingExt extends CuboidToGridTableMapping {
 
     private Map<FunctionDesc, Integer> dynMetrics2gt;
 
-    public CuboidToGridTableMappingExt(Cuboid cuboid, List<DynamicFunctionDesc> dynFuncs) {
+    public CuboidToGridTableMappingExt(Cuboid cuboid, List<TblColRef> dynDims, List<DynamicFunctionDesc> dynFuncs) {
         super(cuboid);
+        this.dynDims = dynDims;
         this.dynFuncs = dynFuncs;
         init();
     }
@@ -59,6 +63,15 @@ public class CuboidToGridTableMappingExt extends CuboidToGridTableMapping {
         int gtColIdx = super.getColumnCount();
 
         BitSet rtColBlock = new BitSet();
+        // dynamic dimensions
+        for (TblColRef rtDim : dynDims) {
+            dynDim2gt.put(rtDim, gtColIdx);
+            dynGtDataTypes.add(rtDim.getType());
+            rtColBlock.set(gtColIdx);
+            gtColIdx++;
+        }
+        dynamicDims = new ImmutableBitSet(rtColBlock);
+
         // dynamic metrics
         for (DynamicFunctionDesc rtFunc : dynFuncs) {
             dynMetrics2gt.put(rtFunc, gtColIdx);
@@ -70,9 +83,13 @@ public class CuboidToGridTableMappingExt extends CuboidToGridTableMapping {
         dynGtColBlocks.add(new ImmutableBitSet(rtColBlock));
     }
 
+    public ImmutableBitSet getDynamicDims() {
+        return dynamicDims;
+    }
+
     @Override
     public int getColumnCount() {
-        return super.getColumnCount() + dynMetrics2gt.size();
+        return super.getColumnCount() + dynDims.size() + dynFuncs.size();
     }
 
     @Override

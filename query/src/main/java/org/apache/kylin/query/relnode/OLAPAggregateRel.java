@@ -266,12 +266,37 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         this.groups = Lists.newArrayList();
         for (int i = getGroupSet().nextSetBit(0); i >= 0; i = getGroupSet().nextSetBit(i + 1)) {
             TupleExpression tupleExpression = inputColumnRowType.getSourceColumnsByIndex(i);
-            Set<TblColRef> srcCols = ExpressionColCollector.collectColumns(tupleExpression);
-            // if no source columns, use target column instead
-            if (srcCols.isEmpty()) {
-                srcCols.add(inputColumnRowType.getColumnByIndex(i));
+            if (tupleExpression instanceof ColumnTupleExpression) {
+                this.groups.add(((ColumnTupleExpression) tupleExpression).getColumn());
+            } else {
+                TblColRef groupOutCol = inputColumnRowType.getColumnByIndex(i);
+                Pair<Set<TblColRef>, Set<TblColRef>> cols = ExpressionColCollector.collectColumnsPair(tupleExpression);
+
+                // push down only available for the innermost aggregation
+                boolean ifPushDown = !afterAggregate;
+
+                // if measure columns exist, don't do push down
+                if (!cols.getSecond().isEmpty()) {
+                    ifPushDown = false;
+                }
+
+                // if existing a dimension which is a derived column, don't do push down
+                for (TblColRef dimCol : cols.getFirst()) {
+                    if (!this.context.belongToFactTableDims(dimCol)) {
+                        ifPushDown = false;
+                        break;
+                    }
+                }
+
+                if (ifPushDown) {
+                    this.groups.add(groupOutCol);
+                    this.context.dynGroupBy.put(groupOutCol, tupleExpression);
+                } else {
+                    this.groups.addAll(cols.getFirst());
+                    this.groups.addAll(cols.getSecond());
+                    this.context.dynamicFields.remove(groupOutCol);
+                }
             }
-            this.groups.addAll(srcCols);
         }
     }
 
@@ -321,7 +346,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 } else if (aggCall.getAggregation() instanceof SqlCountAggFunction && !aggCall.isDistinct()) {
                     if (tupleExpr instanceof ColumnTupleExpression) {
                         TblColRef srcCol = ((ColumnTupleExpression) tupleExpr).getColumn();
-                        if (this.context.belongToFactTable(srcCol)) {
+                        if (this.context.belongToFactTableDims(srcCol)) {
                             tupleExpr = getCountColumnExpression(srcCol);
 
                             TblColRef column = TblColRef.newInnerColumn(tupleExpr.getDigest(),

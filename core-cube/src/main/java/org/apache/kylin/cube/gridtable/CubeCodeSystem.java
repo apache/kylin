@@ -34,6 +34,7 @@ import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.gridtable.IGTComparator;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+import org.apache.kylin.metadata.datatype.DynamicDimSerializer;
 
 /**
  * defines how column values will be encoded to/ decoded from GTRecord 
@@ -68,7 +69,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
     @Override
     public void init(GTInfo info) {
         this.info = info;
-
+        ImmutableBitSet dDims = info.getDynamicDims();
         this.serializers = new DataTypeSerializer[info.getColumnCount()];
         for (int i = 0; i < serializers.length; i++) {
             DimensionEncoding dimEnc = i < dimEncs.length ? dimEncs[i] : null;
@@ -77,8 +78,14 @@ public class CubeCodeSystem implements IGTCodeSystem {
                 // for dimensions
                 serializers[i] = dimEnc.asDataTypeSerializer();
             } else {
-                // for measures
-                serializers[i] = DataTypeSerializer.create(info.getColumnType(i));
+                DataTypeSerializer dSerializer = DataTypeSerializer.create(info.getColumnType(i));
+                if (dDims != null && dDims.get(i)) {
+                    // for dynamic dimensions
+                    dSerializer = new DynamicDimSerializer(dSerializer);
+                } else {
+                    // for measures
+                }
+                serializers[i] = dSerializer;
             }
         }
     }

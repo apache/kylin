@@ -42,6 +42,7 @@ import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.gridtable.StorageLimitLevel;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
+import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.CaseTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -93,7 +94,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 continue;
             }
 
-            scanner = new CubeSegmentScanner(cubeSeg, request.getCuboid(), request.getDimensions(), request.getGroups(), //
+            scanner = new CubeSegmentScanner(cubeSeg, request.getCuboid(), request.getDimensions(), //
+                    request.getGroups(), request.getDynGroups(), request.getDynGroupExprs(), //
                     request.getMetrics(), request.getDynFuncs(), //
                     request.getFilter(), request.getHavingFilter(), request.getContext());
             if (!scanner.isSegmentSkipped())
@@ -104,7 +106,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
 
         return new SequentialCubeTupleIterator(scanners, request.getCuboid(), request.getDimensions(),
-                request.getGroups(), request.getMetrics(), returnTupleInfo, request.getContext(), sqlDigest);
+                request.getDynGroups(), request.getGroups(), request.getMetrics(), returnTupleInfo, request.getContext(), sqlDigest);
     }
 
     public GTCubeStorageQueryRequest getStorageQueryRequest(StorageContext context, SQLDigest sqlDigest,
@@ -144,13 +146,19 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
         // set cuboid to GridTable mapping;
         boolean noDynamicCols;
-
+        // dynamic dimensions
+        List<TblColRef> dynGroups = Lists.newArrayList(sqlDigest.dynGroupbyColumns.keySet());
+        noDynamicCols = dynGroups.isEmpty();
+        List<TupleExpression> dynGroupExprs = Lists.newArrayListWithExpectedSize(sqlDigest.dynGroupbyColumns.size());
+        for (TblColRef dynGroupCol : dynGroups) {
+            dynGroupExprs.add(sqlDigest.dynGroupbyColumns.get(dynGroupCol));
+        }
         // dynamic measures
         List<DynamicFunctionDesc> dynFuncs = sqlDigest.dynAggregations;
-        noDynamicCols = dynFuncs.isEmpty();
+        noDynamicCols = noDynamicCols && dynFuncs.isEmpty();
 
         CuboidToGridTableMapping mapping = noDynamicCols ? new CuboidToGridTableMapping(cuboid)
-                : new CuboidToGridTableMappingExt(cuboid, dynFuncs);
+                : new CuboidToGridTableMappingExt(cuboid, dynGroups, dynFuncs);
         context.setMapping(mapping);
 
         // set whether to aggr at storage
@@ -171,8 +179,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         context.setFilterMask(getQueryFilterMask(filterColumnD));
 
         // set limit push down
-        enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filterD, loosenedColumnD,
-                sqlDigest.aggregations, context);
+        enableStorageLimitIfPossible(cuboid, groups, dynGroups, derivedPostAggregation, groupsD, filterD,
+                loosenedColumnD, sqlDigest.aggregations, context);
         // set whether to aggregate results from multiple partitions
         enableStreamAggregateIfBeneficial(cuboid, groupsD, context);
         // check query deadline
@@ -187,8 +195,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 cubeInstance.getName(), cuboid.getId(), groupsD, filterColumnD, context.getFinalPushDownLimit(),
                 context.getStorageLimitLevel(), context.isNeedStorageAggregation());
 
-        return new GTCubeStorageQueryRequest(cuboid, dimensionsD, groupsD, filterColumnD, metrics, dynFuncs, filterD,
-                havingFilter, context);
+        return new GTCubeStorageQueryRequest(cuboid, dimensionsD, groupsD, dynGroups, dynGroupExprs, filterColumnD,
+                metrics, dynFuncs, filterD, havingFilter, context);
     }
 
     protected abstract String getGTStorage();
@@ -408,7 +416,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
     }
 
-    private void enableStorageLimitIfPossible(Cuboid cuboid, Collection<TblColRef> groups,
+    private void enableStorageLimitIfPossible(Cuboid cuboid, Collection<TblColRef> groups, List<TblColRef> dynGroups,
             Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter,
             Set<TblColRef> loosenedColumnD, Collection<FunctionDesc> functionDescs, StorageContext context) {
 
@@ -422,6 +430,11 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                     "storageLimitLevel set to LIMIT_ON_RETURN_SIZE because groupD is not clustered at head, groupsD: "
                             + groupsD //
                             + " with cuboid columns: " + cuboid.getColumns());
+        }
+
+        if (!dynGroups.isEmpty()) {
+            storageLimitLevel = StorageLimitLevel.NO_LIMIT;
+            logger.debug("Storage limit push down is impossible because the query has dynamic groupby " + dynGroups);
         }
 
         // derived aggregation is bad, unless expanded columns are already in group by

@@ -33,6 +33,8 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.metadata.expression.ExpressionColCollector;
+import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -158,6 +160,8 @@ public class OLAPContext {
     // dynamic columns info, note that the name of TblColRef will be the field name
     public Map<TblColRef, RelDataType> dynamicFields = new HashMap<>();
 
+    public Map<TblColRef, TupleExpression> dynGroupBy = new HashMap<>();
+
     // hive query
     public String sql = "";
 
@@ -172,6 +176,9 @@ public class OLAPContext {
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null) {
             Set<TblColRef> rtDimColumns = new HashSet<>();
+            for (TupleExpression tupleExpr : dynGroupBy.values()) {
+                rtDimColumns.addAll(ExpressionColCollector.collectColumns(tupleExpr));
+            }
             Set<TblColRef> rtMetricColumns = new HashSet<>();
             List<DynamicFunctionDesc> dynFuncs = Lists.newLinkedList();
             for (FunctionDesc functionDesc : aggregations) {
@@ -183,7 +190,7 @@ public class OLAPContext {
                 }
             }
             sqlDigest = new SQLDigest(firstTableScan.getTableName(), allColumns, joins, // model
-                    groupByColumns, subqueryJoinParticipants, // group by
+                    groupByColumns, subqueryJoinParticipants, dynGroupBy, // group by
                     metricsColumns, aggregations, aggrSqlCalls, dynFuncs, // aggregation
                     rtDimColumns, rtMetricColumns, // runtime related columns
                     filterColumns, filter, havingFilter, // filter
@@ -211,7 +218,7 @@ public class OLAPContext {
         return false;
     }
 
-    public boolean belongToFactTable(TblColRef tblColRef) {
+    public boolean belongToFactTableDims(TblColRef tblColRef) {
         if (!belongToContextTables(tblColRef)) {
             return false;
         }
