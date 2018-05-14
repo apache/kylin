@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.job.constant.JobStatusEnum;
@@ -52,6 +53,8 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     private long duration;
     @JsonProperty("related_cube")
     private String relatedCube;
+    @JsonProperty("display_cube_name")
+    private String displayCubeName;
     @JsonProperty("related_segment")
     private String relatedSegment;
     @JsonProperty("exec_start_time")
@@ -174,6 +177,18 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     public void setRelatedCube(String relatedCube) {
         this.relatedCube = relatedCube;
+    }
+
+    public String getDisplayCubeName() {
+        if (StringUtils.isBlank(displayCubeName)) {
+            return relatedCube;
+        } else {
+            return displayCubeName;
+        }
+    }
+
+    public void setDisplayCubeName(String displayCubeName) {
+        this.displayCubeName = displayCubeName;
     }
 
     public String getRelatedSegment() {
