@@ -31,7 +31,6 @@ import com.google.common.collect.Lists;
 public class HiveCmdBuilder {
     public static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
 
-    public static final String HIVE_CONF_FILENAME = "kylin_hive_conf";
     static final String CREATE_HQL_TMP_FILE_TEMPLATE = "cat >%s<<EOL\n%sEOL";
 
     public enum HiveClientMode {
@@ -44,7 +43,7 @@ public class HiveCmdBuilder {
 
     public HiveCmdBuilder() {
         kylinConfig = KylinConfig.getInstanceFromEnv();
-        hiveConfProps = HiveConfigurationUtil.loadHiveConfiguration();
+        hiveConfProps = SourceConfigurationUtil.loadHiveConfiguration();
     }
 
     public String build() {

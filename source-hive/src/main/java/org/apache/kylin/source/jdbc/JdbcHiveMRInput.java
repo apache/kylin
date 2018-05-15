@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.SourceConfigurationUtil;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -38,6 +39,8 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.hive.HiveMRInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Maps;
 
 public class JdbcHiveMRInput extends HiveMRInput {
 
@@ -184,12 +187,12 @@ public class JdbcHiveMRInput extends HiveMRInput {
             //related to "kylin.engine.mr.config-override.mapreduce.job.queuename"
             String queueName = getSqoopJobQueueName(config);
             String cmd = String.format("%s/sqoop import -Dorg.apache.sqoop.splitter.allow_text_splitter=true "
-                    + "-Dmapreduce.job.queuename=%s "
+                    + generateSqoopConfigArgString()
                     + "--connect \"%s\" --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
                     + "--target-dir %s/%s --split-by %s.%s --boundary-query \"%s\" --null-string '' "
-                    + "--fields-terminated-by '%s' --num-mappers %d", sqoopHome, queueName, connectionUrl, driverClass,
-                    jdbcUser, jdbcPass, selectSql, jobWorkingDir, hiveTable, splitTable, splitColumn, bquery,
-                    filedDelimiter, mapperNum);
+                    + "--fields-terminated-by '%s' --num-mappers %d", sqoopHome, connectionUrl, driverClass, jdbcUser,
+                    jdbcPass, selectSql, jobWorkingDir, hiveTable, splitTable, splitColumn, bquery, filedDelimiter,
+                    mapperNum);
             logger.debug(String.format("sqoop cmd:%s", cmd));
             CmdStep step = new CmdStep();
             step.setCmd(cmd);
@@ -200,6 +203,20 @@ public class JdbcHiveMRInput extends HiveMRInput {
         @Override
         protected void addStepPhase1_DoMaterializeLookupTable(DefaultChainedExecutable jobFlow) {
             // skip
+        }
+
+        protected String generateSqoopConfigArgString() {
+            KylinConfig kylinConfig = getConfig();
+            Map<String, String> config = Maps.newHashMap();
+            config.put("mapreduce.job.queuename", getSqoopJobQueueName(kylinConfig)); // override job queue from mapreduce config
+            config.putAll(SourceConfigurationUtil.loadSqoopConfiguration());
+            config.putAll(kylinConfig.getSqoopConfigOverride());
+
+            StringBuilder args = new StringBuilder();
+            for (Map.Entry<String, String> entry : config.entrySet()) {
+                args.append(" -D" + entry.getKey() + "=" + entry.getValue() + " ");
+            }
+            return args.toString();
         }
     }
 }

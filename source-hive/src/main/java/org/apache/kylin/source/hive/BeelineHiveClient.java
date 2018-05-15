@@ -30,7 +30,7 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DBUtils;
-import org.apache.kylin.common.util.HiveConfigurationUtil;
+import org.apache.kylin.common.util.SourceConfigurationUtil;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -60,7 +60,7 @@ public class BeelineHiveClient implements IHiveClient {
                 password = stripQuotes(splits[i + 1]);
             }
         }
-        Properties jdbcProperties = HiveConfigurationUtil.loadHiveJDBCProperties();
+        Properties jdbcProperties = SourceConfigurationUtil.loadHiveJDBCProperties();
         jdbcProperties.put(HIVE_AUTH_PASSWD, password);
         jdbcProperties.put(HIVE_AUTH_USER, username);
         this.init(url, jdbcProperties);
