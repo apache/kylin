@@ -164,7 +164,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
                 }
                 this.context.allColumns.addAll(srcCols);
 
-                if (tupleExpr.ifForDynamicColumn()) {
+                if (this.context.isDynamicColumnEnabled() && tupleExpr.ifForDynamicColumn()) {
                     SqlTypeName fSqlType = columnField.getType().getSqlTypeName();
                     String dataType = OLAPTable.DATATYPE_MAPPING.get(fSqlType);
                     // upgrade data type for number columns

@@ -417,7 +417,9 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testExpressionQuery() throws Exception {
-        batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_expression");
+        if (config.isDynamicColumnEnabled()) {
+            batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_expression");
+        }
     }
 
     @Test
