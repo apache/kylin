@@ -200,6 +200,10 @@ public class OLAPContext {
         return sqlDigest;
     }
 
+    public boolean isDynamicColumnEnabled() {
+        return olapSchema != null && olapSchema.getConfig().isDynamicColumnEnabled();
+    }
+
     public boolean hasPrecalculatedFields() {
         return realization instanceof CubeInstance || realization instanceof HybridInstance;
     }
