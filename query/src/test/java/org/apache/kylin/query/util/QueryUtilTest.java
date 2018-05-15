@@ -225,4 +225,10 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
             Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
         }
     }
+
+    @Test
+    public void testUnknownErrorResponseMessage() {
+        String msg = QueryUtil.makeErrorMsgUserFriendly(new NullPointerException());
+        Assert.assertEquals("Unknown error.", msg);
+    }
 }
