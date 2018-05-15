@@ -852,6 +852,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.source.jdbc.sqoop-mapper-num", "4"));
     }
 
+    public Map<String, String> getSqoopConfigOverride() {
+        return getPropertiesByPrefix("kylin.source.jdbc.sqoop-config-override.");
+    }
+    
     public String getJdbcSourceFieldDelimiter() {
         return getOptional("kylin.source.jdbc.field-delimiter", "|");
     }
