@@ -123,6 +123,9 @@ public class QueryUtil {
     }
 
     public static String makeErrorMsgUserFriendly(String errorMsg) {
+        if (errorMsg == null) {
+            return "Unknown error.";
+        }
         try {
             // make one line
             errorMsg = errorMsg.replaceAll("\\s", " ");
