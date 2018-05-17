@@ -56,8 +56,9 @@ Connectivity and APIs
 8. [Connect from MicroStrategy](tutorial/microstrategy.html)
 9. [Connect from SQuirreL](tutorial/squirrel.html)
 10. [Connect from Apache Flink](tutorial/flink.html)
-11. [Connect from Hue](tutorial/hue.html)
-12. [Connect from Qlik Sense](tutorial/Qlik.html)
+11. [Connect from Apache Spark](tutorial/spark.html)
+12. [Connect from Hue](tutorial/hue.html)
+13. [Connect from Qlik Sense](tutorial/Qlik.html)
 
 
 Operations
