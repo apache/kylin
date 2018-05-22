@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.filter;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +82,39 @@ public abstract class TupleFilter {
         SWAP_OP_MAP.put(FilterOperatorEnum.LT, FilterOperatorEnum.GT);
         SWAP_OP_MAP.put(FilterOperatorEnum.GTE, FilterOperatorEnum.LTE);
     }
+    
+    public static CompareTupleFilter compare(TblColRef col, FilterOperatorEnum op) {
+        CompareTupleFilter r = new CompareTupleFilter(op);
+        r.addChild(new ColumnTupleFilter(col));
+        return r;
+    }
+    
+    public static CompareTupleFilter compare(TblColRef col, FilterOperatorEnum op, Object val) {
+        CompareTupleFilter r = new CompareTupleFilter(op);
+        r.addChild(new ColumnTupleFilter(col));
+        r.addChild(new ConstantTupleFilter(val));
+        return r;
+    }
+
+    public static LogicalTupleFilter and(TupleFilter... children) {
+        LogicalTupleFilter r = new LogicalTupleFilter(FilterOperatorEnum.AND);
+        r.addChildren(children);
+        return r;
+    }
+    
+    public static LogicalTupleFilter or(TupleFilter... children) {
+        LogicalTupleFilter r = new LogicalTupleFilter(FilterOperatorEnum.OR);
+        r.addChildren(children);
+        return r;
+    }
+    
+    public static LogicalTupleFilter not(TupleFilter child) {
+        LogicalTupleFilter r = new LogicalTupleFilter(FilterOperatorEnum.NOT);
+        r.addChild(child);
+        return r;
+    }
+    
+    // ============================================================================
 
     protected final List<TupleFilter> children;
     protected FilterOperatorEnum operator;
@@ -245,6 +279,35 @@ public abstract class TupleFilter {
         }
         return oldProductFilters;
     }
+    
+    public HashMap<TblColRef, Object> findMustEqualColsAndValues(Collection<TblColRef> lookingForCols) {
+        HashMap<TblColRef, Object> result = new HashMap<>();
+        findMustEqualColsAndValues(this, lookingForCols, result);
+        return result;
+    }
+
+    private void findMustEqualColsAndValues(TupleFilter filter, Collection<TblColRef> lookingForCols, HashMap<TblColRef, Object> result) {
+        if (filter instanceof CompareTupleFilter) {
+            CompareTupleFilter comp = (CompareTupleFilter) filter;
+            TblColRef col = comp.getColumn();
+            if (lookingForCols.contains(col)) {
+                if (comp.getOperator() == FilterOperatorEnum.EQ)
+                    result.put(col, comp.getFirstValue());
+                else if (comp.getOperator() == FilterOperatorEnum.ISNULL)
+                    result.put(col, null);
+            }
+            return;
+        }
+
+        if (filter instanceof LogicalTupleFilter) {
+            LogicalTupleFilter logic = (LogicalTupleFilter) filter;
+            if (logic.getOperator() == FilterOperatorEnum.AND) {
+                for (TupleFilter child : logic.getChildren())
+                    findMustEqualColsAndValues(child, lookingForCols, result);
+            }
+            return;
+        }
+    }
 
     public abstract boolean isEvaluable();
 
@@ -282,28 +345,6 @@ public abstract class TupleFilter {
         for (TupleFilter child : filter.getChildren()) {
             collectColumns(child, collector);
         }
-    }
-
-    public static TupleFilter and(TupleFilter f1, TupleFilter f2) {
-        if (f1 == null)
-            return f2;
-        if (f2 == null)
-            return f1;
-
-        if (f1.getOperator() == FilterOperatorEnum.AND) {
-            f1.addChild(f2);
-            return f1;
-        }
-
-        if (f2.getOperator() == FilterOperatorEnum.AND) {
-            f2.addChild(f1);
-            return f2;
-        }
-
-        LogicalTupleFilter and = new LogicalTupleFilter(FilterOperatorEnum.AND);
-        and.addChild(f1);
-        and.addChild(f2);
-        return and;
     }
 
 }

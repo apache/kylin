@@ -33,7 +33,7 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
  * @author xjiang
  */
 public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupleFilter {
-
+    
     public enum CompareResultType {
         AlwaysTrue, AlwaysFalse, Unknown
     }
