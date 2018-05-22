@@ -1,0 +1,110 @@
+{
+  "uuid" : "70a9f288-3c01-4745-a04b-5641e82d6c72",
+  "name" : "ssb_cube_with_dimention_range",
+  "owner" : "ADMIN",
+  "cost" : 50,
+  "status" : "DISABLED",
+  "segments" : [{
+    "uuid": "f34e2a88-50e4-4c8c-8dd1-64e922ce8c37",
+    "name": "19920523163722_20180523173026",
+    "storage_location_identifier": "KYLIN_KFV177RJOS",
+    "date_range_start": 706639042000,
+    "date_range_end": 1527096626000,
+    "source_offset_start": 0,
+    "source_offset_end": 0,
+    "status": "READY",
+    "size_kb": 100,
+    "input_records": 1000,
+    "input_records_size": 102400,
+    "last_build_time": 1527068515334,
+    "last_build_job_id": "a5010166-b64a-4289-ac56-064640f7f2fa",
+    "create_time_utc": 1527067828660,
+    "total_shards": 0,
+    "blackout_cuboids": [],
+    "binary_signature": null,
+    "dimension_range_info_map": {
+      "PART.P_BRAND": {
+        "min": "MFGR#1101",
+        "max": "MFGR#5540"
+      },
+      "V_LINEORDER.LO_QUANTITY": {
+        "min": "1",
+        "max": "50"
+      },
+      "PART.P_MFGR": {
+        "min": "MFGR#1",
+        "max": "MFGR#5"
+      },
+      "DATES.D_YEARMONTHNUM": {
+        "min": "199205",
+        "max": "199808"
+      },
+      "CUSTOMER.C_NATION": {
+        "min": "ALGERIA",
+        "max": "VIETNAM"
+      },
+      "DATES.D_YEARMONTH": {
+        "min": "Apr1993",
+        "max": "Sep1997"
+      },
+      "CUSTOMER.C_CUSTKEY": {
+        "min": "1",
+        "max": "2999"
+      },
+      "DATES.D_DATEKEY": {
+        "min": "19920523",
+        "max": "19980802"
+      },
+      "SUPPLIER.S_SUPPKEY": {
+        "min": "1",
+        "max": "200"
+      },
+      "SUPPLIER.S_REGION": {
+        "min": "AFRICA",
+        "max": "MIDDLE EAST"
+      },
+      "PART.P_PARTKEY": {
+        "min": "1",
+        "max": "20000"
+      },
+      "PART.P_CATEGORY": {
+        "min": "MFGR#11",
+        "max": "MFGR#55"
+      },
+      "DATES.D_WEEKNUMINYEAR": {
+        "min": "1",
+        "max": "53"
+      },
+      "CUSTOMER.C_CITY": {
+        "min": "ALGERIA  0",
+        "max": "VIETNAM  9"
+      },
+      "SUPPLIER.S_NATION": {
+        "min": "ALGERIA",
+        "max": "VIETNAM"
+      },
+      "SUPPLIER.S_CITY": {
+        "min": "ALGERIA  1",
+        "max": "VIETNAM  9"
+      },
+      "CUSTOMER.C_REGION": {
+        "min": "AFRICA",
+        "max": "MIDDLE EAST"
+      },
+      "DATES.D_YEAR": {
+        "min": "1992",
+        "max": "1998"
+      },
+      "V_LINEORDER.LO_DISCOUNT": {
+        "min": "0",
+        "max": "10"
+      }
+    }
+  } ],
+  "last_modified" : 1457534216410,
+  "descriptor" : "ssb_cube_with_dimention_range",
+  "create_time_utc" : 1457444500888,
+  "size_kb" : 100,
+  "input_records_count" : 1000,
+  "input_records_size" : 102400
+}

@@ -23,15 +23,18 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.DimensionRangeInfo;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.LookupMaterializeContext;
@@ -40,10 +43,13 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.datatype.DataTypeOrder;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -76,9 +82,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
 
         try {
             saveExtSnapshotIfNeeded(cubeManager, cube, segment);
-            if (segment.isOffsetCube()) {
-                updateTimeRange(segment);
-            }
+            updateSegment(segment);
 
             cubeManager.promoteNewlyBuiltSegments(cube, segment);
             return new ExecuteResult();
@@ -115,40 +119,51 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         }
     }
 
-    private void updateTimeRange(CubeSegment segment) throws IOException {
+    private void updateSegment(CubeSegment segment) throws IOException {
         final TblColRef partitionCol = segment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
 
-        if (partitionCol == null) {
-            return;
-        }
-        final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
-        Path colDir = new Path(factColumnsInputPath, partitionCol.getIdentity());
-        FileSystem fs = HadoopUtil.getWorkingFileSystem();
-        Path outputFile = HadoopUtil.getFilterOnlyPath(fs, colDir,
-                partitionCol.getName() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
-        if (outputFile == null) {
-            throw new IOException("fail to find the partition file in base dir: " + colDir);
-        }
+        for (TblColRef dimColRef : segment.getCubeDesc().listDimensionColumnsExcludingDerived(true)) {
+            final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
+            Path colDir = new Path(factColumnsInputPath, dimColRef.getIdentity());
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
 
-        FSDataInputStream is = null;
-        BufferedReader bufferedReader = null;
-        InputStreamReader isr = null;
-        long minValue, maxValue;
-        try {
-            is = fs.open(outputFile);
-            isr = new InputStreamReader(is);
-            bufferedReader = new BufferedReader(isr);
-            minValue = Long.parseLong(bufferedReader.readLine());
-            maxValue = Long.parseLong(bufferedReader.readLine());
-        } finally {
-            IOUtils.closeQuietly(is);
-            IOUtils.closeQuietly(isr);
-            IOUtils.closeQuietly(bufferedReader);
-        }
+            //handle multiple reducers
+            Path[] outputFiles = HadoopUtil.getFilteredPath(fs, colDir,
+                    dimColRef.getName() + FactDistinctColumnsReducer.DIMENSION_COL_INFO_FILE_POSTFIX);
+            if (outputFiles == null || outputFiles.length == 0) {
+                segment.getDimensionRangeInfoMap().put(dimColRef.getIdentity(), new DimensionRangeInfo(null, null));
+                continue;
+            }
 
-        logger.info("updateTimeRange step. minValue:" + minValue + " maxValue:" + maxValue);
-        if (minValue != timeMinValue && maxValue != timeMaxValue) {
-            segment.setTSRange(new TSRange(minValue, maxValue + 1));
+            FSDataInputStream is = null;
+            BufferedReader bufferedReader = null;
+            InputStreamReader isr = null;
+            Set<String> minValues = Sets.newHashSet(), maxValues = Sets.newHashSet();
+            for (Path outputFile : outputFiles) {
+                try {
+                    is = fs.open(outputFile);
+                    isr = new InputStreamReader(is);
+                    bufferedReader = new BufferedReader(isr);
+                    minValues.add(bufferedReader.readLine());
+                    maxValues.add(bufferedReader.readLine());
+                } finally {
+                    IOUtils.closeQuietly(is);
+                    IOUtils.closeQuietly(isr);
+                    IOUtils.closeQuietly(bufferedReader);
+                }
+            }
+            DataTypeOrder order = dimColRef.getType().getOrder();
+            String minValue = order.min(minValues);
+            String maxValue = order.max(maxValues);
+            logger.info("updateSegment step. {} minValue:" + minValue + " maxValue:" + maxValue, dimColRef.getName());
+
+            if (segment.isOffsetCube() && partitionCol != null && partitionCol.getIdentity().equals(dimColRef.getIdentity())) {
+                logger.info("update partition. {} timeMinValue:" + minValue + " timeMaxValue:" + maxValue, dimColRef.getName());
+                if (DateFormat.stringToMillis(minValue) != timeMinValue && DateFormat.stringToMillis(maxValue) != timeMaxValue) {
+                    segment.setTSRange(new TSRange(DateFormat.stringToMillis(minValue), DateFormat.stringToMillis(maxValue) + 1));
+                }
+            }
+            segment.getDimensionRangeInfoMap().put(dimColRef.getIdentity(), new DimensionRangeInfo(minValue, maxValue));
         }
     }
 }

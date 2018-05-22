@@ -43,7 +43,6 @@ public class InputConverterUnitForRawData implements InputConverterUnit<String[]
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(InputConverterUnitForRawData.class);
     
-    public static final byte[] HIVE_NULL = Bytes.toBytes("\\N");
     public static final String[] END_ROW = new String[0];
     public static final String[] CUT_ROW = { "" };
 
@@ -149,7 +148,6 @@ public class InputConverterUnitForRawData implements InputConverterUnit<String[]
 
     private void initNullBytes(CubeDesc cubeDesc) {
         nullBytes = Lists.newArrayList();
-        nullBytes.add(HIVE_NULL);
         String[] nullStrings = cubeDesc.getNullStrings();
         if (nullStrings != null) {
             for (String s : nullStrings) {

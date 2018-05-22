@@ -18,8 +18,12 @@
 
 package org.apache.kylin.query.optrule;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -33,13 +37,11 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.ImmutableBitSet;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 
 /**
- * Supoort grouping query. Expand the non-simple aggregate to more than one simple aggregates.
+ * Support grouping query. Expand the non-simple aggregate to more than one simple aggregates.
  * Add project on expanded simple aggregate to add indicators of origin aggregate.
  * All projects on aggregate added into one union, which replace the origin aggregate.
  * The new aggregates will be transformed by {@link org.apache.kylin.query.optrule.AggregateProjectReduceRule}, to reduce rolled up dimensions.

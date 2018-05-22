@@ -59,6 +59,7 @@ public class UpdateCubeInfoAfterOptimizeStep extends AbstractExecutable {
         segment.setSizeKB(cubeSizeBytes / 1024);
         segment.setInputRecords(sourceCount);
         segment.setInputRecordsSize(sourceSizeBytes);
+        segment.setDimensionRangeInfoMap(originalSegment.getDimensionRangeInfoMap());
 
         try {
             cubeManager.promoteNewlyOptimizeSegments(cube, segment);

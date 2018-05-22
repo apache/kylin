@@ -18,73 +18,74 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.common.MapReduceUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import com.google.common.collect.Lists;
+
 /**
  * Reducers play different roles based on reducer-id:
- * - (start from 0) one reducer for each dictionary column, UHC may have more than one reducer
- * - one reducer to get min/max of date partition column
+ * - (start from 0) one reducer for each dimension column, dictionary column, UHC may have more than one reducer
  * - (at the end) one or more reducers to collect row counts for cuboids using HLL
  */
 public class FactDistinctColumnsReducerMapping {
 
-    public static final int MARK_FOR_PARTITION_COL = -2;
     public static final int MARK_FOR_HLL_COUNTER = -1;
 
-    final private int nDictValueCollectors;
-    final private int datePartitionReducerId;
     final private int nCuboidRowCounters;
+    final private int nDimReducers;
     final private int nTotalReducers;
 
-    final private List<TblColRef> allDictCols;
-    final private int[] dictColIdToReducerBeginId;
+    final private List<TblColRef> allDimDictCols = Lists.newArrayList();
+    final private int[] colIdToReducerBeginId;
     final private int[] reducerRolePlay; // >=0 for dict col id, <0 for partition col and hll counter (using markers)
 
     public FactDistinctColumnsReducerMapping(CubeInstance cube) {
         this(cube, 0);
     }
 
-    public FactDistinctColumnsReducerMapping(CubeInstance cube, int cuboidRowCounterReducerNum) {
+    private FactDistinctColumnsReducerMapping(CubeInstance cube, int cuboidRowCounterReducerNum) {
         CubeDesc desc = cube.getDescriptor();
+        Set<TblColRef> allCols = cube.getAllColumns();
+        Set<TblColRef> dictCols = desc.getAllColumnsNeedDictionaryBuilt();
+        List<TblColRef> dimCols = desc.listDimensionColumnsExcludingDerived(true);
+        for (TblColRef colRef : allCols) {
+            if (dictCols.contains(colRef)) {
+                allDimDictCols.add(colRef);
+            } else if (dimCols.indexOf(colRef) >= 0){
+                allDimDictCols.add(colRef);
+            }
+        }
 
-        allDictCols = new ArrayList(desc.getAllColumnsNeedDictionaryBuilt());
-
-        dictColIdToReducerBeginId = new int[allDictCols.size() + 1];
+        colIdToReducerBeginId = new int[allDimDictCols.size() + 1];
 
         int uhcReducerCount = cube.getConfig().getUHCReducerCount();
         List<TblColRef> uhcList = desc.getAllUHCColumns();
         int counter = 0;
-        for (int i = 0; i < allDictCols.size(); i++) {
-            dictColIdToReducerBeginId[i] = counter;
-            boolean isUHC = uhcList.contains(allDictCols.get(i));
+        for (int i = 0; i < allDimDictCols.size(); i++) {
+            colIdToReducerBeginId[i] = counter;
+            boolean isUHC = uhcList.contains(allDimDictCols.get(i));
             counter += (isUHC) ? uhcReducerCount : 1;
         }
-
-        dictColIdToReducerBeginId[allDictCols.size()] = counter;
-        nDictValueCollectors = counter;
-        datePartitionReducerId = counter;
+        colIdToReducerBeginId[allDimDictCols.size()] = counter;
+        nDimReducers = counter;
 
         nCuboidRowCounters = cuboidRowCounterReducerNum == 0 ? //
                 MapReduceUtil.getCuboidHLLCounterReducerNum(cube) : cuboidRowCounterReducerNum;
-        nTotalReducers = nDictValueCollectors + 1 + nCuboidRowCounters;
+        nTotalReducers = nDimReducers + nCuboidRowCounters;
 
         reducerRolePlay = new int[nTotalReducers];
         for (int i = 0, dictId = 0; i < nTotalReducers; i++) {
-            if (i > datePartitionReducerId) {
+            if (i >= nDimReducers) {
                 // cuboid HLL counter reducer
                 reducerRolePlay[i] = MARK_FOR_HLL_COUNTER;
-            } else if (i == datePartitionReducerId) {
-                // date partition min/max reducer
-                reducerRolePlay[i] = MARK_FOR_PARTITION_COL;
             } else {
-                // dict value collector reducer
-                if (i == dictColIdToReducerBeginId[dictId + 1])
+                if (i == colIdToReducerBeginId[dictId + 1])
                     dictId++;
 
                 reducerRolePlay[i] = dictId;
@@ -92,8 +93,8 @@ public class FactDistinctColumnsReducerMapping {
         }
     }
     
-    public List<TblColRef> getAllDictCols() {
-        return allDictCols;
+    public List<TblColRef> getAllDimDictCols() {
+        return allDimDictCols;
     }
     
     public int getTotalReducerNum() {
@@ -104,9 +105,9 @@ public class FactDistinctColumnsReducerMapping {
         return nCuboidRowCounters;
     }
 
-    public int getReducerIdForDictCol(int dictColId, Object fieldValue) {
-        int begin = dictColIdToReducerBeginId[dictColId];
-        int span = dictColIdToReducerBeginId[dictColId + 1] - begin;
+    public int getReducerIdForCol(int colId, Object fieldValue) {
+        int begin = colIdToReducerBeginId[colId];
+        int span = colIdToReducerBeginId[colId + 1] - begin;
         
         if (span == 1)
             return begin;
@@ -120,37 +121,29 @@ public class FactDistinctColumnsReducerMapping {
     }
 
     public int getRolePlayOfReducer(int reducerId) {
-        return reducerRolePlay[reducerId];
+        return reducerRolePlay[reducerId % nTotalReducers];
     }
     
     public boolean isCuboidRowCounterReducer(int reducerId) {
         return getRolePlayOfReducer(reducerId) == MARK_FOR_HLL_COUNTER;
     }
-    
-    public boolean isPartitionColReducer(int reducerId) {
-        return getRolePlayOfReducer(reducerId) == MARK_FOR_PARTITION_COL;
-    }
 
-    public TblColRef getDictColForReducer(int reducerId) {
-        int role = getRolePlayOfReducer(reducerId);
+    public TblColRef getColForReducer(int reducerId) {
+        int role = getRolePlayOfReducer(reducerId % nTotalReducers);
         if (role < 0)
             throw new IllegalStateException();
         
-        return allDictCols.get(role);
+        return allDimDictCols.get(role);
     }
 
-    public int getReducerNumForDictCol(TblColRef col) {
-        int dictColId = allDictCols.indexOf(col);
-        return dictColIdToReducerBeginId[dictColId + 1] - dictColIdToReducerBeginId[dictColId];
-    }
-
-    public int getReducerIdForDatePartitionColumn() {
-        return datePartitionReducerId;
+    public int getReducerNumForDimCol(TblColRef col) {
+        int dictColId = allDimDictCols.indexOf(col);
+        return colIdToReducerBeginId[dictColId + 1] - colIdToReducerBeginId[dictColId];
     }
 
     public int getReducerIdForCuboidRowCount(long cuboidId) {
         int rowCounterId = (int) (Math.abs(cuboidId) % nCuboidRowCounters);
-        return datePartitionReducerId + 1 + rowCounterId;
+        return nDimReducers + rowCounterId;
     }
     
 }
