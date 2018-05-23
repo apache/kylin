@@ -1,8 +1,8 @@
 ---
 layout: docs23
 title:  Use Dashboard
-categories: howto
-permalink: /docs23/howto/howto_use_dashboard.html
+categories: tutorial
+permalink: /docs23/tutorial/use_dashboard.html
 ---
 
 > Available since Apache Kylin v2.3.0

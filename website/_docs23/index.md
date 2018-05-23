@@ -28,8 +28,6 @@ Installation & Setup
 5. [Run Kylin with Docker](install/kylin_docker.html)
 6. [Install Kylin on AWS EMR](install/kylin_aws_emr.html)
 
-
-
 Tutorial
 ------------  
 1. [Quick Start with Sample Cube](tutorial/kylin_sample.html)
@@ -41,7 +39,9 @@ Tutorial
 7. [Build Cube with Spark Engine](tutorial/cube_spark.html)
 8. [Cube Build Tuning](tutorial/cube_build_performance.html)
 9. [Enable Query Pushdown](tutorial/query_pushdown.html)
-
+10. [Setup System Cube](tutorial/setup_systemcube.html)
+11. [Optimize with Cube Planner](tutorial/use_cube_planner.html)
+12. [Use System Dashboard](tutorial/use_dashboard.html)
 
 
 Connectivity and APIs

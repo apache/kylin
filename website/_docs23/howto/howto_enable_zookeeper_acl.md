@@ -1,6 +1,6 @@
 ---
 layout: docs23
-title:  Enable zookeeper acl
+title:  Enable Zookeeper ACL
 categories: howto
 permalink: /docs23/howto/howto_enable_zookeeper_acl.html
 ---

@@ -1,8 +1,8 @@
 ---
 layout: docs23
 title:  Use Cube Planner
-categories: howto
-permalink: /docs23/howto/howto_use_cube_planner.html
+categories: tutorial
+permalink: /docs23/tutorial/use_cube_planner.html
 ---
 
 > Available since Apache Kylin v2.3.0

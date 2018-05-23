@@ -46,10 +46,14 @@
   - tutorial/cube_spark
   - tutorial/cube_build_performance
   - tutorial/kylin_client_tool
+  - tutorial/setup_systemcube
+  - tutorial/use_cube_planner
+  - tutorial/use_dashboard
 
 - title: Integration
   docs:
   - tutorial/odbc
+  - tutorial/jdbc
   - tutorial/tableau
   - tutorial/tableau_91
   - tutorial/powerbi
@@ -68,13 +72,9 @@
   - howto/howto_optimize_build
   - howto/howto_backup_metadata
   - howto/howto_cleanup_storage
-  - howto/howto_jdbc
   - howto/howto_upgrade
   - howto/howto_ldap_and_sso
   - howto/howto_use_beeline
   - howto/howto_update_coprocessor
   - howto/howto_install_ranger_kylin_plugin
   - howto/howto_enable_zookeeper_acl
-  - howto/howto_setup_systemcube
-  - howto/howto_use_cube_planner
-  - howto/howto_use_dashboard

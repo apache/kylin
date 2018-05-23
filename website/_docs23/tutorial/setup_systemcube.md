@@ -1,8 +1,8 @@
 ---
 layout: docs23
 title:  Set Up System Cube
-categories: howto
-permalink: /docs23/howto/howto_setup_systemcube.html
+categories: tutorial
+permalink: /docs23/tutorial/setup_systemcube.html
 ---
 
 > Available since Apache Kylin v2.3.x

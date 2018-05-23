@@ -1,6 +1,6 @@
 ---
 layout: docs23
-title:  The Ranger Kylin Plugin Installation Guide
+title:  Install Ranger Plugin
 categories: howto
 permalink: /docs23/howto/howto_install_ranger_kylin_plugin.html
 ---
