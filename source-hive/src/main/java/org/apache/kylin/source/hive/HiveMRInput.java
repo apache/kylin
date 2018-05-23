@@ -63,7 +63,6 @@ import com.google.common.collect.Sets;
 
 public class HiveMRInput implements IMRInput {
 
-    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HiveMRInput.class);
 
     public static String getTableNameForHCat(TableDesc table) {
