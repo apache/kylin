@@ -83,8 +83,11 @@ public class HBaseLookupMRSteps {
         TableDesc tableDesc = TableMetadataManager.getInstance(kylinConfig).getTableDesc(tableName, cube.getProject());
         IReadableTable sourceTable = SourceManager.createReadableTable(tableDesc);
         try {
-            if (extTableSnapshotInfoManager.hasLatestSnapshot(sourceTable.getSignature(), tableName)) {
+            ExtTableSnapshotInfo latestSnapshot = extTableSnapshotInfoManager.getLatestSnapshot(sourceTable.getSignature(), tableName);
+            if (latestSnapshot != null) {
                 logger.info("there is latest snapshot exist for table:{}, skip build snapshot step.", tableName);
+                jobFlow.addExtraInfo(BatchConstants.LOOKUP_EXT_SNAPSHOT_CONTEXT_PFX + latestSnapshot.getTableName(),
+                        latestSnapshot.getResourcePath());
                 return;
             }
         } catch (IOException ioException) {

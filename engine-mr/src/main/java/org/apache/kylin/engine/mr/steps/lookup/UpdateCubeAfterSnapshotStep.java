@@ -57,13 +57,18 @@ public class UpdateCubeAfterSnapshotStep extends AbstractExecutable {
 
         String contextKey = BatchConstants.LOOKUP_EXT_SNAPSHOT_CONTEXT_PFX + lookupTableName;
         String snapshotResPath = job.getExtraInfo(contextKey);
-
+        if (snapshotResPath == null) {
+            logger.info("no snapshot path exist in the context, so no need to update snapshot path");
+            return new ExecuteResult();
+        }
         CubeDesc cubeDesc = cube.getDescriptor();
         try {
             logger.info("update snapshot path to cube metadata");
             if (cubeDesc.isGlobalSnapshotTable(lookupTableName)) {
-                LookupExecutableUtil.updateSnapshotPathToCube(cubeManager, cube, lookupTableName,
-                        snapshotResPath);
+                if (!snapshotResPath.equals(cube.getSnapshotResPath(lookupTableName))) {
+                    LookupExecutableUtil.updateSnapshotPathToCube(cubeManager, cube, lookupTableName,
+                            snapshotResPath);
+                }
             } else {
                 LookupExecutableUtil.updateSnapshotPathToSegments(cubeManager, cube, segmentIDs, lookupTableName,
                         snapshotResPath);

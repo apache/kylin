@@ -97,14 +97,18 @@ public class ExtTableSnapshotInfoManager {
                 });
     }
 
-    public boolean hasLatestSnapshot(TableSignature signature, String tableName) throws IOException {
+    /**
+     *
+     * @param signature source table signature
+     * @param tableName
+     * @return latest snapshot info
+     * @throws IOException
+     */
+    public ExtTableSnapshotInfo getLatestSnapshot(TableSignature signature, String tableName) throws IOException {
         ExtTableSnapshotInfo snapshot = new ExtTableSnapshotInfo(signature, tableName);
         snapshot.updateRandomUuid();
         ExtTableSnapshotInfo dupSnapshot = checkDupByInfo(snapshot);
-        if (dupSnapshot != null) {
-            return true;
-        }
-        return false;
+        return dupSnapshot;
     }
 
     public ExtTableSnapshotInfo getSnapshot(String snapshotResPath) {
