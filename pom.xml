@@ -82,7 +82,7 @@
         <commons-collections.version>3.2.2</commons-collections.version>
 
         <!-- Calcite deps, keep compatible with calcite.version -->
-        <jackson.version>2.6.7.1</jackson.version>
+        <jackson.version>2.9.5</jackson.version>
 
         <!-- Test Dependency versions -->
         <antlr.version>3.4</antlr.version>
@@ -597,7 +597,17 @@
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
 
