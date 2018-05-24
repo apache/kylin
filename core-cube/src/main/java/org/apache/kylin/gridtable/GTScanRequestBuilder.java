@@ -20,13 +20,14 @@ package org.apache.kylin.gridtable;
 
 import java.util.BitSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.TupleFilter;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class GTScanRequestBuilder {
     private GTInfo info;
@@ -39,7 +40,7 @@ public class GTScanRequestBuilder {
     private String[] aggrMetricsFuncs = null;
     private ImmutableBitSet dynamicColumns;
     private ImmutableBitSet rtAggrMetrics;
-    private List<TupleExpression> exprsPushDown;
+    private Map<Integer, TupleExpression> exprsPushDown;
     private boolean allowStorageAggregation = true;
     private double aggCacheMemThreshold = 0;
     private int storageScanRowNumThreshold = Integer.MAX_VALUE;// storage should terminate itself when $storageScanRowNumThreshold cuboid rows are scanned, and throw exception.   
@@ -69,7 +70,7 @@ public class GTScanRequestBuilder {
         return this;
     }
 
-    public GTScanRequestBuilder setExprsPushDown(List<TupleExpression> exprsPushDown) {
+    public GTScanRequestBuilder setExprsPushDown(Map<Integer, TupleExpression> exprsPushDown) {
         this.exprsPushDown = exprsPushDown;
         return this;
     }
@@ -166,7 +167,7 @@ public class GTScanRequestBuilder {
         }
 
         if (exprsPushDown == null) {
-            exprsPushDown = Lists.newArrayList();
+            exprsPushDown = Maps.newHashMap();
         }
 
         if (storageBehavior == null) {
