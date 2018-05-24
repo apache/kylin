@@ -64,7 +64,7 @@ public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
         if (op == SqlStdOperatorTable.EXTRACT_DATE) {
             return visitFirstRexInputRef(call);
         } else if (op instanceof SqlCastFunction) {
-            return visitFirstRexInputRef(call);
+            return call.getOperands().get(0).accept(this);
         } else if (op instanceof SqlUserDefinedFunction) {
             if (op.getName().equals("QUARTER")) {
                 return visitFirstRexInputRef(call);
