@@ -455,6 +455,9 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   };
 
   $scope.addSnapshot = function(newSnapshot) {
+    if (!$scope.cubeMetaFrame.snapshot_table_desc_list) {
+       $scope.cubeMetaFrame.snapshot_table_desc_list = [];
+    }
     if (!newSnapshot.table_name || !newSnapshot.storage_type) {
       swal('Oops...', 'Snapshot table name or storage should not be empty', 'warning');
       return;
