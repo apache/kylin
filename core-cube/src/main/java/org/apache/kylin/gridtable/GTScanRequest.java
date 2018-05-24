@@ -23,6 +23,7 @@ import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
@@ -45,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class GTScanRequest {
@@ -65,7 +67,7 @@ public class GTScanRequest {
     private ImmutableBitSet rtAggrMetrics;
 
     private ImmutableBitSet dynamicCols;
-    private List<TupleExpression> tupleExpressionList;
+    private Map<Integer, TupleExpression> tupleExpressionMap;
 
     // optional filtering
     private TupleFilter filterPushDown;
@@ -92,7 +94,7 @@ public class GTScanRequest {
 
     GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
             ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, ImmutableBitSet rtAggrMetrics, //
-            ImmutableBitSet dynamicCols, List<TupleExpression> tupleExpressionList, //
+            ImmutableBitSet dynamicCols, Map<Integer, TupleExpression> tupleExpressionMap, //
             TupleFilter filterPushDown, TupleFilter havingFilterPushDown, //
             boolean allowStorageAggregation, double aggCacheMemThreshold, int storageScanRowNumThreshold, //
             int storagePushDownLimit, StorageLimitLevel storageLimitLevel, String storageBehavior, long startTime,
@@ -114,7 +116,7 @@ public class GTScanRequest {
         this.rtAggrMetrics = rtAggrMetrics;
 
         this.dynamicCols = dynamicCols;
-        this.tupleExpressionList = tupleExpressionList;
+        this.tupleExpressionMap = tupleExpressionMap;
 
         this.storageBehavior = storageBehavior;
         this.startTime = startTime;
@@ -217,8 +219,8 @@ public class GTScanRequest {
                 result = new GTForwardingScanner(result);//need its check function
             }
 
-            if (dynamicCols != null && dynamicCols.cardinality() > 0) {
-                logger.info("GTFunctionScanner will be used with expressions " + tupleExpressionList);
+            if (tupleExpressionMap != null && !tupleExpressionMap.isEmpty()) {
+                logger.info("GTFunctionScanner will be used with expressions " + tupleExpressionMap);
                 result = new GTFunctionScanner(result, this);
             }
 
@@ -344,8 +346,8 @@ public class GTScanRequest {
         return rtAggrMetrics;
     }
 
-    public List<TupleExpression> getTupleExpressionList() {
-        return tupleExpressionList;
+    public Map<Integer, TupleExpression> getTupleExpressionMap() {
+        return tupleExpressionMap;
     }
 
     public boolean isAllowStorageAggregation() {
@@ -446,7 +448,11 @@ public class GTScanRequest {
 
             // for dynamic related info
             ImmutableBitSet.serializer.serialize(value.dynamicCols, out);
-            for (TupleExpression tupleExpr : value.tupleExpressionList) {
+
+            BytesUtil.writeVInt(value.tupleExpressionMap.size(), out);
+            for (int c : value.tupleExpressionMap.keySet()) {
+                TupleExpression tupleExpr = value.tupleExpressionMap.get(c);
+                BytesUtil.writeVInt(c, out);
                 BytesUtil.writeByteArray(TupleExpressionSerializer.serialize(tupleExpr,
                         GTUtil.wrap(value.info.codeSystem.getComparator())), out);
             }
@@ -495,17 +501,21 @@ public class GTScanRequest {
             String storageBehavior = BytesUtil.readUTFString(in);
 
             ImmutableBitSet aDynCols = ImmutableBitSet.serializer.deserialize(in);
-            int nDynCols = aDynCols.cardinality();
-            List<TupleExpression> sTupleExprList = Lists.newArrayListWithExpectedSize(nDynCols);
-            for (int i = 0; i < nDynCols; i++) {
-                sTupleExprList.add(TupleExpressionSerializer.deserialize(BytesUtil.readByteArray(in),
-                        GTUtil.wrap(sInfo.codeSystem.getComparator())));
+
+            int nTupleExprs = BytesUtil.readVInt(in);
+            Map<Integer, TupleExpression> sTupleExpressionMap = Maps.newHashMapWithExpectedSize(nTupleExprs);
+            for (int i = 0; i < nTupleExprs; i++) {
+                int sC = BytesUtil.readVInt(in);
+                TupleExpression sTupleExpr = TupleExpressionSerializer.deserialize(BytesUtil.readByteArray(in),
+                        GTUtil.wrap(sInfo.codeSystem.getComparator()));
+                sTupleExpressionMap.put(sC, sTupleExpr);
             }
             ImmutableBitSet aRuntimeAggrMetrics = ImmutableBitSet.serializer.deserialize(in);
 
             return new GTScanRequestBuilder().setInfo(sInfo).setRanges(sRanges).setDimensions(sColumns)
                     .setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs)
-                    .setRtAggrMetrics(aRuntimeAggrMetrics).setDynamicColumns(aDynCols).setExprsPushDown(sTupleExprList)
+                    .setRtAggrMetrics(aRuntimeAggrMetrics).setDynamicColumns(aDynCols)
+                    .setExprsPushDown(sTupleExpressionMap)
                     .setFilterPushDown(sGTFilter).setHavingFilterPushDown(sGTHavingFilter)
                     .setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB)
                     .setStorageScanRowNumThreshold(storageScanRowNumThreshold)

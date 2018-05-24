@@ -114,24 +114,27 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
 
         // for dynamic cols, which are as appended columns to GTInfo
         BitSet tmpGtDynCols = new BitSet();
-        tmpGtDynCols.or(mapping.makeGridTableColumns(Sets.newHashSet(dynGroupsDims)).mutable());
-        tmpGtDynCols.or(mapping.makeGridTableColumns(dynFuncs).mutable());
-        this.gtDynColumns = new ImmutableBitSet(tmpGtDynCols);
 
-        this.tupleExpressionList = Lists.newArrayListWithExpectedSize(dynGroupExprs.size() + dynFuncs.size());
+        this.tupleExpressionMap = Maps.newHashMap();
         // for dynamic dimensions
-        for (TupleExpression rtGroupExpr : dynGroupExprs) {
-            this.tupleExpressionList
-                    .add(GTUtil.convertFilterColumnsAndConstants(rtGroupExpr, gtInfo, mapping, groupByPushDown));
+        for (int i = 0; i < dynGroupsDims.size(); i++) {
+            int c = mapping.getIndexOf(dynGroupsDims.get(i));
+            tmpGtDynCols.set(c);
+            TupleExpression tupleExpr = GTUtil.convertFilterColumnsAndConstants(dynGroupExprs.get(i), gtInfo, mapping,
+                    groupByPushDown);
+            this.tupleExpressionMap.put(c, tupleExpr);
         }
 
         // for dynamic measures
         Set<FunctionDesc> tmpRtAggrMetrics = Sets.newHashSet();
-        for (DynamicFunctionDesc rtFunc : dynFuncs) {
-            tmpRtAggrMetrics.addAll(rtFunc.getRuntimeFuncs());
-            this.tupleExpressionList.add(GTUtil.convertFilterColumnsAndConstants(rtFunc.getTupleExpression(), gtInfo,
-                    mapping, rtFunc.getRuntimeFuncMap(), groupByPushDown));
+        for (DynamicFunctionDesc dynFunc : dynFuncs) {
+            tmpRtAggrMetrics.addAll(dynFunc.getRuntimeFuncs());
+            int c = mapping.getIndexOf(dynFunc);
+            tmpGtDynCols.set(c);
+            this.tupleExpressionMap.put(c, GTUtil.convertFilterColumnsAndConstants(dynFunc.getTupleExpression(), gtInfo,
+                    mapping, dynFunc.getRuntimeFuncMap(), groupByPushDown));
         }
+        this.gtDynColumns = new ImmutableBitSet(tmpGtDynCols);
         this.gtRtAggrMetrics = mapping.makeGridTableColumns(tmpRtAggrMetrics);
 
         if (cubeSegment.getModel().getPartitionDesc().isPartitioned()) {
@@ -179,7 +182,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
                     .setAggrGroupBy(gtAggrGroups).setAggrMetrics(gtAggrMetrics).setAggrMetricsFuncs(gtAggrFuncs)
                     .setFilterPushDown(gtFilter)//
                     .setRtAggrMetrics(gtRtAggrMetrics).setDynamicColumns(gtDynColumns)
-                    .setExprsPushDown(tupleExpressionList)//
+                    .setExprsPushDown(tupleExpressionMap)//
                     .setAllowStorageAggregation(context.isNeedStorageAggregation())
                     .setAggCacheMemThreshold(cubeSegment.getConfig().getQueryCoprocessorMemGB())//
                     .setStoragePushDownLimit(context.getFinalPushDownLimit())

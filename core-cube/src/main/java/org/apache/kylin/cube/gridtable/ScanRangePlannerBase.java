@@ -64,7 +64,7 @@ public abstract class ScanRangePlannerBase {
 
     protected ImmutableBitSet gtDynColumns;
     protected ImmutableBitSet gtRtAggrMetrics;
-    protected List<TupleExpression> tupleExpressionList;
+    protected Map<Integer, TupleExpression> tupleExpressionMap;
 
     public abstract GTScanRequest planScanRequest();
 

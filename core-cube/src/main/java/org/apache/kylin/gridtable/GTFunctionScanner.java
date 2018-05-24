@@ -20,7 +20,7 @@ package org.apache.kylin.gridtable;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.kylin.common.util.ByteArray;
@@ -33,16 +33,12 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-
 public class GTFunctionScanner implements IGTScanner {
     private static final Logger logger = LoggerFactory.getLogger(GTFunctionScanner.class);
 
     protected IGTScanner rawScanner;
-    private final ImmutableBitSet dynamicCols;
     private final ImmutableBitSet rtAggrMetrics;
-    private final List<TupleExpression> tupleExpressionList;
+    private final Map<Integer, TupleExpression> tupleExpressionMap;
     private final IEvaluatableTuple oneTuple; // avoid instance creation
     private final IFilterCodeSystem<ByteArray> filterCodeSystem;
 
@@ -50,8 +46,7 @@ public class GTFunctionScanner implements IGTScanner {
 
     protected GTFunctionScanner(IGTScanner rawScanner, GTScanRequest req) {
         this.rawScanner = rawScanner;
-        this.dynamicCols = req.getDynamicCols();
-        this.tupleExpressionList = req.getTupleExpressionList();
+        this.tupleExpressionMap = req.getTupleExpressionMap();
         this.rtAggrMetrics = req.getRtAggrMetrics();
         this.oneTuple = new IEvaluatableTuple() {
             @Override
@@ -111,14 +106,10 @@ public class GTFunctionScanner implements IGTScanner {
             }
 
             private void calculateDynamics() {
-                List<Object> rtResult = Lists.transform(tupleExpressionList, new Function<TupleExpression, Object>() {
-                    @Override
-                    public Object apply(TupleExpression tupleExpr) {
-                        return tupleExpr.calculate(oneTuple, filterCodeSystem);
-                    }
-                });
-                for (int i = 0; i < dynamicCols.trueBitCount(); i++) {
-                    next.setValue(dynamicCols.trueBitAt(i), rtResult.get(i)); //
+                for (int c : tupleExpressionMap.keySet()) {
+                    TupleExpression tupleExpr = tupleExpressionMap.get(c);
+                    Object rtResult = tupleExpr.calculate(oneTuple, filterCodeSystem);
+                    next.setValue(c, rtResult);
                 }
             }
         };
