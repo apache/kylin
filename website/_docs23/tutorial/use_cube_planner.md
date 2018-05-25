@@ -42,15 +42,12 @@ kylin.metrics.monitor-enabled=true
 
 1. Click the '**Planner**' button to view the '**Current Cuboid Distribution**' of the Cube.
 
-  You should make sure the status of the Cube is '**READY**'![Status_Ready](/images/CubePlanner/Status_Ready.png).
+  You should make sure the status of the Cube is '**READY**'
 
   If the status of the Cube is '**DISABLED**'![Status_Disabled](/images/CubePlanner/Status_Disabled.png), you will not be able to use the Cube planner.
 
-  ​
+  You should change the status of the Cube from '**DISABLED**' to '**READY**' by building it or enabling it if it has been built before.
 
-  You should change the status of the Cube from '**DISABLED**' to '**READY**' by clicking the '**Enable**' button.
-
-  ![DISABLED2READY](/images/CubePlanner/DISABLED2READY.png)
 
 #### Step 3:
 
@@ -73,9 +70,7 @@ a. Click the '**Planner**' button to view the '**Current Cuboid Distribution**' 
 
    ![CubePlanner](/images/CubePlanner/Leaf.png)
 
-   Name:1111111110000000 means the dimension combination is ["MONTH_BEG_DT","USER_CNTRY_SITE_CD","RPRTD_SGMNT_VAL","RPRTD_IND","SRVY_TYPE_ID","QSTN_ID","L1_L2_IND","PRNT_L1_ID","TRANCHE_ID"] based on the row key orders below:
-
-   ![CubePlanner](/images/CubePlanner/Rowkeys.png)
+   Name "1111111110000000" means the dimension combination is ["MONTH_BEG_DT","USER_CNTRY_SITE_CD","RPRTD_SGMNT_VAL","RPRTD_IND","SRVY_TYPE_ID","QSTN_ID","L1_L2_IND","PRNT_L1_ID","TRANCHE_ID"] based on the row key orders.
 
    **ID** is the unique id of the cuboid.
 
@@ -89,13 +84,9 @@ a. Click the '**Planner**' button to view the '**Current Cuboid Distribution**' 
 
 -  The center of the sunburst chart contains the combined information of  basic cuboid. its '**Name**' is composed of several '1's.
 
-![Root](/images/CubePlanner/Root.png)
-
 As for a leaf, its '**Name**' is composed of several '0's and 1's. 
 
-![Leaf](/images/CubePlanner/Leaf.png)
-
--    If you want to **specify** a leaf, just **click on** it. The view will change automatically.
+-    If you want to specify a leaf, just click on it. The view will change automatically.
 
      ![Leaf-Specify](/images/CubePlanner/Leaf-Specify.png)
 
@@ -105,13 +96,13 @@ As for a leaf, its '**Name**' is composed of several '0's and 1's.
 
 b. Click the '**Recommend**' button to view the '**Recommend Cuboid Distribution**' of the Cube.
 
-If the Cube is currently under building![Running](/images/CubePlanner/Running.png), the Cube planner '**Recommend**' function will not be able to perform correctly. Please first **stop the building progress** of the Cube.
+If the Cube is currently under building, the Cube planner '**Recommend**' function will not be able to perform. Please wait the build to finish.
 
 -  The data will be calculated by unique algorithms. It is common to see this window.
 
    ![Recommending](/images/CubePlanner/Recommending.png)
 
--  The data will be displayed in *[Sunburst Chart](https://en.wikipedia.org/wiki/Pie_chart#Ring_chart_.2F_Sunburst_chart_.2F_Multilevel_pie_chart)*.
+-  The data will be displayed in Sunburst Chart.
 
    - Each part is shown in different colors determined by the **frequency**.
 
@@ -125,13 +116,7 @@ If the Cube is currently under building![Running](/images/CubePlanner/Running.pn
 
 c. Click the '**Optimize**' button to optimize the Cube.
 
-- A window will jump up to ensure your decision.
-
-  ​	![CubePlanner_Optimize](/images/CubePlanner/CubePlanner_Optimize.png)
-
-  Click '**Yes**' to start the optimization.
-
-  Click '**Cancel**' to give up the optimization.
+- A window will jump up to confirm. Click '**Yes**' to start the optimization. Click '**Cancel**' to give up the optimization.
 
 - User is able to get to know the last optimized time of the Cube in Cube Planner tab page. 
 

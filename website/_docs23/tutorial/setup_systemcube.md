@@ -5,7 +5,7 @@ categories: tutorial
 permalink: /docs23/tutorial/setup_systemcube.html
 ---
 
-> Available since Apache Kylin v2.3.x
+> Available since Apache Kylin v2.3.0
 
 ## What is System Cube
 
@@ -70,11 +70,9 @@ Then we need to upload metadata to hbase by the following command:
 ### 4. Reload Metadata
 Finally, we need to reload metadata in Kylin web UI.
 
-![reload_metadata](/images/SystemCube/reload_metadata.png)
 
 Then, a set of system Cubes will be created under the system project, called "KYLIN_SYSTEM".
 
-![kylin_system](/images/SystemCube/kylin_system.png)
 
 ### 5. System Cube build
 When the system Cube is created, we need to build the Cube regularly.
@@ -342,10 +340,10 @@ This Cube is for collecting query metrics at the Cube level. The most important 
 </table>
 
 ### METRICS_JOB
-In kylin, there are mainly three types of job:
-- "BUILD",for building Cube segments from **HIVE**.
-- "MERGE",for merging Cube segments in **HBASE**.
-- "OPTIMIZE",for dynamically adjusting the precalculated cuboid tree base on the **base cuboid** in **HBASE**.
+In Kylin, there are mainly three types of job:
+- "BUILD", for building Cube segments from **HIVE**.
+- "MERGE", for merging Cube segments in **HBASE**.
+- "OPTIMIZE", for dynamically adjusting the precalculated cuboid tree base on the **base cuboid** in **HBASE**.
 
 This Cube is for collecting job metrics. The details are as follows:
 

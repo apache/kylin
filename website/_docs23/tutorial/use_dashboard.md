@@ -17,7 +17,7 @@ Kylin Dashboard shows useful Cube usage statistics, which are very important to 
 
 To enable Dashboard on WebUI, you need to ensure these are all set:
 * Set **kylin.web.dashboard-enabled=true** in **kylin.properties**.
-* Setup system Cubes according to [toturial](howto_setup_systemcube.html).
+* Setup system Cubes according to [toturial](setup_systemcube.html).
 
 ## How to use it
 
@@ -60,9 +60,6 @@ Now the data analysis will be changed and shown on the same page. (Important inf
 
   You can click the '**More Details**' in these two boxes and you will be led to the '**Model**' page. 
 
-  ![Cube-Info-Page](/images/Dashboard/Cube-Info-Page.png)
-
-
 - Numbers in '**Query Count**', '**Average Query Latency**', '**Job Count**' and '**Average Build Time per MB**' are in **Green**.
 
   You can click on these four rectangles to get detail infomation about the data you selected. The detail information will then be shown as diagrams and displayed in '**Data grouped by Project**' and '**Data grouped by Time**' boxes.
@@ -79,8 +76,6 @@ Now the data analysis will be changed and shown on the same page. (Important inf
 
      You can click the '**More Details**' in these two boxes and you will be led to the '**Insight**' page. 
 
-     ![Query-Link-Page](/images/Dashboard/Query-Link-Page.png)
-
   2. '**Job Count**' and '**Average Build Time per MB**'
 
      You can click on '**Job Count**' to get detail infomation. 
@@ -91,13 +86,7 @@ Now the data analysis will be changed and shown on the same page. (Important inf
 
      ![AVG-Build-Time](/images/Dashboard/AVGBuildTimePerMB.jpg)
 
-     You can click the '**More Details**' in these two boxes and you will be led to the '**Monitor**' page.
-
-     ![Job-Link-Page](/images/Dashboard/Job-Link-Page.png)
-
-     It is common to see the browser showing 'Please wait...'.
-
-     ![Job-Link-Page-Waiting](/images/Dashboard/Job-Link-Page-Waiting.png)
+     You can click the '**More Details**' in these two boxes and you will be led to the '**Monitor**' page. It is common to see the browser showing 'Please wait...'.
 
 #### Step 4:
 
