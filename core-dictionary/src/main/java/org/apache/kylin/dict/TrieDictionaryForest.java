@@ -189,8 +189,8 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         //write tree size
         headOut.writeInt(trees.size());
         headOut.close();
-        byte[] head = byteBuf.toByteArray();
         //output
+        byte[] head = byteBuf.toByteArray();
         out.writeInt(head.length);
         out.write(head);
     }

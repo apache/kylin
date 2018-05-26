@@ -146,6 +146,9 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
         return maxValueLength;
     }
 
+    public int getStorageSizeInBytes() {
+        return trieBytes.length;
+    }
 
     @Override
     protected int getIdFromValueBytesWithoutCache(byte[] value, int offset, int len, int roundingFlag) {
