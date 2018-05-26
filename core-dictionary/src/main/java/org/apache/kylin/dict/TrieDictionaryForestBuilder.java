@@ -17,12 +17,13 @@
 */
 package org.apache.kylin.dict;
 
+import java.util.ArrayList;
+
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exceptions.TooBigDictionaryException;
 import org.apache.kylin.common.util.ByteArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
 
 /**
  * Build a trie dictionary forest if the input values is ordered, or the forest falls back to a single trie.
@@ -134,6 +135,18 @@ public class TrieDictionaryForestBuilder<T> {
         byte[] valueBytes = tree.getValueBytesFromIdWithoutCache(minId);
         valueDivide.add(new ByteArray(valueBytes, 0, valueBytes.length));
         curOffset += (tree.getMaxId() + 1);
+        
+        checkDictSize();
+    }
+
+    private void checkDictSize() {
+        // due to the limitation of resource store, no dictionary beyond 2GB is allowed
+        long size = 0;
+        for (TrieDictionary trie : trees) {
+            size += trie.getStorageSizeInBytes();
+        }
+        if (size > TrieDictionaryBuilder._2GB)
+            throw new TooBigDictionaryException("Too big dictionary, dictionary cannot be bigger than 2GB");
     }
 
     private void reset() {

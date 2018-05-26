@@ -39,7 +39,7 @@ import org.apache.kylin.common.util.BytesUtil;
  */
 public class TrieDictionaryBuilder<T> {
 
-    private static final int _2GB = 2000000000;
+    public static final int _2GB = 2000000000;
 
     public static class Node {
         public byte[] part;
