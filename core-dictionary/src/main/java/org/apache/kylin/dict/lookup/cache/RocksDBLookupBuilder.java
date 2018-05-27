@@ -71,10 +71,10 @@ public class RocksDBLookupBuilder {
             // todo use batch may improve write performance
             for (String[] row : srcLookupTable) {
                 KV kv = encoder.encode(row);
-
                 rocksDB.put(kv.getKey(), kv.getValue());
             }
         } catch (RocksDBException e) {
+            logger.error("error when put data to rocksDB", e);
             throw new RuntimeException("error when write data to rocks db", e);
         }
 

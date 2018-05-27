@@ -204,7 +204,7 @@ public class ExtTableSnapshotInfoManager {
         return snapshot;
     }
 
-    private void save(ExtTableSnapshotInfo snapshot) throws IOException {
+    public void save(ExtTableSnapshotInfo snapshot) throws IOException {
         ResourceStore store = TableMetadataManager.getInstance(this.config).getStore();
         String path = snapshot.getResourcePath();
         store.putResource(path, snapshot, SNAPSHOT_SERIALIZER);
