@@ -137,7 +137,7 @@ public class RocksDBLookupTableCache implements IExtLookupTableCache {
 
     protected static String getCacheBasePath(KylinConfig config) {
         String basePath = config.getExtTableSnapshotLocalCachePath();
-        if (!basePath.startsWith("/")) {
+        if ((!basePath.startsWith("/")) && (KylinConfig.getKylinHome() != null)) {
             basePath = KylinConfig.getKylinHome() + File.separator + basePath;
         }
         return basePath + File.separator + CACHE_TYPE_ROCKSDB;
@@ -253,10 +253,12 @@ public class RocksDBLookupTableCache implements IExtLookupTableCache {
                     try {
                         RocksDBLookupBuilder builder = new RocksDBLookupBuilder(tableDesc, keyColumns, dbPath);
                         builder.build(sourceTable);
+                        saveSnapshotCacheState(extTableSnapshotInfo, cachePath);
+                    } catch (Exception e) {
+                        logger.error("error when build snapshot cache", e);
                     } finally {
                         inBuildingTables.remove(snapshotResPath);
                     }
-                    saveSnapshotCacheState(extTableSnapshotInfo, cachePath);
                 }
             });
 

@@ -35,6 +35,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
+import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
 import org.apache.kylin.dict.lookup.IExtLookupProvider;
 import org.apache.kylin.dict.lookup.IExtLookupTableCache;
 import org.apache.kylin.dict.lookup.IExtLookupTableCache.CacheState;
@@ -61,7 +62,6 @@ public class RocksDBLookupTableCacheTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         createTestMetadata();
-        System.setProperty("KYLIN_HOME", ".");
         TableMetadataManager metadataManager = TableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         kylinConfig = getTestConfig();
         tableDesc = metadataManager.getTableDesc(TABLE_COUNTRY, "default");
@@ -95,6 +95,7 @@ public class RocksDBLookupTableCacheTest extends LocalFileMetadataTestCase {
         snapshotInfo.setRowCnt(rowCnt);
         snapshotInfo.setSignature(new TableSignature("/test", rowCnt, System.currentTimeMillis()));
 
+        ExtTableSnapshotInfoManager.getInstance(kylinConfig).save(snapshotInfo);
         RocksDBLookupTableCache cache = RocksDBLookupTableCache.getInstance(kylinConfig);
         cache.buildSnapshotCache(tableDesc, snapshotInfo, getLookupTableWithRandomData(rowCnt));
 
@@ -148,6 +149,8 @@ public class RocksDBLookupTableCacheTest extends LocalFileMetadataTestCase {
         ILookupTable cachedLookupTable = cache.getCachedLookupTable(tableDesc, snapshotInfo, false);
         assertNotNull(cachedLookupTable);
         cachedLookupTable.close();
+
+        ExtTableSnapshotInfoManager.getInstance(kylinConfig).removeSnapshot(snapshotInfo.getTableName(), snapshotInfo.getId());
         cache.checkCacheState();
         String cacheLocalPath = cache.getSnapshotCachePath(snapshotInfo.getTableName(), snapshotInfo.getId());
         assertFalse(new File(cacheLocalPath).exists());
