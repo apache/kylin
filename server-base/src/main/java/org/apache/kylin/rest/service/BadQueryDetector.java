@@ -144,6 +144,7 @@ public class BadQueryDetector extends Thread {
     }
 
     private void detectBadQuery() {
+        logger.info("Detect bad query.");
         long now = System.currentTimeMillis();
         ArrayList<Entry> entries = new ArrayList<Entry>(runningQueries.values());
         Collections.sort(entries);
@@ -156,8 +157,6 @@ public class BadQueryDetector extends Thread {
             if (runningSec >= alertRunningSec) {
                 notify(BadQueryEntry.ADJ_SLOW, e);
                 dumpStackTrace(e.thread, e.queryId);
-            } else {
-                break; // entries are sorted by startTime
             }
         }
 
@@ -170,7 +169,7 @@ public class BadQueryDetector extends Thread {
     private void setQueryThreadInterrupted(Entry e, float runningSec) {
         if (queryTimeoutSeconds != 0 && runningSec >= queryTimeoutSeconds) {
             e.thread.interrupt();
-            logger.error("Trying to cancel query:" + e.thread.getName());
+            logger.error("Query running "+ runningSec + "s, Trying to cancel query:" + e.thread.getName());
         }
     }
 
