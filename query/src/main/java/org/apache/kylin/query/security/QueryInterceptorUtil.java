@@ -26,11 +26,7 @@ import org.apache.kylin.common.util.ClassUtil;
 
 public class QueryInterceptorUtil {
     private static List<QueryInterceptor> queryInterceptors = new ArrayList<>();
-
-    private static void setQueryInterceptor() {
-        if (queryInterceptors.size() > 0) {
-            return;
-        }
+    static {
         String[] classes = KylinConfig.getInstanceFromEnv().getQueryInterceptors();
         for (String clz : classes) {
             try {
@@ -43,8 +39,6 @@ public class QueryInterceptorUtil {
     }
 
     public static List<QueryInterceptor> getQueryInterceptors() {
-        setQueryInterceptor();
         return queryInterceptors;
     }
-
 }
