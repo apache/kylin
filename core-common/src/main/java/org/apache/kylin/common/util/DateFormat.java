@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ public class DateFormat {
         }
         return r;
     }
-    
+
     public static String formatToCompactDateStr(long millis) {
         return formatToDateStr(millis, COMPACT_DATE_PATTERN);
     }
@@ -94,11 +94,12 @@ public class DateFormat {
     public static long stringToMillis(String str) {
         // try to be smart and guess the date format
         if (isAllDigits(str)) {
-            if (str.length() == 8)
+            if (str.length() <= 8) {
                 //TODO: might be prolematic if an actual ts happends to be 8 digits, e.g. 1970-01-01 10:00:01.123
-                return stringToDate(str, COMPACT_DATE_PATTERN).getTime();
-            else
+                return stringToDate(paddingIfNeed(str), COMPACT_DATE_PATTERN).getTime();
+            } else {
                 return Long.parseLong(str);
+            }
         } else if (str.length() == 10) {
             return stringToDate(str, DEFAULT_DATE_PATTERN).getTime();
         } else if (str.length() == 19) {
@@ -108,6 +109,14 @@ public class DateFormat {
         } else {
             throw new IllegalArgumentException("there is no valid date pattern for:" + str);
         }
+    }
+
+    private static String paddingIfNeed(String str) {
+        int num = 8 - str.length();
+        for (int i = 0; i < num; i++) {
+            str = "0" + str;
+        }
+        return str;
     }
 
     private static boolean isAllDigits(String str) {

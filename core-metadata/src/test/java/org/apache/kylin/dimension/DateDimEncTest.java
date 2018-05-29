@@ -18,9 +18,7 @@
 
 package org.apache.kylin.dimension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.DateFormat;
@@ -98,4 +96,12 @@ public class DateDimEncTest {
         }
     }
 
+    @Test
+    public void testEncAndDecShortDate() {
+        byte[] buf1 = new byte[3];
+        byte[] buf2 = new byte[3];
+        enc.encode("10101", buf1, 0);
+        enc.encode("00010101", buf2, 0);
+        assertEquals(enc.decode(buf1, 0, 3), enc.decode(buf2, 0, 3));
+    }
 }
