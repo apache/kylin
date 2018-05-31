@@ -112,11 +112,6 @@ public class SparkExecutable extends AbstractExecutable {
                     "kylin_hadoop_conf_dir is empty, check if there's error in the output of 'kylin.sh start'");
         }
 
-        File hiveConfFile = new File(hadoopConf, "hive-site.xml");
-        if (!hiveConfFile.exists()) {
-            throw new RuntimeException("Cannot find hive-site.xml in kylin_hadoop_conf_dir: " + hadoopConf + //
-                    ". In order to enable spark cubing, you must set kylin.env.hadoop-conf-dir to a dir which contains at least core-site.xml, hdfs-site.xml, hive-site.xml, mapred-site.xml, yarn-site.xml");
-        }
         logger.info("Using " + hadoopConf + " as HADOOP_CONF_DIR");
 
         String jobJar = config.getKylinJobJarPath();
