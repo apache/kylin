@@ -74,6 +74,8 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
         final String tablePath = JoinedFlatTable.getTableDir(flatTableDesc, getJobWorkingDir(jobId));
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
+        sparkExecutable.setParam(SparkCubingByLayer.OPTION_INPUT_TABLE.getOpt(),
+                seg.getConfig().getHiveDatabaseForIntermediateTable() + "." + flatTableDesc.getTableName());
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_INPUT_PATH.getOpt(),
                 tablePath);
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_META_URL.getOpt(),
