@@ -21,20 +21,20 @@ package org.apache.kylin.storage.hbase.lookup;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.engine.mr.ILookupMaterializer;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.engine.mr.LookupMaterializeContext;
 
 public class HBaseLookupMaterializer implements ILookupMaterializer{
 
     @Override
-    public void materializeLookupTable(DefaultChainedExecutable jobFlow, CubeInstance cube, String lookupTableName) {
+    public void materializeLookupTable(LookupMaterializeContext context, CubeInstance cube, String lookupTableName) {
         HBaseLookupMRSteps lookupMRSteps = new HBaseLookupMRSteps(cube);
         SnapshotTableDesc snapshotTableDesc = cube.getDescriptor().getSnapshotTableDesc(lookupTableName);
-        lookupMRSteps.addMaterializeLookupTableSteps(jobFlow, lookupTableName, snapshotTableDesc);
+        lookupMRSteps.addMaterializeLookupTableSteps(context, lookupTableName, snapshotTableDesc);
     }
 
     @Override
-    public void materializeLookupTablesForCube(DefaultChainedExecutable jobFlow, CubeInstance cube) {
+    public void materializeLookupTablesForCube(LookupMaterializeContext context, CubeInstance cube) {
         HBaseLookupMRSteps lookupMRSteps = new HBaseLookupMRSteps(cube);
-        lookupMRSteps.addMaterializeLookupTablesSteps(jobFlow);
+        lookupMRSteps.addMaterializeLookupTablesSteps(context);
     }
 }

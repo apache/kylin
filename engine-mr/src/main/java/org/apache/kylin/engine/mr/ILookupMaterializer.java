@@ -19,10 +19,22 @@
 package org.apache.kylin.engine.mr;
 
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public interface ILookupMaterializer {
-    void materializeLookupTable(DefaultChainedExecutable jobFlow, CubeInstance cube, String lookupTableName);
+    /**
+     * materialize lookup table
+     * @param context materialize context, the snapshotPath of lookup table should be put into context
+     *                via {@code LookupMaterializeContext.addLookupSnapshotPath} method
+     * @param cube
+     * @param lookupTableName
+     */
+    void materializeLookupTable(LookupMaterializeContext context, CubeInstance cube, String lookupTableName);
 
-    void materializeLookupTablesForCube(DefaultChainedExecutable jobFlow, CubeInstance cube);
+    /**
+     * materialize all ext lookup tables in the cube
+     * @param context materialize context, the snapshotPath of lookup table should be put into context
+     *                via {@code LookupMaterializeContext.addLookupSnapshotPath} method
+     * @param cube
+     */
+    void materializeLookupTablesForCube(LookupMaterializeContext context, CubeInstance cube);
 }

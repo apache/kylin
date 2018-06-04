@@ -52,8 +52,6 @@ import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
@@ -91,7 +89,6 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             String tableName = getOptionValue(OPTION_TABLE_NAME);
-            String cubingJobID = getOptionValue(OPTION_CUBING_JOB_ID);
             String lookupSnapshotID = getOptionValue(OPTION_LOOKUP_SNAPSHOT_ID);
 
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -112,7 +109,6 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
             ExtTableSnapshotInfo snapshot = createSnapshotResource(extSnapshotInfoManager, tableName, lookupSnapshotID,
                     keyColumns, hTableNameAndShard.getFirst(), hTableNameAndShard.getSecond(), sourceTable);
             logger.info("created snapshot information at:{}", snapshot.getResourcePath());
-            saveSnapshotInfoToJobContext(kylinConfig, cubingJobID, snapshot);
 
             job = Job.getInstance(HBaseConfiguration.create(getConf()), getOptionValue(OPTION_JOB_NAME));
 
@@ -192,13 +188,6 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
             result[i] = keyColRefs[i].getName();
         }
         return result;
-    }
-
-    private void saveSnapshotInfoToJobContext(KylinConfig kylinConfig, String jobID, ExtTableSnapshotInfo snapshot) {
-        ExecutableManager execMgr = ExecutableManager.getInstance(kylinConfig);
-        DefaultChainedExecutable job = (DefaultChainedExecutable) execMgr.getJob(jobID);
-        job.addExtraInfo(BatchConstants.LOOKUP_EXT_SNAPSHOT_CONTEXT_PFX + snapshot.getTableName(),
-                snapshot.getResourcePath());
     }
 
     /**

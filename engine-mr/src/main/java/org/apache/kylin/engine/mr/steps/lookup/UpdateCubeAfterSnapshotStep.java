@@ -20,15 +20,16 @@ package org.apache.kylin.engine.mr.steps.lookup;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.engine.mr.LookupMaterializeContext;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.slf4j.Logger;
@@ -53,17 +54,21 @@ public class UpdateCubeAfterSnapshotStep extends AbstractExecutable {
         CubeInstance cube = cubeManager.getCube(LookupExecutableUtil.getCubeName(this.getParams()));
         List<String> segmentIDs = LookupExecutableUtil.getSegments(this.getParams());
         String lookupTableName = LookupExecutableUtil.getLookupTableName(this.getParams());
-        DefaultChainedExecutable job = (DefaultChainedExecutable) getManager().getJob(LookupExecutableUtil.getJobID(this.getParams()));
 
-        String contextKey = BatchConstants.LOOKUP_EXT_SNAPSHOT_CONTEXT_PFX + lookupTableName;
-        String snapshotResPath = job.getExtraInfo(contextKey);
+        String extLookupSnapshotStr = this.getParam(BatchConstants.ARG_EXT_LOOKUP_SNAPSHOTS_INFO);
+        if (extLookupSnapshotStr == null || extLookupSnapshotStr.isEmpty()) {
+            return new ExecuteResult();
+        }
+
+        Map<String, String> extLookupSnapshotMap = LookupMaterializeContext.parseLookupSnapshots(extLookupSnapshotStr);
+        String snapshotResPath = extLookupSnapshotMap.get(lookupTableName);
         if (snapshotResPath == null) {
             logger.info("no snapshot path exist in the context, so no need to update snapshot path");
             return new ExecuteResult();
         }
         CubeDesc cubeDesc = cube.getDescriptor();
         try {
-            logger.info("update snapshot path to cube metadata");
+            logger.info("update snapshot path:{} to cube:{}", snapshotResPath, cube.getName());
             if (cubeDesc.isGlobalSnapshotTable(lookupTableName)) {
                 if (!snapshotResPath.equals(cube.getSnapshotResPath(lookupTableName))) {
                     LookupExecutableUtil.updateSnapshotPathToCube(cubeManager, cube, lookupTableName,

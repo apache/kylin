@@ -512,6 +512,7 @@ public class CubeService extends BasicService implements InitializingBean {
         update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
         update.setCuboids(Maps.<Long, Long> newHashMap());
         update.setCuboidsRecommend(Sets.<Long> newHashSet());
+        update.setUpdateTableSnapshotPath(Maps.<String, String>newHashMap());
         CubeManager.getInstance(getConfig()).updateCube(update);
     }
 

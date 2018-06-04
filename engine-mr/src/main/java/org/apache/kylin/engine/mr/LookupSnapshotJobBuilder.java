@@ -24,6 +24,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.steps.lookup.LookupExecutableUtil;
 import org.apache.kylin.engine.mr.steps.lookup.LookupSnapshotToMetaStoreStep;
 import org.apache.kylin.engine.mr.steps.lookup.UpdateCubeAfterSnapshotStep;
@@ -62,11 +63,14 @@ public class LookupSnapshotJobBuilder {
 
     private void addExtMaterializeLookupTableSteps(final LookupSnapshotBuildJob result,
             SnapshotTableDesc snapshotTableDesc) {
+        LookupMaterializeContext lookupMaterializeContext = new LookupMaterializeContext(result);
         ILookupMaterializer materializer = MRUtil.getExtLookupMaterializer(snapshotTableDesc.getStorageType());
-        materializer.materializeLookupTable(result, cube, lookupTable);
+        materializer.materializeLookupTable(lookupMaterializeContext, cube, lookupTable);
 
         UpdateCubeAfterSnapshotStep afterSnapshotStep = new UpdateCubeAfterSnapshotStep();
         afterSnapshotStep.setName(ExecutableConstants.STEP_NAME_MATERIALIZE_LOOKUP_TABLE_UPDATE_CUBE);
+
+        afterSnapshotStep.getParams().put(BatchConstants.ARG_EXT_LOOKUP_SNAPSHOTS_INFO, lookupMaterializeContext.getAllLookupSnapshotsInString());
         LookupExecutableUtil.setCubeName(cube.getName(), afterSnapshotStep.getParams());
         LookupExecutableUtil.setLookupTableName(lookupTable, afterSnapshotStep.getParams());
         LookupExecutableUtil.setSegments(segments, afterSnapshotStep.getParams());

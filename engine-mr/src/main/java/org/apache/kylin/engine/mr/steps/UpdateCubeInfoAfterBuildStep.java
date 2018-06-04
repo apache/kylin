@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -33,6 +34,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.LookupMaterializeContext;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -73,7 +75,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         segment.setInputRecordsSize(sourceSizeBytes);
 
         try {
-            saveExtSnapshotIfNeeded(cubeManager, cubingJob, cube, segment);
+            saveExtSnapshotIfNeeded(cubeManager, cube, segment);
             if (segment.isOffsetCube()) {
                 updateTimeRange(segment);
             }
@@ -86,19 +88,26 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         }
     }
 
-    private void saveExtSnapshotIfNeeded(CubeManager cubeManager, CubingJob cubingJob, CubeInstance cube, CubeSegment segment) throws IOException {
+    private void saveExtSnapshotIfNeeded(CubeManager cubeManager, CubeInstance cube, CubeSegment segment) throws IOException {
+        String extLookupSnapshotStr = this.getParam(BatchConstants.ARG_EXT_LOOKUP_SNAPSHOTS_INFO);
+        if (extLookupSnapshotStr == null || extLookupSnapshotStr.isEmpty()) {
+            return;
+        }
+        Map<String, String> extLookupSnapshotMap = LookupMaterializeContext.parseLookupSnapshots(extLookupSnapshotStr);
+        logger.info("update ext lookup snapshots:{}", extLookupSnapshotMap);
         List<SnapshotTableDesc> snapshotTableDescList = cube.getDescriptor().getSnapshotTableDescList();
         for (SnapshotTableDesc snapshotTableDesc : snapshotTableDescList) {
             String tableName = snapshotTableDesc.getTableName();
             if (snapshotTableDesc.isExtSnapshotTable()) {
-                String contextKey = BatchConstants.LOOKUP_EXT_SNAPSHOT_CONTEXT_PFX + tableName;
-                String newSnapshotResPath = cubingJob.getExtraInfo(contextKey);
-                if (newSnapshotResPath == null) {
+                String newSnapshotResPath = extLookupSnapshotMap.get(tableName);
+                if (newSnapshotResPath == null || newSnapshotResPath.isEmpty()) {
                     continue;
                 }
 
                 if (snapshotTableDesc.isGlobal()) {
-                    cubeManager.updateCubeLookupSnapshot(cube, tableName, newSnapshotResPath);
+                    if (!newSnapshotResPath.equals(cube.getSnapshotResPath(tableName))) {
+                        cubeManager.updateCubeLookupSnapshot(cube, tableName, newSnapshotResPath);
+                    }
                 } else {
                     segment.putSnapshotResPath(tableName, newSnapshotResPath);
                 }

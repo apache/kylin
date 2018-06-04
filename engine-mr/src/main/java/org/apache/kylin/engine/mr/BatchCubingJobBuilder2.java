@@ -72,7 +72,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         result.addTask(createSaveStatisticsStep(jobId));
 
         // add materialize lookup tables if needed
-        addMaterializeLookupTableSteps(result);
+        LookupMaterializeContext lookupMaterializeContext = addMaterializeLookupTableSteps(result);
 
         outputSide.addStepPhase2_BuildDictionary(result);
 
@@ -82,7 +82,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         outputSide.addStepPhase3_BuildCube(result);
 
         // Phase 4: Update Metadata & Cleanup
-        result.addTask(createUpdateCubeInfoAfterBuildStep(jobId));
+        result.addTask(createUpdateCubeInfoAfterBuildStep(jobId, lookupMaterializeContext));
         inputSide.addStepPhase4_Cleanup(result);
         outputSide.addStepPhase4_Cleanup(result);
 
@@ -102,16 +102,19 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         return true;
     }
 
-    private void addMaterializeLookupTableSteps(final CubingJob result) {
+    private LookupMaterializeContext addMaterializeLookupTableSteps(final CubingJob result) {
+        LookupMaterializeContext lookupMaterializeContext = new LookupMaterializeContext(result);
         CubeDesc cubeDesc = seg.getCubeDesc();
         List<String> allSnapshotTypes = cubeDesc.getAllExtLookupSnapshotTypes();
         if (allSnapshotTypes.isEmpty()) {
-            return;
+            return null;
         }
         for (String snapshotType : allSnapshotTypes) {
+            logger.info("add lookup table materialize steps for storage type:{}", snapshotType);
             ILookupMaterializer materializer = MRUtil.getExtLookupMaterializer(snapshotType);
-            materializer.materializeLookupTablesForCube(result, seg.getCubeInstance());
+            materializer.materializeLookupTablesForCube(lookupMaterializeContext, seg.getCubeInstance());
         }
+        return lookupMaterializeContext;
     }
 
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {

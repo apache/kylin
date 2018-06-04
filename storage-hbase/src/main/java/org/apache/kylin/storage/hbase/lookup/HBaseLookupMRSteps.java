@@ -31,6 +31,7 @@ import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
+import org.apache.kylin.engine.mr.LookupMaterializeContext;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
@@ -59,7 +60,7 @@ public class HBaseLookupMRSteps {
         this.config = new JobEngineConfig(cube.getConfig());
     }
 
-    public void addMaterializeLookupTablesSteps(DefaultChainedExecutable jobFlow) {
+    public void addMaterializeLookupTablesSteps(LookupMaterializeContext context) {
         CubeDesc cubeDesc = cube.getDescriptor();
         Set<String> allLookupTables = Sets.newHashSet();
         for (DimensionDesc dim : cubeDesc.getDimensions()) {
@@ -72,22 +73,22 @@ public class HBaseLookupMRSteps {
         for (SnapshotTableDesc snapshotTableDesc : snapshotTableDescs) {
             if (ExtTableSnapshotInfo.STORAGE_TYPE_HBASE.equals(snapshotTableDesc.getStorageType())
                     && allLookupTables.contains(snapshotTableDesc.getTableName())) {
-                addMaterializeLookupTableSteps(jobFlow, snapshotTableDesc.getTableName(), snapshotTableDesc);
+                addMaterializeLookupTableSteps(context, snapshotTableDesc.getTableName(), snapshotTableDesc);
             }
         }
     }
 
-    public void addMaterializeLookupTableSteps(DefaultChainedExecutable jobFlow, String tableName, SnapshotTableDesc snapshotTableDesc) {
+    public void addMaterializeLookupTableSteps(LookupMaterializeContext context, String tableName, SnapshotTableDesc snapshotTableDesc) {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         ExtTableSnapshotInfoManager extTableSnapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(kylinConfig);
         TableDesc tableDesc = TableMetadataManager.getInstance(kylinConfig).getTableDesc(tableName, cube.getProject());
         IReadableTable sourceTable = SourceManager.createReadableTable(tableDesc);
         try {
-            ExtTableSnapshotInfo latestSnapshot = extTableSnapshotInfoManager.getLatestSnapshot(sourceTable.getSignature(), tableName);
+            ExtTableSnapshotInfo latestSnapshot = extTableSnapshotInfoManager.getLatestSnapshot(
+                    sourceTable.getSignature(), tableName);
             if (latestSnapshot != null) {
                 logger.info("there is latest snapshot exist for table:{}, skip build snapshot step.", tableName);
-                jobFlow.addExtraInfo(BatchConstants.LOOKUP_EXT_SNAPSHOT_CONTEXT_PFX + latestSnapshot.getTableName(),
-                        latestSnapshot.getResourcePath());
+                context.addLookupSnapshotPath(tableName, latestSnapshot.getResourcePath());
                 return;
             }
         } catch (IOException ioException) {
@@ -95,10 +96,11 @@ public class HBaseLookupMRSteps {
         }
         logger.info("add build snapshot steps for table:{}", tableName);
         String snapshotID = genLookupSnapshotID();
-        addLookupTableConvertToHFilesStep(jobFlow, tableName, snapshotID);
-        addLookupTableHFilesBulkLoadStep(jobFlow, tableName, snapshotID);
+        context.addLookupSnapshotPath(tableName, ExtTableSnapshotInfo.getResourcePath(tableName, snapshotID));
+        addLookupTableConvertToHFilesStep(context.getJobFlow(), tableName, snapshotID);
+        addLookupTableHFilesBulkLoadStep(context.getJobFlow(), tableName, snapshotID);
         if (snapshotTableDesc !=null && snapshotTableDesc.isEnableLocalCache()) {
-            addUpdateSnapshotQueryCacheStep(jobFlow, tableName, snapshotID);
+            addUpdateSnapshotQueryCacheStep(context.getJobFlow(), tableName, snapshotID);
         }
     }
 
