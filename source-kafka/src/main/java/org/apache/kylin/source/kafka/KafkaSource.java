@@ -31,6 +31,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -224,7 +225,9 @@ public class KafkaSource implements ISource {
             public List<String> getRelatedKylinResources(TableDesc table) {
                 List<String> dependentResources = Lists.newArrayList();
                 dependentResources.add(KafkaConfig.concatResourcePath(table.getIdentity()));
-                dependentResources.add(StreamingConfig.concatResourcePath(table.getIdentity()));
+                if (table.getSourceType() == ISourceAware.ID_STREAMING) {
+                    dependentResources.add(StreamingConfig.concatResourcePath(table.getIdentity()));
+                }
                 return dependentResources;
             }
 

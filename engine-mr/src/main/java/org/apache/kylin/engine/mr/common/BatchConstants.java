@@ -25,6 +25,9 @@ public interface BatchConstants {
      */
     char INTERMEDIATE_TABLE_ROW_DELIMITER = 127;
 
+
+    String SEQUENCE_FILE_DEFAULT_DELIMITER = "\01";
+
     /**
      * ConFiGuration entry names for MR jobs
      */

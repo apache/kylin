@@ -30,6 +30,8 @@ public interface IJoinedFlatTableDesc {
 
     List<TblColRef> getAllColumns();
 
+    List<TblColRef> getFactColumns();
+
     int getColumnIndex(TblColRef colRef);
 
     SegmentRange getSegRange();
@@ -40,5 +42,7 @@ public interface IJoinedFlatTableDesc {
 
     // optionally present
     ISegment getSegment();
+
+    boolean useAlias();
 
 }

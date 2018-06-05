@@ -42,7 +42,7 @@ import com.google.common.collect.Maps;
 @SuppressWarnings("serial")
 public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializable {
 
-    protected final String tableName;
+    protected String tableName;
     protected final CubeDesc cubeDesc;
     protected final CubeSegment cubeSegment;
     protected final boolean includingDerived;
@@ -135,6 +135,18 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
         }
     }
 
+    @Override
+    public List<TblColRef> getFactColumns() {
+        final List<TblColRef> factColumns = Lists.newArrayList();
+        for (TblColRef col : this.getAllColumns()) {
+            if (col.getTableRef().equals(getDataModel().getRootFactTable())) {
+                // only fetch the columns from fact table
+                factColumns.add(col);
+            }
+        }
+        return factColumns;
+    }
+
     // sanity check the input record (in bytes) matches what's expected
     public void sanityCheck(BytesSplitter bytesSplitter) {
         if (columnCount != bytesSplitter.getBufferSize()) {
@@ -171,6 +183,9 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
 
     @Override
     public SegmentRange getSegRange() {
+        if (cubeSegment.isOffsetCube()) {
+            return null;
+        }
         return cubeSegment.getSegRange();
     }
 
@@ -182,6 +197,11 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
     @Override
     public ISegment getSegment() {
         return cubeSegment;
+    }
+
+    @Override
+    public boolean useAlias() {
+        return true;
     }
 
     @Override

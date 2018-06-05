@@ -67,6 +67,9 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("margin")
     private long margin;
 
+    @JsonProperty("splitRows")
+    private int splitRows=1000000;
+
     //"configA=1;configB=2"
     @JsonProperty("parserProperties")
     private String parserProperties;
@@ -155,6 +158,15 @@ public class KafkaConfig extends RootPersistentEntity {
         if (parserProperties != null)
             sb.append(parserProperties);
         return sb.toString();
+    }
+
+
+    public int getSplitRows() {
+        return splitRows;
+    }
+
+    public void setSplitRows(int splitRows) {
+        this.splitRows = splitRows;
     }
 
     @Override

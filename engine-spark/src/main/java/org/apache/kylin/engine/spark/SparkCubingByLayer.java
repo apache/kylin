@@ -17,8 +17,6 @@
 */
 package org.apache.kylin.engine.spark;
 
-import static org.apache.kylin.engine.mr.common.BaseCuboidBuilder.SEQUENCEFILE_DELIMITER;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -64,6 +62,7 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.mr.common.NDCuboidBuilder;
 import org.apache.kylin.engine.mr.common.SerializableConfiguration;
+import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregators;
 import org.apache.kylin.measure.MeasureIngester;
@@ -175,7 +174,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         logger.info("All measure are normal (agg on all cuboids) ? : " + allNormalMeasure);
         StorageLevel storageLevel = StorageLevel.MEMORY_AND_DISK_SER();
 
-        boolean isSequenceFile = "SEQUENCEFILE".equalsIgnoreCase(envConfig.getFlatTableStorageFormat());
+        boolean isSequenceFile = JoinedFlatTable.SEQUENCEFILE.equalsIgnoreCase(envConfig.getFlatTableStorageFormat());
 
         final JavaPairRDD<ByteArray, Object[]> encodedBaseRDD;
 
@@ -185,7 +184,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                         @Override
                         public String[] call(Text text) throws Exception {
                             String s = Bytes.toString(text.getBytes(), 0, text.getLength());
-                            return s.split(SEQUENCEFILE_DELIMITER);
+                            return s.split(BatchConstants.SEQUENCE_FILE_DEFAULT_DELIMITER);
                         }
                     }).mapToPair(new EncodeBaseCuboid(cubeName, segmentId, metaUrl, sConf));
         } else {

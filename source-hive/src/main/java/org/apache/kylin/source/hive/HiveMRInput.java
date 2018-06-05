@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -33,6 +34,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -284,8 +286,8 @@ public class HiveMRInput implements IMRInput {
 
             GarbageCollectionStep step = new GarbageCollectionStep();
             step.setName(ExecutableConstants.STEP_NAME_HIVE_CLEANUP);
-            step.setIntermediateTableIdentity(getIntermediateTableIdentity());
-            step.setExternalDataPath(JoinedFlatTable.getTableDir(flatDesc, jobWorkingDir));
+            step.setIntermediateTables(Collections.singletonList(getIntermediateTableIdentity()));
+            step.setExternalDataPaths(Collections.singletonList(JoinedFlatTable.getTableDir(flatDesc, jobWorkingDir)));
             step.setHiveViewIntermediateTableIdentities(hiveViewIntermediateTables);
             jobFlow.addTask(step);
         }
@@ -435,42 +437,58 @@ public class HiveMRInput implements IMRInput {
 
         private String cleanUpIntermediateFlatTable(KylinConfig config) throws IOException {
             StringBuffer output = new StringBuffer();
-            final String hiveTable = this.getIntermediateTableIdentity();
-            if (config.isHiveKeepFlatTable() == false && StringUtils.isNotEmpty(hiveTable)) {
-                final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-                hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
-                hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTable + ";");
-                config.getCliCommandExecutor().execute(hiveCmdBuilder.build());
-                output.append("Hive table " + hiveTable + " is dropped. \n");
-                rmdirOnHDFS(getExternalDataPath());
-                output.append(
-                        "Hive table " + hiveTable + " external data path " + getExternalDataPath() + " is deleted. \n");
+            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+            final List<String> hiveTables = this.getIntermediateTables();
+            for (String hiveTable : hiveTables) {
+                if (config.isHiveKeepFlatTable() == false && StringUtils.isNotEmpty(hiveTable)) {
+                    hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
+                    hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTable + ";");
+
+                    output.append("Hive table " + hiveTable + " is dropped. \n");
+                }
             }
+            config.getCliCommandExecutor().execute(hiveCmdBuilder.build());
+            rmdirOnHDFS(getExternalDataPaths());
+            output.append(
+                    "Path " + getExternalDataPaths() + " is deleted. \n");
+
             return output.toString();
         }
 
-        private void rmdirOnHDFS(String path) throws IOException {
-            Path externalDataPath = new Path(path);
-            FileSystem fs = HadoopUtil.getWorkingFileSystem();
-            if (fs.exists(externalDataPath)) {
-                fs.delete(externalDataPath, true);
+        private void rmdirOnHDFS(List<String> paths) throws IOException {
+            for (String path : paths) {
+                Path externalDataPath = new Path(path);
+                FileSystem fs = HadoopUtil.getWorkingFileSystem();
+                if (fs.exists(externalDataPath)) {
+                    fs.delete(externalDataPath, true);
+                }
             }
         }
 
-        public void setIntermediateTableIdentity(String tableIdentity) {
-            setParam("oldHiveTable", tableIdentity);
+        public void setIntermediateTables(List<String> tableIdentity) {
+            setParam("oldHiveTables", StringUtil.join(tableIdentity, ","));
         }
 
-        private String getIntermediateTableIdentity() {
-            return getParam("oldHiveTable");
+        private List<String> getIntermediateTables() {
+            List<String> intermediateTables = Lists.newArrayList();
+            String[] tables = StringUtil.splitAndTrim(getParam("oldHiveTables"), ",");
+            for (String t : tables) {
+                intermediateTables.add(t);
+            }
+            return intermediateTables;
         }
 
-        public void setExternalDataPath(String externalDataPath) {
-            setParam("externalDataPath", externalDataPath);
+        public void setExternalDataPaths(List<String> externalDataPaths) {
+            setParam("externalDataPaths", StringUtil.join(externalDataPaths, ","));
         }
 
-        private String getExternalDataPath() {
-            return getParam("externalDataPath");
+        private List<String> getExternalDataPaths() {
+            String[] paths = StringUtil.splitAndTrim(getParam("externalDataPaths"), ",");
+            List<String> result = Lists.newArrayList();
+            for (String s : paths) {
+                result.add(s);
+            }
+            return result;
         }
 
         public void setHiveViewIntermediateTableIdentities(String tableIdentities) {
