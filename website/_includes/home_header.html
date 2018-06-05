@@ -17,9 +17,13 @@
 -->
 
 <header id="header" >
+  
   <!-- Main Menu -->
   <nav class="navbar navbar-default" role="navigation" id="nav-wrapper">
     <div class="container-fluid" id="nav">
+      <!--
+      <img class="img-circle" width="40px" height="40px" id="circlelogo" src="{{ "/assets/images/kylin_logo.jpg"| prepend: site.baseurl }}">
+      -->
       <!-- Brand and toggle get grouped for better mobile display -->
       <div class="navbar-header">
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -33,28 +37,40 @@
 
       <!-- Collect the nav links, forms, and other content for toggling -->
       <div class="navbar-collapse" id="bs-example-navbar-collapse-1">
-        <img class="navbar-logo" width="46" src="{{"/assets/images/kylin_logo.png " |prepend: site.baseurl }}"></img>
+        <img class="navbar-logo" src="../assets/images/kylin_logo.png" width="46"></img>
         <ul class="icon-navbar">
             <li><a href="https://twitter.com/apachekylin" target="_blank" class="fa fa-twitter fa-lg"  title="Twitter: @ApacheKylin" ></a></li>
             <li><a href="https://github.com/apache/kylin" target="_blank" class="fa fa-github-alt fa-lg" title="Github: apache/kylin" ></a></li>          
             <li><a href="https://www.facebook.com/kylinio" target="_blank" class="fa fa-facebook fa-lg" title="Facebook: kylin.io" ></a></li>    
         </ul>
         <ul class="nav navbar-nav">
-            <li><a href="/cn">首页</a></li>
-            <li><a href="/cn/docs23" >文档</a></li>
-            <li><a href="/cn/download">下载</a></li>
-            <li><a href="/community" >社区</a></li>
-            <li><a href="/development" >开发</a></li>
-            <li><a href="/blog">博客</a></li>
-            <li><a href="/" >English</a></li>           
-        </ul>
-        
 
+          <li><a href="/">Home</a></li>
+          <li>
+            <a href="/docs23">Docs</a>
+<!--        
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Docs</a>     
+            <ul class="dropdown-menu">
+              {% for section in site.data.docs23 %}
+                  <li class="dropdown-submenu"><a href="#{{ section | first }}" data-toggle="collapse" class="navtitle">{{ section.title }}</a>
+                  <ul class="dropdown-menu">
+                  {% include docs_ul.html items=section.docs %}
+                  <ul>
+                  </li>
+              {% endfor %}
+            </ul> -->
+          </li>
+          <li><a href="/download">Download</a></li>
+          <li><a href="/community" >Community</a></li>
+          <li><a href="/development" >Development</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/cn" >中文版</a></li> 
+        </ul>     
       </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
   </nav>
 
-  <div id="head" class="parallax normal-header" >
+  <div id="head" class="parallax" >
     <div class="text-center header-apache">
       <a href="http://apache.org/foundation/contributing.html" title="Support Apache" style="margin-left: 150px;">
         <div>
@@ -63,5 +79,5 @@
       </a>
     </div>  
   </div>
-
+  
  </header>

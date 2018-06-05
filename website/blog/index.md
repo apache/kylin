@@ -1,33 +1,34 @@
 ---
-layout: default
+layout: blogs
 title: Blog
 ---
 
 <main id="main" >
 <section id="first" class="main">
-    <header style="padding:2em 0 4em 0;">
+    <header style="padding:2em 0 2em 0;">
       <div class="container" >
-        <h4 class="section-title"><span>Apache Kylin™ Technical Blog </span></h4>
+        <h4 class="index-title"><span>Apache Kylin™ Technical Blog </span></h4>
          <!-- second-->
-          <div id="content-container" class="animated fadeIn">
-            <div>
-             <ul class="post-list">
-            {% for category in site.categories %}     <!-- categories -->
+          <div id="content-containe" class="animated fadeIn clearfix">
+            {% for category in site.categories %}   
             {% if category[0]  == 'blog' %}
             {% for post in category[1] %}
-            <li>
-        <h2 align="left" style="margin:0px">
-          <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a></h2><div align="left" class="post-meta" >posted: {{ post.date | date: "%b %-d, %Y" }}</div>
-        
-      </li>
-    {% endfor %}
-    {% endif %}
-    {% endfor %}
-  </ul>
+            <div class="col-md-6 col-lg-6 col-xs-6">
+              <div class="blog-card">
+                <div class="blog-pic">
+                  <img width="20" src="../assets/images/icon_blog_w.png">
+                </div>
+                <p class="blog-title"><a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a></p>
+                <p align="left" class="post-meta" >posted: {{ post.date | date: "%b %-d, %Y" }}</p>
+              </div>
+            </div>
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
 
-  <p class="rss-subscribe">subscribe <a href="{{ "/feed.xml" | prepend: site.baseurl }}">via RSS</a></p>
-          </div>
         </div>
+
+  <p class="rss-subscribe">Subscribe <a href="{{ "/feed.xml" | prepend: site.baseurl }}">via RSS</a></p>
       </div>
       <!-- /container --> 
       

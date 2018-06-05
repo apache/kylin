@@ -20,7 +20,7 @@
     <ul class="nav nav-pills nav-stacked">
         {% for category in site.categories %}     <!-- categories -->
         {% if category[0] == '入门' %}
-        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">入门</a></li>
+        <li><a href="#{{ category | first }}" data-toggle="collapse" class="navtitle">入门</a></li>
         <div class="collapse in" id="{{ category[0] }}">
             <div class="list-group" id="list1">
                 <ul style="list-style-type:disc">

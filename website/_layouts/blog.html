@@ -21,13 +21,18 @@
 	<body>
 		{% include header.html %}
 		<div class="page-content">
-			<header style=" padding:2em 0 0 0">
+			<header style=" padding:2em 0 0 ">
 			<div class="container" >
-				<h4 class="section-title"><span>Apache Kylin™ Technical Blog</span></h4>
+			  <div style=" padding:0 4em">
+                <div class="blog-icon">
+                  <img width="30" src="{{"/assets/images/icon_blog_w.png" | prepend: site.baseurl}}">
+                </div>
+				<h4 class="index-title" style=" float:left;"><span>Apache Kylin™ Technical Blog</span></h4>
+			  </div>
 			</div>
 		</div>
 
-		<div class="container">
+		<div class="container blog">
 			<div>
 				<article class="post-content" >	
 				{{ content }}

@@ -16,13 +16,13 @@
 * limitations under the License.
 -->
 
-<div class="col-md-3 col-lg-3 col-xs-4 aside1 visible-md visible-lg" id="nside1" style=" padding-top: 2em">
+<div class="col-md-4 col-lg-4 col-xs-4 aside1 visible-md visible-lg" id="nside1" style=" padding-top: 2em">
     <ul class="nav nav-pills nav-stacked">
     {% for section in site.data.docs23 %}
-    <li><a href="#{{ section | first }}" data-toggle="collapse" id="navtitle">{{ section.title }}</a></li>
+    <li><a href="#{{ section | first }}" data-toggle="collapse" class="navtitle">{{ section.title }}</a></li>
     <div class="collapse in">
   	<div class="list-group" id="list1">
-    <ul style="list-style-type:disc">
+    <ul>
     {% include docs23_ul.html items=section.docs %}
         <ul>
   </div>

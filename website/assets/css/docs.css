@@ -15,14 +15,8 @@
   border-radius: 0px;
   color: #454545;
   font-weight: 600;
-  font-family: 'Open sans';
   font-size: 15px;
   padding: 0px 30px 5px 0px;
-}
-
-.aside1> .nav > li > a:hover {
-  color: #000000;
-  background-color: #ffffff;
 }
 
 .aside1 > .nav-pills>li.active>a ,.nav-pills>li.active>a:hover,.nav-pills>li.active>a:focus {
@@ -30,10 +24,14 @@
   background-color: #ffffff;
 }
 
-.list-group {
-  font-family: 'Open sans';
+.list-group ul {
+  list-style-type: none;
+  padding: 0;
 }
 
+.list-group ul li{
+  height: 40px;
+}
 
 .aside2 {
   height: 100%;
@@ -44,83 +42,103 @@
 }
 
 .post-title {
-  font-family: 'Open sans';
   font-size: 30px;
 }
 
-.post-meta {
-  font-family: 'Open sans';
-}
 
-.post-content {
-  font-family: 'Open sans';
-}
 
 .post-content> h1  {
-  font-family: 'Open sans';
   font-size: 28px;
 }
 
 .post-content> h2  {
-  font-family: 'Open sans';
   font-size: 24px;
 }
 
 .post-content> h3  {
-  font-family: 'Open sans';
   font-size: 20px;
 }
 
 .post-content> h4  {
-  font-family: 'Open sans';
   font-size: 18px;
 }
 
 .post-content> h5  {
-  font-family: 'Open sans';
   font-size: 16px;
 }
 
 .post-content> h6  {
-  font-family: 'Open sans';
   font-size: 16px;
   color: #666666;
 }
 
 .post-link {
-  font-family: 'Open sans';
   color: #454545;
   font-size: 20px;
 }
 
-.nside {
-  color: #fb8d08 !important;
+.navlist .nside {
+  color: #fff;
+  background: #F3982A;
 }
 
 .nnav {
   font-weight: 600;
 }
 
-.nnav-home {
-  font-weight: 200;
+.nav-stacked {
+  background: #FAFAFA;
+  border: 1px solid #EEEEEE;
+  padding: 10px 20px;
+  margin-bottom: 100px;
 }
 
-#navtitle {
-  color:#454545;
+.navtitle {
+  font-size: 16px;
+  color: #333333;
+  letter-spacing: 0;
+  line-height: 22px;
+  margin: 20px 0 10px;
 }
 
-#navtitle:hover, #navtitle:focus{
+.navtitle:hover, .navtitle:focus{
+  background: inherit;
+  cursor: inherit;
+}
+
+.navlist {
+  background: inherit;
+}
+.navlist a{
+  width: 100%;
+  line-height: 40px;
+  height: 100%;
+  display: inline-block;
+  padding-left: 10px;
+  color: #151515;
+}
+.navlist:hover, .navlist:focus{
   color:#000000;
+  background:  #EEEEEE;
+}
+.docs {
+  margin-bottom: 100px;
+}
+.docs ul {
+  list-style: none;
+  position: relative;
 }
 
-#navlist {
-  color:#454545;
+.docs ul>li:before {
+  content: '●';
+  color: #F3982A;
+  position: absolute;
+  left: 20px;
 }
-
-#navlist:hover, #navlist:focus{
-  color:#000000;
+.docs ul>li:after {
+  clear: both;
 }
-
-
-
+.docs ol {
+  padding-left: 20px;
+}
 

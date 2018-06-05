@@ -20,22 +20,33 @@ jQuery(document).ready(function ($) {
 
    // page elements animation 
     var image_animation = function () {
-        //var diagramTop = $('#diagram').offset().top;
-		var coremTop = $('#core').offset().top;
-
+        var diagramTop = $('#diagram').offset() ? $('#diagram').offset().top : 0;
+		var coremTop = $('#core').offset() ? $('#core').offset().top : 0;
+        var logoTop = $('#intro_logo').offset() ? $('#intro_logo').offset().top : 0;
         
         var scroll_top = $(window).scrollTop();
         var currentPosition = scroll_top + 320;
 
         
 
-        if (coremTop< currentPosition) {
+        if (coremTop > 0 && coremTop< currentPosition) {
 
             $('#core').addClass("animated fadeInRight");
         } else {
             $('#core').removeClass("animated fadeInRight");
         }
+        if (diagramTop > 0 && diagramTop < currentPosition) {
 
+            $('#diagram').addClass("animated fadeInRight");
+        } else {
+            $('#diagram').removeClass("animated fadeInRight");
+        }
+        if (logoTop > 0 && logoTop< currentPosition) {
+
+            $('#intro_logo').addClass("animated fadeInRight");
+        } else {
+            $('#intro_logo').removeClass("animated fadeInRight");
+        }
     }
 	
 	

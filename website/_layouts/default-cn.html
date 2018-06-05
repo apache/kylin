@@ -22,15 +22,19 @@
   {% include head.cn.html %}
 
   <body>
-
-    {% include header.cn.html %}
-
+  {% include home_header.cn.html %}
+  
+<main id="main" >
+  <div >
+    <div id="zero" class=" main home" >
     <div class="page-content">
       <div class="wrapper">
         {{ content }}
       </div>
     </div>
-
+    </div>
+  </div>
+</main>
     {% include footer.html %}
 
   <script src="/assets/js/jquery-1.9.1.min.js"></script> 

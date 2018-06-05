@@ -1,5 +1,5 @@
 $(function() {
-	var myNav = $("#bs-example-navbar-collapse-1 a"),i;
+	var myNav = $("#bs-example-navbar-collapse-1 .navbar-nav a"),i;
 	for(i=0;i<myNav.length;i++) {
 		var links = myNav.eq(i).attr("href"), myURL = document.URL;
 		if (links != "/" & links != "/cn") {
