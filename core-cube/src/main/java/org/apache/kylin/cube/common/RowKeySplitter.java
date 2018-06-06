@@ -63,6 +63,9 @@ public class RowKeySplitter implements java.io.Serializable {
         return bufferSize;
     }
 
+    public RowKeySplitter(CubeSegment cubeSeg) {
+        this(cubeSeg, cubeSeg.getCubeDesc().getRowkey().getRowKeyColumns().length + 2, cubeSeg.getConfig().getDimensionEncodingMaxLength());
+    }
     public RowKeySplitter(CubeSegment cubeSeg, int splitLen, int bytesLen) {
         this.cubeSegment = cubeSeg;
         this.enableSharding = cubeSeg.isEnableSharding();

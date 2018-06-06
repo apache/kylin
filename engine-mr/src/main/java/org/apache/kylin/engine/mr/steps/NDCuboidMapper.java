@@ -78,7 +78,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         ndCuboidBuilder = new NDCuboidBuilder(cubeSegment);
         // initialize CubiodScheduler
         cuboidScheduler = CuboidSchedulerUtil.getCuboidSchedulerByMode(cubeSegment, cuboidModeName);
-        rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
+        rowKeySplitter = new RowKeySplitter(cubeSegment);
     }
 
 

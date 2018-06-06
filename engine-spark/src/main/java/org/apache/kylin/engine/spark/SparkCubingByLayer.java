@@ -416,7 +416,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             this.cubeDesc = cubeInstance.getDescriptor();
             this.cuboidScheduler = cubeSegment.getCuboidScheduler();
             this.ndCuboidBuilder = new NDCuboidBuilder(cubeSegment, new RowKeyEncoderProvider(cubeSegment));
-            this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
+            this.rowKeySplitter = new RowKeySplitter(cubeSegment);
         }
 
         @Override

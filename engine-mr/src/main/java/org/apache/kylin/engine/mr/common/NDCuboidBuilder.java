@@ -47,15 +47,13 @@ public class NDCuboidBuilder implements Serializable {
     private ByteArray newKeyBuf = ByteArray.allocate(RowConstants.ROWKEY_BUFFER_SIZE);
 
     public NDCuboidBuilder(CubeSegment cubeSegment) {
-        this.cubeSegment = cubeSegment;
-        this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
-        this.rowKeyEncoderProvider = new RowKeyEncoderProvider(cubeSegment);
+        this(cubeSegment, new RowKeyEncoderProvider(cubeSegment));
     }
 
     public NDCuboidBuilder(CubeSegment cubeSegment, RowKeyEncoderProvider rowKeyEncoderProvider) {
         this.cubeSegment = cubeSegment;
         this.rowKeyEncoderProvider = rowKeyEncoderProvider;
-        this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
+        this.rowKeySplitter = new RowKeySplitter(cubeSegment);
     }
 
 
