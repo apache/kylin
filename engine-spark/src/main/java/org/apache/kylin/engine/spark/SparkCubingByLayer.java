@@ -172,7 +172,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             allNormalMeasure = allNormalMeasure && needAggr[i];
         }
         logger.info("All measure are normal (agg on all cuboids) ? : " + allNormalMeasure);
-        StorageLevel storageLevel = StorageLevel.MEMORY_AND_DISK_SER();
+        StorageLevel storageLevel = StorageLevel.fromString(envConfig.getSparkStorageLevel());
 
         boolean isSequenceFile = JoinedFlatTable.SEQUENCEFILE.equalsIgnoreCase(envConfig.getFlatTableStorageFormat());
 

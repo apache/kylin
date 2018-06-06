@@ -1200,6 +1200,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.valueOf(getOptional("kylin.engine.spark.max-partition", "5000"));
     }
 
+    public String getSparkStorageLevel() {
+        return getOptional("kylin.engine.spark.storage-level", "MEMORY_AND_DISK_SER");
+    }
+
     public boolean isSparkSanityCheckEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark.sanity-check-enabled", "false"));
     }
