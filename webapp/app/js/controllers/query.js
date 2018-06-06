@@ -443,7 +443,7 @@ KylinApp
 
 
     })
-    .controller('QueryResultCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, kylinConfig) {
+    .controller('QueryResultCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, kylinConfig, queryConfig) {
         $scope.isAdminExportAllowed = kylinConfig.isAdminExportAllowed();
         $scope.isNonAdminExportAllowed = kylinConfig.isNonAdminExportAllowed();
         $scope.buildGraphMetadata = function (query) {
