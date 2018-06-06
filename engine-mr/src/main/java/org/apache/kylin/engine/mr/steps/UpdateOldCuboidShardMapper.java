@@ -79,7 +79,7 @@ public class UpdateOldCuboidShardMapper extends KylinMapper<Text, Text, Text, Te
         cubeDesc = cube.getDescriptor();
         baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
 
-        rowKeySplitter = new RowKeySplitter(oldSegment, 65, 256);
+        rowKeySplitter = new RowKeySplitter(oldSegment);
         rowKeyEncoderProvider = new RowKeyEncoderProvider(cubeSegment);
     }
 

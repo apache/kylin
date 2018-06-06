@@ -64,7 +64,7 @@ public class FilterRecommendCuboidDataMapper extends KylinMapper<Text, Text, Tex
         CubeSegment optSegment = cube.getSegmentById(segmentID);
         CubeSegment originalSegment = cube.getOriginalSegmentToOptimize(optSegment);
 
-        rowKeySplitter = new RowKeySplitter(originalSegment, 65, 255);
+        rowKeySplitter = new RowKeySplitter(originalSegment);
         baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
 
         recommendCuboids = cube.getCuboidsRecommend();

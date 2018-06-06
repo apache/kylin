@@ -45,7 +45,7 @@ public class RowKeyDecoder {
 
     public RowKeyDecoder(CubeSegment cubeSegment) {
         this.cubeDesc = cubeSegment.getCubeDesc();
-        this.rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 255);
+        this.rowKeySplitter = new RowKeySplitter(cubeSegment);
         this.colIO = new RowKeyColumnIO(cubeSegment.getDimensionEncodingMap());
         this.values = new ArrayList<String>();
     }

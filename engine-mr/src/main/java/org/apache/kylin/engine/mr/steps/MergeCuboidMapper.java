@@ -110,7 +110,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(mergedCubeSegment).getOuputFormat();
         sourceCubeSegment = outputFormat.findSourceSegment(fileSplit, cube);
 
-        rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
+        rowKeySplitter = new RowKeySplitter(sourceCubeSegment);
         rowKeyEncoderProvider = new RowKeyEncoderProvider(mergedCubeSegment);
 
         measureDescs = cubeDesc.getMeasures();
