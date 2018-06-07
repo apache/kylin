@@ -7,7 +7,7 @@ title: Home
 <main id="main" >
   <div class="container" >
     <div id="zero" class=" main" >
-      <header style=" padding:4em 0;">
+      <header style=" padding:2em 0 4em 0;">
         <div class="container" >
           <h4 class="index-title"><span>Apache Kylin™ Overview</span></h4>
           <div class="row" style="margin-top:-20px;">

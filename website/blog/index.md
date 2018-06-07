@@ -14,13 +14,13 @@ title: Blog
             {% if category[0]  == 'blog' %}
             {% for post in category[1] %}
             <div class="col-md-6 col-lg-6 col-xs-6">
-              <div class="blog-card">
+              <a class="blog-card" href="{{ post.url | prepend: site.baseurl }}">
                 <div class="blog-pic">
                   <img width="20" src="../assets/images/icon_blog_w.png">
                 </div>
-                <p class="blog-title"><a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a></p>
+                <p class="blog-title">{{ post.title }}</p>
                 <p align="left" class="post-meta" >posted: {{ post.date | date: "%b %-d, %Y" }}</p>
-              </div>
+              </a>
             </div>
       {% endfor %}
       {% endif %}

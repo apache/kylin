@@ -4,7 +4,7 @@ title: Community
 permalink: /community/index.html
 ---
 <div class="container" >
-	<div class="row" style="margin-top:60px">
+	<div class="row">
 		<div class="col-sm-6 col-md-6">
 		    <h2> Powered By Apache Kylin™ </h2>
 			<p>For information about who are using Apache Kylin™, please refer to <a href="/community/poweredby.html">Powered By</a> page.</p>

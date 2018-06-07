@@ -748,7 +748,7 @@ a.section-menu-title:hover {
 .community .members-card .members-role{
 	font-size: 14px;
 	line-height: 18px;
-	padding-top: 0px;
+	margin-top: 0px;
 }
 
 .community .members-card .apche-id{
@@ -778,9 +778,12 @@ a.section-menu-title:hover {
 .blog-card {
 	height: 105px;
 	box-shadow: 0 0 4px 0 #CFD8DC;
+	display: block;
+	color: #333;
 }
 .blog-card:hover {
 	height: 105px;
+	color: #333;
 	box-shadow: 0 0 4px 0 #f3982a;
 }
 .blog-card:hover .blog-pic{
