@@ -69,7 +69,7 @@
         <avatica.version>1.10.0</avatica.version>
 
         <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
-        <zookeeper.version>3.4.8</zookeeper.version>
+        <zookeeper.version>3.4.12</zookeeper.version>
         <curator.version>2.7.1</curator.version>
         <jsr305.version>3.0.1</jsr305.version>
         <guava.version>14.0</guava.version>
