@@ -233,8 +233,8 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
     }
 
     private int calculateShardNum(KylinConfig kylinConfig, long dataSize) {
-        long shardSize = kylinConfig.getExtTableSnapshotShardingMB() * 1024 * 1024;
-        return dataSize < shardSize ? 1 : (int) (Math.ceil(dataSize / shardSize));
+        long shardSize = (long) (kylinConfig.getExtTableSnapshotShardingMB()) * 1024 * 1024;
+        return dataSize < shardSize ? 1 : (int) (Math.ceil((double) dataSize / shardSize));
     }
 
     private byte[][] getSplitsByShardNum(int shardNum) {
