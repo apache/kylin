@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -59,6 +58,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class HiveMRInput implements IMRInput {
@@ -153,7 +153,9 @@ public class HiveMRInput implements IMRInput {
 
             // then count and redistribute
             if (cubeConfig.isHiveRedistributeEnabled()) {
-                jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName));
+                if (flatDesc.getClusterBy() != null || flatDesc.getDistributedBy() != null) {
+                    jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName));
+                }
             }
 
             // special for hive
@@ -449,8 +451,7 @@ public class HiveMRInput implements IMRInput {
             }
             config.getCliCommandExecutor().execute(hiveCmdBuilder.build());
             rmdirOnHDFS(getExternalDataPaths());
-            output.append(
-                    "Path " + getExternalDataPaths() + " is deleted. \n");
+            output.append("Path " + getExternalDataPaths() + " is deleted. \n");
 
             return output.toString();
         }

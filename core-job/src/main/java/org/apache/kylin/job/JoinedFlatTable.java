@@ -189,11 +189,7 @@ public class JoinedFlatTable {
     }
 
     private static void appendDistributeStatement(StringBuilder sql, TblColRef redistCol) {
-        if (redistCol != null) {
-            sql.append(" DISTRIBUTE BY ").append(colName(redistCol, true)).append(";\n");
-        } else {
-            sql.append(" DISTRIBUTE BY RAND()").append(";\n");
-        }
+        sql.append(" DISTRIBUTE BY ").append(colName(redistCol, true)).append(";\n");
     }
 
     private static void appendClusterStatement(StringBuilder sql, TblColRef clusterCol) {
