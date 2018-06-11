@@ -151,7 +151,9 @@ public class HiveMRInput implements IMRInput {
 
             // then count and redistribute
             if (cubeConfig.isHiveRedistributeEnabled()) {
-                jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName));
+                if (flatDesc.getClusterBy() != null || flatDesc.getDistributedBy() != null) {
+                    jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName));
+                }
             }
 
             // special for hive
