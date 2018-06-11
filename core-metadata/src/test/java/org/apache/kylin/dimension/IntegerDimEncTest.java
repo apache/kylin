@@ -110,6 +110,15 @@ public class IntegerDimEncTest {
     }
 
     @Test
+    // For JIRA: KYLIN-1948
+    public void testEncodeDecodeMinusOne() {
+        for (int i = 1; i < 9; i++) {
+            IntegerDimEnc enc = new IntegerDimEnc(i);
+            testEncodeDecode(enc, -1);
+        }
+    }
+
+    @Test
     public void testEncodeDecode() {
         for (int i = 1; i <= successValue.size(); i++) {
             IntegerDimEnc enc = new IntegerDimEnc(i);
