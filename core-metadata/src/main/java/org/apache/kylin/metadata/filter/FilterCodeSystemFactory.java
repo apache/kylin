@@ -41,6 +41,8 @@ public class FilterCodeSystemFactory {
             return codeSystemMap.get("integer");
         } else if (dataType.isNumberFamily()) {
             return codeSystemMap.get("decimal");
+        } else if (dataType.isDateTimeFamily()) {
+            return codeSystemMap.get("integer");
         } else {
             return codeSystemMap.get("string");
         }
