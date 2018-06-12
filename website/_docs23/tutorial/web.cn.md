@@ -1,4 +1,4 @@
----
+﻿---
 layout: docs23-cn
 title:  Kylin网页版教程
 categories: 教程
@@ -14,87 +14,78 @@ version: v1.2
 
 ## 1. 访问 & 登陆
 访问主机: http://hostname:7070
-使用用户名/密码登陆：ADMIN/KYLIN
+使用用户名登陆：ADMIN
+使用密码登陆：KYLIN
 
 ![]( /images/Kylin-Web-Tutorial/1 login.png)
 
-## 2. Kylin中可用的Hive表
-虽然Kylin使用SQL作为查询接口并利用Hive元数据，Kylin不会让用户查询所有的hive表，因为到目前为止它是一个预构建OLAP(MOLAP)系统。为了使表在Kylin中可用，使用"Sync"方法能够方便地从Hive中同步表。
+## 2. Kylin 中可用的 Hive 表
+虽然 Kylin 使用 SQL 作为查询接口并利用 Hive 元数据，Kylin 不会让用户查询所有的 hive 表，因为到目前为止它是一个预构建 OLAP(MOLAP) 系统。为了使表在 Kylin 中可用，使用 "Sync" 方法能够方便地从 Hive 中同步表。
 
 ![]( /images/Kylin-Web-Tutorial/2 tables.png)
 
 ## 3. Kylin OLAP Cube
-Kylin的OLAP Cube是从星型模式的Hive表中获取的预计算数据集，这是供用户探索、管理所有cube的网页管理页面。由菜单栏进入`Cubes`页面，系统中所有可用的cube将被列出。
+Kylin 的 OLAP Cube 是从星型模式的 Hive 表中获取的预计算数据集，这是供用户探索、管理所有 cube 的网页管理页面。由菜单栏进入 `Model` 页面，系统中所有可用的 cube 将被列出。
 
 ![]( /images/Kylin-Web-Tutorial/3 cubes.png)
 
-探索更多关于Cube的详细信息
+探索更多关于 Cube 的详细信息
 
-* 表格视图:
+* Grid 视图:
 
    ![]( /images/Kylin-Web-Tutorial/4 form-view.png)
 
-* SQL 视图 (Hive查询读取数据以生成cube):
+* SQL 视图 (Hive 查询读取数据以生成 cube):
 
    ![]( /images/Kylin-Web-Tutorial/5 sql-view.png)
 
-* 可视化 (显示这个cube背后的星型模式):
-
-   ![]( /images/Kylin-Web-Tutorial/6 visualization.png)
-
-* 访问 (授予用户/角色权限，beta版中授予权限操作仅对管理员开放):
-
-   ![]( /images/Kylin-Web-Tutorial/7 access.png)
-
-## 4. 在网页上编写和运行SQL
-Kelin的网页版为用户提供了一个简单的查询工具来运行SQL以探索现存的cube，验证结果并探索使用#5中的Pivot analysis与可视化分析的结果集。
+## 4. 在网页上编写和运行 SQL
+Kylin 的网页版为用户提供了一个简单的查询工具来运行 SQL 以探索现存的 cube，验证结果并探索使用下一章中的 Pivot analysis 与可视化的结果集。
 
 > **查询限制**
 > 
-> 1. 仅支持SELECT查询
+> 1. 仅支持 SELECT 查询
 > 
-> 2. 为了避免从服务器到客户端产生巨大的网络流量，beta版中的扫描范围阀值被设置为1,000,000。
-> 
-> 3. beta版中，SQL在cube中无法找到的数据将不会重定向到Hive
+> 2. 支持聚合函数和 group by
 
-由菜单栏进入“Query”页面：
+由菜单栏进入 “Insight” 页面：
 
 ![]( /images/Kylin-Web-Tutorial/8 query.png)
 
 * 源表：
 
-   浏览器当前可用表（与Hive相同的结构和元数据）：
+   浏览器当前可用表（与 Hive 相同的结构和元数据）：
   
    ![]( /images/Kylin-Web-Tutorial/9 query-table.png)
 
 * 新的查询：
 
-   你可以编写和运行你的查询并探索结果。这里提供一个查询供你参考：
+   你可以编写和运行你的查询并探索结果。
 
    ![]( /images/Kylin-Web-Tutorial/10 query-result.png)
 
-* 已保存的查询：
+* 已保存的查询（只在 LDAP security 有效后才能使用）：
 
    与用户账号关联，你将能够从不同的浏览器甚至机器上获取已保存的查询。
-   在结果区域点击“Save”，将会弹出名字和描述来保存当前查询：
+   在结果区域点击 “Save”，将会弹出用来保存当前查询名字和描述：
 
    ![]( /images/Kylin-Web-Tutorial/11 save-query.png)
 
-   点击“Saved Queries”探索所有已保存的查询，你可以直接重新提交它来运行或删除它：
+   点击 “Saved Queries” 浏览所有已保存的查询，你可以直接重新提交它或删除它：
 
    ![]( /images/Kylin-Web-Tutorial/11 save-query-2.png)
 
 * 查询历史：
 
-   仅保存当前用户在当前浏览器中的查询历史，这将需要启用cookie，并且如果你清理浏览器缓存将会丢失数据。点击“Query History”标签，你可以直接重新提交其中的任何一条并再次运行。
+   仅保存当前用户在当前浏览器中的查询历史，这将需要启用 cookie，并且如果你清理浏览器缓存将会丢失数据。点击 “Query History” 标签，你可以直接重新提交其中的任何一条并再次运行。
 
-## 5. Pivot Analysis与可视化
-Kylin的网页版提供一个简单的Pivot与可视化分析工具供用户探索他们的查询结果：
+## 5. Pivot Analysis 与可视化
+Kylin 的网页版提供一个简单的 Pivot 与可视化分析工具供用户探索他们的查询结果：
 
 * 一般信息：
 
-   当查询运行成功后，它将呈现一个成功指标与被访问的cube名字。
-   同时它将会呈现这个查询在后台引擎运行了多久（不包括从Kylin服务器到浏览器的网络通信）：
+   当查询运行成功后，它将呈现一个成功指标与被访问的 cube 名字。
+   同时它将会呈现这个查询在后台引擎运行了多久（不包括从 Kylin 服务器到浏览器的网络通信）：
 
    ![]( /images/Kylin-Web-Tutorial/12 general.png)
 
@@ -104,31 +95,17 @@ Kylin的网页版提供一个简单的Pivot与可视化分析工具供用户探�
 
    ![]( /images/Kylin-Web-Tutorial/13 results.png)
 
-* 导出到CSV文件
+* 导出到 CSV 文件
 
-   点击“Export”按钮以CSV文件格式保存当前结果。
-
-* Pivot表：
-
-   将一个或多个列拖放到标头，结果将根据这些列的值分组：
-
-   ![]( /images/Kylin-Web-Tutorial/14 drag.png)
+   点击 “Export” 按钮以 CSV 文件格式保存当前结果。
 
 * 可视化：
 
-   同时，结果集将被方便地显示在“可视化”的不同图表中：
+   同时，结果集将被方便地显示在 “可视化” 的不同图表中，总共有3种类型的图表：线性图、饼图和条形图
 
-   注意：线形图仅当至少一个从Hive表中获取的维度有真实的“Date”数据类型列时才是可用的。
+   注意：线形图仅当至少一个从 Hive 表中获取的维度有真实的 “Date” 数据类型列时才是可用的。
 
-   * 条形图：
+* 条形图：
 
    ![]( /images/Kylin-Web-Tutorial/15 bar-chart.png)
-   
-   * 饼图：
-
-   ![]( /images/Kylin-Web-Tutorial/16 pie-chart.png)
-
-   * 线形图：
-
-   ![]( /images/Kylin-Web-Tutorial/17 line-chart.png)
 
