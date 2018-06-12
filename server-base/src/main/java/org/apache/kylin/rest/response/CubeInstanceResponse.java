@@ -64,6 +64,7 @@ public class CubeInstanceResponse extends CubeInstance {
         setSegments(cube.getSegments());
         setCreateTimeUTC(cube.getCreateTimeUTC());
         setLastModified(cube.getDescriptor().getLastModified());
+        setCuboidLastOptimized(cube.getCuboidLastOptimized());
 
         this.model = cube.getDescriptor().getModelName();
         this.partitionDateStart = cube.getDescriptor().getPartitionDateStart();

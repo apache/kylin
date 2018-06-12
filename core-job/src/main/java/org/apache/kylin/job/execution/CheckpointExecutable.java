@@ -83,9 +83,10 @@ public class CheckpointExecutable extends DefaultChainedExecutable {
                 // Add last optimization time
                 CubeManager cubeManager = CubeManager.getInstance(executableContext.getConfig());
                 CubeInstance cube = cubeManager.getCube(getCubeName());
-                try{
-                    cube.setCuboidLastOptimized(getEndTime());
-                    CubeUpdate cubeUpdate = new CubeUpdate(cube);
+                CubeInstance copyForWrite = cube.latestCopyForWrite();
+                try {
+                    copyForWrite.setCuboidLastOptimized(getEndTime());
+                    CubeUpdate cubeUpdate = new CubeUpdate(copyForWrite);
                     cubeManager.updateCube(cubeUpdate);
                 } catch (IOException e) {
                     logger.error("Failed to update last optimized for " + getCubeName(), e);
