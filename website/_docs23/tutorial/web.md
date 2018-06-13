@@ -1,4 +1,4 @@
-﻿---
+---
 layout: docs23
 title:  Web Interface
 categories: tutorial
@@ -17,12 +17,12 @@ Login with password：KYLIN
 ![](/images/tutorial/1.5/Kylin-Web-Tutorial/1 login.png)
 
 ## 2. Sync Hive Table into Kylin
-Although Kylin will using SQL as query interface and leverage Hive metadata, kylin will not enable user to query all hive tables since it's a pre-build OLAP (MOLAP) system so far. To enable Table in Kylin, it will be easy to using "Sync" function to sync up tables from Hive.
+Although Kylin will using SQL as query interface and leverage Hive metadata, kylin will not enable user to query all hive tables since it's a pre-build OLAP (MOLAP) system so far. To enable Table in Kylin, use "Sync" function to sync up hive table metadata to Kylin.
 
 ![](/images/tutorial/1.5/Kylin-Web-Tutorial/2 tables.png)
 
 ## 3. Kylin OLAP Cube
-Kylin's OLAP Cubes are pre-calculation datasets from star schema tables, Here's the web interface for user to explore, manage all cubes. Go to `Model` menu, it will list all cubes available in system.
+Kylin's OLAP Cubes are pre-calculation datasets from star/snowflake schema tables, Here's the web interface for user to explore, manage all cubes. Go to `Model` menu, it will list all cubes available in system.
 
 ![](/images/tutorial/1.5/Kylin-Web-Tutorial/3 cubes.png)
 
@@ -61,7 +61,7 @@ Go to "Insight" menu.
 
    ![](/images/tutorial/1.5/Kylin-Web-Tutorial/10 query-result.png)
 
-* Saved Query (only work after enable LDAP security):
+* Saved Query:
 
    Associate with user account, you can get saved query from different browsers even machines.
    Click "Save" in Result area, it will popup for name and description to save current query.

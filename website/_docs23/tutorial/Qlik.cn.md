@@ -1,6 +1,6 @@
 ---
 layout: docs23-cn
-title:  与Qlik Sense集成
+title:  Qlik Sense 集成
 categories: tutorial
 permalink: /cn/docs23/tutorial/Qlik.html
 since: v2.2

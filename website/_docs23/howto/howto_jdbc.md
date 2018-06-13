@@ -1,6 +1,6 @@
 ---
 layout: docs23
-title:  Kylin JDBC Driver
+title:  JDBC Driver
 categories: howto
 permalink: /docs23/howto/howto_jdbc.html
 ---

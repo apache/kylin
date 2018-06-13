@@ -1,6 +1,6 @@
 ---
 layout: docs23-cn
-title:  优化cube构建
+title:  优化 Cube 构建
 categories: 帮助
 permalink: /cn/docs23/howto/howto_optimize_build.html
 ---

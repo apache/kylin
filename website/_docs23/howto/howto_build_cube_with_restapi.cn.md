@@ -1,6 +1,6 @@
 ---
 layout: docs23-cn
-title:  用API构建cube
+title:  用 API 构建 Cube
 categories: 帮助
 permalink: /cn/docs23/howto/howto_build_cube_with_restapi.html
 ---
@@ -50,5 +50,5 @@ Content-Type: application/json;charset=UTF-8
 *   `GET http://localhost:7070/kylin/api/jobs/{job_uuid}`
 *   返回的 `job_status` 代表job的当前状态。
 
-### 5.	如果构建任务出现错误，可以重新开始它
+	## 5.	如果构建任务出现错误，可以重新开始它
 *   `PUT http://localhost:7070/kylin/api/jobs/{job_uuid}/resume`

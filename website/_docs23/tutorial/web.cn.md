@@ -1,6 +1,6 @@
-﻿---
+---
 layout: docs23-cn
-title:  Kylin网页版教程
+title:  Web 界面
 categories: 教程
 permalink: /cn/docs23/tutorial/web.html
 version: v1.2
@@ -64,7 +64,7 @@ Kylin 的网页版为用户提供了一个简单的查询工具来运行 SQL 以
 
    ![]( /images/Kylin-Web-Tutorial/10 query-result.png)
 
-* 已保存的查询（只在 LDAP security 有效后才能使用）：
+* 已保存的查询：
 
    与用户账号关联，你将能够从不同的浏览器甚至机器上获取已保存的查询。
    在结果区域点击 “Save”，将会弹出用来保存当前查询名字和描述：

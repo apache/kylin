@@ -1,6 +1,6 @@
 ---
 layout: docs23-cn
-title:  微软Excel及Power BI教程
+title:  MS Excel及Power BI教程
 categories: tutorial
 permalink: /cn/docs23/tutorial/powerbi.html
 version: v1.2
@@ -28,7 +28,7 @@ Microsoft Power BI 是由微软推出的商业智能的专业分析工具，给�
 
 > 为了简化连接字符串的输入，推荐创建Apache Kylin的DSN，可以将连接字符串简化为DSN=[YOUR_DSN_NAME]，有关DSN的创建请参考：[https://support.microsoft.com/en-us/kb/305599](https://support.microsoft.com/en-us/kb/305599)。
 
- 
+
 3. 如果您选择不输入SQL语句，Power Query将会列出所有的数据库表，您可以根据需要对整张表的数据进行加载。但是，Apache Kylin暂不支持原数据的查询，部分表的加载可能因此受限
 ![](/images/tutorial/odbc/ms_tool/Picture3.png)
 

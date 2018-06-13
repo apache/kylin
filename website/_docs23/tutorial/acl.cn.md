@@ -1,6 +1,6 @@
 ---
 layout: docs23-cn
-title:  Kylin Cube 权限授予教程
+title:  Cube 权限授予(v2.1)
 categories: 教程
 permalink: /cn/docs23/tutorial/acl.html
 version: v1.2

@@ -1,6 +1,6 @@
 ---
 layout: docs23-cn
-title:  Tableau 9 教程
+title:  Tableau 9 
 categories: tutorial
 permalink: /cn/docs23/tutorial/tableau_91.html
 version: v1.2

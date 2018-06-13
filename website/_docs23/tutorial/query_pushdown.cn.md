@@ -6,7 +6,7 @@ permalink: /cn/docs23/tutorial/query_pushdown.html
 since: v2.1
 ---
 
-### Kylin支持查询下压
+### Kylin 支持查询下压
 
 对于没有cube能查得结果的sql，Kylin支持将这类查询通过JDBC下压至备用查询引擎如Hive, SparkSQL, Impala等来查得结果。以下以Hive为例说明开启步骤，由于Kylin本事就将Hive作为数据源，作为Query Pushdown引擎也更易使用与配置。
 
@@ -20,7 +20,7 @@ since: v2.1
     - *kylin.query.pushdown.jdbc.url*：Hive JDBC的URL.
 
     - *kylin.query.pushdown.jdbc.driver*：Hive Jdbc的driver类名
-        
+      
     - *kylin.query.pushdown.jdbc.username*：Hive Jdbc对应数据库的用户名
 
     - *kylin.query.pushdown.jdbc.password*：Hive Jdbc对应数据库的密码

@@ -1,6 +1,6 @@
 ---
 layout: docs23-cn
-title:  Kylin Python 客户端工具库
+title:  Python 客户端工具库
 categories: 教程
 permalink: /cn/docs23/tutorial/kylin_client_tool.html
 ---

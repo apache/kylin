@@ -1,6 +1,6 @@
 ---
 layout: docs23
-title: Cube Permission (v2.1.x)
+title: Cube Permission (v2.1)
 categories: tutorial
 permalink: /docs23/tutorial/acl.html
 since: v0.7.1

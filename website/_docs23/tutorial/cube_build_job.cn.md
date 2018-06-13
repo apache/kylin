@@ -1,15 +1,9 @@
-﻿---
-
+---
 layout: docs23-cn
-
-title:  Kylin Cube 建立和Job监控教程
-
+title: Cube 构建和 Job 监控
 categories: 教程
-
 permalink: /cn/docs23/tutorial/cube_build_job.html
-
 version: v1.2
-
 since: v0.7.1
 
 ---
