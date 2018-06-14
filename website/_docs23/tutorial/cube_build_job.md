@@ -5,6 +5,8 @@ categories: tutorial
 permalink: /docs23/tutorial/cube_build_job.html
 ---
 
+This tutorial will guide you to build a cube.
+
 ### Cube Build
 First of all, make sure that you have authority of the cube you want to build.
 
@@ -16,14 +18,13 @@ First of all, make sure that you have authority of the cube you want to build.
 
    ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/3 date.png)
 
-3. Click `Submit` to send the build request. After success, you will see the new job in the `Monitor` page.
+3. Click `Submit`, then you will see the new job in the `Monitor` page.
 
    ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/4 jobs-page.png)
 
 4. The new job is in "pending" status; after a while, it will be started to run and you will see the progress by refresh the web page or click the refresh button.
 
    ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/5 job-progress.png)
-
 
 5. Wait the job to finish. In the between if you want to discard it, click `Actions` -> `Discard` button.
 
@@ -38,11 +39,11 @@ If you have more source data, repeat the steps above to build them into the cube
 ### Job Monitoring
 In the `Monitor` page, click the job detail button to see detail information show in the right side.
 
-![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/7 job-steps.png)
+   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/7 job-steps.png)
 
 The detail information of a job provides a step-by-step record to trace a job. You can hover a step status icon to see the basic status and information.
 
-![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/8 hover-step.png)
+   ![](/images/tutorial/1.5/Kylin-Cube-Build-and-Job-Monitoring-Tutorial/8 hover-step.png)
 
 Click the icon buttons showing in each step to see the details: `Parameters`, `Log`, `MRJob`.
 

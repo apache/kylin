@@ -24,7 +24,7 @@
   docs:
   - tutorial/create_cube
   - tutorial/cube_build_job
-  - tutorial/acl
+  - tutorial/project_level_acl
   - tutorial/web
   - tutorial/kylin_client_tool
   - tutorial/tableau

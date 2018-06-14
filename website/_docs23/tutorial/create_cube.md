@@ -39,14 +39,13 @@ This tutorial will guide you to create a cube. It need you have at least 1 sampl
 
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table-tree.png)
 
-5.  In the left `Tables` section, the newly loaded table is added. Click the table name will shows the columns.
+5. In the left `Tables` section, the newly loaded table is added. Click the table name will shows the columns.
 
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table-info.png)
 
 6. In the background, Kylin will run a MapReduce job to calculate the approximate cardinality for the newly synced table. After the job be finished, refresh web page and then click the table name, the cardinality will be shown in the table info.
 
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table-cardinality.png)
-
 
 ### III. Create Data Model
 Before creating a cube, you need to define a data model. The data model defines a star/snowflake schema. But it doesn't define the aggregation policies. One data model can be referenced by multiple cubes.
@@ -68,36 +67,30 @@ Before creating a cube, you need to define a data model. The data model defines 
     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-lookup-table.png)
 
 5. Click `New Join Condition` button, select the FK column of fact table in the left, and select the PK column of lookup table in the right side. Repeat this step if have more than one join columns.
-
     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-join-condition.png)
 
 6. Click "OK", repeat step 4 and 5 to add more lookup tables if any. After finished, click "Next".
 
 7. The "Dimensions" page allows to select the columns that will be used as dimension in the cubes. Click the `Columns` cell of a table, in the drop-down list select the column to the list. Usually all "Varchar", "String", "Date" columns should be declared as dimension. Only a column in this list can be added into a cube as dimension, so please add all possible dimension columns here.
-
     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-dimensions.png)
 
 8. Click "Next" go to the "Measures" page, select the columns that will be used in measure/metrics. The measure column can only from fact table. Usually the "long", "int", "double", "decimal" columns are declared as measures. 
-
     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-measures.png)
 
 9. Click "Next" to the "Settings" page. If the data in fact table increases by day, select the corresponding date column in the `Partition Date Column`, and select the date format, otherwise leave it as blank.
 
-10. [Optional] Choose whether has a separate "time of the day" column, by default it is `No`. If choose `Yes`, select the corresponding time column in the `Partition Time Column`, and select the time format.![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-partition-column.png)
+10. [Optional] Choose whether has a separate "time of the day" column, by default it is `No`. If choose `Yes`, select the corresponding time column in the `Partition Time Column`, and select the time format.
+    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-partition-column.png)
 
 11. [Optional] If some conditions need to be applied when extracting data from Hive,  you can input the condition in `Filter`.
 
-    
-
 12. Click `Save` and then select `Yes` to save the data model. After created, the data model will be shown in the left `Models` list.
-
     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-created.png)
 
 ### IV. Create Cube
 After the data model be created, you can start to create a cube. 
 
 Click `Model` in top bar, and then click `Models` tab. Click `+New` button, in the drop-down list select `New Cube`.
-
     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/7 new-cube.png)
 
 **Step 1. Cube Info**
@@ -105,7 +98,6 @@ Click `Model` in top bar, and then click `Models` tab. Click `+New` button, in t
 Select the data model, enter the cube name; Click `Next` to enter the next step.
 
 You can use letters, numbers and '_' to name your cube (blank space in name is not allowed). `Notification Email List` is a list of email addresses which be notified on cube job success/failure. `Notification Events` is the status to trigger events.
-
     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/7 cube-info.png)
 
 **Step 2. Dimensions**

@@ -30,7 +30,7 @@ To explore more detail about the Cube.
 
 * Grid View:
 
-   ![](/images/tutorial/1.5/Kylin-Web-Tutorial/4 grid-view.png)
+   ![](/images/tutorial/1.5/Kylin-Web-Tutorial/4 grid-view.PNG)
 
 * SQL View (Hive Query to read data to generate the cube):
 
@@ -100,7 +100,7 @@ There's one simple pivot and visualization analysis tool in Kylin's web for user
 
    note: line chart only available when there's at least one dimension with real "Date" data type of column from Hive Table.
 
-   * Bar Chart:
+   * Pie Chart:
 
    ![](/images/tutorial/1.5/Kylin-Web-Tutorial/15 bar-chart.png)
 
