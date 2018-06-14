@@ -127,17 +127,6 @@
       "returntype" : "bitmap"
     },
     "dependent_measure_ref" : null
-  },{
-    "name": "TEST_COUNT_DISTINCT_BITMAP",
-    "function": {
-      "expression": "COUNT_DISTINCT",
-      "parameter": {
-        "type": "column",
-        "value": "TEST_COUNT_DISTINCT_BITMAP"
-      },
-      "returntype": "bitmap"
-    },
-    "dependent_measure_ref" : null
   }, {
     "name" : "SELLER_FORMAT_CNT",
     "function" : {
@@ -266,7 +255,7 @@
       "name" : "f2",
       "columns" : [ {
         "qualifier" : "m",
-        "measure_refs" : [ "seller_cnt_bitmap", "user_count_bitmap", "TEST_COUNT_DISTINCT_BITMAP", "seller_format_cnt"]
+        "measure_refs" : [ "seller_cnt_bitmap", "user_count_bitmap", "seller_format_cnt"]
       } ]
     }, {
       "name" : "f3",

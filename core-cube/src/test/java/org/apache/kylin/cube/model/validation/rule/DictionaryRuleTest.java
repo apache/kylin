@@ -19,11 +19,9 @@
 package org.apache.kylin.cube.model.validation.rule;
 
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_DUPLICATE_DICTIONARY_COLUMN;
-import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_GLOBAL_DICTIONNARY_FOR_BITMAP_MEASURE;
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE;
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_REUSE_BUILDER_BOTH_EMPTY;
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_REUSE_BUILDER_BOTH_SET;
-import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_REUSE_GLOBAL_DICTIONNARY_FOR_BITMAP_MEASURE;
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_TRANSITIVE_REUSE;
 import static org.junit.Assert.assertTrue;
 
@@ -40,7 +38,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DictionaryDesc;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.dict.GlobalDictionaryBuilder;
-import org.apache.kylin.dict.global.SegmentAppendTrieDictBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,19 +99,6 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
     public void testBadDesc5() throws IOException {
         testDictionaryDesc(ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE,
                 DictionaryDesc.create("CATEG_LVL2_NAME", null, GlobalDictionaryBuilder.class.getName()));
-    }
-
-    @Test
-    public void testBadDesc6() throws IOException {
-        testDictionaryDesc(ERROR_GLOBAL_DICTIONNARY_FOR_BITMAP_MEASURE,
-                DictionaryDesc.create("TEST_COUNT_DISTINCT_BITMAP", null, SegmentAppendTrieDictBuilder.class.getName()));
-    }
-
-    @Test
-    public void testBadDesc7() throws IOException {
-        testDictionaryDesc(ERROR_REUSE_GLOBAL_DICTIONNARY_FOR_BITMAP_MEASURE,
-                DictionaryDesc.create("SELLER_ID", null, SegmentAppendTrieDictBuilder.class.getName()),
-                DictionaryDesc.create("TEST_COUNT_DISTINCT_BITMAP", "SELLER_ID", null));
     }
 
     @Test
