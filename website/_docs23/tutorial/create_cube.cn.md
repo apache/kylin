@@ -11,7 +11,7 @@ since: v0.7.1
 ### I. 新建项目
 1. 由顶部菜单栏进入 `Model` 页面，然后点击 `Manage Projects`。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/1 manage-prject.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/1 manage-prject.png)
 
 2. 点击 `+ Project` 按钮添加一个新的项目。
 
@@ -19,88 +19,85 @@ since: v0.7.1
 
 3. 填写下列表单并点击 `submit` 按钮提交请求。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/3 new-project.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/3 new-project.png)
 
 4. 成功后，底部会显示通知。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/3.1 pj-created.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/3.1 pj-created.png)
 
 ### II. 同步Hive表
 1. 在顶部菜单栏点击 `Model`，然后点击左边的 `Data Source` 标签，它会列出所有加载进 Kylin 的表，点击 `Load Table` 按钮。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/4 %2Btable.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/4 +table.png)
 
 2. 输入表名并点击 `Sync` 按钮提交请求。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/5 hive-table.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table.png)
 
 3. 【可选】如果你想要浏览 hive 数据库来选择表，点击 `Load Table From Tree` 按钮。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/5 hive-table.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/4 +table-tree.png)
 
 4. 【可选】展开数据库节点，点击选择要加载的表，然后点击 `Sync` 按钮。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/5 hive-table.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table-tree.png)
 
 5. 成功的消息将会弹出，在左边的 `Tables` 部分，新加载的表已经被添加进来。点击表将会展开列。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/5 hive-table.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table-info.png)
 
 6. 在后台，Kylin 将会执行 MapReduce 任务计算新同步表的基数（cardinality），任务完成后，刷新页面并点击表名，基数值将会显示在表信息中。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/5 hive-table.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table-cardinality.png)
 
 ### III. 新建 Data Model
 创建 cube 前，需定义一个数据模型。数据模型定义了一个星型（star schema）或雪花（snowflake schema）模型。一个模型可以被多个 cube 使用。
 
-![](/images/Kylin-Cube-Creation-Tutorial/6 %2Bcube.png)
+![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 +model.png)
 
 1. 点击顶部的 `Model` ，然后点击 `Models` 标签。点击 `+New` 按钮，在下拉框中选择 `New Model`。
 
 2. 输入 model 的名字和可选的描述。
 
-![](/images/Kylin-Cube-Creation-Tutorial/7 cube-info.png)
+![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-name.png)
 
 3. 在 `Fact Table` 中，为模型选择事实表。
 
-    ![](/images/Kylin-Cube-Creation-Tutorial/8 dim-factable.png)
+    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-fact-table.png)
 
 4. 【可选】点击 `Add Lookup Table` 按钮添加一个 lookup 表。选择表名和关联类型（内连接或左连接）
 
-    ![](/images/Kylin-Cube-Creation-Tutorial/8 dim-%2Bdim.png)
+    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-lookup-table.png)
 
 5. 点击 `New Join Condition` 按钮，左边选择事实表的外键，右边选择 lookup 表的主键。如果有多于一个 join 列重复执行。
 
-    ![](/images/Kylin-Cube-Creation-Tutorial/8 dim-typeA.png)
+    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-join-condition.png)
 
 6. 点击 “OK”，重复4，5步来添加更多的 lookup 表。完成后，点击 “Next”。
-   ![](/images/Kylin-Cube-Creation-Tutorial/8 dim-edit.png)
 
 7. `Dimensions` 页面允许选择在子 cube 中用作维度的列，然后点击 `Columns` 列，在下拉框中选择需要的列。
+    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-dimensions.png)
 
 8. 点击 “Next” 到达 “Measures” 页面，选择作为 measure 的列，其只能从事实表中选择。
 
-![](/images/Kylin-Cube-Creation-Tutorial/7 cube-info.png)
+![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-measures.png)
 
 9. 点击 “Next” 到达 “Settings” 页面，如果事实表中的数据每日增长，选择 `Partition Date Column` 中相应的 日期列以及日期格式，否则就将其留白。
 
-    ![](/images/Kylin-Cube-Creation-Tutorial/8 dim-factable.png)
-
 10. 【可选】选择是否需要 “time of the day” 列，默认情况下为 `No`。如果选择 `Yes`, 选择 `Partition Time Column` 中相应的 time 列以及 time 格式
 
-    ![](/images/Kylin-Cube-Creation-Tutorial/8 dim-%2Bdim.png)
+    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-partition-column.png)
 
 11. 【可选】如果在从 hive 抽取数据时候想做一些筛选，可以在 `Filter` 中输入筛选条件。
 
-    ![](/images/Kylin-Cube-Creation-Tutorial/8 dim-typeA.png)
-
 12. 点击 `Save` 然后选择 `Yes` 来保存 data model。创建完成，data model 就会列在左边 `Models` 列表中。
-   ![](/images/Kylin-Cube-Creation-Tutorial/8 dim-edit.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-created.png)
 
 ### III. 新建 Cube
 
 创建完 data model，可以开始创建 cube。
 点击顶部 `Model`，然后点击 `Models` 标签。点击 `+New` 按钮，在下拉框中选择 `New Cube`。
+    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/7 new-cube.png)
 
 **步骤1. Cube 信息**
 
@@ -108,11 +105,13 @@ since: v0.7.1
 
 cube 名字可以使用字母，数字和下划线（空格不允许）。`Notification Email List` 是运用来通知job执行成功或失败情况的邮箱列表。`Notification Events` 是触发事件的状态。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/9 meas-%2Bmeas.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/7 cube-info.png)
 
 **步骤2. 维度**
 
 1. 点击 `Add Dimension`，在弹窗中显示的事实表和 lookup 表里勾选输入需要的列。Lookup 表的列有2个选项：“Normal” 和 “Derived”（默认）。“Normal” 添加一个普通独立的维度列，“Derived” 添加一个 derived 维度，derived 维度不会计算入 cube，将由事实表的外键推算出。阅读更多【如何优化 cube】（/docs15/howto/howto_optimize_cubes.html）。
+
+    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/7 cube-dimension-batch.png)
 
 2. 选择所有维度后点击 “Next”。
 
@@ -120,31 +119,31 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
 
 1. 点击 `+Measure` 按钮添加一个新的度量。
 
-   ![](/images/Kylin-Cube-Creation-Tutorial/9 meas-%2Bmeas.png)
+   ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 meas-+meas.png)
 
 2. 根据它的表达式共有8种不同类型的度量：`SUM`、`MAX`、`MIN`、`COUNT`、`COUNT_DISTINCT` `TOP_N`, `EXTENDED_COLUMN` 和 `PERCENTILE`。请合理选择 `COUNT_DISTINCT` 和 `TOP_N` 返回类型，它与 cube 的大小相关。
    * SUM
 
-     ![](/images/Kylin-Cube-Creation-Tutorial/9 meas-sum.png)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-sum.png)
 
    * MIN
 
-     ![](/images/Kylin-Cube-Creation-Tutorial/9 meas-min.png)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-min.png)
 
    * MAX
 
-     ![](/images/Kylin-Cube-Creation-Tutorial/9 meas-max.png)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-max.png)
 
    * COUNT
 
-     ![](/images/Kylin-Cube-Creation-Tutorial/9 meas-count.png)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-count.png)
 
    * DISTINCT_COUNT
    这个度量有两个实现：
    1）近似实现 HyperLogLog，选择可接受的错误率，低错误率需要更多存储；
    2）精确实现 bitmap（具体限制请看 https://issues.apache.org/jira/browse/KYLIN-1186）
 
-     ![](/images/Kylin-Cube-Creation-Tutorial/9 meas-distinct.png)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-distinct.png)
    
     注意：distinct 是一种非常重的数据类型，和其他度量相比构建和查询会更慢。
    
@@ -153,10 +152,12 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
    
    合理的选择返回类型，将决定多少 top 记录被监察：top 10, top 100, top 500, top 1000, top 5000 or top 10000。
 
-     ![](/images/Kylin-Cube-Creation-Tutorial/9 meas-distinct.png)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-topn.png)
 
    * EXTENDED_COLUMN
    Extended_Column 作为度量比作为维度更节省空间。一列和零一列可以生成新的列。
+   
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-extended_column.png)
 
    * PERCENTILE
    Percentile 代表了百分比。值越大，错误就越少。100为最合适的值。
@@ -175,7 +176,7 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
 
 `Partition Start Date`: cube 的开始日期.
 
-![](/images/Kylin-Cube-Creation-Tutorial/11 refresh-setting2.png)
+![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/9 refresh-setting1.png)
 
 **步骤5. 高级设置**
 
@@ -217,6 +218,6 @@ Kylin 允许在 Cube 级别覆盖部分 kylin.properties 中的配置，你可�
 
 你可以概览你的 cube 并返回之前的步骤进行修改。点击 `Save` 按钮完成 cube 创建。
 
-![](/images/Kylin-Cube-Creation-Tutorial/13 overview.png)
+![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/11 overview.png)
 
 恭喜，cube 创建好了，你可以去构建和玩它了。

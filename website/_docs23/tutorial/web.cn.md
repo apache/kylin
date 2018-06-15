@@ -17,27 +17,27 @@ version: v1.2
 使用用户名登陆：ADMIN
 使用密码登陆：KYLIN
 
-![]( /images/Kylin-Web-Tutorial/1 login.png)
+![](/images/tutorial/1.5/Kylin-Web-Tutorial/1 login.png)
 
 ## 2. Kylin 中可用的 Hive 表
 虽然 Kylin 使用 SQL 作为查询接口并利用 Hive 元数据，Kylin 不会让用户查询所有的 hive 表，因为到目前为止它是一个预构建 OLAP(MOLAP) 系统。为了使表在 Kylin 中可用，使用 "Sync" 方法能够方便地从 Hive 中同步表。
 
-![]( /images/Kylin-Web-Tutorial/2 tables.png)
+![](/images/tutorial/1.5/Kylin-Web-Tutorial/2 tables.png)
 
 ## 3. Kylin OLAP Cube
 Kylin 的 OLAP Cube 是从星型模式的 Hive 表中获取的预计算数据集，这是供用户探索、管理所有 cube 的网页管理页面。由菜单栏进入 `Model` 页面，系统中所有可用的 cube 将被列出。
 
-![]( /images/Kylin-Web-Tutorial/3 cubes.png)
+![](/images/tutorial/1.5/Kylin-Web-Tutorial/3 cubes.png)
 
 探索更多关于 Cube 的详细信息
 
 * Grid 视图:
 
-   ![]( /images/Kylin-Web-Tutorial/4 form-view.png)
+   ![](/images/tutorial/1.5/Kylin-Web-Tutorial/4 grid-view.PNG)
 
 * SQL 视图 (Hive 查询读取数据以生成 cube):
 
-   ![]( /images/Kylin-Web-Tutorial/5 sql-view.png)
+   ![](/images/tutorial/1.5/Kylin-Web-Tutorial/5 sql-view.png)
 
 ## 4. 在网页上编写和运行 SQL
 Kylin 的网页版为用户提供了一个简单的查询工具来运行 SQL 以探索现存的 cube，验证结果并探索使用下一章中的 Pivot analysis 与可视化的结果集。
@@ -50,30 +50,28 @@ Kylin 的网页版为用户提供了一个简单的查询工具来运行 SQL 以
 
 由菜单栏进入 “Insight” 页面：
 
-![]( /images/Kylin-Web-Tutorial/8 query.png)
+![](/images/tutorial/1.5/Kylin-Web-Tutorial/8 query.png)
 
 * 源表：
 
    浏览器当前可用表（与 Hive 相同的结构和元数据）：
   
-   ![]( /images/Kylin-Web-Tutorial/9 query-table.png)
+   ![](/images/tutorial/1.5/Kylin-Web-Tutorial/9 query-table.png)
 
 * 新的查询：
 
    你可以编写和运行你的查询并探索结果。
 
-   ![]( /images/Kylin-Web-Tutorial/10 query-result.png)
+   ![](/images/tutorial/1.5/Kylin-Web-Tutorial/10 query-result.png)
 
 * 已保存的查询：
 
    与用户账号关联，你将能够从不同的浏览器甚至机器上获取已保存的查询。
    在结果区域点击 “Save”，将会弹出用来保存当前查询名字和描述：
 
-   ![]( /images/Kylin-Web-Tutorial/11 save-query.png)
+   ![](/images/tutorial/1.5/Kylin-Web-Tutorial/11 save-query.png)
 
    点击 “Saved Queries” 浏览所有已保存的查询，你可以直接重新提交它或删除它：
-
-   ![]( /images/Kylin-Web-Tutorial/11 save-query-2.png)
 
 * 查询历史：
 
@@ -87,13 +85,13 @@ Kylin 的网页版提供一个简单的 Pivot 与可视化分析工具供用户�
    当查询运行成功后，它将呈现一个成功指标与被访问的 cube 名字。
    同时它将会呈现这个查询在后台引擎运行了多久（不包括从 Kylin 服务器到浏览器的网络通信）：
 
-   ![]( /images/Kylin-Web-Tutorial/12 general.png)
+   ![](/images/tutorial/1.5/Kylin-Web-Tutorial/12 general.png)
 
 * 查询结果：
 
    能够方便地在一个列上排序。
 
-   ![]( /images/Kylin-Web-Tutorial/13 results.png)
+   ![](/images/tutorial/1.5/Kylin-Web-Tutorial/13 results.png)
 
 * 导出到 CSV 文件
 
@@ -107,5 +105,5 @@ Kylin 的网页版提供一个简单的 Pivot 与可视化分析工具供用户�
 
 * 条形图：
 
-   ![]( /images/Kylin-Web-Tutorial/15 bar-chart.png)
+   ![](/images/tutorial/1.5/Kylin-Web-Tutorial/15 bar-chart.png)
 
