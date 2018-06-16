@@ -124,7 +124,7 @@ public class ProjectManager {
     public ProjectInstance reloadProjectQuietly(String project) throws IOException {
         try (AutoLock lock = prjMapLock.lockForWrite()) {
             ProjectInstance prj = crud.reloadQuietly(project);
-            reloadProjectL2Cache(project);
+            clearL2Cache();
             return prj;
         }
     }
