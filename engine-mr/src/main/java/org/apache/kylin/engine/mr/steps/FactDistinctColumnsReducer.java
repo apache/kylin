@@ -35,7 +35,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -71,17 +70,16 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     private boolean isStatistics = false;
     private KylinConfig cubeConfig;
     private int taskId;
-    private boolean isPartitionCol = false;
     private int rowCount = 0;
     private FactDistinctColumnsReducerMapping reducerMapping;
 
     //local build dict
     private boolean buildDictInReducer;
     private IDictionaryBuilder builder;
-    private long timeMaxValue = Long.MIN_VALUE;
-    private long timeMinValue = Long.MAX_VALUE;
+    private String maxValue = null;
+    private String minValue = null;
     public static final String DICT_FILE_POSTFIX = ".rldict";
-    public static final String PARTITION_COL_INFO_FILE_POSTFIX = ".pci";
+    public static final String DIMENSION_COL_INFO_FILE_POSTFIX = ".dci";
 
     private MultipleOutputs mos;
 
@@ -97,11 +95,9 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         cubeConfig = cube.getConfig();
         cubeDesc = cube.getDescriptor();
 
-        int numberOfTasks = context.getNumReduceTasks();
         taskId = context.getTaskAttemptID().getTaskID().getId();
 
-        reducerMapping = new FactDistinctColumnsReducerMapping(cube,
-                conf.getInt(BatchConstants.CFG_HLL_REDUCER_NUM, 1));
+        reducerMapping = new FactDistinctColumnsReducerMapping(cube);
         
         logger.info("reducer no " + taskId + ", role play " + reducerMapping.getRolePlayOfReducer(taskId));
 
@@ -114,18 +110,9 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             samplingPercentage = Integer
                     .parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
             logger.info("Reducer " + taskId + " handling stats");
-        } else if (reducerMapping.isPartitionColReducer(taskId)) {
-            // partition col
-            isPartitionCol = true;
-            col = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
-            if (col == null) {
-                logger.info("No partition col. This reducer will do nothing");
-            } else {
-                logger.info("Reducer " + taskId + " handling partition col " + col.getIdentity());
-            }
         } else {
             // normal col
-            col = reducerMapping.getDictColForReducer(taskId);
+            col = reducerMapping.getColForReducer(taskId);
             Preconditions.checkNotNull(col);
 
             // local build dict
@@ -133,7 +120,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             if (cubeDesc.getDictionaryBuilderClass(col) != null) { // only works with default dictionary builder
                 buildDictInReducer = false;
             }
-            if (reducerMapping.getReducerNumForDictCol(col) > 1) {
+            if (reducerMapping.getReducerNumForDimCol(col) > 1) {
                 buildDictInReducer = false; // only works if this is the only reducer of a dictionary column
             }
             if (buildDictInReducer) {
@@ -167,24 +154,29 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
                     cuboidHLLMap.put(cuboidId, hll);
                 }
             }
-        } else if (isPartitionCol) {
-            // partition col
+        } else {
             String value = Bytes.toString(key.getBytes(), 1, key.getLength() - 1);
             logAFewRows(value);
-            long time = DateFormat.stringToMillis(value);
-            timeMinValue = Math.min(timeMinValue, time);
-            timeMaxValue = Math.max(timeMaxValue, time);
-        } else {
-            // normal col
-            if (buildDictInReducer) {
-                String value = Bytes.toString(key.getBytes(), 1, key.getLength() - 1);
-                logAFewRows(value);
-                builder.addValue(value);
-            } else {
-                byte[] keyBytes = Bytes.copy(key.getBytes(), 1, key.getLength() - 1);
-                // output written to baseDir/colName/-r-00000 (etc)
-                String fileName = col.getIdentity() + "/";
-                mos.write(BatchConstants.CFG_OUTPUT_COLUMN, NullWritable.get(), new Text(keyBytes), fileName);
+            // if dimension col, compute max/min value
+            if (cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col)) {
+                if (minValue == null || col.getType().compare(minValue, value) > 0) {
+                    minValue = value;
+                }
+                if (maxValue == null || col.getType().compare(maxValue, value) < 0) {
+                    maxValue = value;
+                }
+            }
+
+            //if dict column
+            if (cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col)) {
+                if (buildDictInReducer) {
+                    builder.addValue(value);
+                } else {
+                    byte[] keyBytes = Bytes.copy(key.getBytes(), 1, key.getLength() - 1);
+                    // output written to baseDir/colName/-r-00000 (etc)
+                    String fileName = col.getIdentity() + "/";
+                    mos.write(BatchConstants.CFG_OUTPUT_COLUMN, NullWritable.get(), new Text(keyBytes), fileName);
+                }
             }
         }
 
@@ -207,11 +199,12 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
 
             logMapperAndCuboidStatistics(allCuboids); // for human check
             outputStatistics(allCuboids);
-        } else if (isPartitionCol) {
-            // partition col
-            outputPartitionInfo();
         } else {
-            // normal col
+            //dimension col
+            if (cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col)) {
+                outputDimRangeInfo();
+            }
+            // dic col
             if (buildDictInReducer) {
                 Dictionary<String> dict = builder.build();
                 outputDict(col, dict);
@@ -221,14 +214,17 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         mos.close();
     }
 
-    private void outputPartitionInfo() throws IOException, InterruptedException {
-        if (col != null) {
-            // output written to baseDir/colName/colName.pci-r-00000 (etc)
-            String partitionFileName = col.getIdentity() + "/" + col.getName() + PARTITION_COL_INFO_FILE_POSTFIX;
+    private void outputDimRangeInfo() throws IOException, InterruptedException {
+        if (col != null && minValue != null) {
+            // output written to baseDir/colName/colName.dci-r-00000 (etc)
+            String dimRangeFileName = col.getIdentity() + "/" + col.getName() + DIMENSION_COL_INFO_FILE_POSTFIX;
 
-            mos.write(BatchConstants.CFG_OUTPUT_PARTITION, NullWritable.get(), new LongWritable(timeMinValue), partitionFileName);
-            mos.write(BatchConstants.CFG_OUTPUT_PARTITION, NullWritable.get(), new LongWritable(timeMaxValue), partitionFileName);
-            logger.info("write partition info for col : " + col.getName() + "  minValue:" + timeMinValue + " maxValue:" + timeMaxValue);
+            mos.write(BatchConstants.CFG_OUTPUT_PARTITION, NullWritable.get(), new Text(minValue.getBytes()),
+                    dimRangeFileName);
+            mos.write(BatchConstants.CFG_OUTPUT_PARTITION, NullWritable.get(), new Text(maxValue.getBytes()),
+                    dimRangeFileName);
+            logger.info("write dimension range info for col : " + col.getName() + "  minValue:" + minValue + " maxValue:"
+                    + maxValue);
         }
     }
 

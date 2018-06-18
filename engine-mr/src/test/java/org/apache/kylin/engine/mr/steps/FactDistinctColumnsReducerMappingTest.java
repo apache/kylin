@@ -60,24 +60,22 @@ public class FactDistinctColumnsReducerMappingTest extends LocalFileMetadataTest
         int totalReducerNum = mapping.getTotalReducerNum();
         Assert.assertEquals(2, mapping.getCuboidRowCounterReducerNum());
         
-        // check partition column reducer & cuboid row count reducers
+        // check cuboid row count reducers
         Assert.assertEquals(FactDistinctColumnsReducerMapping.MARK_FOR_HLL_COUNTER,
                 mapping.getRolePlayOfReducer(totalReducerNum - 1));
         Assert.assertEquals(FactDistinctColumnsReducerMapping.MARK_FOR_HLL_COUNTER,
                 mapping.getRolePlayOfReducer(totalReducerNum - 2));
-        Assert.assertEquals(FactDistinctColumnsReducerMapping.MARK_FOR_PARTITION_COL,
-                mapping.getRolePlayOfReducer(totalReducerNum - 3));
         
         // check all dict column reducers
-        int dictEnd = totalReducerNum - 3;
+        int dictEnd = totalReducerNum - 2;
         for (int i = 0; i < dictEnd; i++)
             Assert.assertTrue(mapping.getRolePlayOfReducer(i) >= 0);
         
         // check a UHC dict column
-        Assert.assertEquals(2, mapping.getReducerNumForDictCol(aUHC));
+        Assert.assertEquals(2, mapping.getReducerNumForDimCol(aUHC));
         int uhcReducerBegin = -1;
         for (int i = 0; i < dictEnd; i++) {
-            if (mapping.getDictColForReducer(i).equals(aUHC)) {
+            if (mapping.getColForReducer(i).equals(aUHC)) {
                 uhcReducerBegin = i;
                 break;
             }
@@ -86,7 +84,7 @@ public class FactDistinctColumnsReducerMappingTest extends LocalFileMetadataTest
         int[] allRolePlay = mapping.getAllRolePlaysForReducers();
         Assert.assertEquals(allRolePlay[uhcReducerBegin], allRolePlay[uhcReducerBegin + 1]);
         for (int i = 0; i < 5; i++) {
-            int reducerId = mapping.getReducerIdForDictCol(uhcReducerBegin, i);
+            int reducerId = mapping.getReducerIdForCol(uhcReducerBegin, i);
             Assert.assertTrue(uhcReducerBegin <= reducerId && reducerId <= uhcReducerBegin + 1);
         }
     }

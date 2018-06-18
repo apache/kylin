@@ -116,4 +116,27 @@ public class TupleFilterTest {
         r.put(col2, v2);
         return r;
     }
+
+    @Test
+    public void testMustTrueTupleFilter() {
+        TupleFilter andFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+        TupleFilter andFilter2  = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+        TupleFilter orFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.OR);
+        andFilter.addChild(andFilter2);
+        andFilter.addChild(orFilter);
+
+        Set<CompareTupleFilter> trueTupleFilters = andFilter.findMustTrueCompareFilters();
+        Assert.assertTrue(trueTupleFilters.isEmpty());
+
+        TupleFilter compFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
+        compFilter.addChild(new ColumnTupleFilter(TblColRef.newInnerColumn("test1", TblColRef.InnerDataTypeEnum.LITERAL)));
+        TupleFilter compFilter2 = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
+        compFilter2.addChild(new ColumnTupleFilter(TblColRef.newInnerColumn("test2", TblColRef.InnerDataTypeEnum.LITERAL)));
+        andFilter2.addChild(compFilter);
+        orFilter.addChild(compFilter2);
+        Assert.assertEquals(Sets.newHashSet(compFilter), andFilter.findMustTrueCompareFilters());
+        
+        Assert.assertEquals(Sets.newHashSet(compFilter2), compFilter2.findMustTrueCompareFilters());
+    }
+    
 }

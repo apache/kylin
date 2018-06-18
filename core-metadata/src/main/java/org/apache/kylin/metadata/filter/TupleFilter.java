@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * 
@@ -92,7 +93,7 @@ public abstract class TupleFilter {
     public static CompareTupleFilter compare(TblColRef col, FilterOperatorEnum op, Object val) {
         CompareTupleFilter r = new CompareTupleFilter(op);
         r.addChild(new ColumnTupleFilter(col));
-        r.addChild(new ConstantTupleFilter(val));
+        r.addChild(val instanceof ConstantTupleFilter ? (ConstantTupleFilter) val : new ConstantTupleFilter(val));
         return r;
     }
 
@@ -309,6 +310,31 @@ public abstract class TupleFilter {
         }
     }
 
+    //find must true compareTupleFilter
+    public Set<CompareTupleFilter> findMustTrueCompareFilters() {
+        Set<CompareTupleFilter> result = Sets.newHashSet();
+        findMustTrueCompareFilters(this, result);
+        return result;
+    }
+
+    private void findMustTrueCompareFilters(TupleFilter filter, Set<CompareTupleFilter> result) {
+        if (filter instanceof CompareTupleFilter) {
+            if (((CompareTupleFilter) filter).getColumn() != null) {
+                result.add((CompareTupleFilter) filter);
+            }
+            return;
+        }
+        
+        if (filter instanceof LogicalTupleFilter) {
+            if (filter.getOperator() == FilterOperatorEnum.AND) {
+                for (TupleFilter child : filter.getChildren()) {
+                    findMustTrueCompareFilters(child, result);
+                }
+            }
+            return;
+        }
+    }
+    
     public abstract boolean isEvaluable();
 
     public abstract boolean evaluate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs);

@@ -37,7 +37,6 @@ import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.measure.hllc.RegisterType;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,9 +67,6 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
 
     private static final Text EMPTY_TEXT = new Text();
 
-    private int partitionColumnIndex = -1;
-    private boolean needFetchPartitionCol = true;
-
     private SelfDefineSortableKey sortableKey = new SelfDefineSortableKey();
 
     @Override
@@ -96,18 +92,6 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
             allCuboidsHLL[i] = new HLLCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision(), RegisterType.DENSE);
         }
 
-        TblColRef partitionColRef = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
-        if (partitionColRef != null) {
-            partitionColumnIndex = intermediateTableDesc.getColumnIndex(partitionColRef);
-        }
-
-        // check whether need fetch the partition col values
-        if (partitionColumnIndex < 0) {
-            // if partition col not on cube, no need
-            needFetchPartitionCol = false;
-        } else {
-            needFetchPartitionCol = true;
-        }
         //for KYLIN-2518 backward compatibility
         boolean isUsePutRowKeyToHllNewAlgorithm;
         if (KylinVersion.isBefore200(cubeDesc.getVersion())) {
@@ -172,12 +156,12 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
 
         for (String[] row : rowCollection) {
             context.getCounter(RawDataCounter.BYTES).increment(countSizeInBytes(row));
-            for (int i = 0; i < dictCols.size(); i++) {
-                String fieldValue = row[dictionaryColumnIndex[i]];
+            for (int i = 0; i < allDimDictCols.size(); i++) {
+                String fieldValue = row[columnIndex[i]];
                 if (fieldValue == null)
                     continue;
 
-                int reducerIndex = reducerMapping.getReducerIdForDictCol(i, fieldValue);
+                int reducerIndex = reducerMapping.getReducerIdForCol(i, fieldValue);
                 
                 tmpbuf.clear();
                 byte[] valueBytes = Bytes.toBytes(fieldValue);
@@ -188,15 +172,14 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
                 tmpbuf.put(Bytes.toBytes(reducerIndex)[3]);
                 tmpbuf.put(valueBytes);
                 outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
-                DataType type = dictCols.get(i).getType();
+                DataType type = allDimDictCols.get(i).getType();
                 sortableKey.init(outputKey, type);
-                //judge type
                 context.write(sortableKey, EMPTY_TEXT);
 
                 // log a few rows for troubleshooting
                 if (rowCount < 10) {
                     logger.info(
-                            "Sample output: " + dictCols.get(i) + " '" + fieldValue + "' => reducer " + reducerIndex);
+                            "Sample output: " + allDimDictCols.get(i) + " '" + fieldValue + "' => reducer " + reducerIndex);
                 }
             }
 
@@ -204,22 +187,6 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
                 putRowKeyToHLL(row);
             }
 
-            if (needFetchPartitionCol == true) {
-                String fieldValue = row[partitionColumnIndex];
-                if (fieldValue != null) {
-                    tmpbuf.clear();
-                    byte[] valueBytes = Bytes.toBytes(fieldValue);
-                    int size = valueBytes.length + 1;
-                    if (size >= tmpbuf.capacity()) {
-                        tmpbuf = ByteBuffer.allocate(countNewSize(tmpbuf.capacity(), size));
-                    }
-                    tmpbuf.put((byte) FactDistinctColumnsReducerMapping.MARK_FOR_PARTITION_COL);
-                    tmpbuf.put(valueBytes);
-                    outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
-                    sortableKey.init(outputKey, (byte) 0);
-                    context.write(sortableKey, EMPTY_TEXT);
-                }
-            }
             rowCount++;
         }
     }
