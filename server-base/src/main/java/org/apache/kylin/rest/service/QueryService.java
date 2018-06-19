@@ -23,7 +23,6 @@ import static org.apache.kylin.common.util.CheckUtil.checkCondition;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -61,7 +60,6 @@ import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
-import org.apache.kylin.common.htrace.HtraceInit;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
@@ -103,9 +101,6 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
 import org.apache.kylin.rest.util.TableauInterceptor;
-import org.apache.kylin.shaded.htrace.org.apache.htrace.Sampler;
-import org.apache.kylin.shaded.htrace.org.apache.htrace.Trace;
-import org.apache.kylin.shaded.htrace.org.apache.htrace.TraceScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -352,14 +347,6 @@ public class QueryService extends BasicService {
 
         final QueryContext queryContext = QueryContextFacade.current();
 
-        TraceScope scope = null;
-        if (kylinConfig.isHtraceTracingEveryQuery() || BackdoorToggles.getHtraceEnabled()) {
-            logger.info("Current query is under tracing");
-            HtraceInit.init();
-            scope = Trace.startSpan("query life cycle for " + queryContext.getQueryId(), Sampler.ALWAYS);
-        }
-        String traceUrl = getTraceUrl(scope);
-
         try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
             SQLResponse sqlResponse = null;
             String sql = sqlRequest.getSql();
@@ -386,7 +373,6 @@ public class QueryService extends BasicService {
 
             if (sqlResponse == null && isQueryCacheEnabled) {
                 sqlResponse = searchQueryInCache(sqlRequest);
-                Trace.addTimelineAnnotation("query cache searched");
             }
 
             // real execution if required
@@ -394,12 +380,9 @@ public class QueryService extends BasicService {
                 try (QueryRequestLimits limit = new QueryRequestLimits(sqlRequest.getProject())) {
                     sqlResponse = queryAndUpdateCache(sqlRequest, isQueryCacheEnabled);
                 }
-            } else {
-                Trace.addTimelineAnnotation("response without real execution");
             }
 
             sqlResponse.setDuration(queryContext.getAccumulatedMillis());
-            sqlResponse.setTraceUrl(traceUrl);
             logQuery(queryContext.getQueryId(), sqlRequest, sqlResponse);
             try {
                 recordMetric(sqlRequest, sqlResponse);
@@ -414,9 +397,6 @@ public class QueryService extends BasicService {
         } finally {
             BackdoorToggles.cleanToggles();
             QueryContextFacade.resetCurrent();
-            if (scope != null) {
-                scope.close();
-            }
         }
     }
 
@@ -430,10 +410,8 @@ public class QueryService extends BasicService {
             final boolean isSelect = QueryUtil.isSelectStatement(sqlRequest.getSql());
             if (isSelect) {
                 sqlResponse = query(sqlRequest, queryContext.getQueryId());
-                Trace.addTimelineAnnotation("query almost done");
             } else if (kylinConfig.isPushDownEnabled() && kylinConfig.isPushDownUpdateEnabled()) {
                 sqlResponse = update(sqlRequest);
-                Trace.addTimelineAnnotation("update query almost done");
             } else {
                 logger.debug("Directly return exception as the sql is unsupported, and query pushdown is disabled");
                 throw new BadRequestException(msg.getNOT_SUPPORTED_SQL());
@@ -464,7 +442,6 @@ public class QueryService extends BasicService {
                             kylinConfig.getLargeQueryThreshold())) {
                 cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest.getCacheKey(), sqlResponse));
             }
-            Trace.addTimelineAnnotation("response from execution");
 
         } catch (Throwable e) { // calcite may throw AssertError
             queryContext.stop(e);
@@ -482,7 +459,6 @@ public class QueryService extends BasicService {
                 Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
                 exceptionCache.put(new Element(sqlRequest.getCacheKey(), sqlResponse));
             }
-            Trace.addTimelineAnnotation("error response");
         }
         return sqlResponse;
     }
@@ -495,29 +471,6 @@ public class QueryService extends BasicService {
     protected void recordMetric(SQLRequest sqlRequest, SQLResponse sqlResponse) throws UnknownHostException {
         QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
         QueryMetrics2Facade.updateMetrics(sqlRequest, sqlResponse);
-    }
-
-    private String getTraceUrl(TraceScope scope) {
-        if (scope == null) {
-            return null;
-        }
-
-        String hostname = System.getProperty("zipkin.collector-hostname");
-        if (StringUtils.isEmpty(hostname)) {
-            try {
-                hostname = InetAddress.getLocalHost().getHostName();
-            } catch (UnknownHostException e) {
-                logger.debug("failed to get trace url due to " + e.getMessage());
-                return null;
-            }
-        }
-
-        String port = System.getProperty("zipkin.web-ui-port");
-        if (StringUtils.isEmpty(port)) {
-            port = "9411";
-        }
-
-        return "http://" + hostname + ":" + port + "/zipkin/traces/" + Long.toHexString(scope.getSpan().getTraceId());
     }
 
     private String getUserName() {
@@ -578,7 +531,6 @@ public class QueryService extends BasicService {
                 //CAUTION: should not change sqlRequest content!
                 //sqlRequest.setSql(correctedSql);
             }
-            Trace.addTimelineAnnotation("query massaged");
 
             // add extra parameters into olap context, like acceptPartial
             Map<String, String> parameters = new HashMap<String, String>();

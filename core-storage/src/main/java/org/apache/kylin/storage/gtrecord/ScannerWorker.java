@@ -30,8 +30,6 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStorage;
 import org.apache.kylin.metadata.model.ISegment;
-import org.apache.kylin.shaded.htrace.org.apache.htrace.Trace;
-import org.apache.kylin.shaded.htrace.org.apache.htrace.TraceScope;
 import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,26 +46,23 @@ public class ScannerWorker {
         
         inputArgs = new Object[] { segment, cuboid, scanRequest, gtStorage, context };
         
-        try (TraceScope scope = Trace.startSpan("visit segment " + segment.getName())) {
-
-            if (scanRequest == null) {
-                logger.info("Segment {} will be skipped", segment);
-                internal = new EmptyGTScanner();
-                return;
-            }
-
-            final GTInfo info = scanRequest.getInfo();
-
-            try {
-                IGTStorage rpc = (IGTStorage) Class.forName(gtStorage)
-                        .getConstructor(ISegment.class, Cuboid.class, GTInfo.class, StorageContext.class)
-                        .newInstance(segment, cuboid, info, context); // default behavior
-                internal = rpc.getGTScanner(scanRequest);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        if (scanRequest == null) {
+            logger.info("Segment {} will be skipped", segment);
+            internal = new EmptyGTScanner();
+            return;
         }
-        
+
+        final GTInfo info = scanRequest.getInfo();
+
+        try {
+            IGTStorage rpc = (IGTStorage) Class.forName(gtStorage)
+                    .getConstructor(ISegment.class, Cuboid.class, GTInfo.class, StorageContext.class)
+                    .newInstance(segment, cuboid, info, context); // default behavior
+            internal = rpc.getGTScanner(scanRequest);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         checkNPE();
     }
 
