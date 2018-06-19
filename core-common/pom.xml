@@ -67,12 +67,6 @@
             <artifactId>jsch</artifactId>
         </dependency>
 
-        <!-- Metric & Tracing -->
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-external-htrace</artifactId>
-        </dependency>
-
         <!-- Env & Test -->
         <dependency>
             <groupId>junit</groupId>
