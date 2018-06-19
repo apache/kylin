@@ -1163,7 +1163,6 @@
     </build>
 
     <modules>
-        <module>external</module>
         <module>atopcalcite</module>
         <module>core-common</module>
         <module>core-metadata</module>
