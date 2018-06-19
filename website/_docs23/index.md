@@ -21,10 +21,10 @@ Document of prior versions:
 
 Installation & Setup
 ------------  
-1. [Hadoop Env](install/hadoop_env.html)
-2. [Installation Guide](install/index.html)
-3. [Advanced settings](install/advance_settings.html)
-4. [Deploy in cluster mode](install/kylin_cluster.html)
+1. [Installation Guide](install/index.html)
+2. [Configurations](install/configuration.html)
+3. [Deploy in cluster mode](install/kylin_cluster.html)
+4. [Advanced settings](install/advance_settings.html)
 5. [Run Kylin with Docker](install/kylin_docker.html)
 6. [Install Kylin on AWS EMR](install/kylin_aws_emr.html)
 

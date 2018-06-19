@@ -28,8 +28,8 @@
 - title: Installation
   docs:
   - install/index
-  - install/hadoop_env
   - install/manual_install_guide
+  - install/configuration
   - install/kylin_cluster
   - install/advance_settings
   - install/kylin_docker
@@ -43,6 +43,7 @@
   - tutorial/cube_build_job
   - tutorial/project_level_acl
   - tutorial/cube_spark
+  - tutorial/cube_streaming
   - tutorial/cube_build_performance
   - tutorial/kylin_client_tool
   - tutorial/setup_systemcube
