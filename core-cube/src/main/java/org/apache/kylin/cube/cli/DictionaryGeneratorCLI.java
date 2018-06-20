@@ -94,8 +94,12 @@ public class DictionaryGeneratorCLI {
         cubeSeg = updatedCube.getSegmentById(cubeSeg.getUuid());
         for (TableRef lookup : toCheckLookup) {
             logger.info("Checking snapshot of " + lookup);
-            JoinDesc join = cubeSeg.getModel().getJoinsTree().getJoinByPKSide(lookup);
-            cubeMgr.getLookupTable(cubeSeg, join);
+            try {
+                JoinDesc join = cubeSeg.getModel().getJoinsTree().getJoinByPKSide(lookup);
+                cubeMgr.getLookupTable(cubeSeg, join);
+            } catch (Throwable th) {
+                throw new RuntimeException("Checking snapshot of " + lookup + " failed.", th);
+            }
         }
     }
 
