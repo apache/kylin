@@ -13,7 +13,7 @@ title: Blog
             {% for category in site.categories %}   
             {% if category[0]  == 'blog' %}
             {% for post in category[1] %}
-            <div class="col-md-6 col-lg-6 col-xs-6">
+            <div class="col-md-6 col-lg-6 col-xs-12">
               <a class="blog-card" href="{{ post.url | prepend: site.baseurl }}">
                 <div class="blog-pic">
                   <img width="20" src="../assets/images/icon_blog_w.png">

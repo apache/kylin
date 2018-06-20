@@ -703,8 +703,14 @@ a.section-menu-title:hover {
     text-align: center;
     margin: 60px 0 45px 0;
 }
+.credits ul{
+    text-align: left;
+}
 .contributors {
 	margin: 5px 0 60px 15px;
+}
+.contributors table{
+	text-align: left;
 }
 .contributors span {
 	min-width: 120px;
@@ -839,6 +845,13 @@ a.section-menu-title:hover {
 }
 .blog ol {
   padding-left: 20px;
+}
+.powered {
+  margin-bottom: 90px;
+}
+.powered ul {
+	list-style: none;
+	padding-left: 0px;
 }
 /*********************************************************************
  

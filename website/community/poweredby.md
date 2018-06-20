@@ -1,10 +1,8 @@
 ---
-layout: default
+layout: powered
 title: PoweredBy
 permalink: /community/poweredby.html
 ---		
-
-## Powered By Apache Kylin™
 
 __How to be listed here?__
 Send a quick description of your organization and usage to the [mailing list](mailto:user@kylin.apache.org) or to [@apachekylin](https://twitter.com/apachekylin) or [@lukehq](https://twitter.com/lukehq) on twitter and we'll add you.
