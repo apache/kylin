@@ -129,7 +129,7 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
                 AbstractExecutable job = execMgr.getJob(jobId);
                 ExecutableState status = job.getStatus();
                 if (status == ExecutableState.RUNNING) {
-                    scheduler.fetchFailed = true;
+                    scheduler.getFetcherRunner().setFetchFailed(true);
                     break;
                 }
                 Thread.sleep(1000);
