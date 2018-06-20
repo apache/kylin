@@ -28,7 +28,7 @@ public class CuboidResult {
     public final  GridTable table;
     public final int nRows;
     public final long timeSpent;
-    public final int aggrCacheMB;
+    public int aggrCacheMB;
 
     public CuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB) {
         this.cuboidId = cuboidId;
