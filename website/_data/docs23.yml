@@ -49,6 +49,7 @@
   - tutorial/setup_systemcube
   - tutorial/use_cube_planner
   - tutorial/use_dashboard
+  - tutorial/setup_jdbc_datasource
 
 - title: Integration
   docs:
@@ -78,7 +79,3 @@
   - howto/howto_update_coprocessor
   - howto/howto_install_ranger_kylin_plugin
   - howto/howto_enable_zookeeper_acl
-  - howto/howto_setup_systemcube
-  - howto/howto_use_cube_planner
-  - howto/howto_use_dashboard
-  - howto/howto_setup_jdbc_datasource
