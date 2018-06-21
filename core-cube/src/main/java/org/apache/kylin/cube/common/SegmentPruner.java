@@ -135,10 +135,16 @@ public class SegmentPruner {
 
     private boolean satisfy(CompareTupleFilter comp, String minVal, String maxVal) {
 
+        // When both min and max are null, it means all cells of the column are null.
+        // In such case, return true to let query engine scan the segment, since the
+        // result of null comparison is query engine specific.
+        if (minVal == null && maxVal == null)
+            return true;
+
         TblColRef col = comp.getColumn();
         DataTypeOrder order = col.getType().getOrder();
         String filterVal = toString(comp.getFirstValue());
-
+        
         switch (comp.getOperator()) {
         case EQ:
         case IN:
