@@ -74,6 +74,8 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
 
         //integer
         TblColRef qtyCol = cube.getModel().findColumn("V_LINEORDER.LO_QUANTITY");
+        TblColRef revCol = cube.getModel().findColumn("V_LINEORDER.V_REVENUE");
+        
         TupleFilter constFilter_LO_QUANTITY0 = new ConstantTupleFilter(Sets.newHashSet("8", "18", "28"));//between min and max value
         TupleFilter constFilter_LO_QUANTITY1 = new ConstantTupleFilter("1");//min value
         TupleFilter constFilter_LO_QUANTITY2 = new ConstantTupleFilter("50");//max value
@@ -81,6 +83,13 @@ public class SegmentPrunerTest extends LocalFileMetadataTestCase {
         TupleFilter constFilter_LO_QUANTITY4 = new ConstantTupleFilter("200");//gt max value
         TupleFilter constFilter_LO_QUANTITY5 = new ConstantTupleFilter(Sets.newHashSet("51", "52", "53"));//gt max values
 
+        // non-constant filter
+        {
+            TupleFilter f = compare(qtyCol, FilterOperatorEnum.EQ, revCol);
+            SegmentPruner segmentPruner = new SegmentPruner(f);
+            Assert.assertTrue(segmentPruner.check(cubeSegment));
+        }
+        
         // is null
         {
             TupleFilter f = compare(qtyCol, FilterOperatorEnum.ISNULL);

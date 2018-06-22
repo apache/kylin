@@ -32,6 +32,7 @@ import org.apache.kylin.cube.DimensionRangeInfo;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeOrder;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
@@ -139,6 +140,10 @@ public class SegmentPruner {
         // In such case, return true to let query engine scan the segment, since the
         // result of null comparison is query engine specific.
         if (minVal == null && maxVal == null)
+            return true;
+        
+        // pass on non-constant filter
+        if (comp.getChildren().size() > 1 && !(comp.getChildren().get(1) instanceof ConstantTupleFilter))
             return true;
 
         TblColRef col = comp.getColumn();

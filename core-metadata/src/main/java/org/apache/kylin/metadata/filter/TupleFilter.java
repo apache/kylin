@@ -93,7 +93,12 @@ public abstract class TupleFilter {
     public static CompareTupleFilter compare(TblColRef col, FilterOperatorEnum op, Object val) {
         CompareTupleFilter r = new CompareTupleFilter(op);
         r.addChild(new ColumnTupleFilter(col));
-        r.addChild(val instanceof ConstantTupleFilter ? (ConstantTupleFilter) val : new ConstantTupleFilter(val));
+        if (val instanceof TupleFilter)
+            r.addChild((TupleFilter) val);
+        else if (val instanceof TblColRef)
+            r.addChild(new ColumnTupleFilter((TblColRef) col));
+        else
+            r.addChild(new ConstantTupleFilter(val));
         return r;
     }
 
