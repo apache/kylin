@@ -28,18 +28,15 @@ import org.junit.Test;
 public class ITDistributedSchedulerTakeOverTest extends BaseTestDistributedScheduler {
     @Test
     public void testSchedulerTakeOver() throws Exception {
-        if (!lock(jobLock1, segmentId2)) {
+        if (!lock(jobLock1, jobId2)) {
             throw new JobException("fail to get the lock");
         }
 
         DefaultChainedExecutable job = new DefaultChainedExecutable();
-        job.setParam(SEGMENT_ID, segmentId2);
+        job.setId(jobId2);
         AbstractExecutable task1 = new SucceedTestExecutable();
-        task1.setParam(SEGMENT_ID, segmentId2);
         AbstractExecutable task2 = new SucceedTestExecutable();
-        task2.setParam(SEGMENT_ID, segmentId2);
         AbstractExecutable task3 = new SucceedTestExecutable();
-        task3.setParam(SEGMENT_ID, segmentId2);
         job.addTask(task1);
         job.addTask(task2);
         job.addTask(task3);
