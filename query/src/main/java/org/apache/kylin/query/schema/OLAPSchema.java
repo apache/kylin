@@ -29,6 +29,7 @@ import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 
 /**
@@ -129,4 +130,7 @@ public class OLAPSchema extends AbstractSchema {
         return CubeManager.getInstance(config);
     }
 
+    public ProjectInstance getProjectInstance() {
+        return ProjectManager.getInstance(config).getProject(projectName);
+    }
 }

@@ -201,7 +201,7 @@ public class OLAPContext {
     }
 
     public boolean isDynamicColumnEnabled() {
-        return olapSchema != null && olapSchema.getConfig().isDynamicColumnEnabled();
+        return olapSchema != null && olapSchema.getProjectInstance().getConfig().isDynamicColumnEnabled();
     }
 
     public boolean hasPrecalculatedFields() {
