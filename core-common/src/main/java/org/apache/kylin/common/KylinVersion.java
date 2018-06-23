@@ -88,14 +88,14 @@ public class KylinVersion implements Comparable {
         comp = this.internal - v.internal;
         if (comp != 0)
             return comp;
-        
+
         return (this.isSnapshot ? 0 : 1) - (v.isSnapshot ? 0 : 1);
     }
 
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("2.3.1.0");
+    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("2.3.2.0");
 
     private static final KylinVersion VERSION_200 = new KylinVersion("2.0.0");
 
@@ -131,7 +131,7 @@ public class KylinVersion implements Comparable {
     public static boolean isBefore200(String ver) {
         return new KylinVersion(ver).compareTo(VERSION_200) < 0;
     }
-    
+
     public static int compare(String v1, String v2) {
         return new KylinVersion(v1).compareTo(new KylinVersion(v2));
     }
