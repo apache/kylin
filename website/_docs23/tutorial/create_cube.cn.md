@@ -93,7 +93,7 @@ since: v0.7.1
 12. 点击 `Save` 然后选择 `Yes` 来保存 data model。创建完成，data model 就会列在左边 `Models` 列表中。
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/6 model-created.png)
 
-### III. 新建 Cube
+### IV. 新建 Cube
 
 创建完 data model，可以开始创建 cube。
 点击顶部 `Model`，然后点击 `Models` 标签。点击 `+New` 按钮，在下拉框中选择 `New Cube`。
@@ -157,12 +157,12 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
    * EXTENDED_COLUMN
    Extended_Column 作为度量比作为维度更节省空间。一列和零一列可以生成新的列。
    
-     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-extended_column.png)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-extended_column.PNG)
 
    * PERCENTILE
    Percentile 代表了百分比。值越大，错误就越少。100为最合适的值。
 
-     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-percentile.png)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-percentile.PNG)
 
 **步骤4. 更新设置**
 
@@ -212,12 +212,12 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
 
 Kylin 允许在 Cube 级别覆盖部分 kylin.properties 中的配置，你可以在这里定义覆盖的属性。如果你没有要配置的，点击 `Next` 按钮。
 
-![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/10 configuration.png)
+![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/10 configuration.PNG)
 
 **步骤7. 概览 & 保存**
 
 你可以概览你的 cube 并返回之前的步骤进行修改。点击 `Save` 按钮完成 cube 创建。
 
-![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/11 overview.png)
+![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/11 overview.PNG)
 
 恭喜，cube 创建好了，你可以去构建和玩它了。

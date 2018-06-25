@@ -150,12 +150,12 @@ You can use letters, numbers and '_' to name your cube (blank space in name is n
 * EXTENDED_COLUMN
    Extended_Column as a measure rather than a dimension is to save space. One column with another column can generate new columns.
 
-     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-extended_column.png)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-extended_column.PNG)
 
 * PERCENTILE
    Percentile represent the percentage. The larger the value, the smaller the error. 100 is the most suitable.
 
-     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-percentile.png)
+     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-percentile.PNG)
 
 **Step 4. Refresh Setting**
 
@@ -205,12 +205,12 @@ Please note: "Global Dictionary" and "Segment Dictionary" are one-way dictionary
 
 Kylin allows overwritting system configurations (conf/kylin.properties) at Cube level . You can add the key/values that you want to overwrite here. If you don't have anything to config, click `Next` button.
 
-![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/10 configuration.png)
+![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/10 configuration.PNG)
 
 **Step 7. Overview & Save**
 
 You can overview your cube and go back to previous step to modify it. Click the `Save` button to complete the cube creation.
 
-![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/11 overview.png)
+![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/11 overview.PNG)
 
 Cheers! Now the cube is created, you can go ahead to build and play it.
