@@ -27,39 +27,43 @@ public class DefaultQueryTransformerTest {
 
     @Test
     public void SumOfFnConvertTransform() throws Exception {
+        SumOfFnConvertTransform("SQL_DOUBLE");
+        SumOfFnConvertTransform("SQL_BIGINT");
+    }
+
+    private void SumOfFnConvertTransform(String dataType) throws Exception {
         DefaultQueryTransformer transformer = new DefaultQueryTransformer();
 
-        String fnConvertSumSql = "select sum({fn convert(\"LSTG_SITE_ID\", SQL_DOUBLE)}) from KYLIN_SALES group by LSTG_SITE_ID";
+        String fnConvertSumSql = "select sum({fn convert(\"LSTG_SITE_ID\", " + dataType + ")}) from KYLIN_SALES group by LSTG_SITE_ID";
         String correctSql = transformer.transform(fnConvertSumSql, "", "");
         assertTrue("select sum(\"LSTG_SITE_ID\") from KYLIN_SALES group by LSTG_SITE_ID".equalsIgnoreCase(correctSql));
 
         //test SQL contains blank
         //Case one blank interval
-        fnConvertSumSql = "select sum ( { fn convert( \"LSTG_SITE_ID\" , SQL_DOUBLE) } ) from KYLIN_SALES group by LSTG_SITE_ID";
+        fnConvertSumSql = "select sum ( { fn convert( \"LSTG_SITE_ID\" , " + dataType + ") } ) from KYLIN_SALES group by LSTG_SITE_ID";
         correctSql = transformer.transform(fnConvertSumSql, "", "");
         assertTrue("select sum(\"LSTG_SITE_ID\") from KYLIN_SALES group by LSTG_SITE_ID".equalsIgnoreCase(correctSql));
 
         //Case multi blank interval
-        fnConvertSumSql = "select SUM  (  {  fn  convert(  \"LSTG_SITE_ID\"  ,  SQL_DOUBLE  )  }  ) from KYLIN_SALES group by LSTG_SITE_ID";
+        fnConvertSumSql = "select SUM  (  {  fn  convert(  \"LSTG_SITE_ID\"  ,  " + dataType + "  )  }  ) from KYLIN_SALES group by LSTG_SITE_ID";
         correctSql = transformer.transform(fnConvertSumSql, "", "");
         assertTrue("select sum(\"LSTG_SITE_ID\") from KYLIN_SALES group by LSTG_SITE_ID".equalsIgnoreCase(correctSql));
 
         //Case one or multi blank interval
-        fnConvertSumSql = "select SUM(  { fn convert( \"LSTG_SITE_ID\"  , SQL_DOUBLE  ) }  ) from KYLIN_SALES group by LSTG_SITE_ID";
+        fnConvertSumSql = "select SUM(  { fn convert( \"LSTG_SITE_ID\"  , " + dataType + "  ) }  ) from KYLIN_SALES group by LSTG_SITE_ID";
         correctSql = transformer.transform(fnConvertSumSql, "", "");
         assertTrue("select sum(\"LSTG_SITE_ID\") from KYLIN_SALES group by LSTG_SITE_ID".equalsIgnoreCase(correctSql));
 
         //test exception case of "... fnconvert ..."
-        fnConvertSumSql = "select SUM ({fnconvert(\"LSTG_SITE_ID\", SQL_DOUBLE)}) from KYLIN_SALES group by LSTG_SITE_ID";
+        fnConvertSumSql = "select SUM ({fnconvert(\"LSTG_SITE_ID\", " + dataType + ")}) from KYLIN_SALES group by LSTG_SITE_ID";
         correctSql = transformer.transform(fnConvertSumSql, "", "");
         assertFalse("select sum(\"LSTG_SITE_ID\") from KYLIN_SALES group by LSTG_SITE_ID".equalsIgnoreCase(correctSql));
 
         //test SQL contains multi sum
-        fnConvertSumSql = "select SUM({fn convert(\"LSTG_SITE_ID\", SQL_DOUBLE)}), SUM({fn convert(\"price\", SQL_DOUBLE)}) from KYLIN_SALES group by LSTG_SITE_ID";
+        fnConvertSumSql = "select SUM({fn convert(\"LSTG_SITE_ID\", " + dataType + ")}), SUM({fn convert(\"price\", " + dataType + ")}) from KYLIN_SALES group by LSTG_SITE_ID";
         correctSql = transformer.transform(fnConvertSumSql, "", "");
         assertTrue("select sum(\"LSTG_SITE_ID\"), sum(\"price\") from KYLIN_SALES group by LSTG_SITE_ID"
                 .equalsIgnoreCase(correctSql));
-
     }
 
     @Test
@@ -92,7 +96,7 @@ public class DefaultQueryTransformerTest {
         assertTrue("select sum(LSTG_SITE_ID), sum(price) from KYLIN_SALES group by LSTG_SITE_ID"
                 .equalsIgnoreCase(correctSql));
     }
-    
+
     @Test
     public void functionEscapeTransform() throws Exception {
         DefaultQueryTransformer transformer = new DefaultQueryTransformer();
