@@ -141,4 +141,12 @@
 .docs ol {
   padding-left: 20px;
 }
-
+@media only screen and (max-width: 767px) {
+  
+  .aside2 {
+    padding: 0px 0px 0px 10px; 
+  }
+  .docs {
+    margin: 0px;
+  }
+}

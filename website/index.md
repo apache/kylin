@@ -90,7 +90,7 @@ title: Home
                   <img width="30" src="assets/images/icon_index_shape.png">
                 </div>
                 <b>Seamless Integration with BI Tools:</b><br/>
-                <div class="indent" style="margin-top: 47px">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet. </div>
+                <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI/Excel, MSTR, QlikSense, Hue and SuperSet. </div>
               </div>
             </div>
           </div>
