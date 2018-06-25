@@ -3,9 +3,10 @@ layout: docs
 title:  Use RESTful API
 categories: howto
 permalink: /docs/howto/howto_use_restapi.html
+since: v0.7.1
 ---
 
-This page lists all the Rest APIs provided by Kylin; The base of the URL is `/kylin/api`, so don't forget to add it before a certain API's path. For example, to get all cube instances, send HTTP GET request to "/kylin/api/cubes".
+This page lists the major RESTful APIs provided by Kylin.
 
 * Query
    * [Authentication](#authentication)
@@ -17,24 +18,31 @@ This page lists all the Rest APIs provided by Kylin; The base of the URL is `/ky
    * [Get cube descriptor (dimension, measure info, etc)](#get-cube-descriptor)
    * [Get data model (fact and lookup table info)](#get-data-model)
    * [Build cube](#build-cube)
+   * [Enable cube](#enable-cube)
    * [Disable cube](#disable-cube)
    * [Purge cube](#purge-cube)
-   * [Enable cube](#enable-cube)
+   * [Delete segment](#delete-segment)
 * JOB
    * [Resume job](#resume-job)
+   * [Pause job](#pause-job)
    * [Discard job](#discard-job)
    * [Get job status](#get-job-status)
    * [Get job step output](#get-job-step-output)
+   * [Get job list](#get-job-list)
 * Metadata
    * [Get Hive Table](#get-hive-table)
-   * [Get Hive Table (Extend Info)](#get-hive-table-extend-info)
    * [Get Hive Tables](#get-hive-tables)
    * [Load Hive Tables](#load-hive-tables)
 * Cache
    * [Wipe cache](#wipe-cache)
+* Streaming
+   * [Initiate cube start position](#initiate-cube-start-position)
+   * [Build stream cube](#build-stream-cube)
+   * [Check segment holes](#check-segment-holes)
+   * [Fill segment holes](#fill-segment-holes)
 
 ## Authentication
-`POST /user/authentication`
+`POST /kylin/api/user/authentication`
 
 #### Request Header
 Authorization data encoded by basic auth is needed in the header, such as:
@@ -66,7 +74,7 @@ Authorization:Basic {data}
 }
 ```
 
-Example with `curl`: 
+#### Curl Example
 
 ```
 curl -c /path/to/cookiefile.txt -X POST -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/json' http://<host>:<port>/kylin/api/user/authentication
@@ -75,13 +83,20 @@ curl -c /path/to/cookiefile.txt -X POST -H "Authorization: Basic XXXXXXXXX" -H '
 If login successfully, the JSESSIONID will be saved into the cookie file; In the subsequent http requests, attach the cookie, for example:
 
 ```
-curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/your_cube/rebuild
+curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/your_cube/build
+```
+
+Alternatively, you can provide the username/password with option "user" in each curl call; please note this has the risk of password leak in shell history:
+
+
+```
+curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d '{ "startTime": 820454400000, "endTime": 821318400000, "buildType": "BUILD"}' http://localhost:7070/kylin/api/cubes/kylin_sales/build
 ```
 
 ***
 
 ## Query
-`POST /query`
+`POST /kylin/api/query`
 
 #### Request Body
 * sql - `required` `string` The text of sql statement.
@@ -100,6 +115,12 @@ curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{
    "acceptPartial":false,
    "project":"DEFAULT"
 }
+```
+
+#### Curl Example
+
+```
+curl -X POST -H "Authorization: Basic XXXXXXXXX" -H "Content-Type: application/json" -d '{ "sql":"select count(*) from TEST_KYLIN_FACT", "project":"learn_kylin" }' http://localhost:7070/kylin/api/query
 ```
 
 #### Response Body
@@ -195,8 +216,9 @@ curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{
 }
 ```
 
+
 ## List queryable tables
-`GET /tables_and_columns`
+`GET /kylin/api/tables_and_columns`
 
 #### Request Parameters
 * project - `required` `string` The project to load tables
@@ -274,7 +296,7 @@ curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{
 ***
 
 ## List cubes
-`GET /cubes`
+`GET /kylin/api/cubes`
 
 #### Request Parameters
 * offset - `required` `int` Offset used by pagination
@@ -305,13 +327,13 @@ curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{
 ```
 
 ## Get cube
-`GET /cubes/{cubeName}`
+`GET /kylin/api/cubes/{cubeName}`
 
 #### Path Variable
 * cubeName - `required` `string` Cube name to find.
 
 ## Get cube descriptor
-`GET /cube_desc/{cubeName}`
+`GET /kylin/api/cube_desc/{cubeName}`
 Get descriptor for specified cube instance.
 
 #### Path Variable
@@ -572,7 +594,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Get data model
-`GET /model/{modelName}`
+`GET /kylin/api/model/{modelName}`
 
 #### Path Variable
 * modelName - `required` `string` Data model name, by default it should be the same with cube name.
@@ -625,7 +647,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Build cube
-`PUT /cubes/{cubeName}/rebuild`
+`PUT /kylin/api/cubes/{cubeName}/build`
 
 #### Path Variable
 * cubeName - `required` `string` Cube name.
@@ -634,6 +656,11 @@ Get descriptor for specified cube instance.
 * startTime - `required` `long` Start timestamp of data to build, e.g. 1388563200000 for 2014-1-1
 * endTime - `required` `long` End timestamp of data to build
 * buildType - `required` `string` Supported build type: 'BUILD', 'MERGE', 'REFRESH'
+
+#### Curl Example
+```
+curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/{cubeName}/build
+```
 
 #### Response Sample
 ```
@@ -698,7 +725,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Enable Cube
-`PUT /cubes/{cubeName}/enable`
+`PUT /kylin/api/cubes/{cubeName}/enable`
 
 #### Path variable
 * cubeName - `required` `string` Cube name.
@@ -752,7 +779,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Disable Cube
-`PUT /cubes/{cubeName}/disable`
+`PUT /kylin/api/cubes/{cubeName}/disable`
 
 #### Path variable
 * cubeName - `required` `string` Cube name.
@@ -761,7 +788,7 @@ Get descriptor for specified cube instance.
 (Same as "Enable Cube")
 
 ## Purge Cube
-`PUT /cubes/{cubeName}/purge`
+`PUT /kylin/api/cubes/{cubeName}/purge`
 
 #### Path variable
 * cubeName - `required` `string` Cube name.
@@ -769,10 +796,14 @@ Get descriptor for specified cube instance.
 #### Response Sample
 (Same as "Enable Cube")
 
+
+## Delete Segment
+`DELETE /kylin/api/cubes/{cubeName}/segs/{segmentName}`
+
 ***
 
 ## Resume Job
-`PUT /jobs/{jobId}/resume`
+`PUT /kylin/api/jobs/{jobId}/resume`
 
 #### Path variable
 * jobId - `required` `string` Job id.
@@ -838,18 +869,20 @@ Get descriptor for specified cube instance.
    "progress":0.0
 }
 ```
-
-## Discard Job
-`PUT /jobs/{jobId}/cancel`
+## Pause Job
+`PUT /kylin/api/jobs/{jobId}/pause`
 
 #### Path variable
 * jobId - `required` `string` Job id.
 
-#### Response Sample
-(Same as "Resume job")
+## Discard Job
+`PUT /kylin/api/jobs/{jobId}/cancel`
+
+#### Path variable
+* jobId - `required` `string` Job id.
 
 ## Get Job Status
-`GET /jobs/{jobId}`
+`GET /kylin/api/jobs/{jobId}`
 
 #### Path variable
 * jobId - `required` `string` Job id.
@@ -858,7 +891,7 @@ Get descriptor for specified cube instance.
 (Same as "Resume Job")
 
 ## Get job step output
-`GET /jobs/{jobId}/steps/{stepId}/output`
+`GET /kylin/api/jobs/{jobId}/steps/{stepId}/output`
 
 #### Path Variable
 * jobId - `required` `string` Job id.
@@ -871,12 +904,82 @@ Get descriptor for specified cube instance.
 }
 ```
 
+## Get job list
+`GET /kylin/api/jobs`
+
+#### Request Variables
+* cubeName - `optional` `string` Cube name.
+* projectName - `required` `string` Project name.
+* status - `optional` `int` Job status, e.g. (NEW: 0, PENDING: 1, RUNNING: 2, STOPPED: 32, FINISHED: 4, ERROR: 8, DISCARDED: 16)
+* offset - `required` `int` Offset used by pagination.
+* limit - `required` `int` Jobs per page.
+* timeFilter - `required` `int`, e.g. (LAST ONE DAY: 0, LAST ONE WEEK: 1, LAST ONE MONTH: 2, LAST ONE YEAR: 3, ALL: 4)
+
+For example, to get the job list in project 'learn_kylin' for cube 'kylin_sales_cube' in lastone week: 
+
+`GET: /kylin/api/jobs?cubeName=kylin_sales_cube&limit=15&offset=0&projectName=learn_kylin&timeFilter=1`
+
+
+#### Response Sample
+```
+[
+  { 
+    "uuid": "9eb7bccf-4448-4578-9c29-552658b5a2ca", 
+    "last_modified": 1490957579843, 
+    "version": "2.0.0", 
+    "name": "Sample_Cube - 19700101000000_20150101000000 - BUILD - GMT+08:00 2017-03-31 18:36:08", 
+    "type": "BUILD", 
+    "duration": 936, 
+    "related_cube": "Sample_Cube", 
+    "related_segment": "53a5d7f7-7e06-4ea1-b3ee-b7f30343c723", 
+    "exec_start_time": 1490956581743, 
+    "exec_end_time": 1490957518131, 
+    "mr_waiting": 0, 
+    "steps": [
+      { 
+        "interruptCmd": null, 
+        "id": "9eb7bccf-4448-4578-9c29-552658b5a2ca-00", 
+        "name": "Create Intermediate Flat Hive Table", 
+        "sequence_id": 0, 
+        "exec_cmd": null, 
+        "interrupt_cmd": null, 
+        "exec_start_time": 1490957508721, 
+        "exec_end_time": 1490957518102, 
+        "exec_wait_time": 0, 
+        "step_status": "DISCARDED", 
+        "cmd_type": "SHELL_CMD_HADOOP", 
+        "info": { "endTime": "1490957518102", "startTime": "1490957508721" }, 
+        "run_async": false 
+      }, 
+      { 
+        "interruptCmd": null, 
+        "id": "9eb7bccf-4448-4578-9c29-552658b5a2ca-01", 
+        "name": "Redistribute Flat Hive Table", 
+        "sequence_id": 1, 
+        "exec_cmd": null, 
+        "interrupt_cmd": null, 
+        "exec_start_time": 0, 
+        "exec_end_time": 0, 
+        "exec_wait_time": 0, 
+        "step_status": "DISCARDED", 
+        "cmd_type": "SHELL_CMD_HADOOP", 
+        "info": {}, 
+        "run_async": false 
+      }
+    ],
+    "submitter": "ADMIN", 
+    "job_status": "FINISHED", 
+    "progress": 100.0 
+  }
+]
+```
 ***
 
 ## Get Hive Table
-`GET /tables/{tableName}`
+`GET /kylin/api/tables/{project}/{tableName}`
 
-#### Request Parameters
+#### Path Parameters
+* project - `required` `string` project name
 * tableName - `required` `string` table name to find.
 
 #### Response Sample
@@ -906,35 +1009,8 @@ Get descriptor for specified cube instance.
 }
 ```
 
-## Get Hive Table (Extend Info)
-`GET /tables/{tableName}/exd-map`
-
-#### Request Parameters
-* tableName - `optional` `string` table name to find.
-
-#### Response Sample
-```
-{
-    "minFileSize": "46055",
-    "totalNumberFiles": "1",
-    "location": "hdfs://sandbox.hortonworks.com:8020/apps/hive/warehouse/sample_07",
-    "lastAccessTime": "1418374103365",
-    "lastUpdateTime": "1398176493340",
-    "columns": "struct columns { string code, string description, i32 total_emp, i32 salary}",
-    "partitionColumns": "",
-    "EXD_STATUS": "true",
-    "maxFileSize": "46055",
-    "inputformat": "org.apache.hadoop.mapred.TextInputFormat",
-    "partitioned": "false",
-    "tableName": "sample_07",
-    "owner": "hue",
-    "totalFileSize": "46055",
-    "outputformat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
-}
-```
-
 ## Get Hive Tables
-`GET /tables`
+`GET /kylin/api/tables`
 
 #### Request Parameters
 * project- `required` `string` will list all tables in the project.
@@ -988,7 +1064,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Load Hive Tables
-`POST /tables/{tables}/{project}`
+`POST /kylin/api/tables/{tables}/{project}`
 
 #### Request Parameters
 * tables - `required` `string` table names you want to load from hive, separated with comma.
@@ -1005,10 +1081,125 @@ Get descriptor for specified cube instance.
 ***
 
 ## Wipe cache
-`PUT /cache/{type}/{name}/{action}`
+`PUT /kylin/api/cache/{type}/{name}/{action}`
 
 #### Path variable
 * type - `required` `string` 'METADATA' or 'CUBE'
 * name - `required` `string` Cache key, e.g the cube name.
 * action - `required` `string` 'create', 'update' or 'drop'
 
+***
+
+## Initiate cube start position
+Set the stream cube's start position to the current latest offsets; This can avoid building from the earlist position of Kafka topic (if you have set a long retension time); 
+
+`PUT /kylin/api/cubes/{cubeName}/init_start_offsets`
+
+#### Path variable
+* cubeName - `required` `string` Cube name
+
+#### Response Sample
+```sh
+{
+    "result": "success", 
+    "offsets": "{0=246059529, 1=253547684, 2=253023895, 3=172996803, 4=165503476, 5=173513896, 6=19200473, 7=26691891, 8=26699895, 9=26694021, 10=19204164, 11=26694597}"
+}
+```
+
+## Build stream cube
+`PUT /kylin/api/cubes/{cubeName}/build2`
+
+This API is specific for stream cube's building;
+
+#### Path variable
+* cubeName - `required` `string` Cube name
+
+#### Request Body
+
+* sourceOffsetStart - `required` `long` The start offset, 0 represents from previous position;
+* sourceOffsetEnd  - `required` `long` The end offset, 9223372036854775807 represents to the end position of current stream data
+* buildType - `required` Build type, "BUILD", "MERGE" or "REFRESH"
+
+#### Request Sample
+
+```sh
+{  
+   "sourceOffsetStart": 0, 
+   "sourceOffsetEnd": 9223372036854775807, 
+   "buildType": "BUILD"
+}
+```
+
+#### Response Sample
+```sh
+{
+    "uuid": "3afd6e75-f921-41e1-8c68-cb60bc72a601", 
+    "last_modified": 1480402541240, 
+    "version": "1.6.0", 
+    "name": "embedded_cube_clone - 1409830324_1409849348 - BUILD - PST 2016-11-28 22:55:41", 
+    "type": "BUILD", 
+    "duration": 0, 
+    "related_cube": "embedded_cube_clone", 
+    "related_segment": "42ebcdea-cbe9-4905-84db-31cb25f11515", 
+    "exec_start_time": 0, 
+    "exec_end_time": 0, 
+    "mr_waiting": 0, 
+ ...
+}
+```
+
+## Check segment holes
+`GET /kylin/api/cubes/{cubeName}/holes`
+
+#### Path variable
+* cubeName - `required` `string` Cube name
+
+## Fill segment holes
+`PUT /kylin/api/cubes/{cubeName}/holes`
+
+#### Path variable
+* cubeName - `required` `string` Cube name
+
+
+
+## Use RESTful API in Javascript
+
+Keypoints of call Kylin RESTful API in web page are:
+
+1. Add basic access authorization info in http headers.
+
+2. Use proper request type and data synax.
+
+Kylin security is based on basic access authorization, if you want to use API in your javascript, you need to add authorization info in http headers; for example:
+
+```
+$.ajaxSetup({
+      headers: { 'Authorization': "Basic eWFu**********X***ZA==", 'Content-Type': 'application/json;charset=utf-8' } // use your own authorization code here
+    });
+    var request = $.ajax({
+       url: "http://hostname/kylin/api/query",
+       type: "POST",
+       data: '{"sql":"select count(*) from SUMMARY;","offset":0,"limit":50000,"acceptPartial":true,"project":"test"}',
+       dataType: "json"
+    });
+    request.done(function( msg ) {
+       alert(msg);
+    }); 
+    request.fail(function( jqXHR, textStatus ) {
+       alert( "Request failed: " + textStatus );
+  });
+
+```
+
+To generate your authorization code, download and import "jquery.base64.js" from [https://github.com/yckart/jquery.base64.js](https://github.com/yckart/jquery.base64.js)).
+
+```
+var authorizationCode = $.base64('encode', 'NT_USERNAME' + ":" + 'NT_PASSWORD');
+
+$.ajaxSetup({
+   headers: { 
+    'Authorization': "Basic " + authorizationCode, 
+    'Content-Type': 'application/json;charset=utf-8' 
+   }
+});
+```

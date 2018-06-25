@@ -1,98 +1,135 @@
 ---
 layout: docs
-title:  Kylin Client Tool Tutorial
+title:  Kylin Python Client
 categories: tutorial
 permalink: /docs/tutorial/kylin_client_tool.html
 ---
-  
-> Kylin-client-tool is a tool coded with python, completely based on Kylin's restful apis.
-> With it, users can easily create Kylin Cubes, timely build cubes, summit/schedule/check/cancel/resume jobs.
 
-## Install
-1.Make sure python2.6/2.7 installed
+Apache Kylin Python Client Library is a python-based Apache Kylin client. There are two components in Apache Kylin Python Client Library:
 
-2.Two python packages `apscheduler` and `requests` are needed, run `setup.sh` to install. For mac users, please run`setup-mac.sh`. Or you can install them with setuptools.
+* Apache Kylin command line tools
+* Apache Kylin dialect for SQLAlchemy
 
-## Settings
-Modify settings/settings.py to set,
+You can get more detail from this [Github Repository](https://github.com/Kyligence/kylinpy).
 
-`KYLIN_USER`  Kylin's username
+## Installation
+Make sure Python version is 2.7+ or 3.4+. The easiest way to install Apache Kylin Python Client Library is to use "pip":
 
-`KYLIN_PASSWORD`  Kylin's password
+```
+pip install --upgrade kylinpy
+```
 
-`KYLIN_REST_HOST`  Kylin's address
+## Kylinpy CLI
+After installing Apache Kylin Python Client Library you may run kylinpy in terminal.
 
-`KYLIN_REST_PORT`  Kylin's port
+```
+$ kylinpy
+Usage: kylinpy [OPTIONS] COMMAND [ARGS]...
 
-`KYLIN_JOB_MAX_COCURRENT`  Max concurrent jobs for cube building
+Options:
+  -h, --host TEXT       Kylin host name  [required]
+  -P, --port INTEGER    Kylin port, default: 7070
+  -u, --username TEXT   Kylin username  [required]
+  -p, --password TEXT   Kylin password  [required]
+  --project TEXT        Kylin project  [required]
+  --prefix TEXT         Kylin RESTful prefix of url, default: "/kylin/api"
+  --debug / --no-debug  show debug infomation
+  --help                Show this message and exit.
 
-`KYLIN_JOB_MAX_RETRY`  Max failover time after job failed
+Commands:
+  auth           get user auth info
+  cube_columns   list cube columns
+  cube_desc      show cube description
+  cube_names     list cube names
+  model_desc     show model description
+  projects       list all projects
+  query          sql query
+  table_columns  list table columns
+  table_names    list all table names
+```
 
-## About command lines
-This tool is used by command lines, please run `python kylin_client_tool.py －h` to check for details.
+## Examples for Kylinpy CLI
 
-## Cube's creation
-This tool has its own cube definition method, the format is as below,
+1. To get all user info from Apache Kylin with debug mode
 
-`cube name|fact table name|dimension1,type of dimension1;dimension2,type of dimension2...|measure1,expression of measure1,type of measure1...|settings|filter|`
+```
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --debug auth
+```
 
-`settings` has options below,
+2. To get all cube columns from Apache Kylin with debug mode
 
-`no_dictionary`  Set dimensions not generate dictionaries in "Rowkeys" and their lengths
+```
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --debug cube_columns --name kylin_sales_cube
+```
 
-`mandatory_dimension`  Set mandatory dimensions in "Rowkeys"
+3. To get cube description of selected cube from Apache Kylin with debug mode
 
-`aggregation_group`  Set aggregation group
+```
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --debug cube_desc --name kylin_sales_cube
+```
 
-`partition_date_column`  Set partition date column
+4. To get all cube names from Apache Kylin with debug mode
 
-`partition_date_start`  Set partition start date
+```
+kylinpy -h hostname -u ADMIN -p KYLIN --project learn_kylin --debug cube_names
+```
 
-Cases can be found in file cube_def.csv, it does not support cube creation with lookup table
+5. To get cube SQL of selected cube from Apache Kylin with debug mode
 
-Use `-c` to create, use `-F` to specify cube definition file, for instance
+```
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --debug cube_sql --name kylin_sales_cube
+```
 
-`python kylin_client_tool.py -c -F cube_def.csv`
+6. To list all projects from Apache Kylin with debug mode
 
-## Build cube
-###Build cube with cube definition file
-Use `-b` to build, use `-F` to specify the cube definition file, if "partition date column" specified, use `-T` to specify the end date(year-month-day), if not specified, it will take current time as end date, for instance,
+```
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --debug projects
+```
 
-`python kylin_client_tool.py -b -F cube_def.csv -T 2016-03-01`
+7. To list all tables column of selected cube from Apache Kylin with debug mode
 
-###Build cube with file of cube names
-Use `-f` to specify the file of cube names, each line of the file has one cube name, for instance,
+```
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --debug table_columns --name KYLIN_SALES
+```
 
-`python kylin_client_tool.py -b -f cube_names.csv -T 2016-03-01`
+8. To get all table names from kylin
 
-###Build cube with cube names
-Use `-C` to specify cube names, split with commas, for instance,
+```
+kylinpy -h hostname -u ADMIN -p KYLIN --project learn_kylin --api1 table_names
+```
 
-`python kylin_client_tool.py -b -C client_tool_test1,client_tool_test2 -T 2016-03-01`
+9. To get the model description of the selected model from Apache Kylin with debug mode
 
-## Job management
-###Check jobs' statuses
-Use `-s` to check, use `-f` to specify file of cube names, use `-C` to specify cube names, if not specified, it will check all cubes' statuses. Use `-S` to specify jobs' statuses, R for `Running`, E for `Error`, F for `Finished`, D for `Discarded`, for instance,
+```
+kylinpy -h hostname -P 7070 -u ADMIN -p KYLIN --project learn_kylin --debug model_desc --name kylin_sales_model
+```
 
-`python kylin_client_tool.py -s -C kylin_sales_cube -f cube_names.csv -S F`
+## Kylin dialect for SQLAlchemy
 
-###Resume jobs
-Use `-r` to resume jobs, use `-f` to specify file of cube names, use `-C` to specify cube names, if not specified, it will reuse all jobs with error status, for instance,
+Any application that uses SQLAlchemy can now query Apache Kylin with this Apache Kylin dialect installed. It is part of the Apache Kylin Python Client Library, so if you already installed this library in the previous step, you are ready to use. You may use below template to build DSN to connect Apache Kylin.
 
-`python kylin_client_tool.py -r -C kylin_sales_cube -f cube_names.csv`
+```
+kylin://<username>:<password>@<hostname>:<port>/<project>?version=<v1|v2>&prefix=</kylin/api>
+```
 
-###Cancel jobs
-Use `-k` to cancel jobs, use `-f` to specify file with cube names, use `-C` to specify cube names, if not specified, it will cancel all jobs with running or error statuses, for instance,
+## Examples for SQLAlchemy
 
-`python kylin_client_tool.py -k -C kylin_sales_cube -f cube_names.csv`
+Test connection with Apache Kylin
 
-## Schedule cubes building
-### Build cube at set intervals
-On the basis of command of cube building, use `-B i` to specify the mode of build cube at set intervals, use `-O` to specify how many hours, for instance,
+```
+$ python
+  >>> import sqlalchemy as sa
+  >>> kylin_engine = sa.create_engine('kylin://username:password@hostname:7070/learn_kylin?version=v1')
+  >>> results = kylin_engine.execute('SELECT count(*) FROM KYLIN_SALES')
+  >>> [e for e in results]
+    [(4953,)]
+  >>> kylin_engine.table_names()
+    [u'KYLIN_ACCOUNT',
+     u'KYLIN_CAL_DT',
+     u'KYLIN_CATEGORY_GROUPINGS',
+     u'KYLIN_COUNTRY',
+     u'KYLIN_SALES',
+     u'KYLIN_STREAMING_TABLE']
+```
 
-`python kylin_client_tool.py -b -F cube_def.csv -B i -O 1`
 
-### Build cube at given time
-Use `-B t` to specify the mode of build cube at given time, use `-O` to specify the build time, split with commas,for instance,
-
-`python kylin_client_tool.py -b -F cube_def.csv -T 2016-03-04 -B t -O 2016,3,1,0,0,0`

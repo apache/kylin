@@ -1,6 +1,6 @@
 ---
 layout: docs-cn
-title:  Tableau 9 教程
+title:  Tableau 9 
 categories: tutorial
 permalink: /cn/docs/tutorial/tableau_91.html
 version: v1.2
@@ -8,6 +8,7 @@ since: v1.2
 ---
 
 Tableau 9已经发布一段时间了，社区有很多用户希望Apache Kylin能进一步支持该版本。现在可以通过更新Kylin ODBC驱动以使用Tableau 9来与Kylin服务进行交互。
+
 
 ### Tableau 8.x 用户
 请参考[Tableau 教程](./tableau.html)以获得更详细帮助。

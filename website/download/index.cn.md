@@ -5,6 +5,15 @@ title: 下载
 
 您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](https://kylin.apache.org/KEYS)来验证下载文件的有效性.
 
+#### v2.4.0
+- This is a major release after 2.3.x, with 8 new features and more than 30 bug fixes and enhancement. For the detail list please check release notes. 
+- [Release notes](/docs/release_notes.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
+- 源代码下载: [apache-kylin-2.4.0-src.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-source-release.zip.asc)\] \[[sha1](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-source-release.zip.sha1)\]
+- 二进制包下载:
+  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.4.0-bin-hbase1x.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-hbase1x.tar.gz.asc)\] \[[sha1](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-hbase1x.tar.gz.sha1)\]
+  - for CDH 5.7+ - [apache-kylin-2.4.0-bin-cdh57.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-cdh57.tar.gz.asc)\] \[[sha1](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-cdh57.tar.gz.tar.gz.sha1)\]
+
+
 ## v2.3.1
 
 - [Release notes](/docs23/release_notes.html) 和 [升级指南](/docs23/howto/howto_upgrade.html)

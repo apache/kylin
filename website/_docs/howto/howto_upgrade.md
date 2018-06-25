@@ -1,101 +1,108 @@
 ---
 layout: docs
-title:  Upgrade from old version
+title:  Upgrade From Old Versions
 categories: howto
 permalink: /docs/howto/howto_upgrade.html
+since: v1.5.1
 ---
 
-## Upgrade among v0.7.x and v1.x 
+Running as a Hadoop client, Apache Kylin's metadata and Cube data are persistended in Hadoop (HBase and HDFS), so the upgrade is relatively easy and user does not need worry about data loss. The upgrade can be performed in the following steps:
 
-From v0.7.1 to latest v1.2, Kylin's metadata is backward compatible, the upgrade can be finished in couple of minutes:
+* Download the new Apache Kylin binary package for your Hadoop version from Kylin download page.
+* Unpack the new version Kylin package to a new folder, e.g, /usr/local/kylin/apache-kylin-2.1.0/ (directly overwrite old instance is not recommended).
+* Merge the old configuration files (`$KYLIN_HOME/conf/*`) into the new ones. It is not recommended to overwrite the new configuration files, although that works in most cases. If you have modified tomcat configuration ($KYLIN_HOME/tomcat/conf/), do the same for it.
+* Stop the current Kylin instance with `bin/kylin.sh stop`
+* Set the `KYLIN_HOME` env variable to the new installation folder. If you have set `KYLIN_HOME` in `~/.bash_profile` or other scripts, remember to update them as well.
+* Start the new Kylin instance with `$KYLIN_HOME/bin/kylin start`. After be started, login Kylin web to check whether your cubes can be loaded correctly.
+* [Upgrade coprocessor](howto_update_coprocessor.html) to ensure the HBase region servers use the latest Kylin coprocessor.
+* Verify your SQL queries can be performed successfully.
 
-#### 1. Backup metadata
-Backup the Kylin metadata peridically is a good practice, and is highly suggested before upgrade; 
+Below are versions specific guides:
 
-```
-cd $KYLIN_HOME
-./bin/metastore.sh backup
-``` 
-It will print the backup folder, take it down and make sure it will not be deleted before the upgrade finished. If there is no "metastore.sh", use HBase's snapshot command to do backup:
 
-```
-hbase shell
-snapshot 'kylin_metadata', 'kylin_metadata_backup20150610'
-```
-Here 'kylin_metadata' is the default kylin metadata table name, replace it with the right table name of your Kylin;
+## Upgrade from v2.3.0 to v2.4.0
+Metadata is compitable, but the coprocessor need be updated.
 
-#### 2. Install new Kylin and copy back "conf"
-Download the new Kylin binary package from Kylin's download page; Extract it to a different folder other than current KYLIN_HOME; Before copy back the "conf" folder, do a compare and merge between the old and new kylin.properties to ensure newly introduced property will be kept.
+## Upgrade from v2.1.0 to v2.2.0
 
-#### 3. Stop old and start new Kylin instance
-```
-cd $KYLIN_HOME
-./bin/kylin.sh stop
-export KYLIN_HOME="<path_of_new_installation>"
-cd $KYLIN_HOME
-./bin/kylin.sh start
-```
+Kylin v2.2.0 cube metadata is compitable with v2.1.0, but you need aware the following changes:
 
-#### 4. Back-port if the upgrade is failed
-If the new version couldn't startup and need back-port, shutdown it and then switch to the old KYLIN_HOME to start. Idealy that would return to the origin state. If the metadata is broken, restore it from the backup folder.
+* Cube ACL is removed, use Project Level ACL instead. You need to manually configure Project Permissions to migrate your existing Cube Permissions. Please refer to [Project Level ACL](/docs21/tutorial/project_level_acl.html).
+* Update HBase coprocessor. The HBase tables for existing cubes need be updated to the latest coprocessor. Follow [this guide](/docs21/howto/howto_update_coprocessor.html) to update.
+
+
+## Upgrade from v2.0.0 to v2.1.0
+
+Kylin v2.1.0 cube metadata is compitable with v2.0.0, but you need aware the following changes. 
+
+1) In previous version, Kylin uses additional two HBase tables "kylin_metadata_user" and "kylin_metadata_acl" to persistent the user and ACL info. From 2.1, Kylin consolidates all the info into one table: "kylin_metadata". This will make the backup/restore and maintenance more easier. When you start Kylin 2.1.0, it will detect whether need migration; if true, it will print the command to do migration:
 
 ```
-./bin/metastore.sh restore <path_of_metadata_backup>
+ERROR: Legacy ACL metadata detected. Please migrate ACL metadata first. Run command 'bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE'.
 ```
 
-## Upgrade from v0.6.x to v0.7.x 
+After the migration finished, you can delete the legacy "kylin_metadata_user" and "kylin_metadata_acl" tables from HBase.
 
-In v0.7, Kylin refactored the metadata structure, for the new features like inverted-index and streaming; If you have cube created with v0.6 and want to keep in v0.7, a migration is needed; (Please skip v0.7.1 as
-it has several compatible issues and the fix will be included in v0.7.2) Below is the steps;
+2) From v2.1, Kylin hides the default settings in "conf/kylin.properties"; You only need uncomment or add the customized properties in it.
 
-#### 1. Backup v0.6 metadata
-To avoid data loss in the migration, a backup at the very beginning is always suggested; You can use HBase's backup or snapshot command to achieve this; Here is a sample with snapshot:
+3) Spark is upgraded from v1.6.3 to v2.1.1, if you customized Spark configurations in kylin.properties, please upgrade them as well by referring to [Spark documentation](https://spark.apache.org/docs/2.1.0/).
 
-```
-hbase shell
-snapshot 'kylin_metadata', 'kylin_metadata_backup20150610'
-```
-
-'kylin_metadata' is the default kylin metadata table name, replace it with the right table name of your Kylin;
-
-#### 2. Dump v0.6 metadata to local file
-This is also a backup method; As the migration tool is only tested with local file system, this step is must; All metadata need be downloaded, including snapshot, dictionary, etc;
+4) If you are running Kylin with two clusters (compute/query separated), need copy the big metadata files (which are persisted in HDFS instead of HBase) from the Hadoop cluster to HBase cluster.
 
 ```
-hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-job.jar  org.apache.kylin.common.persistence.ResourceTool  download  ./meta_dump
+hadoop distcp hdfs://compute-cluster:8020/kylin/kylin_metadata/resources hdfs://query-cluster:8020/kylin/kylin_metadata/resources
 ```
 
-(./meta_dump is the local folder that the metadata will be downloaded, change to name you preferred)
 
-#### 3. Run CubeMetadataUpgrade to migrate the metadata
-This step is to run the migration tool to parse the v0.6 metadata and then convert to v0.7 format; A verification will be performed in the last, and report error if some cube couldn't be migrated;
+## Upgrade from v1.6.0 to v2.0.0
 
-```
-hbase org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-job.jar org.apache.kylin.job.CubeMetadataUpgrade ./meta_dump
-```
+Kylin v2.0.0 can read v1.6.0 metadata directly. Please follow the common upgrade steps above.
 
-1. The tool will not overwrite v0.6 metadata; It will create a new folder with "_v2" suffix in the same folder, in this case the "./meta_dump_v2" will be created;
-2. By default this tool will only migrate the job history in last 30 days; If you want to keep elder job history, please tweak upgradeJobInstance() method by your own;
-3. If you see _No error or warning messages; The migration is success_ , that's good; Otherwise please check the error/warning messages carefully;
-4. For some problem you may need manually update the JSON file, to check whether the problem is gone, you can run a verify against the new metadata:
+Configuration names in `kylin.properties` have changed since v2.0.0. While the old property names still work, it is recommended to use the new property names as they follow [the naming convention](/development/coding_naming_convention.html) and are easier to understand. There is [a mapping from the old properties to the new properties](https://github.com/apache/kylin/blob/2.0.x/core-common/src/main/resources/kylin-backward-compatibility.properties).
 
-```
-hbase org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-job.jar org.apache.kylin.job.CubeMetadataUpgrade ./meta_dump2 verify
-```
+## Upgrade from v1.5.4 to v1.6.0
 
-#### 4. Upload the new metadata to HBase
-Now the new format of metadata will be upload to the HBase to replace the old format; Stop Kylin, and then:
+Kylin v1.5.4 and v1.6.0 are compatible in metadata. Please follow the common upgrade steps above.
 
-```
-hbase org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-job.jar  org.apache.kylin.common.persistence.ResourceTool  reset
-hbase org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-job.jar  org.apache.kylin.common.persistence.ResourceTool  upload  ./meta_dump_v2
-```
+## Upgrade from v1.5.3 to v1.5.4
+Kylin v1.5.3 and v1.5.4 are compatible in metadata. Please follow the common upgrade steps above.
 
-#### 5. Update HTables to use new coprocessor
-Kylin uses HBase coprocessor to do server side aggregation; When Kylin instance upgrades to V0.7, the HTables that created in V0.6 should also be updated to use the new coprocessor:
+## Upgrade from 1.5.2 to v1.5.3
+Kylin v1.5.3 metadata is compitible with v1.5.2, your cubes don't need rebuilt, as usual, some actions need to be performed:
 
-```
-hbase org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-job.jar  org.apache.kylin.job.tools.DeployCoprocessorCLI ${KYLIN_HOME}/lib/kylin-coprocessor-x.x.x.jar
-```
+#### 1. Update HBase coprocessor
+The HBase tables for existing cubes need be updated to the latest coprocessor; Follow [this guide](howto_update_coprocessor.html) to update;
 
-Done; Update your v0.7 Kylin configure to point to the same metadata HBase table, then start Kylin server; Check whether all cubes and other information are kept;
+#### 2. Update conf/kylin_hive_conf.xml
+From 1.5.3, Kylin doesn't need Hive to merge small files anymore; For users who copy the conf/ from previous version, please remove the "merge" related properties in kylin_hive_conf.xml, including "hive.merge.mapfiles", "hive.merge.mapredfiles", and "hive.merge.size.per.task"; this will save the time on extracting data from Hive.
+
+
+## Upgrade from 1.5.1 to v1.5.2
+Kylin v1.5.2 metadata is compitible with v1.5.1, your cubes don't need upgrade, while some actions need to be performed:
+
+#### 1. Update HBase coprocessor
+The HBase tables for existing cubes need be updated to the latest coprocessor; Follow [this guide](howto_update_coprocessor.html) to update;
+
+#### 2. Update conf/kylin.properties
+In v1.5.2 several properties are deprecated, and several new one are added:
+
+Deprecated:
+
+* kylin.hbase.region.cut.small=5
+* kylin.hbase.region.cut.medium=10
+* kylin.hbase.region.cut.large=50
+
+New:
+
+* kylin.hbase.region.cut=5
+* kylin.hbase.hfile.size.gb=2
+
+These new parameters determines how to split HBase region; To use different size you can overwite these params in Cube level. 
+
+When copy from old kylin.properties file, suggest to remove the deprecated ones and add the new ones.
+
+#### 3. Add conf/kylin\_job\_conf\_inmem.xml
+A new job conf file named "kylin\_job\_conf\_inmem.xml" is added in "conf" folder; As Kylin 1.5 introduced the "fast cubing" algorithm, which aims to leverage more memory to do the in-mem aggregation; Kylin will use this new conf file for submitting the in-mem cube build job, which requesting different memory with a normal job; Please update it properly according to your cluster capacity.
+
+Besides, if you have used separate config files for different capacity cubes, for example "kylin\_job\_conf\_small.xml", "kylin\_job\_conf\_medium.xml" and "kylin\_job\_conf\_large.xml", please note that they are deprecated now; Only "kylin\_job\_conf.xml" and "kylin\_job\_conf\_inmem.xml" will be used for submitting cube job; If you have cube level job configurations (like using different Yarn job queue), you can customize at cube level, check [KYLIN-1706](https://issues.apache.org/jira/browse/KYLIN-1706)
+

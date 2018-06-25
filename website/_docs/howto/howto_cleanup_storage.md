@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  Cleanup Storage (HDFS & HBase Tables)
+title:  Cleanup Storage
 categories: howto
 permalink: /docs/howto/howto_cleanup_storage.html
 ---
@@ -11,11 +11,12 @@ automated garbage collection, it might not cover all cases; You can do an offlin
 Steps:
 1. Check which resources can be cleanup, this will not remove anything:
 {% highlight Groff markup %}
-hbase org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-(version).jar org.apache.kylin.job.hadoop.cube.StorageCleanupJob --delete false
+export KYLIN_HOME=/path/to/kylin_home
+${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.StorageCleanupJob --delete false
 {% endhighlight %}
 Here please replace (version) with the specific Kylin jar version in your installation;
 2. You can pickup 1 or 2 resources to check whether they're no longer be referred; Then add the "--delete true" option to start the cleanup:
 {% highlight Groff markup %}
-hbase org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-(version).jar org.apache.kylin.job.hadoop.cube.StorageCleanupJob --delete true
+${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.StorageCleanupJob --delete true
 {% endhighlight %}
-On finish, the intermediate HDFS location and HTables will be dropped;
+On finish, the intermediate HDFS location and HTables should be dropped;

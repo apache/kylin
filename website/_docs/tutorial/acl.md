@@ -1,9 +1,15 @@
 ---
 layout: docs
-title:  Kylin Cube Permissions
+title: Cube Permission (v2.1)
 categories: tutorial
 permalink: /docs/tutorial/acl.html
+since: v0.7.1
 ---
+
+```
+Notes:
+Cube ACL is removed since v2.2.0, please use [Project level ACL](/docs/tutorial/project_level_acl.html) to manager ACL.
+```
 
 In `Cubes` page, double click the cube row to see the detail information. Here we focus on the `Access` tab.
 Click the `+Grant` button to grant permission. 

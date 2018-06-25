@@ -163,10 +163,6 @@ $ mvn -DdryRun=true -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y
 __Check the dry run output:__
 
 * In the `target` directory should be these 8 files, among others:
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.tar.gz
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.tar.gz.asc
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.tar.gz.md5
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.tar.gz.sha1
   * apache-kylin-X.Y.Z-SNAPSHOT-src.zip
   * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.asc
   * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.md5

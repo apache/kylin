@@ -1,8 +1,8 @@
 ---
 layout: docs-cn
-title:  Kylin ODBC 驱动程序教程
+title:  ODBC 驱动程序
 categories: 教程
-permalink: /cn/docs/tutorial/odbc.html
+permalink: /cn/docs23/tutorial/odbc.html
 version: v1.2
 since: v0.7.1
 ---

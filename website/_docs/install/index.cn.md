@@ -2,7 +2,7 @@
 layout: docs
 title:  "Installation Guide"
 categories: install
-permalink: /docs/install/index.html
+permalink: /cn/docs/install/index.html
 version: v0.7.2
 since: v0.7.1
 ---
@@ -36,11 +36,6 @@ Except for some prerequisite software installations, the core of Kylin installat
 4. To start Kylin, simply run **bin/kylin.sh start**
 5. To stop Kylin, simply run **bin/kylin.sh stop**
 
-> If you want to have multiple Kylin nodes please refer to [this](kylin_cluster.html)
+After Kylin started you can visit <http://your_hostname:7070/kylin>. The username/password is ADMIN/KYLIN. 
 
-After Kylin started you can visit <http://your_hostname:7070/kylin>. The username/password is ADMIN/KYLIN. It's a clean Kylin homepage with nothing in there. To start with you can:
-
-1. [Quick play with a sample cube](../tutorial/kylin_sample.html)
-2. [Create and Build your own cube](../tutorial/create_cube.html)
-3. [Kylin Web Tutorial](../tutorial/web.html)
 

@@ -1,6 +1,6 @@
 ---
 layout: docs-cn
-title:  Tableau教程
+title:  Tableau
 categories: 教程
 permalink: /cn/docs/tutorial/tableau.html
 version: v1.2

@@ -44,7 +44,7 @@ If you want to publish local dashboard to a Tableau Server, just expand `Server`
 
 ### More
 
-- Please refer to [Kylin and Tableau Tutorial](./tableau.html) for more detail.
+- You can refer to [Kylin and Tableau Tutorial](./tableau.html) for more detail.
 - Here is a good tutorial written by Alberto Ramon Portoles (a.ramonportoles@gmail.com): [KylinWithTableau](https://github.com/albertoRamon/Kylin/tree/master/KylinWithTableau)
 
 
