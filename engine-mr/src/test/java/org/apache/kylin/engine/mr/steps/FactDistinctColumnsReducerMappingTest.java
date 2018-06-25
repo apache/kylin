@@ -54,9 +54,7 @@ public class FactDistinctColumnsReducerMappingTest extends LocalFileMetadataTest
         TblColRef aUHC = cube.getModel().findColumn("TEST_COUNT_DISTINCT_BITMAP");
 
         FactDistinctColumnsReducerMapping mapping = new FactDistinctColumnsReducerMapping(cube);
-        //System.out.println(mapping.getAllDictCols());
-        //System.out.println(Arrays.toString(mapping.getAllRolePlaysForReducers()));
-
+        
         int totalReducerNum = mapping.getTotalReducerNum();
         Assert.assertEquals(2, mapping.getCuboidRowCounterReducerNum());
         

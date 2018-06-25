@@ -92,8 +92,16 @@ public class DimensionRangeInfo {
         return min;
     }
 
+    public void setMin(String min) {
+        this.min = min;
+    }
+
     public String getMax() {
         return max;
+    }
+
+    public void setMax(String max) {
+        this.max = max;
     }
     
     @Override
