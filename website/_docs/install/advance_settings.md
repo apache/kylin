@@ -80,6 +80,17 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX:MaxPermSize=128M -v
 # export KYLIN_JVM_SETTINGS="-Xms16g -Xmx16g -XX:MaxPermSize=512m -XX:NewSize=3g -XX:MaxNewSize=3g -XX:SurvivorRatio=4 -XX:+CMSClassUnloadingEnabled -XX:+CMSParallelRemarkEnabled -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:CMSInitiatingOccupancyFraction=70 -XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError"
 {% endhighlight %}
 
+## Enable multiple job engines (HA)
+Since Kylin 2.0, Kylin support multiple job engines running together, which is more extensible, available and reliable than the default job scheduler.
+
+To enable the distributed job scheduler, you need to set or update the configs in the kylin.properties:
+
+```
+kylin.job.scheduler.default=2
+kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock
+```
+Please add all job servers and query servers to the `kylin.server.cluster-servers`.
+
 ## Enable LDAP or SSO authentication
 
 Check [How to Enable Security with LDAP and SSO](../howto/howto_ldap_and_sso.html)

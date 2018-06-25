@@ -181,7 +181,6 @@ The main configuration file of Kylin.
 | kylin.engine.spark.rdd-partition-cut-mb               | 10.0                 | Spark Cubing RDD partition split size.                       | Yes                       |
 | kylin.engine.spark.min-partition                      | 1                    | Spark Cubing RDD min partition number                        | Yes                       |
 | kylin.engine.spark.max-partition                      | 5000                 | RDD max partition number                                     | Yes                       |
-| kylin.engine.spark.storage-level                      | MEMORY_AND_DISK_SER  | RDD persistent level.                                        | Yes                       |
 | kylin.query.skip-empty-segments                       | true                 | Whether directly skip empty segment (metadata shows size be 0) when run SQL query. | Yes                       |
 | kylin.query.force-limit                               | -1                   |                                                              |                           |
 | kylin.query.max-scan-bytes                            | 0                    |                                                              |                           |
