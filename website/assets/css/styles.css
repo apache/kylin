@@ -44,6 +44,7 @@ body {
 	color: #333333;
 	font-weight: 400;
 	padding: 0;
+	overflow-x: hidden;
 }
 .topspace {
 	margin-top: 40px;
