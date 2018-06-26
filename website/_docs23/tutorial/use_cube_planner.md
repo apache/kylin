@@ -17,10 +17,11 @@ Cube Planner makes Apache Kylin to be more resource efficient. It intelligently 
 
 ![CubePlanner](/images/CubePlanner/CubePlanner.png)
 
+Read more at [eBay tech blog](https://www.ebayinc.com/stories/blogs/tech/cube-planner-build-an-apache-kylin-olap-cube-efficiently-and-intelligently/)
+
 ## Prerequisites
 
-To enable Dashboard on WebUI, you need to set **kylin.cube.cubeplanner.enabled=true** and other properties in **kylin.properties**.
-
+To enable Dashboard on WebUI, you need to set `kylin.cube.cubeplanner.enabled=true` and other properties in `kylin.properties`
 
 {% highlight Groff markup %}
 kylin.cube.cubeplanner.enabled=true
@@ -44,7 +45,7 @@ kylin.metrics.monitor-enabled=true
 
   You should make sure the status of the Cube is '**READY**'
 
-  If the status of the Cube is '**DISABLED**'![Status_Disabled](/images/CubePlanner/Status_Disabled.png), you will not be able to use the Cube planner.
+  If the status of the Cube is '**DISABLED**', you will not be able to use the Cube planner.
 
   You should change the status of the Cube from '**DISABLED**' to '**READY**' by building it or enabling it if it has been built before.
 
@@ -53,7 +54,7 @@ kylin.metrics.monitor-enabled=true
 
 a. Click the '**Planner**' button to view the '**Current Cuboid Distribution**' of the Cube.
 
-- The data will be displayed in *[Sunburst Chart](https://en.wikipedia.org/wiki/Pie_chart#Ring_chart_.2F_Sunburst_chart_.2F_Multilevel_pie_chart)*. 
+- The data will be displayed in **Sunburst Chart**. 
 
 - Each part refers to a cuboid, is shown in different colors determined by the query **frequency** against this cuboid.
 
@@ -119,6 +120,8 @@ c. Click the '**Optimize**' button to optimize the Cube.
 - A window will jump up to confirm. Click '**Yes**' to start the optimization. Click '**Cancel**' to give up the optimization.
 
 - User is able to get to know the last optimized time of the Cube in Cube Planner tab page. 
+
+Please note: if you don't see the last optimized time, upgrade to Kylin v2.3.2 or above, check KYLIN-3404.
 
 ![column name+optimize time](/images/CubePlanner/column_name+optimize_time.png)
 
