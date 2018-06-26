@@ -17,7 +17,7 @@ or send to Apache Kylin mailing list:
 
 
 ## v2.4.0 - 2018-06-23
-_Tag:_ [kylin-2.3.1](https://github.com/apache/kylin/tree/kylin-2.3.1)
+_Tag:_ [kylin-2.4.0](https://github.com/apache/kylin/tree/kylin-2.4.0)
 This is a major release after 2.3.x, with 8 new features and more than 30 bug fixes bug fixes and enhancement. Check [How to upgrade](/docs/howto/howto_upgrade.html).
 
 __New Feature__
