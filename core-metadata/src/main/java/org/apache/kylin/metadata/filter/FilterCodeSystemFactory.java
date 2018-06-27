@@ -22,18 +22,23 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by donald.zheng on 2016/12/19.
  */
 public class FilterCodeSystemFactory {
+    private static final Logger logger = LoggerFactory.getLogger(FilterCodeSystemFactory.class);
     private final static HashMap<String, IFilterCodeSystem> codeSystemMap = new HashMap<>();
 
     static {
         codeSystemMap.put("string", StringCodeSystem.INSTANCE);
         codeSystemMap.put("integer", new IntegerCodeSystem());
         codeSystemMap.put("decimal", new DecimalCodeSystem());
+        codeSystemMap.put("date", new DateTimeCodeSystem());
     }
 
     public static IFilterCodeSystem getFilterCodeSystem(DataType dataType) {
@@ -41,6 +46,8 @@ public class FilterCodeSystemFactory {
             return codeSystemMap.get("integer");
         } else if (dataType.isNumberFamily()) {
             return codeSystemMap.get("decimal");
+        } else if (dataType.isDateTimeFamily()) {
+            return codeSystemMap.get("date");
         } else {
             return codeSystemMap.get("string");
         }
@@ -95,4 +102,33 @@ public class FilterCodeSystemFactory {
         }
     }
 
+    private static class DateTimeCodeSystem implements IFilterCodeSystem<String> {
+
+        @Override
+        public boolean isNull(String code) {
+            return code == null;
+        }
+
+        @Override
+        public void serialize(String code, ByteBuffer buf) {
+            BytesUtil.writeUTFString(code, buf);
+        }
+
+        @Override
+        public String deserialize(ByteBuffer buf) {
+            return BytesUtil.readUTFString(buf);
+        }
+
+        @Override
+        public int compare(String o1, String o2) {
+            try {
+                long d1 = DateFormat.stringToMillis(o1);
+                long d2 = DateFormat.stringToMillis(o2);
+                return Long.compare(d1, d2);
+            } catch (IllegalArgumentException e) {
+                logger.error("failed to convert string[{},{}] to date, use string to compare.", o1, o2, e);
+                return o1.compareTo(o2);
+            }
+        }
+    }
 }
