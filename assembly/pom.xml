@@ -26,7 +26,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>2.3.2-SNAPSHOT</version>
+        <version>2.3.2</version>
     </parent>
 
     <properties>
