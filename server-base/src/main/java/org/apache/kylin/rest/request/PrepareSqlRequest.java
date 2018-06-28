@@ -28,6 +28,7 @@ import java.util.Collections;
  * 
  */
 public class PrepareSqlRequest extends SQLRequest {
+    private boolean enableStatementCache = true;
 
     public PrepareSqlRequest() {
         super();
@@ -41,6 +42,14 @@ public class PrepareSqlRequest extends SQLRequest {
 
     public void setParams(StateParam[] params) {
         this.params = params;
+    }
+
+    public boolean isEnableStatementCache() {
+        return enableStatementCache;
+    }
+
+    public void setEnableStatementCache(boolean enableStatementCache) {
+        this.enableStatementCache = enableStatementCache;
     }
 
     public static class StateParam implements Serializable {

@@ -355,6 +355,18 @@ public class ProjectManager {
             save(projectInstance);
         }
     }
+
+    /**
+     * change the last project modify time
+     * @param projectName
+     * @throws IOException
+     */
+    public void touchProject(String projectName) throws IOException {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
+            ProjectInstance projectInstance = getProject(projectName);
+            save(projectInstance);
+        }
+    }
     
     private ProjectInstance save(ProjectInstance prj) throws IOException {
         crud.save(prj);

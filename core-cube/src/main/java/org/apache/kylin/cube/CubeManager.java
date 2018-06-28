@@ -264,6 +264,7 @@ public class CubeManager implements IRealizationProvider {
             cube = cube.latestCopyForWrite(); // get a latest copy
             CubeUpdate update = new CubeUpdate(cube);
             update.setStatus(newStatus);
+            ProjectManager.getInstance(config).touchProject(cube.getProject());
             return updateCube(update);
         }
     }
