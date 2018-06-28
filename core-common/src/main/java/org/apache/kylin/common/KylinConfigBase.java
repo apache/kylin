@@ -1398,6 +1398,14 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.query.access-controller", null);
     }
 
+    public int getQueryMaxCacheStatementNum() {
+        return Integer.parseInt(this.getOptional("kylin.query.statement-cache-max-num", String.valueOf(50000)));
+    }
+
+    public int getQueryMaxCacheStatementInstancePerKey() {
+        return Integer.parseInt(this.getOptional("kylin.query.statement-cache-max-num-per-key", String.valueOf(50)));
+    }
+
     public int getDimCountDistinctMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.query.max-dimension-count-distinct", "5000000"));
     }

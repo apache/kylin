@@ -80,6 +80,7 @@
         <commons-upload.version>1.3.3</commons-upload.version>
         <commons-math3.version>3.1.1</commons-math3.version>
         <commons-collections.version>3.2.2</commons-collections.version>
+        <commons-pool.version>2.5.0</commons-pool.version>
 
         <!-- Calcite deps, keep compatible with calcite.version -->
         <jackson.version>2.9.5</jackson.version>
@@ -506,6 +507,11 @@
                 <artifactId>commons-collections</artifactId>
                 <version>${commons-collections.version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-pool2</artifactId>
+                <version>${commons-pool.version}</version>
             </dependency>
 
             <!-- HBase2 dependencies -->
