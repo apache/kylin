@@ -1061,6 +1061,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.storage.hbase.hconnection-threads-alive-seconds", "60"));
     }
 
+    public int getHBaseReplicationScope() {
+        return Integer.parseInt(getOptional("kylin.storage.hbase.replication-scope", "0"));
+    }
+
     // ============================================================================
     // ENGINE.MR
     // ============================================================================

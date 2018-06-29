@@ -202,6 +202,7 @@ public class CubeHTableUtil {
 
         cf.setInMemory(false);
         cf.setBloomFilterType(BloomType.NONE);
+        cf.setScope(kylinConfig.getHBaseReplicationScope());
         return cf;
     }
 
