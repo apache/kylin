@@ -18,49 +18,38 @@
 
 package org.apache.kylin.source.hive;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hive.hcatalog.data.HCatRecord;
-import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
+import org.apache.kylin.engine.spark.ISparkInput;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-public class HiveMRInput extends HiveInputBase implements IMRInput {
+public class HiveSparkInput extends HiveInputBase implements ISparkInput {
 
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(HiveMRInput.class);
+    private static final Logger logger = LoggerFactory.getLogger(HiveSparkInput.class);
 
     @Override
-    public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+    public ISparkInput.ISparkBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
         return new BatchCubingInputSide(flatDesc);
     }
 
     @Override
-    public IMRTableInputFormat getTableInputFormat(TableDesc table) {
-        return new HiveTableInputFormat(getTableNameForHCat(table));
-    }
-
-    @Override
-    public IMRBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
-        return new IMRBatchMergeInputSide() {
+    public ISparkInput.ISparkBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
+        return new ISparkInput.ISparkBatchMergeInputSide() {
             @Override
             public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
                 // doing nothing
@@ -68,40 +57,7 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
         };
     }
 
-    public static class HiveTableInputFormat implements IMRTableInputFormat {
-        final String dbName;
-        final String tableName;
-
-        /**
-         * Construct a HiveTableInputFormat to read hive table.
-         * @param fullQualifiedTableName "databaseName.tableName"
-         */
-        public HiveTableInputFormat(String fullQualifiedTableName) {
-            String[] parts = HadoopUtil.parseHiveTableName(fullQualifiedTableName);
-            dbName = parts[0];
-            tableName = parts[1];
-        }
-
-        @Override
-        public void configureJob(Job job) {
-            try {
-                job.getConfiguration().addResource("hive-site.xml");
-
-                HCatInputFormat.setInput(job, dbName, tableName);
-                job.setInputFormatClass(HCatInputFormat.class);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public List<String[]> parseMapperInput(Object mapperInput) {
-            return Collections.singletonList(HiveTableReader.getRowAsStringArray((HCatRecord) mapperInput));
-        }
-
-    }
-
-    public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
+    public class BatchCubingInputSide implements ISparkBatchCubingInputSide {
 
         final protected IJoinedFlatTableDesc flatDesc;
         final protected String flatTableDatabase;
@@ -124,7 +80,7 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
             final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
 
             // create flat table first
-            addStepPhase1_DoCreateFlatTable(jobFlow);
+            addStepPhase1_DoCreateFlatTable(jobFlow, hdfsWorkingDir, flatDesc, flatTableDatabase);
 
             // then count and redistribute
             if (cubeConfig.isHiveRedistributeEnabled()) {
@@ -135,14 +91,6 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
 
             // special for hive
             addStepPhase1_DoMaterializeLookupTable(jobFlow);
-        }
-
-        protected void addStepPhase1_DoCreateFlatTable(DefaultChainedExecutable jobFlow) {
-            final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
-            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
-            final String jobWorkingDir = getJobWorkingDir(jobFlow, hdfsWorkingDir);
-
-            jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
         }
 
         protected void addStepPhase1_DoMaterializeLookupTable(DefaultChainedExecutable jobFlow) {
@@ -156,6 +104,7 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
         }
 
 
+
         @Override
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
             final String jobWorkingDir = getJobWorkingDir(jobFlow, hdfsWorkingDir);
@@ -166,11 +115,6 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
             step.setExternalDataPaths(Collections.singletonList(JoinedFlatTable.getTableDir(flatDesc, jobWorkingDir)));
             step.setHiveViewIntermediateTableIdentities(StringUtil.join(hiveViewIntermediateTables, ","));
             jobFlow.addTask(step);
-        }
-
-        @Override
-        public IMRTableInputFormat getFlatTableInputFormat() {
-            return new HiveTableInputFormat(getIntermediateTableIdentity());
         }
 
         private String getIntermediateTableIdentity() {

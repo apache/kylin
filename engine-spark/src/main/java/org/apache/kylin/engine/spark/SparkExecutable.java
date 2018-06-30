@@ -37,6 +37,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
 import org.apache.kylin.job.common.PatternedLogger;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -53,6 +54,7 @@ public class SparkExecutable extends AbstractExecutable {
     private static final String CLASS_NAME = "className";
     private static final String JARS = "jars";
     private static final String JOB_ID = "jobId";
+    private String counter_save_as;
 
     public void setClassName(String className) {
         this.setParam(CLASS_NAME, className);
@@ -64,6 +66,10 @@ public class SparkExecutable extends AbstractExecutable {
 
     public void setJars(String jars) {
         this.setParam(JARS, jars);
+    }
+
+    public void setCounterSaveAs(String value) {
+        counter_save_as = value;
     }
 
     private String formatArgs() {
@@ -125,7 +131,7 @@ public class SparkExecutable extends AbstractExecutable {
         try {
             attachSegmentMetadataWithDict(segment);
         } catch (IOException e) {
-            throw new ExecuteException("meta dump fialed");
+            throw new ExecuteException("meta dump failed");
         }
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -145,7 +151,10 @@ public class SparkExecutable extends AbstractExecutable {
             CliCommandExecutor exec = new CliCommandExecutor();
             PatternedLogger patternedLogger = new PatternedLogger(logger);
             exec.execute(cmd, patternedLogger);
-            getManager().addJobInfo(getId(), patternedLogger.getInfo());
+
+            Map<String, String> joblogInfo = patternedLogger.getInfo();
+            readCounters(joblogInfo);
+            getManager().addJobInfo(getId(), joblogInfo);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, patternedLogger.getBufferedLog());
         } catch (Exception e) {
             logger.error("error run spark job:", e);
@@ -191,5 +200,20 @@ public class SparkExecutable extends AbstractExecutable {
         KylinConfig dstConfig = KylinConfig.createKylinConfig(props);
         //upload metadata
         ResourceTool.copy(KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath()), dstConfig);
+    }
+
+    private void readCounters(final Map<String, String> info) {
+        if (counter_save_as != null) {
+            String[] saveAsNames = counter_save_as.split(",");
+            saveCounterAs(info.get(ExecutableConstants.SOURCE_RECORDS_COUNT), saveAsNames, 0, info);
+            saveCounterAs(info.get(ExecutableConstants.SOURCE_RECORDS_SIZE), saveAsNames, 1, info);
+            saveCounterAs(info.get(ExecutableConstants.HDFS_BYTES_WRITTEN), saveAsNames, 2, info);
+        }
+    }
+
+    private void saveCounterAs(String counter, String[] saveAsNames, int i, Map<String, String> info) {
+        if (saveAsNames.length > i && StringUtils.isBlank(saveAsNames[i]) == false) {
+            info.put(saveAsNames[i].trim(), counter);
+        }
     }
 }

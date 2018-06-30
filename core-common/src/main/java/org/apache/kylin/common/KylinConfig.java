@@ -400,7 +400,7 @@ public class KylinConfig extends KylinConfigBase {
 
     // ============================================================================
     
-    Map<Class, Object> managersCache = new ConcurrentHashMap<>();
+    transient Map<Class, Object> managersCache = new ConcurrentHashMap<>();
 
     private KylinConfig() {
         super();

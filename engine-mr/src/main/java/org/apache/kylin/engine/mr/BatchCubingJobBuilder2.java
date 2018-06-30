@@ -22,17 +22,14 @@ import java.util.List;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidUtil;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
 import org.apache.kylin.engine.mr.IMROutput2.IMRBatchCubingOutputSide2;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.BaseCuboidJob;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.mr.steps.InMemCuboidJob;
 import org.apache.kylin.engine.mr.steps.NDCuboidJob;
-import org.apache.kylin.engine.mr.steps.SaveStatisticsStep;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -89,7 +86,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         return result;
     }
 
-    private boolean isEnableUHCDictStep() {
+    public boolean isEnableUHCDictStep() {
         if (!config.getConfig().isBuildUHCDictWithMREnabled()) {
             return false;
         }
@@ -102,21 +99,6 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         return true;
     }
 
-    private LookupMaterializeContext addMaterializeLookupTableSteps(final CubingJob result) {
-        LookupMaterializeContext lookupMaterializeContext = new LookupMaterializeContext(result);
-        CubeDesc cubeDesc = seg.getCubeDesc();
-        List<String> allSnapshotTypes = cubeDesc.getAllExtLookupSnapshotTypes();
-        if (allSnapshotTypes.isEmpty()) {
-            return null;
-        }
-        for (String snapshotType : allSnapshotTypes) {
-            logger.info("add lookup table materialize steps for storage type:{}", snapshotType);
-            ILookupMaterializer materializer = MRUtil.getExtLookupMaterializer(snapshotType);
-            materializer.materializeLookupTablesForCube(lookupMaterializeContext, seg.getCubeInstance());
-        }
-        return lookupMaterializeContext;
-    }
-
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {
         // Don't know statistics so that tree cuboid scheduler is not determined. Determine the maxLevel at runtime
         final int maxLevel = CuboidUtil.getLongestDepth(seg.getCuboidScheduler().getAllCuboidIds());
@@ -126,16 +108,6 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         for (int i = 1; i <= maxLevel; i++) {
             result.addTask(createNDimensionCuboidStep(getCuboidOutputPathsByLevel(cuboidRootPath, i - 1), getCuboidOutputPathsByLevel(cuboidRootPath, i), i, jobId));
         }
-    }
-
-    private SaveStatisticsStep createSaveStatisticsStep(String jobId) {
-        SaveStatisticsStep result = new SaveStatisticsStep();
-        result.setName(ExecutableConstants.STEP_NAME_SAVE_STATISTICS);
-        CubingExecutableUtil.setCubeName(seg.getRealization().getName(), result.getParams());
-        CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
-        CubingExecutableUtil.setStatisticsPath(getStatisticsPath(jobId), result.getParams());
-        CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
-        return result;
     }
 
     protected void addInMemCubingSteps(final CubingJob result, String jobId, String cuboidRootPath) {

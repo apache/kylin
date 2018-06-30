@@ -29,6 +29,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMRInput;
+import org.apache.kylin.engine.spark.ISparkInput;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -61,6 +62,8 @@ public class KafkaSource implements ISource {
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
         if (engineInterface == IMRInput.class) {
             return (I) new KafkaMRInput();
+        } else if(engineInterface == ISparkInput.class) {
+            return (I) new KafkaSparkInput();
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }

@@ -132,7 +132,7 @@ public class MetricsManager {
             Preconditions.checkArgument(activeReservoirPointers.size() == sourceReporterBindProps.keySet().size(),
                     "Duplicate register names exist!!!");
         } else {
-            logger.info("Kylin metrics monitor is not enabled!!!");
+            logger.info("Kylin metrics monitor is not enabled");
         }
     }
 

@@ -20,7 +20,7 @@ package org.apache.kylin.engine.spark;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-
+import org.apache.hadoop.io.Text;
 import org.apache.kylin.engine.spark.util.PercentileCounterSerializer;
 import org.apache.kylin.measure.percentile.PercentileCounter;
 import org.apache.spark.serializer.KryoRegistrator;
@@ -45,6 +45,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(String[].class);
         kyroClasses.add(String[][].class);
         kyroClasses.add(Object[].class);
+        kyroClasses.add(Text.class);
         kyroClasses.add(java.math.BigDecimal.class);
         kyroClasses.add(java.util.ArrayList.class);
         kyroClasses.add(java.util.LinkedList.class);
@@ -83,7 +84,6 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.cube.model.HBaseColumnFamilyDesc[].class);
         kyroClasses.add(org.apache.kylin.cube.model.HBaseColumnDesc[].class);
         kyroClasses.add(org.apache.kylin.cube.model.RowKeyColDesc[].class);
-
         kylinClassByReflection1(kyroClasses);
         kylinClassByReflection2(kyroClasses);
 
@@ -94,6 +94,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.roaringbitmap.buffer.MappeableArrayContainer.class);
         kyroClasses.add(org.roaringbitmap.buffer.MappeableBitmapContainer.class);
 
+        kyroClasses.add(Class.class);
 
         addClassQuitely(kyroClasses, "com.google.common.collect.EmptyImmutableList");
         addClassQuitely(kyroClasses, "java.nio.HeapShortBuffer");

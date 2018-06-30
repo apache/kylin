@@ -46,8 +46,7 @@ public class HiveMRInputTest {
             DefaultChainedExecutable defaultChainedExecutable = mock(DefaultChainedExecutable.class);
             defaultChainedExecutable.setId(UUID.randomUUID().toString());
 
-            HiveMRInput.BatchCubingInputSide batchCubingInputSide = new HiveMRInput.BatchCubingInputSide(null);
-            String jobWorkingDir = batchCubingInputSide.getJobWorkingDir(defaultChainedExecutable);
+            String jobWorkingDir = HiveInputBase.getJobWorkingDir(defaultChainedExecutable, KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
             jobWorkDirPath = new Path(jobWorkingDir);
             Assert.assertTrue(fileSystem.exists(jobWorkDirPath));
         } finally {
@@ -65,7 +64,7 @@ public class HiveMRInputTest {
 
         StringBuilder hqls = new StringBuilder();
         for (int i = 0; i < viewSize; i++) {
-            String hql = HiveMRInput.BatchCubingInputSide.materializeViewHql(mockedViewNames[i], mockedTalbeNames[i],
+            String hql = HiveInputBase.materializeViewHql(mockedViewNames[i], mockedTalbeNames[i],
                     mockedWorkingDir);
             hqls.append(hql);
         }

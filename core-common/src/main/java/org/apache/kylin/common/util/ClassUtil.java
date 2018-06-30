@@ -134,4 +134,14 @@ public class ClassUtil {
             throw new RuntimeException(var6);
         }
     }
+
+    public static String findContainingJar(String className, String perferLibraryName) {
+        try {
+            return findContainingJar(Class.forName(className), perferLibraryName);
+        } catch (ClassNotFoundException e) {
+            logger.warn("failed to locate jar for class " + className + ", ignore it");
+        }
+
+        return "";
+    }
 }

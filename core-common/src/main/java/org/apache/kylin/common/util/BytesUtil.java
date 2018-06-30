@@ -457,4 +457,19 @@ public class BytesUtil {
         return sb.toString();
     }
 
+    /**
+     *
+     * @param hex String value of a byte array in hex, e.g, "\\x00\\x0A";
+     * @return the byte array that the hex represented.
+     */
+    public static byte[] fromHex(String hex) {
+        byte[] b = new byte[hex.length() / 4];
+        for (int i = 0; i < b.length; i++) {
+            int index = i * 4;
+            int v = Integer.parseInt(hex.substring(index + 2, index + 4), 16);
+            b[i] = (byte) v;
+        }
+        return b;
+    }
+
 }

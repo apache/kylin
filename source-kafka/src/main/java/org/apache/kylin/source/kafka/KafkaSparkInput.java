@@ -17,92 +17,40 @@
 */
 package org.apache.kylin.source.kafka;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
-import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.job.JoinedFlatTable;
+import org.apache.kylin.engine.spark.ISparkInput;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-public class KafkaMRInput extends KafkaInputBase implements IMRInput {
+public class KafkaSparkInput extends KafkaInputBase implements ISparkInput {
 
-    private static final Logger logger = LoggerFactory.getLogger(KafkaMRInput.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaSparkInput.class);
     private CubeSegment cubeSegment;
 
     @Override
-    public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+    public ISparkInput.ISparkBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
         this.cubeSegment = (CubeSegment) flatDesc.getSegment();
         return new BatchCubingInputSide(cubeSegment, flatDesc);
     }
 
     @Override
-    public IMRTableInputFormat getTableInputFormat(TableDesc table) {
-
-        return new KafkaTableInputFormat(cubeSegment, null);
+    public ISparkBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
+        return new KafkaSparkBatchMergeInputSide((CubeSegment) seg);
     }
 
-    @Override
-    public IMRBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
-        return new KafkaMRBatchMergeInputSide((CubeSegment) seg);
-    }
-
-    public static class KafkaTableInputFormat implements IMRTableInputFormat {
-        private final CubeSegment cubeSegment;
-        private final JobEngineConfig conf;
-        private String delimiter = BatchConstants.SEQUENCE_FILE_DEFAULT_DELIMITER;
-
-        public KafkaTableInputFormat(CubeSegment cubeSegment, JobEngineConfig conf) {
-            this.cubeSegment = cubeSegment;
-            this.conf = conf;
-        }
-
-        @Override
-        public void configureJob(Job job) {
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-            String jobId = job.getConfiguration().get(BatchConstants.ARG_CUBING_JOB_ID);
-            IJoinedFlatTableDesc flatHiveTableDesc = new CubeJoinedFlatTableDesc(cubeSegment);
-            String inputPath = JoinedFlatTable.getTableDir(flatHiveTableDesc,
-                    JobBuilderSupport.getJobWorkingDir(conf, jobId));
-            try {
-                FileInputFormat.addInputPath(job, new Path(inputPath));
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-
-        @Override
-        public Collection<String[]> parseMapperInput(Object mapperInput) {
-            Text text = (Text) mapperInput;
-            String[] columns = Bytes.toString(text.getBytes(), 0, text.getLength()).split(delimiter);
-            return Collections.singletonList(columns);
-        }
-
-    }
-
-    public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
+    public static class BatchCubingInputSide implements ISparkBatchCubingInputSide {
 
         final JobEngineConfig conf;
         final CubeSegment seg;
@@ -110,8 +58,8 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
         private KylinConfig config;
         protected IJoinedFlatTableDesc flatDesc;
         protected String hiveTableDatabase;
-        private List<String> intermediateTables = Lists.newArrayList();
-        private List<String> intermediatePaths = Lists.newArrayList();
+        final private List<String> intermediateTables = Lists.newArrayList();
+        final private List<String> intermediatePaths = Lists.newArrayList();
         private String cubeName;
 
         public BatchCubingInputSide(CubeSegment seg, IJoinedFlatTableDesc flatDesc) {
@@ -139,7 +87,8 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
                 final String mockFactTableName = MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + cubeName.toLowerCase()
                         + "_" + seg.getUuid().replaceAll("-", "_") + "_fact";
                 jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId(), baseLocation + "/" + mockFactTableName, seg));
-                jobFlow.addTask(createFlatTable(hiveTableDatabase, mockFactTableName, baseLocation, cubeName, cubeDesc, flatDesc, intermediateTables, intermediatePaths));
+                jobFlow.addTask(createFlatTable(hiveTableDatabase, mockFactTableName, baseLocation, cubeName, cubeDesc,
+                        flatDesc, intermediateTables, intermediatePaths));
             }
         }
 
@@ -152,18 +101,13 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
             jobFlow.addTask(createGCStep(intermediateTables, intermediatePaths));
 
         }
-
-        @Override
-        public IMRTableInputFormat getFlatTableInputFormat() {
-            return new KafkaTableInputFormat(seg, conf);
-        }
     }
 
-    class KafkaMRBatchMergeInputSide implements IMRBatchMergeInputSide {
+    class KafkaSparkBatchMergeInputSide implements ISparkBatchMergeInputSide {
 
         private CubeSegment cubeSegment;
 
-        KafkaMRBatchMergeInputSide(CubeSegment cubeSegment) {
+        KafkaSparkBatchMergeInputSide(CubeSegment cubeSegment) {
             this.cubeSegment = cubeSegment;
         }
 

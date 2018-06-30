@@ -203,7 +203,7 @@ public class JoinsTree implements Serializable {
         boolean matches(JoinDesc join1, JoinDesc join2);
     }
 
-    public static class DefaultJoinDescMatcher implements IJoinDescMatcher {
+    public static class DefaultJoinDescMatcher implements IJoinDescMatcher, Serializable {
         @Override
         public boolean matches(JoinDesc join1, JoinDesc join2) {
             if (join1 == null) {

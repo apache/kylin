@@ -16,31 +16,33 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.engine.mr;
+package org.apache.kylin.engine.spark;
 
 import java.util.List;
 
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class BatchMergeJobBuilder2 extends JobBuilderSupport {
-    private static final Logger logger = LoggerFactory.getLogger(BatchMergeJobBuilder2.class);
+public class SparkBatchMergeJobBuilder2 extends JobBuilderSupport {
+    private static final Logger logger = LoggerFactory.getLogger(SparkBatchMergeJobBuilder2.class);
 
-    private final IMROutput2.IMRBatchMergeOutputSide2 outputSide;
-    private final IMRInput.IMRBatchMergeInputSide inputSide;
+    private final ISparkOutput.ISparkBatchMergeOutputSide outputSide;
+    private final ISparkInput.ISparkBatchMergeInputSide inputSide;
 
-    public BatchMergeJobBuilder2(CubeSegment mergeSegment, String submitter) {
+    public SparkBatchMergeJobBuilder2(CubeSegment mergeSegment, String submitter) {
         super(mergeSegment, submitter);
-        this.outputSide = MRUtil.getBatchMergeOutputSide2(seg);
-        this.inputSide = MRUtil.getBatchMergeInputSide(seg);
+        this.outputSide = SparkUtil.getBatchMergeOutputSide2(seg);
+        this.inputSide = SparkUtil.getBatchMergeInputSide(seg);
     }
 
     public CubingJob build() {
-        logger.info("MR_V2 new job to MERGE segment " + seg);
+        logger.info("Spark_V2 new job to MERGE segment " + seg);
 
         final CubeSegment cubeSegment = seg;
         final CubingJob result = CubingJob.createMergeJob(cubeSegment, submitter, config);
@@ -68,5 +70,5 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
 
         return result;
     }
-
+    
 }

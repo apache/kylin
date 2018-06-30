@@ -18,19 +18,21 @@
 
 package org.apache.kylin.storage.hbase.steps;
 
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.io.WritableComparator;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 
-public class RowKeyWritable implements WritableComparable<RowKeyWritable> {
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.WritableComparator;
+import org.apache.kylin.common.util.BytesUtil;
+
+public class RowKeyWritable implements WritableComparable<RowKeyWritable>, Serializable {
     private byte[] data;
     private int offset;
     private int length;
-    private KeyValue.KVComparator kvComparator = new KeyValue.KVComparator();
+    private final static SerializableKVComparator kvComparator = new SerializableKVComparator();
 
     static {
         WritableComparator.define(RowKeyWritable.class, new RowKeyComparator());
@@ -56,6 +58,18 @@ public class RowKeyWritable implements WritableComparable<RowKeyWritable> {
         this.length = length;
     }
 
+    public byte[] getData() {
+        return data;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(this.length);
@@ -70,12 +84,23 @@ public class RowKeyWritable implements WritableComparable<RowKeyWritable> {
         this.offset = 0;
     }
 
+    @Override
     public int compareTo(RowKeyWritable other) {
         return kvComparator.compare(this.data, this.offset, this.length, other.data, other.offset, other.length);
     }
 
-    public static class RowKeyComparator extends WritableComparator {
-        private KeyValue.KVComparator kvComparator = new KeyValue.KVComparator();
+    @Override
+    public String toString() {
+        return BytesUtil.toHex(data, offset, length);
+    }
+
+    public static class SerializableKVComparator extends KeyValue.KVComparator implements Serializable {
+
+    }
+
+    public static class RowKeyComparator extends WritableComparator implements Serializable {
+        public static final RowKeyComparator INSTANCE = new RowKeyComparator();
+        private SerializableKVComparator kvComparator = new SerializableKVComparator();
         private static final int LENGTH_BYTES = 4;
 
         @Override
