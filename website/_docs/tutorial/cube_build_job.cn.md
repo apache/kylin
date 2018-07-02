@@ -1,6 +1,6 @@
 ---
 layout: docs-cn
-title: Cube 构建和 Job 监控
+title: "Cube 构建和 Job 监控"
 categories: 教程
 permalink: /cn/docs/tutorial/cube_build_job.html
 version: v1.2

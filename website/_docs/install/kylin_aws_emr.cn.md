@@ -1,8 +1,8 @@
 ---
-layout: docs23-cn
+layout: docs-cn
 title:  "在 AWS EMR 上安装 Kylin"
 categories: install
-permalink: /cn/docs23/install/kylin_aws_emr.html
+permalink: /cn/docs/install/kylin_aws_emr.html
 ---
 
 今天许多用户将 Hadoop 运行在像 AWS 这样的公有云上。Apache Kylin，由标准的 Hadoop/HBase API 编译，支持多数主流的 Hadoop 发布；现在的版本是 Kylin v2.2，支持 AWS EMR 5.0 - 5.10。本文档介绍了在 EMR 上如何运行 Kylin。

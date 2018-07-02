@@ -103,7 +103,7 @@ Kylin 的网页版提供一个简单的 Pivot 与可视化分析工具供用户�
 
    注意：线形图仅当至少一个从 Hive 表中获取的维度有真实的 “Date” 数据类型列时才是可用的。
 
-* 条形图：
+* 饼图：
 
    ![](/images/tutorial/1.5/Kylin-Web-Tutorial/15 bar-chart.png)
 

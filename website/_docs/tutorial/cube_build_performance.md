@@ -79,7 +79,7 @@ Try to use ORC Format and compression on Hive input table (Snappy):
 ![]( /images/tutorial/2.0/cube_build_performance/08.png)
 
 
-The time in the first three stree steps (Flat Table) has been improved by half.
+The time in the first three steps (Flat Table) has been improved by half.
 
 Other columnar formats can be tested:
 
@@ -200,14 +200,14 @@ How can the performance of Map – Reduce be improved? The easy way is to increa
 ![]( /images/tutorial/2.0/cube_build_performance/25.png)
 
 
-**NOTE:** YARN / MapReduce have a lot parameters to configure and adapt to theyour system. The focus here is only on small parts. 
+**NOTE:** YARN / MapReduce have a lot parameters to configure and adapt to the your system. The focus here is only on small parts. 
 
 (In my system I can assign 12 – 14 GB and 8 cores to YARN Resources):
 
 * yarn.nodemanager.resource.memory-mb = 15 GB
 * yarn.scheduler.maximum-allocation-mb = 8 GB
 * yarn.nodemanager.resource.cpu-vcores = 8 cores
-With this config our max theoreticaleorical grade of parallelismelist is 8. However, but this has a problem: “Timed out after 3600 secs”
+With this config our max theoretical orical grade of parallelism list is 8. However, but this has a problem: “Timed out after 3600 secs”
 
 ![]( /images/tutorial/2.0/cube_build_performance/26.png)
 
@@ -218,7 +218,7 @@ Where is the problem? The problem is that 4 mappers started, but each mapper nee
 
 * The solution 1: add more RAM to YARN 
 * The solution 2: increase vCores number used in Mapper step to reduce the RAM used
-* The solution 3: you can play with max RAM to YARN by node  (yarn.nodemanager.resource.memory-mb) and experiment with mimin RAM perto container (yarn.scheduler.minimum-allocation-mb). If you increase minimum RAM per container, YARN will reduce the numbers of Mappers     
+* The solution 3: you can play with max RAM to YARN by node  (yarn.nodemanager.resource.memory-mb) and experiment with minimum RAM per to container (yarn.scheduler.minimum-allocation-mb). If you increase minimum RAM per container, YARN will reduce the numbers of Mappers     
 
 ![]( /images/tutorial/2.0/cube_build_performance/27.png)
 

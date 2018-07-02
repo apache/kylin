@@ -21,7 +21,7 @@ Read more at [eBay tech blog](https://www.ebayinc.com/stories/blogs/tech/cube-pl
 
 ## Prerequisites
 
-To enable Dashboard on WebUI, you need to set `kylin.cube.cubeplanner.enabled=true` and other properties in`kylin.properties`
+To enable Dashboard on WebUI, you need to set `kylin.cube.cubeplanner.enabled=true` and other properties in `kylin.properties`
 
 {% highlight Groff markup %}
 kylin.cube.cubeplanner.enabled=true
@@ -45,14 +45,16 @@ kylin.metrics.monitor-enabled=true
 
   You should make sure the status of the Cube is '**READY**'
 
-  If the status of the Cube is '**DISABLED**', you will not be able to use the Cube planner. You should change the status of the Cube from '**DISABLED**' to '**READY**' by building it or enabling it if it has been built before.
+  If the status of the Cube is '**DISABLED**', you will not be able to use the Cube planner.
+
+  You should change the status of the Cube from '**DISABLED**' to '**READY**' by building it or enabling it if it has been built before.
 
 
 #### Step 3:
 
 a. Click the '**Planner**' button to view the '**Current Cuboid Distribution**' of the Cube.
 
-- The data will be displayed in Sunburst Chart. 
+- The data will be displayed in **Sunburst Chart**. 
 
 - Each part refers to a cuboid, is shown in different colors determined by the query **frequency** against this cuboid.
 

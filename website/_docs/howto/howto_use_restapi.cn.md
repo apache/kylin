@@ -1,8 +1,8 @@
 ---
-layout: docs23-cn
+layout: docs-cn
 title:  RESTful API
 categories: howto
-permalink: /cn/docs23/howto/howto_use_restapi.html
+permalink: /cn/docs/howto/howto_use_restapi.html
 since: v0.7.1
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: docs-cn
-title:  MS Excel及Power BI教程
+title:  "Excel 及 Power BI 教程"
 categories: tutorial
 permalink: /cn/docs/tutorial/powerbi.html
 version: v1.2

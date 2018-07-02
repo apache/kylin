@@ -20,9 +20,6 @@ Running as a Hadoop client, Apache Kylin's metadata and Cube data are persistend
 Below are versions specific guides:
 
 
-## Upgrade from v2.3.0 to v2.4.0
-Metadata is compitable, but the coprocessor need be updated.
-
 ## Upgrade from v2.1.0 to v2.2.0
 
 Kylin v2.2.0 cube metadata is compitable with v2.1.0, but you need aware the following changes:

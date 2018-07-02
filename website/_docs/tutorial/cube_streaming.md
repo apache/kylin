@@ -59,7 +59,7 @@ Start Kylin server with "$KYLIN_HOME/bin/kylin.sh start", login Kylin Web GUI at
 
    ![](/images/tutorial/1.6/Kylin-Cube-Streaming-Tutorial/1_Add_streaming_table.png)
 
-In the pop-up dialogue, enter a sample record which you got from the kafka-console-consumer, click the ">>" button, Kylin parses the JSON message and listS all the properties;
+In the pop-up dialogue, enter a sample record which you got from the kafka-console-consumer, click the ">>" button, Kylin parses the JSON message and lists all the properties;
 
 You need give a logic table name for this streaming data source; The name will be used for SQL query later; here enter "STREAMING_SALES_TABLE" as an example in the "Table Name" field.
 

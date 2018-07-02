@@ -1,8 +1,8 @@
 ---
-layout: docs23-cn
+layout: docs-cn
 title:  "集群模式部署"
 categories: install
-permalink: /cn/docs23/install/kylin_cluster.html
+permalink: /cn/docs/install/kylin_cluster.html
 ---
 
 

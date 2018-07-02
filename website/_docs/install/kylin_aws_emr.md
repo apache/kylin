@@ -72,7 +72,7 @@ If using HDFS as Kylin working directory, you just leave configurations unchange
 kylin.env.hdfs-working-dir=/kylin
 ```
 
-Before you shudown/restart the cluster, you must backup the "/kylin" data on HDFS to S3 with [S3DistCp](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/UsingEMR_s3distcp.html), or you may lost data and couldn't recover the cluster later.
+Before you shutdown/restart the cluster, you must backup the "/kylin" data on HDFS to S3 with [S3DistCp](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/UsingEMR_s3distcp.html), or you may lost data and couldn't recover the cluster later.
 
 - Use S3 as "kylin.env.hdfs-working-dir" 
 
