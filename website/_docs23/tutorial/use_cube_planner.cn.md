@@ -1,5 +1,5 @@
 ---
-layout: docs23
+layout: docs23-cn
 title:  使用 Cube Planner
 categories: tutorial
 permalink: /cn/docs23/tutorial/use_cube_planner.html
@@ -42,18 +42,18 @@ kylin.metrics.monitor-enabled=true
 
 1. 点击 '**Planner**' 按钮查看 Cube 的 '**Current Cuboid Distribution**'。
 
-  您应该确保 Cube 的状态是 '**READY**'
+  应该确保 Cube 的状态是 '**READY**'
 
-  如果 Cube 的状态是 '**DISABLED**'![Status_Disabled](/images/CubePlanner/Status_Disabled.png)，您将不能使用 Cube planner。
+  如果 Cube 的状态是 '**DISABLED**'，将不能使用 Cube planner。
 
-  如果 Cube 之前已经 build 过，您需要通过 building 或 enabling 它来将其状态从 '**DISABLED**' 变为 '**READY**'。
+  如果 Cube 之前已经 build 过，需要通过 building 或 enabling 它来将其状态从 '**DISABLED**' 变为 '**READY**'。
 
 
 #### 步骤 3:
 
 a. 点击 '**Planner**' 按钮查看 Cube 的 '**Current Cuboid Distribution**'。
 
-- 数据将会展示在 *[Sunburst Chart](https://en.wikipedia.org/wiki/Pie_chart#Ring_chart_.2F_Sunburst_chart_.2F_Multilevel_pie_chart)*。
+- 数据将会展示在 Sunburst Chart。
 
 - 每一部分代表一个 cuboid，以不同的颜色展示，颜色取决于对 cuboid 查询的**频率**。
 

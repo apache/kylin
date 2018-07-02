@@ -23,9 +23,8 @@
 		{% include header.cn.html %}
 		
 		<div class="container">
-			<div class="row">
-				{% include docs23_nav.cn.html %}
-				<div class="col-md-8 col-lg-8 col-xs-12 col-sm-12 aside2">
+			<div class="row" style="clear:both;">
+				<div class="col-md-8 col-lg-8 col-xs-12 col-sm-12 aside2" style="float:right;">
 					<div id="container" class="docs">
 						<div id="pjax">
 							<h1 class="post-title">{{ page.title }}</h1>
@@ -35,6 +34,7 @@
 						</div>
 					</div>
 				</div>
+				{% include docs23_nav.cn.html %}
 			</div>
 		</div>		
 		{% include footer.html %}

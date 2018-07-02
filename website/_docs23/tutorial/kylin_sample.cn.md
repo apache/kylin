@@ -1,6 +1,6 @@
 ---
-layout: docs23
-title:  样例 Cube 快速入门
+layout: docs23-cn
+title:  "样例 Cube 快速入门"
 categories: tutorial
 permalink: /cn/docs23/tutorial/kylin_sample.html
 ---

@@ -1,5 +1,5 @@
 ---
-layout: docs23
+layout: docs23-cn
 title:  "安装指南"
 categories: install
 permalink: /cn/docs23/install/index.html

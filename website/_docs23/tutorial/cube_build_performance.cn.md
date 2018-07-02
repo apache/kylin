@@ -1,8 +1,8 @@
 ---
-layout：docs23
-title：调整 Cube Build
-categories：tutorial
-permalink：/cn/docs23/tutorial/cube_build_performance.html
+layout: docs23-cn
+title: "优化 Cube 构建"
+categories: tutorial
+permalink: /cn/docs23/tutorial/cube_build_performance.html
 ---
  *本教程是关于如何一步步优化 cube build 的样例。* 
  

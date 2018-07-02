@@ -1,8 +1,8 @@
 ---
-layout：docs23
-title： "高级设置"
-categories：install
-permalink：/cn/docs23/install/advance_settings.html
+layout: docs23-cn
+title: "高级设置"
+categories: install
+permalink: /cn/docs23/install/advance_settings.html
 ---
 
 ## 在 Cube 级别重写默认的 kylin.properties
@@ -79,6 +79,17 @@ permalink：/cn/docs23/install/advance_settings.html
 export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX:MaxPermSize=128M -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:$KYLIN_HOME/logs/kylin.gc.$$ -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=64M"
 # export KYLIN_JVM_SETTINGS="-Xms16g -Xmx16g -XX:MaxPermSize=512m -XX:NewSize=3g -XX:MaxNewSize=3g -XX:SurvivorRatio=4 -XX:+CMSClassUnloadingEnabled -XX:+CMSParallelRemarkEnabled -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:CMSInitiatingOccupancyFraction=70 -XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError"
 {% endhighlight %}
+
+## 启用多个任务引擎
+从 2.0 开始, Kylin 支持多个任务引擎一起运行，相比于默认单任务引擎的配置，多引擎可以保证任务构建的高可用。
+
+使用多任务引擎，你可以在多个 Kylin 节点上配置它的角色为 `job` 或 `all`。为了避免它们之间产生竞争，需要启用分布式任务锁，请在 `kylin.properties` 里配置：
+
+```
+kylin.job.scheduler.default=2
+kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock
+```
+并记得将所有任务和查询节点的地址注册到 `kylin.server.cluster-servers`.
 
 ## 支持 LDAP 或 SSO authentication
 

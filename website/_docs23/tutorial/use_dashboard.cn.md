@@ -1,5 +1,5 @@
 ---
-layout: docs23
+layout: docs23-cn
 title:  使用 Dashboard
 categories: tutorial
 permalink: /cn/docs23/tutorial/use_dashboard.html

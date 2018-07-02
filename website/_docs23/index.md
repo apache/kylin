@@ -16,7 +16,7 @@ Document of prior versions:
 * [v2.1.x and v2.2.x document](/docs21/)
 * [v2.0.x document](/docs20/)
 * [v1.6.x document](/docs16/)
-* [v1.5.x document](/docs15/)
+* [Archive](/archive/)
 
 
 Installation & Setup

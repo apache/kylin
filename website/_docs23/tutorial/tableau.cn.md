@@ -1,6 +1,6 @@
 ---
 layout: docs23-cn
-title:  Tableau
+title:  Tableau 8
 categories: 教程
 permalink: /cn/docs23/tutorial/tableau.html
 version: v1.2
@@ -13,11 +13,7 @@ since: v0.7.1
 > * 请勿尝试在多个事实表或多个查找表之间进行连接；
 > * 你可以尝试使用类似Tableau过滤器中seller id这样的高基数维度，但引擎现在将只返回有限个Tableau过滤器中的seller id。
 > 
-> 如需更多详细信息或有任何问题，请联系Kylin团队：`kylinolap@gmail.com`
-
-
-### 使用Tableau 9.x的用户
-请参考[Tableau 9 教程](./tableau_91.html)以获得更详细帮助。
+> 如需更多详细信息或有任何问题，请联系Kylin团队：`dev@kylin.apache.org`
 
 ### 步骤1. 安装Kylin ODBC驱动程序
 参考页面[Kylin ODBC 驱动程序教程](./odbc.html)。

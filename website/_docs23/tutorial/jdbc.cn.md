@@ -1,6 +1,6 @@
 ---
 layout: docs23-cn
-title:  Kylin JDBC Driver
+title:  "JDBC 驱动"
 categories: 教程
 permalink: /cn/docs23/tutorial/jdbc.html
 ---

@@ -1,6 +1,6 @@
 ---
-layout: docs23
-title:  Kafka 的可拓展 Cubing
+layout: docs23-cn
+title:  "从 Kafka 流构建 Cube"
 categories: tutorial
 permalink: /cn/docs23/tutorial/cube_streaming.html
 ---

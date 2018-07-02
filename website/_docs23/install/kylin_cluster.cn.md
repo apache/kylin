@@ -1,5 +1,5 @@
 ---
-layout: docs23
+layout: docs23-cn
 title:  "Cluster 模式下部署"
 categories: install
 permalink: /cn/docs23/install/kylin_cluster.html

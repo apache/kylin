@@ -28,13 +28,12 @@
 - title: Installation
   docs:
   - install/index
-  - install/manual_install_guide
-  - install/configuration
   - install/kylin_cluster
+  - install/configuration
   - install/advance_settings
-  - install/kylin_docker
   - install/kylin_aws_emr
-
+  - install/kylin_docker
+  
 - title: Tutorial
   docs:
   - tutorial/kylin_sample

@@ -1,6 +1,6 @@
 ---
 layout: docs23-cn
-title:  ODBC 驱动程序
+title:  "ODBC 驱动"
 categories: 教程
 permalink: /cn/docs23/tutorial/odbc.html
 version: v1.2
