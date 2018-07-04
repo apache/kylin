@@ -619,19 +619,15 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     startTime = cube.segments[cube.segments.length-1].date_range_end;
   }
   $scope.jobBuildRequest.startTime=startTime;
-  $scope.rebuild = function () {
-
+  $scope.rebuild = function (isForce) {
     $scope.message = null;
-
     if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
       $scope.message = "WARNING: End time should be later than the start time.";
-
       return;
     }
-
+    $scope.jobBuildRequest.forceMergeEmptySegment = !!isForce;
     loadingRequest.show();
     CubeService.rebuildCube({cubeId: cube.name}, $scope.jobBuildRequest, function (job) {
-
       loadingRequest.hide();
       $modalInstance.dismiss('cancel');
       SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
@@ -639,8 +635,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
           $scope.cubeList.cubes[$scope.cubeList.cubes.indexOf(cube)] = _cube;
         });
     }, function (e) {
-
-
       loadingRequest.hide();
       if (e.data && e.data.exception) {
         var message = e.data.exception;
@@ -656,14 +650,11 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
             closeOnConfirm: true
           }, function (isConfirm) {
             if (isConfirm) {
-              $scope.jobBuildRequest.forceMergeEmptySegment = true;
-              $scope.rebuild();
-              delete $scope.jobBuildRequest.forceMergeEmptySegment;
+              $scope.rebuild(true);
             }
           });
           return;
         }
-
         if(message.indexOf("Merging segments must not have gaps between")!=-1){
           SweetAlert.swal({
             title:'',
@@ -674,9 +665,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
             closeOnConfirm: true
           }, function (isConfirm) {
             if (isConfirm) {
-              $scope.jobBuildRequest.forceMergeEmptySegment = true;
-              $scope.rebuild();
-              delete $scope.jobBuildRequest.forceMergeEmptySegment;
+              $scope.rebuild(true);
             }
           });
           return;
