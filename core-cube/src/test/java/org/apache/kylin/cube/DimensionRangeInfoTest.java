@@ -67,6 +67,7 @@ public class DimensionRangeInfoTest extends LocalFileMetadataTestCase {
             Map<String, DimensionRangeInfo> m2 = new HashMap<>();
 
             Assert.assertTrue(DimensionRangeInfo.mergeRangeMap(model, m1, m2).isEmpty());
+            Assert.assertTrue(DimensionRangeInfo.mergeRangeMap(model, m2, m1).isEmpty());
         }
         
         // null min/max value (happens on empty segment, or all-null columns)

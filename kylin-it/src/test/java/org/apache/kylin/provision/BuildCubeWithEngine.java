@@ -313,6 +313,7 @@ public class BuildCubeWithEngine {
         checkNormalSegRangeInfo(cubeManager.getCube(cubeName));
         if (!buildSegment(cubeName, date2, date3))
             return false;
+        checkNormalSegRangeInfo(cubeManager.getCube(cubeName));
         if (!optimizeCube(cubeName))
             return false;
         checkNormalSegRangeInfo(cubeManager.getCube(cubeName));

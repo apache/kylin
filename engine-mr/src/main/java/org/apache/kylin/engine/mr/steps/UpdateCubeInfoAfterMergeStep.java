@@ -63,28 +63,29 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         if (mergingSegmentIds.isEmpty()) {
             return ExecuteResult.createFailed(new SegmentNotFoundException("there are no merging segments"));
         }
+        
         long sourceCount = 0L;
         long sourceSize = 0L;
-
         boolean isOffsetCube = mergedSegment.isOffsetCube();
         Long tsStartMin = Long.MAX_VALUE, tsEndMax = 0L;
+        for (String id : mergingSegmentIds) {
+            CubeSegment segment = cube.getSegmentById(id);
+            sourceCount += segment.getInputRecords();
+            sourceSize += segment.getInputRecordsSize();
+            tsStartMin = Math.min(tsStartMin, segment.getTSRange().start.v);
+            tsEndMax = Math.max(tsEndMax, segment.getTSRange().end.v);
+        }
+
         Map<String, DimensionRangeInfo> mergedSegDimRangeMap = null;
         for (String id : mergingSegmentIds) {
             CubeSegment segment = cube.getSegmentById(id);
             Map<String, DimensionRangeInfo> segDimRangeMap = segment.getDimensionRangeInfoMap();
-            if (segDimRangeMap.isEmpty()) {
-                continue;
-            }
             if (mergedSegDimRangeMap == null) {
                 mergedSegDimRangeMap = segDimRangeMap;
             } else {
                 mergedSegDimRangeMap = DimensionRangeInfo.mergeRangeMap(cube.getModel(), segDimRangeMap,
                         mergedSegDimRangeMap);
             }
-            sourceCount += segment.getInputRecords();
-            sourceSize += segment.getInputRecordsSize();
-            tsStartMin = Math.min(tsStartMin, segment.getTSRange().start.v);
-            tsEndMax = Math.max(tsEndMax, segment.getTSRange().end.v);
         }
 
         // update segment info
@@ -94,7 +95,6 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         mergedSegment.setLastBuildJobID(CubingExecutableUtil.getCubingJobId(this.getParams()));
         mergedSegment.setLastBuildTime(System.currentTimeMillis());
         mergedSegment.setDimensionRangeInfoMap(mergedSegDimRangeMap);
-
         if (isOffsetCube) {
             SegmentRange.TSRange tsRange = new SegmentRange.TSRange(tsStartMin, tsEndMax);
             mergedSegment.setTSRange(tsRange);
