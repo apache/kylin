@@ -47,6 +47,7 @@ public class AdminServiceTest extends ServiceTestBase {
         String path = Thread.currentThread().getContextClassLoader().getResource("kylin.properties").getPath();
 
         KylinConfig config = KylinConfig.createInstanceFromUri(path);
+        String timeZone = config.getTimeZone();
         try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(config)) {
         
             String expected = "kylin.web.link-streaming-guide=http://kylin.apache.org/\n" +
@@ -55,7 +56,7 @@ public class AdminServiceTest extends ServiceTestBase {
                     "kylin.query.cache-enabled=true\n" +
                     "kylin.web.link-diagnostic=\n" +
                     "kylin.web.help.length=4\n" +
-                    "kylin.web.timezone=GMT+8\n" +
+                    "kylin.web.timezone=\n" +
                     "kylin.server.external-acl-provider=\n" +
                     "kylin.tool.auto-migrate-cube.enabled=\n" +
                     "kylin.storage.default=2\n" +

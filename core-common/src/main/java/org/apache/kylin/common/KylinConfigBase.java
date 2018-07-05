@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.SortedSet;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1610,7 +1611,11 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public String getTimeZone() {
-        return getOptional("kylin.web.timezone", "PST");
+        String timezone = getOptional("kylin.web.timezone");
+        if (StringUtils.isBlank(timezone)) {
+            timezone = TimeZone.getDefault().getID();
+        }
+        return timezone;
     }
 
     public boolean isWebCrossDomainEnabled() {
