@@ -69,10 +69,10 @@ public class AdminServiceTest extends ServiceTestBase {
                     "kylin.env=QA\n" +
                     "kylin.web.hive-limit=20\n" +
                     "kylin.engine.default=2\n" +
-                    "kylin.web.help.3=onboard|Cube Design Tutorial|http://kylin.apache.org/docs21/howto/howto_optimize_cubes.html\n" +
-                    "kylin.web.help.2=tableau|Tableau Guide|http://kylin.apache.org/docs21/tutorial/tableau_91.html\n" +
-                    "kylin.web.help.1=odbc|ODBC Driver|http://kylin.apache.org/docs21/tutorial/odbc.html\n" +
-                    "kylin.web.help.0=start|Getting Started|http://kylin.apache.org/docs21/tutorial/kylin_sample.html\n" +
+                    "kylin.web.help.3=onboard|Cube Design Tutorial|http://kylin.apache.org/docs/howto/howto_optimize_cubes.html\n" +
+                    "kylin.web.help.2=tableau|Tableau Guide|http://kylin.apache.org/docs/tutorial/tableau_91.html\n" +
+                    "kylin.web.help.1=odbc|ODBC Driver|http://kylin.apache.org/docs/tutorial/odbc.html\n" +
+                    "kylin.web.help.0=start|Getting Started|http://kylin.apache.org/docs/tutorial/kylin_sample.html\n" +
                     "kylin.security.profile=testing\n";
             Assert.assertEquals(expected, adminService.getPublicConfig());
         }
