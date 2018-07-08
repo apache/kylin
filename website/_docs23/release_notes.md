@@ -15,6 +15,27 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v2.3.2 - 2018-07-08
+_Tag:_ [kylin-2.3.2](https://github.com/apache/kylin/tree/kylin-2.3.2)
+This is a bug fix release after 2.3.1, with 12 bug fixes and enhancement. Check [How to upgrade](/docs23/howto/howto_upgrade.html).
+
+__Improvement__
+* [KYLIN-3345] - Use Apache Parent POM 19
+* [KYLIN-3372] - Upgrade jackson-databind version due to security concerns
+* [KYLIN-3415] - Remove "external" module
+
+__Bug__
+* [KYLIN-3115] - Incompatible RowKeySplitter initialize between build and merge job
+* [KYLIN-3336] - java.lang.NoSuchMethodException: org.apache.kylin.tool.HBaseUsageExtractor.execute([Ljava.lang.String;)
+* [KYLIN-3348] - "missing LastBuildJobID" error when building new cube segment
+* [KYLIN-3352] - Segment pruning bug, e.g. date_col > "max_date+1"
+* [KYLIN-3363] - Wrong partition condition appended in JDBC Source
+* [KYLIN-3388] - Data may become not correct if mappers fail during the redistribute step, "distribute by rand()"
+* [KYLIN-3400] - WipeCache and createCubeDesc causes deadlock
+* [KYLIN-3401] - The current using zip compress tool has an arbitrary file write vulnerability
+* [KYLIN-3404] - Last optimized time detail was not showing after cube optimization
+
+
 ## v2.3.1 - 2018-03-28
 _Tag:_ [kylin-2.3.1](https://github.com/apache/kylin/tree/kylin-2.3.1)
 This is a bug fix release after 2.3.0, with 12 bug fixes and enhancement. Check [How to upgrade](/docs23/howto/howto_upgrade.html).
