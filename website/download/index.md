@@ -21,7 +21,7 @@ You can verify the download by following these [procedures](https://www.apache.o
 - Source download: [apache-kylin-2.3.2-src.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-source-release.zip.asc)\] \[[sha1](https://www.apache.org/dist/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-source-release.zip.sha1)\]
 - Binary download:
   - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.3.2-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-bin-hbase1x.tar.gz.asc)\] \[[md5](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-bin-hbase1x.tar.gz.md5)\]
-  - for CDH 5.7+ - [apache-kylin-2.3.1-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-bin-cdh57.tar.gz.asc)\] \[[md5](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-bin-cdh57.tar.gz.md5)\]
+  - for CDH 5.7+ - [apache-kylin-2.3.2-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-bin-cdh57.tar.gz.asc)\] \[[md5](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.3.2/apache-kylin-2.3.2-bin-cdh57.tar.gz.md5)\]
 
 #### JDBC Driver
 
