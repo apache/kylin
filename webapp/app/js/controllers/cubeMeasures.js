@@ -77,7 +77,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       if($scope.newMeasure.function.configuration==null){
         var GroupBy = {
             name:$scope.newMeasure.function.parameter.next_parameter.value,
-            encoding:"dict  (v1)",
+            encoding:"dict[v1]",
             valueLength:0,
             }
         $scope.convertedColumns.push(GroupBy);
@@ -285,7 +285,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   $scope.addNewGroupByColumn = function () {
     $scope.nextGroupBy = {
       name:null,
-      encoding:"dict  (v1)",
+      encoding:"dict[v1]",
       valueLength:0,
     }
     $scope.convertedColumns.push($scope.nextGroupBy);
