@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceTool;
@@ -135,8 +136,13 @@ public class SparkExecutable extends AbstractExecutable {
         }
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(
-                "export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry ");
+        if (Shell.osType == Shell.OSType.OS_TYPE_WIN) {
+            stringBuilder.append(
+                    "set HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry ");
+        } else {
+            stringBuilder.append(
+                    "export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry ");
+        }
 
         Map<String, String> sparkConfs = config.getSparkConfigOverride();
         for (Map.Entry<String, String> entry : sparkConfs.entrySet()) {
@@ -149,7 +155,12 @@ public class SparkExecutable extends AbstractExecutable {
                     formatArgs());
             logger.info("cmd: " + cmd);
             CliCommandExecutor exec = new CliCommandExecutor();
-            PatternedLogger patternedLogger = new PatternedLogger(logger);
+            PatternedLogger patternedLogger = new PatternedLogger(logger, new PatternedLogger.ILogListener() {
+                @Override
+                public void onLogEvent(Map<String, String> info) {
+                    getManager().addJobInfo(getId(), info);
+                }
+            });
             exec.execute(cmd, patternedLogger);
 
             Map<String, String> joblogInfo = patternedLogger.getInfo();

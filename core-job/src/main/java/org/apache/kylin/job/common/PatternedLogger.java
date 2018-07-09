@@ -33,6 +33,7 @@ import com.google.common.collect.Maps;
  */
 public class PatternedLogger extends BufferedLogger {
     private final Map<String, String> info = Maps.newHashMap();
+    ILogListener listener;
 
     private static final Pattern PATTERN_APP_ID = Pattern.compile("Submitted application (.*?) to ResourceManager");
     private static final Pattern PATTERN_APP_URL = Pattern.compile("The url to track the job: (.*)");
@@ -54,6 +55,11 @@ public class PatternedLogger extends BufferedLogger {
 
     public PatternedLogger(Logger wrappedLogger) {
         super(wrappedLogger);
+    }
+
+    public PatternedLogger(Logger wrappedLogger, ILogListener listener) {
+        super(wrappedLogger);
+        this.listener = listener;
     }
 
     @Override
@@ -128,11 +134,16 @@ public class PatternedLogger extends BufferedLogger {
         if (matcher.find()) {
             String trackingUrl = matcher.group(1);
             info.put(ExecutableConstants.YARN_APP_URL, trackingUrl);
+            listener.onLogEvent(info);
         }
     }
 
     public Map<String, String> getInfo() {
         return info;
+    }
+
+    public interface ILogListener{
+        void onLogEvent(Map<String, String> info);
     }
 
 }
