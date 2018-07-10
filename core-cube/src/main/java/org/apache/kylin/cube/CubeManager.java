@@ -801,7 +801,7 @@ public class CubeManager implements IRealizationProvider {
             if (force == false) {
                 List<String> emptySegment = Lists.newArrayList();
                 for (CubeSegment seg : mergingSegments) {
-                    if (seg.getSizeKB() == 0) {
+                    if (seg.getSizeKB() == 0 && seg.getInputRecords() == 0) {
                         emptySegment.add(seg.getName());
                     }
                 }

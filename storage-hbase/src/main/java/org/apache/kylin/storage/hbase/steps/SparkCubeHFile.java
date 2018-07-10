@@ -239,8 +239,10 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         hfilerdd2.saveAsNewAPIHadoopFile(outputPath, ImmutableBytesWritable.class, KeyValue.class,
                 HFileOutputFormat2.class, job.getConfiguration());
 
+        // output the data size to console, job engine will parse and save the metric
+        // please note: this mechanism won't work when spark.submit.deployMode=cluster
         System.out.println("HDFS: Number of bytes written=" + jobListener.metrics.getBytesWritten());
-        // deleteHDFSMeta(metaUrl);
+        deleteHDFSMeta(metaUrl);
     }
 
     private List<JavaPairRDD> parseInputPath(String inputPath, FileSystem fs, JavaSparkContext sc) throws IOException {
