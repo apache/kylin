@@ -157,12 +157,17 @@ public class SparkExecutable extends AbstractExecutable {
             CliCommandExecutor exec = new CliCommandExecutor();
             PatternedLogger patternedLogger = new PatternedLogger(logger, new PatternedLogger.ILogListener() {
                 @Override
-                public void onLogEvent(Map<String, String> info) {
-                    getManager().addJobInfo(getId(), info);
+                public void onLogEvent(String infoKey, Map<String, String> info) {
+                    // only care two properties here
+                    if (ExecutableConstants.YARN_APP_ID.equals(infoKey)
+                            || ExecutableConstants.YARN_APP_ID.equals(infoKey)) {
+                        getManager().addJobInfo(getId(), info);
+                    }
                 }
             });
             exec.execute(cmd, patternedLogger);
 
+            // update all properties
             Map<String, String> joblogInfo = patternedLogger.getInfo();
             readCounters(joblogInfo);
             getManager().addJobInfo(getId(), joblogInfo);
