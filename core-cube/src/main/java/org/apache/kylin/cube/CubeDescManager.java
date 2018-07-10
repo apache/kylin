@@ -276,8 +276,13 @@ public class CubeDescManager {
                     String encoding = configuration.get(TopNMeasureType.CONFIG_ENCODING_PREFIX + parameter.getValue());
                     String encodingVersionStr = configuration
                             .get(TopNMeasureType.CONFIG_ENCODING_VERSION_PREFIX + parameter.getValue());
-                    if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
-                        keyLength += DictionaryDimEnc.MAX_ENCODING_LENGTH; // estimation for dict encoding
+                    if (StringUtils.isEmpty(encoding) || encoding.startsWith("dict")) {
+                        if (DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
+                            keyLength += DictionaryDimEnc.MAX_ENCODING_LENGTH; // estimation for dict encoding
+                        } else {
+                            throw new IllegalArgumentException(
+                                    "TOP_N's Encoding is " + encoding + ", please choose the correct one");
+                        }
                     } else {
                         // non-dict encoding
                         int encodingVersion = 1;
