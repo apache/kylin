@@ -21,7 +21,6 @@ package org.apache.kylin.storage.hbase.steps;
 import java.util.List;
 
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.steps.MergeCuboidJob;
 import org.apache.kylin.engine.spark.ISparkOutput;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.slf4j.Logger;
@@ -80,8 +79,6 @@ public class HBaseSparkOutputTransition implements ISparkOutput {
             @Override
             public void addStepPhase2_BuildCube(CubeSegment seg, List<CubeSegment> mergingSegments,
                     DefaultChainedExecutable jobFlow) {
-                jobFlow.addTask(
-                        steps.createMergeCuboidDataStep(seg, mergingSegments, jobFlow.getId(), MergeCuboidJob.class));
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }

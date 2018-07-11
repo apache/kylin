@@ -30,7 +30,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValue;
@@ -42,8 +41,8 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
@@ -57,6 +56,7 @@ import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.SerializableConfiguration;
 import org.apache.kylin.engine.spark.KylinSparkJobListener;
+import org.apache.kylin.engine.spark.SparkUtil;
 import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.spark.Partitioner;
@@ -94,8 +94,6 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
 
     private Options options;
 
-    private KylinSparkJobListener jobListener;
-
     public SparkCubeHFile() {
         options = new Options();
         options.addOption(OPTION_INPUT_PATH);
@@ -104,7 +102,6 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         options.addOption(OPTION_META_URL);
         options.addOption(OPTION_OUTPUT_PATH);
         options.addOption(OPTION_PARTITION_FILE_PATH);
-        jobListener = new KylinSparkJobListener();
     }
 
     @Override
@@ -130,6 +127,7 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         conf.set("spark.kryo.registrator", "org.apache.kylin.engine.spark.KylinKryoRegistrator");
         conf.set("spark.kryo.registrationRequired", "true").registerKryoClasses(kryoClassArray);
 
+        KylinSparkJobListener jobListener = new KylinSparkJobListener();
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.sc().addSparkListener(jobListener);
         final FileSystem fs = partitionFilePath.getFileSystem(sc.hadoopConfiguration());
@@ -161,7 +159,7 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         logger.info("Input path: {}", inputPath);
         logger.info("Output path: {}", outputPath);
 
-        List<JavaPairRDD> inputRDDs = parseInputPath(inputPath, fs, sc);
+        List<JavaPairRDD> inputRDDs = SparkUtil.parseInputPath(inputPath, fs, sc, Text.class, Text.class);
         final JavaPairRDD<Text, Text> allCuboidFile = sc.union(inputRDDs.toArray(new JavaPairRDD[inputRDDs.size()]));
         final JavaPairRDD<RowKeyWritable, KeyValue> hfilerdd;
         if (quickPath) {
@@ -236,33 +234,15 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
             logger.debug(ioe.getMessage());
         }
 
-        hfilerdd2.saveAsNewAPIHadoopFile(outputPath, ImmutableBytesWritable.class, KeyValue.class,
-                HFileOutputFormat2.class, job.getConfiguration());
+        FileOutputFormat.setOutputPath(job, new Path(outputPath));
+        hfilerdd2.saveAsNewAPIHadoopDataset(job.getConfiguration());
 
         // output the data size to console, job engine will parse and save the metric
         // please note: this mechanism won't work when spark.submit.deployMode=cluster
-        System.out.println("HDFS: Number of bytes written=" + jobListener.metrics.getBytesWritten());
-        deleteHDFSMeta(metaUrl);
+        logger.info("HDFS: Number of bytes written=" + jobListener.metrics.getBytesWritten());
+        HadoopUtil.deleteHDFSMeta(metaUrl);
     }
 
-    private List<JavaPairRDD> parseInputPath(String inputPath, FileSystem fs, JavaSparkContext sc) throws IOException {
-        List<JavaPairRDD> inputRDDs = Lists.newArrayList();
-        Path inputHDFSPath = new Path(inputPath);
-        FileStatus[] fileStatuses = fs.listStatus(inputHDFSPath);
-        boolean hasDir = false;
-        for (FileStatus stat : fileStatuses) {
-            if (stat.isDirectory() && !stat.getPath().getName().startsWith("_")) {
-                hasDir = true;
-                inputRDDs.add(sc.sequenceFile(stat.getPath().toString(), Text.class, Text.class));
-            }
-        }
-
-        if (!hasDir) {
-            inputRDDs.add(sc.sequenceFile(inputHDFSPath.toString(), Text.class, Text.class));
-        }
-
-        return inputRDDs;
-    }
 
     static class HFilePartitioner extends Partitioner {
         private List<RowKeyWritable> keys;
@@ -296,12 +276,6 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         public int hashCode() {
             return Objects.hash(keys);
         }
-    }
-
-    protected void deleteHDFSMeta(String metaUrl) throws IOException {
-        String realHdfsPath = StorageURL.valueOf(metaUrl).getParameter("path");
-        HadoopUtil.getFileSystem(realHdfsPath).delete(new Path(realHdfsPath), true);
-        logger.info("Delete metadata in HDFS for this job: " + realHdfsPath);
     }
 
 }

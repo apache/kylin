@@ -29,7 +29,7 @@ public class KylinSparkJobListener extends SparkListener implements Serializable
 
     @Override
     public void onTaskEnd(SparkListenerTaskEnd taskEnd) {
-        if (taskEnd.taskMetrics().outputMetrics() != null) {
+        if (taskEnd != null && taskEnd.taskMetrics() != null && taskEnd.taskMetrics().outputMetrics() != null) {
             metrics.bytesWritten += taskEnd.taskMetrics().outputMetrics().bytesWritten();
             metrics.recordsWritten += taskEnd.taskMetrics().outputMetrics().recordsWritten();
         }

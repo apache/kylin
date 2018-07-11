@@ -20,6 +20,8 @@ package org.apache.kylin.engine.mr;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidModeEnum;
@@ -57,6 +59,7 @@ public class JobBuilderSupport {
     final public static String PathNameCuboidBase = "base_cuboid";
     final public static String PathNameCuboidOld = "old";
     final public static String PathNameCuboidInMem = "in_memory";
+    final public static Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
 
     public JobBuilderSupport(CubeSegment seg, String submitter) {
         Preconditions.checkNotNull(seg, "segment cannot be null");
@@ -324,4 +327,14 @@ public class JobBuilderSupport {
         return getRealizationRootPath(jobId) + "/metadata";
     }
 
+
+    public static String extractJobIDFromPath(String path) {
+        Matcher matcher = JOB_NAME_PATTERN.matcher(path);
+        // check the first occurrence
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            throw new IllegalStateException("Can not extract job ID from file path : " + path);
+        }
+    }
 }

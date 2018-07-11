@@ -414,6 +414,10 @@ public class KylinConfig extends KylinConfigBase {
         KylinConfig base = base();
         if (base != this)
             return base.getManager(clz);
+
+        if (managersCache == null) {
+            managersCache = new ConcurrentHashMap<>();
+        }
         
         Object mgr = managersCache.get(clz);
         if (mgr != null)

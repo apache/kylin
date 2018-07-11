@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.Writable;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -185,5 +186,11 @@ public class HadoopUtil {
             result[i] = fileStatus[i].getPath();
         }
         return result;
+    }
+
+    public static void deleteHDFSMeta(String metaUrl) throws IOException {
+        String realHdfsPath = StorageURL.valueOf(metaUrl).getParameter("path");
+        HadoopUtil.getFileSystem(realHdfsPath).delete(new Path(realHdfsPath), true);
+        logger.info("Delete metadata in HDFS for this job: " + realHdfsPath);
     }
 }

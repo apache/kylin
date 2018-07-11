@@ -275,7 +275,8 @@
   "engine_type" : %default_engine_type%,
   "storage_type" : %default_storage_type%,
   "override_kylin_properties" : {
-    "kylin.cube.aggrgroup.is-mandatory-only-valid" : "true"
+    "kylin.cube.aggrgroup.is-mandatory-only-valid" : "true",
+    "kylin.engine.spark.rdd-partition-cut-mb" : "500"
   },
   "cuboid_black_list" : [ ],
   "parent_forward" : 3,

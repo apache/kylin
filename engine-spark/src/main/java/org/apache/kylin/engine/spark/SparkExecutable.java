@@ -20,7 +20,9 @@ package org.apache.kylin.engine.spark;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -44,6 +46,7 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.model.Segments;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -132,9 +135,17 @@ public class SparkExecutable extends AbstractExecutable {
 
         String segmentID = this.getParam(SparkCubingByLayer.OPTION_SEGMENT_ID.getOpt());
         CubeSegment segment = cube.getSegmentById(segmentID);
+        Segments<CubeSegment> mergingSeg = cube.getMergingSegments(segment);
 
         try {
-            attachSegmentMetadataWithDict(segment);
+            if (mergingSeg == null || mergingSeg.size() == 0) {
+                attachSegmentMetadataWithDict(segment);
+            } else {
+                List<CubeSegment> allRelatedSegs = new ArrayList();
+                allRelatedSegs.add(segment);
+                allRelatedSegs.addAll(mergingSeg);
+                attachSegmentsMetadataWithDict(allRelatedSegs);
+            }
         } catch (IOException e) {
             throw new ExecuteException("meta dump failed");
         }
@@ -195,6 +206,16 @@ public class SparkExecutable extends AbstractExecutable {
         dumpList.addAll(segment.getDictionaryPaths());
         dumpList.add(segment.getStatisticsResourcePath());
         dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig());
+    }
+
+    private void attachSegmentsMetadataWithDict(List<CubeSegment> segments) throws IOException {
+        Set<String> dumpList = new LinkedHashSet<>();
+        dumpList.addAll(JobRelatedMetaUtil.collectCubeMetadata(segments.get(0).getCubeInstance()));
+        for (CubeSegment segment : segments) {
+            dumpList.addAll(segment.getDictionaryPaths());
+            dumpList.add(segment.getStatisticsResourcePath());
+        }
+        dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segments.get(0).getConfig());
     }
 
     private void dumpAndUploadKylinPropsAndMetadata(Set<String> dumpList, KylinConfigExt kylinConfig)

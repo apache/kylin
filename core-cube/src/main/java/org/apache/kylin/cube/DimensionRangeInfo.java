@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.kylin.metadata.datatype.DataTypeOrder;
@@ -31,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class DimensionRangeInfo {
+public class DimensionRangeInfo implements Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(DimensionRangeInfo.class);
 

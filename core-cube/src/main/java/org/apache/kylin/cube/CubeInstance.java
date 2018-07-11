@@ -707,4 +707,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return newCube;
     }
 
+    public static CubeSegment findSegmentWithJobId(String jobID, CubeInstance cubeInstance) {
+        for (CubeSegment segment : cubeInstance.getSegments()) {
+            String lastBuildJobID = segment.getLastBuildJobID();
+            if (lastBuildJobID != null && lastBuildJobID.equalsIgnoreCase(jobID)) {
+                return segment;
+            }
+        }
+        throw new IllegalStateException("No segment's last build job ID equals " + jobID);
+    }
+
 }

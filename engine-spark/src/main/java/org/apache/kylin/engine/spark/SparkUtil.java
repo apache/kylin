@@ -18,27 +18,30 @@
 
 package org.apache.kylin.engine.spark;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.util.GenericOptionsParser;
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.IMROutput2;
-import org.apache.kylin.metadata.TableMetadataManager;
+import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.storage.StorageFactory;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+
+import com.google.common.collect.Lists;
 
 public class SparkUtil {
 
     public static ISparkInput.ISparkBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg) {
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(seg);
         return SourceManager.createEngineAdapter(seg, ISparkInput.class).getBatchCubingInputSide(flatDesc);
-    }
-
-    private static TableDesc getTableDesc(String tableName, String prj) {
-        return TableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(tableName, prj);
     }
 
     public static ISparkOutput.ISparkBatchCubingOutputSide getBatchCubingOutputSide(CubeSegment seg) {
@@ -57,7 +60,47 @@ public class SparkUtil {
         return StorageFactory.createEngineAdapter(seg, IMROutput2.class).getBatchOptimizeOutputSide(seg);
     }
 
-    private static synchronized GenericOptionsParser getParser(Configuration conf, String[] args) throws Exception {
-        return new GenericOptionsParser(conf, args);
+    public static List<JavaPairRDD> parseInputPath(String inputPath, FileSystem fs, JavaSparkContext sc, Class keyClass,
+            Class valueClass) throws IOException {
+        List<JavaPairRDD> inputRDDs = Lists.newArrayList();
+        Path inputHDFSPath = new Path(inputPath);
+        FileStatus[] fileStatuses = fs.listStatus(inputHDFSPath);
+        boolean hasDir = false;
+        for (FileStatus stat : fileStatuses) {
+            if (stat.isDirectory() && !stat.getPath().getName().startsWith("_")) {
+                hasDir = true;
+                inputRDDs.add(sc.sequenceFile(stat.getPath().toString(), keyClass, valueClass));
+            }
+        }
+
+        if (!hasDir) {
+            inputRDDs.add(sc.sequenceFile(inputHDFSPath.toString(), keyClass, valueClass));
+        }
+
+        return inputRDDs;
     }
+
+
+    public static int estimateLayerPartitionNum(int level, CubeStatsReader statsReader, KylinConfig kylinConfig) {
+        double baseCuboidSize = statsReader.estimateLayerSize(level);
+        float rddCut = kylinConfig.getSparkRDDPartitionCutMB();
+        int partition = (int) (baseCuboidSize / rddCut);
+        partition = Math.max(kylinConfig.getSparkMinPartition(), partition);
+        partition = Math.min(kylinConfig.getSparkMaxPartition(), partition);
+        return partition;
+    }
+
+
+    public static int estimateTotalPartitionNum(CubeStatsReader statsReader, KylinConfig kylinConfig) {
+        double totalSize = 0;
+        for (double x: statsReader.getCuboidSizeMap().values()) {
+            totalSize += x;
+        }
+        float rddCut = kylinConfig.getSparkRDDPartitionCutMB();
+        int partition = (int) (totalSize / rddCut);
+        partition = Math.max(kylinConfig.getSparkMinPartition(), partition);
+        partition = Math.min(kylinConfig.getSparkMaxPartition(), partition);
+        return partition;
+    }
+
 }
