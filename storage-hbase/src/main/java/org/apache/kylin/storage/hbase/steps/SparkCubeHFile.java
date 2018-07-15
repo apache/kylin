@@ -158,42 +158,6 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
 
         logger.info("Input path: {}", inputPath);
         logger.info("Output path: {}", outputPath);
-
-        JavaPairRDD<Text, Text> inputRDDs = SparkUtil.parseInputPath(inputPath, fs, sc, Text.class, Text.class);
-        final JavaPairRDD<RowKeyWritable, KeyValue> hfilerdd;
-        if (quickPath) {
-            hfilerdd = inputRDDs.mapToPair(new PairFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
-                @Override
-                public Tuple2<RowKeyWritable, KeyValue> call(Tuple2<Text, Text> textTextTuple2) throws Exception {
-                    KeyValue outputValue = keyValueCreators.get(0).create(textTextTuple2._1,
-                            textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength());
-                    return new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()), outputValue);
-                }
-            });
-        } else {
-            hfilerdd = inputRDDs
-                    .flatMapToPair(new PairFlatMapFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
-                        @Override
-                        public Iterator<Tuple2<RowKeyWritable, KeyValue>> call(Tuple2<Text, Text> textTextTuple2)
-                                throws Exception {
-
-                            List<Tuple2<RowKeyWritable, KeyValue>> result = Lists.newArrayListWithExpectedSize(cfNum);
-                            Object[] inputMeasures = new Object[cubeDesc.getMeasures().size()];
-                            inputCodec.decode(
-                                    ByteBuffer.wrap(textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength()),
-                                    inputMeasures);
-
-                            for (int i = 0; i < cfNum; i++) {
-                                KeyValue outputValue = keyValueCreators.get(i).create(textTextTuple2._1, inputMeasures);
-                                result.add(new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()),
-                                        outputValue));
-                            }
-
-                            return result.iterator();
-                        }
-                    });
-        }
-
         // read partition split keys
         List<RowKeyWritable> keys = new ArrayList<>();
         try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, partitionFilePath, sc.hadoopConfiguration())) {
@@ -207,10 +171,55 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         }
 
         logger.info("There are " + keys.size() + " split keys, totally " + (keys.size() + 1) + " hfiles");
+        Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
+        HadoopUtil.healSickConfig(hbaseConf);
+        Job job = new Job(hbaseConf, cubeSegment.getStorageLocationIdentifier());
+        job.getConfiguration().set("spark.hadoop.dfs.replication", "3"); // HFile, replication=3
+        HTable table = new HTable(hbaseConf, cubeSegment.getStorageLocationIdentifier());
+        try {
+            HFileOutputFormat2.configureIncrementalLoadMap(job, table);
+        } catch (IOException ioe) {
+            // this can be ignored.
+            logger.debug(ioe.getMessage(), ioe);
+        }
 
-        final JavaPairRDD<ImmutableBytesWritable, KeyValue> hfilerdd2 = hfilerdd
-                .repartitionAndSortWithinPartitions(new HFilePartitioner(keys),
-                        RowKeyWritable.RowKeyComparator.INSTANCE)
+        FileOutputFormat.setOutputPath(job, new Path(outputPath));
+
+        JavaPairRDD<Text, Text> inputRDDs = SparkUtil.parseInputPath(inputPath, fs, sc, Text.class, Text.class);
+        final JavaPairRDD<RowKeyWritable, KeyValue> hfilerdd;
+        if (quickPath) {
+            hfilerdd = inputRDDs.mapToPair(new PairFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
+                @Override
+                public Tuple2<RowKeyWritable, KeyValue> call(Tuple2<Text, Text> textTextTuple2) throws Exception {
+                    KeyValue outputValue = keyValueCreators.get(0).create(textTextTuple2._1,
+                            textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength());
+                    return new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()), outputValue);
+                }
+            });
+        } else {
+            hfilerdd = inputRDDs.flatMapToPair(new PairFlatMapFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
+                @Override
+                public Iterator<Tuple2<RowKeyWritable, KeyValue>> call(Tuple2<Text, Text> textTextTuple2)
+                        throws Exception {
+
+                    List<Tuple2<RowKeyWritable, KeyValue>> result = Lists.newArrayListWithExpectedSize(cfNum);
+                    Object[] inputMeasures = new Object[cubeDesc.getMeasures().size()];
+                    inputCodec.decode(ByteBuffer.wrap(textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength()),
+                            inputMeasures);
+
+                    for (int i = 0; i < cfNum; i++) {
+                        KeyValue outputValue = keyValueCreators.get(i).create(textTextTuple2._1, inputMeasures);
+                        result.add(new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()),
+                                outputValue));
+                    }
+
+                    return result.iterator();
+                }
+            });
+        }
+
+        hfilerdd.repartitionAndSortWithinPartitions(new HFilePartitioner(keys),
+                RowKeyWritable.RowKeyComparator.INSTANCE)
                 .mapToPair(new PairFunction<Tuple2<RowKeyWritable, KeyValue>, ImmutableBytesWritable, KeyValue>() {
                     @Override
                     public Tuple2<ImmutableBytesWritable, KeyValue> call(
@@ -218,28 +227,13 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
                         return new Tuple2<>(new ImmutableBytesWritable(rowKeyWritableKeyValueTuple2._2.getKey()),
                                 rowKeyWritableKeyValueTuple2._2);
                     }
-                });
-
-        Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
-        HadoopUtil.healSickConfig(hbaseConf);
-        Job job = new Job(hbaseConf, cubeSegment.getStorageLocationIdentifier());
-        HTable table = new HTable(hbaseConf, cubeSegment.getStorageLocationIdentifier());
-        try {
-            HFileOutputFormat2.configureIncrementalLoadMap(job, table);
-        } catch (IOException ioe) {
-            // this can be ignored.
-            logger.debug(ioe.getMessage());
-        }
-
-        FileOutputFormat.setOutputPath(job, new Path(outputPath));
-        hfilerdd2.saveAsNewAPIHadoopDataset(job.getConfiguration());
+                }).saveAsNewAPIHadoopDataset(job.getConfiguration());
 
         // output the data size to console, job engine will parse and save the metric
         // please note: this mechanism won't work when spark.submit.deployMode=cluster
         logger.info("HDFS: Number of bytes written=" + jobListener.metrics.getBytesWritten());
-        HadoopUtil.deleteHDFSMeta(metaUrl);
+        //HadoopUtil.deleteHDFSMeta(metaUrl);
     }
-
 
     static class HFilePartitioner extends Partitioner {
         private List<RowKeyWritable> keys;

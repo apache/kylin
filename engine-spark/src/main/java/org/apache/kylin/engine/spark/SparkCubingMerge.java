@@ -24,13 +24,11 @@ import java.util.List;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -116,6 +114,7 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
         conf.set("spark.kryo.registrationRequired", "true").registerKryoClasses(kryoClassArray);
 
         JavaSparkContext sc = new JavaSparkContext(conf);
+        SparkUtil.modifySparkHadoopConfiguration(sc.sc()); // set dfs.replication=2 and enable compress
         KylinSparkJobListener jobListener = new KylinSparkJobListener();
         sc.sc().addSparkListener(jobListener);
 
@@ -131,12 +130,9 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
         logger.info("Input path: {}", inputPath);
         logger.info("Output path: {}", outputPath);
 
-        Configuration confOverwrite = new Configuration(sc.hadoopConfiguration());
-        confOverwrite.set("dfs.replication", "2"); // cuboid intermediate files, replication=2
-        final Job job = Job.getInstance(confOverwrite);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        final Job job = Job.getInstance(sConf.get());
+
+        SparkUtil.setHadoopConfForCuboid(job, cubeSegment, metaUrl);
 
         final MeasureAggregators aggregators = new MeasureAggregators(cubeDesc.getMeasures());
         final Function2 reduceFunction = new Function2<Object[], Object[], Object[]>() {
@@ -157,12 +153,17 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
                     throws Exception {
 
                 if (initialized == false) {
-                    synchronized (SparkCubingByLayer.class) {
+                    synchronized (SparkCubingMerge.class) {
                         if (initialized == false) {
-                            KylinConfig kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
-                            CubeDesc desc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cubeName);
-                            codec = new BufferedMeasureCodec(desc.getMeasures());
-                            initialized = true;
+                            synchronized (SparkCubingMerge.class) {
+                                if (initialized == false) {
+                                    KylinConfig kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
+                                    KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
+                                    CubeDesc desc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cubeName);
+                                    codec = new BufferedMeasureCodec(desc.getMeasures());
+                                    initialized = true;
+                                }
+                            }
                         }
                     }
                 }
@@ -231,7 +232,7 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
         // output the data size to console, job engine will parse and save the metric
         // please note: this mechanism won't work when spark.submit.deployMode=cluster
         logger.info("HDFS: Number of bytes written=" + jobListener.metrics.getBytesWritten());
-        //HadoopUtil.deleteHDFSMeta(metaUrl);
+        //        HadoopUtil.deleteHDFSMeta(metaUrl);
     }
 
     static class ReEncodCuboidFunction implements PairFunction<Tuple2<Text, Text>, Text, Object[]> {

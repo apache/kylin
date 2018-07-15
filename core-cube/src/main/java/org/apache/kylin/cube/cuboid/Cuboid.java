@@ -54,7 +54,7 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
 
     // for mandatory cuboid, no need to translate cuboid
     public static Cuboid findForMandatory(CubeDesc cube, long cuboidID) {
-        return new Cuboid(cube, cuboidID, cuboidID);
+        return CuboidManager.getInstance(cube.getConfig()).findMandatoryId(cube, cuboidID);
     }
     
     public static Cuboid findCuboid(CuboidScheduler cuboidScheduler, Set<TblColRef> dimensions,

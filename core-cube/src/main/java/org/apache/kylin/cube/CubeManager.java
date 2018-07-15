@@ -125,7 +125,7 @@ public class CubeManager implements IRealizationProvider {
     private DictionaryAssist dictAssist = new DictionaryAssist();
 
     private CubeManager(KylinConfig cfg) throws IOException {
-        logger.info("Initializing CubeManager with config " + config);
+        logger.info("Initializing CubeManager with config " + cfg);
         this.config = cfg;
         this.cubeMap = new CaseInsensitiveStringCache<CubeInstance>(config, "cube");
         this.crud = new CachedCrudAssist<CubeInstance>(getStore(), ResourceStore.CUBE_RESOURCE_ROOT, CubeInstance.class,

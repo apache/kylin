@@ -31,7 +31,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -98,15 +97,15 @@ public class UpdateOldCuboidShardMapper extends KylinMapper<Text, Text, Text, Te
         mos.write(outputKey, value, generateFileName(baseOutputPath));
     }
 
-    private int buildKey(Cuboid cuboid, SplittedBytes[] splitBuffers) {
+    private int buildKey(Cuboid cuboid, ByteArray[] splitBuffers) {
         RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(cuboid);
 
         int startIdx = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboidId
         int endIdx = startIdx + Long.bitCount(cuboid.getId());
         int offset = 0;
         for (int i = startIdx; i < endIdx; i++) {
-            System.arraycopy(splitBuffers[i].value, 0, newKeyBodyBuf, offset, splitBuffers[i].length);
-            offset += splitBuffers[i].length;
+            System.arraycopy(splitBuffers[i].array(), splitBuffers[i].offset(), newKeyBodyBuf, offset, splitBuffers[i].length());
+            offset += splitBuffers[i].length();
         }
 
         int fullKeySize = rowkeyEncoder.getBytesLength();

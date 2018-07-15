@@ -24,6 +24,9 @@ import java.util.List;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
@@ -33,6 +36,7 @@ import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.storage.StorageFactory;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 
@@ -113,5 +117,19 @@ public class SparkUtil {
         partition = Math.min(kylinConfig.getSparkMaxPartition(), partition);
         return partition;
     }
+
+
+    public static void setHadoopConfForCuboid(Job job, CubeSegment segment, String metaUrl) throws Exception {
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+    }
+
+    public static void modifySparkHadoopConfiguration(SparkContext sc) throws Exception {
+        sc.hadoopConfiguration().set("dfs.replication", "2"); // cuboid intermediate files, replication=2
+        sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress", "true");
+        sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress.type", "BLOCK");
+        sc.hadoopConfiguration().set("mapreduce.output.fileoutputformat.compress.codec", "org.apache.hadoop.io.compress.DefaultCodec"); // or org.apache.hadoop.io.compress.SnappyCodec
+  }
 
 }

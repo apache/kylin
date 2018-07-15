@@ -22,7 +22,6 @@ import java.io.Serializable;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -43,8 +42,7 @@ public class NDCuboidBuilder implements Serializable {
     protected CubeSegment cubeSegment;
     private RowKeySplitter rowKeySplitter;
     private RowKeyEncoderProvider rowKeyEncoderProvider;
-    private byte[] newKeyBodyBuf = new byte[RowConstants.ROWKEY_BUFFER_SIZE];
-    private ByteArray newKeyBuf = ByteArray.allocate(RowConstants.ROWKEY_BUFFER_SIZE);
+    private ByteArray newKeyBodyBuf = null;
 
     public NDCuboidBuilder(CubeSegment cubeSegment) {
         this(cubeSegment, new RowKeyEncoderProvider(cubeSegment));
@@ -56,11 +54,42 @@ public class NDCuboidBuilder implements Serializable {
         this.rowKeySplitter = new RowKeySplitter(cubeSegment);
     }
 
-
-    public Pair<Integer, ByteArray> buildKey(Cuboid parentCuboid, Cuboid childCuboid, SplittedBytes[] splitBuffers) {
+    /**
+     * Build the new key, return a reused ByteArray object. Suitable for MR
+     * @param parentCuboid
+     * @param childCuboid
+     * @param splitBuffers
+     * @return
+     */
+    public Pair<Integer, ByteArray> buildKey(Cuboid parentCuboid, Cuboid childCuboid, ByteArray[] splitBuffers) {
         RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(childCuboid);
+        int fullKeySize = rowkeyEncoder.getBytesLength();
+        if (newKeyBodyBuf == null || newKeyBodyBuf.length() < fullKeySize) {
+            newKeyBodyBuf = new ByteArray(fullKeySize);
+        }
 
-        int offset = 0;
+        buildKeyInternal(parentCuboid, childCuboid, splitBuffers, newKeyBodyBuf);
+        return new Pair<>(Integer.valueOf(fullKeySize), newKeyBodyBuf);
+
+    }
+
+    /**
+     * Build the new key, return a new ByteArray object each time. Suitable for spark
+     * @param parentCuboid
+     * @param childCuboid
+     * @param splitBuffers
+     * @return
+     */
+    public ByteArray buildKey2(Cuboid parentCuboid, Cuboid childCuboid, ByteArray[] splitBuffers) {
+        RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(childCuboid);
+        int fullKeySize = rowkeyEncoder.getBytesLength();
+        ByteArray newKey = new ByteArray(fullKeySize);
+        buildKeyInternal(parentCuboid, childCuboid, splitBuffers, newKey);
+        return newKey;
+    }
+
+    private void buildKeyInternal(Cuboid parentCuboid, Cuboid childCuboid, ByteArray[] splitBuffers, ByteArray newKeyBodyBuf) {
+        RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(childCuboid);
 
         // rowkey columns
         long mask = Long.highestOneBit(parentCuboid.getId());
@@ -68,28 +97,21 @@ public class NDCuboidBuilder implements Serializable {
         long childCuboidId = childCuboid.getId();
         long parentCuboidIdActualLength = (long)Long.SIZE - Long.numberOfLeadingZeros(parentCuboid.getId());
         int index = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboidId
+        int offset = RowConstants.ROWKEY_SHARDID_LEN + RowConstants.ROWKEY_CUBOIDID_LEN; // skip shard and cuboidId
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
             if ((mask & parentCuboidId) > 0) {// if the this bit position equals
                 // 1
                 if ((mask & childCuboidId) > 0) {// if the child cuboid has this
                     // column
-                    System.arraycopy(splitBuffers[index].value, 0, newKeyBodyBuf, offset, splitBuffers[index].length);
-                    offset += splitBuffers[index].length;
+                    System.arraycopy(splitBuffers[index].array(), splitBuffers[index].offset(), newKeyBodyBuf.array(), offset, splitBuffers[index].length());
+                    offset += splitBuffers[index].length();
                 }
                 index++;
             }
             mask = mask >> 1;
         }
 
-        int fullKeySize = rowkeyEncoder.getBytesLength();
-        while (newKeyBuf.array().length < fullKeySize) {
-            newKeyBuf = new ByteArray(newKeyBuf.length() * 2);
-        }
-        newKeyBuf.setLength(fullKeySize);
-
-        rowkeyEncoder.encode(new ByteArray(newKeyBodyBuf, 0, offset), newKeyBuf);
-
-        return new Pair<>(Integer.valueOf(fullKeySize), newKeyBuf);
+        rowkeyEncoder.fillHeader(newKeyBodyBuf.array());
     }
 
 }

@@ -20,14 +20,12 @@ package org.apache.kylin.engine.spark;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
@@ -38,7 +36,6 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -138,21 +135,19 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.sc().addSparkListener(jobListener);
         HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(outputPath));
+        SparkUtil.modifySparkHadoopConfiguration(sc.sc()); // set dfs.replication=2 and enable compress
         final SerializableConfiguration sConf = new SerializableConfiguration(sc.hadoopConfiguration());
-
         KylinConfig envConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
 
         final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
         final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
 
-        Configuration confOverwrite = new Configuration(sc.hadoopConfiguration());
-        confOverwrite.set("dfs.replication", "2"); // cuboid intermediate files, replication=2
-        final Job job = Job.getInstance(confOverwrite);
-
         logger.info("RDD input path: {}", inputPath);
         logger.info("RDD Output path: {}", outputPath);
-        setHadoopConf(job, cubeSegment, metaUrl);
+
+        final Job job = Job.getInstance(sConf.get());
+        SparkUtil.setHadoopConfForCuboid(job, cubeSegment, metaUrl);
 
         int countMeasureIndex = 0;
         for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
@@ -227,11 +222,13 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         saveToHDFS(allRDDs[0], metaUrl, cubeName, cubeSegment, outputPath, 0, job, envConfig);
 
+        PairFlatMapFunction flatMapFunction = new CuboidFlatMap(cubeName, segmentId, metaUrl, sConf);
         // aggregate to ND cuboids
         for (level = 1; level <= totalLevels; level++) {
             partition = SparkUtil.estimateLayerPartitionNum(level, cubeStatsReader, envConfig);
-            allRDDs[level] = allRDDs[level - 1].flatMapToPair(new CuboidFlatMap(cubeName, segmentId, metaUrl, sConf))
-                    .reduceByKey(reducerFunction2, partition).persist(storageLevel);
+
+            allRDDs[level] = allRDDs[level - 1].flatMapToPair(flatMapFunction).reduceByKey(reducerFunction2, partition)
+                    .persist(storageLevel);
             allRDDs[level - 1].unpersist();
             if (envConfig.isSparkSanityCheckEnabled() == true) {
                 sanityCheck(allRDDs[level], totalCount, level, cubeStatsReader, countMeasureIndex);
@@ -241,13 +238,9 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         allRDDs[totalLevels].unpersist();
         logger.info("Finished on calculating all level cuboids.");
         logger.info("HDFS: Number of bytes written=" + jobListener.metrics.getBytesWritten());
-        HadoopUtil.deleteHDFSMeta(metaUrl);
+        //HadoopUtil.deleteHDFSMeta(metaUrl);
     }
 
-    protected void setHadoopConf(Job job, CubeSegment segment, String metaUrl) throws Exception {
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-    }
 
 
     protected JavaPairRDD<ByteArray, Object[]> prepareOutput(JavaPairRDD<ByteArray, Object[]> rdd, KylinConfig config,
@@ -277,6 +270,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                             synchronized (SparkCubingByLayer.class) {
                                 if (initialized == false) {
                                     KylinConfig kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
+                                    KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
                                     CubeDesc desc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cubeName);
                                     codec = new BufferedMeasureCodec(desc.getMeasures());
                                     initialized = true;
@@ -315,6 +309,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                 synchronized (SparkCubingByLayer.class) {
                     if (initialized == false) {
                         KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
+                        KylinConfig.setAndUnsetThreadLocalConfig(kConfig);
                         CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
                         CubeDesc cubeDesc = cubeInstance.getDescriptor();
                         CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
@@ -353,6 +348,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         public void init() {
             KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
+            KylinConfig.setAndUnsetThreadLocalConfig(kConfig);
             CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
             cubeDesc = cubeInstance.getDescriptor();
             aggregators = new MeasureAggregators(cubeDesc.getMeasures());
@@ -422,6 +418,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         public void init() {
             KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
+            KylinConfig.setAndUnsetThreadLocalConfig(kConfig);
             CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
             this.cubeSegment = cubeInstance.getSegmentById(segmentId);
             this.cubeDesc = cubeInstance.getDescriptor();
@@ -430,7 +427,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         }
 
         @Override
-        public Iterator<Tuple2<ByteArray, Object[]>> call(Tuple2<ByteArray, Object[]> tuple2) throws Exception {
+        public Iterator<Tuple2<ByteArray, Object[]>> call(final Tuple2<ByteArray, Object[]> tuple2) throws Exception {
             if (initialized == false) {
                 synchronized (SparkCubingByLayer.class) {
                     if (initialized == false) {
@@ -441,26 +438,23 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             }
 
             byte[] key = tuple2._1().array();
-            long cuboidId = rowKeySplitter.split(key);
-            Cuboid parentCuboid = Cuboid.findForMandatory(cubeDesc, cuboidId);
-
-            Collection<Long> myChildren = cubeSegment.getCuboidScheduler().getSpanningCuboid(cuboidId);
+            long cuboidId = rowKeySplitter.parseCuboid(key);
+            final List<Long> myChildren = cubeSegment.getCuboidScheduler().getSpanningCuboid(cuboidId);
 
             // if still empty or null
             if (myChildren == null || myChildren.size() == 0) {
                 return EMTPY_ITERATOR.iterator();
             }
+            rowKeySplitter.split(key);
+            final Cuboid parentCuboid = Cuboid.findForMandatory(cubeDesc, cuboidId);
 
             List<Tuple2<ByteArray, Object[]>> tuples = new ArrayList(myChildren.size());
             for (Long child : myChildren) {
                 Cuboid childCuboid = Cuboid.findForMandatory(cubeDesc, child);
-                Pair<Integer, ByteArray> result = ndCuboidBuilder.buildKey(parentCuboid, childCuboid,
+                ByteArray result = ndCuboidBuilder.buildKey2(parentCuboid, childCuboid,
                         rowKeySplitter.getSplitBuffers());
 
-                byte[] newKey = new byte[result.getFirst()];
-                System.arraycopy(result.getSecond().array(), 0, newKey, 0, result.getFirst());
-
-                tuples.add(new Tuple2<>(new ByteArray(newKey), tuple2._2()));
+                tuples.add(new Tuple2<>(result, tuple2._2()));
             }
 
             return tuples.iterator();

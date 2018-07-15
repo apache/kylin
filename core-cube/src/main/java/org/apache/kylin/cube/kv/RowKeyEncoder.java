@@ -158,9 +158,9 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Seri
         return bytes;
     }
 
-    protected void fillHeader(byte[] bytes) {
-        int offset = 0;
 
+    public void fillHeader(byte[] bytes) {
+        int offset = 0;
         if (enableSharding) {
             short shard = calculateShard(bytes);
             BytesUtil.writeShort(shard, bytes, offset, RowConstants.ROWKEY_SHARDID_LEN);

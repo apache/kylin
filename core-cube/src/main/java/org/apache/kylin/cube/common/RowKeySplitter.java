@@ -18,8 +18,8 @@
 
 package org.apache.kylin.cube.common;
 
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
@@ -32,18 +32,17 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 public class RowKeySplitter implements java.io.Serializable {
 
-    private CubeSegment cubeSegment;
     private CubeDesc cubeDesc;
     private RowKeyColumnIO colIO;
 
-    private SplittedBytes[] splitBuffers;
+    private ByteArray[] splitBuffers;
     private int[] splitOffsets;
     private int bufferSize;
 
     private boolean enableSharding;
     private short shardId;
 
-    public SplittedBytes[] getSplitBuffers() {
+    public ByteArray[] getSplitBuffers() {
         return splitBuffers;
     }
 
@@ -67,7 +66,6 @@ public class RowKeySplitter implements java.io.Serializable {
         this(cubeSeg, cubeSeg.getCubeDesc().getRowkey().getRowKeyColumns().length + 2, cubeSeg.getConfig().getDimensionEncodingMaxLength());
     }
     public RowKeySplitter(CubeSegment cubeSeg, int splitLen, int bytesLen) {
-        this.cubeSegment = cubeSeg;
         this.enableSharding = cubeSeg.isEnableSharding();
         this.cubeDesc = cubeSeg.getCubeDesc();
         IDimensionEncodingMap dimEncoding = new CubeDimEncMap(cubeSeg);
@@ -78,11 +76,8 @@ public class RowKeySplitter implements java.io.Serializable {
 
         this.colIO = new RowKeyColumnIO(dimEncoding);
 
-        this.splitBuffers = new SplittedBytes[splitLen];
+        this.splitBuffers = new ByteArray[splitLen];
         this.splitOffsets = new int[splitLen];
-        for (int i = 0; i < splitLen; i++) {
-            this.splitBuffers[i] = new SplittedBytes(bytesLen);
-        }
         this.bufferSize = 0;
     }
 
@@ -93,6 +88,11 @@ public class RowKeySplitter implements java.io.Serializable {
         return null;
     }
 
+
+    public long parseCuboid(byte[] bytes) {
+        int offset = enableSharding ? RowConstants.ROWKEY_SHARDID_LEN : 0;
+        return Bytes.toLong(bytes, offset, RowConstants.ROWKEY_CUBOIDID_LEN);
+    }
     /**
      * @param bytes
      * @return cuboid ID
@@ -103,21 +103,18 @@ public class RowKeySplitter implements java.io.Serializable {
 
         if (enableSharding) {
             // extract shard
-            SplittedBytes shardSplit = this.splitBuffers[this.bufferSize++];
-            shardSplit.length = RowConstants.ROWKEY_SHARDID_LEN;
-            System.arraycopy(bytes, offset, shardSplit.value, 0, RowConstants.ROWKEY_SHARDID_LEN);
+            ByteArray shardSplit = new ByteArray(bytes, offset, RowConstants.ROWKEY_SHARDID_LEN);
+            this.splitBuffers[this.bufferSize++] = shardSplit;
             offset += RowConstants.ROWKEY_SHARDID_LEN;
             //lastSplittedShard = Bytes.toShort(shardSplit.value, 0, shardSplit.length);
-            shardId = Bytes.toShort(shardSplit.value);
+            shardId = Bytes.toShort(shardSplit.array(), shardSplit.offset());
         }
 
         // extract cuboid id
-        SplittedBytes cuboidIdSplit = this.splitBuffers[this.bufferSize++];
-        cuboidIdSplit.length = RowConstants.ROWKEY_CUBOIDID_LEN;
-        System.arraycopy(bytes, offset, cuboidIdSplit.value, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
+        ByteArray cuboidIdSplit = new ByteArray(bytes, offset, RowConstants.ROWKEY_CUBOIDID_LEN);
+        this.splitBuffers[this.bufferSize++] = cuboidIdSplit;
         offset += RowConstants.ROWKEY_CUBOIDID_LEN;
-
-        long lastSplittedCuboidId = Bytes.toLong(cuboidIdSplit.value, 0, cuboidIdSplit.length);
+        long lastSplittedCuboidId = Bytes.toLong(cuboidIdSplit.array(), cuboidIdSplit.offset(), RowConstants.ROWKEY_CUBOIDID_LEN);
         Cuboid cuboid = Cuboid.findForMandatory(cubeDesc, lastSplittedCuboidId);
 
         // rowkey columns
@@ -125,9 +122,8 @@ public class RowKeySplitter implements java.io.Serializable {
             splitOffsets[i] = offset;
             TblColRef col = cuboid.getColumns().get(i);
             int colLength = colIO.getColumnLength(col);
-            SplittedBytes split = this.splitBuffers[this.bufferSize++];
-            split.length = colLength;
-            System.arraycopy(bytes, offset, split.value, 0, colLength);
+            ByteArray split = new ByteArray(bytes, offset, colLength);
+            this.splitBuffers[this.bufferSize++] = split;
             offset += colLength;
         }
 

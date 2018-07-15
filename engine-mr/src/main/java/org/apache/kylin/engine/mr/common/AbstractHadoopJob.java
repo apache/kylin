@@ -75,6 +75,8 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
+
 @SuppressWarnings("static-access")
 public abstract class AbstractHadoopJob extends Configured implements Tool {
     private static final Logger logger = LoggerFactory.getLogger(AbstractHadoopJob.class);
@@ -126,6 +128,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             .create(BatchConstants.ARG_LOOKUP_SNAPSHOT_ID);
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
+
+    private static final Map<String, KylinConfig> kylinConfigCache = Maps.newConcurrentMap();
 
     protected static void runJob(Tool job, String[] args) {
         try {
@@ -488,6 +492,11 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         if (!uri.contains("@hdfs"))
             throw new IllegalArgumentException("meta url should like @hdfs schema");
 
+        if (kylinConfigCache.get(uri) != null) {
+            logger.info("KylinConfig cached for : {}", uri);
+            return kylinConfigCache.get(uri);
+        }
+
         logger.info("Ready to load KylinConfig from uri: {}", uri);
         KylinConfig config;
         FileSystem fs;
@@ -505,7 +514,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         // limitation of MR API. It works because MR task runs its own process. Do not copy.
         @SuppressWarnings("unused")
         SetAndUnsetThreadLocalConfig shouldAutoClose = KylinConfig.setAndUnsetThreadLocalConfig(config);
-        
+        kylinConfigCache.put(uri, config);
         return config;
     }
 

@@ -65,7 +65,7 @@ public class FuzzyMaskEncoder extends RowKeyEncoder {
     }
 
     @Override
-    protected void fillHeader(byte[] bytes) {
+    public void fillHeader(byte[] bytes) {
         int offset = 0;
         if (enableSharding) {
             Arrays.fill(bytes, 0, RowConstants.ROWKEY_SHARDID_LEN, RowConstants.BYTE_ONE);

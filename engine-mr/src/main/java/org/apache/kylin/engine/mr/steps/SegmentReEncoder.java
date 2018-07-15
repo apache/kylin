@@ -30,7 +30,6 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -181,7 +180,7 @@ public class SegmentReEncoder implements Serializable {
         Cuboid cuboid = Cuboid.findForMandatory(cubeDesc, cuboidID);
         RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(cuboid);
 
-        SplittedBytes[] splittedByteses = rowKeySplitter.getSplitBuffers();
+        ByteArray[] splittedByteses = rowKeySplitter.getSplitBuffers();
         int bufOffset = 0;
         int bodySplitOffset = rowKeySplitter.getBodySplitOffset();
 
@@ -217,8 +216,8 @@ public class SegmentReEncoder implements Serializable {
                     System.arraycopy(oldBuf, 0, newKeyBodyBuf, 0, oldBuf.length);
                 }
 
-                int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[useSplit].value, 0,
-                        splittedByteses[useSplit].length);
+                int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[useSplit].array(), splittedByteses[useSplit].offset(),
+                        splittedByteses[useSplit].length());
                 int idInMergedDict;
 
                 //int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBodyBuf, bufOffset);
@@ -233,15 +232,15 @@ public class SegmentReEncoder implements Serializable {
                 bufOffset += mergedDict.getSizeOfId();
             } else {
                 // keep as it is
-                while (splittedByteses[useSplit].length > newKeyBodyBuf.length - bufOffset) {
+                while (splittedByteses[useSplit].length() > newKeyBodyBuf.length - bufOffset) {
                     byte[] oldBuf = newKeyBodyBuf;
                     newKeyBodyBuf = new byte[2 * newKeyBodyBuf.length];
                     System.arraycopy(oldBuf, 0, newKeyBodyBuf, 0, oldBuf.length);
                 }
 
-                System.arraycopy(splittedByteses[useSplit].value, 0, newKeyBodyBuf, bufOffset,
-                        splittedByteses[useSplit].length);
-                bufOffset += splittedByteses[useSplit].length;
+                System.arraycopy(splittedByteses[useSplit].array(), splittedByteses[useSplit].offset(), newKeyBodyBuf, bufOffset,
+                        splittedByteses[useSplit].length());
+                bufOffset += splittedByteses[useSplit].length();
             }
         }
 

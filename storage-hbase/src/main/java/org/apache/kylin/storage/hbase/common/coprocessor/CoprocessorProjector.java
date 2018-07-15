@@ -40,7 +40,7 @@ public class CoprocessorProjector {
 
         RowKeyEncoder rowKeyMaskEncoder = new RowKeyEncoder(cubeSegment, cuboid) {
             @Override
-            protected void fillHeader(byte[] bytes) {
+            public void fillHeader(byte[] bytes) {
                 Arrays.fill(bytes, 0, this.getHeaderLength(), (byte) 0xff);
             }
 

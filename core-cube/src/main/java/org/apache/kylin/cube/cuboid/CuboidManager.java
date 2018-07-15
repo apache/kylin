@@ -25,6 +25,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 
 import com.google.common.collect.Maps;
+import org.apache.kylin.cube.model.CubeDesc;
 
 /**
  * A cuboid cache.
@@ -60,6 +61,20 @@ public class CuboidManager {
         if (cuboid == null) {
             long validCuboidID = cuboidScheduler.findBestMatchCuboid(cuboidID);
             cuboid = new Cuboid(cuboidScheduler.getCubeDesc(), cuboidID, validCuboidID);
+            cubeCache.put(cuboidID, cuboid);
+        }
+        return cuboid;
+    }
+
+    public Cuboid findMandatoryId(CubeDesc cubeDesc, long cuboidID) {
+        Map<Long, Cuboid> cubeCache = schedulerCuboidCache.get(cubeDesc.getName());
+        if (cubeCache == null) {
+            cubeCache = Maps.newConcurrentMap();
+            schedulerCuboidCache.put(cubeDesc.getName(), cubeCache);
+        }
+        Cuboid cuboid = cubeCache.get(cuboidID);
+        if (cuboid == null) {
+            cuboid = new Cuboid(cubeDesc, cuboidID, cuboidID);
             cubeCache.put(cuboidID, cuboid);
         }
         return cuboid;
