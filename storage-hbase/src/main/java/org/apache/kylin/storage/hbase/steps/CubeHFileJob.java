@@ -46,6 +46,8 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.hadoop.hbase.HBaseConfiguration.merge;
+
 /**
  * @author George Song (ysong1)
  */
@@ -76,6 +78,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             // use current hbase configuration
             Configuration configuration = HBaseConnection.getCurrentHBaseConfiguration();
+            merge(configuration, getConf());
             job = Job.getInstance(configuration, getOptionValue(OPTION_JOB_NAME));
 
             setJobClasspath(job, cube.getConfig());
