@@ -27,7 +27,7 @@
               <div class="row middle-popover">
                   <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Date Column</b> <i kylinpopover placement="right" title="Partition Date Column" template="partitionTip.html" class="fa fa-info-circle"></i></label>
                   <div class="col-xs-12 col-sm-6" ng-if="state.mode=='edit'">
-                      <select style="width: 49%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
+                      <select width="'49%'" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
                               ng-model="selectedTables.fact"
                               ng-change="tableChange(selectedTables.fact)"
                               data-placement=""
@@ -35,7 +35,7 @@
                           <option value="">--Select Partition Table--</option>
                       </select>
 
-                      <select style="width: 49%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
+                      <select width="'49%'" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
                             ng-model="modelsManager.selectedModel.partition_desc.partition_date_column"
                             ng-change="partitionChange(modelsManager.selectedModel.partition_desc.partition_date_column)"
                             data-placement=""
@@ -57,15 +57,24 @@
             <div class="row">
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Date Format</b></label>
               <div class="col-xs-12 col-sm-6">
-                <select style="width: 100%" chosen
-                        ng-required="modelsManager.selectedModel.partition_desc.partition_date_format"
-                        ng-model="modelsManager.selectedModel.partition_desc.partition_date_format"
+                <select chosen
+                        width="'98.5%'"
                         ng-if="state.mode=='edit'"
+                        ng-model="partition_date.type"
+                        ng-required="partition_date.type"
                         ng-disabled="$parent.isFormatEdit.editable!==true"
-                        data-placement=""
-                        ng-options="ddt as ddt for ddt in cubeConfig.partitionDateFormatOpt">
+                        ng-class="{ 'col-5': partition_date.type === 'other' }"
+                        ng-options="ddt as ddt for ddt in cubeConfig.partitionDateFormatOpt"
+                        data-placement="">
                   <option value="">--Select Date Format--</option>
                 </select>
+                <input
+                  class="form-control format-input"
+                  ng-if="partition_date.type === 'other'"
+                  ng-model="partition_date.format"
+                  ng-required="partition_date.format"
+                  ng-class="{ 'col-5': partition_date.type === 'other' }"
+                  placeholder="Please enter your custom date format."/>
                 <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_date_column">{{(modelsManager.selectedModel.partition_desc.partition_date_format)}}</span>
               </div>
             </div>
@@ -85,14 +94,14 @@
             <div class="row middle-popover">
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default align-right"><b>Partition Time Column </b> <i kylinpopover placement="right" ng-title="Partition Time Column" template="partitionTimeTip.html" class="fa fa-info-circle"></i> </label>
               <div class="col-xs-12 col-sm-6">
-                <select style="width: 49%" chosen
+                <select width="'49%'" chosen
                         ng-model="selectedTablesForPartitionTime.fact"
                         ng-if="state.mode=='edit'"
                         data-placement=""
                         ng-options="alias as alias for alias in availableFactTables" >
                   <option value="">--Select Partition Table--</option>
                 </select>
-                <select style="width: 49%" chosen
+                <select width="'49%'" chosen
                         ng-model="modelsManager.selectedModel.partition_desc.partition_time_column"
                         ng-if="state.mode=='edit'"
                         data-placement=""
@@ -109,14 +118,23 @@
             <div class="row">
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Time Format</b></label>
               <div class="col-xs-12 col-sm-6">
-                <select style="width: 100%" chosen
-                        ng-required="modelsManager.selectedModel.partition_desc.partition_time_format"
-                        ng-model="modelsManager.selectedModel.partition_desc.partition_time_format"
-                        ng-if="state.mode=='edit'"
-                        data-placement=""
-                        ng-options="ddt as ddt for ddt in cubeConfig.partitionTimeFormatOpt">
+                <select chosen
+                  width="'98.5%'"
+                  ng-if="state.mode=='edit'"
+                  ng-model="partition_time.type"
+                  ng-required="partition_time.type"
+                  ng-class="{ 'col-5': partition_time.type === 'other' }"
+                  ng-options="ddt as ddt for ddt in cubeConfig.partitionTimeFormatOpt"
+                  data-placement="">
                   <option value="">--Select Time Format--</option>
                 </select>
+                <input
+                  class="form-control format-input"
+                  ng-if="partition_time.type === 'other'"
+                  ng-model="partition_time.format"
+                  ng-required="partition_time.format"
+                  ng-class="{ 'col-5': partition_time.type === 'other' }"
+                  placeholder="Please enter your custom time format."/>
                 <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_time_column">{{(modelsManager.selectedModel.partition_desc.partition_time_format)}}</span>
               </div>
             </div>
