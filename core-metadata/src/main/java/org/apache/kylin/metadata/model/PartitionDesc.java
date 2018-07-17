@@ -199,7 +199,7 @@ public class PartitionDesc implements Serializable {
             StringBuilder builder = new StringBuilder();
 
             if (partDesc.partitionColumnIsYmdInt()) {
-                buildSingleColumnRangeCondAsYmdInt(builder, partitionDateColumn, startInclusive, endExclusive);
+                buildSingleColumnRangeCondAsYmdInt(builder, partitionDateColumn, startInclusive, endExclusive, partDesc.getPartitionDateFormat());
             } else if (partDesc.partitionColumnIsTimeMillis()) {
                 buildSingleColumnRangeCondAsTimeMillis(builder, partitionDateColumn, startInclusive, endExclusive);
             } else if (partitionDateColumn != null && partitionTimeColumn == null) {
@@ -225,13 +225,13 @@ public class PartitionDesc implements Serializable {
         }
 
         private static void buildSingleColumnRangeCondAsYmdInt(StringBuilder builder, TblColRef partitionColumn,
-                long startInclusive, long endExclusive) {
+                long startInclusive, long endExclusive, String partitionColumnDateFormat) {
             String partitionColumnName = partitionColumn.getIdentity();
             builder.append(partitionColumnName + " >= "
-                    + DateFormat.formatToDateStr(startInclusive, DateFormat.COMPACT_DATE_PATTERN));
+                    + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat));
             builder.append(" AND ");
             builder.append(partitionColumnName + " < "
-                    + DateFormat.formatToDateStr(endExclusive, DateFormat.COMPACT_DATE_PATTERN));
+                    + DateFormat.formatToDateStr(endExclusive, partitionColumnDateFormat));
         }
 
         private static void buildSingleColumnRangeCondition(StringBuilder builder, TblColRef partitionColumn,
