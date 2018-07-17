@@ -159,11 +159,10 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         logger.info("Input path: {}", inputPath);
         logger.info("Output path: {}", outputPath);
 
-        List<JavaPairRDD> inputRDDs = SparkUtil.parseInputPath(inputPath, fs, sc, Text.class, Text.class);
-        final JavaPairRDD<Text, Text> allCuboidFile = sc.union(inputRDDs.toArray(new JavaPairRDD[inputRDDs.size()]));
+        JavaPairRDD<Text, Text> inputRDDs = SparkUtil.parseInputPath(inputPath, fs, sc, Text.class, Text.class);
         final JavaPairRDD<RowKeyWritable, KeyValue> hfilerdd;
         if (quickPath) {
-            hfilerdd = allCuboidFile.mapToPair(new PairFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
+            hfilerdd = inputRDDs.mapToPair(new PairFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
                 @Override
                 public Tuple2<RowKeyWritable, KeyValue> call(Tuple2<Text, Text> textTextTuple2) throws Exception {
                     KeyValue outputValue = keyValueCreators.get(0).create(textTextTuple2._1,
@@ -172,7 +171,7 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
                 }
             });
         } else {
-            hfilerdd = allCuboidFile
+            hfilerdd = inputRDDs
                     .flatMapToPair(new PairFlatMapFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
                         @Override
                         public Iterator<Tuple2<RowKeyWritable, KeyValue>> call(Tuple2<Text, Text> textTextTuple2)
@@ -194,8 +193,6 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
                         }
                     });
         }
-
-        allCuboidFile.unpersist();
 
         // read partition split keys
         List<RowKeyWritable> keys = new ArrayList<>();

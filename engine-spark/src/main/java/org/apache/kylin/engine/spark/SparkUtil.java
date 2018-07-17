@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.IMROutput2;
@@ -60,24 +61,34 @@ public class SparkUtil {
         return StorageFactory.createEngineAdapter(seg, IMROutput2.class).getBatchOptimizeOutputSide(seg);
     }
 
-    public static List<JavaPairRDD> parseInputPath(String inputPath, FileSystem fs, JavaSparkContext sc, Class keyClass,
+    /**
+     * Read the given path as a Java RDD; The path can have second level sub folder.
+     * @param inputPath
+     * @param fs
+     * @param sc
+     * @param keyClass
+     * @param valueClass
+     * @return
+     * @throws IOException
+     */
+    public static JavaPairRDD parseInputPath(String inputPath, FileSystem fs, JavaSparkContext sc, Class keyClass,
             Class valueClass) throws IOException {
-        List<JavaPairRDD> inputRDDs = Lists.newArrayList();
+        List<String> inputFolders = Lists.newArrayList();
         Path inputHDFSPath = new Path(inputPath);
         FileStatus[] fileStatuses = fs.listStatus(inputHDFSPath);
         boolean hasDir = false;
         for (FileStatus stat : fileStatuses) {
             if (stat.isDirectory() && !stat.getPath().getName().startsWith("_")) {
                 hasDir = true;
-                inputRDDs.add(sc.sequenceFile(stat.getPath().toString(), keyClass, valueClass));
+                inputFolders.add(stat.getPath().toString());
             }
         }
 
         if (!hasDir) {
-            inputRDDs.add(sc.sequenceFile(inputHDFSPath.toString(), keyClass, valueClass));
+            return sc.sequenceFile(inputHDFSPath.toString(), keyClass, valueClass);
         }
 
-        return inputRDDs;
+        return sc.sequenceFile(StringUtil.join(inputFolders, ","), keyClass, valueClass);
     }
 
 

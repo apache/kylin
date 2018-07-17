@@ -232,11 +232,11 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             partition = SparkUtil.estimateLayerPartitionNum(level, cubeStatsReader, envConfig);
             allRDDs[level] = allRDDs[level - 1].flatMapToPair(new CuboidFlatMap(cubeName, segmentId, metaUrl, sConf))
                     .reduceByKey(reducerFunction2, partition).persist(storageLevel);
+            allRDDs[level - 1].unpersist();
             if (envConfig.isSparkSanityCheckEnabled() == true) {
                 sanityCheck(allRDDs[level], totalCount, level, cubeStatsReader, countMeasureIndex);
             }
             saveToHDFS(allRDDs[level], metaUrl, cubeName, cubeSegment, outputPath, level, job, envConfig);
-            allRDDs[level - 1].unpersist();
         }
         allRDDs[totalLevels].unpersist();
         logger.info("Finished on calculating all level cuboids.");
