@@ -40,7 +40,6 @@ public class ResourceTool {
 
     private static String[] includes = null;
     private static String[] excludes = null;
-    private static final TreeSet<String> pathsSkipChildrenCheck = new TreeSet<>();
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceTool.class);
 
@@ -173,13 +172,7 @@ public class ResourceTool {
 
         logger.info("Copy from {} to {}", src, dst);
 
-        for (String resourceRoot : SKIP_CHILDREN_CHECK_RESOURCE_ROOT) {
-            NavigableSet<String> all = src.listResourcesRecursively(resourceRoot);
-            if (all != null) {
-                pathsSkipChildrenCheck.addAll(src.listResourcesRecursively(resourceRoot));
-            }
-        }
-        copyR(src, dst, path, copyImmutableResource);
+        copyR(src, dst, path, getPathsSkipChildren(src), copyImmutableResource);
     }
 
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws IOException {
@@ -195,7 +188,7 @@ public class ResourceTool {
         logger.info("Copy from {} to {}", src, dst);
 
         for (String path : paths) {
-            copyR(src, dst, path, copyImmutableResource);
+            copyR(src, dst, path, getPathsSkipChildren(src), copyImmutableResource);
         }
     }
 
@@ -209,7 +202,7 @@ public class ResourceTool {
         copy(srcConfig, dstConfig, "/", copyImmutableResource);
     }
 
-    public static void copyR(ResourceStore src, ResourceStore dst, String path, boolean copyImmutableResource)
+    public static void copyR(ResourceStore src, ResourceStore dst, String path, TreeSet<String> pathsSkipChildrenCheck, boolean copyImmutableResource)
             throws IOException {
 
         if (!copyImmutableResource && IMMUTABLE_PREFIX.contains(path)) {
@@ -241,9 +234,22 @@ public class ResourceTool {
         } else {
             // case of folder
             for (String child : children)
-                copyR(src, dst, child, copyImmutableResource);
+                copyR(src, dst, child, pathsSkipChildrenCheck, copyImmutableResource);
         }
 
+    }
+
+    private static TreeSet<String> getPathsSkipChildren(ResourceStore src) throws IOException {
+        TreeSet<String> pathsSkipChildrenCheck = new TreeSet<>();
+
+        for (String resourceRoot : SKIP_CHILDREN_CHECK_RESOURCE_ROOT) {
+            NavigableSet<String> all = src.listResourcesRecursively(resourceRoot);
+            if (all != null) {
+                pathsSkipChildrenCheck.addAll(src.listResourcesRecursively(resourceRoot));
+            }
+        }
+
+        return pathsSkipChildrenCheck;
     }
 
     private static boolean matchFilter(String path) {
