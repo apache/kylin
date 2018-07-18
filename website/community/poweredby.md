@@ -10,7 +10,7 @@ Send a quick description of your organization and usage to the [mailing list](ma
 __Companies & Organizations__
 
 * [DiDi](http://www.didiglobal.com/), 2018-06-27
-    * Apache Kylin is running as the engine for OLAP analytics in Didi; It has served more than 10 business lines and 3000+ users, providing stable, reliable and high performance data services for us. Read more at [this blog](https://mp.weixin.qq.com/s/WDaSJHeHvWTDjGkUR7zmfg). 
+    * Apache Kylin is running as a specific scenario engine of OLAP in Didi. With the help of aggregation cache function, it has served more than 10 business lines and 3000+ users, providing stable, reliable and high performance data services for us. Read more at [this blog](https://mp.weixin.qq.com/s/WDaSJHeHvWTDjGkUR7zmfg). 
 
 * [StrateBI](http://www.stratebi.com/), 2018-05-23
     * Apache Kylin has become an essential part in our Big Data projects. We have deployed Kylin with successful for a digital marketing and retail customers, where requirements for data refreshing (minutes) and query latency (sub-second) were very strict while data volumes remain very high (billion rows). Moreover, in order to try and show Kylin features, we have created some demos integrating it with [Tableau](http://bigdata.stratebi.com/kylin-tableau/index.htm), [Superset](http://bigdata.stratebi.com/kylin-superset/index.htm) or even [Mondrian MDX](http://bigdata.stratebi.com/kylin-olap/index.htm) based tools.
