@@ -270,7 +270,7 @@ public class JoinedFlatTable {
         } else if (flatDesc.getDistributedBy() != null) {
             appendDistributeStatement(sql, Lists.newArrayList(flatDesc.getDistributedBy()));
         } else {
-            int redistColumnCount = KylinConfig.getInstanceFromEnv().getHiveRedistributeColumnCount();
+            int redistColumnCount = cubeDesc.getConfig().getHiveRedistributeColumnCount();
 
             RowKeyColDesc[] rowKeyColDescs = cubeDesc.getRowkey().getRowKeyColumns();
 
