@@ -788,6 +788,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.source.hive.flat-table-cluster-by-dict-column");
     }
 
+    public int getHiveRedistributeColumnCount() {
+        return Integer.parseInt(getOptional("kylin.source.hive.redistribute-column-count", "3"));
+    }
+
     public int getDefaultVarcharPrecision() {
         int v = Integer.parseInt(getOptional("kylin.source.hive.default-varchar-precision", "256"));
         if (v < 1) {

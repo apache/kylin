@@ -28,6 +28,7 @@ import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
@@ -118,8 +119,9 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
         @Override
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
-            final KylinConfig cubeConfig = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName)
-                    .getConfig();
+            CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+            final KylinConfig cubeConfig = cubeInstance.getConfig();
+
             final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
 
             // create flat table first
@@ -127,9 +129,7 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
 
             // then count and redistribute
             if (cubeConfig.isHiveRedistributeEnabled()) {
-                if (flatDesc.getClusterBy() != null || flatDesc.getDistributedBy() != null) {
-                    jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc));
-                }
+                jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc, cubeInstance.getDescriptor()));
             }
 
             // special for hive
@@ -153,7 +153,6 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
                 jobFlow.addTask(task);
             }
         }
-
 
         @Override
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
