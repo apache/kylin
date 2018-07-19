@@ -25,31 +25,17 @@ export KYLIN_HOME=/usr/local/apache-kylin-2.1.0-bin-hbase1x
 
 ## 准备 "kylin.env.hadoop-conf-dir"
 
-为使 Spark 运行在 Yarn 上，需指定 **HADOOP_CONF_DIR** 环境变量，其是一个包含 Hadoop（客户端) 配置文件的目录。许多 Hadoop 分布式的目录设置为 "/etc/hadoop/conf"；但 Kylin 不仅需要访问 HDFS，Yarn 和 Hive，还有 HBase，因此默认的目录可能并未包含所有需要的文件。在此用例中，您需要创建一个新的目录然后拷贝或者连接这些客户端文件 (core-site.xml，hdfs-site.xml，yarn-site.xml，hive-site.xml 和 hbase-site.xml) 到这个目录下。在 HDP 2.4 中，hive-tez 和 Spark 之间有个冲突，因此当为 Kylin 进行复制时，需要将默认的 engine 由 "tez" 换为 "mr"。
+为使 Spark 运行在 Yarn 上，需指定 **HADOOP_CONF_DIR** 环境变量，其是一个包含 Hadoop（客户端) 配置文件的目录，通常是 `/etc/hadoop/conf`。
+
+通常 Kylin 会在启动时从 Java classpath 上检测 Hadoop 配置目录，并使用它来启动 Spark。 如果您的环境中未能正确发现此目录，那么可以显式地指定此目录：在 `kylin.properties` 中设置属性 "kylin.env.hadoop-conf-dir" 好让 Kylin 知道这个目录:
 
 {% highlight Groff markup %}
-
-mkdir $KYLIN_HOME/hadoop-conf
-ln -s /etc/hadoop/conf/core-site.xml $KYLIN_HOME/hadoop-conf/core-site.xml 
-ln -s /etc/hadoop/conf/hdfs-site.xml $KYLIN_HOME/hadoop-conf/hdfs-site.xml 
-ln -s /etc/hadoop/conf/yarn-site.xml $KYLIN_HOME/hadoop-conf/yarn-site.xml 
-ln -s /etc/hbase/2.4.0.0-169/0/hbase-site.xml $KYLIN_HOME/hadoop-conf/hbase-site.xml 
-cp /etc/hive/2.4.0.0-169/0/hive-site.xml $KYLIN_HOME/hadoop-conf/hive-site.xml 
-vi $KYLIN_HOME/hadoop-conf/hive-site.xml (change "hive.execution.engine" value from "tez" to "mr")
-
+kylin.env.hadoop-conf-dir=/etc/hadoop/conf
 {% endhighlight %}
-
-现在，在 kylin.properties 中设置属性 "kylin.env.hadoop-conf-dir" 好让 Kylin 知道这个目录:
-
-{% highlight Groff markup %}
-kylin.env.hadoop-conf-dir=/usr/local/apache-kylin-2.1.0-bin-hbase1x/hadoop-conf
-{% endhighlight %}
-
-如果这个属性没有设置，Kylin 将会使用 "hive-site.xml" 中的默认目录；然而那个文件夹可能并没有 "hbase-site.xml"，会导致 Spark 的 HBase/ZK 连接错误。
 
 ## 检查 Spark 配置
 
-Kylin 在 $KYLIN_HOME/spark 中嵌入一个 Spark binary (v2.1.0)，所有使用 *"kylin.engine.spark-conf."* 作为前缀的 Spark 配置属性都能在 $KYLIN_HOME/conf/kylin.properties 中进行管理。这些属性当运行提交 Spark job 时会被提取并应用；例如，如果您配置 "kylin.engine.spark-conf.spark.executor.memory=4G"，Kylin 将会在执行 "spark-submit" 操作时使用 "--conf spark.executor.memory=4G" 作为参数。
+Kylin 在 $KYLIN_HOME/spark 中嵌入一个 Spark binary (v2.1.2)，所有使用 *"kylin.engine.spark-conf."* 作为前缀的 Spark 配置属性都能在 $KYLIN_HOME/conf/kylin.properties 中进行管理。这些属性当运行提交 Spark job 时会被提取并应用；例如，如果您配置 "kylin.engine.spark-conf.spark.executor.memory=4G"，Kylin 将会在执行 "spark-submit" 操作时使用 "--conf spark.executor.memory=4G" 作为参数。
 
 运行 Spark cubing 前，建议查看一下这些配置并根据您集群的情况进行自定义。下面是默认配置，也是 sandbox 最低要求的配置 (1 个 1GB memory 的 executor)；通常一个集群，需要更多的 executors 且每一个至少有 4GB memory 和 2 cores:
 
@@ -57,9 +43,11 @@ Kylin 在 $KYLIN_HOME/spark 中嵌入一个 Spark binary (v2.1.0)，所有使用
 kylin.engine.spark-conf.spark.master=yarn
 kylin.engine.spark-conf.spark.submit.deployMode=cluster
 kylin.engine.spark-conf.spark.yarn.queue=default
-kylin.engine.spark-conf.spark.executor.memory=1G
+kylin.engine.spark-conf.spark.executor.memory=4G
+kylin.engine.spark-conf.spark.yarn.executor.memoryOverhead=1024
 kylin.engine.spark-conf.spark.executor.cores=2
-kylin.engine.spark-conf.spark.executor.instances=1
+kylin.engine.spark-conf.spark.executor.instances=40
+kylin.engine.spark-conf.spark.shuffle.service.enabled=true
 kylin.engine.spark-conf.spark.eventLog.enabled=true
 kylin.engine.spark-conf.spark.eventLog.dir=hdfs\:///kylin/spark-history
 kylin.engine.spark-conf.spark.history.fs.logDirectory=hdfs\:///kylin/spark-history
@@ -73,9 +61,9 @@ kylin.engine.spark-conf.spark.history.fs.logDirectory=hdfs\:///kylin/spark-histo
 
 {% endhighlight %}
 
-为了在 Hortonworks 平台上运行，需要将 "hdp.version" 指定为 Yarn 容器的 Java 选项，因此请取消 kylin.properties 的最后三行。 
+为了在 Hortonworks 平台上运行，需要将 "hdp.version" 指定为 Yarn 容器的 Java 选项，因此请取消 kylin.properties 的最后三行的注释。 
 
-除此之外，为了避免重复上传 Spark jar 包到 Yarn，您可以手动上传一次，然后配置 jar 包的 HDFS 路径；请注意，HDFS 路径必须是全限定名。
+除此之外，为了避免重复上传 Spark jar 包到 Yarn，您可以手动上传一次，然后配置 jar 包的 HDFS 路径；请注意，HDFS 路径必须是全路径名。
 
 {% highlight Groff markup %}
 jar cv0f spark-libs.jar -C $KYLIN_HOME/spark/jars/ .
@@ -86,12 +74,9 @@ hadoop fs -put spark-libs.jar /kylin/spark/
 然后，要在 kylin.properties 中进行如下配置:
 {% highlight Groff markup %}
 kylin.engine.spark-conf.spark.yarn.archive=hdfs://sandbox.hortonworks.com:8020/kylin/spark/spark-libs.jar
-kylin.engine.spark-conf.spark.driver.extraJavaOptions=-Dhdp.version=current
-kylin.engine.spark-conf.spark.yarn.am.extraJavaOptions=-Dhdp.version=current
-kylin.engine.spark-conf.spark.executor.extraJavaOptions=-Dhdp.version=current
 {% endhighlight %}
 
-所有 "kylin.engine.spark-conf.*" 参数都可以在 Cube 或 Project 级别进行重写，这为用户提供了极大的灵活性。
+所有 "kylin.engine.spark-conf.*" 参数都可以在 Cube 或 Project 级别进行重写，这为用户提供了灵活性。
 
 ## 创建和修改样例 cube
 
@@ -113,7 +98,9 @@ Kylin 启动后，访问 Kylin 网站，在 "Advanced Setting" 页，编辑名�
 
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/2_overwrite_partition.png)
 
-样例 cube 有两个耗尽内存的度量: "COUNT DISTINCT" 和 "TOPN(100)"；当源数据较小时，他们的大小估计的不太准确: 预估的大小会比真实的大很多，导致了更多的 RDD partitions 被切分，使得 build 的速度降低。100 对于其是一个较为合理的数字。点击 "Next" 和 "Save" 保存 cube。
+样例 cube 有两个耗尽内存的度量: "COUNT DISTINCT" 和 "TOPN(100)"；当源数据较小时，他们的大小估计的不太准确: 预估的大小会比真实的大很多，导致了更多的 RDD partitions 被切分，使得 build 的速度降低。500 对于其是一个较为合理的数字。点击 "Next" 和 "Save" 保存 cube。
+
+对于没有"COUNT DISTINCT" 和 "TOPN" 的 cube，请保留默认配置。
 
 
 ## 用 Spark 构建 Cube
@@ -164,6 +151,6 @@ $KYLIN_HOME/spark/sbin/start-history-server.sh hdfs://sandbox.hortonworks.com:80
 
 ## 进一步
 
-如果您是 Kylin 的管理员但是对于 Spark 是新手，建议您浏览 [Spark 文档](https://spark.apache.org/docs/2.1.0/)，别忘记相应地去更新配置。您可以让 Spark 的 [Dynamic Resource Allocation](https://spark.apache.org/docs/2.1.0/job-scheduling.html#dynamic-resource-allocation) 生效以便其对于不同的工作负载能自动伸缩。Spark 性能依赖于集群的内存和 CPU 资源，当有复杂数据模型和巨大的数据集一次构建时 Kylin 的 Cube 构建将会是一项繁重的任务。如果您的集群资源不能够执行，Spark executors 就会抛出如 "OutOfMemorry" 这样的错误，因此请合理的使用。对于有 UHC dimension，过多组合 (例如，一个 cube 超过 12 dimensions)，或耗尽内存的度量 (Count Distinct，Top-N) 的 Cube，建议您使用 MapReduce engine。如果您的 Cube 模型较为简单，所有的都是 SUM/MIN/MAX/COUNT，源数据规模小至中等，Spark engine 将会是个好的选择。除此之外，Streaming 构建在 engine 中目前还不支持(KYLIN-2484)。
+如果您是 Kylin 的管理员但是对于 Spark 是新手，建议您浏览 [Spark 文档](https://spark.apache.org/docs/2.1.2/)，别忘记相应地去更新配置。您可以开启 Spark 的 [Dynamic Resource Allocation](https://spark.apache.org/docs/2.1.2/job-scheduling.html#dynamic-resource-allocation) ，以便其对于不同的工作负载能自动伸缩。Spark 性能依赖于集群的内存和 CPU 资源，当有复杂数据模型和巨大的数据集一次构建时 Kylin 的 Cube 构建将会是一项繁重的任务。如果您的集群资源不能够执行，Spark executors 就会抛出如 "OutOfMemorry" 这样的错误，因此请合理的使用。对于有 UHC dimension，过多组合 (例如，一个 cube 超过 12 dimensions)，或耗尽内存的度量 (Count Distinct，Top-N) 的 Cube，建议您使用 MapReduce engine。如果您的 Cube 模型较为简单，所有度量都是 SUM/MIN/MAX/COUNT，源数据规模小至中等，Spark engine 将会是个好的选择。
 
 如果您有任何问题，意见，或 bug 修复，欢迎在 dev@kylin.apache.org 中讨论。
