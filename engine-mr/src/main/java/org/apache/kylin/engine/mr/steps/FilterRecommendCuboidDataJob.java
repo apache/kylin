@@ -25,6 +25,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.LazyOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
@@ -78,7 +79,8 @@ public class FilterRecommendCuboidDataJob extends AbstractHadoopJob {
             job.setInputFormatClass(SequenceFileInputFormat.class);
             FileInputFormat.setInputPaths(job, input);
             // Output
-            job.setOutputFormatClass(SequenceFileOutputFormat.class);
+            //// prevent to create zero-sized default output
+            LazyOutputFormat.setOutputFormatClass(job, SequenceFileOutputFormat.class);
             FileOutputFormat.setOutputPath(job, output);
 
             // set job configuration
