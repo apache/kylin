@@ -63,6 +63,7 @@
   - tutorial/spark
   - tutorial/hue
   - tutorial/Qlik
+  - tutorial/superset
 
 - title: How To
   docs:
