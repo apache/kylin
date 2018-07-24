@@ -89,6 +89,29 @@ public class HybridService extends BasicService {
         return getHybridInstance(hybridName);
     }
 
+    public void updateHybridCubeNoCheck(String hybridName, String projectName, String modelName,
+                                           String[] cubeNames) {
+        List<String> args = new ArrayList<String>();
+        args.add("-name");
+        args.add(hybridName);
+        args.add("-project");
+        args.add(projectName);
+        args.add("-model");
+        args.add(modelName);
+        args.add("-cubes");
+        args.add(StringUtils.join(cubeNames, ","));
+        args.add("-check");
+        args.add("false");
+        args.add("-action");
+        args.add("update");
+        try {
+            HybridCubeCLI.main(args.toArray(new String[args.size()]));
+        } catch (Exception e) {
+            logger.warn("Update Hybrid Failed", e);
+            throw e;
+        }
+    }
+
     public void deleteHybridCube(String hybridName, String projectName, String modelName) {
         aclEvaluate.checkProjectWritePermission(projectName);
         List<String> args = new ArrayList<String>();

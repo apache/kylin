@@ -65,6 +65,8 @@ public class HybridCubeCLI extends AbstractApplication {
 
     private static final Option OPTION_CUBES = OptionBuilder.withArgName("cubes").hasArg().isRequired(false).withDescription("the cubes used in HybridCube, seperated by comma, empty if to delete HybridCube").create("cubes");
 
+    private static final Option OPTION_CHECK = OptionBuilder.withArgName("check").hasArg().isRequired(false).withDescription("whether to check cube size, default true.").create("check");
+
     private final Options options;
 
     private KylinConfig kylinConfig;
@@ -80,6 +82,7 @@ public class HybridCubeCLI extends AbstractApplication {
         options.addOption(OPTION_PROJECT);
         options.addOption(OPTION_MODEL);
         options.addOption(OPTION_CUBES);
+        options.addOption(OPTION_CHECK);
 
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
         this.store = ResourceStore.getStore(kylinConfig);
@@ -105,6 +108,8 @@ public class HybridCubeCLI extends AbstractApplication {
         String projectName = optionsHelper.getOptionValue(OPTION_PROJECT);
         String modelName = optionsHelper.getOptionValue(OPTION_MODEL);
         String cubeNamesStr = optionsHelper.getOptionValue(OPTION_CUBES);
+        boolean checkCubeSize = optionsHelper.hasOption(OPTION_CHECK) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_CHECK)) : true;
+
         String[] cubeNames = new String[] {};
         if (cubeNamesStr != null)
             cubeNames = cubeNamesStr.split(",");
@@ -141,7 +146,7 @@ public class HybridCubeCLI extends AbstractApplication {
                 throw new RuntimeException("The Hybrid Cube doesn't exist, could not update: " + hybridName);
             }
             // Update the Hybrid
-            update(hybridInstance, realizationEntries, projectName, owner);
+            update(hybridInstance, realizationEntries, projectName, owner, checkCubeSize);
         } else if ("delete".equals(action)) {
             if (hybridInstance == null) {
                 throw new RuntimeException("The Hybrid Cube doesn't exist, could not delete: " + hybridName);
@@ -162,8 +167,9 @@ public class HybridCubeCLI extends AbstractApplication {
         return hybridInstance;
     }
 
-    private void update(HybridInstance hybridInstance, List<RealizationEntry> realizationEntries, String projectName, String owner) throws IOException {
-        checkSegmentOffset(realizationEntries);
+    private void update(HybridInstance hybridInstance, List<RealizationEntry> realizationEntries, String projectName, String owner, boolean checkCubeSize) throws IOException {
+        if (checkCubeSize)
+            checkSegmentOffset(realizationEntries);
         hybridInstance.setRealizationEntries(realizationEntries);
         store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
         ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);

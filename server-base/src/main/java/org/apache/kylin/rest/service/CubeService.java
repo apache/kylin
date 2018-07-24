@@ -73,6 +73,7 @@ import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ValidateUtil;
+import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -116,6 +117,9 @@ public class CubeService extends BasicService implements InitializingBean {
 
     @Autowired
     private AclEvaluate aclEvaluate;
+
+    @Autowired
+    private HybridService hybridService;
 
     public boolean isCubeNameVaildate(final String cubeName) {
         if (StringUtils.isEmpty(cubeName) || !ValidateUtil.isAlphanumericUnderscore(cubeName)) {
@@ -300,6 +304,34 @@ public class CubeService extends BasicService implements InitializingBean {
         } catch (Exception e) {
             logger.error("error when releasing all jobs", e);
             //ignore the exception
+        }
+
+        // remove from hybrid definition
+        ProjectInstance projectInstance = cube.getProjectInstance();
+        List<RealizationEntry> hybridRealizationEntries = projectInstance.getRealizationEntries(RealizationType.HYBRID);
+
+        if (hybridRealizationEntries != null) {
+            for (RealizationEntry entry : hybridRealizationEntries) {
+                HybridInstance instance = getHybridManager().getHybridInstance(entry.getRealization());
+                List<RealizationEntry> cubeRealizationEntries = instance.getRealizationEntries();
+
+                boolean needUpdateHybrid = false;
+                for (RealizationEntry cubeRealizationEntry : cubeRealizationEntries){
+                    if (cube.getName().equals(cubeRealizationEntry.getRealization())){
+                        needUpdateHybrid = true;
+                        cubeRealizationEntries.remove(cubeRealizationEntry);
+                        break;
+                    }
+                }
+
+                if (needUpdateHybrid){
+                    String[] cubeNames = new String[cubeRealizationEntries.size()];
+                    for (int i = 0; i < cubeRealizationEntries.size(); i++){
+                        cubeNames[i] = cubeRealizationEntries.get(i).getRealization();
+                    }
+                    hybridService.updateHybridCubeNoCheck(instance.getName(), projectInstance.getName(), cube.getModel().getName(), cubeNames);
+                }
+            }
         }
 
         int cubeNum = getCubeManager().getCubesByDesc(cube.getDescriptor().getName()).size();
