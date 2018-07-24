@@ -108,7 +108,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
                 return;
 
             if (realizationEntries == null || realizationEntries.size() == 0)
-                throw new IllegalArgumentException();
+                return;
 
             RealizationRegistry registry = RealizationRegistry.getInstance(config);
             List<IRealization> realizationList = Lists.newArrayList();
@@ -301,7 +301,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     public IRealization[] getRealizations() {
         init();
-        return realizations;
+        return realizations == null ? new IRealization[0] : realizations;
     }
 
     public String getResourcePath() {
