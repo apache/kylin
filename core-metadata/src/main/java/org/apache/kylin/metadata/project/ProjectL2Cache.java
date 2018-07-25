@@ -59,8 +59,12 @@ class ProjectL2Cache {
         this.mgr = mgr;
     }
 
-    public void clear() {
-        projectCaches.clear();
+    public void clear(String projectname) {
+        if (projectname == null) {
+            projectCaches.clear();
+        } else {
+            projectCaches.remove(projectname);
+        }
     }
 
     public ExternalFilterDesc getExternalFilterDesc(String project, String extFilterName) {

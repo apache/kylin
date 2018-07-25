@@ -113,8 +113,8 @@ public class ProjectManager {
         }
     }
 
-    public void clearL2Cache() {
-        l2Cache.clear();
+    public void clearL2Cache(String projectname) {
+        l2Cache.clear(projectname);
     }
 
     public void reloadProjectL2Cache(String project) {
@@ -124,7 +124,7 @@ public class ProjectManager {
     public ProjectInstance reloadProjectQuietly(String project) throws IOException {
         try (AutoLock lock = prjMapLock.lockForWrite()) {
             ProjectInstance prj = crud.reloadQuietly(project);
-            clearL2Cache();
+            clearL2Cache(project);
             return prj;
         }
     }
@@ -209,7 +209,7 @@ public class ProjectManager {
             crud.delete(projectInstance);
             BadQueryHistoryManager.getInstance(config).removeBadQueryHistory(projectName);
 
-            clearL2Cache();
+            clearL2Cache(projectName);
             return projectInstance;
         }
     }
@@ -233,7 +233,7 @@ public class ProjectManager {
     public void removeProjectLocal(String proj) {
         try (AutoLock lock = prjMapLock.lockForWrite()) {
             projectMap.removeLocal(proj);
-            clearL2Cache();
+            clearL2Cache(proj);
         }
     }
 
@@ -358,7 +358,7 @@ public class ProjectManager {
     
     private ProjectInstance save(ProjectInstance prj) throws IOException {
         crud.save(prj);
-        clearL2Cache();
+        clearL2Cache(prj.getName());
         return prj;
     }
 

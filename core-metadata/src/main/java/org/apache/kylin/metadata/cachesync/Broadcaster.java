@@ -254,19 +254,19 @@ public class Broadcaster {
             config.clearManagers(); // clear all registered managers in config
             break;
         case SYNC_PRJ_SCHEMA:
-            ProjectManager.getInstance(config).clearL2Cache();
+            ProjectManager.getInstance(config).clearL2Cache(cacheKey);
             for (Listener l : list) {
                 l.onProjectSchemaChange(this, cacheKey);
             }
             break;
         case SYNC_PRJ_DATA:
-            ProjectManager.getInstance(config).clearL2Cache(); // cube's first becoming ready leads to schema change too
+            ProjectManager.getInstance(config).clearL2Cache(cacheKey); // cube's first becoming ready leads to schema change too
             for (Listener l : list) {
                 l.onProjectDataChange(this, cacheKey);
             }
             break;
         case SYNC_PRJ_ACL:
-            ProjectManager.getInstance(config).clearL2Cache();
+            ProjectManager.getInstance(config).clearL2Cache(cacheKey);
             for (Listener l : list) {
                 l.onProjectQueryACLChange(this, cacheKey);
             }
