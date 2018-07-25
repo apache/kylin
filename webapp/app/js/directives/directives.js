@@ -27,13 +27,13 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
     templateUrl: 'partials/directives/pagination.html',
     link: function (scope, element, attrs) {
       var _this = this;
-      scope.limit = 15;
       scope.hasMore = false;
       scope.data = $parse(attrs.data)(scope.$parent);
       scope.action = $parse(attrs.action)(scope.$parent);
       scope.loadFunc = $parse(attrs.loadFunc)(scope.$parent);
+      scope.isHideTotal = $parse(attrs.isHideTotal)();
+      scope.limit = $parse(attrs.limit)() || 15;
       scope.autoLoad = true;
-
 
       scope.$watch("action.reload", function (newValue, oldValue) {
         if (newValue != oldValue) {

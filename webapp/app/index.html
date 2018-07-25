@@ -149,6 +149,7 @@
 <script src="js/services/acl.js"></script>
 <!--New GUI-->
 <script src="js/services/models.js"></script>
+<script src="js/services/hybridInstance.js"></script>
 <script src="js/services/dashboard.js"></script>
 
 <script src="js/model/cubeConfig.js"></script>
@@ -172,6 +173,7 @@
 
 <!--New GUI-->
 <script src="js/model/modelsManager.js"></script>
+<script src="js/model/hybridInstanceManager.js"></script>
 <script src="js/services/badQuery.js"></script>
 <script src="js/utils/utils.js"></script>
 <script src="js/controllers/page.js"></script>
@@ -210,6 +212,8 @@
 
 <!--New GUI-->
 <script src="js/controllers/models.js"></script>
+<script src="js/controllers/hybridInstanceSchema.js"></script>
+<script src="js/controllers/hybridInstance.js"></script>
 <script src="js/controllers/dashboard.js"></script>
 
 <!-- endref -->
@@ -251,6 +255,24 @@
 </script>
 
 <script type="text/ng-template" id="modelResultSuccess.html">
+  <div class="callout callout-info">
+    <p>{{text}}</p>
+  </div>
+</script>
+
+<!-- static template for hybrid cube save/update result notification -->
+<script type="text/ng-template" id="hybridResultError.html">
+  <div class="callout callout-info">
+    <h4>Error Message</h4>
+    <p>{{text}}</p>
+  </div>
+  <div class="callout callout-danger">
+    <h4>Hybrid Cube Schema</h4>
+    <pre>{{schema}}</pre>
+  </div>
+</script>
+
+<script type="text/ng-template" id="hybridResultSuccess.html">
   <div class="callout callout-info">
     <p>{{text}}</p>
   </div>

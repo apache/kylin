@@ -17,57 +17,86 @@
 -->
 
 <div class="tree-border">
-    <div class="row">
-      <div class="col-xs-12" style="margin-top:10px;">
-        <!--<i class="fa fa-plus fa-2x" style="color:green;"> New</i>-->
-        <a ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)" class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="true">
-          <i class="fa fa-plus fa-2x" style="color:#2e8965;"> New<span class="caret"></span></i>
-          <!--<i> New </i> <span class="caret"></span>-->
-        </a>
-        <ul class="dropdown-menu">
-           <li  ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
-             <a href="models/add"><i class="fa fa-star"></i>New Model</a>
-          </li>
-          <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
-            <a href="cubes/add"><i class="fa fa-cube"></i>New Cube</a>
-          </li>
-
-        </ul>
-      </div>
-
+  <div class="row">
+    <div class="col-xs-12" style="margin-top:10px;">
+      <!--<i class="fa fa-plus fa-2x" style="color:green;"> New</i>-->
+      <a ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)" class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="true">
+        <i class="fa fa-plus fa-2x" style="color:#2e8965;"> New<span class="caret"></span></i>
+        <!--<i> New </i> <span class="caret"></span>-->
+      </a>
+      <ul class="dropdown-menu">
+          <li  ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
+            <a href="models/add"><i class="fa fa-star"></i>New Model</a>
+        </li>
+        <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
+          <a href="cubes/add"><i class="fa fa-cube"></i>New Cube</a>
+        </li>
+        <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('project',projectModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
+          <a href="hybrid/add"><i class="kylin-icon-hybrid"></i>New Hybrid</a>
+        </li>
+      </ul>
     </div>
-    <div class="space-4 box-header with-border"></div>
-    <!--tree-->
-  <div>
-    <h3 class="text-info">Models</h3>
+
   </div>
-<!--{{window}}px -->
-    <div id="cube_model_trees" style="width:100%; height:250px; overflow:auto;margin-top: 20px;" class="cube_model_trees">
+  <div class="space-4 box-header with-border"></div>
+  <!--tree-->
 
-        <ul class="list-group models-tree" id="models-tree">
-          <li class="list-group-item" ng-repeat="model in modelsManager.models">
+  <div>
+    <h3 class="text-info">Models ({{modelsManager.models.length}})</h3>
+  </div>
+  <!--{{window}}px -->
+  <div id="cube_model_trees" style="width:100%; height:250px; overflow:auto;margin-top: 20px;" class="cube_model_trees">
 
-            <div class="pull-right" showonhoverparent style="display:none;" >
-              <div ng-click="$event.stopPropagation();" class="btn-group">
-                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
-                  Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
-                </button>
-                <ul class="dropdown-menu" role="menu" style="right:0;left:auto;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('model',model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
-                  <li><a ng-click="editModel(model, false)"  title="Edit Model" style="cursor:pointer;margin-right: 8px;" >Edit</a></li>
-                  <li><a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" >Clone </a></li>
-                  <li><a ng-click="dropModel(model)" title="Drop Model"  style="cursor:pointer;margin-right: 8px;">Drop</a></li>
-                  <li ng-if="userService.hasRole('ROLE_ADMIN')">
-                    <a ng-click="editModel(model, true)">Edit(JSON)</a></li>
-                </ul>
-              </div>
+      <ul class="list-group models-tree" id="models-tree">
+        <li class="list-group-item" ng-repeat="model in modelsManager.models">
+
+          <div class="pull-right" showonhoverparent style="display:none;" >
+            <div ng-click="$event.stopPropagation();" class="btn-group">
+              <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu" style="right:0;left:auto;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('model',model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
+                <li><a ng-click="editModel(model, false)"  title="Edit Model" style="cursor:pointer;margin-right: 8px;" >Edit</a></li>
+                <li><a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" >Clone </a></li>
+                <li><a ng-click="dropModel(model)" title="Drop Model"  style="cursor:pointer;margin-right: 8px;">Drop</a></li>
+                <li ng-if="userService.hasRole('ROLE_ADMIN')">
+                  <a ng-click="editModel(model, true)">Edit(JSON)</a></li>
+              </ul>
             </div>
-            <span class="strong"><a style="cursor: pointer;word-break:break-all;" ng-click="openModal(model)">{{model.name}}</a></span>
+          </div>
+          <span class="strong"><a style="cursor: pointer;word-break:break-all;" ng-click="openModal(model)">{{model.name}}</a></span>
 
-          </li>
-        </ul>
-      <div ng-if="modelsManager.loading==true"><i class="fa fa-2x fa-spinner fa-spin"></i> Loading..</div>
-      <div no-result ng-if="modelsManager.loading!=true&&modelsManager.models.length==0"></div>
+        </li>
+      </ul>
+    <div ng-if="modelsManager.loading==true"><i class="fa fa-2x fa-spinner fa-spin"></i> Loading..</div>
+    <div no-result ng-if="modelsManager.loading!=true&&modelsManager.models.length==0"></div>
+  </div>
+
+  <div ng-controller="HybridInstanceCtrl">
+    <div>
+      <h3 class="text-info">Hybrids ({{hybridInstanceManager.hybridInstances.length}})</h3>
     </div>
+    <div id="hybrid_cube_trees" style="width:100%; height:250px; overflow:auto;margin-top: 20px;" class="cube_model_trees">
+      <ul class="list-group models-tree" id="hybrid-tree">
+        <li class="list-group-item" ng-repeat="hybridInstance in hybridInstanceManager.hybridInstances">
+          <div class="pull-right" showonhoverparent style="display:none;" >
+            <div ng-click="$event.stopPropagation();" class="btn-group">
+              <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu" style="right:0;left:auto;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('model',model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
+                <li><a ng-click="editHybridInstance(hybridInstance)" title="Edit Hybrid" style="cursor:pointer;margin-right: 8px;" >Edit</a></li>
+                <li><a ng-click="dropHybridInstance(hybridInstance)" title="Drop Hybrid"  style="cursor:pointer;margin-right: 8px;">Drop</a></li>
+              </ul>
+            </div>
+          </div>
+          <span class="strong"><a style="cursor: pointer;word-break:break-all;" ng-click="openHybridInstance(hybridInstance)">{{hybridInstance.name}}</a></span>
+        </li>
+      </ul>
+      <div ng-if="hybridInstanceManager.loading === true"><i class="fa fa-2x fa-spinner fa-spin"></i> Loading..</div>
+      <div no-result ng-if="hybridInstanceManager.loading!==true && hybridInstanceManager.hybridInstances.length === 0"></div>
+    </div>
+  </div>
 </div>
 
 <div ng-include="'partials/models/model_detail.html'"></div>
