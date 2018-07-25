@@ -120,5 +120,19 @@
       "tab": "dashboard",
       "controller": "DashboardCtrl"
     }
+  },
+  {
+    "url": "/hybrid/add",
+    "params": {
+      "templateUrl": "partials/cubes/hybrid_edit.html",
+      "tab": "models"
+    }
+  },
+  {
+    "url": "/hybrid/edit/:hybridName",
+    "params": {
+      "templateUrl": "partials/cubes/hybrid_edit.html",
+      "tab": "models"
+    }
   }
 ]
