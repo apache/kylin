@@ -401,7 +401,7 @@ public class CubeManager implements IRealizationProvider {
         }
 
         //this is a duplicate call to take care of scenarios where REST cache service unavailable
-        ProjectManager.getInstance(cube.getConfig()).clearL2Cache();
+        ProjectManager.getInstance(cube.getConfig()).clearL2Cache(cube.getProject());
 
         return cube;
     }
