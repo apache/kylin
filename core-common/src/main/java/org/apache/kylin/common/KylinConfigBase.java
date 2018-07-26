@@ -426,7 +426,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Double.parseDouble(getOptional("kylin.snapshot.ext.local.cache.max-size-gb", "200"));
     }
 
-
     // ============================================================================
     // CUBE
     // ============================================================================
@@ -449,7 +448,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public double getJobCuboidSizeCountDistinctRatio() {
-        return Double.parseDouble(getOptional("kylin.cube.size-estimate-countdistinct-ratio", "0.05"));
+        return Double.parseDouble(getOptional("kylin.cube.size-estimate-countdistinct-ratio", "0.5"));
+    }
+
+    public double getJobCuboidSizeTopNRatio() {
+        return Double.parseDouble(getOptional("kylin.cube.size-estimate-topn-ratio", "0.5"));
     }
 
     public String getCubeAlgorithm() {
@@ -872,7 +875,7 @@ abstract public class KylinConfigBase implements Serializable {
     public Map<String, String> getSqoopConfigOverride() {
         return getPropertiesByPrefix("kylin.source.jdbc.sqoop-config-override.");
     }
-    
+
     public String getJdbcSourceFieldDelimiter() {
         return getOptional("kylin.source.jdbc.field-delimiter", "|");
     }
@@ -1223,11 +1226,11 @@ abstract public class KylinConfigBase implements Serializable {
     public Boolean isEnumerableRulesEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.calcite.enumerable-rules-enabled", "false"));
     }
-    
+
     public boolean isReduceExpressionsRulesEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.calcite.reduce-rules-enabled", "true"));
     }
-    
+
     public boolean isConvertCreateTableToWith() {
         return Boolean.valueOf(getOptional("kylin.query.convert-create-table-to-with", "false"));
     }
@@ -1328,12 +1331,13 @@ abstract public class KylinConfigBase implements Serializable {
     public int getBadQueryDefaultAlertingSeconds() {
         return Integer.parseInt(getOptional("kylin.query.badquery-alerting-seconds", "90"));
     }
+
     public double getBadQueryDefaultAlertingCoefficient() {
         return Double.parseDouble(getOptional("kylin.query.timeout-seconds-coefficient", "0.5"));
     }
 
     public int getBadQueryDefaultDetectIntervalSeconds() {
-        int time =(int) (getQueryTimeoutSeconds() * getBadQueryDefaultAlertingCoefficient()); // half of query timeout
+        int time = (int) (getQueryTimeoutSeconds() * getBadQueryDefaultAlertingCoefficient()); // half of query timeout
         if (time == 0) {
             time = 60; // 60 sec
         }

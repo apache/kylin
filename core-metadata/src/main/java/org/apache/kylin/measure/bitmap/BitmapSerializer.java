@@ -30,6 +30,7 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
 
     private static final int IS_RESULT_FLAG = 1;
     private static final int RESULT_SIZE = 12;
+    private static final int DEFAULT_MAX_SIZE = 1024;
 
     // called by reflection
     public BitmapSerializer(DataType type) {
@@ -83,6 +84,19 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
     public int getStorageBytesEstimate() {
         // It's difficult to decide the size before data was ingested, comparing with HLLCounter(16) as 64KB, here is assumption
         return 8 * 1024;
+    }
+
+    @Override
+    protected double getStorageBytesEstimate(double averageNumOfElementsInCounter) {
+        // MappeableArrayContainer DEFAULT_MAX_SIZE = 4096
+        if (averageNumOfElementsInCounter < DEFAULT_MAX_SIZE) {
+            // 8 = 4 + 4 for SERIAL_COOKIE_NO_RUNCONTAINER + size
+            // size * 8 = 2 * size + 2 * size + 4 * size as keys + values Cardinality + startOffsets
+            // size * 8 for values array
+            return 8 + averageNumOfElementsInCounter * 16;
+        } else {
+            return getStorageBytesEstimate();
+        }
     }
 
     @Override

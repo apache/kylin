@@ -78,7 +78,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         }
     }
 
-    private boolean isDense(int size) {
+    public boolean isDense(int size) {
         double over = OVERFLOW_FACTOR * m;
         return size > (int) over;
     }
@@ -358,7 +358,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         return 1 + m;
     }
 
-    private int getRegisterIndexSize() {
+    public int getRegisterIndexSize() {
         return (p - 1) / 8 + 1; // 2 when p=16, 3 when p=17
     }
 

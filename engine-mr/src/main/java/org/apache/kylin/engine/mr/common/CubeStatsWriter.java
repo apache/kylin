@@ -40,14 +40,15 @@ public class CubeStatsWriter {
 
     public static void writeCuboidStatistics(Configuration conf, Path outputPath, //
             Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage) throws IOException {
-        writeCuboidStatistics(conf, outputPath, cuboidHLLMap, samplingPercentage, 0, 0);
+        writeCuboidStatistics(conf, outputPath, cuboidHLLMap, samplingPercentage, 0, 0, 0);
     }
 
     public static void writeCuboidStatistics(Configuration conf, Path outputPath, //
-            Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage, int mapperNumber, double mapperOverlapRatio) throws IOException {
+            Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage, int mapperNumber, double mapperOverlapRatio,
+            long sourceRecordCoun) throws IOException {
         Path seqFilePath = new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
         writeCuboidStatisticsInner(conf, seqFilePath, cuboidHLLMap, samplingPercentage, mapperNumber,
-                mapperOverlapRatio);
+                mapperOverlapRatio, sourceRecordCoun);
     }
 
     //Be care of that the file name for partial cuboid statistics should start with BatchConstants.CFG_OUTPUT_STATISTICS,
@@ -57,12 +58,12 @@ public class CubeStatsWriter {
             int shard) throws IOException {
         Path seqFilePath = new Path(outputPath, BatchConstants.CFG_OUTPUT_STATISTICS + "_" + shard);
         writeCuboidStatisticsInner(conf, seqFilePath, cuboidHLLMap, samplingPercentage, mapperNumber,
-                mapperOverlapRatio);
+                mapperOverlapRatio, 0);
     }
 
     private static void writeCuboidStatisticsInner(Configuration conf, Path outputFilePath, //
-            Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage, int mapperNumber, double mapperOverlapRatio)
-            throws IOException {
+            Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage, int mapperNumber, double mapperOverlapRatio,
+            long sourceRecordCount) throws IOException {
         List<Long> allCuboids = Lists.newArrayList();
         allCuboids.addAll(cuboidHLLMap.keySet());
         Collections.sort(allCuboids);
@@ -79,6 +80,9 @@ public class CubeStatsWriter {
 
             // sampling percentage at key 0
             writer.append(new LongWritable(0L), new BytesWritable(Bytes.toBytes(samplingPercentage)));
+
+            // flat table source_count at key -3
+            writer.append(new LongWritable(-3), new BytesWritable(Bytes.toBytes(sourceRecordCount)));
 
             for (long i : allCuboids) {
                 valueBuf.clear();
