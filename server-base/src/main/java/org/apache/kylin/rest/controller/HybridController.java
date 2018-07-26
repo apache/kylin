@@ -19,8 +19,12 @@
 package org.apache.kylin.rest.controller;
 
 import java.util.Collection;
+import java.util.List;
 
+import com.google.common.collect.Lists;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.rest.request.HybridRequest;
+import org.apache.kylin.rest.response.HybridRespone;
 import org.apache.kylin.rest.service.HybridService;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,45 +45,58 @@ public class HybridController extends BasicController {
 
     @RequestMapping(value = "", method = RequestMethod.POST, produces = { "application/json" })
     @ResponseBody
-    public HybridInstance create(@RequestBody HybridRequest request) {
+    public HybridRespone create(@RequestBody HybridRequest request) {
         checkRequiredArg("hybrid", request.getHybrid());
         checkRequiredArg("project", request.getProject());
         checkRequiredArg("model", request.getModel());
         checkRequiredArg("cubes", request.getCubes());
-        HybridInstance instance = hybridService.createHybridCube(request.getHybrid(), request.getProject(), request.getModel(), request.getCubes());
-        return instance;
+        HybridInstance hybridInstance = hybridService.createHybridInstance(request.getHybrid(), request.getProject(), request.getModel(),
+                request.getCubes());
+        return hybridInstance2response(hybridInstance);
     }
 
     @RequestMapping(value = "", method = RequestMethod.PUT, produces = { "application/json" })
     @ResponseBody
-    public HybridInstance update(@RequestBody HybridRequest request) {
+    public HybridRespone update(@RequestBody HybridRequest request) {
         checkRequiredArg("hybrid", request.getHybrid());
         checkRequiredArg("project", request.getProject());
         checkRequiredArg("model", request.getModel());
         checkRequiredArg("cubes", request.getCubes());
-        HybridInstance instance = hybridService.updateHybridCube(request.getHybrid(), request.getProject(), request.getModel(), request.getCubes());
-        return instance;
+        HybridInstance hybridInstance = hybridService.updateHybridInstance(request.getHybrid(), request.getProject(), request.getModel(),
+                request.getCubes());
+        return hybridInstance2response(hybridInstance);
     }
 
     @RequestMapping(value = "", method = RequestMethod.DELETE, produces = { "application/json" })
     @ResponseBody
-    public void delete(@RequestBody HybridRequest request) {
-        checkRequiredArg("hybrid", request.getHybrid());
-        checkRequiredArg("project", request.getProject());
-        checkRequiredArg("model", request.getModel());
-        hybridService.deleteHybridCube(request.getHybrid(), request.getProject(), request.getModel());
+    public void delete(String hybrid, String project) {
+        checkRequiredArg("hybrid", hybrid);
+        checkRequiredArg("project", project);
+        hybridService.deleteHybridInstance(hybrid, project);
     }
 
     @RequestMapping(value = "", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
-    public Collection<HybridInstance> list(@RequestParam(required = false) String project, @RequestParam(required = false) String model) {
-        return hybridService.listHybrids(project, model);
+    public Collection<HybridRespone> list(@RequestParam(required = false) String project, @RequestParam(required = false) String model) {
+        List<HybridInstance> hybridInstances = hybridService.listHybrids(project, model);
+        List<HybridRespone> hybridRespones = Lists.newArrayListWithCapacity(hybridInstances.size());
+
+        for (HybridInstance hybridInstance : hybridInstances) {
+            hybridRespones.add(hybridInstance2response(hybridInstance));
+        }
+
+        return hybridRespones;
     }
 
     @RequestMapping(value = "{hybrid}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
-    public HybridInstance get(@PathVariable String hybrid) {
-        return hybridService.getHybridInstance(hybrid);
+    public HybridRespone get(@PathVariable String hybrid) {
+        HybridInstance hybridInstance = hybridService.getHybridInstance(hybrid);
+        return hybridInstance2response(hybridInstance);
     }
 
+    private HybridRespone hybridInstance2response(HybridInstance hybridInstance){
+        DataModelDesc modelDesc = hybridInstance.getModel();
+        return new HybridRespone(modelDesc == null ? HybridRespone.NO_PROJECT : modelDesc.getProject(), modelDesc == null ? HybridRespone.NO_MODEL : modelDesc.getName(), hybridInstance);
+    }
 }
