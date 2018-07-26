@@ -122,12 +122,15 @@ public class SaveStatisticsStep extends AbstractExecutable {
                         totalRowsBeforeMerge);
             }
             double mapperOverlapRatio = grantTotal == 0 ? 0 : (double) totalRowsBeforeMerge / grantTotal;
+            CubingJob cubingJob = (CubingJob) getManager()
+                    .getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));
+            long sourceRecordCount = cubingJob.findSourceRecordCount();
             CubeStatsWriter.writeCuboidStatistics(hadoopConf, statisticsDir, cuboidHLLMap, samplingPercentage,
-                    mapperNumber, mapperOverlapRatio);
+                    mapperNumber, mapperOverlapRatio, sourceRecordCount);
 
             Path statisticsFile = new Path(statisticsDir, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
             logger.info(newSegment + " stats saved to hdfs " + statisticsFile);
-            
+
             FSDataInputStream is = fs.open(statisticsFile);
             try {
                 // put the statistics to metadata store
@@ -135,8 +138,6 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 rs.putResource(resPath, is, System.currentTimeMillis());
                 logger.info(newSegment + " stats saved to resource " + resPath);
 
-                CubingJob cubingJob = (CubingJob) getManager()
-                        .getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));
                 StatisticsDecisionUtil.decideCubingAlgorithm(cubingJob, newSegment);
                 StatisticsDecisionUtil.optimizeCubingPlan(newSegment);
             } finally {

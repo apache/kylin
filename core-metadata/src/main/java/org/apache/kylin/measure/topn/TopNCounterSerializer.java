@@ -61,12 +61,12 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
 
     @Override
     public int maxLength() {
-        return Math.max(precision * TopNCounter.EXTRA_SPACE_RATE * (scale + 8), 1024 * 1024); // use at least 1M
+        return Math.max(precision * TopNCounter.EXTRA_SPACE_RATE * storageBytesEstimatePerCounter(), 1024 * 1024); // use at least 1M
     }
 
     @Override
     public int getStorageBytesEstimate() {
-        return precision * TopNCounter.EXTRA_SPACE_RATE * (scale + 8);
+        return precision * TopNCounter.EXTRA_SPACE_RATE * storageBytesEstimatePerCounter();
     }
 
     @Override
@@ -105,6 +105,19 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
         }
 
         return counter;
+    }
+
+    @Override
+    protected double getStorageBytesEstimate(double averageNumOfElementsInCounter) {
+        if (averageNumOfElementsInCounter < precision * TopNCounter.EXTRA_SPACE_RATE) {
+            return averageNumOfElementsInCounter * storageBytesEstimatePerCounter() + 12;
+        } else {
+            return getStorageBytesEstimate();
+        }
+    }
+
+    private int storageBytesEstimatePerCounter() {
+        return (scale + 8);
     }
 
 }

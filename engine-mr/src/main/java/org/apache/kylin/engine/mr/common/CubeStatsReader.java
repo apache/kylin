@@ -55,6 +55,7 @@ import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.hllc.HLLCounter;
+import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -79,6 +80,7 @@ public class CubeStatsReader {
     final double mapperOverlapRatioOfFirstBuild; // becomes meaningless after merge
     final Map<Long, HLLCounter> cuboidRowEstimatesHLL;
     final CuboidScheduler cuboidScheduler;
+    final long sourceRowCount;
 
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
         this(cubeSegment, cubeSegment.getCuboidScheduler(), kylinConfig);
@@ -94,7 +96,7 @@ public class CubeStatsReader {
         RawResource resource = store.getResource(statsKey);
         if (resource == null)
             throw new IllegalStateException("Missing resource at " + statsKey);
-        
+
         File tmpSeqFile = writeTmpSeqFile(resource.inputStream);
         Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
 
@@ -107,6 +109,7 @@ public class CubeStatsReader {
         this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
         this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
         this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
+        this.sourceRowCount = cubeStatsResult.getSourceRecordCount();
     }
 
     /**
@@ -129,6 +132,7 @@ public class CubeStatsReader {
         this.mapperNumberOfFirstBuild = cubeStatsResult.getMapperNumber();
         this.mapperOverlapRatioOfFirstBuild = cubeStatsResult.getMapperOverlapRatio();
         this.cuboidRowEstimatesHLL = cubeStatsResult.getCounterMap();
+        this.sourceRowCount = cubeStatsResult.getSourceRecordCount();
     }
 
     private File writeTmpSeqFile(InputStream inputStream) throws IOException {
@@ -158,7 +162,7 @@ public class CubeStatsReader {
 
     // return map of Cuboid ID => MB
     public Map<Long, Double> getCuboidSizeMap() {
-        return getCuboidSizeMapFromRowCount(seg, getCuboidRowEstimatesHLL());
+        return getCuboidSizeMapFromRowCount(seg, getCuboidRowEstimatesHLL(), sourceRowCount);
     }
 
     public double estimateCubeSize() {
@@ -184,7 +188,8 @@ public class CubeStatsReader {
         return cuboidRowCountMap;
     }
 
-    public static Map<Long, Double> getCuboidSizeMapFromRowCount(CubeSegment cubeSegment, Map<Long, Long> rowCountMap) {
+    public static Map<Long, Double> getCuboidSizeMapFromRowCount(CubeSegment cubeSegment, Map<Long, Long> rowCountMap,
+            long sourceRowCount) {
         final CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         final List<Integer> rowkeyColumnSize = Lists.newArrayList();
         final Cuboid baseCuboid = Cuboid.getBaseCuboid(cubeDesc);
@@ -199,7 +204,7 @@ public class CubeStatsReader {
         Map<Long, Double> sizeMap = Maps.newHashMap();
         for (Map.Entry<Long, Long> entry : rowCountMap.entrySet()) {
             sizeMap.put(entry.getKey(), estimateCuboidStorageSize(cubeSegment, entry.getKey(), entry.getValue(),
-                    baseCuboid.getId(), baseCuboidRowCount, rowkeyColumnSize));
+                    baseCuboid.getId(), baseCuboidRowCount, rowkeyColumnSize, sourceRowCount));
         }
         return sizeMap;
     }
@@ -210,7 +215,7 @@ public class CubeStatsReader {
      * @return the cuboid size in M bytes
      */
     private static double estimateCuboidStorageSize(CubeSegment cubeSegment, long cuboidId, long rowCount,
-            long baseCuboidId, long baseCuboidCount, List<Integer> rowKeyColumnLength) {
+            long baseCuboidId, long baseCuboidCount, List<Integer> rowKeyColumnLength, long sourceRowCount) {
 
         int rowkeyLength = cubeSegment.getRowKeyPreambleSize();
         KylinConfig kylinConf = cubeSegment.getConfig();
@@ -228,12 +233,21 @@ public class CubeStatsReader {
         int normalSpace = rowkeyLength;
         int countDistinctSpace = 0;
         double percentileSpace = 0;
+        int topNSpace = 0;
         for (MeasureDesc measureDesc : cubeSegment.getCubeDesc().getMeasures()) {
+            if (rowCount == 0)
+                break;
             DataType returnType = measureDesc.getFunction().getReturnDataType();
             if (measureDesc.getFunction().getExpression().equals(FunctionDesc.FUNC_COUNT_DISTINCT)) {
-                countDistinctSpace += returnType.getStorageBytesEstimate();
+                long estimateDistinctCount = sourceRowCount / rowCount;
+                estimateDistinctCount = estimateDistinctCount == 0 ? 1L : estimateDistinctCount;
+                countDistinctSpace += returnType.getStorageBytesEstimate(estimateDistinctCount);
             } else if (measureDesc.getFunction().getExpression().equals(FunctionDesc.FUNC_PERCENTILE)) {
                 percentileSpace += returnType.getStorageBytesEstimate(baseCuboidCount * 1.0 / rowCount);
+            } else if (measureDesc.getFunction().getExpression().equals(TopNMeasureType.FUNC_TOP_N)) {
+                long estimateTopNCount = sourceRowCount / rowCount;
+                estimateTopNCount = estimateTopNCount == 0 ? 1L : estimateTopNCount;
+                topNSpace += returnType.getStorageBytesEstimate(estimateTopNCount);
             } else {
                 normalSpace += returnType.getStorageBytesEstimate();
             }
@@ -241,9 +255,11 @@ public class CubeStatsReader {
 
         double cuboidSizeRatio = kylinConf.getJobCuboidSizeRatio();
         double cuboidSizeMemHungryRatio = kylinConf.getJobCuboidSizeCountDistinctRatio();
+        double cuboidSizeTopNRatio = kylinConf.getJobCuboidSizeTopNRatio();
+
         double ret = (1.0 * normalSpace * rowCount * cuboidSizeRatio
-                + 1.0 * countDistinctSpace * rowCount * cuboidSizeMemHungryRatio + 1.0 * percentileSpace * rowCount)
-                / (1024L * 1024L);
+                + 1.0 * countDistinctSpace * rowCount * cuboidSizeMemHungryRatio + 1.0 * percentileSpace * rowCount
+                + 1.0 * topNSpace * rowCount * cuboidSizeTopNRatio) / (1024L * 1024L);
         return ret;
     }
 
@@ -351,6 +367,7 @@ public class CubeStatsReader {
     public static class CubeStatsResult {
         private int percentage = 100;
         private double mapperOverlapRatio = 0;
+        private long sourceRecordCount = 0;
         private int mapperNumber = 0;
         private Map<Long, HLLCounter> counterMap = Maps.newHashMap();
 
@@ -367,6 +384,8 @@ public class CubeStatsReader {
                         mapperOverlapRatio = Bytes.toDouble(value.getBytes());
                     } else if (key.get() == -2) {
                         mapperNumber = Bytes.toInt(value.getBytes());
+                    } else if (key.get() == -3) {
+                        sourceRecordCount = Bytes.toLong(value.getBytes());
                     } else if (key.get() > 0) {
                         HLLCounter hll = new HLLCounter(precision);
                         ByteArray byteArray = new ByteArray(value.getBytes());
@@ -391,6 +410,10 @@ public class CubeStatsReader {
 
         public Map<Long, HLLCounter> getCounterMap() {
             return Collections.unmodifiableMap(counterMap);
+        }
+
+        public long getSourceRecordCount() {
+            return sourceRecordCount;
         }
     }
 

@@ -80,4 +80,16 @@ public class HLLCSerializer extends DataTypeSerializer<HLLCounter> {
         return current().maxLength();
     }
 
+    @Override
+    protected double getStorageBytesEstimate(double averageNumOfElementsInCounter) {
+        int registerIndexSize = current().getRegisterIndexSize();
+        int m = 1 << precision;
+        if (!current().isDense((int) averageNumOfElementsInCounter)
+                || averageNumOfElementsInCounter < (m - 5) / (1 + registerIndexSize)) {
+            // 5 = 1 + 4 for scheme and size
+            // size * (getRegisterIndexSize + 1)
+            return 5 + averageNumOfElementsInCounter * (registerIndexSize + 1);
+        }
+        return getStorageBytesEstimate();
+    }
 }
