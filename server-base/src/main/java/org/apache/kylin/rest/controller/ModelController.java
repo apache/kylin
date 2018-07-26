@@ -190,7 +190,7 @@ public class ModelController extends BasicController {
         }
 
         if (modelDesc == null || StringUtils.isEmpty(modelName)) {
-            throw new BadRequestException("Model does not exist.");
+            throw new NotFoundException("Model does not exist.");
         }
 
         if (!project.equals(modelDesc.getProject())) {

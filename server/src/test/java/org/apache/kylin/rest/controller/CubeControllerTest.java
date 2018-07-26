@@ -28,6 +28,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
@@ -140,7 +141,7 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController.deleteSegment(cubeName, "20131212000000_20140112000000");
     }
 
-    @Test(expected = InternalErrorException.class)
+    @Test(expected = NotFoundException.class)
     public void testDeleteSegmentNotExist() throws IOException {
         String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
         CubeDesc[] cubes = cubeDescController.getCube(cubeName);

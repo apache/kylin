@@ -28,6 +28,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.ProjectRequest;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.CubeService;
@@ -155,7 +156,7 @@ public class ProjectController extends BasicController {
         try {
             ProjectInstance currentProject = projectService.getProjectManager().getProject(formerProjectName);
             if (currentProject == null) {
-                throw new InternalErrorException("The project named " + formerProjectName + " does not exists");
+                throw new NotFoundException("The project named " + formerProjectName + " does not exists");
             }
 
             if (projectDesc.getName().equals(currentProject.getName())) {
