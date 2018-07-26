@@ -348,7 +348,7 @@ public class SparkExecutable extends AbstractExecutable {
 
     private int killAppRetry(String appId) throws IOException, InterruptedException {
         String state = getAppState(appId);
-        if (state.equals("SUCCEEDED") || state.equals("FAILED") || state.equals("KILLED")) {
+        if ("SUCCEEDED".equals(state) || "FAILED".equals(state) || "KILLED".equals(state)) {
             logger.warn(appId + "is final state, no need to kill");
             return 0;
         }
@@ -366,7 +366,7 @@ public class SparkExecutable extends AbstractExecutable {
             retry++;
         }
 
-        if (state.equals("KILLED")) {
+        if ("KILLED".equals(state)) {
             logger.info(appId + " killed successfully");
             return 0;
         } else {

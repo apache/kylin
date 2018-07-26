@@ -50,7 +50,7 @@ public class PatternedLogger extends BufferedLogger {
     private static final Pattern PATTERN_HIVE_APP_ID_URL_2 = Pattern.compile("Executing on YARN cluster with App id  (.*?)");
 
     // spark
-    private static final Pattern PATTERN_SPARK_APP_ID = Pattern.compile("Submitted application (.*?)");
+    private static final Pattern PATTERN_SPARK_APP_ID = Pattern.compile("Submitted application (.*)");
     private static final Pattern PATTERN_SPARK_APP_URL = Pattern.compile("tracking URL: (.*)");
     private static final Pattern PATTERN_JOB_STATE = Pattern.compile("Final-State : (.*?)$");
 
@@ -109,5 +109,5 @@ public class PatternedLogger extends BufferedLogger {
     public interface ILogListener{
         void onLogEvent(String infoKey, Map<String, String> info);
     }
-
+    
 }
