@@ -21,7 +21,7 @@
         <i class="icon-plus icon-white"></i> <span>{{ loaded ? 'More' : 'Loading...' }}</span>
     </button>
     <div class="clearfix" style="margin: 5px"></div>
-    <div class="pull-left" style="padding-right: 3%">
+    <div class="pull-left" style="padding-right: 3%" ng-if="!isHideTotal">
         <span class="pull-left font-color-default" style="font-size: 15px"><strong>Total: {{getLength(data)}}</strong></span>
     </div>
 </div>
