@@ -37,22 +37,31 @@ kylin.env.hadoop-conf-dir=/etc/hadoop/conf
 
 Kylin 在 $KYLIN_HOME/spark 中嵌入一个 Spark binary (v2.1.2)，所有使用 *"kylin.engine.spark-conf."* 作为前缀的 Spark 配置属性都能在 $KYLIN_HOME/conf/kylin.properties 中进行管理。这些属性当运行提交 Spark job 时会被提取并应用；例如，如果您配置 "kylin.engine.spark-conf.spark.executor.memory=4G"，Kylin 将会在执行 "spark-submit" 操作时使用 "--conf spark.executor.memory=4G" 作为参数。
 
-运行 Spark cubing 前，建议查看一下这些配置并根据您集群的情况进行自定义。下面是默认配置，也是 sandbox 最低要求的配置 (1 个 1GB memory 的 executor)；通常一个集群，需要更多的 executors 且每一个至少有 4GB memory 和 2 cores:
+运行 Spark cubing 前，建议查看一下这些配置并根据您集群的情况进行自定义。下面是建议配置，开启了 Spark 动态资源分配:
 
 {% highlight Groff markup %}
 kylin.engine.spark-conf.spark.master=yarn
 kylin.engine.spark-conf.spark.submit.deployMode=cluster
+kylin.engine.spark-conf.spark.dynamicAllocation.enabled=true
+kylin.engine.spark-conf.spark.dynamicAllocation.minExecutors=1
+kylin.engine.spark-conf.spark.dynamicAllocation.maxExecutors=1000
+kylin.engine.spark-conf.spark.dynamicAllocation.executorIdleTimeout=300
 kylin.engine.spark-conf.spark.yarn.queue=default
+kylin.engine.spark-conf.spark.driver.memory=2G
 kylin.engine.spark-conf.spark.executor.memory=4G
 kylin.engine.spark-conf.spark.yarn.executor.memoryOverhead=1024
-kylin.engine.spark-conf.spark.executor.cores=2
-kylin.engine.spark-conf.spark.executor.instances=40
+kylin.engine.spark-conf.spark.executor.cores=1
+kylin.engine.spark-conf.spark.network.timeout=600
 kylin.engine.spark-conf.spark.shuffle.service.enabled=true
+#kylin.engine.spark-conf.spark.executor.instances=1
 kylin.engine.spark-conf.spark.eventLog.enabled=true
+kylin.engine.spark-conf.spark.hadoop.dfs.replication=2
+kylin.engine.spark-conf.spark.hadoop.mapreduce.output.fileoutputformat.compress=true
+kylin.engine.spark-conf.spark.hadoop.mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.DefaultCodec
+kylin.engine.spark-conf.spark.io.compression.codec=org.apache.spark.io.SnappyCompressionCodec
 kylin.engine.spark-conf.spark.eventLog.dir=hdfs\:///kylin/spark-history
 kylin.engine.spark-conf.spark.history.fs.logDirectory=hdfs\:///kylin/spark-history
 
-#kylin.engine.spark-conf.spark.io.compression.codec=org.apache.spark.io.SnappyCompressionCodec
 
 ## uncomment for HDP
 #kylin.engine.spark-conf.spark.driver.extraJavaOptions=-Dhdp.version=current
