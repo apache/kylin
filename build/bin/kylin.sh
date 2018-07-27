@@ -333,10 +333,14 @@ then
 
     #retrive $KYLIN_EXTRA_START_OPTS from a separate file called setenv-tool.sh
     unset KYLIN_EXTRA_START_OPTS # unset the global server setenv config first
-    if [ -f "${dir}/setenv-tool.sh" ]
-        then source ${dir}/setenv-tool.sh
+    if [ -f "${dir}/setenv-tool.sh" ]; then
+        echo "WARNING: ${dir}/setenv-tool.sh is deprecated and ignored, please remove it and use ${KYLIN_HOME}/conf/setenv-tool.sh instead"
+        source ${dir}/setenv-tool.sh
     fi
 
+    if [ -f "${KYLIN_HOME}/conf/setenv-tool.sh" ]; then
+        source ${KYLIN_HOME}/conf/setenv-tool.sh
+    fi
     hbase_pre_original=${HBASE_CLASSPATH_PREFIX}
     export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/tool/*:${HBASE_CLASSPATH_PREFIX}
     exec hbase ${KYLIN_EXTRA_START_OPTS} -Dkylin.hive.dependency=${hive_dependency} -Dkylin.hbase.dependency=${hbase_dependency} -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties "$@"
