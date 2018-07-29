@@ -18,12 +18,19 @@
 
 package org.apache.kylin.rest.service;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
@@ -41,10 +48,12 @@ import org.apache.kylin.engine.mr.LookupSnapshotJobBuilder;
 import org.apache.kylin.engine.mr.common.JobInfoConverter;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JobInstance;
+import org.apache.kylin.job.JobSearchResult;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.SchedulerFactory;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
+import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.exception.SchedulerException;
@@ -74,16 +83,12 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author ysong1
@@ -387,7 +392,8 @@ public class JobService extends BasicService implements InitializingBean {
         return optimizeJobInstance;
     }
 
-    public JobInstance submitLookupSnapshotJob(CubeInstance cube, String lookupTable, List<String> segmentIDs, String submitter) throws IOException {
+    public JobInstance submitLookupSnapshotJob(CubeInstance cube, String lookupTable, List<String> segmentIDs,
+            String submitter) throws IOException {
         LookupSnapshotBuildJob job = new LookupSnapshotJobBuilder(cube, lookupTable, segmentIDs, submitter).build();
         getExecutableManager().addJob(job);
 
@@ -660,17 +666,19 @@ public class JobService extends BasicService implements InitializingBean {
                 + SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
+    //******************************** Job search apis for Job controller V1 *******************************************
     /**
-     * currently only support substring match
-     *
-     * @return
-     */
+    * currently only support substring match
+    *
+    * @return
+    */
     public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName,
             final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue,
             final JobTimeFilterEnum timeFilter, JobSearchMode jobSearchMode) {
         Integer limit = (null == limitValue) ? 30 : limitValue;
         Integer offset = (null == offsetValue) ? 0 : offsetValue;
-        List<JobInstance> jobs = searchJobsByCubeName(cubeNameSubstring, projectName, statusList, timeFilter, jobSearchMode);
+        List<JobInstance> jobs = searchJobsByCubeName(cubeNameSubstring, projectName, statusList, timeFilter,
+                jobSearchMode);
 
         Collections.sort(jobs);
 
@@ -685,24 +693,16 @@ public class JobService extends BasicService implements InitializingBean {
         return jobs.subList(offset, offset + limit);
     }
 
+    /**
+     * it loads all metadata of "execute" and "execute_output", and parses all job instances within the scope of the given filters
+     *
+     * @return List of job instances searched by the method
+     *
+     */
     public List<JobInstance> searchJobsByCubeName(final String cubeNameSubstring, final String projectName,
-            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
-        return searchJobsByCubeName(cubeNameSubstring, projectName, statusList, timeFilter, JobSearchMode.CUBING_ONLY);
-    }
-
-    public List<JobInstance> searchJobsByCubeName(final String cubeNameSubstring, final String projectName,
-            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter, final JobSearchMode jobSearchMode) {
+            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter,
+            final JobSearchMode jobSearchMode) {
         return innerSearchJobs(cubeNameSubstring, null, projectName, statusList, timeFilter, jobSearchMode);
-    }
-
-    public List<JobInstance> searchJobsByJobName(final String jobName, final String projectName,
-            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
-        return searchJobsByJobName(jobName, projectName, statusList, timeFilter, JobSearchMode.ALL);
-    }
-
-    public List<JobInstance> searchJobsByJobName(final String jobName, final String projectName,
-            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter, JobSearchMode jobSearchMode) {
-        return innerSearchJobs(null, jobName, projectName, statusList, timeFilter, jobSearchMode);
     }
 
     public List<JobInstance> innerSearchJobs(final String cubeName, final String jobName, final String projectName,
@@ -756,82 +756,90 @@ public class JobService extends BasicService implements InitializingBean {
                                 }));
     }
 
+    /**
+     * loads all metadata of "execute" and returns list of cubing job within the scope of the given filters
+     *
+     * @param allOutputs map of executable output data with type DefaultOutput parsed from ExecutableOutputPO
+     *
+     */
     public List<CubingJob> innerSearchCubingJobs(final String cubeName, final String jobName,
             final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
             final Map<String, Output> allOutputs, final boolean nameExactMatch, final String projectName) {
         List<CubingJob> results = Lists.newArrayList(
                 FluentIterable.from(getExecutableManager().getAllExecutables(timeStartInMillis, timeEndInMillis))
                         .filter(new Predicate<AbstractExecutable>() {
-                    @Override
-                    public boolean apply(AbstractExecutable executable) {
-                        if (executable instanceof CubingJob) {
-                            if (StringUtils.isEmpty(cubeName)) {
-                                return true;
+                            @Override
+                            public boolean apply(AbstractExecutable executable) {
+                                if (executable instanceof CubingJob) {
+                                    if (StringUtils.isEmpty(cubeName)) {
+                                        return true;
+                                    }
+                                    String executableCubeName = CubingExecutableUtil
+                                            .getCubeName(executable.getParams());
+                                    if (executableCubeName == null)
+                                        return true;
+                                    if (nameExactMatch)
+                                        return executableCubeName.equalsIgnoreCase(cubeName);
+                                    else
+                                        return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
+                                } else {
+                                    return false;
+                                }
                             }
-                            String executableCubeName = CubingExecutableUtil.getCubeName(executable.getParams());
-                            if (executableCubeName == null)
-                                return true;
-                            if (nameExactMatch)
-                                return executableCubeName.equalsIgnoreCase(cubeName);
-                            else
-                                return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
-                        } else {
-                            return false;
-                        }
-                    }
-                }).transform(new Function<AbstractExecutable, CubingJob>() {
-                    @Override
-                    public CubingJob apply(AbstractExecutable executable) {
-                        return (CubingJob) executable;
-                    }
-                }).filter(Predicates.and(new Predicate<CubingJob>() {
-                    @Override
-                    public boolean apply(CubingJob executable) {
-                        if (null == projectName || null == getProjectManager().getProject(projectName)) {
-                            return true;
-                        } else {
-                            return projectName.equalsIgnoreCase(executable.getProjectName());
-                        }
-                    }
-                }, new Predicate<CubingJob>() {
-                    @Override
-                    public boolean apply(CubingJob executable) {
-                        try {
-                            Output output = allOutputs.get(executable.getId());
-                            if (output == null) {
-                                return false;
+                        }).transform(new Function<AbstractExecutable, CubingJob>() {
+                            @Override
+                            public CubingJob apply(AbstractExecutable executable) {
+                                return (CubingJob) executable;
                             }
+                        }).filter(Predicates.and(new Predicate<CubingJob>() {
+                            @Override
+                            public boolean apply(CubingJob executable) {
+                                if (null == projectName || null == getProjectManager().getProject(projectName)) {
+                                    return true;
+                                } else {
+                                    return projectName.equalsIgnoreCase(executable.getProjectName());
+                                }
+                            }
+                        }, new Predicate<CubingJob>() {
+                            @Override
+                            public boolean apply(CubingJob executable) {
+                                try {
+                                    Output output = allOutputs.get(executable.getId());
+                                    if (output == null) {
+                                        return false;
+                                    }
 
-                            ExecutableState state = output.getState();
-                            boolean ret = statusList.contains(state);
-                            return ret;
-                        } catch (Exception e) {
-                            throw e;
-                        }
-                    }
-                }, new Predicate<CubingJob>() {
-                    @Override
-                    public boolean apply(@Nullable CubingJob cubeJob) {
-                        if (cubeJob == null) {
-                            return false;
-                        }
+                                    ExecutableState state = output.getState();
+                                    boolean ret = statusList.contains(state);
+                                    return ret;
+                                } catch (Exception e) {
+                                    throw e;
+                                }
+                            }
+                        }, new Predicate<CubingJob>() {
+                            @Override
+                            public boolean apply(@Nullable CubingJob cubeJob) {
+                                if (cubeJob == null) {
+                                    return false;
+                                }
 
-                        if (Strings.isEmpty(jobName)) {
-                            return true;
-                        }
+                                if (Strings.isEmpty(jobName)) {
+                                    return true;
+                                }
 
-                        if (nameExactMatch) {
-                            return cubeJob.getName().equalsIgnoreCase(jobName);
-                        } else {
-                            return cubeJob.getName().toLowerCase().contains(jobName.toLowerCase());
-                        }
-                    }
-                })));
+                                if (nameExactMatch) {
+                                    return cubeJob.getName().equalsIgnoreCase(jobName);
+                                } else {
+                                    return cubeJob.getName().toLowerCase().contains(jobName.toLowerCase());
+                                }
+                            }
+                        })));
         return results;
     }
 
     public List<JobInstance> innerSearchCheckpointJobs(final String cubeName, final String jobName,
             final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+        // TODO: use cache of jobs for this method
         // prepare time range
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
@@ -855,82 +863,352 @@ public class JobService extends BasicService implements InitializingBean {
     public List<CheckpointExecutable> innerSearchCheckpointJobs(final String cubeName, final String jobName,
             final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
             final Map<String, Output> allOutputs, final boolean nameExactMatch, final String projectName) {
-        List<CheckpointExecutable> results = Lists
-                .newArrayList(
-                        FluentIterable
-                                .from(getExecutableManager().getAllExecutables(timeStartInMillis, timeEndInMillis))
-                                .filter(new Predicate<AbstractExecutable>() {
-                                    @Override
-                                    public boolean apply(AbstractExecutable executable) {
-                                        if (executable instanceof CheckpointExecutable) {
-                                            if (StringUtils.isEmpty(cubeName)) {
-                                                return true;
-                                            }
-                                            String executableCubeName = CubingExecutableUtil
-                                                    .getCubeName(executable.getParams());
-                                            if (executableCubeName == null)
-                                                return true;
-                                            if (nameExactMatch)
-                                                return executableCubeName.equalsIgnoreCase(cubeName);
-                                            else
-                                                return executableCubeName.toLowerCase()
-                                                        .contains(cubeName.toLowerCase());
-                                        } else {
-                                            return false;
-                                        }
+        List<CheckpointExecutable> results = Lists.newArrayList(
+                FluentIterable.from(getExecutableManager().getAllExecutables(timeStartInMillis, timeEndInMillis))
+                        .filter(new Predicate<AbstractExecutable>() {
+                            @Override
+                            public boolean apply(AbstractExecutable executable) {
+                                if (executable instanceof CheckpointExecutable) {
+                                    if (StringUtils.isEmpty(cubeName)) {
+                                        return true;
                                     }
-                                }).transform(new Function<AbstractExecutable, CheckpointExecutable>() {
-                                    @Override
-                                    public CheckpointExecutable apply(AbstractExecutable executable) {
-                                        return (CheckpointExecutable) executable;
+                                    String executableCubeName = CubingExecutableUtil
+                                            .getCubeName(executable.getParams());
+                                    if (executableCubeName == null)
+                                        return true;
+                                    if (nameExactMatch)
+                                        return executableCubeName.equalsIgnoreCase(cubeName);
+                                    else
+                                        return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
+                                } else {
+                                    return false;
+                                }
+                            }
+                        }).transform(new Function<AbstractExecutable, CheckpointExecutable>() {
+                            @Override
+                            public CheckpointExecutable apply(AbstractExecutable executable) {
+                                return (CheckpointExecutable) executable;
+                            }
+                        }).filter(Predicates.and(new Predicate<CheckpointExecutable>() {
+                            @Override
+                            public boolean apply(CheckpointExecutable executable) {
+                                if (null == projectName || null == getProjectManager().getProject(projectName)) {
+                                    return true;
+                                } else {
+                                    return projectName.equalsIgnoreCase(executable.getProjectName());
+                                }
+                            }
+                        }, new Predicate<CheckpointExecutable>() {
+                            @Override
+                            public boolean apply(CheckpointExecutable executable) {
+                                try {
+                                    Output output = allOutputs.get(executable.getId());
+                                    if (output == null) {
+                                        return false;
                                     }
-                                }).filter(Predicates.and(new Predicate<CheckpointExecutable>() {
-                                    @Override
-                                    public boolean apply(CheckpointExecutable executable) {
-                                        if (null == projectName
-                                                || null == getProjectManager().getProject(projectName)) {
-                                            return true;
-                                        } else {
-                                            return projectName.equalsIgnoreCase(executable.getProjectName());
-                                        }
-                                    }
-                                }, new Predicate<CheckpointExecutable>() {
-                                    @Override
-                                    public boolean apply(CheckpointExecutable executable) {
-                                        try {
-                                            Output output = allOutputs.get(executable.getId());
-                                            if (output == null) {
-                                                return false;
-                                            }
 
-                                            ExecutableState state = output.getState();
-                                            boolean ret = statusList.contains(state);
-                                            return ret;
-                                        } catch (Exception e) {
-                                            throw e;
-                                        }
-                                    }
-                                }, new Predicate<CheckpointExecutable>() {
-                                    @Override
-                                    public boolean apply(@Nullable CheckpointExecutable checkpointExecutable) {
-                                        if (checkpointExecutable == null) {
-                                            return false;
-                                        }
+                                    ExecutableState state = output.getState();
+                                    boolean ret = statusList.contains(state);
+                                    return ret;
+                                } catch (Exception e) {
+                                    throw e;
+                                }
+                            }
+                        }, new Predicate<CheckpointExecutable>() {
+                            @Override
+                            public boolean apply(@Nullable CheckpointExecutable checkpointExecutable) {
+                                if (checkpointExecutable == null) {
+                                    return false;
+                                }
 
-                                        if (Strings.isEmpty(jobName)) {
-                                            return true;
-                                        }
+                                if (Strings.isEmpty(jobName)) {
+                                    return true;
+                                }
 
-                                        if (nameExactMatch) {
-                                            return checkpointExecutable.getName().equalsIgnoreCase(jobName);
-                                        } else {
-                                            return checkpointExecutable.getName().toLowerCase()
-                                                    .contains(jobName.toLowerCase());
-                                        }
-                                    }
-                                })));
+                                if (nameExactMatch) {
+                                    return checkpointExecutable.getName().equalsIgnoreCase(jobName);
+                                } else {
+                                    return checkpointExecutable.getName().toLowerCase().contains(jobName.toLowerCase());
+                                }
+                            }
+                        })));
         return results;
     }
+    //****************************** Job search apis for Job controller V1 end *****************************************
+
+    //******************************** Job search apis for Job controller V2 *******************************************
+    public List<JobInstance> searchJobsV2(final String cubeNameSubstring, final String projectName,
+            final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue,
+            final JobTimeFilterEnum timeFilter, JobSearchMode jobSearchMode) {
+        Integer limit = (null == limitValue) ? 30 : limitValue;
+        Integer offset = (null == offsetValue) ? 0 : offsetValue;
+        List<JobSearchResult> jobSearchResultList = searchJobsByCubeNameV2(cubeNameSubstring, projectName, statusList,
+                timeFilter, jobSearchMode);
+
+        Collections.sort(jobSearchResultList);
+
+        if (jobSearchResultList.size() <= offset) {
+            return Collections.emptyList();
+        }
+
+        // Fetch instance data of jobs for the searched job results
+        List<JobSearchResult> subJobSearchResultList;
+        if ((jobSearchResultList.size() - offset) < limit) {
+            subJobSearchResultList = jobSearchResultList.subList(offset, jobSearchResultList.size());
+        } else {
+            subJobSearchResultList = jobSearchResultList.subList(offset, offset + limit);
+        }
+
+        List<JobInstance> jobInstanceList = new ArrayList<>();
+        for (JobSearchResult result : subJobSearchResultList) {
+            JobInstance jobInstance = getJobInstance(result.getId());
+            jobInstanceList.add(jobInstance);
+        }
+
+        return jobInstanceList;
+    }
+
+    /**
+     * it loads all cache for digest metadata of "execute" and "execute_output", and returns the search results within the scope of the given filters
+     *
+     * @return List of search results searched by the method
+     *
+     */
+    public List<JobSearchResult> searchJobsByCubeNameV2(final String cubeNameSubstring, final String projectName,
+            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter,
+            final JobSearchMode jobSearchMode) {
+        List<JobSearchResult> result = Lists.newArrayList();
+        switch (jobSearchMode) {
+        case ALL:
+            result.addAll(innerSearchCubingJobsV2(cubeNameSubstring, null, projectName, statusList, timeFilter));
+            result.addAll(innerSearchCheckpointJobsV2(cubeNameSubstring, null, projectName, statusList, timeFilter));
+            break;
+        case CHECKPOINT_ONLY:
+            result.addAll(innerSearchCheckpointJobsV2(cubeNameSubstring, null, projectName, statusList, timeFilter));
+            break;
+        case CUBING_ONLY:
+        default:
+            result.addAll(innerSearchCubingJobsV2(cubeNameSubstring, null, projectName, statusList, timeFilter));
+        }
+        return result;
+    }
+
+    public List<JobSearchResult> innerSearchCubingJobsV2(final String cubeName, final String jobName,
+            final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+        if (null == projectName) {
+            aclEvaluate.checkIsGlobalAdmin();
+        } else {
+            aclEvaluate.checkProjectOperationPermission(projectName);
+        }
+        // prepare time range
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
+        long timeEndInMillis = Long.MAX_VALUE;
+        Set<ExecutableState> states = convertStatusEnumToStates(statusList);
+        final Map<String, ExecutableOutputPO> allOutputDigests = getExecutableManager()
+                .getAllOutputDigests(timeStartInMillis, timeEndInMillis);
+        return Lists
+                .newArrayList(FluentIterable
+                        .from(innerSearchCubingJobsV2(cubeName, jobName, states, timeStartInMillis, timeEndInMillis,
+                                allOutputDigests, false, projectName))
+                        .transform(new Function<CubingJob, JobSearchResult>() {
+                            @Override
+                            public JobSearchResult apply(CubingJob cubingJob) {
+                                return JobInfoConverter.parseToJobSearchResult(cubingJob, allOutputDigests);
+                            }
+                        }).filter(new Predicate<JobSearchResult>() {
+                            @Override
+                            public boolean apply(@Nullable JobSearchResult input) {
+                                return input != null;
+                            }
+                        }));
+    }
+
+    public List<JobSearchResult> innerSearchCheckpointJobsV2(final String cubeName, final String jobName,
+            final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+        if (null == projectName) {
+            aclEvaluate.checkIsGlobalAdmin();
+        } else {
+            aclEvaluate.checkProjectOperationPermission(projectName);
+        }
+        // prepare time range
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
+        long timeEndInMillis = Long.MAX_VALUE;
+        Set<ExecutableState> states = convertStatusEnumToStates(statusList);
+        final Map<String, ExecutableOutputPO> allOutputDigests = getExecutableManager()
+                .getAllOutputDigests(timeStartInMillis, timeEndInMillis);
+        return Lists.newArrayList(FluentIterable
+                .from(innerSearchCheckpointJobsV2(cubeName, jobName, states, timeStartInMillis, timeEndInMillis,
+                        allOutputDigests, false, projectName))
+                .transform(new Function<CheckpointExecutable, JobSearchResult>() {
+                    @Override
+                    public JobSearchResult apply(CheckpointExecutable checkpointExecutable) {
+                        return JobInfoConverter.parseToJobSearchResult(checkpointExecutable, allOutputDigests);
+                    }
+                }).filter(new Predicate<JobSearchResult>() {
+                    @Override
+                    public boolean apply(@Nullable JobSearchResult input) {
+                        return input != null;
+                    }
+                }));
+    }
+
+    /**
+     * Called by searchJobsByCubeNameV2, it loads all cache of digest metadata of "execute" and returns list of cubing job within the scope of the given filters
+     *
+     * @param allExecutableOutputPO map of executable output data with type ExecutableOutputPO
+     *
+     */
+    public List<CubingJob> innerSearchCubingJobsV2(final String cubeName, final String jobName,
+            final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
+            final Map<String, ExecutableOutputPO> allExecutableOutputPO, final boolean nameExactMatch,
+            final String projectName) {
+        List<CubingJob> results = Lists.newArrayList(
+                FluentIterable.from(getExecutableManager().getAllExecutableDigests(timeStartInMillis, timeEndInMillis))
+                        .filter(new Predicate<AbstractExecutable>() {
+                            @Override
+                            public boolean apply(AbstractExecutable executable) {
+                                if (executable instanceof CubingJob) {
+                                    if (StringUtils.isEmpty(cubeName)) {
+                                        return true;
+                                    }
+                                    String executableCubeName = CubingExecutableUtil
+                                            .getCubeName(executable.getParams());
+                                    if (executableCubeName == null)
+                                        return true;
+                                    if (nameExactMatch)
+                                        return executableCubeName.equalsIgnoreCase(cubeName);
+                                    else
+                                        return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
+                                } else {
+                                    return false;
+                                }
+                            }
+                        }).transform(new Function<AbstractExecutable, CubingJob>() {
+                            @Override
+                            public CubingJob apply(AbstractExecutable executable) {
+                                return (CubingJob) executable;
+                            }
+                        }).filter(Predicates.and(new Predicate<CubingJob>() {
+                            @Override
+                            public boolean apply(CubingJob executable) {
+                                if (null == projectName || null == getProjectManager().getProject(projectName)) {
+                                    return true;
+                                } else {
+                                    return projectName.equalsIgnoreCase(executable.getProjectName());
+                                }
+                            }
+                        }, new Predicate<CubingJob>() {
+                            @Override
+                            public boolean apply(CubingJob executable) {
+                                try {
+                                    ExecutableOutputPO executableOutputPO = allExecutableOutputPO
+                                            .get(executable.getId());
+                                    ExecutableState state = ExecutableState.valueOf(executableOutputPO.getStatus());
+                                    return statusList.contains(state);
+
+                                } catch (Exception e) {
+                                    throw e;
+                                }
+                            }
+                        }, new Predicate<CubingJob>() {
+                            @Override
+                            public boolean apply(@Nullable CubingJob cubeJob) {
+                                if (cubeJob == null) {
+                                    return false;
+                                }
+
+                                if (Strings.isEmpty(jobName)) {
+                                    return true;
+                                }
+
+                                if (nameExactMatch) {
+                                    return cubeJob.getName().equalsIgnoreCase(jobName);
+                                } else {
+                                    return cubeJob.getName().toLowerCase().contains(jobName.toLowerCase());
+                                }
+                            }
+                        })));
+        return results;
+    }
+
+    public List<CheckpointExecutable> innerSearchCheckpointJobsV2(final String cubeName, final String jobName,
+            final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
+            final Map<String, ExecutableOutputPO> allExecutableOutputPO, final boolean nameExactMatch,
+            final String projectName) {
+        List<CheckpointExecutable> results = Lists.newArrayList(
+                FluentIterable.from(getExecutableManager().getAllExecutableDigests(timeStartInMillis, timeEndInMillis))
+                        .filter(new Predicate<AbstractExecutable>() {
+                            @Override
+                            public boolean apply(AbstractExecutable executable) {
+                                if (executable instanceof CheckpointExecutable) {
+                                    if (StringUtils.isEmpty(cubeName)) {
+                                        return true;
+                                    }
+                                    String executableCubeName = CubingExecutableUtil
+                                            .getCubeName(executable.getParams());
+                                    if (executableCubeName == null)
+                                        return true;
+                                    if (nameExactMatch)
+                                        return executableCubeName.equalsIgnoreCase(cubeName);
+                                    else
+                                        return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
+                                } else {
+                                    return false;
+                                }
+                            }
+                        }).transform(new Function<AbstractExecutable, CheckpointExecutable>() {
+                            @Override
+                            public CheckpointExecutable apply(AbstractExecutable executable) {
+                                return (CheckpointExecutable) executable;
+                            }
+                        }).filter(Predicates.and(new Predicate<CheckpointExecutable>() {
+                            @Override
+                            public boolean apply(CheckpointExecutable executable) {
+                                if (null == projectName || null == getProjectManager().getProject(projectName)) {
+                                    return true;
+                                } else {
+                                    return projectName.equalsIgnoreCase(executable.getProjectName());
+                                }
+                            }
+                        }, new Predicate<CheckpointExecutable>() {
+                            @Override
+                            public boolean apply(CheckpointExecutable executable) {
+                                try {
+                                    ExecutableOutputPO executableOutputPO = allExecutableOutputPO
+                                            .get(executable.getId());
+                                    ExecutableState state = ExecutableState.valueOf(executableOutputPO.getStatus());
+                                    return statusList.contains(state);
+
+                                } catch (Exception e) {
+                                    throw e;
+                                }
+                            }
+                        }, new Predicate<CheckpointExecutable>() {
+                            @Override
+                            public boolean apply(@Nullable CheckpointExecutable checkpointExecutable) {
+                                if (checkpointExecutable == null) {
+                                    return false;
+                                }
+
+                                if (Strings.isEmpty(jobName)) {
+                                    return true;
+                                }
+
+                                if (nameExactMatch) {
+                                    return checkpointExecutable.getName().equalsIgnoreCase(jobName);
+                                } else {
+                                    return checkpointExecutable.getName().toLowerCase().contains(jobName.toLowerCase());
+                                }
+                            }
+                        })));
+        return results;
+    }
+
+    //****************************** Job search apis for Job controller V2 end *****************************************
 
     public List<CubingJob> listJobsByRealizationName(final String realizationName, final String projectName,
             final Set<ExecutableState> statusList) {

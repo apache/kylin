@@ -108,7 +108,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         return resRootPath + "/" + resourceName + resPathSuffix;
     }
 
-    private String resourceName(String resourcePath) {
+    protected String resourceName(String resourcePath) {
         Preconditions.checkArgument(resourcePath.startsWith(resRootPath));
         Preconditions.checkArgument(resourcePath.endsWith(resPathSuffix));
         return resourcePath.substring(resRootPath.length() + 1, resourcePath.length() - resPathSuffix.length());

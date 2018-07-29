@@ -27,11 +27,14 @@ import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JobInstance;
+import org.apache.kylin.job.JobSearchResult;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
+import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.CheckpointExecutable;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.slf4j.Logger;
@@ -200,5 +203,36 @@ public class JobInfoConverter {
         default:
             throw new RuntimeException("invalid state:" + state);
         }
+    }
+
+    public static JobSearchResult parseToJobSearchResult(DefaultChainedExecutable job, Map<String, ExecutableOutputPO> outputs) {
+        if (job == null) {
+            logger.warn("job is null.");
+            return null;
+        }
+
+        ExecutableOutputPO output = outputs.get(job.getId());
+        if (output == null) {
+            logger.warn("job output is null.");
+            return null;
+        }
+
+        final JobSearchResult result = new JobSearchResult();
+
+        String cubeName = CubingExecutableUtil.getCubeName(job.getParams());
+
+        if (cubeName == null) {
+            cubeName = job.getParam("model_name");
+        } else {
+            CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+            if (cube != null) {
+                cubeName = cube.getDisplayName();
+            }
+        }
+        result.setCubeName(cubeName);
+        result.setId(job.getId());
+        result.setJobName(job.getName());
+        result.setLastModified(output.getLastModified());
+        return result;
     }
 }

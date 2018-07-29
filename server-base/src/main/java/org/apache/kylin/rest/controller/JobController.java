@@ -83,7 +83,7 @@ public class JobController extends BasicController {
         }
 
         try {
-            jobInstanceList = jobService.searchJobs(jobRequest.getCubeName(), jobRequest.getProjectName(), statusList,
+            jobInstanceList = jobService.searchJobsV2(jobRequest.getCubeName(), jobRequest.getProjectName(), statusList,
                     jobRequest.getLimit(), jobRequest.getOffset(), timeFilter, jobSearchMode);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);

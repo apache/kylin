@@ -28,7 +28,11 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.metadata.cachesync.Broadcaster;
+import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
+import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,9 +59,140 @@ public class ExecutableDao {
     
     private ResourceStore store;
 
-    private ExecutableDao(KylinConfig config) {
+    private CaseInsensitiveStringCache<ExecutablePO> executableDigestMap;
+
+    private CaseInsensitiveStringCache<ExecutableOutputPO> executableOutputDigestMap;
+
+    private CachedCrudAssist<ExecutablePO> executableDigestCrud;
+
+    private CachedCrudAssist<ExecutableOutputPO> executableOutputDigestCrud;
+
+    private AutoReadWriteLock executableDigestMapLock = new AutoReadWriteLock();
+
+    private AutoReadWriteLock executableOutputDigestMapLock = new AutoReadWriteLock();
+
+    private ExecutableDao(KylinConfig config) throws IOException {
         logger.info("Using metadata url: " + config);
         this.store = ResourceStore.getStore(config);
+        this.executableDigestMap = new CaseInsensitiveStringCache<>(config, "execute");
+        this.executableDigestCrud = new CachedCrudAssist<ExecutablePO>(store, ResourceStore.EXECUTE_RESOURCE_ROOT, "",
+                ExecutablePO.class, executableDigestMap, false) {
+            @Override
+            public ExecutablePO reloadAt(String path) {
+                try {
+                    ExecutablePO executablePO = readJobResource(path);
+                    if (executablePO == null) {
+                        logger.warn("No job found at " + path + ", returning null");
+                        executableDigestMap.removeLocal(resourceName(path));
+                        return null;
+                    }
+
+                    // create a digest
+                    ExecutablePO digestExecutablePO = new ExecutablePO();
+                    digestExecutablePO.setUuid(executablePO.getUuid());
+                    digestExecutablePO.setName(executablePO.getName());
+                    digestExecutablePO.setLastModified(executablePO.getLastModified());
+                    digestExecutablePO.setType(executablePO.getType());
+                    digestExecutablePO.setParams(executablePO.getParams());
+                    executableDigestMap.putLocal(resourceName(path), digestExecutablePO);
+                    return digestExecutablePO;
+                } catch (Exception e) {
+                    throw new IllegalStateException("Error loading execute at " + path, e);
+                }
+            }
+
+            @Override
+            protected ExecutablePO initEntityAfterReload(ExecutablePO entity, String resourceName) {
+                return entity;
+            }
+        };
+        this.executableDigestCrud.setCheckCopyOnWrite(true);
+        this.executableDigestCrud.reloadAll();
+
+        this.executableOutputDigestMap = new CaseInsensitiveStringCache<>(config, "execute_output");
+        this.executableOutputDigestCrud = new CachedCrudAssist<ExecutableOutputPO>(store, ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT,
+                "", ExecutableOutputPO.class, executableOutputDigestMap, false) {
+            @Override
+            public void reloadAll() throws IOException {
+                logger.debug("Reloading execute_output from " + ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
+                executableOutputDigestMap.clear();
+
+                NavigableSet<String> paths = store.listResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
+
+                if (paths != null) {
+                    for (String path : paths) {
+                        if (!isTaskExecutableOutput(resourceName(path)))
+                            reloadAt(path);
+                    }
+
+                    logger.debug("Loaded " + executableOutputDigestMap.size() + " execute_output digest(s) out of " + paths.size()
+                            + " resource");
+                }
+            }
+
+            @Override
+            public ExecutableOutputPO reloadAt(String path) {
+                try {
+                    ExecutableOutputPO executableOutputPO = readJobOutputResource(path);
+                    if (executableOutputPO == null) {
+                        logger.warn("No job output found at " + path + ", returning null");
+                        executableOutputDigestMap.removeLocal(resourceName(path));
+                        return null;
+                    }
+
+                    // create a digest
+                    ExecutableOutputPO digestExecutableOutputPO = new ExecutableOutputPO();
+                    digestExecutableOutputPO.setUuid(executableOutputPO.getUuid());
+                    digestExecutableOutputPO.setLastModified(executableOutputPO.getLastModified());
+                    digestExecutableOutputPO.setStatus(executableOutputPO.getStatus());
+                    executableOutputDigestMap.putLocal(resourceName(path), digestExecutableOutputPO);
+                    return digestExecutableOutputPO;
+                } catch (Exception e) {
+                    throw new IllegalStateException("Error loading execute at " + path, e);
+                }
+            }
+
+            @Override
+            protected ExecutableOutputPO initEntityAfterReload(ExecutableOutputPO entity, String resourceName) {
+                return entity;
+            }
+        };
+        this.executableOutputDigestCrud.setCheckCopyOnWrite(true);
+        this.executableOutputDigestCrud.reloadAll();
+        Broadcaster.getInstance(config).registerListener(new JobSyncListener(), "execute");
+        Broadcaster.getInstance(config).registerListener(new JobOutputSyncListener(), "execute_output");
+    }
+
+    private boolean isTaskExecutableOutput(String id) {
+        return id.length() > 36;
+    }
+
+    private class JobSyncListener extends Broadcaster.Listener {
+        @Override
+        public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey)
+                throws IOException {
+            try (AutoReadWriteLock.AutoLock l = executableDigestMapLock.lockForWrite()) {
+                if (event == Broadcaster.Event.DROP)
+                    executableDigestMap.removeLocal(cacheKey);
+                else
+                    executableDigestCrud.reloadQuietly(cacheKey);
+            }
+        }
+    }
+
+    private class JobOutputSyncListener extends Broadcaster.Listener {
+        @Override
+        public void onEntityChange(Broadcaster broadcaster, String entity, Broadcaster.Event event, String cacheKey)
+                throws IOException {
+            try (AutoReadWriteLock.AutoLock l = executableOutputDigestMapLock.lockForWrite()) {
+                if (!isTaskExecutableOutput(cacheKey)) {
+                    if (event == Broadcaster.Event.DROP)
+                        executableOutputDigestMap.removeLocal(cacheKey);
+                    else
+                        executableOutputDigestCrud.reloadQuietly(cacheKey);
+                }
+            }
+        }
     }
 
     private String pathOfJob(ExecutablePO job) {
@@ -106,6 +241,15 @@ public class ExecutableDao {
         }
     }
 
+    public List<ExecutableOutputPO> getJobOutputDigests(long timeStart, long timeEndExclusive) {
+        List<ExecutableOutputPO> jobOutputDigests = Lists.newArrayList();
+        for (ExecutableOutputPO po : executableOutputDigestMap.values()) {
+            if (po.getLastModified() >= timeStart && po.getLastModified() < timeEndExclusive)
+                jobOutputDigests.add(po);
+        }
+        return jobOutputDigests;
+    }
+
     public List<ExecutablePO> getJobs() throws PersistentException {
         try {
             return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, ExecutablePO.class, JOB_SERIALIZER);
@@ -122,6 +266,15 @@ public class ExecutableDao {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
         }
+    }
+
+    public List<ExecutablePO> getJobDigests(long timeStart, long timeEndExclusive) {
+        List<ExecutablePO> jobDigests = Lists.newArrayList();
+        for (ExecutablePO po : executableDigestMap.values()) {
+            if (po.getLastModified() >= timeStart && po.getLastModified() < timeEndExclusive)
+                jobDigests.add(po);
+        }
+        return jobDigests;
     }
 
     public List<String> getJobIds() throws PersistentException {
@@ -156,6 +309,7 @@ public class ExecutableDao {
                 throw new IllegalArgumentException("job id:" + job.getUuid() + " already exists");
             }
             writeJobResource(pathOfJob(job), job);
+            executableDigestMap.put(job.getId(), job);
             return job;
         } catch (IOException e) {
             logger.error("error save job:" + job.getUuid(), e);
@@ -170,6 +324,7 @@ public class ExecutableDao {
             }
             final long ts = writeJobResource(pathOfJob(job), job);
             job.setLastModified(ts);
+            executableDigestMap.put(job.getId(), job);
             return job;
         } catch (IOException e) {
             logger.error("error update job:" + job.getUuid(), e);
@@ -180,6 +335,7 @@ public class ExecutableDao {
     public void deleteJob(String uuid) throws PersistentException {
         try {
             store.deleteResource(pathOfJob(uuid));
+            executableDigestMap.remove(uuid);
         } catch (IOException e) {
             logger.error("error delete job:" + uuid, e);
             throw new PersistentException(e);
@@ -205,6 +361,8 @@ public class ExecutableDao {
         try {
             output.setLastModified(0);
             writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
+            if (!isTaskExecutableOutput(output.getUuid()))
+                executableOutputDigestMap.put(output.getUuid(), output);
         } catch (IOException e) {
             logger.error("error update job output id:" + output.getUuid(), e);
             throw new PersistentException(e);
@@ -215,6 +373,8 @@ public class ExecutableDao {
         try {
             final long ts = writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
             output.setLastModified(ts);
+            if (!isTaskExecutableOutput(output.getUuid()))
+                executableOutputDigestMap.put(output.getUuid(), output);
         } catch (IOException e) {
             logger.error("error update job output id:" + output.getUuid(), e);
             throw new PersistentException(e);
@@ -224,6 +384,8 @@ public class ExecutableDao {
     public void deleteJobOutput(String uuid) throws PersistentException {
         try {
             store.deleteResource(pathOfJobOutput(uuid));
+            if (!isTaskExecutableOutput(uuid))
+                executableOutputDigestMap.remove(uuid);
         } catch (IOException e) {
             logger.error("error delete job:" + uuid, e);
             throw new PersistentException(e);
