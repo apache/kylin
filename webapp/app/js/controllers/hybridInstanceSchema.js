@@ -20,7 +20,7 @@
 
 KylinApp.controller('HybridInstanceSchema', function (
   $scope, $q, $location, $interpolate, $templateCache, $routeParams,
-  CubeList, HybridInstanceService, ProjectModel, modelsManager, SweetAlert, MessageService, loadingRequest, CubeService, CubeDescService
+  CubeList, HybridInstanceService, ProjectModel, modelsManager, SweetAlert, MessageService, loadingRequest, CubeService, CubeDescService, MessageBox
 ) {
 
   // check for empty project of header, break the operation.
@@ -206,9 +206,9 @@ KylinApp.controller('HybridInstanceSchema', function (
         MessageService.sendMsg(template, 'error', {}, true, 'top_center');
       } else {
         if($scope.isEdit) {
-          SweetAlert.swal('', 'Update hybrid cube successfully.', 'success');
+          MessageBox.successNotify('Update hybrid cube successfully.');
         } else {
-          SweetAlert.swal('', 'Create hybrid cube successfully.', 'success');
+          MessageBox.successNotify('Create hybrid cube successfully.');
         }
         $location.path('/models');
       }

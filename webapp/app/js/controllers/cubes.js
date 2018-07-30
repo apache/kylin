@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, cubeConfig, ProjectModel, ModelService, MetaModel, CubeList,modelsManager,TableService, kylinConfig) {
+KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, cubeConfig, ProjectModel, ModelService, MetaModel, CubeList,modelsManager,TableService, kylinConfig, MessageBox) {
 
     $scope.cubeConfig = cubeConfig;
     $scope.cubeList = CubeList;
@@ -168,7 +168,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
                 $scope.cubeList.cubes[$scope.cubeList.cubes.indexOf(cube)] = _cube;
               }
             });
-            SweetAlert.swal('Success!', 'Enable job was submitted successfully', 'success');
+            MessageBox.successNotify('Enable job was submitted successfully');
           },function(e){
 
             loadingRequest.hide();
@@ -205,7 +205,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
                 $scope.cubeList.cubes[$scope.cubeList.cubes.indexOf(cube)] = _cube;
              }
             });
-            SweetAlert.swal('Success!', 'Purge job was submitted successfully', 'success');
+            MessageBox.successNotify('Purge job was submitted successfully');
           },function(e){
             loadingRequest.hide();
             if(e.data&& e.data.exception){
@@ -242,7 +242,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
                 $scope.cubeList.cubes[$scope.cubeList.cubes.indexOf(cube)] = _cube;
               }
             });
-            SweetAlert.swal('Success!', 'Disable job was submitted successfully', 'success');
+            MessageBox.successNotify('Disable job was submitted successfully');
           },function(e){
 
             loadingRequest.hide();
@@ -275,7 +275,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
           loadingRequest.show();
           CubeService.drop({cubeId: cube.name}, {}, function (result) {
             loadingRequest.hide();
-            SweetAlert.swal('Success!', 'Cube drop is done successfully', 'success');
+            MessageBox.successNotify('Cube drop is done successfully');
             $scope.cubeList.cubes.splice($scope.cubeList.cubes.indexOf(cube),1);
           },function(e){
 
@@ -313,7 +313,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
           loadingRequest.show();
           CubeService.autoMigrate({cubeId: cube.name, propName: $scope.projectModel.selectedProject}, {}, function (result) {
             loadingRequest.hide();
-            SweetAlert.swal('Success!', cube.name + ' migrate successfully!', 'success');
+            MessageBox.successNotify(cube.name + ' migrate successfully!');
           },function(e){
             loadingRequest.hide();
             SweetAlert.swal('Migrate failed!', "Please contact your ADMIN.", 'error');
@@ -356,7 +356,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
                     buildType:'BUILD'
                   }, function (job) {
                     loadingRequest.hide();
-                    SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
+                    MessageBox.successNotify('Rebuild job was submitted successfully');
                   },function(e){
 
                     loadingRequest.hide();
@@ -423,7 +423,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
                     }, function (job) {
 
                       loadingRequest.hide();
-                      SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
+                      MessageBox.successNotify('Rebuild job was submitted successfully');
                     },function(e){
 
                       loadingRequest.hide();
@@ -566,7 +566,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
   });
 
 
-var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, MetaModel, SweetAlert,ProjectModel, loadingRequest) {
+var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, MetaModel, SweetAlert,ProjectModel, loadingRequest, MessageBox) {
   $scope.projectModel = ProjectModel;
 
   $scope.targetObj={
@@ -604,7 +604,7 @@ var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageServic
         loadingRequest.show();
         CubeService.clone({cubeId: cube.name}, $scope.cubeRequest, function (result) {
           loadingRequest.hide();
-          SweetAlert.swal('Success!', 'Clone cube successfully', 'success');
+          MessageBox.successNotify('Clone cube successfull');
           location.reload();
         }, function (e) {
           loadingRequest.hide();
@@ -623,7 +623,7 @@ var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 }
 
 
-var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, metaModel, buildType, SweetAlert, loadingRequest, scope, CubeList,$filter) {
+var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, metaModel, buildType, SweetAlert, loadingRequest, scope, CubeList,$filter, MessageBox) {
   $scope.cubeList = CubeList;
   $scope.cube = cube;
   $scope.metaModel = metaModel;
@@ -651,7 +651,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     CubeService.rebuildCube({cubeId: cube.name}, $scope.jobBuildRequest, function (job) {
       loadingRequest.hide();
       $modalInstance.dismiss('cancel');
-      SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
+      MessageBox.successNotify('Rebuild job was submitted successfully');
       scope.refreshCube(cube).then(function(_cube){
           $scope.cubeList.cubes[$scope.cubeList.cubes.indexOf(cube)] = _cube;
         });
@@ -746,7 +746,7 @@ var streamingBuildCtrl = function ($scope, $modalInstance,kylinConfig) {
   };
 };
 
-var deleteSegmentCtrl = function($scope, $modalInstance, CubeService, SweetAlert, loadingRequest, cube, scope) {
+var deleteSegmentCtrl = function($scope, $modalInstance, CubeService, SweetAlert, loadingRequest, cube, scope, MessageBox) {
   $scope.cube = cube;
   $scope.deleteSegments = [];
   $scope.segment = {};
@@ -775,7 +775,7 @@ var deleteSegmentCtrl = function($scope, $modalInstance, CubeService, SweetAlert
               scope.cubeList.cubes[scope.cubeList.cubes.indexOf(cube)] = _cube;
            }
           });
-          SweetAlert.swal('Success!', 'Delete segment successfully', 'success');
+          MessageBox.successNotify('Delete segment successfully');
         },function(e){
           loadingRequest.hide();
           if(e.data&& e.data.exception){
@@ -791,7 +791,7 @@ var deleteSegmentCtrl = function($scope, $modalInstance, CubeService, SweetAlert
   };
 };
 
-var lookupRefreshCtrl = function($scope, scope, CubeList, $modalInstance, CubeService, cube, SweetAlert, loadingRequest) {
+var lookupRefreshCtrl = function($scope, scope, CubeList, $modalInstance, CubeService, cube, SweetAlert, loadingRequest, MessageBox) {
   $scope.cubeList = CubeList;
   $scope.cube = cube;
   $scope.dispalySegment = false;
@@ -878,7 +878,7 @@ var lookupRefreshCtrl = function($scope, scope, CubeList, $modalInstance, CubeSe
     CubeService.lookupRefresh({cubeId: cube.name}, lookupSnapshotBuildRequest, function (job) {
       loadingRequest.hide();
       $modalInstance.dismiss('cancel');
-      SweetAlert.swal('Success!', 'Lookup refresh job was submitted successfully', 'success');
+      MessageBox.successNotify('Lookup refresh job was submitted successfully');
       scope.refreshCube(cube).then(function(_cube){
           $scope.cubeList.cubes[$scope.cubeList.cubes.indexOf(cube)] = _cube;
         });

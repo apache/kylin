@@ -17,7 +17,7 @@
  */
 
 'use strict';
-KylinApp.controller('AclCtrl', function ($scope, AclService, TableModel,loadingRequest,SweetAlert,$modal, ProjectModel) {
+KylinApp.controller('AclCtrl', function ($scope, AclService, TableModel,loadingRequest,SweetAlert,$modal, ProjectModel, MessageBox) {
   $scope.tableModel = TableModel;
   $scope.tableUserAclList = [];
   $scope.tableGroupAclList = [];
@@ -72,7 +72,7 @@ KylinApp.controller('AclCtrl', function ($scope, AclService, TableModel,loadingR
         },function () {
           loadingRequest.hide();
           loadTableAclList(type);
-          SweetAlert.swal('Success!', 'Table acl drop is done successfully', 'success');
+          MessageBox.successNotify('Table acl drop is done successfully');
         },function (e) {
           if (e.data && e.data.exception) {
             var message = e.data.exception;
@@ -136,7 +136,7 @@ KylinApp.controller('AclCtrl', function ($scope, AclService, TableModel,loadingR
         username: $scope.newTableAcl.name
       },{},function () {
         loadingRequest.hide();
-        SweetAlert.swal('Success!', 'Table acl add successfully', 'success');
+        MessageBox.successNotify('Table acl add successfully');
         loadTableAclList()
         $scope.cancel()
       },function (e) {

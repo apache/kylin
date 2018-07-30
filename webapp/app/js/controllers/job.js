@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService,jobConfig,JobList,$window) {
+    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService,jobConfig,JobList,$window, MessageBox) {
 
         $scope.jobList = JobList;
         JobList.removeAll();
@@ -144,7 +144,7 @@ KylinApp
                   if (angular.isDefined($scope.state.selectedJob)) {
                     $scope.state.selectedJob = JobList.jobs[$scope.state.selectedJob.uuid];
                   }
-                  SweetAlert.swal('Success!', 'Job has been resumed successfully!', 'success');
+                  MessageBox.successNotify('Job has been resumed successfully!');
                 }, function (e) {
                   loadingRequest.hide();
                   if (e.data && e.data.exception) {
@@ -181,7 +181,7 @@ KylinApp
                         }
 
                     });
-                    SweetAlert.swal('Success!', 'Job has been discarded successfully!', 'success');
+                    MessageBox.successNotify('Job has been discarded successfully!');
                 },function(e){
                     loadingRequest.hide();
                     if(e.data&& e.data.exception){
@@ -217,7 +217,7 @@ KylinApp
                 }
 
               });
-              SweetAlert.swal('Success!', 'Job has been paused successfully!', 'success');
+              MessageBox.successNotify('Job has been paused successfully!');
             },function(e){
               loadingRequest.hide();
               if(e.data&& e.data.exception){
@@ -246,7 +246,7 @@ KylinApp
             loadingRequest.show();
             JobService.drop({jobId: job.uuid}, {}, function (job) {
               loadingRequest.hide();
-              SweetAlert.swal('Success!', 'Job has been dropped successfully!', 'success');
+              MessageBox.successNotify('Job has been dropped successfully!');
               $scope.jobList.jobs[job.uuid].dropped = true;
             },function(e){
               loadingRequest.hide();

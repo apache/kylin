@@ -19,7 +19,7 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert, $log, cubeConfig, CubeDescModel, MetaModel, TableModel, ModelDescService, modelsManager, cubesManager, ProjectModel, StreamingModel, StreamingService,VdmUtil) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert, $log, cubeConfig, CubeDescModel, MetaModel, TableModel, ModelDescService, modelsManager, cubesManager, ProjectModel, StreamingModel, StreamingService,VdmUtil, MessageBox) {
   $scope.cubeConfig = cubeConfig;
   $scope.metaModel = {};
   $scope.modelsManager = modelsManager;
@@ -336,7 +336,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           }, function (request) {
             if (request.successful) {
               $scope.state.cubeSchema = request.cubeDescData;
-              SweetAlert.swal('', 'Updated the cube successfully.', 'success');
+              MessageBox.successNotify('Updated the cube successfully.');
               $location.path("/models");
             } else {
               $scope.saveCubeRollBack();
@@ -375,7 +375,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           }, function (request) {
             if (request.successful) {
               $scope.state.cubeSchema = request.cubeDescData;
-              SweetAlert.swal('', 'Created the cube successfully.', 'success');
+              MessageBox.successNotify('Created the cube successfully.');
               $location.path("/models");
               //location.reload();
 

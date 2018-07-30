@@ -20,7 +20,7 @@
 
 KylinApp.controller('HybridInstanceCtrl', function (
   $scope, $q, $location,
-  ProjectModel, hybridInstanceManager, SweetAlert, HybridInstanceService, loadingRequest
+  ProjectModel, hybridInstanceManager, SweetAlert, HybridInstanceService, loadingRequest, MessageBox
 ) {
   $scope.projectModel = ProjectModel;
   $scope.hybridInstanceManager = hybridInstanceManager;
@@ -91,7 +91,7 @@ KylinApp.controller('HybridInstanceCtrl', function (
         loadingRequest.show();
         HybridInstanceService.drop(schema, {}, function (result) {
           loadingRequest.hide();
-          SweetAlert.swal('Success!', 'Hybrid drop is done successfully', 'success');
+          MessageBox.successNotify('Hybrid drop is done successfully');
           location.reload();
         }, function (e) {
           loadingRequest.hide();
