@@ -1240,6 +1240,16 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     /**
+     * Extras calcite properties to config Calcite connection
+     */
+    public Properties getCalciteExtrasProperties() {
+        Properties properties = new Properties();
+        Map<String, String> map = getPropertiesByPrefix("kylin.query.calcite.extras-props.");
+        properties.putAll(map);
+        return properties;
+    }
+
+    /**
      * Rule is usually singleton as static field, the configuration of this property is like:
      * RuleClassName1#FieldName1,RuleClassName2#FieldName2,...
      */
