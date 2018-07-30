@@ -54,10 +54,8 @@ public class RawAggregator extends MeasureAggregator<List<ByteArray>> {
             return value1;
         }
 
-        List<ByteArray> result = new ArrayList<>(value1.size() + value2.size());
-        result.addAll(value1);
-        result.addAll(value2);
-        return result;
+        value1.addAll(value2);
+        return value1;
     }
 
     @Override

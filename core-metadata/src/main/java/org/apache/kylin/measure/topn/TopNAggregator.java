@@ -46,12 +46,8 @@ public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
 
     @Override
     public TopNCounter<ByteArray> aggregate(TopNCounter<ByteArray> value1, TopNCounter<ByteArray> value2) {
-        int thisCapacity = value1.getCapacity();
-        TopNCounter<ByteArray> aggregated = new TopNCounter<>(thisCapacity * 2);
-        aggregated.merge(value1);
-        aggregated.merge(value2);
-        aggregated.retain(thisCapacity);
-        return aggregated;
+        value1.merge(value2);
+        return value1;
     }
 
     @Override

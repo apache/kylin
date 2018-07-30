@@ -45,9 +45,8 @@ public class DimCountDistinctAggregator extends MeasureAggregator<DimCountDistin
 
     @Override
     public DimCountDistinctCounter aggregate(DimCountDistinctCounter value1, DimCountDistinctCounter value2) {
-        DimCountDistinctCounter result = new DimCountDistinctCounter(value1);
-        result.addAll(value2);
-        return result;
+        value1.addAll(value2);
+        return value1;
     }
 
     @Override

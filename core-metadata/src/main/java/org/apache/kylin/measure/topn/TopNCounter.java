@@ -167,12 +167,18 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
         }
 
         for (Map.Entry<T, Counter<T>> entry : another.counterMap.entrySet()) {
-            if (this.counterMap.containsKey(entry.getKey())) {
-                this.offer(entry.getValue().getItem(), (entry.getValue().count - m2));
+            Counter<T> counter = this.counterMap.get(entry.getKey());
+            if (counter != null) {
+                //                this.offer(entry.getValue().getItem(), (entry.getValue().count - m2));
+                counter.setCount(counter.getCount() + (entry.getValue().count - m2));
             } else {
-                this.offer(entry.getValue().getItem(), entry.getValue().count + m1);
+                //                this.offer(entry.getValue().getItem(), entry.getValue().count + m1);
+                counter = new Counter<T>(entry.getValue().getItem(), entry.getValue().count + m1);
+                this.counterMap.put(entry.getValue().getItem(), counter);
+                this.counterList.add(counter);
             }
         }
+        this.ordered = false;
 
         this.sortAndRetain();
         return this;
