@@ -210,7 +210,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
 
 });
 
-var projCtrl = function ($scope, $location, $modalInstance, ProjectService, MessageService, projects, project, SweetAlert, ProjectModel, $cookieStore, $route, $timeout) {
+var projCtrl = function ($scope, $location, $modalInstance, ProjectService, MessageService, projects, project, SweetAlert, ProjectModel, $cookieStore, $route, $timeout, MessageBox) {
   $scope.state = {
     isEdit: false,
     oldProjName: null,
@@ -246,7 +246,7 @@ var projCtrl = function ($scope, $location, $modalInstance, ProjectService, Mess
 	delete $scope.proj.override_kylin_properties[""];
     if ($scope.state.isEdit) {
       ProjectService.update({}, {formerProjectName: $scope.state.oldProjName, projectDescData: angular.toJson($scope.proj)}, function (newProj) {
-        SweetAlert.swal('Success!', 'Project update successfully!', 'success');
+        MessageBox.successNotify('Project update successfully!');
 
         //update project in project model
         ProjectModel.updateProject($scope.proj.name, $scope.state.oldProjName);
@@ -267,12 +267,7 @@ var projCtrl = function ($scope, $location, $modalInstance, ProjectService, Mess
       ProjectService.save({}, {projectDescData: angular.toJson($scope.proj)}, function (newProj) {
         $modalInstance.dismiss('cancel');
         $cookieStore.put("project", newProj.name);
-        SweetAlert.swal({
-          title: "Success!",
-          text: "New project created successfully!",
-          confirmButtonClass: 'btn-primary',
-          type: "success"
-        },function(){
+        MessageBox.successAlert("New project created successfully!", function(){
           location.reload();
         });
 

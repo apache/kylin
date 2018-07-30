@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, AccessService) {
+KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, AccessService, MessageBox) {
 
   //tree data
 
@@ -110,7 +110,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         ModelService.drop({modelId: model.name}, {}, function (result) {
           loadingRequest.hide();
 //                    CubeList.removeCube(cube);
-          SweetAlert.swal('Success!', 'Model drop is done successfully', 'success');
+          MessageBox.successNotify('Model drop is done successfully');
           location.reload();
         }, function (e) {
           loadingRequest.hide();
@@ -247,7 +247,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
 });
 
 
-var modelCloneCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, model, MetaModel, SweetAlert,ProjectModel, loadingRequest,ModelService) {
+var modelCloneCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, model, MetaModel, SweetAlert,ProjectModel, loadingRequest,ModelService, MessageBox) {
   $scope.projectModel = ProjectModel;
 
   $scope.targetObj={
@@ -285,7 +285,7 @@ var modelCloneCtrl = function ($scope, $modalInstance, CubeService, MessageServi
         loadingRequest.show();
         ModelService.clone({modelId: model.name}, $scope.modelRequest, function (result) {
           loadingRequest.hide();
-          SweetAlert.swal('Success!', 'Clone model successfully', 'success');
+          MessageBox.successNotify('Clone model successfully');
           location.reload();
         }, function (e) {
           loadingRequest.hide();

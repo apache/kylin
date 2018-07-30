@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-  .controller('SourceMetaCtrl', function ($scope, $cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService, $route, loadingRequest, SweetAlert, tableConfig, TableModel,cubeConfig) {
+  .controller('SourceMetaCtrl', function ($scope, $cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService, $route, loadingRequest, SweetAlert, tableConfig, TableModel,cubeConfig, MessageBox) {
     var $httpDefaultCache = $cacheFactory.get('$http');
     $scope.tableModel = TableModel;
     $scope.tableModel.selectedSrcDb = [];
@@ -171,7 +171,7 @@ KylinApp
           SweetAlert.swal('Failed!', 'Failed to load following table(s): ' + unloadedTableInfo, 'error');
         }
         if (result['result.loaded'].length != 0 && result['result.unloaded'].length == 0) {
-          SweetAlert.swal('Success!', 'The following table(s) have been successfully loaded: ' + loadTableInfo, 'success');
+          MessageBox.successNotify('The following table(s) have been successfully loaded: ' + loadTableInfo);
         }
         if (result['result.loaded'].length != 0 && result['result.unloaded'].length != 0) {
           SweetAlert.swal('Partial loaded!', 'The following table(s) have been successfully loaded: ' + loadTableInfo + "\n\n Failed to load following table(s):" + unloadedTableInfo, 'warning');
@@ -221,7 +221,7 @@ KylinApp
               SweetAlert.swal('Failed!', 'Failed to unload following table(s): ' + unRemovedTableInfo, 'error');
             }
             if (result['result.unload.success'].length != 0 && result['result.unload.fail'].length == 0) {
-              SweetAlert.swal('Success!', 'The following table(s) have been successfully unloaded: ' + removedTableInfo, 'success');
+              MessageBox.successNotify('The following table(s) have been successfully unloaded: ' + removedTableInfo);
             }
             if (result['result.unload.success'].length != 0 && result['result.unload.fail'].length != 0) {
               SweetAlert.swal('Partial unloaded!', 'The following table(s) have been successfully unloaded: ' + removedTableInfo + "\n\n Failed to unload following table(s):" + unRemovedTableInfo, 'warning');
@@ -543,7 +543,7 @@ KylinApp
           kafkaConfig: angular.toJson($scope.kafkaMeta)
         }, function (request) {
           if (request.successful) {
-            SweetAlert.swal('', 'Updated the streaming successfully.', 'success');
+            MessageBox.successNotify('Updated the streaming successfully.');
             $scope.cancel();
           } else {
             var message = request.message;
@@ -842,7 +842,7 @@ KylinApp
                 kafkaConfig: angular.toJson($scope.kafkaMeta)
               }, function (request) {
                 if (request.successful) {
-                  SweetAlert.swal('', 'Updated the streaming successfully.', 'success');
+                  MessageBox.successNotify('Updated the streaming successfully.');
                   $location.path("/models");
                 } else {
                   var message = request.message;
@@ -882,7 +882,7 @@ KylinApp
                 kafkaConfig: angular.toJson($scope.kafkaMeta)
               }, function (request) {
                 if (request.successful) {
-                  SweetAlert.swal('', 'Created the streaming successfully.', 'success');
+                  MessageBox.successNotify('Created the streaming successfully.');
                   $scope.cancel();
                   scope.aceSrcTbLoaded(true);
                 } else {

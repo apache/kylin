@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, MessageService, CubeService, cubeConfig, TableService, ModelGraphService, UserService,SweetAlert,loadingRequest,modelsManager,$modal,cubesManager, $location) {
+KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, MessageService, CubeService, cubeConfig, TableService, ModelGraphService, UserService,SweetAlert,loadingRequest,modelsManager,$modal,cubesManager, $location, MessageBox) {
     $scope.newAccess = null;
     $scope.state = {jsonEdit: false};
 
@@ -76,7 +76,7 @@ KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, Mes
             cube.detail.notify_list = cube.notifyListString.split(",");
         }
         CubeService.updateNotifyList({cubeId: cube.name}, cube.detail.notify_list, function () {
-            SweetAlert.swal('Success!', 'Notify List updated successfully!', 'success');
+            MessageBox.successNotify('Notify List updated successfully!');
         },function(e){
             if(e.data&& e.data.exception){
                 var message =e.data.exception;
