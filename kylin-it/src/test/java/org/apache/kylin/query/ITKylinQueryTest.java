@@ -417,8 +417,13 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testExpressionQuery() throws Exception {
-        if (config.isDynamicColumnEnabled()) {
-            batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_expression");
+        boolean ifDynamicColumnEnabled = config.isDynamicColumnEnabled();
+        if (!ifDynamicColumnEnabled) {
+            config.setProperty("kylin.query.enable-dynamic-column", "true");
+        }
+        batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_expression");
+        if (!ifDynamicColumnEnabled) {
+            config.setProperty("kylin.query.enable-dynamic-column", "false");
         }
     }
 

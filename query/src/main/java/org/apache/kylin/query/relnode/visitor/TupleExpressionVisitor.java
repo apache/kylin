@@ -50,12 +50,12 @@ import com.google.common.collect.Lists;
 
 public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
     final ColumnRowType inputRowType;
-    final boolean afterAggregate;
+    final boolean ifVerify;
 
-    public TupleExpressionVisitor(ColumnRowType inputRowType, boolean afterAggregate) {
+    public TupleExpressionVisitor(ColumnRowType inputRowType, boolean ifVerify) {
         super(true);
         this.inputRowType = inputRowType;
-        this.afterAggregate = afterAggregate;
+        this.ifVerify = ifVerify;
     }
 
     @Override
@@ -91,7 +91,7 @@ public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
         default:
             tupleExpression = getRexCallTupleExpression(call);
         }
-        if (!afterAggregate) {
+        if (ifVerify) {
             tupleExpression.verify();
         }
         return tupleExpression;

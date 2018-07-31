@@ -145,7 +145,8 @@ public class OLAPProjectRel extends Project implements OLAPRel {
 
         OLAPRel olapChild = (OLAPRel) getInput();
         ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
-        TupleExpressionVisitor visitor = new TupleExpressionVisitor(inputColumnRowType, afterAggregate);
+        boolean ifVerify = !hasSubQuery() && !afterAggregate;
+        TupleExpressionVisitor visitor = new TupleExpressionVisitor(inputColumnRowType, ifVerify);
         for (int i = 0; i < this.rewriteProjects.size(); i++) {
             RexNode rex = this.rewriteProjects.get(i);
             RelDataTypeField columnField = this.rowType.getFieldList().get(i);
