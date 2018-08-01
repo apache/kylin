@@ -104,6 +104,7 @@
                                     <include>org.springframework.security:spring-security-core</include>
                                     <include>org.springframework.security:spring-security-acl</include>
                                     <include>org.springframework:spring-core</include>
+                                    <include>com.fasterxml.jackson*:*</include>
                                 </includes>
                             </artifactSet>
                             <relocations>
@@ -126,6 +127,10 @@
                                 <relocation>
                                     <pattern>org.apache.http</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.http</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.fasterxml.jackson</pattern>
+                                    <shadedPattern>${shadeBase}.com.fasterxml.jackson</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
