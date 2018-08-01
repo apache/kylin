@@ -36,6 +36,7 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -158,7 +159,7 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
             final String jobWorkingDir = getJobWorkingDir(jobFlow, hdfsWorkingDir);
 
-            GarbageCollectionStep step = new GarbageCollectionStep();
+            org.apache.kylin.source.hive.GarbageCollectionStep step = new org.apache.kylin.source.hive.GarbageCollectionStep();
             step.setName(ExecutableConstants.STEP_NAME_HIVE_CLEANUP);
             step.setIntermediateTables(Collections.singletonList(getIntermediateTableIdentity()));
             step.setExternalDataPaths(Collections.singletonList(JoinedFlatTable.getTableDir(flatDesc, jobWorkingDir)));
@@ -176,4 +177,27 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
         }
     }
 
+    /**
+     * When build job is created by kylin version 2.4.x or below, the step class name is an inner class of {@link HiveMRInput},
+     * to avoid the ClassNotFoundException in {@link ExecutableManager#newExecutable(java.lang.String)} , delegate the OLD class to the new one
+     *
+     * @since 2.5.0
+     * @deprecated For backwards compatibility.
+     */
+    @Deprecated
+    public static class RedistributeFlatHiveTableStep extends org.apache.kylin.source.hive.RedistributeFlatHiveTableStep {
+
+    }
+
+    /**
+     * When build job is created by kylin version 2.4.x or below, the step class name is an inner class of {@link HiveMRInput},
+     * to avoid the ClassNotFoundException in {@link ExecutableManager#newExecutable(java.lang.String)} , delegate the OLD class to the new one
+     *
+     * @since 2.5.0
+     * @deprecated For backwards compatibility.
+     */
+    @Deprecated
+    public static class GarbageCollectionStep extends org.apache.kylin.source.hive.GarbageCollectionStep {
+
+    }
 }
