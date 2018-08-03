@@ -154,13 +154,16 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
         assertEquals("true", extras.getProperty("caseSensitive"));
         assertEquals("TO_UPPER", extras.getProperty("unquotedCasing"));
         assertEquals("DOUBLE_QUOTE", extras.getProperty("quoting"));
+        assertEquals("LENIENT", extras.getProperty("conformance"));
 
         conf.setProperty("kylin.query.calcite.extras-props.caseSensitive", "false");
         conf.setProperty("kylin.query.calcite.extras-props.unquotedCasing", "UNCHANGED");
         conf.setProperty("kylin.query.calcite.extras-props.quoting", "BRACKET");
+        conf.setProperty("kylin.query.calcite.extras-props.conformance", "DEFAULT");
         extras = conf.getCalciteExtrasProperties();
         assertEquals("false", extras.getProperty("caseSensitive"));
         assertEquals("UNCHANGED", extras.getProperty("unquotedCasing"));
         assertEquals("BRACKET", extras.getProperty("quoting"));
+        assertEquals("DEFAULT", extras.getProperty("conformance"));
     }
 }

@@ -440,6 +440,18 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testOrdinalQuery() throws Exception {
+        String sqlConformance = config.getCalciteExtrasProperties().getProperty("conformance");
+        if (!"LENIENT".equalsIgnoreCase(sqlConformance)) {
+            config.setProperty("kylin.query.calcite.extras-props.conformance", "LENIENT");
+        }
+        batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_ordinal");
+        if (!"LENIENT".equalsIgnoreCase(sqlConformance)) {
+            config.setProperty("kylin.query.calcite.extras-props.conformance", sqlConformance);
+        }
+    }
+
+    @Test
     public void testValues() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_values", null, true);
     }
