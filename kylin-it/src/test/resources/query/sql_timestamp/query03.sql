@@ -16,7 +16,7 @@
 -- limitations under the License.
 --
 
-SELECT cast(timestampadd(MONTH,1,WEEK_BEG_DT) as date) as x ,WEEK_BEG_DT
+SELECT test_kylin_fact.cal_dt,cast(timestampdiff(YEAR,date'2000-01-01',test_kylin_fact.cal_dt) as integer) as x,sum(price) as y
  FROM TEST_KYLIN_FACT 
  
 inner JOIN edw.test_cal_dt as test_cal_dt
@@ -25,4 +25,4 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
  inner JOIN edw.test_sites as test_sites
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
- GROUP BY TEST_CAL_DT.WEEK_BEG_DT
+ GROUP BY test_kylin_fact.cal_dt

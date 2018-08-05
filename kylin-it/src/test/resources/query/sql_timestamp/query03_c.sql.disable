@@ -16,7 +16,10 @@
 -- limitations under the License.
 --
 
-SELECT test_kylin_fact.cal_dt,cast(timestampdiff(DAY,date'2013-01-01',test_kylin_fact.cal_dt) as integer) as x,sum(price) as y
+-- the query is disabled because H2 has trouble dealing with diff years
+
+
+SELECT test_kylin_fact.cal_dt,cast(timestampdiff(YEAR,date'2000-03-01',test_kylin_fact.cal_dt) as integer) as x,sum(price) as y
  FROM TEST_KYLIN_FACT 
  
 inner JOIN edw.test_cal_dt as test_cal_dt
