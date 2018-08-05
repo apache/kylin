@@ -33,6 +33,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.ModifiedOrder;
 import org.apache.kylin.metadata.draft.Draft;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -130,6 +131,13 @@ public class ModelService extends BasicService {
         Message msg = MsgPicker.getMsg();
         if (getDataModelManager().getDataModelDesc(desc.getName()) != null) {
             throw new BadRequestException(String.format(msg.getDUPLICATE_MODEL_NAME(), desc.getName()));
+        }
+
+        String factTableName = desc.getRootFactTableName();
+        TableDesc tableDesc = getTableManager().getTableDesc(factTableName, projectName);
+        if (tableDesc.getSourceType() == ISourceAware.ID_STREAMING
+                && (desc.getPartitionDesc() == null || desc.getPartitionDesc().getPartitionDateColumn() == null)) {
+            throw new IllegalArgumentException("Must define a partition column.");
         }
 
         DataModelDesc createdDesc = null;
