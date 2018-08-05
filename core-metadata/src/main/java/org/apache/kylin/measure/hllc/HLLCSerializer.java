@@ -85,7 +85,7 @@ public class HLLCSerializer extends DataTypeSerializer<HLLCounter> {
         int registerIndexSize = current().getRegisterIndexSize();
         int m = 1 << precision;
         if (!current().isDense((int) averageNumOfElementsInCounter)
-                || averageNumOfElementsInCounter < (m - 5) / (1 + registerIndexSize)) {
+                || averageNumOfElementsInCounter < (m - 5d) / (1d + registerIndexSize)) {
             // 5 = 1 + 4 for scheme and size
             // size * (getRegisterIndexSize + 1)
             return 5 + averageNumOfElementsInCounter * (registerIndexSize + 1);
