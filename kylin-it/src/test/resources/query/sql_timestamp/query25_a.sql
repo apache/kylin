@@ -16,7 +16,7 @@
 -- limitations under the License.
 --
 
-SELECT test_kylin_fact.cal_dt,cast(timestampdiff(DAY,date'2013-01-01',test_kylin_fact.cal_dt) as integer) as x,sum(price) as y
+SELECT test_kylin_fact.cal_dt ,sum(price) as y,cast(timestampadd(WEEK,-5,test_kylin_fact.cal_dt) as date) as x
  FROM TEST_KYLIN_FACT 
  
 inner JOIN edw.test_cal_dt as test_cal_dt
