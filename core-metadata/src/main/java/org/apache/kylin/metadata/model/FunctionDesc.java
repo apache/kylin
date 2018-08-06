@@ -158,7 +158,7 @@ public class FunctionDesc implements Serializable {
             if (isMax() || isMin()) {
                 return parameter.getColRefs().get(0).getType();
             } else if (isSum()) {
-                return parameter.getColRefs().get(0).getType();
+                return parameter.isColumnType() ? parameter.getColRefs().get(0).getType() : DataType.getType("bigint");
             } else if (isCount()) {
                 return DataType.getType("bigint");
             } else {
@@ -249,7 +249,7 @@ public class FunctionDesc implements Serializable {
     public void setExpression(String expression) {
         this.expression = expression;
     }
-    
+
     public ParameterDesc getParameter() {
         return parameter;
     }
