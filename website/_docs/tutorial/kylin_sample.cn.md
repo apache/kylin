@@ -12,7 +12,7 @@ Kylin 提供了一个创建样例 Cube 脚本；脚本会创建五个样例 hive
 3. 选择名为 "kylin_sales_cube" 的样例 cube，点击 "Actions" -> "Build"，选择一个在 2014-01-01 之后的日期（覆盖所有的 10000 样例记录);
 4. 点击 "Monitor" 标签，查看 build 进度直至 100%;
 5. 点击 "Insight" 标签，执行 SQLs，例如:
-	select part_dt，sum(price) as total_selled，count(distinct seller_id) as sellers from kylin_sales group by part_dt order by part_dt
+	`select part_dt, sum(price) as total_selled, count(distinct seller_id) as sellers from kylin_sales group by part_dt order by part_dt`
 6. 您可以验证查询结果且与 hive 的响应时间进行比较;
 
    
@@ -22,11 +22,11 @@ Kylin 也提供了 streaming 样例 cube 脚本。该脚本将会创建 Kafka to
 
 1. 首先设置 KAFKA_HOME，然后启动 Kylin。
 2. 运行 ${KYLIN_HOME}/bin/sample.sh，它会在 learn_kylin 工程中生成 DEFAULT.KYLIN_STREAMING_TABLE 表，kylin_streaming_model 模型，Cube kylin_streaming_cube。
-3. 运行 ${KYLIN_HOME}/bin/sample-streaming.sh，他会在 localhost:9092 broker 中创建名为 kylin_streaming_topic 的 Kafka Topic。它也会每秒随机发送 100 条 messages 到 kylin_streaming_topic。
+3. 运行 ${KYLIN_HOME}/bin/sample-streaming.sh，它会在 localhost:9092 broker 中创建名为 kylin_streaming_topic 的 Kafka Topic。它也会每秒随机发送 100 条 messages 到 kylin_streaming_topic。
 4. 遵循标准 cube build 过程，并触发 Cube kylin_streaming_cube build。  
 5. 点击 "Monitor" 标签，查看 build 进度直至至少有一个 job 达到 100%。
 6. 点击 "Insight" 标签，执行 SQLs，例如:
-         select count(*)，HOUR_START from kylin_streaming_table group by HOUR_START
+         `select count(*), HOUR_START from kylin_streaming_table group by HOUR_START`
 7. 验证查询结果。
  
 ## 下一步干什么
