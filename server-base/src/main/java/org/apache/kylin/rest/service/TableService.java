@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeManager;
@@ -53,7 +54,6 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
@@ -62,11 +62,11 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.response.TableSnapshotResponse;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.IReadableTable.TableSignature;
+import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob;
 import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityUpdateJob;
-import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -277,8 +277,6 @@ public class TableService extends BasicService {
             return false;
         }
 
-        tableType = desc.getSourceType();
-
         if (!modelService.isTableInModel(desc, project)) {
             removeTableFromProject(tableName, project);
             rtn = true;
@@ -293,20 +291,9 @@ public class TableService extends BasicService {
         metaMgr.removeSourceTable(tableName, project);
 
         // remove streaming info
-        if (tableType == 1) {
-            StreamingConfig config = null;
-            KafkaConfig kafkaConfig = null;
-            try {
-                config = streamingService.getStreamingManager().getStreamingConfig(tableName);
-                kafkaConfig = kafkaConfigService.getKafkaConfig(tableName, project);
-                streamingService.dropStreamingConfig(config, project);
-                kafkaConfigService.dropKafkaConfig(kafkaConfig, project);
-                rtn = true;
-            } catch (Exception e) {
-                rtn = false;
-                logger.error(e.getLocalizedMessage(), e);
-            }
-        }
+        SourceManager sourceManager = SourceManager.getInstance(KylinConfig.getInstanceFromEnv());
+        ISource source = sourceManager.getCachedSource(desc);
+        source.unloadTable(tableName, project);
         return rtn;
     }
 
