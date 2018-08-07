@@ -103,6 +103,7 @@ public interface BatchConstants {
     String ARG_TABLE_NAME = "tableName";
     String ARG_LOOKUP_SNAPSHOT_ID = "snapshotID";
     String ARG_EXT_LOOKUP_SNAPSHOTS_INFO = "extlookupsnapshots";
+    String ARG_META_URL = "metadataUrl";
 
     /**
      * logger and counter
