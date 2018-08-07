@@ -19,6 +19,7 @@
 package org.apache.kylin.source;
 
 import java.io.Closeable;
+import java.io.IOException;
 
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -55,4 +56,9 @@ public interface ISource extends Closeable {
      * For testing purpose.
      */
     ISampleDataDeployer getSampleDataDeployer();
+
+    /**
+     * Unload table.
+     */
+    void unloadTable(String tableName, String project) throws IOException;
 }

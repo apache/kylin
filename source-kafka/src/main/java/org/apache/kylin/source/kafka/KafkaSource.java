@@ -37,6 +37,7 @@ import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
+import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISource;
@@ -244,6 +245,19 @@ public class KafkaSource implements ISource {
     @Override
     public ISampleDataDeployer getSampleDataDeployer() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void unloadTable(String tableName, String project) throws IOException {
+        StreamingConfig config;
+        KafkaConfig kafkaConfig;
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        StreamingManager streamingManager = StreamingManager.getInstance(kylinConfig);
+        KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(kylinConfig);
+        config = streamingManager.getStreamingConfig(tableName);
+        kafkaConfig = kafkaConfigManager.getKafkaConfig(tableName);
+        streamingManager.removeStreamingConfig(config);
+        kafkaConfigManager.removeKafkaConfig(kafkaConfig);
     }
 
     @Override
