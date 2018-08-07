@@ -37,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
@@ -386,9 +387,13 @@ public class SparkExecutable extends AbstractExecutable {
     private void attachSegmentsMetadataWithDict(List<CubeSegment> segments) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.addAll(JobRelatedMetaUtil.collectCubeMetadata(segments.get(0).getCubeInstance()));
+        ResourceStore rs = ResourceStore.getStore(segments.get(0).getConfig());
         for (CubeSegment segment : segments) {
             dumpList.addAll(segment.getDictionaryPaths());
-            dumpList.add(segment.getStatisticsResourcePath());
+            if (rs.exists(segment.getStatisticsResourcePath())) {
+                // cube statistics is not available for new segment
+                dumpList.add(segment.getStatisticsResourcePath());
+            }
         }
         dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segments.get(0).getConfig());
     }

@@ -18,12 +18,8 @@
 
 package org.apache.kylin.engine.spark;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
@@ -63,8 +59,8 @@ public class SparkBatchMergeJobBuilder2 extends JobBuilderSupport {
 
         // Phase 1: Merge Dictionary
         inputSide.addStepPhase1_MergeDictionary(result);
-        result.addTask(createMergeDictionaryStep(mergingSegmentIds));
-        result.addTask(createMergeStatisticsStep(cubeSegment, mergingSegmentIds, getStatisticsPath(jobId)));
+        result.addTask(createMergeDictionaryStep(cubeSegment, jobId, mergingSegmentIds));
+        result.addTask(createUpdateDictionaryStep(cubeSegment, jobId, mergingSegmentIds));
         outputSide.addStepPhase1_MergeDictionary(result);
 
         // merge cube
@@ -78,6 +74,28 @@ public class SparkBatchMergeJobBuilder2 extends JobBuilderSupport {
         outputSide.addStepPhase3_Cleanup(result);
 
         return result;
+    }
+
+    public SparkExecutable createMergeDictionaryStep(CubeSegment seg, String jobID, List<String> mergingSegmentIds) {
+        final SparkExecutable sparkExecutable = new SparkExecutable();
+        sparkExecutable.setClassName(SparkMergingDictionary.class.getName());
+
+        sparkExecutable.setParam(SparkMergingDictionary.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
+        sparkExecutable.setParam(SparkMergingDictionary.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
+        sparkExecutable.setParam(SparkMergingDictionary.OPTION_META_URL.getOpt(), getSegmentMetadataUrl(seg.getConfig(), jobID));
+        sparkExecutable.setParam(SparkMergingDictionary.OPTION_MERGE_SEGMENT_IDS.getOpt(), StringUtil.join(mergingSegmentIds, ","));
+        sparkExecutable.setParam(SparkMergingDictionary.OPTION_OUTPUT_PATH_DICT.getOpt(), getDictInfoPath(jobID));
+        sparkExecutable.setParam(SparkMergingDictionary.OPTION_OUTPUT_PATH_STAT.getOpt(), getStatisticsPath(jobID));
+
+        sparkExecutable.setJobId(jobID);
+        sparkExecutable.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY);
+
+        StringBuilder jars = new StringBuilder();
+
+        StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
+        sparkExecutable.setJars(jars.toString());
+
+        return sparkExecutable;
     }
 
     public SparkExecutable createMergeCuboidDataStep(CubeSegment seg, List<CubeSegment> mergingSegments, String jobID) {
@@ -94,8 +112,7 @@ public class SparkBatchMergeJobBuilder2 extends JobBuilderSupport {
         sparkExecutable.setParam(SparkCubingMerge.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
         sparkExecutable.setParam(SparkCubingMerge.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
         sparkExecutable.setParam(SparkCubingMerge.OPTION_INPUT_PATH.getOpt(), formattedPath);
-        sparkExecutable.setParam(SparkCubingMerge.OPTION_META_URL.getOpt(),
-                getSegmentMetadataUrl(seg.getConfig(), jobID));
+        sparkExecutable.setParam(SparkCubingMerge.OPTION_META_URL.getOpt(), getSegmentMetadataUrl(seg.getConfig(), jobID));
         sparkExecutable.setParam(SparkCubingMerge.OPTION_OUTPUT_PATH.getOpt(), outputPath);
 
         sparkExecutable.setJobId(jobID);
@@ -107,11 +124,5 @@ public class SparkBatchMergeJobBuilder2 extends JobBuilderSupport {
         sparkExecutable.setJars(jars.toString());
 
         return sparkExecutable;
-    }
-
-    public String getSegmentMetadataUrl(KylinConfig kylinConfig, String jobId) {
-        Map<String, String> param = new HashMap<>();
-        param.put("path", getDumpMetadataPath(jobId));
-        return new StorageURL(kylinConfig.getMetadataUrl().getIdentifier(), "hdfs", param).toString();
     }
 }
