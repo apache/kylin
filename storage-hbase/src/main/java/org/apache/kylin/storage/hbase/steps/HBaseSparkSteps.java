@@ -22,6 +22,7 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.spark.SparkBatchCubingJobBuilder2;
 import org.apache.kylin.engine.spark.SparkExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -48,7 +49,7 @@ public class HBaseSparkSteps extends HBaseJobSteps {
         sparkExecutable.setParam(SparkCubeHFile.OPTION_OUTPUT_PATH.getOpt(), getHFilePath(jobId));
         sparkExecutable.setParam(SparkCubeHFile.OPTION_PARTITION_FILE_PATH.getOpt(),
                 getRowkeyDistributionOutputPath(jobId) + "/part-r-00000_hfile");
-
+        sparkExecutable.setParam(AbstractHadoopJob.OPTION_HBASE_CONF_PATH.getOpt(), getHBaseConfFilePath(jobId));
         sparkExecutable.setJobId(jobId);
 
         StringBuilder jars = new StringBuilder();

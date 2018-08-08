@@ -26,12 +26,17 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.cli.Options;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
@@ -46,6 +51,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.mr.common.CuboidShardUtil;
+import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +69,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
     CubeDesc cubeDesc = null;
     String segmentID = null;
     String cuboidModeName = null;
+    String hbaseConfPath = null;
     KylinConfig kylinConfig;
     Path partitionFilePath;
 
@@ -74,6 +81,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_PARTITION_FILE_PATH);
         options.addOption(OPTION_CUBOID_MODE);
+        options.addOption(OPTION_HBASE_CONF_PATH);
         parseOptions(options, args);
 
         partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
@@ -85,11 +93,12 @@ public class CreateHTableJob extends AbstractHadoopJob {
         kylinConfig = cube.getConfig();
         segmentID = getOptionValue(OPTION_SEGMENT_ID);
         cuboidModeName = getOptionValue(OPTION_CUBOID_MODE);
+        hbaseConfPath = getOptionValue(OPTION_HBASE_CONF_PATH);
         CubeSegment cubeSegment = cube.getSegmentById(segmentID);
 
         byte[][] splitKeys;
         Map<Long, Double> cuboidSizeMap = new CubeStatsReader(cubeSegment, kylinConfig).getCuboidSizeMap();
-        
+
         // for cube planner, will keep cuboidSizeMap unchanged if cube planner is disabled
         Set<Long> buildingCuboids = cube.getCuboidsByMode(cuboidModeName);
         if (buildingCuboids != null && !buildingCuboids.isEmpty()) {
@@ -104,14 +113,35 @@ public class CreateHTableJob extends AbstractHadoopJob {
             }
             cuboidSizeMap = optimizedCuboidSizeMap;
         }
-        
+
         splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment,
                 partitionFilePath.getParent());
 
         CubeHTableUtil.createHTable(cubeSegment, splitKeys);
+        exportHBaseConfiguration(cubeSegment.getStorageLocationIdentifier());
         return 0;
     }
 
+    private void exportHBaseConfiguration(String hbaseTableName) throws Exception {
+
+        Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
+        HadoopUtil.healSickConfig(hbaseConf);
+        Job job = Job.getInstance(hbaseConf, hbaseTableName);
+        HTable table = new HTable(hbaseConf, hbaseTableName);
+        HFileOutputFormat2.configureIncrementalLoadMap(job, table);
+
+        logger.info("Saving HBase configuration to " + hbaseConfPath);
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        FSDataOutputStream out = null;
+        try {
+            out = fs.create(new Path(hbaseConfPath));
+            job.getConfiguration().writeXml(out);
+        } catch (IOException e) {
+            throw new ExecuteException("Write hbase configuration failed", e);
+        } finally {
+            IOUtils.closeQuietly(out);
+        }
+    }
 
     //one region for one shard
     private static byte[][] getSplitsByRegionCount(int regionCount) {
@@ -124,7 +154,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
         return result;
     }
 
-    public static byte[][] getRegionSplitsFromCuboidStatistics(final Map<Long, Double> cubeSizeMap, final KylinConfig kylinConfig, final CubeSegment cubeSegment, final Path hfileSplitsOutputFolder) throws IOException {
+    public static byte[][] getRegionSplitsFromCuboidStatistics(final Map<Long, Double> cubeSizeMap,
+            final KylinConfig kylinConfig, final CubeSegment cubeSegment, final Path hfileSplitsOutputFolder)
+            throws IOException {
 
         final CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         float cut = cubeDesc.getConfig().getKylinHBaseRegionCut();
@@ -157,7 +189,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
             }
 
             if (nRegion != original) {
-                logger.info("Region count is adjusted from " + original + " to " + nRegion + " to help random sharding");
+                logger.info(
+                        "Region count is adjusted from " + original + " to " + nRegion + " to help random sharding");
             }
         }
 
@@ -188,10 +221,13 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 }
 
                 if (shardNum > nRegion) {
-                    logger.info(String.format("Cuboid %d 's estimated size %.2f MB will generate %d regions, reduce to %d", cuboidId, estimatedSize, shardNum, nRegion));
+                    logger.info(
+                            String.format("Cuboid %d 's estimated size %.2f MB will generate %d regions, reduce to %d",
+                                    cuboidId, estimatedSize, shardNum, nRegion));
                     shardNum = nRegion;
                 } else {
-                    logger.info(String.format("Cuboid %d 's estimated size %.2f MB will generate %d regions", cuboidId, estimatedSize, shardNum));
+                    logger.info(String.format("Cuboid %d 's estimated size %.2f MB will generate %d regions", cuboidId,
+                            estimatedSize, shardNum));
                 }
 
                 cuboidShards.put(cuboidId, (short) shardNum);
@@ -204,7 +240,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
             }
 
             for (int i = 0; i < nRegion; ++i) {
-                logger.info(String.format("Region %d's estimated size is %.2f MB, accounting for %.2f percent", i, regionSizes[i], 100.0 * regionSizes[i] / totalSizeInM));
+                logger.info(String.format("Region %d's estimated size is %.2f MB, accounting for %.2f percent", i,
+                        regionSizes[i], 100.0 * regionSizes[i] / totalSizeInM));
             }
 
             CuboidShardUtil.saveCuboidShards(cubeSegment, cuboidShards, nRegion);
@@ -222,7 +259,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 if (size >= mbPerRegion || (size + cubeSizeMap.get(cuboidId)) >= mbPerRegion * 1.2) {
                     // if the size already bigger than threshold, or it will exceed by 20%, cut for next region
                     regionSplit.add(cuboidId);
-                    logger.info("Region " + regionIndex + " will be " + size + " MB, contains cuboids < " + cuboidId + " (" + cuboidCount + ") cuboids");
+                    logger.info("Region " + regionIndex + " will be " + size + " MB, contains cuboids < " + cuboidId
+                            + " (" + cuboidCount + ") cuboids");
                     size = 0;
                     cuboidCount = 0;
                     regionIndex++;
@@ -240,7 +278,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
     }
 
-    protected static void saveHFileSplits(final List<HashMap<Long, Double>> innerRegionSplits, int mbPerRegion, final Path outputFolder, final KylinConfig kylinConfig) throws IOException {
+    protected static void saveHFileSplits(final List<HashMap<Long, Double>> innerRegionSplits, int mbPerRegion,
+            final Path outputFolder, final KylinConfig kylinConfig) throws IOException {
 
         if (outputFolder == null) {
             logger.warn("outputFolder for hfile split file is null, skip inner region split");
@@ -300,7 +339,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
                     logger.info(String.format("Region %d's hfile %d size is %.2f mb", i, j, accumulatedSize));
                     byte[] split = new byte[RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN];
                     BytesUtil.writeUnsigned(i, split, 0, RowConstants.ROWKEY_SHARDID_LEN);
-                    System.arraycopy(Bytes.toBytes(cuboid), 0, split, RowConstants.ROWKEY_SHARDID_LEN, RowConstants.ROWKEY_CUBOIDID_LEN);
+                    System.arraycopy(Bytes.toBytes(cuboid), 0, split, RowConstants.ROWKEY_SHARDID_LEN,
+                            RowConstants.ROWKEY_CUBOIDID_LEN);
                     splits.add(split);
                     accumulatedSize = 0;
                     j++;
@@ -310,11 +350,15 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         }
 
-        SequenceFile.Writer hfilePartitionWriter = SequenceFile.createWriter(hbaseConf, SequenceFile.Writer.file(hfilePartitionFile), SequenceFile.Writer.keyClass(RowKeyWritable.class), SequenceFile.Writer.valueClass(NullWritable.class));
+        SequenceFile.Writer hfilePartitionWriter = SequenceFile.createWriter(hbaseConf,
+                SequenceFile.Writer.file(hfilePartitionFile), SequenceFile.Writer.keyClass(RowKeyWritable.class),
+                SequenceFile.Writer.valueClass(NullWritable.class));
 
         for (int i = 0; i < splits.size(); i++) {
             //when we compare the rowkey, we compare the row firstly.
-            hfilePartitionWriter.append(new RowKeyWritable(KeyValue.createFirstOnRow(splits.get(i)).createKeyOnly(false).getKey()), NullWritable.get());
+            hfilePartitionWriter.append(
+                    new RowKeyWritable(KeyValue.createFirstOnRow(splits.get(i)).createKeyOnly(false).getKey()),
+                    NullWritable.get());
         }
         hfilePartitionWriter.close();
     }

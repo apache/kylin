@@ -311,6 +311,10 @@ public class JobBuilderSupport {
         return getOptimizationRootPath(jobId) + "/cuboid/";
     }
 
+    public String getHBaseConfFilePath(String jobId) {
+       return getJobWorkingDir(jobId) + "/hbase-conf.xml";
+    }
+
     // ============================================================================
     // static methods also shared by other job flow participant
     // ----------------------------------------------------------------------------

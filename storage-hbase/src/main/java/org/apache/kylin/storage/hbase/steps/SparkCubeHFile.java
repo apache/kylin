@@ -17,7 +17,6 @@
 */
 package org.apache.kylin.storage.hbase.steps;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -30,12 +29,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
@@ -58,7 +56,6 @@ import org.apache.kylin.engine.mr.common.SerializableConfiguration;
 import org.apache.kylin.engine.spark.KylinSparkJobListener;
 import org.apache.kylin.engine.spark.SparkUtil;
 import org.apache.kylin.measure.MeasureCodec;
-import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.spark.Partitioner;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -102,6 +99,7 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         options.addOption(OPTION_META_URL);
         options.addOption(OPTION_OUTPUT_PATH);
         options.addOption(OPTION_PARTITION_FILE_PATH);
+        options.addOption(AbstractHadoopJob.OPTION_HBASE_CONF_PATH);
     }
 
     @Override
@@ -117,11 +115,12 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         final String segmentId = optionsHelper.getOptionValue(OPTION_SEGMENT_ID);
         final String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
         final Path partitionFilePath = new Path(optionsHelper.getOptionValue(OPTION_PARTITION_FILE_PATH));
+        final String hbaseConfFile = optionsHelper.getOptionValue(AbstractHadoopJob.OPTION_HBASE_CONF_PATH);
 
         Class[] kryoClassArray = new Class[] { Class.forName("scala.reflect.ClassTag$$anon$1"), KeyValueCreator.class,
                 KeyValue.class, RowKeyWritable.class };
 
-        SparkConf conf = new SparkConf().setAppName("Covnerting Hfile for:" + cubeName + " segment " + segmentId);
+        SparkConf conf = new SparkConf().setAppName("Converting HFile for:" + cubeName + " segment " + segmentId);
         //serialization conf
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
         conf.set("spark.kryo.registrator", "org.apache.kylin.engine.spark.KylinKryoRegistrator");
@@ -171,17 +170,15 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         }
 
         logger.info("There are " + keys.size() + " split keys, totally " + (keys.size() + 1) + " hfiles");
-        Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
-        HadoopUtil.healSickConfig(hbaseConf);
-        Job job = new Job(hbaseConf, cubeSegment.getStorageLocationIdentifier());
-        job.getConfiguration().set("spark.hadoop.dfs.replication", "3"); // HFile, replication=3
-        HTable table = new HTable(hbaseConf, cubeSegment.getStorageLocationIdentifier());
-        try {
-            HFileOutputFormat2.configureIncrementalLoadMap(job, table);
-        } catch (IOException ioe) {
-            // this can be ignored.
-            logger.debug(ioe.getMessage(), ioe);
-        }
+
+        //HBase conf
+        logger.info("Loading HBase configuration from:" + hbaseConfFile);
+        FSDataInputStream confInput = fs.open(new Path(hbaseConfFile));
+
+        Configuration hbaseJobConf = new Configuration();
+        hbaseJobConf.addResource(confInput);
+        hbaseJobConf.set("spark.hadoop.dfs.replication", "3"); // HFile, replication=3
+        Job job = new Job(hbaseJobConf, cubeSegment.getStorageLocationIdentifier());
 
         FileOutputFormat.setOutputPath(job, new Path(outputPath));
 

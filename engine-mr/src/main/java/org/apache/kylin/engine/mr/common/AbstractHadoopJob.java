@@ -129,7 +129,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             .create(BatchConstants.ARG_LOOKUP_SNAPSHOT_ID);
     protected static final Option OPTION_META_URL = OptionBuilder.withArgName(BatchConstants.ARG_META_URL)
             .hasArg().isRequired(true).withDescription("HDFS metadata url").create(BatchConstants.ARG_META_URL);
-
+    public static final Option OPTION_HBASE_CONF_PATH = OptionBuilder.withArgName(BatchConstants.ARG_HBASE_CONF_PATH).hasArg()
+            .isRequired(true).withDescription("HBase config file path").create(BatchConstants.ARG_HBASE_CONF_PATH);
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 
