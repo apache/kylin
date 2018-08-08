@@ -17,28 +17,23 @@
 */
 package org.apache.kylin.engine.spark;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -381,7 +376,7 @@ public class SparkExecutable extends AbstractExecutable {
         dumpList.addAll(JobRelatedMetaUtil.collectCubeMetadata(segment.getCubeInstance()));
         dumpList.addAll(segment.getDictionaryPaths());
         dumpList.add(segment.getStatisticsResourcePath());
-        dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig());
+        JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig(), this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
     }
 
     private void attachSegmentsMetadataWithDict(List<CubeSegment> segments) throws IOException {
@@ -395,32 +390,7 @@ public class SparkExecutable extends AbstractExecutable {
                 dumpList.add(segment.getStatisticsResourcePath());
             }
         }
-        dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segments.get(0).getConfig());
-    }
-
-    private void dumpAndUploadKylinPropsAndMetadata(Set<String> dumpList, KylinConfigExt kylinConfig)
-            throws IOException {
-        File tmp = File.createTempFile("kylin_job_meta", "");
-        FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
-
-        File metaDir = new File(tmp, "meta");
-        metaDir.mkdirs();
-
-        // dump metadata
-        JobRelatedMetaUtil.dumpResources(kylinConfig, metaDir, dumpList);
-
-        // write kylin.properties
-        Properties props = kylinConfig.exportToProperties();
-        String metadataUrl = this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt());
-        props.setProperty("kylin.metadata.url", metadataUrl);
-        File kylinPropsFile = new File(metaDir, "kylin.properties");
-        try (FileOutputStream os = new FileOutputStream(kylinPropsFile)) {
-            props.store(os, kylinPropsFile.getAbsolutePath());
-        }
-
-        KylinConfig dstConfig = KylinConfig.createKylinConfig(props);
-        //upload metadata
-        ResourceTool.copy(KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath()), dstConfig);
+        JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segments.get(0).getConfig(), this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
     }
 
     private void readCounters(final Map<String, String> info) {

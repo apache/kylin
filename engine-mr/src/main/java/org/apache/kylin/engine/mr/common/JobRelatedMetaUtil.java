@@ -18,9 +18,12 @@
 
 package org.apache.kylin.engine.mr.common;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
@@ -29,8 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedHashSet;
+import java.util.Properties;
 import java.util.Set;
 
 public class JobRelatedMetaUtil {
@@ -68,5 +73,29 @@ public class JobRelatedMetaUtil {
         }
 
         logger.debug("Dump resources to {} took {} ms", metaDir, System.currentTimeMillis() - startTime);
+    }
+
+    public static void dumpAndUploadKylinPropsAndMetadata(Set<String> dumpList, KylinConfigExt kylinConfig, String metadataUrl)
+            throws IOException {
+        File tmp = File.createTempFile("kylin_job_meta", "");
+        FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
+
+        File metaDir = new File(tmp, "meta");
+        metaDir.mkdirs();
+
+        // dump metadata
+        dumpResources(kylinConfig, metaDir, dumpList);
+
+        // write kylin.properties
+        Properties props = kylinConfig.exportToProperties();
+        props.setProperty("kylin.metadata.url", metadataUrl);
+        File kylinPropsFile = new File(metaDir, "kylin.properties");
+        try (FileOutputStream os = new FileOutputStream(kylinPropsFile)) {
+            props.store(os, kylinPropsFile.getAbsolutePath());
+        }
+
+        KylinConfig dstConfig = KylinConfig.createKylinConfig(props);
+        //upload metadata
+        ResourceTool.copy(KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath()), dstConfig);
     }
 }
