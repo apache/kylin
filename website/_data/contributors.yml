@@ -17,7 +17,7 @@
 - name: George Song (宋轶)
   apacheId: yisong
   githubId: songyi10011001
-  org: eBay
+  org: SAP
   role: PMC
 - name: Henry Saputra
   apacheId: hsaputra
@@ -57,7 +57,7 @@
 - name: Qianhao Zhou (周千昊)
   apacheId: qhzhou
   githubId: qhzhou
-  org: eBay
+  org: 
   role: PMC
 - name: Ted Dunning
   apacheId: tdunning
@@ -108,7 +108,7 @@
 - name: Xiaoyu Wang (王晓雨)
   apacheId: wangxiaoyu
   githubId: xiaowangyu
-  org: JD.com
+  org: 
   role: PMC
 - name: Yerui Sun (孙业锐)
   apacheId: sunyerui
@@ -143,7 +143,7 @@
 - name: Roger Shi (施继承)
   apacheId: sjc
   githubId: rogercloud
-  org: Kyligence Inc.
+  org: Alibaba
   role: committer
 - name: Zhixiong Chen (陈志雄)
   apacheId: chen
@@ -163,9 +163,9 @@
 - name: Jianhua Peng (彭建华)
   apacheId: pengjianhua
   githubId: pengjianhua
-  org: ZTE Corporation
+  org: 
   role: committer
-- name: Julian Pan (潘俍欣)
+- name: Julian Pan (潘俍颀)
   apacheId: julianpan
   githubId: sanjulian
   org: eBay Inc.
@@ -173,5 +173,5 @@
 - name: Yu Feng (冯宇)
   apacheId: fengyu
   githubId: terry-chelsea
-  org: Netease
+  org: Alibaba
   role: committer

@@ -59,7 +59,7 @@ Connectivity and APIs
 11. [Connect from Apache Spark](tutorial/spark.html)
 12. [Connect from Hue](tutorial/hue.html)
 13. [Connect from Qlik Sense](tutorial/Qlik.html)
-14. [Connect from Apache Superset](/blog/2018/01/01/kylin-and-superset/)
+14. [Connect from Apache Superset](tutorial/superset.html)
 15. [Connect from Redash](/blog/2018/05/08/redash-kylin-plugin-strikingly/)
 
 

@@ -25,6 +25,7 @@ This page lists the major RESTful APIs provided by Kylin.
 * JOB
    * [Resume job](#resume-job)
    * [Pause job](#pause-job)
+   * [Drop job](#drop-job)
    * [Discard job](#discard-job)
    * [Get job status](#get-job-status)
    * [Get job step output](#get-job-step-output)
@@ -877,6 +878,12 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 
 ## Discard Job
 `PUT /kylin/api/jobs/{jobId}/cancel`
+
+#### Path variable
+* jobId - `required` `string` Job id.
+
+## Drop Job
+`DELETE /kylin/api/jobs/{jobId}/drop`
 
 #### Path variable
 * jobId - `required` `string` Job id.

@@ -37,13 +37,3 @@ build/script/package.sh
 cd kylin
 build/script/package.sh -P cdh5.7
 ```
-
-##### Build Package for HBase 0.98.x
-
-Source code for HBase 0.98.x is in another branch named master-hbase0.98, and you need to switch to this branch before build the package.
-
-```
-cd kylin
-git checkout master-hbase0.98
-build/script/package.sh
-```

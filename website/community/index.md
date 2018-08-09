@@ -119,6 +119,7 @@ permalink: /community/index.html
 			  		<img class="github-pic" src="{% unless c.avatar %}http://github.com/{{ c.githubId }}.png{% else %}{{ c.avatar }}{% endunless %}">
 			  	</a>  
 			  	<p class="members-name"> {{ c.name }} </p> 
+				<p class="member-role">Org: {{ c.org }} </p>
 			  	<p class="members-role">Role : {{ c.role }}</p> 
 			  	<p>Apache ID : <a href="http://home.apache.org/phonebook.html?uid={{ c.apacheId }}" class="apache-id">{{ c.apacheId }}</a> </p>  
 			</div>

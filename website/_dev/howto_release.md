@@ -26,7 +26,7 @@ Install gpg (On Mac OS X as sample):
 Generate gpg key:  
 Reference: [https://www.gnupg.org/gph/en/manual/c14.html](https://www.gnupg.org/gph/en/manual/c14.html)  
 _All new RSA keys generated should be at least 4096 bits. Do not generate new DSA keys_  
-`gpg --gen-key`  
+`gpg --full-generate-key`  
 
 Verify your key:  
 `gpg --list-sigs YOUR_NAME`
@@ -62,10 +62,11 @@ Commit your changes.
 __Before you start:__
 
 * Set up signing keys as described above.
-* Make sure you are using JDK 1.7 (not 1.8).
+* Make sure you are using JDK 1.8.
 * Make sure you are using GIT 2.7.2 or above.
 * Make sure you are working on right release version number.
 * Make sure that every “resolved” JIRA case (including duplicates) has a fix version assigned.
+* Make sure you are working in clean dir
 
 __Configure Apache repository server in Maven__
 If you're the first time to do release, you need update the server authentication information in ~/.m2/settings.xml; If this file doesn't exist, copy a template from $M2_HOME/conf/settings.xml;
@@ -136,16 +137,13 @@ Optionally, when the dry-run has succeeded, change install to deploy:
 $ mvn -Papache-release -DskipTests -Dgpg.passphrase=${GPG_PASSPHRASE} deploy
 {% endhighlight %}
 
-__Prepare and dry run a release__
+__Prepare__
 
 Create a release branch named after the release, e.g. v0.7.2-release, and push it to Apache.  
 {% highlight bash %}
 $ git checkout -b vX.Y.Z-release
 $ git push -u origin vX.Y.Z-release
 {% endhighlight %}
-We will use the branch for the entire the release process. Meanwhile, we do not allow commits to the master branch. After the release is final, we can use `git merge --ff-only` to append the changes on the release branch onto the master branch. (Apache does not allow reverts to the master branch, which makes it difficult to clean up the kind of messy commits that inevitably happen while you are trying to finalize a release.)
-
-Now, set up your environment and do an optional dry run. The dry run will not commit any changes back to git and gives you the opportunity to verify that the release process will complete as expected.
 
 If any of the steps fail, clean up (see below), fix the problem, and start again from the top.  
 {% highlight bash %}
@@ -182,6 +180,25 @@ $ mvn -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT
 
 # Perform checks out the tagged version, builds, and deploys to the staging repository
 $ mvn -DskipTests -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:perform
+{% endhighlight %}
+
+__Cleaning up after a failed release attempt:__
+{% highlight bash %}
+# Make sure that the tag you are about to generate does not already
+# exist (due to a failed release attempt)
+$ git tag
+
+# If the tag exists, delete it locally and remotely
+$ git tag -d kylin-X.Y.Z
+$ git push origin :refs/tags/kylin-X.Y.Z
+
+# Remove modified files
+$ mvn release:clean
+
+# Check whether there are modified files and if so, go back to the
+# original git commit
+$ git status
+$ git reset --hard HEAD
 {% endhighlight %}
 
 __Close the staged artifacts in the Nexus repository:__
@@ -245,10 +262,10 @@ $ gpg --recv-keys key
 $ curl -O https://dist.apache.org/repos/dist/release/kylin/KEYS
 
 ## Sign/check md5 and sha1 hashes
- _(Assumes your O/S has 'md5' and 'sha1' commands.)_
+ _(Assumes your O/S has 'md5' and 'openssl' commands.)_
 function checkHash() {
   cd "$1"
-  for i in *.{zip,gz}; do
+  for i in *.{zip,asc}; do
     if [ ! -f $i ]; then
       continue
     fi
@@ -258,22 +275,16 @@ function checkHash() {
       else
         echo $i.md5 does not match
       fi
-    else
-      md5 -q $i > $i.md5
-      echo $i.md5 created
     fi
     if [ -f $i.sha1 ]; then
-      if [ "$(cat $i.sha1)" = "$(sha1 -q $i)" ]; then
+      if [ "$(cat $i.sha1)" = "$(openssl sha1 $i | cut -d ' ' -f 2)" ]; then
         echo $i.sha1 present and correct
       else
         echo $i.sha1 does not match
       fi
-    else
-      sha1 -q $i > $i.sha1
-      echo $i.sha1 created
     fi
   done
-}
+};
 $ checkHash apache-kylin-X.Y.Z-rcN
 {% endhighlight %}
 
