@@ -1517,6 +1517,7 @@
                                 <exclude>**/*.jpg</exclude>
                                 <exclude>**/*.gif</exclude>
                                 <exclude>**/*.ico</exclude>
+                                <exclude>**/*.svg</exclude>
 
                                 <!--Test Data-->
                                 <exclude>**/src/test/resources/**</exclude>
@@ -1546,6 +1547,9 @@
                                 <exclude>**/*.doc</exclude>
                                 <exclude>**/*.txt</exclude>
                                 <exclude>**/.checkstyle</exclude>
+                                <exclude>**/*.eot</exclude>
+                                <exclude>**/*.ttf</exclude>
+                                <exclude>**/*.woff</exclude>
 
                                 <!-- Kylin's website content -->
                                 <exclude>**/.sass-cache/**</exclude>
