@@ -14,7 +14,7 @@ Kylin v1.6 发布了可扩展的 streaming cubing 功能，它利用 Hadoop 消�
 ## 安装 Kafka 0.10.0.0 和 Kylin
 不要使用 HDP 2.2.4 自带的 Kafka，因为它太旧了，如果其运行着请先停掉。
 {% highlight Groff markup %}
-curl -s http://mirrors.tuna.tsinghua.edu.cn/apache/kafka/0.10.0.0/kafka_2.10-0.10.0.0.tgz | tar -xz -C /usr/local/
+curl -s https://archive.apache.org/dist/kafka/0.10.0.0/kafka_2.10-0.10.0.0.tgz | tar -xz -C /usr/local/
 
 cd /usr/local/kafka_2.10-0.10.0.0/
 
@@ -127,7 +127,7 @@ Streaming Cube 和普通的 cube 大致上一样. 有以下几点需要您注意
 您可以在 web GUI 触发 build，通过点击 "Actions" -> "Build"，或用 'curl' 命令发送一个请求到 Kylin RESTful API:
 
 {% highlight Groff markup %}
-curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d '{ "sourceOffsetStart": 0，"sourceOffsetEnd": 9223372036854775807，"buildType": "BUILD"}' http://localhost:7070/kylin/api/cubes/{your_cube_name}/build2
+curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d '{ "sourceOffsetStart": 0, "sourceOffsetEnd": 9223372036854775807, "buildType": "BUILD"}' http://localhost:7070/kylin/api/cubes/{your_cube_name}/build2
 {% endhighlight %}
 
 请注意 API 终端和普通 cube 不一样 (这个 URL 以 "build2" 结尾)。
@@ -139,7 +139,7 @@ curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8"
 ## 点击 "Insight" 标签，编写 SQL 运行，例如:
 
  {% highlight Groff markup %}
-select minute_start，count(*)，sum(amount)，sum(qty) from streaming_sales_table group by minute_start order by minute_start
+select minute_start, count(*), sum(amount), sum(qty) from streaming_sales_table group by minute_start order by minute_start
  {% endhighlight %}
 
 结果如下。
@@ -152,7 +152,7 @@ select minute_start，count(*)，sum(amount)，sum(qty) from streaming_sales_tab
 
   {% highlight Groff markup %}
 crontab -e
-*/5 * * * * curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d '{ "sourceOffsetStart": 0，"sourceOffsetEnd": 9223372036854775807，"buildType": "BUILD"}' http://localhost:7070/kylin/api/cubes/{your_cube_name}/build2
+*/5 * * * * curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d '{ "sourceOffsetStart": 0, "sourceOffsetEnd": 9223372036854775807, "buildType": "BUILD"}' http://localhost:7070/kylin/api/cubes/{your_cube_name}/build2
  {% endhighlight %}
 
 现在您可以观看 cube 从 streaming 中自动 built。当 cube segments 累积到更大的时间范围，Kylin 将会自动的将其合并到一个更大的 segment 中。
@@ -202,18 +202,18 @@ Caused by: java.lang.ClassNotFoundException: org.apache.kafka.clients.producer.P
  * 如果 Kafka 里已经有一组历史 message 且您不想从最开始 build，您可以触发一个调用来将当前的结束位置设为 cube 的开始:
 
 {% highlight Groff markup %}
-curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d '{ "sourceOffsetStart": 0，"sourceOffsetEnd": 9223372036854775807，"buildType": "BUILD"}' http://localhost:7070/kylin/api/cubes/{your_cube_name}/init_start_offsets
+curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d '{ "sourceOffsetStart": 0, "sourceOffsetEnd": 9223372036854775807, "buildType": "BUILD"}' http://localhost:7070/kylin/api/cubes/{your_cube_name}/init_start_offsets
 {% endhighlight %}
 
  * 如果一些 build job 出错了并且您将其 discard，Cube 中就会留有一个洞（或称为空隙）。每一次 Kylin 都会从最后的位置 build，您不可期望通过正常的 builds 将洞填补。Kylin 提供了 API 检查和填补洞 
 
 检查洞:
  {% highlight Groff markup %}
-curl -X GET --user ADMINN:KYLIN -H "Content-Type: application/json;charset=utf-8" http://localhost:7070/kylin/api/cubes/{your_cube_name}/holes
+curl -X GET --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" http://localhost:7070/kylin/api/cubes/{your_cube_name}/holes
 {% endhighlight %}
 
 如果查询结果是一个空的数组，意味着没有洞；否则，触发 Kylin 填补他们:
  {% highlight Groff markup %}
-curl -X PUT --user ADMINN:KYLIN -H "Content-Type: application/json;charset=utf-8" http://localhost:7070/kylin/api/cubes/{your_cube_name}/holes
+curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" http://localhost:7070/kylin/api/cubes/{your_cube_name}/holes
 {% endhighlight %}
 

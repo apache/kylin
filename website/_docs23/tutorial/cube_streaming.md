@@ -14,7 +14,7 @@ In this tutorial, we will use Hortonworks HDP 2.2.4 Sandbox VM + Kafka v0.10.0(S
 ## Install Kafka 0.10.0.0 and Kylin
 Don't use HDP 2.2.4's build-in Kafka as it is too old, stop it first if it is running.
 {% highlight Groff markup %}
-curl -s http://mirrors.tuna.tsinghua.edu.cn/apache/kafka/0.10.0.0/kafka_2.10-0.10.0.0.tgz | tar -xz -C /usr/local/
+curl -s https://archive.apache.org/dist/kafka/0.10.0.0/kafka_2.10-0.10.0.0.tgz | tar -xz -C /usr/local/
 
 cd /usr/local/kafka_2.10-0.10.0.0/
 
@@ -209,11 +209,11 @@ curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8"
 
 Check holes:
  {% highlight Groff markup %}
-curl -X GET --user ADMINN:KYLIN -H "Content-Type: application/json;charset=utf-8" http://localhost:7070/kylin/api/cubes/{your_cube_name}/holes
+curl -X GET --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" http://localhost:7070/kylin/api/cubes/{your_cube_name}/holes
 {% endhighlight %}
 
 If the result is an empty arrary, means there is no hole; Otherwise, trigger Kylin to fill them:
  {% highlight Groff markup %}
-curl -X PUT --user ADMINN:KYLIN -H "Content-Type: application/json;charset=utf-8" http://localhost:7070/kylin/api/cubes/{your_cube_name}/holes
+curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" http://localhost:7070/kylin/api/cubes/{your_cube_name}/holes
 {% endhighlight %}
 
