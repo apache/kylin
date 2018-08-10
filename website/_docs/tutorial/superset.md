@@ -34,13 +34,3 @@ Please read [this article](http://kylin.apache.org/blog/2018/01/01/kylin-and-sup
 ##### Other functionalities
 Apache Superset also supports exporting to CSV, sharing, and viewing SQL query.
 
-
-### Kyligence Insight for Superset
-A customized version of Superset: Kyligence Insight for Superset gives Kylin users a choice. Please check [this project](https://github.com/Kyligence/Insight-for-Superset) on github for specific installation steps.
-
-##### Compared to the native Superset, it offers the following enhancements:
-1. Unified user management, users do not need to create additional users and permissions on "Superset", manage user access rights on the Kylin backend, and log in to Superset directly using Kylin account.
-2. One-click synchronization Kylin Cube, no need to redefine the data model on the Superset side, directly query Cube.
-3. Support multi-table join model, support inner join and outer join.
-4. Docker containerized deployment Superset, one-click startup, reducing deployment and upgrade thresholds.
-5. Automatically adapt Kylin query syntax.
