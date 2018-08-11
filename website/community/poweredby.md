@@ -9,6 +9,9 @@ Send a quick description of your organization and usage to the [mailing list](ma
 
 __Companies & Organizations__
 
+* [Hobsons, Inc.](https://www.hobsons.com/), 2018-08-11
+    * Hobsons solutions enable educators to improve college and career planning, admissions and enrollment management, student success and advising. Apache Kylin is used at Hobsons to gain valuable insight for educators on school performance and student success metrics.
+
 * [DiDi](http://www.didiglobal.com/), 2018-06-27
     * Apache Kylin is running as a specific scenario engine of OLAP in Didi. With the help of aggregation cache function, it has served more than 10 business lines and 3000+ users, providing stable, reliable and high performance data services for us. Read more at [this blog](https://mp.weixin.qq.com/s/WDaSJHeHvWTDjGkUR7zmfg). 
 
