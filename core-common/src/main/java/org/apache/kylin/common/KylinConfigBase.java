@@ -792,7 +792,7 @@ abstract public class KylinConfigBase implements Serializable {
         int v = Integer.parseInt(getOptional("kylin.source.hive.default-varchar-precision", "256"));
         if (v < 1) {
             return 256;
-        } else if (v > 65355) {
+        } else if (v > 65535) {
             return 65535;
         } else {
             return v;
