@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.rest.request.ExternalFilterRequest;
 import org.apache.kylin.rest.service.ExtFilterService;
@@ -60,7 +60,7 @@ public class ExternalFilterController extends BasicController {
         Map<String, String> result = new HashMap();
         String filterProject = request.getProject();
         ExternalFilterDesc desc = JsonUtil.readValue(request.getExtFilter(), ExternalFilterDesc.class);
-        desc.setUuid(UUID.randomUUID().toString());
+        desc.setUuid(RandomUtil.randomUUID().toString());
         extFilterService.saveExternalFilter(desc);
         extFilterService.syncExtFilterToProject(new String[] { desc.getName() }, filterProject);
         result.put("success", "true");

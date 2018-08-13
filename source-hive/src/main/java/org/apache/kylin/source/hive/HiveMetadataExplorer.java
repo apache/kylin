@@ -26,6 +26,7 @@ import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -70,7 +71,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
             tableDesc = new TableDesc();
             tableDesc.setDatabase(database.toUpperCase());
             tableDesc.setName(tableName.toUpperCase());
-            tableDesc.setUuid(UUID.randomUUID().toString());
+            tableDesc.setUuid(RandomUtil.randomUUID().toString());
             tableDesc.setLastModified(0);
         } else {
             tableDesc = new TableDesc(tableDesc);
@@ -91,7 +92,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
 
         TableExtDesc tableExtDesc = new TableExtDesc();
         tableExtDesc.setIdentity(tableDesc.getIdentity());
-        tableExtDesc.setUuid(UUID.randomUUID().toString());
+        tableExtDesc.setUuid(RandomUtil.randomUUID().toString());
         tableExtDesc.setLastModified(0);
         tableExtDesc.init(prj);
 

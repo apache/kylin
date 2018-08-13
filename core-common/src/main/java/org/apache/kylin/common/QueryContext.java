@@ -22,11 +22,11 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
+import org.apache.kylin.common.util.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +67,7 @@ public class QueryContext {
     }
 
     QueryContext(long startMills) {
-        queryId = UUID.randomUUID().toString();
+        queryId = RandomUtil.randomUUID().toString();
         queryStartMillis = startMills;
     }
 

@@ -19,11 +19,11 @@
 package org.apache.kylin.rest.service;
 
 import java.sql.SQLException;
-import java.util.UUID;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
@@ -71,7 +71,7 @@ public class KylinQueryTimeoutTest extends LocalFileMetadataTestCase {
         SQLRequest request = new SQLRequest();
         request.setProject("default");
         request.setSql("select count(*) from STREAMING_TABLE");
-        detector.queryStart(Thread.currentThread(), request, "ADMIN", UUID.randomUUID().toString());
+        detector.queryStart(Thread.currentThread(), request, "ADMIN", RandomUtil.randomUUID().toString());
         try {
             QueryACLTestUtil.mockQuery("default", "select * from STREAMING_TABLE");
         } finally{

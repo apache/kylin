@@ -21,9 +21,9 @@ package org.apache.kylin.storage.hbase.lookup;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
@@ -105,7 +105,7 @@ public class HBaseLookupMRSteps {
     }
 
     private String genLookupSnapshotID() {
-        return UUID.randomUUID().toString();
+        return RandomUtil.randomUUID().toString();
     }
 
     private void addLookupTableConvertToHFilesStep(DefaultChainedExecutable jobFlow, String tableName, String snapshotID) {

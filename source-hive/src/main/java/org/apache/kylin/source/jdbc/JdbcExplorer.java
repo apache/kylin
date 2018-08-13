@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
@@ -79,7 +80,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         TableDesc tableDesc = new TableDesc();
         tableDesc.setDatabase(database.toUpperCase());
         tableDesc.setName(table.toUpperCase());
-        tableDesc.setUuid(UUID.randomUUID().toString());
+        tableDesc.setUuid(RandomUtil.randomUUID().toString());
         tableDesc.setLastModified(0);
         tableDesc.setSourceType(ISourceAware.ID_JDBC);
 
@@ -106,7 +107,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
 
         TableExtDesc tableExtDesc = new TableExtDesc();
         tableExtDesc.setIdentity(tableDesc.getIdentity());
-        tableExtDesc.setUuid(UUID.randomUUID().toString());
+        tableExtDesc.setUuid(RandomUtil.randomUUID().toString());
         tableExtDesc.setLastModified(0);
         tableExtDesc.init(prj);
 

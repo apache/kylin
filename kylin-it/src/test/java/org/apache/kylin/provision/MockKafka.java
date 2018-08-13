@@ -22,13 +22,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
-import java.util.UUID;
 
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.I0Itec.zkclient.exception.ZkMarshallingError;
 import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.apache.kafka.common.requests.MetadataResponse;
+import org.apache.kylin.common.util.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class MockKafka {
     private ZkConnection zkConnection;
 
     public MockKafka(ZkConnection zkServerConnection) {
-        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID().toString(), "9092", "1");
+        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + RandomUtil.randomUUID().toString(), "9092", "1");
         start();
     }
 
@@ -69,7 +69,7 @@ public class MockKafka {
     }
 
     public MockKafka(ZkConnection zkServerConnection, int port, int brokerId) {
-        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID().toString(), String.valueOf(port), String.valueOf(brokerId));
+        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + RandomUtil.randomUUID().toString(), String.valueOf(port), String.valueOf(brokerId));
         //start();
     }
 

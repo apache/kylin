@@ -19,10 +19,10 @@
 package org.apache.kylin.dict.global;
 
 import java.io.IOException;
-import java.util.UUID;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.IDictionaryBuilder;
 
@@ -50,7 +50,7 @@ public class SegmentAppendTrieDictBuilder implements IDictionaryBuilder {
 
         //use UUID to make each segment dict in different HDFS dir and support concurrent build
         //use timestamp to make the segment dict easily to delete
-        String baseDir = hdfsDir + "resources/SegmentDict" + dictInfo.getResourceDir() + "/" + UUID.randomUUID().toString() + "_" + System.currentTimeMillis()+ "/";
+        String baseDir = hdfsDir + "resources/SegmentDict" + dictInfo.getResourceDir() + "/" + RandomUtil.randomUUID().toString() + "_" + System.currentTimeMillis()+ "/";
 
         this.builder = new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, false);
         this.baseId = baseId;

@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
-import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -58,6 +57,7 @@ import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,7 +149,7 @@ public class HBaseResourceStore extends ResourceStore {
             String uuid = desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
             if (uuid != null)
                 return uuid;
-            return UUID.randomUUID().toString();
+            return RandomUtil.randomUUID().toString();
         } catch (Exception e) {
             return null;
         }

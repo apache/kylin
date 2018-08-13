@@ -43,14 +43,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
-import java.util.UUID;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.dict.global.AppendDictSliceKey;
 import org.apache.kylin.dict.global.AppendTrieDictionaryBuilder;
 import org.apache.kylin.dict.global.GlobalDictHDFSStore;
@@ -60,8 +59,10 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
+
 public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
-    private static final String RESOURCE_DIR = "/dict/append_dict_test/" + UUID.randomUUID();
+    private static final String RESOURCE_DIR = "/dict/append_dict_test/" + RandomUtil.randomUUID();
     private static String BASE_DIR;
     private static String LOCAL_BASE_DIR;
 

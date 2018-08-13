@@ -24,12 +24,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CheckUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -295,7 +295,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         TableDesc tableDesc = new TableDesc();
         tableDesc.setDatabase("TEST_DB");
         tableDesc.setName("TEST_TABLE");
-        tableDesc.setUuid(UUID.randomUUID().toString());
+        tableDesc.setUuid(RandomUtil.randomUUID().toString());
         tableDesc.setLastModified(0);
         return tableDesc;
     }
