@@ -28,11 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -43,6 +41,7 @@ import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
@@ -82,6 +81,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -835,7 +835,7 @@ public class CubeManager implements IRealizationProvider {
             DataModelDesc modelDesc = cube.getModel();
 
             CubeSegment segment = new CubeSegment();
-            segment.setUuid(UUID.randomUUID().toString());
+            segment.setUuid(RandomUtil.randomUUID().toString());
             segment.setName(CubeSegment.makeSegmentName(tsRange, segRange, modelDesc));
             segment.setCreateTimeUTC(System.currentTimeMillis());
             segment.setCubeInstance(cube);

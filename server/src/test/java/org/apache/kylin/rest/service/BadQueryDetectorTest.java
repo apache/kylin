@@ -22,9 +22,9 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.badquery.BadQueryEntry;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.junit.After;
@@ -66,7 +66,7 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
 
             SQLRequest sqlRequest = new SQLRequest();
             sqlRequest.setSql(mockSql);
-            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest, "user", UUID.randomUUID().toString());
+            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest, "user", RandomUtil.randomUUID().toString());
 
             // make sure bad query check happens twice
             Thread.sleep((alertRunningSec * 2 + 1) * 1000);

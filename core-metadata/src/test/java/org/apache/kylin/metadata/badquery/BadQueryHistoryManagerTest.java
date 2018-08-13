@@ -23,11 +23,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.NavigableSet;
-import java.util.UUID;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,7 +67,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         KylinConfig kylinConfig = getTestConfig();
         BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
         BadQueryEntry entry = new BadQueryEntry("sql", "adj", 1459362239992L, 100, "server", "t-0", "user",
-                UUID.randomUUID().toString());
+                RandomUtil.randomUUID().toString());
         BadQueryHistory history = manager.upsertEntryToProject(entry, "default");
         NavigableSet<BadQueryEntry> entries = history.getEntries();
         assertEquals(4, entries.size());
@@ -84,7 +84,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
 
         for (int i = 0; i < kylinConfig.getBadQueryHistoryNum(); i++) {
             BadQueryEntry tmp = new BadQueryEntry("sql", "adj", 1459362239993L + i, 100 + i, "server", "t-0", "user",
-                    UUID.randomUUID().toString());
+                    RandomUtil.randomUUID().toString());
             history = manager.upsertEntryToProject(tmp, "default");
         }
         assertEquals(kylinConfig.getBadQueryHistoryNum(), history.getEntries().size());
@@ -95,7 +95,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         KylinConfig kylinConfig = getTestConfig();
         BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
 
-        String queryId = UUID.randomUUID().toString();
+        String queryId = RandomUtil.randomUUID().toString();
         manager.upsertEntryToProject(
                 new BadQueryEntry("sql", "adj", 1459362239000L, 100, "server", "t-0", "user", queryId),
                 "default");

@@ -23,7 +23,6 @@ import java.io.StringWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.regex.Matcher;
 
 import org.apache.commons.lang.StringUtils;
@@ -31,6 +30,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.MailService;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.PersistentException;
@@ -65,7 +65,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private Map<String, String> params = Maps.newHashMap();
 
     public AbstractExecutable() {
-        setId(UUID.randomUUID().toString());
+        setId(RandomUtil.randomUUID().toString());
     }
 
     protected void initConfig(KylinConfig config) {

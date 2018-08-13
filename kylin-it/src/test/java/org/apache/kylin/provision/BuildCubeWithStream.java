@@ -27,7 +27,6 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,6 +43,7 @@ import org.apache.kafka.common.requests.MetadataResponse;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -90,7 +90,7 @@ public class BuildCubeWithStream {
     private KafkaConfig kafkaConfig;
     private MockKafka kafkaServer;
     private ZkConnection zkConnection;
-    private final String kafkaZkPath = "/kylin/streaming/" + UUID.randomUUID().toString();
+    private final String kafkaZkPath = "/kylin/streaming/" + RandomUtil.randomUUID().toString();
 
     protected static boolean fastBuildMode = false;
     private volatile boolean generateData = true;
@@ -125,7 +125,7 @@ public class BuildCubeWithStream {
         final StreamingConfig streamingConfig = streamingManager.getStreamingConfig(factTable);
         kafkaConfig = KafkaConfigManager.getInstance(kylinConfig).getKafkaConfig(streamingConfig.getName());
 
-        String topicName = UUID.randomUUID().toString();
+        String topicName = RandomUtil.randomUUID().toString();
         String localIp = NetworkUtils.getLocalIp();
         BrokerConfig brokerConfig = kafkaConfig.getKafkaClusterConfigs().get(0).getBrokerConfigs().get(0);
         brokerConfig.setHost(localIp);

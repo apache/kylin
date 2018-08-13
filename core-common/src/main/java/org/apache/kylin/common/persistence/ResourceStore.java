@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.NavigableSet;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -42,6 +41,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.common.util.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,7 +147,7 @@ abstract public class ResourceStore {
     abstract protected NavigableSet<String> listResourcesImpl(String folderPath, boolean recursive) throws IOException;
 
     protected String createMetaStoreUUID() throws IOException {
-        return UUID.randomUUID().toString();
+        return RandomUtil.randomUUID().toString();
     }
 
     public String getMetaStoreUUID() throws IOException {

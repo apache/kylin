@@ -21,10 +21,10 @@ package org.apache.kylin.common.persistence;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.UUID;
 
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.kylin.common.KylinVersion;
+import org.apache.kylin.common.util.RandomUtil;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -99,7 +99,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     }
 
     public void updateRandomUuid() {
-        setUuid(UUID.randomUUID().toString());
+        setUuid(RandomUtil.randomUUID().toString());
     }
     
     public boolean isCachedAndShared() {

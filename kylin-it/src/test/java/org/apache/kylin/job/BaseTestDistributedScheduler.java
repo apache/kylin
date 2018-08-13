@@ -20,7 +20,6 @@ package org.apache.kylin.job;
 
 import java.io.File;
 import java.nio.charset.Charset;
-import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +30,7 @@ import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
@@ -57,8 +57,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static File localMetaDir;
     static String backup;
 
-    static final String jobId1 = "job1" + UUID.randomUUID();
-    static final String jobId2 = "job2" + UUID.randomUUID();
+    static final String jobId1 = "job1" + RandomUtil.randomUUID();
+    static final String jobId2 = "job2" + RandomUtil.randomUUID();
     static final String serverName1 = "serverName1";
     static final String serverName2 = "serverName2";
     static final String confDstPath1 = "target/kylin_metadata_dist_lock_test1/kylin.properties";

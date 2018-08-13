@@ -28,15 +28,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
-import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
@@ -58,8 +57,8 @@ import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.TableDescResponse;
-import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.response.TableSnapshotResponse;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.apache.kylin.source.ISource;
@@ -77,6 +76,7 @@ import org.springframework.stereotype.Component;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
@@ -148,7 +148,7 @@ public class TableService extends BasicService {
 
             TableDesc origTable = metaMgr.getTableDesc(tableDesc.getIdentity(), project);
             if (origTable == null || origTable.getProject() == null) {
-                tableDesc.setUuid(UUID.randomUUID().toString());
+                tableDesc.setUuid(RandomUtil.randomUUID().toString());
                 tableDesc.setLastModified(0);
             } else {
                 tableDesc.setUuid(origTable.getUuid());
@@ -158,7 +158,7 @@ public class TableService extends BasicService {
 
             TableExtDesc origExt = metaMgr.getTableExt(tableDesc.getIdentity(), project);
             if (origExt == null || origExt.getProject() == null) {
-                extDesc.setUuid(UUID.randomUUID().toString());
+                extDesc.setUuid(RandomUtil.randomUUID().toString());
                 extDesc.setLastModified(0);
             } else {
                 extDesc.setUuid(origExt.getUuid());
@@ -305,7 +305,7 @@ public class TableService extends BasicService {
      */
     public void addStreamingTable(TableDesc desc, String project) throws IOException {
         aclEvaluate.checkProjectAdminPermission(project);
-        desc.setUuid(UUID.randomUUID().toString());
+        desc.setUuid(RandomUtil.randomUUID().toString());
         getTableManager().saveSourceTable(desc, project);
         addTableToProject(new String[] { desc.getIdentity() }, project);
     }

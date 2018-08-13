@@ -25,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -36,6 +35,7 @@ import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.common.util.AutoReadWriteLock.AutoLock;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
@@ -353,7 +353,7 @@ public class TableMetadataManager {
             if (null == result) {
                 result = new TableExtDesc();
                 result.setIdentity(t.getIdentity());
-                result.setUuid(UUID.randomUUID().toString());
+                result.setUuid(RandomUtil.randomUUID().toString());
                 result.setLastModified(0);
                 result.init(t.getProject());
                 srcExtMap.putLocal(mapKey(t.getIdentity(), t.getProject()), result);
@@ -426,7 +426,7 @@ public class TableMetadataManager {
         String tableIdentity = TableDesc.parseResourcePath(resourceName).getFirst();
         TableExtDesc result = new TableExtDesc();
         result.setIdentity(tableIdentity);
-        result.setUuid(UUID.randomUUID().toString());
+        result.setUuid(RandomUtil.randomUUID().toString());
         result.setLastModified(0);
         result.setCardinality(cardinality);
         return result;

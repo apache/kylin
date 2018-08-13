@@ -21,11 +21,11 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -119,7 +119,7 @@ public class ModelController extends BasicController {
         }
 
         try {
-            modelDesc.setUuid(UUID.randomUUID().toString());
+            modelDesc.setUuid(RandomUtil.randomUUID().toString());
             String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
                     : modelRequest.getProject();
 

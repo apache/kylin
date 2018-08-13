@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import java.util.UUID;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -36,6 +35,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.common.util.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,7 +126,7 @@ public class KafkaSampleProducer {
             record.put("amount", rnd.nextDouble() * 100);
             //add embedded record
             Map<String, Object> user = new HashMap();
-            user.put("id", UUID.randomUUID().toString());
+            user.put("id", RandomUtil.randomUUID().toString());
             user.put("gender", genders.get(rnd.nextInt(2)));
             user.put("age", rnd.nextInt(20) + 10);
             user.put("first_name", "unknown");

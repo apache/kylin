@@ -28,12 +28,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
-import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfo;
 import org.apache.kylin.dict.lookup.ExtTableSnapshotInfoManager;
 import org.apache.kylin.dict.lookup.IExtLookupProvider;
@@ -81,7 +81,7 @@ public class RocksDBLookupTableCacheTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBuildTableCache() throws Exception {
-        String snapshotID = UUID.randomUUID().toString();
+        String snapshotID = RandomUtil.randomUUID().toString();
         ExtTableSnapshotInfo snapshotInfo = buildSnapshotCache(snapshotID, 100000);
         assertEquals(CacheState.AVAILABLE, RocksDBLookupTableCache.getInstance(kylinConfig).getCacheState(snapshotInfo));
     }
@@ -107,7 +107,7 @@ public class RocksDBLookupTableCacheTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testRestoreCacheFromFiles() throws Exception {
-        String snapshotID = UUID.randomUUID().toString();
+        String snapshotID = RandomUtil.randomUUID().toString();
         String snapshotCacheBasePath = RocksDBLookupTableCache.getCacheBasePath(kylinConfig) + File.separator
                 + TABLE_COUNTRY + File.separator + snapshotID;
         String dbPath = snapshotCacheBasePath + File.separator + "db";
@@ -137,14 +137,14 @@ public class RocksDBLookupTableCacheTest extends LocalFileMetadataTestCase {
         int snapshotNum = 10;
         int snapshotRowCnt = 100000;
         for (int i = 0; i < snapshotNum; i++) {
-            buildSnapshotCache(UUID.randomUUID().toString(), snapshotRowCnt);
+            buildSnapshotCache(RandomUtil.randomUUID().toString(), snapshotRowCnt);
         }
         assertTrue(RocksDBLookupTableCache.getInstance(kylinConfig).getTotalCacheSize() < 0.006 * 1024 * 1024 * 1024);
     }
 
     @Test
     public void testCheckCacheState() throws Exception {
-        ExtTableSnapshotInfo snapshotInfo = buildSnapshotCache(UUID.randomUUID().toString(), 1000);
+        ExtTableSnapshotInfo snapshotInfo = buildSnapshotCache(RandomUtil.randomUUID().toString(), 1000);
         RocksDBLookupTableCache cache = RocksDBLookupTableCache.getInstance(kylinConfig);
         ILookupTable cachedLookupTable = cache.getCachedLookupTable(tableDesc, snapshotInfo, false);
         assertNotNull(cachedLookupTable);

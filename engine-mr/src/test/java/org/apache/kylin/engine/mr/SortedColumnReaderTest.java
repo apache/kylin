@@ -32,6 +32,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.dict.ByteComparator;
 import org.apache.kylin.dict.BytesConverter;
 import org.apache.kylin.dict.IDictionaryValueEnumerator;
@@ -84,7 +85,7 @@ public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
         ArrayList<String> data = new ArrayList<>();
         int num = 10000;
         for (int i = 0; i < num; i++) {
-            UUID uuid = UUID.randomUUID();
+            UUID uuid = RandomUtil.randomUUID();
             data.add(uuid.toString());
         }
         Collections.sort(data, new ByteComparator<String>(new StringBytesConverter()));
