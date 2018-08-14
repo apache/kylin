@@ -39,7 +39,7 @@ import org.apache.calcite.avatica.UnregisteredDriver;
 /**
  * Kylin JDBC factory.
  */
-public class KylinJdbcFactory implements AvaticaFactory {
+public class KylinJdbcFactory implements JdbcFactory {
 
     public static class Version40 extends KylinJdbcFactory {
         public Version40() {
@@ -104,7 +104,7 @@ public class KylinJdbcFactory implements AvaticaFactory {
         return new AvaticaResultSetMetaData(statement, null, signature);
     }
 
-    public IRemoteClient newRemoteClient(KylinConnection conn) {
+    public IRemoteClient newRemoteClient(KylinConnectionInfo conn) {
         return new KylinClient(conn);
     }
 }

@@ -1,0 +1,42 @@
+{
+  "affectedRowCount": 0,
+  "columnMetas": [
+    {
+      "autoIncrement": false,
+      "caseSensitive": true,
+      "catelogName": null,
+      "columnType": 4,
+      "columnTypeName": "INTEGER",
+      "currency": false,
+      "definitelyWritable": false,
+      "displaySize": 10,
+      "isNullable": 0,
+      "label": "VAL",
+      "name": "VAL",
+      "precision": 10,
+      "readOnly": true,
+      "scale": 0,
+      "schemaName": null,
+      "searchable": false,
+      "signed": true,
+      "tableName": null,
+      "writable": false
+    }
+  ],
+  "cube": "",
+  "duration": 71,
+  "exceptionMessage": null,
+  "hitExceptionCache": false,
+  "isException": false,
+  "partial": false,
+  "pushDown": false,
+  "results": [
+    [
+      "1"
+    ]
+  ],
+  "storageCacheUsed": false,
+  "totalScanBytes": 0,
+  "totalScanCount": 0,
+  "traceUrl": null
+}
