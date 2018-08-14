@@ -66,7 +66,7 @@ public class KylinResultSet extends AvaticaResultSet {
 
         QueryResult result;
         try {
-            result = client.executeQuery(sql, params, paramValues, queryToggles);
+            result = client.executeQuery(sql, paramValues, queryToggles);
         } catch (IOException e) {
             throw new SQLException(e);
         }

@@ -35,11 +35,11 @@ import java.util.Properties;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.calcite.avatica.ColumnMetaData.ScalarType;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -65,19 +65,20 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 
 public class KylinClient implements IRemoteClient {
 
     private static final Logger logger = LoggerFactory.getLogger(KylinClient.class);
 
-    private final KylinConnection conn;
+    private final KylinConnectionInfo connInfo;
     private final Properties connProps;
-    private DefaultHttpClient httpClient;
+    private HttpClient httpClient;
     private final ObjectMapper jsonMapper;
 
-    public KylinClient(KylinConnection conn) {
-        this.conn = conn;
-        this.connProps = conn.getConnectionProperties();
+    public KylinClient(KylinConnectionInfo connInfo) {
+        this.connInfo = connInfo;
+        this.connProps = connInfo.getConnectionProperties();
         this.httpClient = new DefaultHttpClient();
         this.jsonMapper = new ObjectMapper();
 
@@ -96,6 +97,11 @@ public class KylinClient implements IRemoteClient {
                 throw new RuntimeException("Initialize HTTPS client failed", e);
             }
         }
+    }
+
+    @VisibleForTesting
+    void setHttpClient(HttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
     @SuppressWarnings("rawtypes")
@@ -208,7 +214,7 @@ public class KylinClient implements IRemoteClient {
     }
 
     private String baseUrl() {
-        return (isSSL() ? "https://" : "http://") + conn.getBaseUrl();
+        return (isSSL() ? "https://" : "http://") + connInfo.getBaseUrl();
     }
 
     private void addHttpHeaders(HttpRequestBase method) {
@@ -243,7 +249,7 @@ public class KylinClient implements IRemoteClient {
 
     @Override
     public KMetaProject retrieveMetaData(String project) throws IOException {
-        assert conn.getProject().equals(project);
+        assert connInfo.getProject().equals(project);
 
         String url = baseUrl() + "/kylin/api/tables_and_columns?project=" + project;
         HttpGet get = new HttpGet(url);
@@ -332,10 +338,10 @@ public class KylinClient implements IRemoteClient {
     }
 
     @Override
-    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues,
+    public QueryResult executeQuery(String sql, List<Object> paramValues,
             Map<String, String> queryToggles) throws IOException {
 
-        SQLResponseStub queryResp = executeKylinQuery(sql, convertParameters(params, paramValues), queryToggles);
+        SQLResponseStub queryResp = executeKylinQuery(sql, convertParameters(paramValues), queryToggles);
         if (queryResp.getIsException())
             throw new IOException(queryResp.getExceptionMessage());
 
@@ -345,12 +351,10 @@ public class KylinClient implements IRemoteClient {
         return new QueryResult(metas, data);
     }
 
-    private List<StatementParameter> convertParameters(List<AvaticaParameter> params, List<Object> paramValues) {
-        if (params == null || params.isEmpty())
+    private List<StatementParameter> convertParameters(List<Object> paramValues) {
+        if (paramValues == null) {
             return null;
-
-        assert params.size() == paramValues.size();
-
+        }
         List<StatementParameter> result = new ArrayList<StatementParameter>();
         for (Object v : paramValues) {
             result.add(new StatementParameter(v.getClass().getCanonicalName(), String.valueOf(v)));
@@ -361,7 +365,7 @@ public class KylinClient implements IRemoteClient {
     private SQLResponseStub executeKylinQuery(String sql, List<StatementParameter> params,
             Map<String, String> queryToggles) throws IOException {
         String url = baseUrl() + "/kylin/api/query";
-        String project = conn.getProject();
+        String project = connInfo.getProject();
 
         PreparedQueryRequest request = new PreparedQueryRequest();
         if (null != params) {

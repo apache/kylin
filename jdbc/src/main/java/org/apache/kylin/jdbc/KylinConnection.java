@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.AvaticaFactory;
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
@@ -39,7 +40,7 @@ import org.apache.calcite.avatica.UnregisteredDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KylinConnection extends AvaticaConnection {
+public class KylinConnection extends AvaticaConnection implements KylinConnectionInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConnection.class);
 
@@ -47,7 +48,7 @@ public class KylinConnection extends AvaticaConnection {
     private final String project;
     private final IRemoteClient remoteClient;
 
-    protected KylinConnection(UnregisteredDriver driver, KylinJdbcFactory factory, String url, Properties info) throws SQLException {
+    protected KylinConnection(UnregisteredDriver driver, JdbcFactory factory, String url, Properties info) throws SQLException {
         super(driver, factory, url, info);
 
         String odbcUrl = url;
@@ -70,15 +71,15 @@ public class KylinConnection extends AvaticaConnection {
         }
     }
 
-    String getBaseUrl() {
+    public String getBaseUrl() {
         return baseUrl;
     }
 
-    String getProject() {
+    public String getProject() {
         return project;
     }
 
-    Properties getConnectionProperties() {
+    public Properties getConnectionProperties() {
         return info;
     }
 
@@ -121,8 +122,8 @@ public class KylinConnection extends AvaticaConnection {
         return new Meta.Signature(columns, sql, params, internalParams, CursorFactory.ARRAY, Meta.StatementType.SELECT);
     }
 
-    private KylinJdbcFactory factory() {
-        return (KylinJdbcFactory) factory;
+    private AvaticaFactory factory() {
+        return factory;
     }
 
     public IRemoteClient getRemoteClient() {

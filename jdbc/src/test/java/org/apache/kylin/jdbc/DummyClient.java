@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.kylin.jdbc.KylinMeta.KMetaCatalog;
@@ -37,7 +36,7 @@ import org.apache.kylin.jdbc.KylinMeta.KMetaTable;
  */
 public class DummyClient implements IRemoteClient {
 
-    public DummyClient(KylinConnection conn) {
+    public DummyClient(KylinConnectionInfo conn) {
     }
 
     @Override
@@ -64,7 +63,7 @@ public class DummyClient implements IRemoteClient {
     }
 
     @Override
-    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues, Map<String, String> queryToggles) throws IOException {
+    public QueryResult executeQuery(String sql, List<Object> paramValues, Map<String, String> queryToggles) throws IOException {
         List<Object> data = new ArrayList<Object>();
         Object[] row = new Object[] { "foo", "bar", "tool" };
         data.add(row);

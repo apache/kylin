@@ -23,13 +23,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.kylin.jdbc.KylinMeta.KMetaProject;
 
 public interface IRemoteClient extends Closeable {
 
-    public static class QueryResult {
+    class QueryResult {
         public final List<ColumnMetaData> columnMeta;
         public final Iterable<Object> iterable;
 
@@ -42,16 +41,16 @@ public interface IRemoteClient extends Closeable {
     /**
      * Connect to Kylin restful service. IOException will be thrown if authentication failed.
      */
-    public void connect() throws IOException;
+    void connect() throws IOException;
 
     /**
      * Retrieve meta data of given project.
      */
-    public KMetaProject retrieveMetaData(String project) throws IOException;
+    KMetaProject retrieveMetaData(String project) throws IOException;
 
     /**
      * Execute query remotely and get back result.
      */
-    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues, Map<String, String> queryToggles) throws IOException;
+    QueryResult executeQuery(String sql, List<Object> paramValues, Map<String, String> queryToggles) throws IOException;
 
 }
