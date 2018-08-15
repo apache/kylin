@@ -20,6 +20,7 @@ package org.apache.kylin.engine.mr;
 
 import java.util.Collection;
 
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
@@ -50,6 +51,9 @@ public interface IMRInput {
 
         /** Parse a mapper input object into column values. */
         public Collection<String[]> parseMapperInput(Object mapperInput);
+
+        /** Get the signature for the input split*/
+        public String getInputSplitSignature(InputSplit inputSplit);
     }
 
     /**

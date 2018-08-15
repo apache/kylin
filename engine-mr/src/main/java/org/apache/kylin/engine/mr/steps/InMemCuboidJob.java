@@ -70,6 +70,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             options.addOption(OPTION_SEGMENT_ID);
             options.addOption(OPTION_OUTPUT_PATH);
             options.addOption(OPTION_CUBING_JOB_ID);
+            options.addOption(OPTION_DICTIONARY_SHRUNKEN_PATH);
             parseOptions(options, args);
 
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
@@ -88,6 +89,10 @@ public class InMemCuboidJob extends AbstractHadoopJob {
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             job.getConfiguration().set(BatchConstants.ARG_CUBING_JOB_ID, cubingJobId);
+            String shrunkenDictPath = getOptionValue(OPTION_DICTIONARY_SHRUNKEN_PATH);
+            if (shrunkenDictPath != null) {
+                job.getConfiguration().set(BatchConstants.ARG_SHRUNKEN_DICT_PATH, shrunkenDictPath);
+            }
             logger.info("Starting: " + job.getJobName());
 
             setJobClasspath(job, cube.getConfig());

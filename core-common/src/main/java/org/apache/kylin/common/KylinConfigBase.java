@@ -430,6 +430,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Double.parseDouble(getOptional("kylin.snapshot.ext.local.cache.max-size-gb", "200"));
     }
 
+    public boolean isShrunkenDictFromGlobalEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.dictionary.shrunken-from-global-enabled", "false"));
+    }
+
     // ============================================================================
     // CUBE
     // ============================================================================

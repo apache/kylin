@@ -93,6 +93,7 @@ public class CuboidJob extends AbstractHadoopJob {
             options.addOption(OPTION_NCUBOID_LEVEL);
             options.addOption(OPTION_CUBING_JOB_ID);
             options.addOption(OPTION_CUBOID_MODE);
+            options.addOption(OPTION_DICTIONARY_SHRUNKEN_PATH);
             parseOptions(options, args);
 
             String output = getOptionValue(OPTION_OUTPUT_PATH);
@@ -118,6 +119,10 @@ public class CuboidJob extends AbstractHadoopJob {
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             job.getConfiguration().set(BatchConstants.ARG_CUBING_JOB_ID, cubingJobId);
+            String shrunkenDictPath = getOptionValue(OPTION_DICTIONARY_SHRUNKEN_PATH);
+            if (shrunkenDictPath != null) {
+                job.getConfiguration().set(BatchConstants.ARG_SHRUNKEN_DICT_PATH, shrunkenDictPath);
+            }
             logger.info("Starting: " + job.getJobName());
 
             setJobClasspath(job, cube.getConfig());

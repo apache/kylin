@@ -74,18 +74,18 @@ public class BaseCuboidBuilder implements java.io.Serializable {
         measureCodec = new BufferedMeasureCodec(cubeDesc.getMeasures());
     }
 
-    public BaseCuboidBuilder(KylinConfig kylinConfig, CubeDesc cubeDesc, CubeSegment cubeSegment, CubeJoinedFlatTableEnrich intermediateTableDesc) {
+    public BaseCuboidBuilder(KylinConfig kylinConfig, CubeDesc cubeDesc, CubeSegment cubeSegment,
+            CubeJoinedFlatTableEnrich intermediateTableDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         this.kylinConfig = kylinConfig;
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
         this.intermediateTableDesc = intermediateTableDesc;
+        this.dictionaryMap = dictionaryMap;
 
         init();
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);
         measureCodec = new BufferedMeasureCodec(cubeDesc.getMeasures());
         aggrIngesters = MeasureIngester.create(cubeDesc.getMeasures());
-        dictionaryMap = cubeSegment.buildDictionaryMap();
-
     }
 
     private void init() {

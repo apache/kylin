@@ -250,6 +250,7 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
         List<String> toDeletePaths = new ArrayList<>();
         toDeletePaths.add(getFactDistinctColumnsPath(jobId));
         toDeletePaths.add(getHFilePath(jobId));
+        toDeletePaths.add(getShrunkenDictionaryPath(jobId));
 
         HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
         step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HBASE);

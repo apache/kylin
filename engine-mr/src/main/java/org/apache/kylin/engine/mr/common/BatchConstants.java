@@ -105,6 +105,7 @@ public interface BatchConstants {
     String ARG_EXT_LOOKUP_SNAPSHOTS_INFO = "extlookupsnapshots";
     String ARG_META_URL = "metadataUrl";
     String ARG_HBASE_CONF_PATH = "hbaseConfPath";
+    String ARG_SHRUNKEN_DICT_PATH = "shrunkenDictPath";
     /**
      * logger and counter
      */

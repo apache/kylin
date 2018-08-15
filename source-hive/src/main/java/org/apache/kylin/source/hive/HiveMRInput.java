@@ -22,9 +22,12 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
+import org.apache.hive.hcatalog.mapreduce.HCatSplit;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringUtil;
@@ -100,6 +103,12 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
             return Collections.singletonList(HiveTableReader.getRowAsStringArray((HCatRecord) mapperInput));
         }
 
+        @Override
+        public String getInputSplitSignature(InputSplit inputSplit) {
+            FileSplit baseSplit = (FileSplit) ((HCatSplit) inputSplit).getBaseSplit();
+            //file name(for intermediate table) + start pos + length
+            return baseSplit.getPath().getName() + "_" + baseSplit.getStart() + "_" + baseSplit.getLength();
+        }
     }
 
     public static class BatchCubingInputSide implements IMRBatchCubingInputSide {

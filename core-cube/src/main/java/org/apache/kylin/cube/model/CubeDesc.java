@@ -1480,6 +1480,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
         return globalDictCols;
     }
+
+    public boolean isShrunkenDictFromGlobalEnabled() {
+        return config.isShrunkenDictFromGlobalEnabled() && !getAllGlobalDictColumns().isEmpty();
+    }
     
     // UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
     public List<TblColRef> getAllUHCColumns() {
