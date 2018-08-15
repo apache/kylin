@@ -72,6 +72,7 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.query.enumerator.DictionaryEnumerator;
 import org.apache.kylin.query.optrule.AggregateMultipleExpandRule;
 import org.apache.kylin.query.optrule.AggregateProjectReduceRule;
 import org.apache.kylin.query.optrule.OLAPAggregateRule;
@@ -419,6 +420,8 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         // if the table to scan is not the fact table of cube, then it's a lookup table
         if (context.realization.getModel().isLookupTable(tableName)) {
             return "executeLookupTableQuery";
+        } else if (DictionaryEnumerator.ifDictionaryEnumeratorEligible(context)) {
+            return "executeColumnDictionaryQuery";
         } else {
             return "executeOLAPQuery";
         }

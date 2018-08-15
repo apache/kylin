@@ -1227,6 +1227,10 @@ abstract public class KylinConfigBase implements Serializable {
     // QUERY
     // ============================================================================
 
+    public boolean isDictionaryEnumeratorEnabled() {
+        return Boolean.valueOf(getOptional("kylin.query.enable-dict-enumerator", "false"));
+    }
+
     public Boolean isEnumerableRulesEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.calcite.enumerable-rules-enabled", "false"));
     }

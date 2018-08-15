@@ -428,6 +428,18 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testDictionaryEnumerator() throws Exception {
+        boolean ifDictEnumeratorEnabled = config.isDictionaryEnumeratorEnabled();
+        if (!ifDictEnumeratorEnabled) {
+            config.setProperty("kylin.query.enable-dict-enumerator", "true");
+        }
+        batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_dict_enumerator");
+        if (!ifDictEnumeratorEnabled) {
+            config.setProperty("kylin.query.enable-dict-enumerator", "false");
+        }
+    }
+
+    @Test
     public void testValues() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_values", null, true);
     }

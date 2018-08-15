@@ -280,6 +280,10 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         return new OLAPQuery(optiqContext, EnumeratorTypeEnum.LOOKUP_TABLE, ctxSeq);
     }
 
+    public Enumerable<Object[]> executeColumnDictionaryQuery(DataContext optiqContext, int ctxSeq) {
+        return new OLAPQuery(optiqContext, EnumeratorTypeEnum.COL_DICT, ctxSeq);
+    }
+
     public Enumerable<Object[]> executeHiveQuery(DataContext optiqContext, int ctxSeq) {
         return new OLAPQuery(optiqContext, EnumeratorTypeEnum.HIVE, ctxSeq);
     }

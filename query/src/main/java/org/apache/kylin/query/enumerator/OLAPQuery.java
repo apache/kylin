@@ -37,7 +37,8 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
     public enum EnumeratorTypeEnum {
         OLAP, //finish query with Cube or II, or a combination of both
         LOOKUP_TABLE, //using a snapshot of lookup table
-        HIVE //using hive
+        HIVE, //using hive
+        COL_DICT // using a column's dictionary
     }
 
     private final DataContext optiqContext;
@@ -65,6 +66,8 @@ public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerabl
                     : new OLAPEnumerator(olapContext, optiqContext);
         case LOOKUP_TABLE:
             return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new LookupTableEnumerator(olapContext);
+        case COL_DICT:
+            return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new DictionaryEnumerator(olapContext);
         case HIVE:
             return BackdoorToggles.getPrepareOnly() ? new EmptyEnumerator() : new HiveEnumerator(olapContext);
         default:
