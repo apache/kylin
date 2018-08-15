@@ -83,7 +83,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
 
             @Override
             public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-                // nothing to do
+                steps.addCubingGarbageCollectionSteps(jobFlow);
             }
 
             @Override
