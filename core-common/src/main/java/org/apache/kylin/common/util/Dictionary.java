@@ -24,10 +24,13 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice
@@ -169,6 +172,14 @@ abstract public class Dictionary<T> implements Serializable {
     abstract protected T getValueFromIdImpl(int id);
 
     abstract public void dump(PrintStream out);
+
+    public List<T> enumeratorValues() {
+        List<T> ret = Lists.newArrayListWithExpectedSize(getSize());
+        for (int i = getMinId(); i <= getMaxId(); i++) {
+            ret.add(getValueFromId(i));
+        }
+        return ret;
+    }
 
     public int nullId() {
         return NULL_ID[getSizeOfId()];

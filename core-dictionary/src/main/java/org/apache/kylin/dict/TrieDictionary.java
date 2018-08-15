@@ -28,6 +28,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
@@ -36,7 +37,9 @@ import org.apache.kylin.common.util.Dictionary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
@@ -356,6 +359,54 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
             idx += currentCount;
         }
         init(trieBytes);
+    }
+
+    @Override
+    public List<T> enumeratorValues() {
+        List<T> result = Lists.newArrayListWithExpectedSize(getSize());
+        byte[] buf = new byte[maxValueLength];
+        visitNode(headSize, buf, 0, result);
+        return result;
+    }
+
+    @VisibleForTesting
+    List<T> enumeratorValuesByParent() {
+        return super.enumeratorValues();
+    }
+
+    /**
+     * Visit the trie tree by pre-order
+     * @param n           -- the offset of current node in trieBytes
+     * @param returnValue -- where return value is written to
+     */
+    private void visitNode(int n, byte[] returnValue, int offset, List<T> result) {
+        int o = offset;
+
+        // write current node value
+        int p = n + firstByteOffset;
+        int len = BytesUtil.readUnsigned(trieBytes, p - 1, 1);
+        System.arraycopy(trieBytes, p, returnValue, o, len);
+        o += len;
+
+        // if the value is ended
+        boolean isEndOfValue = checkFlag(n, BIT_IS_END_OF_VALUE);
+        if (isEndOfValue) {
+            T curNodeValue = bytesConvert.convertFromBytes(returnValue, 0, o);
+            result.add(curNodeValue);
+        }
+
+        // find a child to continue
+        int c = getChildOffset(n);
+        if (c == headSize) // has no children
+            return;
+        while (true) {
+            visitNode(c, returnValue, o, result);
+            if (checkFlag(c, BIT_IS_LAST_CHILD))
+                return;
+            // go to next child
+            p = c + firstByteOffset;
+            c = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1);
+        }
     }
 
     @Override

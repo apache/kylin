@@ -35,12 +35,17 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Sets;
 
 public class TrieDictionaryTest {
 
@@ -206,6 +211,31 @@ public class TrieDictionaryTest {
 
         assertEquals(true, dict2.contains(dict));
         assertEquals(false, dict.contains(dict2));
+    }
+
+    @Test
+    public void testEnumeratorValues() throws Exception {
+        testEnumeratorValues("src/test/resources/dict/english-words.80 (scowl-2015.05.18).txt");
+        testEnumeratorValues("src/test/resources/dict/dw_category_grouping_names.dat");
+    }
+
+    private void testEnumeratorValues(String file) throws Exception {
+        InputStream is = new FileInputStream(file);
+        ArrayList<String> str = loadStrings(is);
+        TrieDictionaryBuilder<String> b = newDictBuilder(str);
+        TrieDictionary<String> dict = b.build(0);
+        System.out.println("Dictionary size for file " + file + " is " + dict.getSize());
+
+        Stopwatch sw = new Stopwatch();
+        sw.start();
+        List<String> values1 = dict.enumeratorValuesByParent();
+        System.out.println("By iterating id visit the time cost " + sw.elapsed(TimeUnit.MILLISECONDS) + " ms");
+        sw.reset();
+        sw.start();
+        List<String> values2 = dict.enumeratorValues();
+        System.out.println("By pre-order visit the time cost " + sw.elapsed(TimeUnit.MILLISECONDS) + " ms");
+        sw.stop();
+        assertEquals(Sets.newHashSet(values1), Sets.newHashSet(values2));
     }
 
     @Test
