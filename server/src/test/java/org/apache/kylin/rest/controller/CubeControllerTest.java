@@ -138,7 +138,26 @@ public class CubeControllerTest extends ServiceTestBase {
         CubeDesc[] cubes = cubeDescController.getCube(cubeName);
         Assert.assertNotNull(cubes);
 
-        cubeController.deleteSegment(cubeName, "20131212000000_20140112000000");
+        String segmentName = "20131212000000_20140112000000";
+
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        CubeSegment toDelete = null;
+        for (CubeSegment seg : cube.getSegments()) {
+            if (seg.getName().equals(segmentName)) {
+                toDelete = seg;
+                break;
+            }
+        }
+
+        Assert.assertNotNull(toDelete);
+        String segId = toDelete.getUuid();
+
+        cubeController.deleteSegment(cubeName, segmentName);
+
+        // delete success, no related job 'NEW' segment can be delete
+        if (cubeService.isOrphonSegment(cube, segId)){
+            throw new InternalErrorException();
+        }
     }
 
     @Test(expected = NotFoundException.class)
