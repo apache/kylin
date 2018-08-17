@@ -23,6 +23,10 @@ addons:
     token:
       secure: "c918989d018ae3af899798716c35f4fe125296a4"
 
+cache:
+  directories:
+    - $HOME/.m2
+
 jdk:
   - oraclejdk8
 
@@ -45,4 +49,8 @@ notification:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+  
+before_cache:
+  # Remove project's local artifacts to force maven reactor resolve
+  - rm -rf $HOME/.m2/repository/org/apache/kylin
 
