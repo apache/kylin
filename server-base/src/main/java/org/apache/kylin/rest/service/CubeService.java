@@ -42,7 +42,10 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.CuboidRecommenderUtil;
+import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.common.PatternedLogger;
+import org.apache.kylin.job.constant.JobStatusEnum;
+import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -510,7 +513,13 @@ public class CubeService extends BasicService implements InitializingBean {
         }
 
         if (toDelete.getStatus() != SegmentStatusEnum.READY) {
-            throw new BadRequestException(String.format(msg.getDELETE_NOT_READY_SEG(), segmentName));
+            if (toDelete.getStatus() == SegmentStatusEnum.NEW) {
+                if (!isOrphonSegment(cube, toDelete.getUuid())) {
+                    throw new BadRequestException(String.format(msg.getDELETE_NOT_READY_SEG(), segmentName));
+                }
+            } else {
+                throw new BadRequestException(String.format(msg.getDELETE_NOT_READY_SEG(), segmentName));
+            }
         }
 
         if (!segmentName.equals(cube.getSegments().get(0).getName())
@@ -519,6 +528,18 @@ public class CubeService extends BasicService implements InitializingBean {
         }
 
         return CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, toDelete);
+    }
+
+    public boolean isOrphonSegment(CubeInstance cube, String segId) {
+        List<JobInstance> jobInstances = jobService.searchJobsByCubeName(cube.getName(), cube.getProject(), Lists.newArrayList(JobStatusEnum.NEW, JobStatusEnum.PENDING, JobStatusEnum.RUNNING, JobStatusEnum.ERROR, JobStatusEnum.STOPPED),
+                JobTimeFilterEnum.ALL, JobService.JobSearchMode.CUBING_ONLY);
+        for (JobInstance jobInstance : jobInstances) {
+            // if there are segment related jobs, can not delete this segment.
+            if (segId.equals(jobInstance.getRelatedSegment())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     protected void releaseAllJobs(CubeInstance cube) {
