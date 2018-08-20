@@ -184,15 +184,11 @@ public class JdbcHiveMRInput extends HiveMRInput {
                 }
             }
 
-            //related to "kylin.engine.mr.config-override.mapreduce.job.queuename"
-            String queueName = getSqoopJobQueueName(config);
-            String cmd = String.format("%s/sqoop import -Dorg.apache.sqoop.splitter.allow_text_splitter=true "
-                    + generateSqoopConfigArgString()
+            String cmd = String.format("%s/sqoop import" + generateSqoopConfigArgString()
                     + "--connect \"%s\" --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
-                    + "--target-dir %s/%s --split-by %s.%s --boundary-query \"%s\" --null-string '' "
+                    + "--target-dir %s/%s --split-by %s --boundary-query \"%s\" --null-string '' "
                     + "--fields-terminated-by '%s' --num-mappers %d", sqoopHome, connectionUrl, driverClass, jdbcUser,
-                    jdbcPass, selectSql, jobWorkingDir, hiveTable, splitTable, splitColumn, bquery, filedDelimiter,
-                    mapperNum);
+                    jdbcPass, selectSql, jobWorkingDir, hiveTable, splitColumn, bquery, filedDelimiter, mapperNum);
             logger.debug(String.format("sqoop cmd:%s", cmd));
             CmdStep step = new CmdStep();
             step.setCmd(cmd);
@@ -212,7 +208,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
             config.putAll(SourceConfigurationUtil.loadSqoopConfiguration());
             config.putAll(kylinConfig.getSqoopConfigOverride());
 
-            StringBuilder args = new StringBuilder();
+            StringBuilder args = new StringBuilder(" -Dorg.apache.sqoop.splitter.allow_text_splitter=true ");
             for (Map.Entry<String, String> entry : config.entrySet()) {
                 args.append(" -D" + entry.getKey() + "=" + entry.getValue() + " ");
             }
