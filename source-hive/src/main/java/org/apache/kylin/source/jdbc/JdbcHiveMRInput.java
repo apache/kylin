@@ -186,7 +186,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
             String cmd = String.format("%s/sqoop import -Dorg.apache.sqoop.splitter.allow_text_splitter=true "
                     + "-Dmapreduce.job.queuename=%s "
                     + "--connect \"%s\" --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
-                    + "--target-dir %s/%s --split-by %s.%s --boundary-query \"%s\" --null-string '' "
+                    + "--target-dir %s/%s --split-by %s --boundary-query \"%s\" --null-string '' "
                     + "--fields-terminated-by '%s' --num-mappers %d", sqoopHome, queueName, connectionUrl, driverClass,
                     jdbcUser, jdbcPass, selectSql, jobWorkingDir, hiveTable, splitTable, splitColumn, bquery,
                     filedDelimiter, mapperNum);
