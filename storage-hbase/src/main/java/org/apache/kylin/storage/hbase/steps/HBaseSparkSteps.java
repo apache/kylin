@@ -48,6 +48,7 @@ public class HBaseSparkSteps extends HBaseJobSteps {
         sparkExecutable.setParam(SparkCubeHFile.OPTION_OUTPUT_PATH.getOpt(), getHFilePath(jobId));
         sparkExecutable.setParam(SparkCubeHFile.OPTION_PARTITION_FILE_PATH.getOpt(),
                 getRowkeyDistributionOutputPath(jobId) + "/part-r-00000_hfile");
+        sparkExecutable.setParam(SparkCubeHFile.OPTION_WORKING_PATH.getOpt(), getJobWorkingDir(jobId));
 
         sparkExecutable.setJobId(jobId);
 
