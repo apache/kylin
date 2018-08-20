@@ -106,6 +106,7 @@ then
 
     # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
     hbase ${KYLIN_EXTRA_START_OPTS} \
+    -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
     -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
     -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-server-log4j.properties \
     -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
