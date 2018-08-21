@@ -18,7 +18,7 @@ __Companies & Organizations__
 * [StrateBI](http://www.stratebi.com/), 2018-05-23
     * Apache Kylin has become an essential part in our Big Data projects. We have deployed Kylin with successful for a digital marketing and retail customers, where requirements for data refreshing (minutes) and query latency (sub-second) were very strict while data volumes remain very high (billion rows). Moreover, in order to try and show Kylin features, we have created some demos integrating it with [Tableau](http://bigdata.stratebi.com/kylin-tableau/index.htm), [Superset](http://bigdata.stratebi.com/kylin-superset/index.htm) or even [Mondrian MDX](http://bigdata.stratebi.com/kylin-olap/index.htm) based tools.
 * [Grow Force](http://www.300.cn/), 2018-01-02
-    * Kyin in Grow Force are mainly in the new data warehouse system and the data computing of BI reports. On one hand, it increases our development efficiency and eliminates the need for the developer to manually write HQL/SQL statement to query dimension data; on the other hand, it decouples the existing system design. The data computing layer thus mainly includes the real-time calculation of Spark and the offline calculation of HQL. After Kylin being introduced, the whole offline calculation can be moved to Kylin, which improves the flexibility greatly. 
+    * Kylin in Grow Force are mainly in the new data warehouse system and the data computing of BI reports. On one hand, it increases our development efficiency and eliminates the need for the developer to manually write HQL/SQL statement to query dimension data; on the other hand, it decouples the existing system design. The data computing layer thus mainly includes the real-time calculation of Spark and the offline calculation of HQL. After Kylin being introduced, the whole offline calculation can be moved to Kylin, which improves the flexibility greatly. 
 * [ZTE 中兴](http://www.zte.com.cn/), 2017-11-09
     * Apache Kylin is one of the foundational components of ZTE's Big Data Platform. ZTE uses Apache Kylin to provide OLAP capabilities to customers in the  telecom, government, banking, finance and other industries.
 * [4399.com](http://www.4399.com/), 2017-07-30
@@ -58,7 +58,7 @@ __Companies & Organizations__
 * [Meituan.com](http://www.meituan.com), 2015-11-05
     * Apache Kylin is powering various OLAP scenarios at Meituan's Data Platform, such as traffic analysis and payment channel analysis. It's quite stable and super fast. We are very willing to try Kylin on other product as well.
 * [MiningLAMP](http://www.mininglamp.com), 2015-11-05
-    * Apache Kylin is part of MiningLAMP's Big Data Analytics product offering OLAP capability for customers from Banking, Finance and others industuies.
+    * Apache Kylin is part of MiningLAMP's Big Data Analytics product offering OLAP capability for customers from Banking, Finance and others industries.
 * [JD.com, Inc.](http://www.jd.com)  (_NASDAQ: JD_), 2015-11-05
     * Apache Kylin as Data Analytics Engine to analysis [JOS](http://jos.jd.com) API access behavior and report in [JCloud](http://www.jcloud.com).
 * [eBay](http://www.ebay.com)  (_NASDAQ: EBAY_), 2015-11-05

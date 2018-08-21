@@ -17,7 +17,7 @@ This abstraction is to extend the meta data to fulfill non-cube queries (coming 
 
 * Support data tables from multiple hive databases;
 
-User has the case that tables are from multiple hive database, and the table name might be the same; To support this case Kylin will use the database name + table name as the unique name for tables; And user need to specify the database name (if it is not "default") in SQL when query Kylin. 
+User has the case that tables are from multiple hive database, and the table name might be the same; To support this case Kylin will use the database name + table name as the unique name for tables; And user need to specify the database name (if it is not "default") in SQL when query in Kylin. 
 
 Here is a sample; the fact table "test_kylin_fact" is from default hive database, you don't need to specify the db name; while lookup table is from "edw", you need use "edw.test_cal_dt" in the query:
 
