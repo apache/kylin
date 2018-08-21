@@ -88,7 +88,6 @@ permalink: /community/index.html
 		    <h2>Community Activity Report</h2>
 
 		    <p><a href="https://github.com/apache/kylin/pulse">Git Pulse</a></p>
-		    <p><a href="https://github.com/apache/kylin/graphs">Git Graphs</a></p>
 		    <p><a href="https://reporter.apache.org/?kylin">Apache Committee Report</a></p>
 		</div>
 	</div>
@@ -151,12 +150,12 @@ permalink: /community/index.html
 		    <tr>  
 		    	<td>Kejia Wang</td>
 		    	<td><a href="https://github.com/Kejia-Wang">Kejia-Wang</a></td>
-		    	<td>Web aplication, Website</td>
+		    	<td>Web application, Website</td>
 		    </tr>
 		    <tr>  
 		    	<td>Yue Yang</td>
 		    	<td></td>
-		    	<td>Web aplication UI design</td>
+		    	<td>Web application UI design</td>
 		    </tr>
 		    </table>
 		</div>

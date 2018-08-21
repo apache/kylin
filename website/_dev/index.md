@@ -18,7 +18,6 @@ Mirrored to Gitbox: [https://gitbox.apache.org/repos/asf?p=kylin.git ](https://g
 ### CI and Code Analysis
 UT on master branch with JDK 1.7(deprecated): [Kylin-Master-JDK-1.7](https://builds.apache.org/job/Kylin-Master-JDK-1.7/) 
 UT on master branch with JDK 1.8: [Kylin-Master-JDK-1.8](https://builds.apache.org/job/Kylin-Master-JDK-1.8/) 
-Integretion test within Hadoop Sandbox (HDP 2.4) : [http://34.226.50.254:8081/](http://34.226.50.254:8081/)
 Static Code Analysis: [SonarCube dashboard](https://builds.apache.org/analysis/overview?id=org.apache.kylin%3Akylin)
 
 [![Build Status](https://travis-ci.org/apache/kylin.svg?branch=master)](https://travis-ci.org/apache/kylin)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/74f0139786cd4e8a8ce69bb0c17c2e71)](https://www.codacy.com/app/kyligence-git/kylin?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=apache/kylin&amp;utm_campaign=Badge_Grade)
@@ -29,8 +28,8 @@ Track issues on the "Kylin" Project on the Apache JIRA ([browse](http://issues.a
 
 ### Roadmap
 - Hadoop 3.0 support (Erasure Coding)
-- Spark Cubing enhancement
-- Connect more sources (JDBC, SparkSQL)
+- Fully on Spark Cube engine
+- Connect more data sources (MySQL, Oracle, SparkSQL, etc)
 - Ad-hoc queries without Cubing
 - Better storage (Druid, Kudu, etc)
 - Real-time analytics with Lambda Architecture

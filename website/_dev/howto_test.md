@@ -20,21 +20,10 @@ In general, there should be unit tests to cover individual classes; there must b
     * The integration tests take one to two hours to complete.
 * `nohup dev-support/test_all_against_hdp_2_4_0_0_169.sh < /dev/null 2>&1 > nohup.out &` runs IT in an unattended mode.
 
-## Test v1.3 and below
-
-* `mvn test` to run unit tests, which has a limited test coverage.
-    * What's special about v1.3 and below is that a hadoop/hbase mini cluster is used to cover queries in unit test.
-* Run the following to run integration tests.
-    * `mvn clean package -DskipTests`
-    * `mvn test  -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -Dhdp.version=2.2.0.0-2041 -DfailIfNoTests=false -P sandbox`
-    * `mvn test  -Dtest=org.apache.kylin.job.BuildIIWithEngineTest -Dhdp.version=2.2.0.0-2041 -DfailIfNoTests=false -P sandbox`
-    * `mvn test  -fae -P sandbox`
-    * `mvn test  -fae  -Dtest=org.apache.kylin.query.test.IIQueryTest -Dhdp.version=2.2.0.0-2041 -DfailIfNoTests=false -P sandbox`
 
 ## More on v1.5 UT/IT separation
 
-From Kylin v1.5 you can run UT(Unit test), environment cube provision and IT (Integration test) separately. 
-Running `mvn verify -Dhdp.version=2.2.4.2-2`  (assume you're on your sandbox) is all you need to run a complete all the test suites.
+Running `mvn verify -Dhdp.version=2.4.0.0-169` (assume you're on your sandbox) is all you need to run a complete all the test suites.
 
 It will execute the following steps sequentially:
  
@@ -52,20 +41,6 @@ If your sandbox is already provisioned and your code change will not affect the 
 
 ### Cube Provision
 
-Environment cube provision is indeed running kylin cubing jobs to prepare example cubes in the sandbox. These prepared cubes will be used by the ITs. Currently provision step is bound with the maven pre-integration-test phase, and it contains running BuildCubeWithEngine (HBase required), BuildCubeWithStream(Kafka required) and BuildIIWithStream(Kafka Required). You can run the mvn commands on you sandbox or your develop computer. For the latter case you need to set kylin.job.use-remote-cli=true in __$KYLIN_HOME/examples/test_case_data/sandbox/kylin.properties__. 
+Test cube provision is indeed running kylin cubing jobs to prepare example cubes in the sandbox. These prepared cubes will be used by the ITs. Currently provision step is bound with the maven pre-integration-test phase, and it contains running BuildCubeWithEngine (HBase required) and BuildCubeWithStream(Kafka required). You can run the mvn commands on you sandbox or your development computer. For the latter case you need to set `kylin.job.use-remote-cli=true`in __$KYLIN_HOME/examples/test_case_data/sandbox/kylin.properties__. 
 Try appending `-DfastBuildMode=true` to mvn verify command to speed up provision by skipping incremental cubing. 
 
-## More on v1.3 Mini Cluster
-
-Kylin v1.3 (and below) used to move as many as possible unit test cases from sandbox to HBase mini cluster, so that user can run tests easily in local without a hadoop sandbox. Two maven profiles are created in the root pom.xml, "default" and "sandbox". The default profile will startup a HBase Mini Cluster to prepare the test data and run the unit tests (the test cases that are not supported by Mini cluster have been added in the "exclude" list). If you want to keep using Sandbox to run test, just run `mvn test -P sandbox`
-
-### When use the "default" profile, Kylin will
-
-* Startup a HBase minicluster and update KylinConfig with the dynamic HBase configurations
-* Create Kylin metadata tables and import six example cube tables
-* Import the hbase data from a tar ball from local: `examples/test_case_data/minicluster/hbase-export.tar.gz` (the hbase-export.tar.gz will be updated on complete of running BuildCubeWithEngineTest）
-* After all test cases be completed, shutdown minicluster and cleanup KylinConfig cache
-
-### To ensure Mini cluster can run successfully, you need
-
-* Make sure JAVA_HOME is properly set

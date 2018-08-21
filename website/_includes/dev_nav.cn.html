@@ -16,33 +16,18 @@
 * limitations under the License.
 -->
 
-<!DOCTYPE html>
-<html>
-
-  {% include head.cn.html %}
-
-  <body>
-
-    {% include header.cn.html %}
-<main id="main" >
-  <div >
-    <div id="zero" class=" main community" >
-      <header style="padding:2em 0 2em 0;">
-        <div class="page-content">
-          <div class="wrapper">
-            {{ content }}
-          </div>
-        </div>
-      </header>
-    </div>
+<div class="col-md-4 col-lg-4 col-xs-12 col-sm-12 aside1 visible-sm visible-xs visible-md visible-lg" id="nside1" style=" margin-top: 5em;float:right;">
+    <ul class="nav nav-pills nav-stacked">
+    {% for section in site.data.development-cn %}
+    <li><a href="#{{ section | first }}" data-toggle="collapse" class="navtitle">{{ section.title }}</a></li>
+    <div class="collapse in">
+  	<div class="list-group" id="list1">
+    <ul>
+    {% include dev_ul.cn.html items=section.dev %}
+        <ul>
   </div>
-</main>
+</div>
+    {% endfor %}
 
-    {% include footer.html %}
-
-  <script src="/assets/js/jquery-1.9.1.min.js"></script> 
-  <script src="/assets/js/bootstrap.min.js"></script> 
-  <script src="/assets/js/main.js"></script>
-  </body>
-
-</html>
+    </ul>
+</div>

@@ -1,77 +1,77 @@
 ---
-layout: dev
-title:  How to Make Release
+layout: dev-cn
+title:  如何发布
 categories: development
-permalink: /development/howto_release.html
+permalink: /cn/development/howto_release.html
 ---
 
-_This guide is for Apache Kylin Committers only._  
-_Shell commands are on Mac OS X as sample._  
-_For people in China, please aware using proxy to avoid potential firewall issue._  
+_本教程只适用于 Apache Kylin Committers。_  
+_以在 Mac OS X 上的 Shell 命令作为样例。_  
+_对于中国用户，请谨慎使用代理以避免潜在的防火墙问题。_  
 
-## Setup Account
-Make sure you have avaliable account and privilege for following applications:
+## 建立账户
+确保您有可使用的账号且对以下应用有权限:
 
-* Apache account: [https://id.apache.org](https://id.apache.org/)    
+* Apache 账户: [https://id.apache.org](https://id.apache.org/)    
 * Apache Kylin git repo (main cobe base): [https://github.com/apache/kylin](https://github.com/apache/kylin)  
-* Apache Kylin svn repo (for website only): [https://svn.apache.org/repos/asf/kylin](https://svn.apache.org/repos/asf/kylin)  
-* Apache Nexus (maven repo): [https://repository.apache.org](https://repository.apache.org)  
-* Apache Kylin dist repo: [https://dist.apache.org/repos/dist/dev/kylin](https://dist.apache.org/repos/dist/dev/kylin)  
+* Apache Kylin svn 仓库 (只针对网站): [https://svn.apache.org/repos/asf/kylin](https://svn.apache.org/repos/asf/kylin)  
+* Apache Nexus (maven 仓库): [https://repository.apache.org](https://repository.apache.org)  
+* Apache Kylin dist 仓库: [https://dist.apache.org/repos/dist/dev/kylin](https://dist.apache.org/repos/dist/dev/kylin)  
 
-## Setup GPG signing keys  
-Follow instructions at [http://www.apache.org/dev/release-signing](http://www.apache.org/dev/release-signing) to create a key pair  
-Install gpg (On Mac OS X as sample):  
+## 设置 GPG 签名密钥  
+按照 [http://www.apache.org/dev/release-signing](http://www.apache.org/dev/release-signing) 上的说明创建密钥对  
+安装 gpg (以 Mac OS X 为例):  
 `brew install gpg`
 
-Generate gpg key:  
-Reference: [https://www.gnupg.org/gph/en/manual/c14.html](https://www.gnupg.org/gph/en/manual/c14.html)  
-_All new RSA keys generated should be at least 4096 bits. Do not generate new DSA keys_  
+生成 gpg 密钥:  
+参考: [https://www.gnupg.org/gph/en/manual/c14.html](https://www.gnupg.org/gph/en/manual/c14.html)  
+_生成的所有新 RSA 密钥应至少为 4096 位。不要生成新的 DSA 密钥_  
 `gpg --full-generate-key`  
 
-Verify your key:  
+验证您的密钥:  
 `gpg --list-sigs YOUR_NAME`
 
-Get the fingerprint of your key:
+获取密钥的指纹:
 `gpg --fingerprint YOUR_NAME`
 
-It will display the fingerprint like "Key fingerprint = XXXX XXXX ...", then add the fingerprint to your apache account at [https://id.apache.org/](https://id.apache.org/) in "OpenPGP Public Key Primary Fingerprint" field; wait for a few hours the key will added to [https://people.apache.org/keys/](https://people.apache.org/keys/), for example:
+它将显示指纹，如 "Key fingerprint = XXXX XXXX ..."，然后在 [https://id.apache.org/](https://id.apache.org/) 上的"OpenPGP Public Key Primary Fingerprint"字段处将指纹添加到您的 apache 帐户；等待几个小时，密钥将添加到 [https://people.apache.org/keys/](https://people.apache.org/keys/)，例如:
 [https://people.apache.org/keys/committer/lukehan.asc](https://people.apache.org/keys/committer/lukehan.asc)
 
-Generate ASCII Amromed Key:  
+生成 ASCII Amromed 键:  
 `gpg -a --export YOUR_MAIL_ADDRESS > YOUR_NAME.asc &`
 
-Upload key to public server:  
+上传密钥到公共服务器:  
 `gpg --send-keys YOUR_KEY_HASH`
 
-or Submit key via web:  
-Open and Submit to [http://pool.sks-keyservers.net:11371](http://pool.sks-keyservers.net:11371) (you can pickup any available public key server)
+或通过 web 提交密钥:  
+打开并提交到 [http://pool.sks-keyservers.net:11371](http://pool.sks-keyservers.net:11371) (您可以选择任意一个有效的公钥服务器)
 
-Once your key submitted to server, you can verify using following command:  
+一旦您的密钥提交到服务器，您可以通过使用以下命令验证:  
 `gpg --recv-keys YOUR_KEY_HASH`
-for example:  
+举例:  
 `gpg --recv-keys 027DC364`
 
-Add your public key to the KEYS file by following instructions in the KEYS file.:  
-_KEYS file location:_ __${kylin}/KEYS__  
-For example:  
+按照 KEYS 文件中的说明将公钥添加到 KEYS 文件:  
+_KEYS 文件位于:_ __${kylin}/KEYS__  
+例如:  
 `(gpg --list-sigs YOURNAME && gpg --armor --export YOURNAME) >> KEYS`
 
-Commit your changes.
+提交您的改动。
 
-## Prepare artifacts for release  
-__Before you start:__
+## 准备 release 的工件  
+__开始前:__
 
-* Set up signing keys as described above.
-* Make sure you are using JDK 1.8.
-* Make sure you are using GIT 2.7.2 or above.
-* Make sure you are working on right release version number.
-* Make sure that every “resolved” JIRA case (including duplicates) has a fix version assigned.
-* Make sure you are working in clean dir
+* 如上所述设置签名密钥。
+* 确保您使用的是 JDK 1.8。
+* 确保您使用的是 GIT 2.7.2 或更高版本。
+* 确保您使用的是正确的 release 版本号。
+* 确保每个“resolved”的 JIRA 案例（包括重复案例）都分配了修复版本。
+* 确保你在干净的目录工作
 
-__Configure Apache repository server in Maven__
-If you're the first time to do release, you need update the server authentication information in ~/.m2/settings.xml; If this file doesn't exist, copy a template from $M2_HOME/conf/settings.xml;
+__在 Maven 中配置 Apache 存储库服务器__
+如果您是第一次发布，您需要在 ~/.m2/settings.xml 中服务器授权信息；如果该文件不存在，从 $M2_HOME/conf/settings.xml 拷贝一个模板;
 
-In the "servers" section, make sure the following servers be added, and replace #YOUR_APACHE_ID#, #YOUR_APACHE_PWD#, #YOUR_GPG_PASSPHRASE# with your ID, password, and passphrase:
+在“服务器”部分中，确保添加以下服务器，并将 #YOUR_APACHE_ID#, #YOUR_APACHE_PWD#, #YOUR_GPG_PASSPHRASE# 替换为您的 ID，密码和口令:
 {% highlight bash %}
   <servers>
     <!-- To publish a snapshot of some part of Maven -->
@@ -114,7 +114,7 @@ In the "servers" section, make sure the following servers be added, and replace 
   </servers>
 {% endhighlight %}
 
-__Fix license issues__
+__修复许可证问题__
 {% highlight bash %}
 # Set passphrase variable without putting it into shell history
 $ read -s GPG_PASSPHRASE
@@ -132,20 +132,20 @@ $ mvn test
 $ mvn -Papache-release -DskipTests -Dgpg.passphrase=${GPG_PASSPHRASE} install
 {% endhighlight %}
 
-Optionally, when the dry-run has succeeded, change install to deploy:
+可选的，当 dry-run 成功了，将安装变为部署:
 {% highlight bash %}
 $ mvn -Papache-release -DskipTests -Dgpg.passphrase=${GPG_PASSPHRASE} deploy
 {% endhighlight %}
 
-__Prepare__
+__准备__
 
-Create a release branch named after the release, e.g. v0.7.2-release, and push it to Apache.  
+创建一个以 release 后命名的发布分支，例如，v0.7.2-release，并将其推到 Apache。  
 {% highlight bash %}
 $ git checkout -b vX.Y.Z-release
 $ git push -u origin vX.Y.Z-release
 {% endhighlight %}
 
-If any of the steps fail, clean up (see below), fix the problem, and start again from the top.  
+如果任何步骤失败，请清理（见下文），解决问题，然后从头重新开始。  
 {% highlight bash %}
 # Set passphrase variable without putting it into shell history
 $ read -s GPG_PASSPHRASE
@@ -158,22 +158,21 @@ $ mvn clean
 $ mvn -DdryRun=true -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:prepare 2>&1 | tee /tmp/prepare-dry.log
 {% endhighlight %}
 
-__Check the dry run output:__
+__查看 dry run 输出:__
 
-* In the `target` directory should be these 8 files, among others:
+* 在 `target` 目录中应该是这 8 个文件，其中包括：
   * apache-kylin-X.Y.Z-SNAPSHOT-src.zip
   * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.asc
   * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.md5
   * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.sha1
-* Remove the .zip, .zip.asc, .zip.md5 and zip.sha1 file as they are not needed.
-* Note that the file names start `apache-kylin-`.
-* In the source distro `.tar.gz`, check that all files belong to a directory called
-  `apache-kylin-X.Y.Z-src`.
-* That directory must contain files `NOTICE`, `LICENSE`, `README.md`
-* Check PGP, per [this](https://httpd.apache.org/dev/verification.html)
+* 移除 .zip, .zip.asc, .zip.md5 和 zip.sha1 文件因为不需要。
+* 注意文件名以 `apache-kylin-` 开始
+* 在源发行版 `.tar.gz` 中，检查所有文件是否属于名为 `apache-kylin-X.Y.Z-src` 的目录。
+* 该目录必须包含 `NOTICE`, `LICENSE`, `README.md` 文件
+* 按[此](https://httpd.apache.org/dev/verification.html)检查 PGP
 
-__Run real release:__
-Now, run the release for real.  
+__运行真实的 release:__
+现在真正开始 release  
 {% highlight bash %}
 # Prepare sets the version numbers, creates a tag, and pushes it to git.
 $ mvn -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:prepare
@@ -182,7 +181,7 @@ $ mvn -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT
 $ mvn -DskipTests -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:perform
 {% endhighlight %}
 
-__Cleaning up after a failed release attempt:__
+__一个失败的 release 尝试后进行清理:__
 {% highlight bash %}
 # Make sure that the tag you are about to generate does not already
 # exist (due to a failed release attempt)
@@ -201,18 +200,18 @@ $ git status
 $ git reset --hard HEAD
 {% endhighlight %}
 
-__Close the staged artifacts in the Nexus repository:__
+__关闭 Nexus 仓库中的阶段性工件:__
 
-* Go to [https://repository.apache.org/](https://repository.apache.org/) and login
-* Under `Build Promotion`, click `Staging Repositories`
-* In the `Staging Repositories` tab there should be a line with profile `org.apache.kylin`
-* Navigate through the artifact tree and make sure the .jar, .pom, .asc files are present
-* Check the box on in the first column of the row, and press the 'Close' button to publish the repository at
+* 输入 [https://repository.apache.org/](https://repository.apache.org/) 并登陆
+* 在 `Build Promotion` 下，点击 `Staging Repositories`
+* 在 `Staging Repositories` 选项卡中，应该有一个包含配置文件 `org.apache.kylin` 的行
+* 浏览工件树并确保存在 .jar，.pom，.asc 文件
+* 选中行第一列中的复选框，点击 'Close' 按钮发布仓库到
   [https://repository.apache.org/content/repositories/orgapachekylin-1006](https://repository.apache.org/content/repositories/orgapachekylin-1006)
-  (or a similar URL)
+  (或相似的 URL)
 
-__Upload to staging area:__  
-Upload the artifacts via subversion to a staging area, https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-X.Y.Z-rcN:
+__上传到临时区域:__  
+通过 subversion 将工件上传到临时区域，https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-X.Y.Z-rcN:
 {% highlight bash %}
 # Create a subversion workspace, if you haven't already
 $ mkdir -p ~/dist/dev
@@ -231,7 +230,7 @@ $ svn add apache-kylin-X.Y.Z-rcN
 $ svn commit -m 'Upload release artifacts to staging' --username <YOUR_APACHE_ID>
 {% endhighlight %}
 
-__Cleaning up after a failed release attempt:__
+__一个失败的 release 尝试后进行清理：__
 {% highlight bash %}
 # Make sure that the tag you are about to generate does not already
 # exist (due to a failed release attempt)
@@ -250,7 +249,7 @@ $ git status
 $ git reset --hard HEAD
 {% endhighlight %}
 
-# Validate a release
+# 验证 release
 {% highlight bash %}
 # Check unit test
 $ mvn test
@@ -288,10 +287,10 @@ function checkHash() {
 $ checkHash apache-kylin-X.Y.Z-rcN
 {% endhighlight %}
 
-## Apache voting process  
+## Apache 投票过程  
 
-__Vote on Apache Kylin dev mailing list__  
-Release vote on dev list, use the commit id that generated by Maven release plugin, whose message looks like "[maven-release-plugin] prepare release kylin-x.x.x":  
+__在 Apache Kylin dev 邮件列表上投票__  
+在 dev 邮件列表上进行 release 投票，使用由 Maven release plugin 生成的 commit id，其消息看起来像 "[maven-release-plugin] prepare release kylin-x.x.x"：
 
 {% highlight text %}
 To: dev@kylin.apache.org
@@ -344,7 +343,7 @@ Here is my vote:
 
 {% endhighlight %}
 
-After vote finishes, send out the result:  
+投票完成后，发出结果：  
 {% highlight text %}
 Subject: [RESULT] [VOTE] Release apache-kylin-X.Y.Z (RC[N])
 To: dev@kylin.apache.org
@@ -367,28 +366,27 @@ Luke
 
 {% endhighlight %}
 
-## Publishing a release  
-After a successful release vote, we need to push the release
-out to mirrors, and other tasks.
+## 发布  
+成功发布投票后，我们需要推动发行到镜像，以及其他任务。
 
-In JIRA, search for
+在 JIRA 中，搜索
 [all issues resolved in this release](https://issues.apache.org/jira/issues/?jql=project%20%3D%20KYLIN%20),
-and do a bulk update changing their status to "Closed",
-with a change comment
+并进行批量更新，将它们的状态更改为“关闭”，
+并加上更改的评论
 "Resolved in release X.Y.Z (YYYY-MM-DD)"
-(fill in release number and date appropriately).  
-__Uncheck "Send mail for this update".__
+(填写适当的发布号和日期)。  
+__取消 "Send mail for this update"。__
 
-Mark the version released in JIRA system, [Manage Versions](https://issues.apache.org/jira/plugins/servlet/project-config/KYLIN/versions).
+标记 JIRA 系统中发布的版本，[管理版本](https://issues.apache.org/jira/plugins/servlet/project-config/KYLIN/versions)。
 
-Promote the staged nexus artifacts.
+推广分阶段的 nexus 工件。
 
-* Go to [https://repository.apache.org/](https://repository.apache.org/) and login
-* Under "Build Promotion" click "Staging Repositories"
-* In the line with "orgapachekylin-xxxx", check the box
-* Press "Release" button
+* 转到 [https://repository.apache.org/](https://repository.apache.org/) 并登陆
+* 在 "Build Promotion" 下点击 "Staging Repositories"
+* 在 "orgapachekylin-xxxx" 行中，选中框
+* 点击 "Release" 按钮
 
-Check the artifacts into svn.
+将工件检入 svn。
 {% highlight bash %}
 # Get the release candidate.
 $ mkdir -p ~/dist/dev
@@ -407,11 +405,11 @@ $ svn add apache-kylin-X.Y.Z
 svn commit -m 'checkin release artifacts'
 {% endhighlight %}
 
-Svnpubsub will publish to
-[https://dist.apache.org/repos/dist/release/kylin](https://dist.apache.org/repos/dist/release/kylin) and propagate to
-[http://www.apache.org/dyn/closer.cgi/kylin](http://www.apache.org/dyn/closer.cgi/kylin) within 24 hours.
+Svnpubsub 将会发布到
+[https://dist.apache.org/repos/dist/release/kylin](https://dist.apache.org/repos/dist/release/kylin) 并会在 24 小时内传播到
+[http://www.apache.org/dyn/closer.cgi/kylin](http://www.apache.org/dyn/closer.cgi/kylin)。
 
-If there are now more than 2 releases, clear out the oldest ones:
+如果现在有超过 2 个版本，请清除最旧的版本：
 
 {% highlight bash %}
 cd ~/dist/release/kylin
@@ -419,47 +417,46 @@ svn rm apache-kylin-X.Y.Z
 svn commit -m 'Remove old release'
 {% endhighlight %}
 
-The old releases will remain available in the
-[release archive](http://archive.apache.org/dist/kylin/).
+旧版本将保留在 [release archive](http://archive.apache.org/dist/kylin/).
 
-Release same version in JIRA, check Change Log.
+在 JIRA 中发布相同版本，检查最新发布版本的更改日志。
 
-## Build and upload binary package
-After publish the release, you need generate the binary packages and then put them to the svn release repository;
+## 构建和上传二进制包
+发布后，您需要生成二进制包并将它们放入到 VPN 发布库中；
 
-* Do `git fetch --all --prune --tags` to sync your local repo with remote.
-* Git checkout the tag for current release; 
-* Make a binary package by refering to [this doc](howto_package.html);
-* Sign the generated binary package with gpg, e.g,:
+* 使用 `git fetch --all --prune --tags` 来同步您本地和远程的仓库。
+* Git 检出当前发布的标签；
+* 通过参考[此文档](howto_package.html)制作二进制包;
+* 使用 gpg 对生成的二进制包进行签名，例如：
   {% highlight bash %}
   gpg --armor --output apache-kylin-1.5.0-bin.tar.gz.asc --detach-sig apache-kylin-1.5.0-bin.tar.gz
   {% endhighlight %}
-* Generate the md5 file for the binary package, e.g,:
+* 生成二进制包的 md5 文件，例如：
   {% highlight bash %}
   md5sum < apache-kylin-1.5.0-bin.tar.gz > apache-kylin-1.5.0-bin.tar.gz.md5
   {% endhighlight %}
-* Push the binary package, the signature file and the md5 file to the svn __dev__ repo, then run `svn mv <files-in-dev> <files-in-release>` to move them to svn __release__ repo.
-* For different Hadoop/HBase version, you may need repeat the above steps;
-* Add the files and then commit the svn changes. 
+* 将二进制包，签名文件和 md5 文件推送到 svn __dev__ 仓库，然后运行 `svn mv <files-in-dev> <files-in-release>` 命令将他们移动到 svn __release__ 仓库。
+* 对于不同的 Hadoop/HBase 版本，您可能需要上述步骤；
+* 添加文件，然后将更改提交 svn。 
 
 
-## Update source code
-After publish the release, you need to manually update some source code:
+## 更新源码
+发布后，您需要手动更新一些源代码：
 
-* Update `KylinVersion` class, change value of `CURRENT_KYLIN_VERSION` to current development version. 
+* 更新 `KylinVersion` 类，将 `CURRENT_KYLIN_VERSION` 的值更改为当前开发版本。
 
-## Publishing the web site  
-Refer to [How to document](howto_docs.html) for more detail.
+## 发布网站  
+更多细节参考[如何写文档](howto_docs.html)。
 
-## Send announcement mail to mailing list
-Send one mail with subject like "[Announce] Apache Kylin x.y.z released" to following list:
+## 发送通知邮件到邮件列表
+发送一个邮件主题如 "[Announce] Apache Kylin x.y.z released" 到以下列表：
 
-* Apache Kylin Dev mailing list: dev@kylin.apache.org
-* Apache Kylin User mailing list: user@kylin.apache.org
-* Apache Announce mailing list: announce@apache.org
-  Please notice to always use your Apache mail address to send this;
+* Apache Kylin Dev 邮箱列表: dev@kylin.apache.org
+* Apache Kylin User 邮箱列表: user@kylin.apache.org
+* Apache Announce 邮箱列表: announce@apache.org
+  请注意始终使用您的 Apache 邮件地址发送;
 
-Here is a sample of announcement email (by studying Kafka's):
+这是一个公告电子邮件的样本（通过研究 Kafka):
 
 {% highlight text %} 
 The Apache Kylin team is pleased to announce the immediate availability of the 2.1.0 release. 
@@ -484,6 +481,6 @@ https://kylin.apache.org/
 
 {% endhighlight %}
 
-# Thanks  
-This guide drafted with reference from [Apache Calcite](http://calcite.apache.org) Howto doc, Thank you very much.
+# 感谢  
+本指南起草于 [Apache Calcite](http://calcite.apache.org) Howto doc 的参考资料，非常感谢。
 
