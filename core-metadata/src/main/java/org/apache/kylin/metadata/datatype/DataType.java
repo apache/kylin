@@ -124,7 +124,7 @@ public class DataType implements Serializable {
         LEGACY_TYPE_MAP.put("hllc16", "hllc(16)");
     }
 
-    private static final ConcurrentMap<DataType, DataType> CACHE = new ConcurrentHashMap<DataType, DataType>();
+    private static final ConcurrentMap<String, DataType> CACHE = new ConcurrentHashMap<String, DataType>();
 
     public static final DataType ANY = DataType.getType("any");
 
@@ -142,10 +142,10 @@ public class DataType implements Serializable {
         if (type == null)
             return null;
 
-        DataType dataType = new DataType(type);
-        DataType cached = CACHE.get(dataType);
+        DataType cached = CACHE.get(type);
         if (cached == null) {
-            CACHE.put(dataType, dataType);
+            DataType dataType = new DataType(type);
+            CACHE.put(type, dataType);
             cached = dataType;
         }
         return cached;
