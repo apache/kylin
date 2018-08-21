@@ -33,7 +33,6 @@ In general, there should be unit tests to cover individual classes; there must b
 
 ## More on v1.5 UT/IT separation
 
-From Kylin v1.5 you can run UT(Unit test), environment cube provision and IT (Integration test) separately. 
 Running `mvn verify -Dhdp.version=2.2.4.2-2`  (assume you're on your sandbox) is all you need to run a complete all the test suites.
 
 It will execute the following steps sequentially:
@@ -52,7 +51,7 @@ If your sandbox is already provisioned and your code change will not affect the 
 
 ### Cube Provision
 
-Environment cube provision is indeed running kylin cubing jobs to prepare example cubes in the sandbox. These prepared cubes will be used by the ITs. Currently provision step is bound with the maven pre-integration-test phase, and it contains running BuildCubeWithEngine (HBase required), BuildCubeWithStream(Kafka required) and BuildIIWithStream(Kafka Required). You can run the mvn commands on you sandbox or your develop computer. For the latter case you need to set kylin.job.use-remote-cli=true in __$KYLIN_HOME/examples/test_case_data/sandbox/kylin.properties__. 
+Test cube provision is indeed running kylin cubing jobs to prepare example cubes in the sandbox. These prepared cubes will be used by the ITs. Currently provision step is bound with the maven pre-integration-test phase, and it contains running BuildCubeWithEngine (HBase required), BuildCubeWithStream(Kafka required) and BuildIIWithStream(Kafka Required). You can run the mvn commands on you sandbox or your develop computer. For the latter case you need to set kylin.job.use-remote-cli=true in __$KYLIN_HOME/examples/test_case_data/sandbox/kylin.properties__. 
 Try appending `-DfastBuildMode=true` to mvn verify command to speed up provision by skipping incremental cubing. 
 
 ## More on v1.3 Mini Cluster

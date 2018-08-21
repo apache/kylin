@@ -16,33 +16,32 @@
 * limitations under the License.
 -->
 
-<!DOCTYPE html>
+<!doctype html>
 <html>
+	{% include head.cn.html %}
+	<body>
+		{% include header.cn.html %}
+		
+		<div class="container">
+			<div class="row"  style="clear:both;">
+				
+				<div class="col-md-8 col-lg-8 col-xs-12 col-sm-12 aside2" style="float: right;">
+					<div id="container" class="docs">
+						<div id="pjax">
+							<h1 class="post-title">{{ page.title }}</h1>
+							<article class="post-content" >
+							{{ content }}
+							</article>
+						</div>
+					</div>
+				</div>
+				{% include dev_nav.cn.html %}
+			</div>
+		</div>		
+		{% include footer.html %}
 
-  {% include head.cn.html %}
-
-  <body>
-
-    {% include header.cn.html %}
-<main id="main" >
-  <div >
-    <div id="zero" class=" main community" >
-      <header style="padding:2em 0 2em 0;">
-        <div class="page-content">
-          <div class="wrapper">
-            {{ content }}
-          </div>
-        </div>
-      </header>
-    </div>
-  </div>
-</main>
-
-    {% include footer.html %}
-
-  <script src="/assets/js/jquery-1.9.1.min.js"></script> 
-  <script src="/assets/js/bootstrap.min.js"></script> 
-  <script src="/assets/js/main.js"></script>
-  </body>
-
+	<script src="/assets/js/jquery-1.9.1.min.js"></script> 
+	<script src="/assets/js/bootstrap.min.js"></script> 
+	<script src="/assets/js/main.js"></script>
+	</body>
 </html>

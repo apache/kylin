@@ -75,8 +75,6 @@ Configuration file: /srv/jekyll/_config.yml
 ## About Jekyll
 Jekyll is a Ruby script to generate a static HTML website from source text and themes, the HTML is generated before being deployed to the web server. Jekyll also happens to be the engine behind GitHub Pages.
 
-Here are good reference about basic usage of Jekyll: [Learning Jekyll By Example](http://learn.andrewmunsell.com/learn/jekyll-by-example/tutorial)
-
 Apache Kylin's website and documentation is using Jekyll to manage and generate final content which avaliable at [http://kylin.apache.org](http://kylin.apache.org).
 
 ## Multi-Language
