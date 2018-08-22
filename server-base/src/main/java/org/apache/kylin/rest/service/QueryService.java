@@ -76,6 +76,7 @@ import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.querymeta.ColumnMeta;
 import org.apache.kylin.metadata.querymeta.ColumnMetaWithType;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
@@ -337,6 +338,11 @@ public class QueryService extends BasicService {
         }
         if (StringUtils.isBlank(sqlRequest.getProject())) {
             throw new BadRequestException(msg.getEMPTY_PROJECT_NAME());
+        }
+        // project not found
+        ProjectManager mgr = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+        if (mgr.getProject(sqlRequest.getProject()) == null) {
+            throw new BadRequestException(msg.getPROJECT_NOT_FOUND());
         }
         if (StringUtils.isBlank(sqlRequest.getSql())) {
             throw new BadRequestException(msg.getNULL_EMPTY_SQL());
