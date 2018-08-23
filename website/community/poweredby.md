@@ -5,7 +5,7 @@ permalink: /community/poweredby.html
 ---		
 
 __How to be listed here?__
-Send a quick description of your organization and usage to the [mailing list](mailto:user@kylin.apache.org) or to [@apachekylin](https://twitter.com/apachekylin) or [@lukehq](https://twitter.com/lukehq) on twitter and we'll add you.
+Send a quick description of your organization and usage to the [mailing list](mailto:user@kylin.apache.org), and then we'll add you.
 
 __Companies & Organizations__
 

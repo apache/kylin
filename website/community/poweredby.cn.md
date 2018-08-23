@@ -5,7 +5,7 @@ permalink: /cn/community/poweredby.html
 ---		
 
 __如何贡献案例__
-如果您的公司或组织正在使用 Kylin，并且想加入到案例列别，请发送一个使用情况的简短描述给[用户邮件列表](mailto:user@kylin.apache.org)或给 [@apachekylin](https://twitter.com/apachekylin) 或给 twitter 上的 [@lukehq](https://twitter.com/lukehq)，随后我们会添加您的案例。
+如果您的公司或组织正在使用 Kylin，并且想加入到此页面，请发送一个使用情况的简短描述给[用户邮件列表](mailto:user@kylin.apache.org)，随后我们会添加您的案例。
 
 __公司 & 组织__
 

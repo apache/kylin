@@ -23,8 +23,8 @@ permalink: /cn/community/index.html
 		    <p>如果您在使用 Kylin 过程中遇到问题，请加入 Kylin 邮件群组参与讨论，这是参与 Apache 项目讨论的正确方式。根据您的参与性质: 普通用户或开发者，可以分别订阅 user@kylin.apache.org 和 dev@kylin.apache.org 邮件群组。</p>
 
 			<p>
-		   	请先订阅Kylin邮件群组，再发邮件到对应的组，否则您的问题将会被阻止。
-			例如，如果您要订阅 user@kylin.apache.org，那么先发一个空邮件到user-subscribe@kylin.apache.org，稍后您会收到一封确认邮件，对它进行回复即可完成订阅。在订阅成功后，请再发送您的问题到 user@kylin.apache.org，那么所有订阅该邮件组的其它用户将会收到您的邮件，并做出分享。</p>
+		   	请先订阅 Kylin 邮件群组，再发邮件到对应的组，否则您的问题将会被阻止。
+			例如，如果您要订阅 user@kylin.apache.org，那么先发一个空邮件到 user-subscribe@kylin.apache.org，稍后您会收到一封确认邮件，对它进行回复即可完成订阅。在订阅成功后，请再发送您的问题到 user@kylin.apache.org，那么所有订阅该邮件组的其它用户将会收到您的邮件，并做出分享。</p>
 
 
 		    <p>  
