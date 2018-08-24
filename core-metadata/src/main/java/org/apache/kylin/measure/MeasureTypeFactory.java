@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigCannotInitException;
+import org.apache.kylin.measure.auc.AucMesureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.dim.DimCountDistinctMeasureType;
@@ -112,6 +113,7 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new ExtendedColumnMeasureType.Factory());
         factoryInsts.add(new PercentileMeasureType.Factory());
         factoryInsts.add(new DimCountDistinctMeasureType.Factory());
+        factoryInsts.add(new AucMesureType.Factory());
 
         logger.info("Checking custom measure types from kylin config");
 

@@ -24,6 +24,18 @@
     <packaging>jar</packaging>
     <name>Apache Kylin - Core Metadata</name>
     <description>Apache Kylin - Core Metadata</description>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
@@ -86,6 +98,10 @@
         <dependency>
             <groupId>com.tdunning</groupId>
             <artifactId>t-digest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.haifengl</groupId>
+            <artifactId>smile-core</artifactId>
         </dependency>
 
         <!-- Env & Test -->

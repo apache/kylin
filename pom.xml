@@ -125,6 +125,7 @@
         <spring.framework.security.version>4.2.3.RELEASE</spring.framework.security.version>
         <spring.framework.security.extensions.version>1.0.2.RELEASE</spring.framework.security.extensions.version>
         <opensaml.version>2.6.6</opensaml.version>
+        <smile.version>1.5.0</smile.version>
         <aspectj.version>1.8.9</aspectj.version>
 
         <!-- Sonar -->
@@ -804,6 +805,11 @@
                 <groupId>org.opensaml</groupId>
                 <artifactId>opensaml</artifactId>
                 <version>${opensaml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.haifengl</groupId>
+                <artifactId>smile-core</artifactId>
+                <version>${smile.version}</version>
             </dependency>
 
 
