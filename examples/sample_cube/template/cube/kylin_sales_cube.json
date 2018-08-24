@@ -3,7 +3,7 @@
  
   "last_modified" : 0,
   "name" : "kylin_sales_cube",
-  "owner" : null,
+  "owner" : "ADMIN",
   "descriptor" : "kylin_sales_cube",
   "display_name" : "kylin_sales_cube",
   "status" : "DISABLED",

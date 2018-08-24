@@ -580,7 +580,8 @@
   "engine_type": 2,
   "storage_type": 2,
   "override_kylin_properties": {
-    "kylin.cube.algorithm": "INMEM"
+    "kylin.cube.algorithm": "INMEM",
+    "kylin.dictionary.shrunken-from-global-enabled": "true"
   },
   "snapshot_table_desc_list": [
     {

@@ -2,7 +2,7 @@
   "uuid": "40a27d9d-c5f3-45c4-9b8b-513552219193",
  
   "name": "kylin_streaming_cube",
-  "owner": null,
+  "owner": "ADMIN",
   "status": "DISABLED",
   "segments": [],
   "last_modified": 0,

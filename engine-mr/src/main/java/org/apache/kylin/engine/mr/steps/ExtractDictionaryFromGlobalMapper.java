@@ -18,13 +18,8 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -48,8 +43,13 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.DictionaryGetterUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ExtractDictionaryFromGlobalMapper<KEYIN, Object> extends KylinMapper<KEYIN, Object, Text, Text> {
     private String cubeName;
@@ -66,12 +66,13 @@ public class ExtractDictionaryFromGlobalMapper<KEYIN, Object> extends KylinMappe
     private List<Dictionary<String>> globalDicts;
 
     private String splitKey;
+    private KylinConfig config;
 
     @Override
     protected void doSetup(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         bindCurrentConfiguration(conf);
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
+        config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         cube = CubeManager.getInstance(config).getCube(cubeName);
@@ -84,14 +85,12 @@ public class ExtractDictionaryFromGlobalMapper<KEYIN, Object> extends KylinMappe
         globalColumns = cubeDesc.getAllGlobalDictColumns();
         globalColumnIndex = new int[globalColumns.size()];
         globalColumnValues = Lists.newArrayListWithExpectedSize(globalColumns.size());
-        globalDicts = Lists.newArrayListWithExpectedSize(globalColumns.size());
+
         for (int i = 0; i < globalColumns.size(); i++) {
             TblColRef colRef = globalColumns.get(i);
             int columnIndexOnFlatTbl = intermediateTableDesc.getColumnIndex(colRef);
             globalColumnIndex[i] = columnIndexOnFlatTbl;
-
             globalColumnValues.add(Sets.<String> newHashSet());
-            globalDicts.add(cubeSeg.getDictionary(colRef));
         }
 
         splitKey = DictionaryGetterUtil.getInputSplitSignature(cubeSeg, context.getInputSplit());
@@ -117,9 +116,19 @@ public class ExtractDictionaryFromGlobalMapper<KEYIN, Object> extends KylinMappe
         FileSystem fs = FileSystem.get(context.getConfiguration());
         Path outputDirBase = new Path(context.getConfiguration().get(FileOutputFormat.OUTDIR));
 
+        globalDicts = Lists.newArrayListWithExpectedSize(globalColumns.size());
+        Map<TblColRef, Dictionary<String>> dictionaryMap = cubeSeg.buildDictionaryMap();
+        for (int i = 0; i < globalColumns.size(); i++) {
+            TblColRef colRef = globalColumns.get(i);
+            globalDicts.add(dictionaryMap.get(colRef));
+        }
+
         ShrunkenDictionary.StringValueSerializer strValueSerializer = new ShrunkenDictionary.StringValueSerializer();
         for (int i = 0; i < globalColumns.size(); i++) {
             List<String> colDistinctValues = Lists.newArrayList(globalColumnValues.get(i));
+            if (colDistinctValues.size() == 0) {
+                continue;
+            }
             // sort values to accelerate the encoding process by reducing the swapping of global dictionary slices
             Collections.sort(colDistinctValues);
 
