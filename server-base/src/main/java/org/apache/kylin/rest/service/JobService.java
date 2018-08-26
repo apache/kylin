@@ -559,12 +559,11 @@ public class JobService extends BasicService implements InitializingBean {
         getExecutableManager().rollbackJob(job.getId(), stepId);
     }
 
-    public JobInstance cancelJob(JobInstance job) throws IOException {
+    public void cancelJob(JobInstance job) throws IOException {
         aclEvaluate.checkProjectOperationPermission(job);
         if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube())
                 || null == job.getRelatedSegment()) {
             getExecutableManager().discardJob(job.getId());
-            return job;
         }
 
         logger.info("Cancel job [" + job.getId() + "] trigger by "
@@ -573,19 +572,17 @@ public class JobService extends BasicService implements InitializingBean {
             throw new IllegalStateException(
                     "The job " + job.getId() + " has already been finished and cannot be discarded.");
         }
-        if (job.getStatus() == JobStatusEnum.DISCARDED) {
-            return job;
-        }
 
-        AbstractExecutable executable = getExecutableManager().getJob(job.getId());
-        if (executable instanceof CubingJob) {
-            cancelCubingJobInner((CubingJob) executable);
-        } else if (executable instanceof CheckpointExecutable) {
-            cancelCheckpointJobInner((CheckpointExecutable) executable);
-        } else {
-            getExecutableManager().discardJob(executable.getId());
+        if (job.getStatus() != JobStatusEnum.DISCARDED) {
+            AbstractExecutable executable = getExecutableManager().getJob(job.getId());
+            if (executable instanceof CubingJob) {
+                cancelCubingJobInner((CubingJob) executable);
+            } else if (executable instanceof CheckpointExecutable) {
+                cancelCheckpointJobInner((CheckpointExecutable) executable);
+            } else {
+                getExecutableManager().discardJob(executable.getId());
+            }
         }
-        return job;
     }
 
     private void cancelCubingJobInner(CubingJob cubingJob) throws IOException {

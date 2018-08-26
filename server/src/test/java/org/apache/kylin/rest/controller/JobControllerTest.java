@@ -18,12 +18,16 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.io.IOException;
+import java.util.Date;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.JobInstance;
+import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.rest.request.JobBuildRequest;
@@ -37,11 +41,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-
-import java.io.IOException;
-import java.util.Date;
-
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author xduo
@@ -91,7 +90,7 @@ public class JobControllerTest extends ServiceTestBase {
     public void testBasics() throws IOException, PersistentException {
         CubeDesc cubeDesc = cubeDescManager.getCubeDesc("test_kylin_cube_with_slr_left_join_desc");
         CubeInstance cube = cubeManager.createCube(CUBE_NAME, "DEFAULT", cubeDesc, "test");
-        assertNotNull(cube);
+        Assert.assertNotNull(cube);
 
         JobListRequest jobRequest = new JobListRequest();
         jobRequest.setTimeFilter(4);
@@ -100,10 +99,8 @@ public class JobControllerTest extends ServiceTestBase {
         jobRequest.setJobSearchMode("ALL");
         Assert.assertNotNull(jobSchedulerController.list(jobRequest));
 
-
         jobRequest.setJobSearchMode("");
         Assert.assertNotNull(jobSchedulerController.list(jobRequest));
-
 
         jobRequest.setJobSearchMode("wrong-input");
         Assert.assertNotNull(jobSchedulerController.list(jobRequest));
@@ -115,12 +112,14 @@ public class JobControllerTest extends ServiceTestBase {
         JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
 
         Assert.assertNotNull(jobSchedulerController.get(job.getId()));
+
+        job = jobSchedulerController.cancel(job.getId());
+        Assert.assertEquals(JobStatusEnum.DISCARDED, job.getStatus());
+
         executableDAO.deleteJob(job.getId());
         if (cubeManager.getCube(CUBE_NAME) != null) {
             cubeManager.dropCube(CUBE_NAME, false);
         }
-
-        // jobSchedulerController.cancel(job.getId());
     }
 
     @Test(expected = RuntimeException.class)
