@@ -19,18 +19,21 @@ public class AucCounter implements Serializable {
         merge(another);
     }
 
+    public AucCounter(List<Integer> truth, List<Double> pred) {
+        this.truth = truth == null ? Lists.newLinkedList() : truth;
+        this.pred = pred == null ? Lists.newLinkedList() : pred;
+    }
+
+
     public void merge(AucCounter value) {
 
         if (value == null) {
             return;
         }
-        if (CollectionUtils.isEmpty(value.getTruth())) {
-            return;
-        }
-        if (CollectionUtils.isEmpty(value.getPred())) {
-            return;
-        }
 
+        if (CollectionUtils.isEmpty(value.getTruth()) || CollectionUtils.isEmpty(value.getPred())) {
+            return;
+        }
 
         this.getTruth().addAll(value.getTruth());
         this.getPred().addAll(value.getPred());
@@ -45,10 +48,31 @@ public class AucCounter implements Serializable {
     }
 
     public double auc() {
+        if (CollectionUtils.isEmpty(truth) || CollectionUtils.isEmpty(pred)) {
+            return -1;
+        }
 
         int[] t = truth.stream().mapToInt(Integer::valueOf).toArray();
         double[] p = pred.stream().mapToDouble(Double::valueOf).toArray();
+        double result = AUC.measure(t, p);
+        if (Double.isNaN(result)) {
+            return -1;
+        }
+        return result;
+    }
 
-        return AUC.measure(t, p);
+    public void addTruth(Object t) {
+
+        if (t == null) {
+            throw new RuntimeException("Truth of dimension is null ");
+        }
+        truth.add((Integer) t);
+    }
+
+    public void addPred(Object p) {
+        if (p == null) {
+            throw new RuntimeException("Pred of dimension is null ");
+        }
+        pred.add((Double) p);
     }
 }

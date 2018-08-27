@@ -19,9 +19,11 @@
 package org.apache.kylin.util;
 
 import java.util.BitSet;
+import java.util.LinkedList;
+
 
 import org.objenesis.strategy.StdInstantiatorStrategy;
-
+import com.esotericsoftware.kryo.serializers.CollectionSerializer;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -53,6 +55,9 @@ public class KryoUtils {
             Kryo kryo = new Kryo();
             kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
             kryo.register(BitSet.class, new BitSetSerializer());
+            CollectionSerializer listSerializer = new CollectionSerializer();
+            listSerializer.setElementsCanBeNull(false);
+            kryo.register(LinkedList.class, listSerializer);
             _Kryo.set(kryo);
         }
 

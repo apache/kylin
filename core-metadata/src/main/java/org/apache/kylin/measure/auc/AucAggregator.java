@@ -39,6 +39,6 @@ public class AucAggregator extends MeasureAggregator<AucCounter> {
 
     @Override
     public int getMemBytesEstimate() {
-        return 0;
+        return auc.getTruth().size() * 4 + auc.getPred().size() * 4;
     }
 }
