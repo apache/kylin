@@ -23,8 +23,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -55,6 +57,7 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.SerializableConfiguration;
 import org.apache.kylin.engine.spark.KylinSparkJobListener;
 import org.apache.kylin.engine.spark.SparkUtil;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.measure.MeasureCodec;
 import org.apache.spark.Partitioner;
 import org.apache.spark.SparkConf;
@@ -88,6 +91,8 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
             .isRequired(true).withDescription("Cuboid files PATH").create(BatchConstants.ARG_INPUT);
     public static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder.withArgName(BatchConstants.ARG_PARTITION)
             .hasArg().isRequired(true).withDescription("Partition file path.").create(BatchConstants.ARG_PARTITION);
+    public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUPUT).hasArg()
+            .isRequired(true).withDescription("counter output path").create(BatchConstants.ARG_COUNTER_OUPUT);
 
     private Options options;
 
@@ -100,6 +105,7 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         options.addOption(OPTION_OUTPUT_PATH);
         options.addOption(OPTION_PARTITION_FILE_PATH);
         options.addOption(AbstractHadoopJob.OPTION_HBASE_CONF_PATH);
+        options.addOption(OPTION_COUNTER_PATH);
     }
 
     @Override
@@ -116,6 +122,7 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         final String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
         final Path partitionFilePath = new Path(optionsHelper.getOptionValue(OPTION_PARTITION_FILE_PATH));
         final String hbaseConfFile = optionsHelper.getOptionValue(AbstractHadoopJob.OPTION_HBASE_CONF_PATH);
+        final String counterPath = optionsHelper.getOptionValue(OPTION_COUNTER_PATH);
 
         Class[] kryoClassArray = new Class[] { Class.forName("scala.reflect.ClassTag$$anon$1"), KeyValueCreator.class,
                 KeyValue.class, RowKeyWritable.class };
@@ -226,9 +233,14 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
                     }
                 }).saveAsNewAPIHadoopDataset(job.getConfiguration());
 
-        // output the data size to console, job engine will parse and save the metric
-        // please note: this mechanism won't work when spark.submit.deployMode=cluster
         logger.info("HDFS: Number of bytes written=" + jobListener.metrics.getBytesWritten());
+
+        Map<String, String> counterMap = Maps.newHashMap();
+        counterMap.put(ExecutableConstants.HDFS_BYTES_WRITTEN, String.valueOf(jobListener.metrics.getBytesWritten()));
+
+        // save counter to hdfs
+        HadoopUtil.writeToSequenceFile(sc.hadoopConfiguration(), counterPath, counterMap);
+
         //HadoopUtil.deleteHDFSMeta(metaUrl);
     }
 

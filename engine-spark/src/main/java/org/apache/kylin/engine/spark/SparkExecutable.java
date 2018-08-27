@@ -35,11 +35,13 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -78,6 +80,11 @@ public class SparkExecutable extends AbstractExecutable {
 
     public void setCounterSaveAs(String value) {
         this.setParam(COUNTER_SAVE_AS, value);
+    }
+
+    public void setCounterSaveAs(String value, String counterOutputPath) {
+        this.setParam(COUNTER_SAVE_AS, value);
+        this.setParam(BatchConstants.ARG_COUNTER_OUPUT, counterOutputPath);
     }
 
     public String getCounterSaveAs() {
@@ -286,6 +293,14 @@ public class SparkExecutable extends AbstractExecutable {
                 }
                 // done, update all properties
                 Map<String, String> joblogInfo = patternedLogger.getInfo();
+
+                // read counter from hdfs
+                String counterOutput = getParam(BatchConstants.ARG_COUNTER_OUPUT);
+                if (counterOutput != null){
+                    Map<String, String> counterMap = HadoopUtil.readFromSequenceFile(counterOutput);
+                    joblogInfo.putAll(counterMap);
+                }
+
                 readCounters(joblogInfo);
                 getManager().addJobInfo(getId(), joblogInfo);
 

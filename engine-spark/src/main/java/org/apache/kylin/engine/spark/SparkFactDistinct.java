@@ -73,6 +73,7 @@ import org.apache.kylin.engine.mr.steps.FactDistinctColumnsMapper.DictColDeduper
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsReducerMapping;
 import org.apache.kylin.engine.mr.steps.SelfDefineSortableKey;
 import org.apache.kylin.job.JoinedFlatTable;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.measure.hllc.RegisterType;
@@ -119,6 +120,8 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
             .withDescription("Hive Intermediate Table").create("hiveTable");
     public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
             .isRequired(true).withDescription("Hive Intermediate Table PATH").create(BatchConstants.ARG_INPUT);
+    public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUPUT).hasArg()
+            .isRequired(true).withDescription("counter output path").create(BatchConstants.ARG_COUNTER_OUPUT);
 
     private Options options;
 
@@ -131,6 +134,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         options.addOption(OPTION_INPUT_PATH);
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_STATS_SAMPLING_PERCENT);
+        options.addOption(OPTION_COUNTER_PATH);
     }
 
     @Override
@@ -146,6 +150,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         String hiveTable = optionsHelper.getOptionValue(OPTION_INPUT_TABLE);
         String inputPath = optionsHelper.getOptionValue(OPTION_INPUT_PATH);
         String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
+        String counterPath = optionsHelper.getOptionValue(OPTION_COUNTER_PATH);
         int samplingPercent = Integer.parseInt(optionsHelper.getOptionValue(OPTION_STATS_SAMPLING_PERCENT));
 
         Class[] kryoClassArray = new Class[] { Class.forName("scala.reflect.ClassTag$$anon$1"), Class.forName("org.apache.kylin.engine.mr.steps.SelfDefineSortableKey") };
@@ -173,6 +178,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         logger.info("RDD Output path: {}", outputPath);
         logger.info("getTotalReducerNum: {}", reducerMapping.getTotalReducerNum());
         logger.info("getCuboidRowCounterReducerNum: {}", reducerMapping.getCuboidRowCounterReducerNum());
+        logger.info("counter path {}", counterPath);
 
         boolean isSequenceFile = JoinedFlatTable.SEQUENCEFILE.equalsIgnoreCase(envConfig.getFlatTableStorageFormat());
 
@@ -202,12 +208,19 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
         multipleOutputsRDD.saveAsNewAPIHadoopDatasetWithMultipleOutputs(job.getConfiguration());
 
-        // only work for client mode, not work when spark.submit.deployMode=cluster
         logger.info("Map input records={}", recordRDD.count());
         logger.info("HDFS Read: {} HDFS Write", bytesWritten.value());
 
+        Map<String, String> counterMap = Maps.newHashMap();
+        counterMap.put(ExecutableConstants.SOURCE_RECORDS_COUNT, String.valueOf(recordRDD.count()));
+        counterMap.put(ExecutableConstants.SOURCE_RECORDS_SIZE, String.valueOf(bytesWritten.value()));
+
+        // save counter to hdfs
+        HadoopUtil.writeToSequenceFile(sc.hadoopConfiguration(), counterPath, counterMap);
+
         HadoopUtil.deleteHDFSMeta(metaUrl);
     }
+
 
     static class FlatOutputFucntion implements PairFlatMapFunction<Iterator<String[]>, SelfDefineSortableKey, Text> {
         private volatile transient boolean initialized = false;
