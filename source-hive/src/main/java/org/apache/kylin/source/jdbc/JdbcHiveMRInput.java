@@ -184,7 +184,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
                 }
             }
 
-            String cmd = String.format("%s/sqoop import" + generateSqoopConfigArgString()
+            String cmd = String.format("%s/bin/sqoop import" + generateSqoopConfigArgString()
                     + "--connect \"%s\" --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
                     + "--target-dir %s/%s --split-by %s --boundary-query \"%s\" --null-string '' "
                     + "--fields-terminated-by '%s' --num-mappers %d", sqoopHome, connectionUrl, driverClass, jdbcUser,
