@@ -47,7 +47,7 @@ public class AucMesureType extends MeasureType<AucCounter> {
 
     @Override
     public MeasureIngester<AucCounter> newIngester() {
-        return null;
+        throw new UnsupportedOperationException("No ingester for this measure type.");
     }
 
     @Override
