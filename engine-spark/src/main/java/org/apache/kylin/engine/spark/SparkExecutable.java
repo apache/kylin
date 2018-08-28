@@ -63,6 +63,7 @@ public class SparkExecutable extends AbstractExecutable {
     private static final String JARS = "jars";
     private static final String JOB_ID = "jobId";
     private static final String COUNTER_SAVE_AS = "CounterSaveAs";
+    private static final String CONFIG_NAME = "configName";
 
     public void setClassName(String className) {
         this.setParam(CLASS_NAME, className);
@@ -84,6 +85,17 @@ public class SparkExecutable extends AbstractExecutable {
         return getParam(COUNTER_SAVE_AS);
     }
 
+    /**
+     * set spark override conf for specific job
+     */
+    public void setSparkConfigName(String configName) {
+        this.setParam(CONFIG_NAME, configName);
+    }
+
+    public String getSparkConfigName() {
+        return getParam(CONFIG_NAME);
+    }
+
     private String formatArgs() {
         StringBuilder stringBuilder = new StringBuilder();
         for (Map.Entry<String, String> entry : getParams().entrySet()) {
@@ -92,7 +104,7 @@ public class SparkExecutable extends AbstractExecutable {
             if (entry.getKey().equals(CLASS_NAME)) {
                 stringBuilder.insert(0, tmp);
             } else if (entry.getKey().equals(JARS) || entry.getKey().equals(JOB_ID)
-                    || entry.getKey().equals(COUNTER_SAVE_AS)) {
+                    || entry.getKey().equals(COUNTER_SAVE_AS) || entry.getKey().equals(CONFIG_NAME)) {
                 // JARS is for spark-submit, not for app
                 continue;
             } else {
@@ -221,6 +233,13 @@ public class SparkExecutable extends AbstractExecutable {
             }
 
             Map<String, String> sparkConfs = config.getSparkConfigOverride();
+
+            String sparkConfigName = getSparkConfigName();
+            if (sparkConfigName != null) {
+                Map<String, String> sparkSpecificConfs = config.getSparkConfigOverrideWithSpecificName(sparkConfigName);
+                sparkConfs.putAll(sparkSpecificConfs);
+            }
+
             for (Map.Entry<String, String> entry : sparkConfs.entrySet()) {
                 stringBuilder.append(" --conf ").append(entry.getKey()).append("=").append(entry.getValue())
                         .append(" ");
