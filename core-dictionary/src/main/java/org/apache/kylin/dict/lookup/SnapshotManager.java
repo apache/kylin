@@ -115,7 +115,7 @@ public class SnapshotManager {
         snapshotCache.invalidate(resourcePath);
     }
 
-    public SnapshotTable buildSnapshot(IReadableTable table, TableDesc tableDesc) throws IOException {
+    public SnapshotTable buildSnapshot(IReadableTable table, TableDesc tableDesc, KylinConfig cubeConfig) throws IOException {
         SnapshotTable snapshot = new SnapshotTable(table, tableDesc.getIdentity());
         snapshot.updateRandomUuid();
 
@@ -125,8 +125,8 @@ public class SnapshotManager {
             return getSnapshotTable(dup);
         }
 
-        if (snapshot.getSignature().getSize() / 1024 / 1024 > config.getTableSnapshotMaxMB()) {
-            throw new IllegalStateException("Table snapshot should be no greater than " + config.getTableSnapshotMaxMB() //
+        if ((float) snapshot.getSignature().getSize() / 1024 / 1024 > cubeConfig.getTableSnapshotMaxMB()) {
+            throw new IllegalStateException("Table snapshot should be no greater than " + cubeConfig.getTableSnapshotMaxMB() //
                     + " MB, but " + tableDesc + " size is " + snapshot.getSignature().getSize());
         }
 
