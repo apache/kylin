@@ -1108,7 +1108,7 @@ public class CubeManager implements IRealizationProvider {
 
             TableDesc tableDesc = new TableDesc(metaMgr.getTableDesc(lookupTable, segCopy.getProject()));
             IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc);
-            SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc);
+            SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc, cubeSeg.getConfig());
 
             CubeDesc cubeDesc = cubeSeg.getCubeDesc();
             if (!cubeDesc.isGlobalSnapshotTable(lookupTable)) {
