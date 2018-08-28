@@ -151,25 +151,31 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
         try {
             onExecuteStart(executableContext);
-            Throwable exception;
+            Throwable catchedException;
+            Throwable realException;
             do {
                 if (retry > 0) {
                     logger.info("Retry " + retry);
                 }
-                exception = null;
+                catchedException = null;
                 result = null;
                 try {
                     result = doWork(executableContext);
                 } catch (Throwable e) {
                     logger.error("error running Executable: " + this.toString());
-                    exception = e;
+                    catchedException = e;
                 }
                 retry++;
-            } while (needRetry(this.retry, exception)); //exception in ExecuteResult should handle by user itself.
+                realException = catchedException != null ? catchedException
+                        : (result.getThrowable() != null ? result.getThrowable() : null);
 
-            if (exception != null) {
-                onExecuteError(exception, executableContext);
-                throw new ExecuteException(exception);
+                //don't invoke retry on ChainedExecutable
+            } while (needRetry(this.retry, realException)); //exception in ExecuteResult should handle by user itself.
+
+            //check exception in result to avoid retry on ChainedExecutable(only need to retry on subtask actually)
+            if (realException != null) {
+                onExecuteError(realException, executableContext);
+                throw new ExecuteException(realException);
             }
 
             onExecuteFinishedWithRetry(result, executableContext);
@@ -468,8 +474,9 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     // Retry will happen in below cases:
     // 1) if property "kylin.job.retry-exception-classes" is not set or is null, all jobs with exceptions will retry according to the retry times.
     // 2) if property "kylin.job.retry-exception-classes" is set and is not null, only jobs with the specified exceptions will retry according to the retry times.
-    public static boolean needRetry(int retry, Throwable t) {
-        if (retry > KylinConfig.getInstanceFromEnv().getJobRetry() || t == null) {
+    public boolean needRetry(int retry, Throwable t) {
+        if (retry > KylinConfig.getInstanceFromEnv().getJobRetry() || t == null
+                || (this instanceof DefaultChainedExecutable)) {
             return false;
         } else {
             return isRetryableException(t.getClass().getName());
