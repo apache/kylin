@@ -23,11 +23,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -70,7 +69,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Preconditions;
@@ -78,7 +76,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
 
 @Component("tableService")
 public class TableService extends BasicService {
@@ -123,13 +120,26 @@ public class TableService extends BasicService {
         return table;
     }
 
-    public String[] loadHiveTablesToProject(String[] tables, String project) throws Exception {
+    /**
+     * @return all loaded table names
+     * @throws Exception on error
+     */
+    public String[] loadHiveTablesToProject(String[] hiveTables, String project) throws Exception {
         aclEvaluate.checkProjectAdminPermission(project);
-        List<Pair<TableDesc, TableExtDesc>> allMeta = getAllMeta(tables, project);
-        return loadHiveTablesToProject(project, allMeta);
+        List<Pair<TableDesc, TableExtDesc>> allMeta = extractHiveTableMeta(hiveTables, project);
+        return loadTablesToProject(allMeta, project);
     }
 
-    String[] loadHiveTablesToProject(String project, List<Pair<TableDesc, TableExtDesc>> allMeta) throws Exception {
+    /**
+     * @return all loaded table names
+     * @throws Exception on error
+     */
+    public String[] loadTableToProject(TableDesc tableDesc, TableExtDesc extDesc, String project) throws IOException {
+        return loadTablesToProject(Lists.newArrayList(Pair.newPair(tableDesc, extDesc)), project);
+    }
+
+    private String[] loadTablesToProject(List<Pair<TableDesc, TableExtDesc>> allMeta, String project) throws IOException {
+        aclEvaluate.checkProjectAdminPermission(project);
         // do schema check
         TableMetadataManager metaMgr = getTableManager();
         CubeManager cubeMgr = getCubeManager();
@@ -156,16 +166,18 @@ public class TableService extends BasicService {
             }
             metaMgr.saveSourceTable(tableDesc, project);
 
-            TableExtDesc origExt = metaMgr.getTableExt(tableDesc.getIdentity(), project);
-            if (origExt == null || origExt.getProject() == null) {
-                extDesc.setUuid(RandomUtil.randomUUID().toString());
-                extDesc.setLastModified(0);
-            } else {
-                extDesc.setUuid(origExt.getUuid());
-                extDesc.setLastModified(origExt.getLastModified());
+            if (extDesc != null) {
+                TableExtDesc origExt = metaMgr.getTableExt(tableDesc.getIdentity(), project);
+                if (origExt == null || origExt.getProject() == null) {
+                    extDesc.setUuid(UUID.randomUUID().toString());
+                    extDesc.setLastModified(0);
+                } else {
+                    extDesc.setUuid(origExt.getUuid());
+                    extDesc.setLastModified(origExt.getLastModified());
+                }
+                extDesc.init(project);
+                metaMgr.saveTableExt(extDesc, project);
             }
-            extDesc.init(project);
-            metaMgr.saveTableExt(extDesc, project);
 
             saved.add(tableDesc.getIdentity());
         }
@@ -175,8 +187,7 @@ public class TableService extends BasicService {
         return result;
     }
 
-    private List<Pair<TableDesc, TableExtDesc>> getAllMeta(String[] tables, String project) throws Exception {
-        // de-dup
+    public List<Pair<TableDesc, TableExtDesc>> extractHiveTableMeta(String[] tables, String project) throws Exception {        // de-dup
         SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
         for (String fullTableName : tables) {
             String[] parts = HadoopUtil.parseHiveTableName(fullTableName);
@@ -199,49 +210,6 @@ public class TableService extends BasicService {
             allMeta.add(pair);
         }
         return allMeta;
-    }
-
-    public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile)
-            throws Exception {
-        aclEvaluate.checkProjectAdminPermission(project);
-        String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
-        Map<String, String[]> result = new HashMap<String, String[]>();
-
-        String[] loaded = loadHiveTablesToProject(tableNames, project);
-        result.put("result.loaded", loaded);
-        Set<String> allTables = new HashSet<String>();
-        for (String tableName : tableNames) {
-            allTables.add(normalizeHiveTableName(tableName));
-        }
-        for (String loadedTableName : loaded) {
-            allTables.remove(loadedTableName);
-        }
-        String[] unloaded = new String[allTables.size()];
-        allTables.toArray(unloaded);
-        result.put("result.unloaded", unloaded);
-        if (isNeedProfile) {
-            calculateCardinalityIfNotPresent(loaded, submitter, project);
-        }
-        return result;
-    }
-
-    public Map<String, String[]> unloadHiveTables(String[] tableNames, String project) throws IOException {
-        aclEvaluate.checkProjectAdminPermission(project);
-        Set<String> unLoadSuccess = Sets.newHashSet();
-        Set<String> unLoadFail = Sets.newHashSet();
-        Map<String, String[]> result = new HashMap<String, String[]>();
-
-        for (String tableName : tableNames) {
-            if (unloadHiveTable(tableName, project)) {
-                unLoadSuccess.add(tableName);
-            } else {
-                unLoadFail.add(tableName);
-            }
-        }
-
-        result.put("result.unload.success", (String[]) unLoadSuccess.toArray(new String[unLoadSuccess.size()]));
-        result.put("result.unload.fail", (String[]) unLoadFail.toArray(new String[unLoadFail.size()]));
-        return result;
     }
 
     private void addTableToProject(String[] tables, String project) throws IOException {
@@ -295,19 +263,6 @@ public class TableService extends BasicService {
         ISource source = sourceManager.getCachedSource(desc);
         source.unloadTable(tableName, project);
         return rtn;
-    }
-
-    /**
-     *
-     * @param desc
-     * @param project
-     * @throws IOException
-     */
-    public void addStreamingTable(TableDesc desc, String project) throws IOException {
-        aclEvaluate.checkProjectAdminPermission(project);
-        desc.setUuid(RandomUtil.randomUUID().toString());
-        getTableManager().saveSourceTable(desc, project);
-        addTableToProject(new String[] { desc.getIdentity() }, project);
     }
 
     /**

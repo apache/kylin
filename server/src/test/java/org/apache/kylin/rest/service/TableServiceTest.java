@@ -18,9 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
-import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -39,7 +37,7 @@ public class TableServiceTest extends ServiceTestBase {
         TableMetadataManager tableMgr = TableMetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         TableDesc tableDesc = tableMgr.getTableDesc("TEST_KYLIN_FACT", "default");
         TableExtDesc tableExt = tableMgr.getTableExt(tableDesc);
-        String[] defaults = tableService.loadHiveTablesToProject("default", Lists.newArrayList(Pair.newPair(tableDesc, tableExt)));
+        String[] defaults = tableService.loadTableToProject(tableDesc, tableExt, "default");
         Assert.assertEquals("DEFAULT.TEST_KYLIN_FACT", defaults[0]);
     }
 }

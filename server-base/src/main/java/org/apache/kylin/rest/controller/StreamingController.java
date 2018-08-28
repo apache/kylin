@@ -131,7 +131,7 @@ public class StreamingController extends BasicController {
         boolean saveStreamingSuccess = false, saveKafkaSuccess = false;
 
         try {
-            tableService.addStreamingTable(tableDesc, project);
+            tableService.loadTableToProject(tableDesc, null, project);
         } catch (IOException e) {
             throw new BadRequestException("Failed to add streaming table.");
         }
