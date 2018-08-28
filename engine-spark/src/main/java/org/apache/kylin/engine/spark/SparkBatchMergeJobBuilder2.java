@@ -89,6 +89,7 @@ public class SparkBatchMergeJobBuilder2 extends JobBuilderSupport {
 
         sparkExecutable.setJobId(jobID);
         sparkExecutable.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY);
+        sparkExecutable.setSparkConfigName(ExecutableConstants.SPARK_SPECIFIC_CONFIG_NAME_MERGE_DICTIONARY);
 
         StringBuilder jars = new StringBuilder();
 

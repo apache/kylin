@@ -1140,6 +1140,11 @@ abstract public class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.engine.spark-conf.");
     }
 
+    public Map<String, String> getSparkConfigOverrideWithSpecificName(String configName) {
+        return getPropertiesByPrefix("kylin.engine.spark-conf-" + configName + ".");
+    }
+
+
     public double getDefaultHadoopJobReducerInputMB() {
         return Double.parseDouble(getOptional("kylin.engine.mr.reduce-input-mb", "500"));
     }
