@@ -18,17 +18,13 @@
 
 package org.apache.kylin.engine.spark;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -89,17 +85,19 @@ import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.util.LongAccumulator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
-
 import scala.Tuple2;
 import scala.Tuple3;
+
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class SparkFactDistinct extends AbstractApplication implements Serializable {
 
@@ -250,32 +248,37 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
         private void init() {
             KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
-            KylinConfig.setAndUnsetThreadLocalConfig(kConfig);
-            CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
-            CubeDesc cubeDesc = cubeInstance.getDescriptor();
-            CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
-            CubeJoinedFlatTableEnrich intermediateTableDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
+            try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                    .setAndUnsetThreadLocalConfig(kConfig)) {
+                CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
+                CubeDesc cubeDesc = cubeInstance.getDescriptor();
+                CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+                CubeJoinedFlatTableEnrich intermediateTableDesc = new CubeJoinedFlatTableEnrich(
+                        EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
 
-            reducerMapping = new FactDistinctColumnsReducerMapping(cubeInstance);
-            tmpbuf = ByteBuffer.allocate(4096);
+                reducerMapping = new FactDistinctColumnsReducerMapping(cubeInstance);
+                tmpbuf = ByteBuffer.allocate(4096);
 
-            int[] rokeyColumnIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
+                int[] rokeyColumnIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
 
-            Long[] cuboidIds = getCuboidIds(cubeSegment);
+                Long[] cuboidIds = getCuboidIds(cubeSegment);
 
-            Integer[][] cuboidsBitSet = CuboidUtil.getCuboidBitSet(cuboidIds, rokeyColumnIndexes.length);
+                Integer[][] cuboidsBitSet = CuboidUtil.getCuboidBitSet(cuboidIds, rokeyColumnIndexes.length);
 
-            boolean isNewAlgorithm = isUsePutRowKeyToHllNewAlgorithm(cubeDesc);
+                boolean isNewAlgorithm = isUsePutRowKeyToHllNewAlgorithm(cubeDesc);
 
-            HLLCounter[] cuboidsHLL = getInitCuboidsHLL(cuboidIds.length, cubeDesc.getConfig().getCubeStatsHLLPrecision());
+                HLLCounter[] cuboidsHLL = getInitCuboidsHLL(cuboidIds.length,
+                        cubeDesc.getConfig().getCubeStatsHLLPrecision());
 
-            cuboidStatCalculator = new CuboidStatCalculator(rokeyColumnIndexes, cuboidIds, cuboidsBitSet, isNewAlgorithm, cuboidsHLL);
-            allCols = reducerMapping.getAllDimDictCols();
+                cuboidStatCalculator = new CuboidStatCalculator(rokeyColumnIndexes, cuboidIds, cuboidsBitSet,
+                        isNewAlgorithm, cuboidsHLL);
+                allCols = reducerMapping.getAllDimDictCols();
 
-            initDictColDeduper(cubeDesc);
-            initColumnIndex(intermediateTableDesc);
+                initDictColDeduper(cubeDesc);
+                initColumnIndex(intermediateTableDesc);
 
-            initialized = true;
+                initialized = true;
+            }
         }
 
         @Override
@@ -572,11 +575,12 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
         private void init() {
             KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
-            KylinConfig.setAndUnsetThreadLocalConfig(kConfig);
-            CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
-            reducerMapping = new FactDistinctColumnsReducerMapping(cubeInstance);
-
-            initialized = true;
+            try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                    .setAndUnsetThreadLocalConfig(kConfig)) {
+                CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
+                reducerMapping = new FactDistinctColumnsReducerMapping(cubeInstance);
+                initialized = true;
+            }
         }
 
         @Override
@@ -641,45 +645,46 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         private void init() throws IOException {
             taskId = TaskContext.getPartitionId();
             KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
-            KylinConfig.setAndUnsetThreadLocalConfig(kConfig);
-            CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
-            cubeDesc = cubeInstance.getDescriptor();
-            cubeConfig = cubeInstance.getConfig();
-            reducerMapping = new FactDistinctColumnsReducerMapping(cubeInstance);
+            try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(kConfig)) {
+                CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
+                cubeDesc = cubeInstance.getDescriptor();
+                cubeConfig = cubeInstance.getConfig();
+                reducerMapping = new FactDistinctColumnsReducerMapping(cubeInstance);
 
-            result = Lists.newArrayList();
+                result = Lists.newArrayList();
 
-            if (reducerMapping.isCuboidRowCounterReducer(taskId)) {
-                // hll
-                isStatistics = true;
-                baseCuboidId = cubeInstance.getCuboidScheduler().getBaseCuboidId();
-                baseCuboidRowCountInMappers = Lists.newArrayList();
-                cuboidHLLMap = Maps.newHashMap();
+                if (reducerMapping.isCuboidRowCounterReducer(taskId)) {
+                    // hll
+                    isStatistics = true;
+                    baseCuboidId = cubeInstance.getCuboidScheduler().getBaseCuboidId();
+                    baseCuboidRowCountInMappers = Lists.newArrayList();
+                    cuboidHLLMap = Maps.newHashMap();
 
-                logger.info("Partition " + taskId + " handling stats");
-            } else {
-                // normal col
-                col = reducerMapping.getColForReducer(taskId);
-                Preconditions.checkNotNull(col);
+                    logger.info("Partition " + taskId + " handling stats");
+                } else {
+                    // normal col
+                    col = reducerMapping.getColForReducer(taskId);
+                    Preconditions.checkNotNull(col);
 
-                // local build dict
-                buildDictInReducer = kConfig.isBuildDictInReducerEnabled();
-                if (cubeDesc.getDictionaryBuilderClass(col) != null) { // only works with default dictionary builder
-                    buildDictInReducer = false;
+                    // local build dict
+                    buildDictInReducer = kConfig.isBuildDictInReducerEnabled();
+                    if (cubeDesc.getDictionaryBuilderClass(col) != null) { // only works with default dictionary builder
+                        buildDictInReducer = false;
+                    }
+
+                    if (reducerMapping.getReducerNumForDimCol(col) > 1) {
+                        buildDictInReducer = false; // only works if this is the only reducer of a dictionary column
+                    }
+
+                    if (buildDictInReducer) {
+                        builder = DictionaryGenerator.newDictionaryBuilder(col.getType());
+                        builder.init(null, 0, null);
+                    }
+                    logger.info("Partition " + taskId + " handling column " + col + ", buildDictInReducer=" + buildDictInReducer);
                 }
 
-                if (reducerMapping.getReducerNumForDimCol(col) > 1) {
-                    buildDictInReducer = false; // only works if this is the only reducer of a dictionary column
-                }
-
-                if (buildDictInReducer) {
-                    builder = DictionaryGenerator.newDictionaryBuilder(col.getType());
-                    builder.init(null, 0, null);
-                }
-                logger.info("Partition " + taskId + " handling column " + col + ", buildDictInReducer=" + buildDictInReducer);
+                initialized = true;
             }
-
-            initialized = true;
         }
 
         private void logAFewRows(String value) {

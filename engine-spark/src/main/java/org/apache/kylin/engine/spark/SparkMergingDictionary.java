@@ -18,13 +18,8 @@
 
 package org.apache.kylin.engine.spark;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -66,11 +61,14 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
 import scala.Tuple2;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
     merge dictionary
@@ -184,10 +182,12 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
 
         private void init() {
             kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
-            KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
-            CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
-            dictMgr = DictionaryManager.getInstance(kylinConfig);
-            mergingSegments = getMergingSegments(cubeInstance, segmentIds);
+            try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                    .setAndUnsetThreadLocalConfig(kylinConfig)) {
+                CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
+                dictMgr = DictionaryManager.getInstance(kylinConfig);
+                mergingSegments = getMergingSegments(cubeInstance, segmentIds);
+            }
         }
 
         @Override
@@ -205,92 +205,98 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
                 // merge dictionary
                 TblColRef col = tblColRefs[index];
                 List<DictionaryInfo> dictInfos = Lists.newArrayList();
-                for (CubeSegment segment : mergingSegments) {
-                    if (segment.getDictResPath(col) != null) {
-                        DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
-                        if (dictInfo != null && !dictInfos.contains(dictInfo)) {
-                            dictInfos.add(dictInfo);
-                        }
-                    }
-                }
-
-                DictionaryInfo mergedDictInfo = dictMgr.mergeDictionary(dictInfos);
-                String tblCol = col.getTableAlias() + ":" + col.getName();
-                String dictInfoPath = mergedDictInfo == null ? "" : mergedDictInfo.getResourcePath();
-
-                return new Tuple2<>(new Text(tblCol), new Text(dictInfoPath));
-            } else {
-                // merge statistics
-                CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
-                CubeSegment newSegment = cubeInstance.getSegmentById(segmentId);
-                ResourceStore rs = ResourceStore.getStore(kylinConfig);
-
-                Map<Long, HLLCounter> cuboidHLLMap = Maps.newHashMap();
-                Configuration conf = null;
-                int averageSamplingPercentage = 0;
-
-                for (CubeSegment cubeSegment : mergingSegments) {
-                    String filePath = cubeSegment.getStatisticsResourcePath();
-                    InputStream is = rs.getResource(filePath).inputStream;
-                    File tempFile;
-                    FileOutputStream tempFileStream = null;
-
-                    try {
-                        tempFile = File.createTempFile(segmentId, ".seq");
-                        tempFileStream = new FileOutputStream(tempFile);
-                        org.apache.commons.io.IOUtils.copy(is, tempFileStream);
-                    } finally {
-                        IOUtils.closeStream(is);
-                        IOUtils.closeStream(tempFileStream);
-                    }
-
-                    FileSystem fs = HadoopUtil.getFileSystem("file:///" + tempFile.getAbsolutePath());
-                    SequenceFile.Reader reader = null;
-
-                    try {
-                        conf = HadoopUtil.getCurrentConfiguration();
-                        //noinspection deprecation
-                        reader = new SequenceFile.Reader(fs, new Path(tempFile.getAbsolutePath()), conf);
-                        LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-                        BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-
-                        while (reader.next(key, value)) {
-                            if (key.get() == 0L) {
-                                // sampling percentage;
-                                averageSamplingPercentage += Bytes.toInt(value.getBytes());
-                            } else if (key.get() > 0) {
-                                HLLCounter hll = new HLLCounter(kylinConfig.getCubeStatsHLLPrecision());
-                                ByteArray byteArray = new ByteArray(value.getBytes());
-                                hll.readRegisters(byteArray.asBuffer());
-
-                                if (cuboidHLLMap.get(key.get()) != null) {
-                                    cuboidHLLMap.get(key.get()).merge(hll);
-                                } else {
-                                    cuboidHLLMap.put(key.get(), hll);
-                                }
+                try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                        .setAndUnsetThreadLocalConfig(kylinConfig)) {
+                    for (CubeSegment segment : mergingSegments) {
+                        if (segment.getDictResPath(col) != null) {
+                            DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
+                            if (dictInfo != null && !dictInfos.contains(dictInfo)) {
+                                dictInfos.add(dictInfo);
                             }
                         }
-                    } finally {
-                        IOUtils.closeStream(reader);
                     }
+
+                    DictionaryInfo mergedDictInfo = dictMgr.mergeDictionary(dictInfos);
+                    String tblCol = col.getTableAlias() + ":" + col.getName();
+                    String dictInfoPath = mergedDictInfo == null ? "" : mergedDictInfo.getResourcePath();
+
+                    return new Tuple2<>(new Text(tblCol), new Text(dictInfoPath));
                 }
+            } else {
+                // merge statistics
+                try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                        .setAndUnsetThreadLocalConfig(kylinConfig)) {
+                    CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
+                    CubeSegment newSegment = cubeInstance.getSegmentById(segmentId);
+                    ResourceStore rs = ResourceStore.getStore(kylinConfig);
 
-                averageSamplingPercentage = averageSamplingPercentage / mergingSegments.size();
-                CubeStatsWriter.writeCuboidStatistics(conf, new Path(statOutputPath), cuboidHLLMap, averageSamplingPercentage);
-                Path statisticsFilePath = new Path(statOutputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+                    Map<Long, HLLCounter> cuboidHLLMap = Maps.newHashMap();
+                    Configuration conf = null;
+                    int averageSamplingPercentage = 0;
 
-                FileSystem fs = HadoopUtil.getFileSystem(statisticsFilePath, conf);
-                FSDataInputStream fis = fs.open(statisticsFilePath);
+                    for (CubeSegment cubeSegment : mergingSegments) {
+                        String filePath = cubeSegment.getStatisticsResourcePath();
+                        InputStream is = rs.getResource(filePath).inputStream;
+                        File tempFile;
+                        FileOutputStream tempFileStream = null;
 
-                try {
-                    // put the statistics to metadata store
-                    String statisticsFileName = newSegment.getStatisticsResourcePath();
-                    rs.putResource(statisticsFileName, fis, System.currentTimeMillis());
-                } finally {
-                    IOUtils.closeStream(fis);
+                        try {
+                            tempFile = File.createTempFile(segmentId, ".seq");
+                            tempFileStream = new FileOutputStream(tempFile);
+                            org.apache.commons.io.IOUtils.copy(is, tempFileStream);
+                        } finally {
+                            IOUtils.closeStream(is);
+                            IOUtils.closeStream(tempFileStream);
+                        }
+
+                        FileSystem fs = HadoopUtil.getFileSystem("file:///" + tempFile.getAbsolutePath());
+                        SequenceFile.Reader reader = null;
+
+                        try {
+                            conf = HadoopUtil.getCurrentConfiguration();
+                            //noinspection deprecation
+                            reader = new SequenceFile.Reader(fs, new Path(tempFile.getAbsolutePath()), conf);
+                            LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+                            BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+
+                            while (reader.next(key, value)) {
+                                if (key.get() == 0L) {
+                                    // sampling percentage;
+                                    averageSamplingPercentage += Bytes.toInt(value.getBytes());
+                                } else if (key.get() > 0) {
+                                    HLLCounter hll = new HLLCounter(kylinConfig.getCubeStatsHLLPrecision());
+                                    ByteArray byteArray = new ByteArray(value.getBytes());
+                                    hll.readRegisters(byteArray.asBuffer());
+
+                                    if (cuboidHLLMap.get(key.get()) != null) {
+                                        cuboidHLLMap.get(key.get()).merge(hll);
+                                    } else {
+                                        cuboidHLLMap.put(key.get(), hll);
+                                    }
+                                }
+                            }
+                        } finally {
+                            IOUtils.closeStream(reader);
+                        }
+                    }
+
+                    averageSamplingPercentage = averageSamplingPercentage / mergingSegments.size();
+                    CubeStatsWriter.writeCuboidStatistics(conf, new Path(statOutputPath), cuboidHLLMap, averageSamplingPercentage);
+                    Path statisticsFilePath = new Path(statOutputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+
+                    FileSystem fs = HadoopUtil.getFileSystem(statisticsFilePath, conf);
+                    FSDataInputStream fis = fs.open(statisticsFilePath);
+
+                    try {
+                        // put the statistics to metadata store
+                        String statisticsFileName = newSegment.getStatisticsResourcePath();
+                        rs.putResource(statisticsFileName, fis, System.currentTimeMillis());
+                    } finally {
+                        IOUtils.closeStream(fis);
+                    }
+
+                    return new Tuple2<>(new Text(""), new Text(""));
                 }
-
-                return new Tuple2<>(new Text(""), new Text(""));
             }
 
         }

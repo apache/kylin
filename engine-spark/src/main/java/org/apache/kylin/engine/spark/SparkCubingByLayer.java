@@ -17,12 +17,6 @@
 */
 package org.apache.kylin.engine.spark;
 
-import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -68,8 +62,13 @@ import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.storage.StorageLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import scala.Tuple2;
+
+import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Spark application to build cube with the "by-layer" algorithm. Only support source data from Hive; Metadata in HBase.
@@ -235,10 +234,12 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                             synchronized (SparkCubingByLayer.class) {
                                 if (initialized == false) {
                                     KylinConfig kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
-                                    KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
-                                    CubeDesc desc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cubeName);
-                                    codec = new BufferedMeasureCodec(desc.getMeasures());
-                                    initialized = true;
+                                    try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                                            .setAndUnsetThreadLocalConfig(kylinConfig)) {
+                                        CubeDesc desc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cubeName);
+                                        codec = new BufferedMeasureCodec(desc.getMeasures());
+                                        initialized = true;
+                                    }
                                 }
                             }
                         }
@@ -274,18 +275,20 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                 synchronized (SparkCubingByLayer.class) {
                     if (initialized == false) {
                         KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
-                        KylinConfig.setAndUnsetThreadLocalConfig(kConfig);
-                        CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
-                        CubeDesc cubeDesc = cubeInstance.getDescriptor();
-                        CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
-                        CubeJoinedFlatTableEnrich interDesc = new CubeJoinedFlatTableEnrich(
-                                EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
-                        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-                        Cuboid baseCuboid = Cuboid.findForMandatory(cubeDesc, baseCuboidId);
-                        baseCuboidBuilder = new BaseCuboidBuilder(kConfig, cubeDesc, cubeSegment, interDesc,
-                                AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid),
-                                MeasureIngester.create(cubeDesc.getMeasures()), cubeSegment.buildDictionaryMap());
-                        initialized = true;
+                        try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                                .setAndUnsetThreadLocalConfig(kConfig)) {
+                            CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
+                            CubeDesc cubeDesc = cubeInstance.getDescriptor();
+                            CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+                            CubeJoinedFlatTableEnrich interDesc = new CubeJoinedFlatTableEnrich(
+                                    EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
+                            long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+                            Cuboid baseCuboid = Cuboid.findForMandatory(cubeDesc, baseCuboidId);
+                            baseCuboidBuilder = new BaseCuboidBuilder(kConfig, cubeDesc, cubeSegment, interDesc,
+                                    AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid),
+                                    MeasureIngester.create(cubeDesc.getMeasures()), cubeSegment.buildDictionaryMap());
+                            initialized = true;
+                        }
                     }
                 }
             }
@@ -313,11 +316,13 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         public void init() {
             KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
-            KylinConfig.setAndUnsetThreadLocalConfig(kConfig);
-            CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
-            cubeDesc = cubeInstance.getDescriptor();
-            aggregators = new MeasureAggregators(cubeDesc.getMeasures());
-            measureNum = cubeDesc.getMeasures().size();
+            try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                    .setAndUnsetThreadLocalConfig(kConfig)) {
+                CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
+                cubeDesc = cubeInstance.getDescriptor();
+                aggregators = new MeasureAggregators(cubeDesc.getMeasures());
+                measureNum = cubeDesc.getMeasures().size();
+            }
         }
 
         @Override
@@ -383,12 +388,13 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         public void init() {
             KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
-            KylinConfig.setAndUnsetThreadLocalConfig(kConfig);
-            CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
-            this.cubeSegment = cubeInstance.getSegmentById(segmentId);
-            this.cubeDesc = cubeInstance.getDescriptor();
-            this.ndCuboidBuilder = new NDCuboidBuilder(cubeSegment, new RowKeyEncoderProvider(cubeSegment));
-            this.rowKeySplitter = new RowKeySplitter(cubeSegment);
+            try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(kConfig)) {
+                CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
+                this.cubeSegment = cubeInstance.getSegmentById(segmentId);
+                this.cubeDesc = cubeInstance.getDescriptor();
+                this.ndCuboidBuilder = new NDCuboidBuilder(cubeSegment, new RowKeyEncoderProvider(cubeSegment));
+                this.rowKeySplitter = new RowKeySplitter(cubeSegment);
+            }
         }
 
         @Override

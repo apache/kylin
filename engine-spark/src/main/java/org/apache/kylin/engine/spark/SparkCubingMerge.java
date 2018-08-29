@@ -17,10 +17,7 @@
 */
 package org.apache.kylin.engine.spark;
 
-import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -56,10 +53,11 @@ import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-
 import scala.Tuple2;
+
+import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.List;
 
 /**
  */
@@ -158,10 +156,12 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
                             synchronized (SparkCubingMerge.class) {
                                 if (initialized == false) {
                                     KylinConfig kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
-                                    KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig);
-                                    CubeDesc desc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cubeName);
-                                    codec = new BufferedMeasureCodec(desc.getMeasures());
-                                    initialized = true;
+                                    try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                                            .setAndUnsetThreadLocalConfig(kylinConfig)) {
+                                        CubeDesc desc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cubeName);
+                                        codec = new BufferedMeasureCodec(desc.getMeasures());
+                                        initialized = true;
+                                    }
                                 }
                             }
                         }
