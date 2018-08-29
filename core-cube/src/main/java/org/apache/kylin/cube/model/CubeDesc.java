@@ -1512,6 +1512,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setVersion(cubeDesc.getVersion());
         newCubeDesc.setParentForward(cubeDesc.getParentForward());
         newCubeDesc.setSnapshotTableDescList(cubeDesc.getSnapshotTableDescList());
+        newCubeDesc.setMandatoryDimensionSetList(cubeDesc.getMandatoryDimensionSetList());
         newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }
