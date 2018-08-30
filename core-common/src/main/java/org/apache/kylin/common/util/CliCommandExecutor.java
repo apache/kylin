@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.LoggerFactory;
@@ -131,7 +132,8 @@ public class CliCommandExecutor {
         builder.redirectErrorStream(true);
         Process proc = builder.start();
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        BufferedReader reader = new BufferedReader(
+                new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8));
         String line;
         StringBuilder result = new StringBuilder();
         while ((line = reader.readLine()) != null && !Thread.currentThread().isInterrupted()) {

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -54,7 +55,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         }
         return INSTANCE;
     }
-    
+
     public synchronized static DefaultScheduler createInstance() {
         destroyInstance();
         INSTANCE = new DefaultScheduler();
@@ -75,7 +76,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     }
 
     // ============================================================================
-    
+
     private JobLock jobLock;
     private ExecutableManager executableManager;
     private FetcherRunner fetcher;
@@ -140,7 +141,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         jobLock = lock;
 
         String serverMode = jobEngineConfig.getConfig().getServerMode();
-        if (!("job".equals(serverMode.toLowerCase()) || "all".equals(serverMode.toLowerCase()))) {
+        if (!("job".equals(serverMode.toLowerCase(Locale.ROOT)) || "all".equals(serverMode.toLowerCase(Locale.ROOT)))) {
             logger.info("server mode: " + serverMode + ", no need to run job scheduler");
             return;
         }

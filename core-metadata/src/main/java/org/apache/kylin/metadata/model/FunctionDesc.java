@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,7 +48,7 @@ public class FunctionDesc implements Serializable {
 
     public static FunctionDesc newInstance(String expression, ParameterDesc param, String returnType) {
         FunctionDesc r = new FunctionDesc();
-        r.expression = (expression == null) ? null : expression.toUpperCase();
+        r.expression = (expression == null) ? null : expression.toUpperCase(Locale.ROOT);
         r.parameter = param;
         r.returnType = returnType;
         r.returnDataType = DataType.getType(returnType);
@@ -90,7 +91,7 @@ public class FunctionDesc implements Serializable {
     private boolean isDimensionAsMetric = false;
 
     public void init(DataModelDesc model) {
-        expression = expression.toUpperCase();
+        expression = expression.toUpperCase(Locale.ROOT);
         if (expression.equals(PercentileMeasureType.FUNC_PERCENTILE)) {
             expression = PercentileMeasureType.FUNC_PERCENTILE_APPROX; // for backward compatibility
         }

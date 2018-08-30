@@ -21,6 +21,7 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -114,7 +115,8 @@ public class ModelController extends BasicController {
         }
         if (!ValidateUtil.isAlphanumericUnderscore(modelDesc.getName())) {
             throw new BadRequestException(
-                    String.format("Invalid model name %s, only letters, numbers and underscore " + "supported."),
+                    String.format(Locale.ROOT,
+                            "Invalid model name %s, only letters, numbers and underscore " + "supported."),
                     modelDesc.getName());
         }
 
@@ -201,8 +203,8 @@ public class ModelController extends BasicController {
             throw new BadRequestException("New model name should not be empty.");
         }
         if (!ValidateUtil.isAlphanumericUnderscore(newModelName)) {
-            throw new BadRequestException(String
-                    .format("Invalid model name %s, only letters, numbers and underscore supported.", newModelName));
+            throw new BadRequestException(String.format(Locale.ROOT,
+                    "Invalid model name %s, only letters, numbers and underscore supported.", newModelName));
         }
 
         DataModelDesc newModelDesc = DataModelDesc.getCopyOf(modelDesc);

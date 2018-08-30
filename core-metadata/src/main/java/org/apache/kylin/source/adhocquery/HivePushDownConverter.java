@@ -21,6 +21,7 @@ import static com.google.common.base.Predicates.equalTo;
 import static com.google.common.base.Predicates.not;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -92,7 +93,7 @@ public class HivePushDownConverter implements IPushDownConverter {
             String castStr = castMatcher.group();
             String type = castMatcher.group(2);
             String supportedType = "";
-            switch (type.toUpperCase()) {
+            switch (type.toUpperCase(Locale.ROOT)) {
             case "INTEGER":
                 supportedType = "int";
                 break;
@@ -132,7 +133,7 @@ public class HivePushDownConverter implements IPushDownConverter {
             if (aliasMatcher.find()) {
                 String aliasCandidate = aliasMatcher.group(1);
 
-                if (aliasCandidate != null && !sqlKeyWordsExceptAS.contains(aliasCandidate.toUpperCase())) {
+                if (aliasCandidate != null && !sqlKeyWordsExceptAS.contains(aliasCandidate.toUpperCase(Locale.ROOT))) {
                     continue;
                 }
 

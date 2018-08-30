@@ -18,6 +18,7 @@
 
 package org.apache.kylin.measure.extendedcolumn;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +115,8 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
     }
 
     @Override
-    public CapabilityResult.CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, final MeasureDesc measureDesc) {
+    public CapabilityResult.CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions,
+            Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, final MeasureDesc measureDesc) {
         TblColRef extendedCol = getExtendedColumn(measureDesc.getFunction());
 
         if (!unmatchedDimensions.contains(extendedCol)) {
@@ -144,9 +146,11 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
         return true;
     }
 
-    public IAdvMeasureFiller getAdvancedTupleFiller(FunctionDesc function, TupleInfo returnTupleInfo, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+    public IAdvMeasureFiller getAdvancedTupleFiller(FunctionDesc function, TupleInfo returnTupleInfo,
+            Map<TblColRef, Dictionary<String>> dictionaryMap) {
         final TblColRef extended = getExtendedColumn(function);
-        final int extendedColumnInTupleIdx = returnTupleInfo.hasColumn(extended) ? returnTupleInfo.getColumnIndex(extended) : -1;
+        final int extendedColumnInTupleIdx = returnTupleInfo.hasColumn(extended)
+                ? returnTupleInfo.getColumnIndex(extended) : -1;
 
         if (extendedColumnInTupleIdx == -1) {
             throw new RuntimeException("Extended column is not required in returnTupleInfo");
@@ -216,7 +220,8 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
             }
 
             @Override
-            public ByteArray valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+            public ByteArray valueOf(String[] values, MeasureDesc measureDesc,
+                    Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 if (values.length <= 1)
                     throw new IllegalArgumentException();
 
@@ -229,7 +234,8 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
                 if (bytes.length <= dataType.getPrecision()) {
                     return new ByteArray(bytes);
                 } else {
-                    return new ByteArray(truncateWhenUTF8(literal, dataType.getPrecision()).getBytes());
+                    return new ByteArray(
+                            truncateWhenUTF8(literal, dataType.getPrecision()).getBytes(StandardCharsets.UTF_8));
                 }
             }
         };

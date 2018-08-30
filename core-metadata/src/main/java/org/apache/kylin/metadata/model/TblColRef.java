@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.Serializable;
 
+import java.util.Locale;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.metadata.datatype.DataType;
 
@@ -259,12 +260,12 @@ public class TblColRef implements Serializable {
         if (column.getTable() == null) {
             return "NULL";
         } else {
-            return column.getTable().getIdentity().toUpperCase();
+            return column.getTable().getIdentity().toUpperCase(Locale.ROOT);
         }
     }
 
     // return DB.TABLE.COLUMN
     public String getColumWithTableAndSchema() {
-        return (getTableWithSchema() + "." + column.getName()).toUpperCase();
+        return (getTableWithSchema() + "." + column.getName()).toUpperCase(Locale.ROOT);
     }
 }

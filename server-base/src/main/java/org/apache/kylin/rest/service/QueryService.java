@@ -41,15 +41,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
-
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.calcite.config.CalciteConnectionConfig;
@@ -124,6 +121,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+
 /**
  * @author xduo
  */
@@ -167,7 +168,8 @@ public class QueryService extends BasicService {
         config.setMaxTotal(kylinConfig.getQueryMaxCacheStatementNum());
         config.setBlockWhenExhausted(false);
         config.setMinEvictableIdleTimeMillis(10 * 60 * 1000L); // cached statement will be evict if idle for 10 minutes
-        GenericKeyedObjectPool<PreparedContextKey, PreparedContext> pool = new GenericKeyedObjectPool<>(factory, config);
+        GenericKeyedObjectPool<PreparedContextKey, PreparedContext> pool = new GenericKeyedObjectPool<>(factory,
+                config);
         return pool;
     }
 
@@ -353,9 +355,9 @@ public class QueryService extends BasicService {
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String serverMode = kylinConfig.getServerMode();
-        if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase())
-                || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
-            throw new BadRequestException(String.format(msg.getQUERY_NOT_ALLOWED(), serverMode));
+        if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase(Locale.ROOT))
+                || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase(Locale.ROOT)))) {
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getQUERY_NOT_ALLOWED(), serverMode));
         }
         if (StringUtils.isBlank(sqlRequest.getProject())) {
             throw new BadRequestException(msg.getEMPTY_PROJECT_NAME());
@@ -533,7 +535,7 @@ public class QueryService extends BasicService {
         boolean borrowPrepareContext = false;
         PreparedContextKey preparedContextKey = null;
         PreparedContext preparedContext = null;
-        
+
         try {
             conn = QueryConnection.getConnection(sqlRequest.getProject());
             String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -569,7 +571,7 @@ public class QueryService extends BasicService {
             OLAPContext.setParameters(parameters);
             // force clear the query context before a new query
             OLAPContext.clearThreadLocalContexts();
-            
+
             // special case for prepare query.
             List<List<String>> results = Lists.newArrayList();
             List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
@@ -590,7 +592,7 @@ public class QueryService extends BasicService {
                         borrowPrepareContext = false;
                         preparedContext = createPreparedContext(sqlRequest.getProject(), sqlRequest.getSql());
                     }
-                    for(OLAPContext olapContext : preparedContext.olapContexts) {
+                    for (OLAPContext olapContext : preparedContext.olapContexts) {
                         OLAPContext.registerContext(olapContext);
                     }
                 } else {
@@ -661,7 +663,7 @@ public class QueryService extends BasicService {
                         columnMeta.getString(23));
 
                 if (!"metadata".equalsIgnoreCase(colmnMeta.getTABLE_SCHEM())
-                        && !colmnMeta.getCOLUMN_NAME().toUpperCase().startsWith("_KY_")) {
+                        && !colmnMeta.getCOLUMN_NAME().toUpperCase(Locale.ROOT).startsWith("_KY_")) {
                     tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(colmnMeta);
                 }
             }
@@ -737,7 +739,7 @@ public class QueryService extends BasicService {
                         columnMeta.getString(23));
 
                 if (!"metadata".equalsIgnoreCase(colmnMeta.getTABLE_SCHEM())
-                        && !colmnMeta.getCOLUMN_NAME().toUpperCase().startsWith("_KY_")) {
+                        && !colmnMeta.getCOLUMN_NAME().toUpperCase(Locale.ROOT).startsWith("_KY_")) {
                     tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(colmnMeta);
                     columnMap.put(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME() + "#"
                             + colmnMeta.getCOLUMN_NAME(), colmnMeta);
@@ -858,7 +860,7 @@ public class QueryService extends BasicService {
             processStatementAttr(stat, sqlRequest);
             resultSet = stat.executeQuery(correctedSql);
 
-            r = createResponseFromResultSet(resultSet); 
+            r = createResponseFromResultSet(resultSet);
 
         } catch (SQLException sqlException) {
             r = pushDownQuery(sqlRequest, correctedSql, conn, sqlException);
@@ -873,8 +875,8 @@ public class QueryService extends BasicService {
         return buildSqlResponse(isPushDown, r.getFirst(), r.getSecond());
     }
 
-    private SQLResponse executePrepareRequest(String correctedSql, PrepareSqlRequest sqlRequest, PreparedContext preparedContext)
-            throws Exception {
+    private SQLResponse executePrepareRequest(String correctedSql, PrepareSqlRequest sqlRequest,
+            PreparedContext preparedContext) throws Exception {
         ResultSet resultSet = null;
         boolean isPushDown = false;
 
@@ -901,7 +903,8 @@ public class QueryService extends BasicService {
         return buildSqlResponse(isPushDown, r.getFirst(), r.getSecond());
     }
 
-    private Pair<List<List<String>>, List<SelectedColumnMeta>> pushDownQuery(SQLRequest sqlRequest, String correctedSql, Connection conn, SQLException sqlException) throws Exception{
+    private Pair<List<List<String>>, List<SelectedColumnMeta>> pushDownQuery(SQLRequest sqlRequest, String correctedSql,
+            Connection conn, SQLException sqlException) throws Exception {
         try {
             return PushDownUtil.tryPushDownSelectQuery(sqlRequest.getProject(), correctedSql, conn.getSchema(),
                     sqlException, BackdoorToggles.getPrepareOnly());
@@ -922,12 +925,13 @@ public class QueryService extends BasicService {
 
         // Fill in selected column meta
         for (int i = 1; i <= columnCount; ++i) {
-            columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), metaData
-                    .isSearchable(i), metaData.isCurrency(i), metaData.isNullable(i), metaData.isSigned(i), metaData
-                    .getColumnDisplaySize(i), metaData.getColumnLabel(i), metaData.getColumnName(i), metaData
-                    .getSchemaName(i), metaData.getCatalogName(i), metaData.getTableName(i), metaData.getPrecision(i),
-                    metaData.getScale(i), metaData.getColumnType(i), metaData.getColumnTypeName(i), metaData
-                            .isReadOnly(i), metaData.isWritable(i), metaData.isDefinitelyWritable(i)));
+            columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i),
+                    metaData.isSearchable(i), metaData.isCurrency(i), metaData.isNullable(i), metaData.isSigned(i),
+                    metaData.getColumnDisplaySize(i), metaData.getColumnLabel(i), metaData.getColumnName(i),
+                    metaData.getSchemaName(i), metaData.getCatalogName(i), metaData.getTableName(i),
+                    metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i),
+                    metaData.getColumnTypeName(i), metaData.isReadOnly(i), metaData.isWritable(i),
+                    metaData.isDefinitelyWritable(i)));
         }
 
         // fill in results
@@ -1125,7 +1129,7 @@ public class QueryService extends BasicService {
         this.cacheManager = cacheManager;
     }
 
-    private static PreparedContext createPreparedContext(String project, String sql) throws Exception{
+    private static PreparedContext createPreparedContext(String project, String sql) throws Exception {
         Connection conn = QueryConnection.getConnection(project);
         PreparedStatement preparedStatement = conn.prepareStatement(sql);
         Collection<OLAPContext> olapContexts = OLAPContext.getThreadLocalContexts();
@@ -1157,8 +1161,8 @@ public class QueryService extends BasicService {
         }
     }
 
-    private static class PreparedContextFactory extends
-            BaseKeyedPooledObjectFactory<PreparedContextKey, PreparedContext> {
+    private static class PreparedContextFactory
+            extends BaseKeyedPooledObjectFactory<PreparedContextKey, PreparedContext> {
 
         @Override
         public PreparedContext create(PreparedContextKey key) throws Exception {
@@ -1195,13 +1199,17 @@ public class QueryService extends BasicService {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
 
             PreparedContextKey that = (PreparedContextKey) o;
 
-            if (prjLastModifyTime != that.prjLastModifyTime) return false;
-            if (project != null ? !project.equals(that.project) : that.project != null) return false;
+            if (prjLastModifyTime != that.prjLastModifyTime)
+                return false;
+            if (project != null ? !project.equals(that.project) : that.project != null)
+                return false;
             return sql != null ? sql.equals(that.sql) : that.sql == null;
 
         }
@@ -1221,7 +1229,7 @@ public class QueryService extends BasicService {
         private Collection<OLAPContext> olapContexts;
 
         public PreparedContext(Connection conn, PreparedStatement preparedStatement,
-                               Collection<OLAPContext> olapContexts) {
+                Collection<OLAPContext> olapContexts) {
             this.conn = conn;
             this.preparedStatement = preparedStatement;
             this.olapContexts = olapContexts;

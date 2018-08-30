@@ -21,6 +21,7 @@ package org.apache.kylin.common.persistence;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.kylin.common.KylinVersion;
@@ -45,7 +46,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
 
     static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss z";
     static FastDateFormat format = FastDateFormat.getInstance(DATE_PATTERN);
-    static DateFormat df = new SimpleDateFormat(DATE_PATTERN);
+    static DateFormat df = new SimpleDateFormat(DATE_PATTERN, Locale.ROOT);
 
     public static String formatTime(long millis) {
         return format.format(millis);
@@ -58,7 +59,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
 
     @JsonProperty("last_modified")
     protected long lastModified;
-    
+
     // if cached and shared, the object MUST NOT be modified (call setXXX() for example)
     protected boolean isCachedAndShared = false;
 
@@ -101,7 +102,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     public void updateRandomUuid() {
         setUuid(RandomUtil.randomUUID().toString());
     }
-    
+
     public boolean isCachedAndShared() {
         return isCachedAndShared;
     }

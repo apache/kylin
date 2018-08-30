@@ -21,6 +21,7 @@ package org.apache.kylin.engine.mr;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -86,7 +87,7 @@ public class CubingJob extends DefaultChainedExecutable {
                 return null;
             }
             for (CubingJobTypeEnum jobTypeEnum : CubingJobTypeEnum.values()) {
-                if (jobTypeEnum.name.equals(name.toUpperCase())) {
+                if (jobTypeEnum.name.equals(name.toUpperCase(Locale.ROOT))) {
                     return jobTypeEnum;
                 }
             }
@@ -136,7 +137,7 @@ public class CubingJob extends DefaultChainedExecutable {
         }
 
         CubingJob result = new CubingJob();
-        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss", Locale.ROOT);
         format.setTimeZone(TimeZone.getTimeZone(config.getTimeZone()));
         result.setDeployEnvName(kylinConfig.getDeployEnv());
         result.setProjectName(projList.get(0).getName());
@@ -279,8 +280,7 @@ public class CubingJob extends DefaultChainedExecutable {
             jobStats.setJobStats(findSourceSizeBytes(), findCubeSizeBytes(), getDuration(), getMapReduceWaitTime(),
                     getPerBytesTimeCost(findSourceSizeBytes(), getDuration()));
             if (CubingJobTypeEnum.getByName(getJobType()) == CubingJobTypeEnum.BUILD) {
-                jobStats.setJobStepStats(
-                        getTaskDurationByName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS),
+                jobStats.setJobStepStats(getTaskDurationByName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS),
                         getTaskDurationByName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY),
                         getTaskDurationByName(ExecutableConstants.STEP_NAME_BUILD_IN_MEM_CUBE),
                         getTaskDurationByName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE));

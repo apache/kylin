@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -147,7 +148,7 @@ public class OLAPSchemaFactory implements SchemaFactory {
         int index = 0;
         out.append("            \"functions\": [\n");
         for (Map.Entry<String, String> udf : udfs.entrySet()) {
-            String udfName = udf.getKey().trim().toUpperCase();
+            String udfName = udf.getKey().trim().toUpperCase(Locale.ROOT);
             String udfClassName = udf.getValue().trim();
             out.append("               {\n");
             out.append("                   name: '" + udfName + "',\n");

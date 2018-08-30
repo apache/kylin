@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.LogManager;
@@ -169,7 +170,7 @@ public class KylinTestBase {
         System.out.println(folder.getAbsolutePath());
         Set<File> set = new TreeSet<>(new FileByNameComparator());
         for (final File fileEntry : folder.listFiles()) {
-            if (fileEntry.getName().toLowerCase().endsWith(fileType.toLowerCase())) {
+            if (fileEntry.getName().toLowerCase(Locale.ROOT).endsWith(fileType.toLowerCase(Locale.ROOT))) {
                 set.add(fileEntry);
             }
         }
@@ -349,7 +350,7 @@ public class KylinTestBase {
         for (int i = 0; i < tokens.length - 1; ++i) {
             if ((tokens[i].equalsIgnoreCase("inner") || tokens[i].equalsIgnoreCase("left"))
                     && tokens[i + 1].equalsIgnoreCase("join")) {
-                tokens[i] = targetType.toLowerCase();
+                tokens[i] = targetType.toLowerCase(Locale.ROOT);
             }
         }
 
@@ -508,7 +509,7 @@ public class KylinTestBase {
             String sql = getTextFromFile(sqlFile);
 
             String sqlWithLimit;
-            if (sql.toLowerCase().contains("limit ")) {
+            if (sql.toLowerCase(Locale.ROOT).contains("limit ")) {
                 sqlWithLimit = sql;
             } else {
                 sqlWithLimit = sql + " limit 5";

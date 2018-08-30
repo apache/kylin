@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -84,11 +85,9 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         String exportDest = optionsHelper.getOptionValue(options.getOption("destDir"));
         boolean shouldCompress = optionsHelper.hasOption(OPTION_COMPRESS)
-                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS))
-                : true;
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS)) : true;
         boolean isSubmodule = optionsHelper.hasOption(OPTION_SUBMODULE)
-                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_SUBMODULE))
-                : false;
+                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_SUBMODULE)) : false;
         packageType = optionsHelper.getOptionValue(OPTION_PACKAGETYPE);
 
         if (packageType == null)
@@ -102,8 +101,8 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         }
 
         // create new folder to contain the output
-        String packageName = packageType.toLowerCase() + "_"
-                + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date());
+        String packageName = packageType.toLowerCase(Locale.ROOT) + "_"
+                + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss", Locale.ROOT).format(new Date());
         if (!isSubmodule && new File(exportDest).exists()) {
             exportDest = exportDest + packageName + "/";
         }
@@ -156,8 +155,8 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
 
         StringBuilder basicSb = new StringBuilder();
         basicSb.append("MetaStoreID: ").append(ToolUtil.getMetaStoreId()).append("\n");
-        basicSb.append("PackageType: ").append(packageType.toUpperCase()).append("\n");
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+        basicSb.append("PackageType: ").append(packageType.toUpperCase(Locale.ROOT)).append("\n");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.ROOT);
         basicSb.append("PackageTimestamp: ").append(format.format(new Date())).append("\n");
         basicSb.append("Host: ").append(ToolUtil.getHostName()).append("\n");
         FileUtils.writeStringToFile(new File(exportDir, "info"), basicSb.toString(), Charset.defaultCharset());

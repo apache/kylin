@@ -18,6 +18,8 @@
 
 package org.apache.kylin.job.metrics;
 
+import java.util.Locale;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metrics.MetricsManager;
 import org.apache.kylin.metrics.lib.impl.RecordEvent;
@@ -112,7 +114,7 @@ public class JobMetricsFacade {
         public void setWrapper(String user, String projectName, String cubeName, String jobId, String jobType,
                 String cubingType) {
             this.user = user;
-            this.projectName = projectName == null ? null : projectName.toUpperCase();
+            this.projectName = projectName == null ? null : projectName.toUpperCase(Locale.ROOT);
             this.cubeName = cubeName;
             this.jobId = jobId;
             this.jobType = jobType;

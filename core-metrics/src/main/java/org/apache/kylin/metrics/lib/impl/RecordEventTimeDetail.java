@@ -20,6 +20,7 @@ package org.apache.kylin.metrics.lib.impl;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import org.apache.kylin.common.KylinConfig;
@@ -43,24 +44,24 @@ public class RecordEventTimeDetail {
     public final String week_begin_date;
 
     public RecordEventTimeDetail(long timeStamp) {
-        Calendar calendar = Calendar.getInstance(timeZone);
+        Calendar calendar = Calendar.getInstance(timeZone, Locale.ROOT);
         calendar.setTimeInMillis(timeStamp);
 
         SimpleDateFormat dateFormat = dateFormatThreadLocal.get();
         if (dateFormat == null) {
-            dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
             dateFormat.setTimeZone(timeZone);
             dateFormatThreadLocal.set(dateFormat);
         }
         SimpleDateFormat timeFormat = timeFormatThreadLocal.get();
         if (timeFormat == null) {
-            timeFormat = new SimpleDateFormat("HH:mm:ss");
+            timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.ROOT);
             timeFormat.setTimeZone(timeZone);
             timeFormatThreadLocal.set(timeFormat);
         }
 
-        String yearStr = String.format("%04d", calendar.get(Calendar.YEAR));
-        String monthStr = String.format("%02d", calendar.get(Calendar.MONTH) + 1);
+        String yearStr = String.format(Locale.ROOT, "%04d", calendar.get(Calendar.YEAR));
+        String monthStr = String.format(Locale.ROOT, "%02d", calendar.get(Calendar.MONTH) + 1);
         this.year_begin_date = yearStr + "-01-01";
         this.month_begin_date = yearStr + "-" + monthStr + "-01";
         this.date = dateFormat.format(calendar.getTime());

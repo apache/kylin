@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -55,7 +56,8 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
     public static final String JOB_TITLE = "Kylin Hive Column Cardinality Update Job";
 
     @SuppressWarnings("static-access")
-    protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
+    protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true)
+            .withDescription("The hive table name").create("table");
 
     public HiveColumnCardinalityUpdateJob() {
 
@@ -74,15 +76,15 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
             parseOptions(options, args);
 
             String project = getOptionValue(OPTION_PROJECT);
-            String table = getOptionValue(OPTION_TABLE).toUpperCase();
-            
+            String table = getOptionValue(OPTION_TABLE).toUpperCase(Locale.ROOT);
+
             // start job
             String jobName = JOB_TITLE + getOptionsAsString();
             logger.info("Starting: " + jobName);
             Configuration conf = getConf();
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
-            updateKylinTableExd(table.toUpperCase(), output.toString(), conf, project);
+            updateKylinTableExd(table.toUpperCase(Locale.ROOT), output.toString(), conf, project);
             return 0;
         } catch (Exception e) {
             printUsage(options);
@@ -91,7 +93,8 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
 
     }
 
-    public void updateKylinTableExd(String tableName, String outPath, Configuration config, String prj) throws IOException {
+    public void updateKylinTableExd(String tableName, String outPath, Configuration config, String prj)
+            throws IOException {
         List<String> columns = null;
         try {
             columns = readLines(new Path(outPath), config);

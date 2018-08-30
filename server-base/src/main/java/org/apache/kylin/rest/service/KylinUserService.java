@@ -21,6 +21,7 @@ package org.apache.kylin.rest.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.PostConstruct;
 
@@ -118,7 +119,7 @@ public class KylinUserService implements UserService {
         Message msg = MsgPicker.getMsg();
         ManagedUser managedUser = getKylinUserManager().get(userName);
         if (managedUser == null) {
-            throw new UsernameNotFoundException(String.format(msg.getUSER_NOT_FOUND(), userName));
+            throw new UsernameNotFoundException(String.format(Locale.ROOT, msg.getUSER_NOT_FOUND(), userName));
         }
         logger.trace("load user : {}", userName);
         return managedUser;
@@ -130,7 +131,7 @@ public class KylinUserService implements UserService {
     }
 
     @Override
-    public List<String> listAdminUsers() throws IOException{
+    public List<String> listAdminUsers() throws IOException {
         List<String> adminUsers = new ArrayList<>();
         for (ManagedUser managedUser : listUsers()) {
             if (managedUser.getAuthorities().contains(new SimpleGrantedAuthority(Constant.ROLE_ADMIN))) {
@@ -141,7 +142,7 @@ public class KylinUserService implements UserService {
     }
 
     @Override
-    public void completeUserInfo(ManagedUser user){
+    public void completeUserInfo(ManagedUser user) {
     }
 
     public static String getId(String userName) {

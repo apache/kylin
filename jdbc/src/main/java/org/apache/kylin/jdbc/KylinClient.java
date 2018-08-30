@@ -20,6 +20,7 @@ package org.apache.kylin.jdbc;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.sql.Date;
@@ -186,7 +187,7 @@ public class KylinClient implements IRemoteClient {
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
-            return value.getBytes();
+            return value.getBytes(StandardCharsets.UTF_8);
         case Types.DATE:
             return Date.valueOf(value);
         case Types.TIME:
@@ -217,7 +218,8 @@ public class KylinClient implements IRemoteClient {
 
         String username = connProps.getProperty("user");
         String password = connProps.getProperty("password");
-        String basicAuth = DatatypeConverter.printBase64Binary((username + ":" + password).getBytes());
+        String basicAuth = DatatypeConverter
+                .printBase64Binary((username + ":" + password).getBytes(StandardCharsets.UTF_8));
         method.addHeader("Authorization", "Basic " + basicAuth);
     }
 

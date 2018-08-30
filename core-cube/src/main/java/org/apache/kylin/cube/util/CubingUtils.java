@@ -21,6 +21,7 @@ package org.apache.kylin.cube.util;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,7 +54,8 @@ public class CubingUtils {
 
     private static Logger logger = LoggerFactory.getLogger(CubingUtils.class);
 
-    public static Map<Long, HLLCounter> sampling(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDescIn, Iterable<List<String>> streams) {
+    public static Map<Long, HLLCounter> sampling(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDescIn,
+            Iterable<List<String>> streams) {
         final CubeJoinedFlatTableEnrich flatDesc = new CubeJoinedFlatTableEnrich(flatDescIn, cubeDesc);
         final int rowkeyLength = cubeDesc.getRowkey().getRowKeyColumns().length;
         final Set<Long> allCuboidIds = cubeDesc.getInitialCuboidScheduler().getAllCuboidIds();
@@ -105,8 +107,10 @@ public class CubingUtils {
         return result;
     }
 
-    public static Map<TblColRef, Dictionary<String>> buildDictionary(final CubeInstance cubeInstance, Iterable<List<String>> recordList) throws IOException {
-        final List<TblColRef> columnsNeedToBuildDictionary = cubeInstance.getDescriptor().listDimensionColumnsExcludingDerived(true);
+    public static Map<TblColRef, Dictionary<String>> buildDictionary(final CubeInstance cubeInstance,
+            Iterable<List<String>> recordList) throws IOException {
+        final List<TblColRef> columnsNeedToBuildDictionary = cubeInstance.getDescriptor()
+                .listDimensionColumnsExcludingDerived(true);
         final HashMap<Integer, TblColRef> tblColRefMap = Maps.newHashMap();
         int index = 0;
         for (TblColRef column : columnsNeedToBuildDictionary) {
@@ -126,14 +130,16 @@ public class CubingUtils {
         }
         for (TblColRef tblColRef : valueMap.keySet()) {
             Set<String> values = valueMap.get(tblColRef);
-            Dictionary<String> dict = DictionaryGenerator.buildDictionary(tblColRef.getType(), new IterableDictionaryValueEnumerator(values));
+            Dictionary<String> dict = DictionaryGenerator.buildDictionary(tblColRef.getType(),
+                    new IterableDictionaryValueEnumerator(values));
             result.put(tblColRef, dict);
         }
         return result;
     }
 
     @SuppressWarnings("unchecked")
-    public static Map<TblColRef, Dictionary<String>> writeDictionary(CubeSegment cubeSegment, Map<TblColRef, Dictionary<String>> dictionaryMap, long startOffset, long endOffset) {
+    public static Map<TblColRef, Dictionary<String>> writeDictionary(CubeSegment cubeSegment,
+            Map<TblColRef, Dictionary<String>> dictionaryMap, long startOffset, long endOffset) {
         Map<TblColRef, Dictionary<String>> realDictMap = Maps.newHashMap();
 
         for (Map.Entry<TblColRef, Dictionary<String>> entry : dictionaryMap.entrySet()) {
@@ -141,7 +147,7 @@ public class CubingUtils {
             final Dictionary<String> dictionary = entry.getValue();
             IReadableTable.TableSignature signature = new IReadableTable.TableSignature();
             signature.setLastModifiedTime(System.currentTimeMillis());
-            signature.setPath(String.format("streaming_%s_%s", startOffset, endOffset));
+            signature.setPath(String.format(Locale.ROOT, "streaming_%s_%s", startOffset, endOffset));
             signature.setSize(endOffset - startOffset);
             DictionaryInfo dictInfo = new DictionaryInfo(tblColRef.getColumnDesc(), tblColRef.getDatatype(), signature);
             logger.info("writing dictionary for TblColRef:" + tblColRef.toString());

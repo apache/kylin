@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ClassUtil;
@@ -199,7 +200,8 @@ public class PartitionDesc implements Serializable {
             StringBuilder builder = new StringBuilder();
 
             if (partDesc.partitionColumnIsYmdInt()) {
-                buildSingleColumnRangeCondAsYmdInt(builder, partitionDateColumn, startInclusive, endExclusive, partDesc.getPartitionDateFormat());
+                buildSingleColumnRangeCondAsYmdInt(builder, partitionDateColumn, startInclusive, endExclusive,
+                        partDesc.getPartitionDateFormat());
             } else if (partDesc.partitionColumnIsTimeMillis()) {
                 buildSingleColumnRangeCondAsTimeMillis(builder, partitionDateColumn, startInclusive, endExclusive);
             } else if (partitionDateColumn != null && partitionTimeColumn == null) {
@@ -230,8 +232,8 @@ public class PartitionDesc implements Serializable {
             builder.append(partitionColumnName + " >= "
                     + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat));
             builder.append(" AND ");
-            builder.append(partitionColumnName + " < "
-                    + DateFormat.formatToDateStr(endExclusive, partitionColumnDateFormat));
+            builder.append(
+                    partitionColumnName + " < " + DateFormat.formatToDateStr(endExclusive, partitionColumnDateFormat));
         }
 
         private static void buildSingleColumnRangeCondition(StringBuilder builder, TblColRef partitionColumn,
@@ -308,8 +310,8 @@ public class PartitionDesc implements Serializable {
             TblColRef partitionColumn = partDesc.getPartitionDateColumnRef();
             String tableAlias = partitionColumn.getTableAlias();
 
-            String concatField = String.format("CONCAT(%s.YEAR,'-',%s.MONTH,'-',%s.DAY)", tableAlias, tableAlias,
-                    tableAlias);
+            String concatField = String.format(Locale.ROOT, "CONCAT(%s.YEAR,'-',%s.MONTH,'-',%s.DAY)", tableAlias,
+                    tableAlias, tableAlias);
             StringBuilder builder = new StringBuilder();
 
             if (startInclusive > 0) {

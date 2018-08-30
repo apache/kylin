@@ -20,9 +20,13 @@ package org.apache.kylin.measure.topn;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -76,7 +80,7 @@ public class TopNCounterTest {
 
         if (tempFile.exists())
             FileUtils.forceDelete(tempFile);
-        FileWriter fw = new FileWriter(tempFile);
+        Writer fw = new OutputStreamWriter(new FileOutputStream(tempFile), StandardCharsets.UTF_8);
         try {
             for (int i = 0; i < TOTAL_RECORDS; i++) {
                 keyIndex = zipf.sample() - 1;
@@ -97,10 +101,12 @@ public class TopNCounterTest {
     //@Test
     public void testSingleSpaceSaving() throws IOException {
         String dataFile = prepareTestDate();
-        TopNCounterTest.SpaceSavingConsumer spaceSavingCounter = new TopNCounterTest.SpaceSavingConsumer(TOP_K * SPACE_SAVING_ROOM);
+        TopNCounterTest.SpaceSavingConsumer spaceSavingCounter = new TopNCounterTest.SpaceSavingConsumer(
+                TOP_K * SPACE_SAVING_ROOM);
         TopNCounterTest.HashMapConsumer accurateCounter = new TopNCounterTest.HashMapConsumer();
 
-        for (TopNCounterTest.TestDataConsumer consumer : new TopNCounterTest.TestDataConsumer[] { spaceSavingCounter, accurateCounter }) {
+        for (TopNCounterTest.TestDataConsumer consumer : new TopNCounterTest.TestDataConsumer[] { spaceSavingCounter,
+                accurateCounter }) {
             feedDataToConsumer(dataFile, consumer, 0, TOTAL_RECORDS);
         }
 
@@ -109,7 +115,8 @@ public class TopNCounterTest {
         compareResult(spaceSavingCounter, accurateCounter);
     }
 
-    private void compareResult(TopNCounterTest.TestDataConsumer firstConsumer, TopNCounterTest.TestDataConsumer secondConsumer) {
+    private void compareResult(TopNCounterTest.TestDataConsumer firstConsumer,
+            TopNCounterTest.TestDataConsumer secondConsumer) {
         List<Pair<String, Double>> topResult1 = firstConsumer.getTopN(TOP_K);
         outputMsg("Get topN, Space saving takes " + firstConsumer.getSpentTime() / 1000 + " seconds");
         List<Pair<String, Double>> realSequence = secondConsumer.getTopN(TOP_K);
@@ -123,8 +130,10 @@ public class TopNCounterTest {
                 //            if (topResult1.get(i).getFirst().equals(realSequence.get(i).getFirst()) && topResult1.get(i).getSecond().doubleValue() == realSequence.get(i).getSecond().doubleValue()) {
                 outputMsg("Passed; key:" + topResult1.get(i).getFirst() + ", value:" + topResult1.get(i).getSecond());
             } else {
-                outputMsg("Failed; space saving key:" + topResult1.get(i).getFirst() + ", value:" + topResult1.get(i).getSecond());
-                outputMsg("Failed; correct key:" + realSequence.get(i).getFirst() + ", value:" + realSequence.get(i).getSecond());
+                outputMsg("Failed; space saving key:" + topResult1.get(i).getFirst() + ", value:"
+                        + topResult1.get(i).getSecond());
+                outputMsg("Failed; correct key:" + realSequence.get(i).getFirst() + ", value:"
+                        + realSequence.get(i).getSecond());
                 error++;
             }
         }
@@ -167,7 +176,8 @@ public class TopNCounterTest {
 
     }
 
-    private TopNCounterTest.SpaceSavingConsumer[] singleMerge(TopNCounterTest.SpaceSavingConsumer[] consumers) throws IOException, ClassNotFoundException {
+    private TopNCounterTest.SpaceSavingConsumer[] singleMerge(TopNCounterTest.SpaceSavingConsumer[] consumers)
+            throws IOException, ClassNotFoundException {
         List<TopNCounterTest.SpaceSavingConsumer> list = Lists.newArrayList();
         if (consumers.length == 1)
             return consumers;
@@ -183,7 +193,8 @@ public class TopNCounterTest {
 
     }
 
-    private TopNCounterTest.SpaceSavingConsumer[] binaryMerge(TopNCounterTest.SpaceSavingConsumer[] consumers) throws IOException, ClassNotFoundException {
+    private TopNCounterTest.SpaceSavingConsumer[] binaryMerge(TopNCounterTest.SpaceSavingConsumer[] consumers)
+            throws IOException, ClassNotFoundException {
         List<TopNCounterTest.SpaceSavingConsumer> list = Lists.newArrayList();
         if (consumers.length == 1)
             return consumers;
@@ -199,9 +210,11 @@ public class TopNCounterTest {
         return binaryMerge(list.toArray(new TopNCounterTest.SpaceSavingConsumer[list.size()]));
     }
 
-    private void feedDataToConsumer(String dataFile, TopNCounterTest.TestDataConsumer consumer, int startLine, int endLine) throws IOException {
+    private void feedDataToConsumer(String dataFile, TopNCounterTest.TestDataConsumer consumer, int startLine,
+            int endLine) throws IOException {
         long startTime = System.currentTimeMillis();
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(dataFile));
+        BufferedReader bufferedReader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_8));
 
         int lineNum = 0;
         String line = bufferedReader.readLine();
@@ -214,7 +227,8 @@ public class TopNCounterTest {
         }
 
         bufferedReader.close();
-        outputMsg("feed data to " + consumer.getClass().getCanonicalName() + " take time (seconds): " + (System.currentTimeMillis() - startTime) / 1000);
+        outputMsg("feed data to " + consumer.getClass().getCanonicalName() + " take time (seconds): "
+                + (System.currentTimeMillis() - startTime) / 1000);
     }
 
     private void outputMsg(String msg) {

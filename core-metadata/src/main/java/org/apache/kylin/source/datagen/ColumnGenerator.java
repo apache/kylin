@@ -20,12 +20,14 @@ package org.apache.kylin.source.datagen;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.TreeSet;
 
@@ -182,7 +184,7 @@ public class ColumnGenerator {
         }
 
         private String formatNumber(double i) {
-            return new DecimalFormat(format).format(i);
+            return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ROOT)).format(i);
         }
 
         private int randomInt() {

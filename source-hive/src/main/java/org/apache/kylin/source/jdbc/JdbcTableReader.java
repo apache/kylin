@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.source.IReadableTable.TableReader;
@@ -61,13 +62,13 @@ public class JdbcTableReader implements TableReader {
         String jdbcPass = config.getJdbcSourcePass();
         dbconf = new DBConnConf(driverClass, connectionUrl, jdbcUser, jdbcPass);
         jdbcCon = SqlUtil.getConnection(dbconf);
-        String sql = String.format("select * from %s.%s", dbName, tableName);
+        String sql = String.format(Locale.ROOT, "select * from %s.%s", dbName, tableName);
         try {
             statement = jdbcCon.createStatement();
             rs = statement.executeQuery(sql);
             colCount = rs.getMetaData().getColumnCount();
         } catch (SQLException e) {
-            throw new IOException(String.format("error while exec %s", sql), e);
+            throw new IOException(String.format(Locale.ROOT, "error while exec %s", sql), e);
         }
     }
 

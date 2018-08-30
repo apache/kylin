@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -128,7 +129,7 @@ public class HiveProducer {
         sb.append(tableLocation);
         for (Map.Entry<String, String> e : recordKey.partition().entrySet()) {
             sb.append("/");
-            sb.append(e.getKey().toLowerCase());
+            sb.append(e.getKey().toLowerCase(Locale.ROOT));
             sb.append("=");
             sb.append(e.getValue());
         }
@@ -145,7 +146,7 @@ public class HiveProducer {
                 } else {
                     hql.append(",");
                 }
-                hql.append(e.getKey().toLowerCase());
+                hql.append(e.getKey().toLowerCase(Locale.ROOT));
                 hql.append("='" + e.getValue() + "'");
             }
             hql.append(")");
@@ -192,7 +193,7 @@ public class HiveProducer {
         List<FieldSchema> fields = tableFieldSchemaCache.get(tableNameSplits).getSecond();
         List<Object> columnValues = Lists.newArrayListWithExpectedSize(fields.size());
         for (FieldSchema fieldSchema : fields) {
-            columnValues.add(rawValue.get(fieldSchema.getName().toUpperCase()));
+            columnValues.add(rawValue.get(fieldSchema.getName().toUpperCase(Locale.ROOT)));
         }
 
         return new HiveProducerRecord(tableNameSplits.getFirst(), tableNameSplits.getSecond(), partitionKVs, columnValues);

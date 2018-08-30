@@ -25,8 +25,10 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
+import java.util.TimeZone;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.filter.CaseTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
@@ -101,12 +103,12 @@ public class FilterBaseTest extends LocalFileMetadataTestCase {
         compareFilter.addChild(columnFilter);
 
         List<String> inValues = Lists.newArrayList();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
         Date startDate = simpleDateFormat.parse("1970-01-01");
         Date endDate = simpleDateFormat.parse("2100-01-01");
-        Calendar start = Calendar.getInstance();
+        Calendar start = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ROOT);
         start.setTime(startDate);
-        Calendar end = Calendar.getInstance();
+        Calendar end = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ROOT);
         end.setTime(endDate);
         for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
             inValues.add(simpleDateFormat.format(date));

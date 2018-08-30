@@ -21,6 +21,7 @@ package org.apache.kylin.query.security;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.kylin.metadata.model.TblColRef;
@@ -30,8 +31,8 @@ public class TableLevelACL {
     public static void tableFilter(List<OLAPContext> contexts, List<String> tableBlackList) {
         Set<String> tableWithSchema = getTableWithSchema(contexts);
         for (String tbl : tableBlackList) {
-            if (tableWithSchema.contains(tbl.toUpperCase())) {
-//                throw new kylin.AccessDeniedException("table:" + tbl);
+            if (tableWithSchema.contains(tbl.toUpperCase(Locale.ROOT))) {
+                //                throw new kylin.AccessDeniedException("table:" + tbl);
                 System.out.println("Access table:" + tbl + " denied");
             }
         }
@@ -40,8 +41,8 @@ public class TableLevelACL {
     public static void columnFilter(List<OLAPContext> contexts, List<String> columnBlackList) {
         List<String> allColWithTblAndSchema = getAllColWithTblAndSchema(contexts);
         for (String tbl : columnBlackList) {
-            if (allColWithTblAndSchema.contains(tbl.toUpperCase())) {
-//                throw new kylin.AccessDeniedException("table:" + tbl);
+            if (allColWithTblAndSchema.contains(tbl.toUpperCase(Locale.ROOT))) {
+                //                throw new kylin.AccessDeniedException("table:" + tbl);
                 System.out.println("Access table:" + tbl + " denied");
             }
         }

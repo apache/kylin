@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -99,7 +100,8 @@ public class AclService implements MutableAclService, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        Broadcaster.getInstance(KylinConfig.getInstanceFromEnv()).registerStaticListener(new AclRecordSyncListener(), "acl");
+        Broadcaster.getInstance(KylinConfig.getInstanceFromEnv()).registerStaticListener(new AclRecordSyncListener(),
+                "acl");
     }
 
     private class AclRecordSyncListener extends Broadcaster.Listener {
@@ -156,7 +158,7 @@ public class AclService implements MutableAclService, InitializingBean {
         Message msg = MsgPicker.getMsg();
         Map<ObjectIdentity, Acl> aclsMap = readAclsById(Arrays.asList(object), sids);
         if (!aclsMap.containsKey(object)) {
-            throw new BadRequestException(String.format(msg.getNO_ACL_ENTRY(), object));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getNO_ACL_ENTRY(), object));
         }
         return aclsMap.get(object);
     }
@@ -173,7 +175,7 @@ public class AclService implements MutableAclService, InitializingBean {
             AclRecord record = getAclRecordByCache(objID(oid));
             if (record == null) {
                 Message msg = MsgPicker.getMsg();
-                throw new NotFoundException(String.format(msg.getACL_INFO_NOT_FOUND(), oid));
+                throw new NotFoundException(String.format(Locale.ROOT, msg.getACL_INFO_NOT_FOUND(), oid));
             }
 
             Acl parentAcl = null;
@@ -209,7 +211,8 @@ public class AclService implements MutableAclService, InitializingBean {
             List<ObjectIdentity> children = findChildren(objectIdentity);
             if (!deleteChildren && children.size() > 0) {
                 Message msg = MsgPicker.getMsg();
-                throw new BadRequestException(String.format(msg.getIDENTITY_EXIST_CHILDREN(), objectIdentity));
+                throw new BadRequestException(
+                        String.format(Locale.ROOT, msg.getIDENTITY_EXIST_CHILDREN(), objectIdentity));
             }
             for (ObjectIdentity oid : children) {
                 deleteAcl(oid, deleteChildren);
@@ -272,7 +275,7 @@ public class AclService implements MutableAclService, InitializingBean {
                 return aclMap.get(id);
             }
         }
-        
+
         try (AutoLock l = lock.lockForWrite()) {
             crud.reloadAll();
             return aclMap.get(id);

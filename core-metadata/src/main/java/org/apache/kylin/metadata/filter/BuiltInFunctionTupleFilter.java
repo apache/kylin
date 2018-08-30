@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.kylin.common.util.BytesUtil;
@@ -66,7 +67,7 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
         this.methodParams = Lists.newArrayList();
 
         if (name != null) {
-            this.name = name.toUpperCase();
+            this.name = name.toUpperCase(Locale.ROOT);
             initMethod();
         }
     }

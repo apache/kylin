@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -744,7 +745,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getOverrideHiveTableLocation(String table) {
-        return getOptional("kylin.source.hive.table-location." + table.toUpperCase());
+        return getOptional("kylin.source.hive.table-location." + table.toUpperCase(Locale.ROOT));
     }
 
     public boolean isHiveKeepFlatTable() {
@@ -1143,7 +1144,6 @@ abstract public class KylinConfigBase implements Serializable {
     public Map<String, String> getSparkConfigOverrideWithSpecificName(String configName) {
         return getPropertiesByPrefix("kylin.engine.spark-conf-" + configName + ".");
     }
-
 
     public double getDefaultHadoopJobReducerInputMB() {
         return Double.parseDouble(getOptional("kylin.engine.mr.reduce-input-mb", "500"));
@@ -1667,7 +1667,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getKylinMetricsPrefix() {
-        return getOptional("kylin.metrics.prefix", "KYLIN").toUpperCase();
+        return getOptional("kylin.metrics.prefix", "KYLIN").toUpperCase(Locale.ROOT);
     }
 
     public String getKylinMetricsActiveReservoirDefaultClass() {

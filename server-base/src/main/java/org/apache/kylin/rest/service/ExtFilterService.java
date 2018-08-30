@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.rest.constant.Constant;
@@ -41,7 +42,7 @@ public class ExtFilterService extends BasicService {
         Message msg = MsgPicker.getMsg();
 
         if (getTableManager().getExtFilterDesc(desc.getName()) != null) {
-            throw new BadRequestException(String.format(msg.getFILTER_ALREADY_EXIST(), desc.getName()));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getFILTER_ALREADY_EXIST(), desc.getName()));
         }
         getTableManager().saveExternalFilter(desc);
     }
@@ -51,7 +52,7 @@ public class ExtFilterService extends BasicService {
         Message msg = MsgPicker.getMsg();
 
         if (getTableManager().getExtFilterDesc(desc.getName()) == null) {
-            throw new BadRequestException(String.format(msg.getFILTER_NOT_FOUND(), desc.getName()));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getFILTER_NOT_FOUND(), desc.getName()));
         }
         getTableManager().saveExternalFilter(desc);
     }

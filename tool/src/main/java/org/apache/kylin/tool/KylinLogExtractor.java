@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.Locale;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.kylin.common.KylinConfig;
@@ -107,7 +108,8 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
         for (File logFile : requiredLogFiles) {
             logger.info("Log file:" + logFile.getAbsolutePath());
             if (logFile.exists()) {
-                String cmd = String.format("cp %s %s", logFile.getAbsolutePath(), exportDir.getAbsolutePath());
+                String cmd = String.format(Locale.ROOT, "cp %s %s", logFile.getAbsolutePath(), exportDir
+                    .getAbsolutePath());
                 config.getCliCommandExecutor().execute(cmd);
             }
         }

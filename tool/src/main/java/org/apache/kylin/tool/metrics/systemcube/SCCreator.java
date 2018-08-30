@@ -24,8 +24,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -246,7 +248,7 @@ public class SCCreator extends AbstractApplication {
         dout.close();
         buf.close();
 
-        saveToFile(fileName, buf.toString());
+        saveToFile(fileName, buf.toString("UTF-8"));
     }
 
     private void saveToFile(String fileName, String contents) throws IOException {
@@ -255,7 +257,8 @@ public class SCCreator extends AbstractApplication {
             parentDir.mkdirs();
         }
 
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName))) {
+        try (BufferedWriter bufferedWriter = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8))) {
             bufferedWriter.append(contents);
         }
     }

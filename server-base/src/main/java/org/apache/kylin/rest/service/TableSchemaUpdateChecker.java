@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -60,15 +61,17 @@ public class TableSchemaUpdateChecker {
         }
 
         static CheckResult validOnFirstLoad(String tableName) {
-            return new CheckResult(true, format("Table '%s' hasn't been loaded before", tableName));
+            return new CheckResult(true, format(Locale.ROOT, "Table '%s' hasn't been loaded before", tableName));
         }
 
         static CheckResult validOnCompatibleSchema(String tableName) {
-            return new CheckResult(true, format("Table '%s' is compatible with all existing cubes", tableName));
+            return new CheckResult(true,
+                    format(Locale.ROOT, "Table '%s' is compatible with all existing cubes", tableName));
         }
 
         static CheckResult invalidOnFetchSchema(String tableName, Exception e) {
-            return new CheckResult(false, format("Failed to fetch metadata of '%s': %s", tableName, e.getMessage()));
+            return new CheckResult(false,
+                    format(Locale.ROOT, "Failed to fetch metadata of '%s': %s", tableName, e.getMessage()));
         }
 
         static CheckResult invalidOnIncompatibleSchema(String tableName, List<String> reasons) {
@@ -77,7 +80,10 @@ public class TableSchemaUpdateChecker {
                 buf.append("- ").append(reason).append("\n");
             }
 
-            return new CheckResult(false, format("Found %d issue(s) with '%s':%n%s Please disable and purge related cube(s) first", reasons.size(), tableName, buf.toString()));
+            return new CheckResult(false,
+                    format(Locale.ROOT,
+                            "Found %d issue(s) with '%s':%n%s Please disable and " + "purge related " + "cube(s) first",
+                            reasons.size(), tableName, buf.toString()));
         }
     }
 
@@ -87,18 +93,19 @@ public class TableSchemaUpdateChecker {
     }
 
     private List<CubeInstance> findCubeByTable(final TableDesc table) {
-        Iterable<CubeInstance> relatedCubes = Iterables.filter(cubeManager.listAllCubes(), new Predicate<CubeInstance>() {
-            @Override
-            public boolean apply(@Nullable CubeInstance cube) {
-                if (cube == null || cube.allowBrokenDescriptor()) {
-                    return false;
-                }
-                DataModelDesc model = cube.getModel();
-                if (model == null)
-                    return false;
-                return model.containsTable(table);
-            }
-        });
+        Iterable<CubeInstance> relatedCubes = Iterables.filter(cubeManager.listAllCubes(),
+                new Predicate<CubeInstance>() {
+                    @Override
+                    public boolean apply(@Nullable CubeInstance cube) {
+                        if (cube == null || cube.allowBrokenDescriptor()) {
+                            return false;
+                        }
+                        DataModelDesc model = cube.getModel();
+                        if (model == null)
+                            return false;
+                        return model.containsTable(table);
+                    }
+                });
 
         return ImmutableList.copyOf(relatedCubes);
     }
@@ -185,7 +192,8 @@ public class TableSchemaUpdateChecker {
                 TableDesc factTable = cube.getModel().findFirstTable(fullTableName).getTableDesc();
                 List<String> violateColumns = checkAllColumnsInCube(cube, factTable, newTableDesc);
                 if (!violateColumns.isEmpty()) {
-                    issues.add(format("Column %s used in cube[%s] and model[%s], but changed in hive", violateColumns, cube.getName(), modelName));
+                    issues.add(format(Locale.ROOT, "Column %s used in cube[%s] and model[%s], but changed " + "in hive",
+                            violateColumns, cube.getName(), modelName));
                 }
             }
 
@@ -194,7 +202,8 @@ public class TableSchemaUpdateChecker {
             if (cube.getModel().isLookupTable(fullTableName)) {
                 TableDesc lookupTable = cube.getModel().findFirstTable(fullTableName).getTableDesc();
                 if (!checkAllColumnsInTableDesc(lookupTable, newTableDesc)) {
-                    issues.add(format("Table '%s' is used as Lookup Table in cube[%s] and model[%s], but changed in hive", lookupTable.getIdentity(), cube.getName(), modelName));
+                    issues.add(format(Locale.ROOT, "Table '%s' is used as Lookup Table in cube[%s] and model[%s], but "
+                            + "changed in " + "hive", lookupTable.getIdentity(), cube.getName(), modelName));
                 }
             }
         }

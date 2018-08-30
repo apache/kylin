@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
@@ -40,6 +40,8 @@ import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.collect.Lists;
 
 /**
  *
@@ -143,7 +145,7 @@ public class JoinedFlatTable {
             if (i > 0) {
                 sql.append(",");
             }
-            String colTotalName = String.format("%s.%s", col.getTableRef().getTableName(), col.getName());
+            String colTotalName = String.format(Locale.ROOT, "%s.%s", col.getTableRef().getTableName(), col.getName());
             if (skipAsList.contains(colTotalName)) {
                 sql.append(col.getExpressionInSourceDB() + sep);
             } else {
@@ -173,7 +175,7 @@ public class JoinedFlatTable {
                     if (pk.length != fk.length) {
                         throw new RuntimeException("Invalid join condition of lookup table:" + lookupDesc);
                     }
-                    String joinType = join.getType().toUpperCase();
+                    String joinType = join.getType().toUpperCase(Locale.ROOT);
 
                     sql.append(joinType + " JOIN " + dimTable.getTableIdentity() + " as " + dimTable.getAlias() + sep);
                     sql.append("ON ");
@@ -245,7 +247,7 @@ public class JoinedFlatTable {
     }
 
     private static String getHiveDataType(String javaDataType) {
-        String originDataType = javaDataType.toLowerCase();
+        String originDataType = javaDataType.toLowerCase(Locale.ROOT);
         String hiveDataType;
         if (originDataType.startsWith("varchar")) {
             hiveDataType = "string";

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
@@ -128,7 +129,8 @@ public class ProjectController extends BasicController {
 
         if (!ValidateUtil.isAlphanumericUnderscore(projectDesc.getName())) {
             throw new BadRequestException(
-                    String.format("Invalid Project name %s, only letters, numbers and underscore supported."),
+                    String.format(Locale.ROOT,
+                            "Invalid Project name %s, only letters, numbers and underscore " + "supported."),
                     projectDesc.getName());
         }
 

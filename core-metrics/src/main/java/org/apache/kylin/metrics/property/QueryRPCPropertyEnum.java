@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metrics.property;
 
+import java.util.Locale;
+
 import com.google.common.base.Strings;
 
 public enum QueryRPCPropertyEnum {
@@ -36,7 +38,7 @@ public enum QueryRPCPropertyEnum {
             return null;
         }
         for (QueryRPCPropertyEnum property : QueryRPCPropertyEnum.values()) {
-            if (property.propertyName.equals(name.toUpperCase())) {
+            if (property.propertyName.equals(name.toUpperCase(Locale.ROOT))) {
                 return property;
             }
         }
