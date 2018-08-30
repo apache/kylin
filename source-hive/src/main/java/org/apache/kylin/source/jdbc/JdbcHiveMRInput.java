@@ -19,6 +19,7 @@
 package org.apache.kylin.source.jdbc;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
@@ -170,8 +171,8 @@ public class JdbcHiveMRInput extends HiveMRInput {
             String filedDelimiter = config.getJdbcSourceFieldDelimiter();
             int mapperNum = config.getSqoopMapperNum();
 
-            String bquery = String.format("SELECT min(%s), max(%s) FROM \"%s\".%s as %s", splitColumn, splitColumn,
-                    splitDatabase, splitTable, splitTableAlias);
+            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM \"%s\".%s as %s", splitColumn,
+                    splitColumn, splitDatabase, splitTable, splitTableAlias);
             if (partitionDesc.isPartitioned()) {
                 SegmentRange segRange = flatDesc.getSegRange();
                 if (segRange != null && !segRange.isInfinite()) {
@@ -184,12 +185,14 @@ public class JdbcHiveMRInput extends HiveMRInput {
                 }
             }
 
-            String cmd = String.format("%s/bin/sqoop import" + generateSqoopConfigArgString()
-                    + "--connect \"%s\" --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
-                    + "--target-dir %s/%s --split-by %s --boundary-query \"%s\" --null-string '' "
-                    + "--fields-terminated-by '%s' --num-mappers %d", sqoopHome, connectionUrl, driverClass, jdbcUser,
-                    jdbcPass, selectSql, jobWorkingDir, hiveTable, splitColumn, bquery, filedDelimiter, mapperNum);
-            logger.debug(String.format("sqoop cmd:%s", cmd));
+            String cmd = String.format(Locale.ROOT,
+                    "%s/bin/sqoop import" + generateSqoopConfigArgString()
+                            + "--connect \"%s\" --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
+                            + "--target-dir %s/%s --split-by %s --boundary-query \"%s\" --null-string '' "
+                            + "--fields-terminated-by '%s' --num-mappers %d",
+                    sqoopHome, connectionUrl, driverClass, jdbcUser, jdbcPass, selectSql, jobWorkingDir, hiveTable,
+                    splitColumn, bquery, filedDelimiter, mapperNum);
+            logger.debug(String.format(Locale.ROOT, "sqoop cmd:%s", cmd));
             CmdStep step = new CmdStep();
             step.setCmd(cmd);
             step.setName(ExecutableConstants.STEP_NAME_SQOOP_TO_FLAT_HIVE_TABLE);

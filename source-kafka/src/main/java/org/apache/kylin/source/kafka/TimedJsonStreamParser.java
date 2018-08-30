@@ -23,6 +23,7 @@ import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -116,7 +117,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
             ArrayList<String> result = Lists.newArrayList();
 
             for (TblColRef column : allColumns) {
-                final String columnName = column.getName().toLowerCase();
+                final String columnName = column.getName().toLowerCase(Locale.ROOT);
                 if (populateDerivedTimeColumns(columnName, result, t) == false) {
                     result.add(getValueByKey(column, root));
                 }
@@ -138,15 +139,15 @@ public final class TimedJsonStreamParser extends StreamingParser {
     }
 
     public String[] getEmbeddedPropertyNames(TblColRef column) {
-        final String colName = column.getName().toLowerCase();
+        final String colName = column.getName().toLowerCase(Locale.ROOT);
         String[] names = nameMap.get(colName);
         if (names == null) {
             String comment = column.getColumnDesc().getComment(); // use comment to parse the structure
             if (!StringUtils.isEmpty(comment) && comment.contains(EMBEDDED_PROPERTY_SEPARATOR)) {
-                names = comment.toLowerCase().split("\\" + EMBEDDED_PROPERTY_SEPARATOR);
+                names = comment.toLowerCase(Locale.ROOT).split("\\" + EMBEDDED_PROPERTY_SEPARATOR);
                 nameMap.put(colName, names);
             } else if (colName.contains(separator)) { // deprecated, just be compitable for old version
-                names = colName.toLowerCase().split(separator);
+                names = colName.toLowerCase(Locale.ROOT).split(separator);
                 nameMap.put(colName, names);
             }
         }
@@ -155,7 +156,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
     }
 
     protected String getValueByKey(TblColRef column, Map<String, Object> rootMap) throws IOException {
-        final String key = column.getName().toLowerCase();
+        final String key = column.getName().toLowerCase(Locale.ROOT);
         if (rootMap.containsKey(key)) {
             return objToString(rootMap.get(key));
         }

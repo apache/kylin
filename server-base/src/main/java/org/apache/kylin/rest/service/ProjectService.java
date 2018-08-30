@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.directory.api.util.Strings;
@@ -81,7 +83,7 @@ public class ProjectService extends BasicService {
         ProjectInstance currentProject = getProjectManager().getProject(projectName);
 
         if (currentProject != null) {
-            throw new BadRequestException(String.format(msg.getPROJECT_ALREADY_EXIST(), projectName));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getPROJECT_ALREADY_EXIST(), projectName));
         }
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description,
@@ -138,6 +140,7 @@ public class ProjectService extends BasicService {
             tableService.unloadHiveTable(table, projectName);
         }
         getProjectManager().dropProject(projectName);
+
         accessService.clean(project, true);
     }
 

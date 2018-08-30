@@ -19,6 +19,7 @@
 package org.apache.kylin.query.util;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,7 +59,7 @@ public class QueryUtil {
         final String suffixPattern = "^.+?\\s(limit\\s\\d+)?\\s(offset\\s\\d+)?\\s*$";
         sql = sql.replaceAll("\\s+", " ");
         Pattern pattern = Pattern.compile(suffixPattern);
-        Matcher matcher = pattern.matcher(sql.toLowerCase() + "  ");
+        Matcher matcher = pattern.matcher(sql.toLowerCase(Locale.ROOT) + "  ");
 
         if (matcher.find()) {
             if (limit > 0 && matcher.group(1) == null) {
@@ -71,7 +72,7 @@ public class QueryUtil {
 
         // https://issues.apache.org/jira/browse/KYLIN-2649
         if (kylinConfig.getForceLimit() > 0 && limit <= 0 && matcher.group(1) == null
-                && sql1.toLowerCase().matches("^select\\s+\\*\\p{all}*")) {
+                && sql1.toLowerCase(Locale.ROOT).matches("^select\\s+\\*\\p{all}*")) {
             sql1 += ("\nLIMIT " + kylinConfig.getForceLimit());
         }
 
@@ -143,7 +144,7 @@ public class QueryUtil {
     }
 
     public static boolean isSelectStatement(String sql) {
-        String sql1 = sql.toLowerCase();
+        String sql1 = sql.toLowerCase(Locale.ROOT);
         sql1 = removeCommentInSql(sql1);
         sql1 = sql1.trim();
         return sql1.startsWith("select") || (sql1.startsWith("with") && sql1.contains("select"))

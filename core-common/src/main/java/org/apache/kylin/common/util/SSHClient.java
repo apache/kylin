@@ -29,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.LoggerFactory;
@@ -93,7 +94,7 @@ public class SSHClient {
                 // The access time should be sent here,
                 // but it is not accessible with JavaAPI ;-<
                 command += (" " + (_lfile.lastModified() / 1000) + " 0\n");
-                out.write(command.getBytes());
+                out.write(command.getBytes(StandardCharsets.UTF_8));
                 out.flush();
                 if (checkAck(in) != 0) {
                     throw new Exception("Error in checkAck()");
@@ -111,7 +112,7 @@ public class SSHClient {
                 command += localFile;
             }
             command += "\n";
-            out.write(command.getBytes());
+            out.write(command.getBytes(StandardCharsets.UTF_8));
             out.flush();
             if (checkAck(in) != 0) {
                 throw new Exception("Error in checkAck()");
@@ -200,7 +201,7 @@ public class SSHClient {
                 for (int i = 0;; i++) {
                     in.read(buf, i, 1);
                     if (buf[i] == (byte) 0x0a) {
-                        file = new String(buf, 0, i);
+                        file = new String(buf, 0, i, StandardCharsets.UTF_8);
                         break;
                     }
                 }
@@ -288,7 +289,7 @@ public class SSHClient {
                     if (i < 0)
                         break;
 
-                    String line = new String(tmp, 0, i);
+                    String line = new String(tmp, 0, i, StandardCharsets.UTF_8);
                     text.append(line);
                     if (logAppender != null) {
                         logAppender.log(line);
@@ -299,7 +300,7 @@ public class SSHClient {
                     if (i < 0)
                         break;
 
-                    String line = new String(tmp, 0, i);
+                    String line = new String(tmp, 0, i, StandardCharsets.UTF_8);
                     text.append(line);
                     if (logAppender != null) {
                         logAppender.log(line);

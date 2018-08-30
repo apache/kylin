@@ -18,6 +18,8 @@
 
 package org.apache.kylin.tool;
 
+import java.util.Locale;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.service.AclTableMigrationTool;
 
@@ -31,7 +33,7 @@ public class AclTableMigrationCLI {
         if (args == null || args.length != 1) {
             throw new IllegalArgumentException("Args num error");
         }
-        String cmd = args[0].toUpperCase();
+        String cmd = args[0].toUpperCase(Locale.ROOT);
         AclTableMigrationTool tool = new AclTableMigrationTool();
         switch (cmd) {
         case MIGRATE:
@@ -40,7 +42,8 @@ public class AclTableMigrationCLI {
         case CHECK:
             boolean needMigrate = tool.checkIfNeedMigrate(KylinConfig.getInstanceFromEnv());
             if (needMigrate) {
-                System.out.println("Found ACL metadata in legacy format. Please execute command : ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE");
+                System.out.println(
+                        "Found ACL metadata in legacy format. Please execute command : ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE");
                 System.exit(2);
             }
             break;

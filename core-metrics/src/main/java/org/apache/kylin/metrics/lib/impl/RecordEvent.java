@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -206,7 +207,7 @@ public class RecordEvent implements Record, Map<String, Object>, Serializable {
 
     @Override
     public byte[] getKey() {
-        return (getHost() + "-" + getTime() + "-" + getID()).getBytes();
+        return (getHost() + "-" + getTime() + "-" + getID()).getBytes(StandardCharsets.UTF_8);
     }
 
     @Override

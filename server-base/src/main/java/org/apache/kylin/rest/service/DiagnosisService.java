@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -64,7 +65,7 @@ public class DiagnosisService extends BasicService {
         File[] files = destDir.listFiles();
         if (files == null) {
             throw new BadRequestException(
-                    String.format(msg.getDIAG_PACKAGE_NOT_AVAILABLE(), destDir.getAbsolutePath()));
+                    String.format(Locale.ROOT, msg.getDIAG_PACKAGE_NOT_AVAILABLE(), destDir.getAbsolutePath()));
         }
         for (File subDir : files) {
             if (subDir.isDirectory()) {
@@ -75,7 +76,8 @@ public class DiagnosisService extends BasicService {
                 }
             }
         }
-        throw new BadRequestException(String.format(msg.getDIAG_PACKAGE_NOT_FOUND(), destDir.getAbsolutePath()));
+        throw new BadRequestException(
+                String.format(Locale.ROOT, msg.getDIAG_PACKAGE_NOT_FOUND(), destDir.getAbsolutePath()));
     }
 
     public BadQueryHistory getProjectBadQueryHistory(String project) throws IOException {
@@ -108,7 +110,8 @@ public class DiagnosisService extends BasicService {
         logger.debug("DiagnosisInfoCLI args: " + Arrays.toString(args));
         File script = new File(KylinConfig.getKylinHome() + File.separator + "bin", "diag.sh");
         if (!script.exists()) {
-            throw new BadRequestException(String.format(msg.getDIAG_NOT_FOUND(), script.getAbsolutePath()));
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getDIAG_NOT_FOUND(), script.getAbsolutePath()));
         }
 
         String diagCmd = script.getAbsolutePath() + " " + StringUtils.join(args, " ");

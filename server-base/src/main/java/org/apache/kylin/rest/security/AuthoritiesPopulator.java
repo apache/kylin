@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.security;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -49,9 +50,11 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
      * @param contextSource
      * @param groupSearchBase
      */
-    public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole, String defaultRole) {
+    public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole,
+            String defaultRole) {
         super(contextSource, groupSearchBase);
-        this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole.toUpperCase()); // spring will convert group names to uppercase by default
+        this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole.toUpperCase(Locale.ROOT)); // spring will
+        // convert group names to uppercase by default
 
         String[] defaultRoles = StringUtils.split(defaultRole, ",");
         if (ArrayUtils.contains(defaultRoles, Constant.ROLE_MODELER)) {

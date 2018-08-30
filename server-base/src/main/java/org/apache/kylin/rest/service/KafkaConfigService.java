@@ -21,6 +21,7 @@ package org.apache.kylin.rest.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
@@ -52,7 +53,8 @@ public class KafkaConfigService extends BasicService {
         return kafkaConfigs;
     }
 
-    public List<KafkaConfig> getKafkaConfigs(final String kafkaConfigName, final String project, final Integer limit, final Integer offset) throws IOException {
+    public List<KafkaConfig> getKafkaConfigs(final String kafkaConfigName, final String project, final Integer limit,
+            final Integer offset) throws IOException {
         aclEvaluate.checkProjectWritePermission(project);
         List<KafkaConfig> kafkaConfigs;
         kafkaConfigs = listAllKafkaConfigs(kafkaConfigName);
@@ -73,7 +75,8 @@ public class KafkaConfigService extends BasicService {
         Message msg = MsgPicker.getMsg();
 
         if (getKafkaManager().getKafkaConfig(config.getName()) != null) {
-            throw new BadRequestException(String.format(msg.getKAFKA_CONFIG_ALREADY_EXIST(), config.getName()));
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getKAFKA_CONFIG_ALREADY_EXIST(), config.getName()));
         }
         getKafkaManager().createKafkaConfig(config);
         return config;

@@ -18,9 +18,11 @@
 
 package org.apache.kylin.source.hive;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -69,8 +71,8 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         // make a new TableDesc instance, don't modify the one in use
         if (tableDesc == null) {
             tableDesc = new TableDesc();
-            tableDesc.setDatabase(database.toUpperCase());
-            tableDesc.setName(tableName.toUpperCase());
+            tableDesc.setDatabase(database.toUpperCase(Locale.ROOT));
+            tableDesc.setName(tableName.toUpperCase(Locale.ROOT));
             tableDesc.setUuid(RandomUtil.randomUUID().toString());
             tableDesc.setLastModified(0);
         } else {
@@ -87,7 +89,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         for (int i = 0, n = hiveTableMeta.partitionColumns.size(); i < n; i++) {
             if (i > 0)
                 partitionColumnString.append(", ");
-            partitionColumnString.append(hiveTableMeta.partitionColumns.get(i).name.toUpperCase());
+            partitionColumnString.append(hiveTableMeta.partitionColumns.get(i).name.toUpperCase(Locale.ROOT));
         }
 
         TableExtDesc tableExtDesc = new TableExtDesc();
@@ -120,7 +122,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
     }
 
     private String generateCreateSchemaSql(String schemaName) {
-        return String.format("CREATE DATABASE IF NOT EXISTS %s", schemaName);
+        return String.format(Locale.ROOT, "CREATE DATABASE IF NOT EXISTS %s", schemaName);
     }
 
     @Override
@@ -177,10 +179,10 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
     }
 
     private static String getHiveDataType(String javaDataType) {
-        String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
-        hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;
+        String hiveDataType = javaDataType.toLowerCase(Locale.ROOT).startsWith("varchar") ? "string" : javaDataType;
+        hiveDataType = javaDataType.toLowerCase(Locale.ROOT).startsWith("integer") ? "int" : hiveDataType;
 
-        return hiveDataType.toLowerCase();
+        return hiveDataType.toLowerCase(Locale.ROOT);
     }
 
     @Override
@@ -188,14 +190,15 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         if (StringUtils.isEmpty(query)) {
             throw new RuntimeException("Evaluate query shall not be empty.");
         }
-        
+
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         String tmpDatabase = config.getHiveDatabaseForIntermediateTable();
-        String tmpView = "kylin_eval_query_" + UUID.nameUUIDFromBytes(query.getBytes()).toString().replace("-", "");
-        
+        String tmpView = "kylin_eval_query_"
+                + UUID.nameUUIDFromBytes(query.getBytes(StandardCharsets.UTF_8)).toString().replace("-", "");
+
         String dropViewSql = "DROP VIEW IF EXISTS " + tmpDatabase + "." + tmpView;
         String evalViewSql = "CREATE VIEW " + tmpDatabase + "." + tmpView + " as " + query;
-        
+
         try {
             logger.debug("Removing duplicate view {}", tmpView);
             hiveClient.executeHQL(dropViewSql);
@@ -223,7 +226,7 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         for (int i = 0; i < columnNumber; i++) {
             HiveTableMeta.HiveTableColumnMeta field = hiveTableMeta.allColumns.get(i);
             ColumnDesc cdesc = new ColumnDesc();
-            cdesc.setName(field.name.toUpperCase());
+            cdesc.setName(field.name.toUpperCase(Locale.ROOT));
 
             // use "double" in kylin for "float"
             if ("float".equalsIgnoreCase(field.dataType)) {

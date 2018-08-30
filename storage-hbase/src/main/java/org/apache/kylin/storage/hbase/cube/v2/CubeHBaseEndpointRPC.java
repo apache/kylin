@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.zip.DataFormatException;
 
@@ -90,14 +91,18 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         if (shardNum == totalShards) {
             //all shards
-            return Lists.newArrayList(Pair.newPair(getByteArrayForShort((short) 0), getByteArrayForShort((short) (shardNum - 1))));
+            return Lists.newArrayList(
+                    Pair.newPair(getByteArrayForShort((short) 0), getByteArrayForShort((short) (shardNum - 1))));
         } else if (baseShard + shardNum <= totalShards) {
             //endpoint end key is inclusive, so no need to append 0 or anything
-            return Lists.newArrayList(Pair.newPair(getByteArrayForShort(baseShard), getByteArrayForShort((short) (baseShard + shardNum - 1))));
+            return Lists.newArrayList(Pair.newPair(getByteArrayForShort(baseShard),
+                    getByteArrayForShort((short) (baseShard + shardNum - 1))));
         } else {
             //0,1,2,3,4 wants 4,0
-            return Lists.newArrayList(Pair.newPair(getByteArrayForShort(baseShard), getByteArrayForShort((short) (totalShards - 1))), //
-                    Pair.newPair(getByteArrayForShort((short) 0), getByteArrayForShort((short) (baseShard + shardNum - totalShards - 1))));
+            return Lists.newArrayList(
+                    Pair.newPair(getByteArrayForShort(baseShard), getByteArrayForShort((short) (totalShards - 1))), //
+                    Pair.newPair(getByteArrayForShort((short) 0),
+                            getByteArrayForShort((short) (baseShard + shardNum - totalShards - 1))));
         }
     }
 
@@ -149,14 +154,18 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(queryContext, shardNum, coprocessorTimeout);
 
-        logger.info("Serialized scanRequestBytes {} bytes, rawScanBytesString {} bytes", scanRequestByteString.size(), rawScanByteString.size());
+        logger.info("Serialized scanRequestBytes {} bytes, rawScanBytesString {} bytes", scanRequestByteString.size(),
+                rawScanByteString.size());
 
-        logger.info("The scan {} for segment {} is as below with {} separate raw scans, shard part of start/end key is set to 0", Integer.toHexString(System.identityHashCode(scanRequest)), cubeSeg, rawScans.size());
+        logger.info(
+                "The scan {} for segment {} is as below with {} separate raw scans, shard part of start/end key is set to 0",
+                Integer.toHexString(System.identityHashCode(scanRequest)), cubeSeg, rawScans.size());
         for (RawScan rs : rawScans) {
             logScan(rs, cubeSeg.getStorageLocationIdentifier());
         }
 
-        logger.debug("Submitting rpc to {} shards starting from shard {}, scan range count {}", shardNum, cuboidBaseShard, rawScans.size());
+        logger.debug("Submitting rpc to {} shards starting from shard {}, scan range count {}", shardNum,
+                cuboidBaseShard, rawScans.size());
 
         // KylinConfig: use env instance instead of CubeSegment, because KylinConfig will share among queries
         // for different cubes until redeployment of coprocessor jar.
@@ -177,8 +186,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         builder.setMaxScanBytes(cubeSeg.getConfig().getPartitionMaxScanBytes());
         builder.setIsExactAggregate(storageContext.isExactAggregation());
 
-        final String logHeader = String.format("<sub-thread for Query %s GTScanRequest %s>", queryContext.getQueryId(),
-                Integer.toHexString(System.identityHashCode(scanRequest)));
+        final String logHeader = String.format(Locale.ROOT, "<sub-thread for Query %s GTScanRequest %s>",
+                queryContext.getQueryId(), Integer.toHexString(System.identityHashCode(scanRequest)));
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
             executorService.submit(new Runnable() {
                 @Override
@@ -370,7 +379,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                     RawScan.serializer.serialize(rs, rawScanBuffer);
                 }
                 rawScanBuffer.flip();
-                rawScanByteString = HBaseZeroCopyByteString.wrap(rawScanBuffer.array(), rawScanBuffer.position(), rawScanBuffer.limit());
+                rawScanByteString = HBaseZeroCopyByteString.wrap(rawScanBuffer.array(), rawScanBuffer.position(),
+                        rawScanBuffer.limit());
                 break;
             } catch (BufferOverflowException boe) {
                 logger.info("Buffer size {} cannot hold the raw scans, resizing to 4 times", rawScanBufferSize);
@@ -385,13 +395,17 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         Stats stats = result.getStats();
         byte[] compressedRows = HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows());
 
-        sb.append("Endpoint RPC returned from HTable ").append(cubeSeg.getStorageLocationIdentifier()).append(" Shard ").append(BytesUtil.toHex(region)).append(" on host: ").append(stats.getHostname()).append(".");
+        sb.append("Endpoint RPC returned from HTable ").append(cubeSeg.getStorageLocationIdentifier()).append(" Shard ")
+                .append(BytesUtil.toHex(region)).append(" on host: ").append(stats.getHostname()).append(".");
         sb.append("Total scanned row: ").append(stats.getScannedRowCount()).append(". ");
         sb.append("Total scanned bytes: ").append(stats.getScannedBytes()).append(". ");
         sb.append("Total filtered row: ").append(stats.getFilteredRowCount()).append(". ");
         sb.append("Total aggred row: ").append(stats.getAggregatedRowCount()).append(". ");
-        sb.append("Time elapsed in EP: ").append(stats.getServiceEndTime() - stats.getServiceStartTime()).append("(ms). ");
-        sb.append("Server CPU usage: ").append(stats.getSystemCpuLoad()).append(", server physical mem left: ").append(stats.getFreePhysicalMemorySize()).append(", server swap mem left:").append(stats.getFreeSwapSpaceSize()).append(".");
+        sb.append("Time elapsed in EP: ").append(stats.getServiceEndTime() - stats.getServiceStartTime())
+                .append("(ms). ");
+        sb.append("Server CPU usage: ").append(stats.getSystemCpuLoad()).append(", server physical mem left: ")
+                .append(stats.getFreePhysicalMemorySize()).append(", server swap mem left:")
+                .append(stats.getFreeSwapSpaceSize()).append(".");
         sb.append("Etc message: ").append(stats.getEtcMsg()).append(".");
         sb.append("Normal Complete: ").append(stats.getNormalComplete() == 1).append(".");
         sb.append("Compressed row size: ").append(compressedRows.length);
@@ -401,7 +415,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
     private RuntimeException getCoprocessorException(CubeVisitResponse response) {
         if (!response.hasErrorInfo()) {
-            return new RuntimeException("Coprocessor aborts due to scan timeout or other reasons, please re-deploy coprocessor to see concrete error message");
+            return new RuntimeException(
+                    "Coprocessor aborts due to scan timeout or other reasons, please re-deploy coprocessor to see concrete error message");
         }
 
         CubeVisitResponse.ErrorInfo errorInfo = response.getErrorInfo();

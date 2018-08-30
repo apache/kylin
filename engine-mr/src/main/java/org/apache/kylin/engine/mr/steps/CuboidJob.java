@@ -18,6 +18,8 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.util.Locale;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -97,7 +99,7 @@ public class CuboidJob extends AbstractHadoopJob {
             parseOptions(options, args);
 
             String output = getOptionValue(OPTION_OUTPUT_PATH);
-            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase(Locale.ROOT);
             int nCuboidLevel = Integer.parseInt(getOptionValue(OPTION_NCUBOID_LEVEL));
             String segmentID = getOptionValue(OPTION_SEGMENT_ID);
             String cubingJobId = getOptionValue(OPTION_CUBING_JOB_ID);
@@ -113,7 +115,8 @@ public class CuboidJob extends AbstractHadoopJob {
             cuboidScheduler = CuboidSchedulerUtil.getCuboidSchedulerByMode(segment, cuboidModeName);
 
             if (checkSkip(cubingJobId, nCuboidLevel)) {
-                logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + segmentID + "[" + segmentID + "]");
+                logger.info(
+                        "Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + segmentID + "[" + segmentID + "]");
                 return 0;
             }
 
@@ -166,7 +169,8 @@ public class CuboidJob extends AbstractHadoopJob {
 
         if ("FLAT_TABLE".equals(input)) {
             // base cuboid case
-            IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
+            IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg)
+                    .getFlatTableInputFormat();
             flatTableInputFormat.configureJob(job);
         } else {
             // n-dimension cuboid case

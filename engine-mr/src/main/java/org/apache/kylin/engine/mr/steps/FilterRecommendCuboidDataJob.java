@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.util.Locale;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -52,7 +53,7 @@ public class FilterRecommendCuboidDataJob extends AbstractHadoopJob {
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
-            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase(Locale.ROOT);
             String segmentID = getOptionValue(OPTION_SEGMENT_ID);
             Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));

@@ -18,13 +18,18 @@
 
 package org.apache.kylin.engine.spark;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -86,19 +91,17 @@ import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.util.LongAccumulator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+
 import scala.Tuple2;
 import scala.Tuple3;
-
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class SparkFactDistinct extends AbstractApplication implements Serializable {
 
@@ -119,8 +122,8 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
             .withDescription("Hive Intermediate Table").create("hiveTable");
     public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
             .isRequired(true).withDescription("Hive Intermediate Table PATH").create(BatchConstants.ARG_INPUT);
-    public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUPUT).hasArg()
-            .isRequired(true).withDescription("counter output path").create(BatchConstants.ARG_COUNTER_OUPUT);
+    public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUPUT)
+            .hasArg().isRequired(true).withDescription("counter output path").create(BatchConstants.ARG_COUNTER_OUPUT);
 
     private Options options;
 
@@ -152,7 +155,8 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         String counterPath = optionsHelper.getOptionValue(OPTION_COUNTER_PATH);
         int samplingPercent = Integer.parseInt(optionsHelper.getOptionValue(OPTION_STATS_SAMPLING_PERCENT));
 
-        Class[] kryoClassArray = new Class[] { Class.forName("scala.reflect.ClassTag$$anon$1"), Class.forName("org.apache.kylin.engine.mr.steps.SelfDefineSortableKey") };
+        Class[] kryoClassArray = new Class[] { Class.forName("scala.reflect.ClassTag$$anon$1"),
+                Class.forName("org.apache.kylin.engine.mr.steps.SelfDefineSortableKey") };
 
         SparkConf conf = new SparkConf().setAppName("Fact distinct columns for:" + cubeName + " segment " + segmentId);
         //serialization conf
@@ -186,17 +190,24 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
         final JavaRDD<String[]> recordRDD = SparkUtil.hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable);
 
-        JavaPairRDD<SelfDefineSortableKey, Text> flatOutputRDD = recordRDD.mapPartitionsToPair(new FlatOutputFucntion(cubeName, segmentId, metaUrl, sConf, samplingPercent, bytesWritten));
+        JavaPairRDD<SelfDefineSortableKey, Text> flatOutputRDD = recordRDD.mapPartitionsToPair(
+                new FlatOutputFucntion(cubeName, segmentId, metaUrl, sConf, samplingPercent, bytesWritten));
 
-        JavaPairRDD<SelfDefineSortableKey, Iterable<Text>> aggredRDD = flatOutputRDD.groupByKey(new FactDistinctPartitioner(cubeName, metaUrl, sConf, reducerMapping.getTotalReducerNum()));
+        JavaPairRDD<SelfDefineSortableKey, Iterable<Text>> aggredRDD = flatOutputRDD
+                .groupByKey(new FactDistinctPartitioner(cubeName, metaUrl, sConf, reducerMapping.getTotalReducerNum()));
 
-        JavaPairRDD<String, Tuple3<Writable, Writable, String>> outputRDD = aggredRDD.mapPartitionsToPair(new MultiOutputFunction(cubeName, metaUrl, sConf, samplingPercent));
+        JavaPairRDD<String, Tuple3<Writable, Writable, String>> outputRDD = aggredRDD
+                .mapPartitionsToPair(new MultiOutputFunction(cubeName, metaUrl, sConf, samplingPercent));
 
         // make each reducer output to respective dir
-        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_COLUMN, SequenceFileOutputFormat.class, NullWritable.class, Text.class);
-        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_DICT, SequenceFileOutputFormat.class, NullWritable.class, ArrayPrimitiveWritable.class);
-        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_STATISTICS, SequenceFileOutputFormat.class, LongWritable.class, BytesWritable.class);
-        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_PARTITION, TextOutputFormat.class, NullWritable.class, LongWritable.class);
+        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_COLUMN, SequenceFileOutputFormat.class,
+                NullWritable.class, Text.class);
+        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_DICT, SequenceFileOutputFormat.class,
+                NullWritable.class, ArrayPrimitiveWritable.class);
+        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_STATISTICS, SequenceFileOutputFormat.class,
+                LongWritable.class, BytesWritable.class);
+        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_PARTITION, TextOutputFormat.class,
+                NullWritable.class, LongWritable.class);
 
         FileOutputFormat.setOutputPath(job, new Path(outputPath));
         FileOutputFormat.setCompressOutput(job, false);
@@ -223,7 +234,6 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         HadoopUtil.deleteHDFSMeta(metaUrl);
     }
 
-
     static class FlatOutputFucntion implements PairFlatMapFunction<Iterator<String[]>, SelfDefineSortableKey, Text> {
         private volatile transient boolean initialized = false;
         private String cubeName;
@@ -241,7 +251,8 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         private LongAccumulator bytesWritten;
         private KeyValueBuilder keyValueBuilder;
 
-        public FlatOutputFucntion(String cubeName, String segmentId, String metaurl, SerializableConfiguration conf, int samplingPercent, LongAccumulator bytesWritten) {
+        public FlatOutputFucntion(String cubeName, String segmentId, String metaurl, SerializableConfiguration conf,
+                int samplingPercent, LongAccumulator bytesWritten) {
             this.cubeName = cubeName;
             this.segmentId = segmentId;
             this.metaUrl = metaurl;
@@ -572,7 +583,8 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         private int totalReducerNum;
         private FactDistinctColumnsReducerMapping reducerMapping;
 
-        public FactDistinctPartitioner(String cubeName, String metaUrl, SerializableConfiguration conf, int totalReducerNum) {
+        public FactDistinctPartitioner(String cubeName, String metaUrl, SerializableConfiguration conf,
+                int totalReducerNum) {
             this.cubeName = cubeName;
             this.metaUrl = metaUrl;
             this.conf = conf;
@@ -641,7 +653,8 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         private String minValue = null;
         private List<Tuple2<String, Tuple3<Writable, Writable, String>>> result;
 
-        public MultiOutputFunction(String cubeName, String metaurl, SerializableConfiguration conf, int samplingPercent) {
+        public MultiOutputFunction(String cubeName, String metaurl, SerializableConfiguration conf,
+                int samplingPercent) {
             this.cubeName = cubeName;
             this.metaUrl = metaurl;
             this.conf = conf;
@@ -651,7 +664,8 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         private void init() throws IOException {
             taskId = TaskContext.getPartitionId();
             KylinConfig kConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
-            try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(kConfig)) {
+            try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                    .setAndUnsetThreadLocalConfig(kConfig)) {
                 CubeInstance cubeInstance = CubeManager.getInstance(kConfig).getCube(cubeName);
                 cubeDesc = cubeInstance.getDescriptor();
                 cubeConfig = cubeInstance.getConfig();
@@ -686,7 +700,8 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                         builder = DictionaryGenerator.newDictionaryBuilder(col.getType());
                         builder.init(null, 0, null);
                     }
-                    logger.info("Partition " + taskId + " handling column " + col + ", buildDictInReducer=" + buildDictInReducer);
+                    logger.info("Partition " + taskId + " handling column " + col + ", buildDictInReducer="
+                            + buildDictInReducer);
                 }
 
                 initialized = true;
@@ -760,7 +775,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                             String fileName = col.getIdentity() + "/";
                             result.add(new Tuple2<String, Tuple3<Writable, Writable, String>>(
                                     BatchConstants.CFG_OUTPUT_COLUMN, new Tuple3<Writable, Writable, String>(
-                                    NullWritable.get(), new Text(keyBytes), fileName)));
+                                            NullWritable.get(), new Text(keyBytes), fileName)));
                         }
                     }
                 }
@@ -819,22 +834,24 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                 String dimRangeFileName = col.getIdentity() + "/" + col.getName() + DIMENSION_COL_INFO_FILE_POSTFIX;
 
                 result.add(new Tuple2<String, Tuple3<Writable, Writable, String>>(BatchConstants.CFG_OUTPUT_PARTITION,
-                        new Tuple3<Writable, Writable, String>(NullWritable.get(), new Text(minValue.getBytes()),
-                                dimRangeFileName)));
+                        new Tuple3<Writable, Writable, String>(NullWritable.get(),
+                                new Text(minValue.getBytes(StandardCharsets.UTF_8)), dimRangeFileName)));
                 result.add(new Tuple2<String, Tuple3<Writable, Writable, String>>(BatchConstants.CFG_OUTPUT_PARTITION,
-                        new Tuple3<Writable, Writable, String>(NullWritable.get(), new Text(maxValue.getBytes()),
-                                dimRangeFileName)));
+                        new Tuple3<Writable, Writable, String>(NullWritable.get(),
+                                new Text(maxValue.getBytes(StandardCharsets.UTF_8)), dimRangeFileName)));
                 logger.info("write dimension range info for col : " + col.getName() + "  minValue:" + minValue
                         + " maxValue:" + maxValue);
             }
         }
 
-        private void outputDict(TblColRef col, Dictionary<String> dict, List<Tuple2<String, Tuple3<Writable, Writable, String>>> result)
+        private void outputDict(TblColRef col, Dictionary<String> dict,
+                List<Tuple2<String, Tuple3<Writable, Writable, String>>> result)
                 throws IOException, InterruptedException {
             // output written to baseDir/colName/colName.rldict-r-00000 (etc)
             String dictFileName = col.getIdentity() + "/" + col.getName() + DICT_FILE_POSTFIX;
 
-            try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); DataOutputStream outputStream = new DataOutputStream(baos)) {
+            try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    DataOutputStream outputStream = new DataOutputStream(baos)) {
                 outputStream.writeUTF(dict.getClass().getName());
                 dict.write(outputStream);
 
@@ -844,10 +861,12 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
             }
         }
 
-        private void outputStatistics(List<Long> allCuboids, List<Tuple2<String, Tuple3<Writable, Writable, String>>> result)
+        private void outputStatistics(List<Long> allCuboids,
+                List<Tuple2<String, Tuple3<Writable, Writable, String>>> result)
                 throws IOException, InterruptedException {
             // output written to baseDir/statistics/statistics-r-00000 (etc)
-            String statisticsFileName = BatchConstants.CFG_OUTPUT_STATISTICS + "/" + BatchConstants.CFG_OUTPUT_STATISTICS;
+            String statisticsFileName = BatchConstants.CFG_OUTPUT_STATISTICS + "/"
+                    + BatchConstants.CFG_OUTPUT_STATISTICS;
 
             // mapper overlap ratio at key -1
             long grandTotal = 0;

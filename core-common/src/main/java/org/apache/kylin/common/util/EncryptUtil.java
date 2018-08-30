@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common.util;
 
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
@@ -35,7 +36,8 @@ public class EncryptUtil {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            final String encryptedString = Base64.encodeBase64String(cipher.doFinal(strToEncrypt.getBytes()));
+            final String encryptedString = Base64.encodeBase64String(cipher.doFinal(strToEncrypt.getBytes(
+                StandardCharsets.UTF_8)));
             return encryptedString;
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -47,7 +49,7 @@ public class EncryptUtil {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
             final SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            final String decryptedString = new String(cipher.doFinal(Base64.decodeBase64(strToDecrypt)));
+            final String decryptedString = new String(cipher.doFinal(Base64.decodeBase64(strToDecrypt)), StandardCharsets.UTF_8);
             return decryptedString;
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);

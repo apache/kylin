@@ -33,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -754,7 +755,7 @@ public class TrieDictionaryForestTest {
     private void evaluateDataSize(ArrayList<String> list) {
         long size = 0;
         for (String str : list)
-            size += str.getBytes().length;
+            size += str.getBytes(StandardCharsets.UTF_8).length;
         System.out.println("test data size : " + size / (1024 * 1024) + " MB");
     }
 
@@ -763,7 +764,7 @@ public class TrieDictionaryForestTest {
         Iterator<String> itr = rs.iterator();
         long bytesCount = 0;
         while (itr.hasNext())
-            bytesCount += itr.next().getBytes().length;
+            bytesCount += itr.next().getBytes(StandardCharsets.UTF_8).length;
         System.out.println("test data size : " + bytesCount / (1024 * 1024) + " MB");
     }
 

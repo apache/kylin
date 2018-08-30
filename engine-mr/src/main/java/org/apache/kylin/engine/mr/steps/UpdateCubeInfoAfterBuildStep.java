@@ -21,6 +21,7 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,7 +67,8 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final CubeManager cubeManager = CubeManager.getInstance(context.getConfig());
-        final CubeInstance cube = cubeManager.getCube(CubingExecutableUtil.getCubeName(this.getParams())).latestCopyForWrite();
+        final CubeInstance cube = cubeManager.getCube(CubingExecutableUtil.getCubeName(this.getParams()))
+                .latestCopyForWrite();
         final CubeSegment segment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
 
         CubingJob cubingJob = (CubingJob) getManager().getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));
@@ -92,7 +94,8 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         }
     }
 
-    private void saveExtSnapshotIfNeeded(CubeManager cubeManager, CubeInstance cube, CubeSegment segment) throws IOException {
+    private void saveExtSnapshotIfNeeded(CubeManager cubeManager, CubeInstance cube, CubeSegment segment)
+            throws IOException {
         String extLookupSnapshotStr = this.getParam(BatchConstants.ARG_EXT_LOOKUP_SNAPSHOTS_INFO);
         if (extLookupSnapshotStr == null || extLookupSnapshotStr.isEmpty()) {
             return;
@@ -142,7 +145,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             for (Path outputFile : outputFiles) {
                 try {
                     is = fs.open(outputFile);
-                    isr = new InputStreamReader(is);
+                    isr = new InputStreamReader(is, StandardCharsets.UTF_8);
                     bufferedReader = new BufferedReader(isr);
                     minValues.add(bufferedReader.readLine());
                     maxValues.add(bufferedReader.readLine());
@@ -157,10 +160,14 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             String maxValue = order.max(maxValues);
             logger.info("updateSegment step. {} minValue:" + minValue + " maxValue:" + maxValue, dimColRef.getName());
 
-            if (segment.isOffsetCube() && partitionCol != null && partitionCol.getIdentity().equals(dimColRef.getIdentity())) {
-                logger.info("update partition. {} timeMinValue:" + minValue + " timeMaxValue:" + maxValue, dimColRef.getName());
-                if (DateFormat.stringToMillis(minValue) != timeMinValue && DateFormat.stringToMillis(maxValue) != timeMaxValue) {
-                    segment.setTSRange(new TSRange(DateFormat.stringToMillis(minValue), DateFormat.stringToMillis(maxValue) + 1));
+            if (segment.isOffsetCube() && partitionCol != null
+                    && partitionCol.getIdentity().equals(dimColRef.getIdentity())) {
+                logger.info("update partition. {} timeMinValue:" + minValue + " timeMaxValue:" + maxValue,
+                        dimColRef.getName());
+                if (DateFormat.stringToMillis(minValue) != timeMinValue
+                        && DateFormat.stringToMillis(maxValue) != timeMaxValue) {
+                    segment.setTSRange(
+                            new TSRange(DateFormat.stringToMillis(minValue), DateFormat.stringToMillis(maxValue) + 1));
                 }
             }
             segment.getDimensionRangeInfoMap().put(dimColRef.getIdentity(), new DimensionRangeInfo(minValue, maxValue));

@@ -22,12 +22,14 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
@@ -76,7 +78,7 @@ public class DeployUtil {
             CubeDescManager.getInstance(config()).updateCubeDesc(cube.getDescriptor());//enforce signature updating
         }
     }
-    
+
     public static void deployMetadata() throws IOException {
         deployMetadata(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
     }
@@ -92,7 +94,8 @@ public class DeployUtil {
     private static String getPomVersion() {
         try {
             MavenXpp3Reader pomReader = new MavenXpp3Reader();
-            Model model = pomReader.read(new FileReader("../pom.xml"));
+            Model model = pomReader
+                    .read(new InputStreamReader(new FileInputStream("../pom.xml"), StandardCharsets.UTF_8));
             return model.getVersion();
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -138,9 +141,11 @@ public class DeployUtil {
         deployTables(modelName);
     }
 
-    public static void prepareTestDataForStreamingCube(long startTime, long endTime, int numberOfRecords, String cubeName, StreamDataLoader streamDataLoader) throws IOException {
+    public static void prepareTestDataForStreamingCube(long startTime, long endTime, int numberOfRecords,
+            String cubeName, StreamDataLoader streamDataLoader) throws IOException {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-        List<String> data = StreamingTableDataGenerator.generate(numberOfRecords, startTime, endTime, cubeInstance.getRootFactTable(), cubeInstance.getProject());
+        List<String> data = StreamingTableDataGenerator.generate(numberOfRecords, startTime, endTime,
+                cubeInstance.getRootFactTable(), cubeInstance.getProject());
         //load into kafka
         streamDataLoader.loadIntoKafka(data);
         logger.info("Write {} messages into {}", data.size(), streamDataLoader.toString());
@@ -151,7 +156,8 @@ public class DeployUtil {
         TimedJsonStreamParser timedJsonStreamParser = new TimedJsonStreamParser(tableColumns, null);
         StringBuilder sb = new StringBuilder();
         for (String json : data) {
-            List<String> rowColumns = timedJsonStreamParser.parse(ByteBuffer.wrap(json.getBytes())).get(0).getData();
+            List<String> rowColumns = timedJsonStreamParser
+                    .parse(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8))).get(0).getData();
             sb.append(StringUtils.join(rowColumns, ","));
             sb.append(System.getProperty("line.separator"));
         }
@@ -200,26 +206,26 @@ public class DeployUtil {
 
         Set<TableRef> tables = model.getAllTables();
         Set<String> TABLE_NAMES = new HashSet<String>();
-        for (TableRef tr:tables){
-            if (!tr.getTableDesc().isView()){
+        for (TableRef tr : tables) {
+            if (!tr.getTableDesc().isView()) {
                 String tableName = tr.getTableName();
                 String schema = tr.getTableDesc().getDatabase();
-                String identity = String.format("%s.%s", schema, tableName);
+                String identity = String.format(Locale.ROOT, "%s.%s", schema, tableName);
                 TABLE_NAMES.add(identity);
             }
         }
         TABLE_NAMES.add(TABLE_SELLER_TYPE_DIM_TABLE); // the wrapper view VIEW_SELLER_TYPE_DIM need this table
-        
+
         // scp data files, use the data from hbase, instead of local files
         File tempDir = Files.createTempDir();
         String tempDirAbsPath = tempDir.getAbsolutePath();
         for (String tablename : TABLE_NAMES) {
-            tablename = tablename.toUpperCase();
+            tablename = tablename.toUpperCase(Locale.ROOT);
 
             File localBufferFile = new File(tempDirAbsPath + "/" + tablename + ".csv");
             localBufferFile.createNewFile();
 
-            logger.info(String.format("get resource from hbase:/data/%s.csv", tablename));
+            logger.info(String.format(Locale.ROOT, "get resource from hbase:/data/%s.csv", tablename));
             InputStream hbaseDataStream = metaMgr.getStore().getResource("/data/" + tablename + ".csv").inputStream;
             FileOutputStream localFileStream = new FileOutputStream(localBufferFile);
             IOUtils.copy(hbaseDataStream, localFileStream);
@@ -233,21 +239,21 @@ public class DeployUtil {
 
         ISampleDataDeployer sampleDataDeployer = SourceManager.getSource(model.getRootFactTable().getTableDesc())
                 .getSampleDataDeployer();
-        
+
         // create hive tables
         sampleDataDeployer.createSampleDatabase("EDW");
         for (String tablename : TABLE_NAMES) {
-            logger.info(String.format("get table desc %s", tablename));
+            logger.info(String.format(Locale.ROOT, "get table desc %s", tablename));
             sampleDataDeployer.createSampleTable(metaMgr.getTableDesc(tablename, model.getProject()));
         }
 
         // load data to hive tables
         // LOAD DATA LOCAL INPATH 'filepath' [OVERWRITE] INTO TABLE tablename
         for (String tablename : TABLE_NAMES) {
-            logger.info(String.format("load data into %s", tablename));
+            logger.info(String.format(Locale.ROOT, "load data into %s", tablename));
             sampleDataDeployer.loadSampleData(tablename, tempDirAbsPath);
         }
-        
+
         // create the view automatically here
         sampleDataDeployer.createWrapperView(TABLE_SELLER_TYPE_DIM_TABLE, VIEW_SELLER_TYPE_DIM);
     }

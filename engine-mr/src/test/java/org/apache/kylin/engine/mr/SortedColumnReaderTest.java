@@ -23,8 +23,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -100,7 +103,7 @@ public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
         }
         ArrayList<BufferedWriter> bws = new ArrayList<>();
         for (File f : allFiles) {
-            bws.add(new BufferedWriter(new FileWriter(f)));
+            bws.add(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)));
         }
         System.out.println(data.size());
         for (String str : data) {
@@ -205,7 +208,7 @@ public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
         }
         ArrayList<BufferedWriter> bws = new ArrayList<>();
         for (File f : allFiles) {
-            bws.add(new BufferedWriter(new FileWriter(f)));
+            bws.add(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)));
         }
         System.out.println(data.size());
         for (String str : data) {
@@ -278,7 +281,7 @@ public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
         }
         ArrayList<BufferedWriter> bws = new ArrayList<>();
         for (File f : allFiles) {
-            bws.add(new BufferedWriter(new FileWriter(f)));
+            bws.add(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)));
         }
         System.out.println(data.size());
         for (String str : data) {
@@ -302,7 +305,8 @@ public class SortedColumnReaderTest extends LocalFileMetadataTestCase {
         ArrayList<String> result = new ArrayList<>();
         File dir = new File(dirPath);
         for (File f : dir.listFiles()) {
-            BufferedReader br = new BufferedReader(new FileReader(f));
+            BufferedReader br = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
             String str = br.readLine();
             while (str != null) {
                 result.add(str);

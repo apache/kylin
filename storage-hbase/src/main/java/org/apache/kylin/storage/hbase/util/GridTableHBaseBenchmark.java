@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Random;
 
@@ -46,8 +47,8 @@ import com.google.common.collect.Lists;
 public class GridTableHBaseBenchmark {
 
     private static final String TEST_TABLE = "GridTableTest";
-    private static final byte[] CF = "F".getBytes();
-    private static final byte[] QN = "C".getBytes();
+    private static final byte[] CF = "F".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] QN = "C".getBytes(StandardCharsets.UTF_8);
     private static final int N_ROWS = 10000;
     private static final int CELL_SIZE = 128 * 1024; // 128 KB
     private static final double DFT_HIT_RATIO = 0.3;
@@ -83,7 +84,8 @@ public class GridTableHBaseBenchmark {
         Hits hits = new Hits(N_ROWS, hitRatio, indexRatio);
 
         for (int i = 0; i < ROUND; i++) {
-            System.out.println("==================================== ROUND " + (i + 1) + " ========================================");
+            System.out.println("==================================== ROUND " + (i + 1)
+                    + " ========================================");
             testRowScanWithIndex(conn, hits.getHitsForRowScanWithIndex());
             testRowScanNoIndexFullScan(conn, hits.getHitsForRowScanNoIndex());
             testRowScanNoIndexSkipScan(conn, hits.getHitsForRowScanNoIndex());
@@ -386,7 +388,8 @@ public class GridTableHBaseBenchmark {
         public void markEnd() {
             endTime = System.currentTimeMillis();
             System.out.println();
-            System.out.println(name + " ends, " + (endTime - startTime) + " ms, " + rowsRead + " rows read, " + bytesRead + " bytes read");
+            System.out.println(name + " ends, " + (endTime - startTime) + " ms, " + rowsRead + " rows read, "
+                    + bytesRead + " bytes read");
         }
     }
 

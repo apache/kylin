@@ -18,6 +18,7 @@
 package org.apache.kylin.source.jdbc;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
@@ -45,7 +46,7 @@ public class CmdStep extends AbstractExecutable {
 
     protected void sqoopFlatHiveTable(KylinConfig config) throws IOException {
         String cmd = getParam("cmd");
-        stepLogger.log(String.format("exe cmd:%s", cmd));
+        stepLogger.log(String.format(Locale.ROOT, "exe cmd:%s", cmd));
         Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
         getManager().addJobInfo(getId(), stepLogger.getInfo());
         if (response.getFirst() != 0) {

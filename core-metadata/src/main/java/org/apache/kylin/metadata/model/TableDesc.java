@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.model;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -53,7 +54,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public static String concatRawResourcePath(String nameOnPath) {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + nameOnPath + ".json";
     }
-    
+
     public static String makeResourceName(String tableIdentity, String prj) {
         return prj == null ? tableIdentity : tableIdentity + "--" + prj;
     }
@@ -134,7 +135,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public String resourceName() {
         return makeResourceName(getIdentity(), getProject());
     }
-    
+
     public TableDesc appendColumns(ColumnDesc[] computedColumns, boolean makeCopy) {
         if (computedColumns == null || computedColumns.length == 0) {
             return this;
@@ -152,7 +153,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
                 if (existingColumns[i].getName().equalsIgnoreCase(computedColumns[j].getName())) {
                     // if we're adding a computed column twice, it should be allowed without producing duplicates
                     if (!existingColumns[i].isComputedColumn()) {
-                        throw new IllegalArgumentException(String.format(
+                        throw new IllegalArgumentException(String.format(Locale.ROOT,
                                 "There is already a column named %s on table %s, please change your computed column name",
                                 new Object[] { computedColumns[j].getName(), this.getIdentity() }));
                     } else {
@@ -195,7 +196,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         if (isBorrowedFromGlobal()) {
             return concatResourcePath(getIdentity(), null);
         }
-        
+
         return concatResourcePath(getIdentity(), project);
     }
 
@@ -209,7 +210,8 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     public String getIdentity() {
         if (identity == null) {
-            identity = String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
+            identity = String.format(Locale.ROOT, "%s.%s", this.getDatabase().toUpperCase(Locale.ROOT), this.getName())
+                    .toUpperCase(Locale.ROOT);
         }
         return identity;
     }
@@ -295,12 +297,12 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public void init(KylinConfig config, String project) {
         this.project = project;
         this.config = config;
-        
+
         if (name != null)
-            name = name.toUpperCase();
+            name = name.toUpperCase(Locale.ROOT);
 
         if (getDatabase() != null)
-            setDatabase(getDatabase().toUpperCase());
+            setDatabase(getDatabase().toUpperCase(Locale.ROOT));
 
         if (columns != null) {
             Arrays.sort(columns, new Comparator<ColumnDesc>() {

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -511,7 +512,7 @@ public class ExecutableManager {
         if (info.containsKey(YARN_APP_ID) && !StringUtils.isEmpty(config.getJobTrackingURLPattern())) {
             String pattern = config.getJobTrackingURLPattern();
             try {
-                String newTrackingURL = String.format(pattern, info.get(YARN_APP_ID));
+                String newTrackingURL = String.format(Locale.ROOT, pattern, info.get(YARN_APP_ID));
                 info.put(YARN_APP_URL, newTrackingURL);
             } catch (IllegalFormatException ife) {
                 logger.error("Illegal tracking url pattern: " + config.getJobTrackingURLPattern());

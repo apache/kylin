@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -336,7 +337,7 @@ public class CubeMigrationCLI {
         case COPY_DICT_OR_SNAPSHOT: {
             String item = (String) opt.params[0];
 
-            if (item.toLowerCase().endsWith(".dict")) {
+            if (item.toLowerCase(Locale.ROOT).endsWith(".dict")) {
                 DictionaryManager dstDictMgr = DictionaryManager.getInstance(dstConfig);
                 DictionaryManager srcDicMgr = DictionaryManager.getInstance(srcConfig);
                 DictionaryInfo dictSrc = srcDicMgr.getDictionaryInfo(item);
@@ -368,7 +369,7 @@ public class CubeMigrationCLI {
                     logger.info("Item " + item + " is dup, instead " + dictSaved.getResourcePath() + " is reused");
                 }
 
-            } else if (item.toLowerCase().endsWith(".snapshot")) {
+            } else if (item.toLowerCase(Locale.ROOT).endsWith(".snapshot")) {
                 SnapshotManager dstSnapMgr = SnapshotManager.getInstance(dstConfig);
                 SnapshotManager srcSnapMgr = SnapshotManager.getInstance(srcConfig);
                 SnapshotTable snapSrc = srcSnapMgr.getSnapshotTable(item);

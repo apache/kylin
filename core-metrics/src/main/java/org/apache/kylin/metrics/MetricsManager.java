@@ -83,6 +83,7 @@ public class MetricsManager {
             }
         }
         scSink = systemCubeSink;
+        System.gc();
     }
 
     private static void setSourceReporterBindProps(

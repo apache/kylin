@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.util.Locale;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -45,7 +46,7 @@ public class MergeCuboidJob extends CuboidJob {
 
             String input = getOptionValue(OPTION_INPUT_PATH);
             String output = getOptionValue(OPTION_OUTPUT_PATH);
-            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase(Locale.ROOT);
             String segmentID = getOptionValue(OPTION_SEGMENT_ID);
 
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());

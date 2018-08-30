@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.Set;
@@ -141,7 +142,7 @@ public class ResourceTool {
         StringBuffer sb = new StringBuffer();
         String line;
         try {
-            br = new BufferedReader(new InputStreamReader(is));
+            br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
                 sb.append(line).append('\n');
@@ -202,8 +203,8 @@ public class ResourceTool {
         copy(srcConfig, dstConfig, "/", copyImmutableResource);
     }
 
-    public static void copyR(ResourceStore src, ResourceStore dst, String path, TreeSet<String> pathsSkipChildrenCheck, boolean copyImmutableResource)
-            throws IOException {
+    public static void copyR(ResourceStore src, ResourceStore dst, String path, TreeSet<String> pathsSkipChildrenCheck,
+            boolean copyImmutableResource) throws IOException {
 
         if (!copyImmutableResource && IMMUTABLE_PREFIX.contains(path)) {
             return;

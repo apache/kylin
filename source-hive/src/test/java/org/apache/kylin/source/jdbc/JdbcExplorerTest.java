@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -138,13 +139,13 @@ public class JdbcExplorerTest extends LocalFileMetadataTestCase {
         TableDesc tableDesc = result.getFirst();
         ColumnDesc columnDesc = tableDesc.getColumns()[1];
 
-        Assert.assertEquals(databaseName.toUpperCase(), tableDesc.getDatabase());
+        Assert.assertEquals(databaseName.toUpperCase(Locale.ROOT), tableDesc.getDatabase());
         Assert.assertEquals(3, tableDesc.getColumnCount());
         Assert.assertEquals("TABLE", tableDesc.getTableType());
         Assert.assertEquals("COL2", columnDesc.getName());
         Assert.assertEquals("integer", columnDesc.getTypeName());
         Assert.assertEquals("comment2", columnDesc.getComment());
-        Assert.assertEquals(databaseName.toUpperCase() + "." + tableName.toUpperCase(),
+        Assert.assertEquals(databaseName.toUpperCase(Locale.ROOT) + "." + tableName.toUpperCase(Locale.ROOT),
                 result.getSecond().getIdentity());
     }
 

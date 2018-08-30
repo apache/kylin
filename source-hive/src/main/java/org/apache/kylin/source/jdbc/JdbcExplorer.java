@@ -18,6 +18,7 @@
 
 package org.apache.kylin.source.jdbc;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -25,6 +26,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -78,8 +80,8 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
     public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table, String prj)
             throws SQLException {
         TableDesc tableDesc = new TableDesc();
-        tableDesc.setDatabase(database.toUpperCase());
-        tableDesc.setName(table.toUpperCase());
+        tableDesc.setDatabase(database.toUpperCase(Locale.ROOT));
+        tableDesc.setName(table.toUpperCase(Locale.ROOT));
         tableDesc.setUuid(RandomUtil.randomUUID().toString());
         tableDesc.setLastModified(0);
         tableDesc.setSourceType(ISourceAware.ID_JDBC);
@@ -95,7 +97,8 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
             if (tableType != null) {
                 tableDesc.setTableType(tableType);
             } else {
-                throw new RuntimeException(String.format("table %s not found in schema:%s", table, database));
+                throw new RuntimeException(
+                        String.format(Locale.ROOT, "table %s not found in schema:%s", table, database));
             }
         }
 
@@ -116,12 +119,12 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
 
     private String getSqlDataType(String javaDataType) {
         if (JdbcDialect.DIALECT_VERTICA.equals(dialect) || JdbcDialect.DIALECT_MSSQL.equals(dialect)) {
-            if (javaDataType.toLowerCase().equals("double")) {
+            if (javaDataType.toLowerCase(Locale.ROOT).equals("double")) {
                 return "float";
             }
         }
 
-        return javaDataType.toLowerCase();
+        return javaDataType.toLowerCase(Locale.ROOT);
     }
 
     @Override
@@ -131,10 +134,12 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
 
     private String generateCreateSchemaSql(String schemaName) {
         if (JdbcDialect.DIALECT_VERTICA.equals(dialect) || JdbcDialect.DIALECT_MYSQL.equals(dialect)) {
-            return String.format("CREATE schema IF NOT EXISTS %s", schemaName);
+            return String.format(Locale.ROOT, "CREATE schema IF NOT EXISTS %s", schemaName);
         } else if (JdbcDialect.DIALECT_MSSQL.equals(dialect)) {
-            return String.format("IF NOT EXISTS (SELECT name FROM sys.schemas WHERE name = N'%s') EXEC('CREATE SCHEMA"
-                    + " [%s] AUTHORIZATION [dbo]')", schemaName, schemaName);
+            return String.format(Locale.ROOT,
+                    "IF NOT EXISTS (SELECT name FROM sys.schemas WHERE name = N'%s') EXEC('CREATE SCHEMA"
+                            + " [%s] AUTHORIZATION [dbo]')",
+                    schemaName, schemaName);
         } else {
             logger.error("unsupported dialect {}.", dialect);
             return null;
@@ -148,14 +153,14 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
 
     private String generateLoadDataSql(String tableName, String tableFileDir) {
         if (JdbcDialect.DIALECT_VERTICA.equals(dialect)) {
-            return String.format("copy %s from local '%s/%s.csv' delimiter as ',';", tableName, tableFileDir,
-                    tableName);
+            return String.format(Locale.ROOT, "copy %s from local '%s/%s.csv' delimiter as ',';", tableName,
+                    tableFileDir, tableName);
         } else if (JdbcDialect.DIALECT_MYSQL.equals(dialect)) {
-            return String.format("LOAD DATA INFILE '%s/%s.csv' INTO %s FIELDS TERMINATED BY ',';", tableFileDir,
-                    tableName, tableName);
+            return String.format(Locale.ROOT, "LOAD DATA INFILE '%s/%s.csv' INTO %s FIELDS TERMINATED BY ',';",
+                    tableFileDir, tableName, tableName);
         } else if (JdbcDialect.DIALECT_MSSQL.equals(dialect)) {
-            return String.format("BULK INSERT %s FROM '%s/%s.csv' WITH(FIELDTERMINATOR = ',')", tableName, tableFileDir,
-                    tableName);
+            return String.format(Locale.ROOT, "BULK INSERT %s FROM '%s/%s.csv' WITH(FIELDTERMINATOR = ',')", tableName,
+                    tableFileDir, tableName);
         } else {
             logger.error("unsupported dialect {}.", dialect);
             return null;
@@ -169,8 +174,9 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
 
     private String[] generateCreateTableSql(TableDesc tableDesc) {
         logger.info("Generate create table sql: {}", tableDesc);
-        String tableIdentity = String.format("%s.%s", tableDesc.getDatabase().toUpperCase(), tableDesc.getName())
-                .toUpperCase();
+        String tableIdentity = String
+                .format(Locale.ROOT, "%s.%s", tableDesc.getDatabase().toUpperCase(Locale.ROOT), tableDesc.getName())
+                .toUpperCase(Locale.ROOT);
         String dropsql = "DROP TABLE IF EXISTS " + tableIdentity;
         String dropsql2 = "DROP VIEW IF EXISTS " + tableIdentity;
 
@@ -239,7 +245,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         String tmpDatabase = config.getHiveDatabaseForIntermediateTable();
         String tmpView = tmpDatabase + ".kylin_eval_query_"
-                + UUID.nameUUIDFromBytes(query.getBytes()).toString().replaceAll("-", "");
+                + UUID.nameUUIDFromBytes(query.getBytes(StandardCharsets.UTF_8)).toString().replaceAll("-", "");
 
         String dropViewSql = "DROP VIEW IF EXISTS " + tmpView;
         String evalViewSql = "CREATE VIEW " + tmpView + " as " + query;
@@ -283,7 +289,7 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
             String remarks = meta.getString("REMARKS");
 
             ColumnDesc cdesc = new ColumnDesc();
-            cdesc.setName(cname.toUpperCase());
+            cdesc.setName(cname.toUpperCase(Locale.ROOT));
 
             String kylinType = SqlUtil.jdbcTypeToKylinDataType(type);
             int precision = (SqlUtil.isPrecisionApplicable(kylinType) && csize > 0) ? csize : -1;

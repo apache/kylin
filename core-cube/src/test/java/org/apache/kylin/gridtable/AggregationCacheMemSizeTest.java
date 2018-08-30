@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -93,10 +94,10 @@ public class AggregationCacheMemSizeTest {
     }
 
     enum Settings {
-        WITHOUT_MEM_HUNGRY,     // only test basic aggrs
-        WITH_HLLC,              // basic aggrs + hllc
-        WITH_LOW_CARD_BITMAP,   // basic aggrs + bitmap
-        WITH_HIGH_CARD_BITMAP   // basic aggrs + bitmap
+        WITHOUT_MEM_HUNGRY, // only test basic aggrs
+        WITH_HLLC, // basic aggrs + hllc
+        WITH_LOW_CARD_BITMAP, // basic aggrs + bitmap
+        WITH_HIGH_CARD_BITMAP // basic aggrs + bitmap
     }
 
     private MeasureAggregator<?>[] createNoMemHungryAggrs() {
@@ -132,19 +133,19 @@ public class AggregationCacheMemSizeTest {
         aggregators.addAll(Arrays.asList(createNoMemHungryAggrs()));
 
         switch (settings) {
-            case WITHOUT_MEM_HUNGRY:
-                break;
-            case WITH_HLLC:
-                aggregators.add(createHLLCAggr());
-                break;
-            case WITH_LOW_CARD_BITMAP:
-                aggregators.add(createBitmapAggr(true));
-                break;
-            case WITH_HIGH_CARD_BITMAP:
-                aggregators.add(createBitmapAggr(false));
-                break;
-            default:
-                break;
+        case WITHOUT_MEM_HUNGRY:
+            break;
+        case WITH_HLLC:
+            aggregators.add(createHLLCAggr());
+            break;
+        case WITH_LOW_CARD_BITMAP:
+            aggregators.add(createBitmapAggr(true));
+            break;
+        case WITH_HIGH_CARD_BITMAP:
+            aggregators.add(createBitmapAggr(false));
+            break;
+        default:
+            break;
         }
 
         return aggregators.toArray(new MeasureAggregator[aggregators.size()]);
@@ -158,10 +159,10 @@ public class AggregationCacheMemSizeTest {
             bitmapAggrs[i].aggregate(bitmaps[i]);
         }
 
-        System.out.printf("%-15s %-10s %-10s\n", "cardinality", "estimate", "actual");
+        System.out.printf(Locale.ROOT, "%-15s %-10s %-10s\n", "cardinality", "estimate", "actual");
         for (BitmapAggregator aggr : bitmapAggrs) {
-            System.out.printf("%-15d %-10d %-10d\n",
-                    aggr.getState().getCount(), aggr.getMemBytesEstimate(), meter.measureDeep(aggr));
+            System.out.printf(Locale.ROOT, "%-15d %-10d %-10d\n", aggr.getState().getCount(),
+                    aggr.getMemBytesEstimate(), meter.measureDeep(aggr));
         }
     }
 
@@ -190,8 +191,8 @@ public class AggregationCacheMemSizeTest {
         long actualMillis = 0;
 
         System.out.println("Settings: " + settings);
-        System.out.printf("%15s %15s %15s %15s %15s\n",
-                "Size", "Estimate(bytes)", "Actual(bytes)", "Estimate(ms)", "Actual(ms)");
+        System.out.printf(Locale.ROOT, "%15s %15s %15s %15s %15s\n", "Size", "Estimate(bytes)", "Actual(bytes)",
+                "Estimate(ms)", "Actual(ms)");
 
         for (int i = 0; i < inputCount; i++) {
             byte[] key = new byte[10];
@@ -199,7 +200,7 @@ public class AggregationCacheMemSizeTest {
             MeasureAggregator[] values = createAggrs(settings);
             map.put(key, values);
 
-            if ((i+1) % reportInterval == 0) {
+            if ((i + 1) % reportInterval == 0) {
                 stopwatch.start();
                 long estimateBytes = GTAggregateScanner.estimateSizeOfAggrCache(key, values, map.size());
                 estimateMillis += stopwatch.elapsedMillis();
@@ -210,8 +211,8 @@ public class AggregationCacheMemSizeTest {
                 actualMillis += stopwatch.elapsedMillis();
                 stopwatch.reset();
 
-                System.out.printf("%,15d %,15d %,15d %,15d %,15d\n",
-                        map.size(), estimateBytes, actualBytes, estimateMillis, actualMillis);
+                System.out.printf(Locale.ROOT, "%,15d %,15d %,15d %,15d %,15d\n", map.size(), estimateBytes,
+                        actualBytes, estimateMillis, actualMillis);
             }
         }
         System.out.println("---------------------------------------\n");

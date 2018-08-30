@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -283,7 +284,8 @@ public class RestClient {
         return response;
     }
 
-    public void clearCacheForCubeMigration(String cube, String project, String model, Map<String, String> tableToProjects) throws IOException{
+    public void clearCacheForCubeMigration(String cube, String project, String model,
+            Map<String, String> tableToProjects) throws IOException {
         String url = baseUrl + "/cache/migration";
         HttpPost post = new HttpPost(url);
 
@@ -309,7 +311,8 @@ public class RestClient {
         HttpResponse response = client.execute(put);
         getContent(response);
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url + "\n");
+            throw new IOException(
+                    "Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url + "\n");
         }
     }
 
@@ -319,7 +322,8 @@ public class RestClient {
         HttpResponse response = client.execute(get);
         String content = getContent(response);
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url + "\n");
+            throw new IOException(
+                    "Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url + "\n");
         }
         return content;
     }
@@ -336,7 +340,8 @@ public class RestClient {
     private void addHttpHeaders(HttpRequestBase method) {
         method.addHeader("Accept", "application/json, text/plain, */*");
         method.addHeader("Content-Type", "application/json");
-        String basicAuth = DatatypeConverter.printBase64Binary((this.userName + ":" + this.password).getBytes());
+        String basicAuth = DatatypeConverter
+                .printBase64Binary((this.userName + ":" + this.password).getBytes(StandardCharsets.UTF_8));
         method.addHeader("Authorization", "Basic " + basicAuth);
     }
 
@@ -384,7 +389,7 @@ public class RestClient {
         BufferedReader rd = null;
         StringBuffer result = new StringBuffer();
         try {
-            reader = new InputStreamReader(response.getEntity().getContent());
+            reader = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8);
             rd = new BufferedReader(reader);
             String line = null;
             while ((line = rd.readLine()) != null) {

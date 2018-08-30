@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -87,7 +88,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
 
-        String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+        String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase(Locale.ROOT);
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         cube = cubeMgr.getCube(cubeName);
         cubeDesc = cube.getDescriptor();
@@ -226,13 +227,14 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 }
 
                 if (shardNum > nRegion) {
-                    logger.info(
-                            String.format("Cuboid %d 's estimated size %.2f MB will generate %d regions, reduce to %d",
-                                    cuboidId, estimatedSize, shardNum, nRegion));
+                    logger.info(String.format(Locale.ROOT,
+                            "Cuboid %d 's estimated size %.2f MB will generate %d regions, " + "reduce to %d", cuboidId,
+                            estimatedSize, shardNum, nRegion));
                     shardNum = nRegion;
                 } else {
-                    logger.info(String.format("Cuboid %d 's estimated size %.2f MB will generate %d regions", cuboidId,
-                            estimatedSize, shardNum));
+                    logger.info(
+                            String.format(Locale.ROOT, "Cuboid %d 's estimated size %.2f MB will generate %d regions",
+                                    cuboidId, estimatedSize, shardNum));
                 }
 
                 cuboidShards.put(cuboidId, (short) shardNum);
@@ -245,8 +247,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
             }
 
             for (int i = 0; i < nRegion; ++i) {
-                logger.info(String.format("Region %d's estimated size is %.2f MB, accounting for %.2f percent", i,
-                        regionSizes[i], 100.0 * regionSizes[i] / totalSizeInM));
+                logger.info(
+                        String.format(Locale.ROOT, "Region %d's estimated size is %.2f MB, accounting for %.2f percent",
+                                i, regionSizes[i], 100.0 * regionSizes[i] / totalSizeInM));
             }
 
             CuboidShardUtil.saveCuboidShards(cubeSegment, cuboidShards, nRegion);
@@ -341,7 +344,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
             for (Long cuboid : allCuboids) {
 
                 if (accumulatedSize >= hfileSizeMB) {
-                    logger.info(String.format("Region %d's hfile %d size is %.2f mb", i, j, accumulatedSize));
+                    logger.info(
+                            String.format(Locale.ROOT, "Region %d's hfile %d size is %.2f mb", i, j, accumulatedSize));
                     byte[] split = new byte[RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN];
                     BytesUtil.writeUnsigned(i, split, 0, RowConstants.ROWKEY_SHARDID_LEN);
                     System.arraycopy(Bytes.toBytes(cuboid), 0, split, RowConstants.ROWKEY_SHARDID_LEN,

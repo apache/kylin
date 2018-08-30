@@ -20,6 +20,7 @@ package org.apache.kylin.query.util;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -32,6 +33,7 @@ public class TempStatementUtil {
     private static final String WITH = "WITH";
     private static final String DROP = "DROP";
     private static final String CREATE = "CREATE";
+
     public static Pair<Boolean, String> handleTempStatement(String sql, KylinConfig config) {
         if (!config.isConvertCreateTableToWith()) {
             return new Pair<>(false, sql);
@@ -132,15 +134,15 @@ public class TempStatementUtil {
     }
 
     private static boolean isCreateTable(String sql) {
-        return sql.trim().toUpperCase().startsWith(CREATE);
+        return sql.trim().toUpperCase(Locale.ROOT).startsWith(CREATE);
     }
 
     private static boolean isDropTable(String sql) {
-        return sql.trim().toUpperCase().startsWith(DROP);
+        return sql.trim().toUpperCase(Locale.ROOT).startsWith(DROP);
     }
 
     private static boolean isWith(String sql) {
-        return sql.trim().toUpperCase().startsWith(WITH);
+        return sql.trim().toUpperCase(Locale.ROOT).startsWith(WITH);
     }
 
     private static String appendWith(String sql, KylinConfig config) {

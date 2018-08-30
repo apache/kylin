@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.kylin.common.KylinConfig;
@@ -65,7 +66,7 @@ public class AdminController extends BasicController {
             envRes.put("env", env);
 
             return envRes;
-        } catch (ConfigurationException e) {
+        } catch (ConfigurationException | UnsupportedEncodingException e) {
             throw new RuntimeException(msg.getGET_ENV_CONFIG_FAIL(), e);
         }
     }

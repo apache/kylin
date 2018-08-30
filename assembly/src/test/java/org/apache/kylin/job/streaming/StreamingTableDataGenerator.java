@@ -20,6 +20,7 @@ package org.apache.kylin.job.streaming;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 import org.apache.kylin.common.KylinConfig;
@@ -66,7 +67,7 @@ public class StreamingTableDataGenerator {
             kvs.clear();
             kvs.put("timestamp", String.valueOf(time));
             for (ColumnDesc columnDesc : tableDesc.getColumns()) {
-                String lowerCaseColumnName = columnDesc.getName().toLowerCase();
+                String lowerCaseColumnName = columnDesc.getName().toLowerCase(Locale.ROOT);
                 DataType dataType = columnDesc.getType();
                 if (dataType.isDateTimeFamily()) {
                     //TimedJsonStreamParser will derived minute_start,hour_start,day_start from timestamp
@@ -78,7 +79,7 @@ public class StreamingTableDataGenerator {
                     int v = r.nextInt(10000);
                     kvs.put(lowerCaseColumnName, String.valueOf(v));
                 } else if (dataType.isNumberFamily()) {
-                    String v = String.format("%.4f", r.nextDouble() * 100);
+                    String v = String.format(Locale.ROOT, "%.4f", r.nextDouble() * 100);
                     kvs.put(lowerCaseColumnName, v);
                 }
             }
