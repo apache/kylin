@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.project;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -242,11 +243,11 @@ public class ProjectInstance extends RootPersistentEntity implements ISourceAwar
     }
 
     public boolean containsTable(String tableName) {
-        return tables.contains(tableName.toUpperCase());
+        return tables.contains(tableName.toUpperCase(Locale.ROOT));
     }
 
     public void removeTable(String tableName) {
-        tables.remove(tableName.toUpperCase());
+        tables.remove(tableName.toUpperCase(Locale.ROOT));
     }
 
     public void addExtFilter(String extFilterName) {
@@ -258,7 +259,7 @@ public class ProjectInstance extends RootPersistentEntity implements ISourceAwar
     }
 
     public void addTable(String tableName) {
-        tables.add(tableName.toUpperCase());
+        tables.add(tableName.toUpperCase(Locale.ROOT));
     }
 
     public Set<String> getTables() {

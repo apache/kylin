@@ -19,8 +19,10 @@
 package org.apache.kylin.cube.cuboid.algorithm;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +90,8 @@ public class ITAlgorithmTestBase {
 
             String sCurrentLine;
 
-            br = new BufferedReader(new FileReader("src/test/resources/statistics.txt"));
+            br = new BufferedReader(new InputStreamReader(new FileInputStream("src/test/resources/statistics.txt"),
+                    StandardCharsets.UTF_8));
 
             while ((sCurrentLine = br.readLine()) != null) {
                 String[] statPair = sCurrentLine.split(" ");

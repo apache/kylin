@@ -22,6 +22,7 @@ import static org.apache.kylin.metadata.filter.function.LikeMatchers.LikeMatcher
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
@@ -130,14 +131,14 @@ public enum BuiltInMethod {
     public static String upper(String s) {
         if (s == null)
             return null;
-        return s.toUpperCase();
+        return s.toUpperCase(Locale.ROOT);
     }
 
     /** SQL LOWER(string) function. */
     public static String lower(String s) {
         if (s == null)
             return null;
-        return s.toLowerCase();
+        return s.toLowerCase(Locale.ROOT);
     }
 
     /** SQL left || right */

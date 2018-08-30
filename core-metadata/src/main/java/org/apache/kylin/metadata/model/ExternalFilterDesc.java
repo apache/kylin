@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.util.Locale;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -90,7 +91,7 @@ public class ExternalFilterDesc extends RootPersistentEntity implements ISourceA
 
     public void init() {
         if (name != null)
-            name = name.toUpperCase();
+            name = name.toUpperCase(Locale.ROOT);
     }
 
     @Override

@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import java.util.Locale;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
@@ -62,7 +63,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
     @Override
     protected void doSetup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
-        cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
+        cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase(Locale.ROOT);
 
         // only used in Build job, not in Merge job
         cuboidLevel = context.getConfiguration().getInt(BatchConstants.CFG_CUBE_CUBOID_LEVEL, 0);

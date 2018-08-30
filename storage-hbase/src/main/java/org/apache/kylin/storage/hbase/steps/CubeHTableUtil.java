@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
 
+import java.util.Locale;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -161,7 +162,7 @@ public class CubeHTableUtil {
             cf.setBlocksize(kylinConfig.getHbaseSmallFamilyBlockSize());
         }
 
-        String hbaseDefaultCC = kylinConfig.getHbaseDefaultCompressionCodec().toLowerCase();
+        String hbaseDefaultCC = kylinConfig.getHbaseDefaultCompressionCodec().toLowerCase(Locale.ROOT);
         switch (hbaseDefaultCC) {
         case "snappy": {
             logger.info("hbase will use snappy to compress data");

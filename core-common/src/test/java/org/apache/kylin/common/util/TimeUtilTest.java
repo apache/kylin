@@ -21,6 +21,7 @@ package org.apache.kylin.common.util;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import org.junit.Assert;
@@ -35,8 +36,8 @@ public class TimeUtilTest {
     }
 
     public static long normalizeTime(long timeMillis, NormalizedTimeUnit unit) {
-        Calendar a = Calendar.getInstance();
-        Calendar b = Calendar.getInstance();
+        Calendar a = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ROOT);
+        Calendar b = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ROOT);
         b.clear();
 
         a.setTimeInMillis(timeMillis);
@@ -50,7 +51,7 @@ public class TimeUtilTest {
 
     @Test
     public void basicTest() throws ParseException {
-        java.text.DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        java.text.DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.ROOT);
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 
         long t1 = dateFormat.parse("2012/01/01 00:00:01").getTime();

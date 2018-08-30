@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.Locale;
 import org.apache.kylin.source.hive.DBConnConf;
 import org.apache.kylin.source.jdbc.SqlUtil;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public class DefaultJdbcMetadata implements IJdbcMetadata {
             while (rs.next()) {
                 String schema = rs.getString("TABLE_SCHEM");
                 String catalog = rs.getString("TABLE_CATALOG");
-                logger.info(String.format("%s,%s", schema, catalog));
+                logger.info(String.format(Locale.ROOT, "%s,%s", schema, catalog));
                 ret.add(schema);
             }
         }

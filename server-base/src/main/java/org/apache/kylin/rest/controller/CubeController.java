@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -295,14 +296,17 @@ public class CubeController extends BasicController {
      *
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/refresh_lookup", method = { RequestMethod.PUT }, produces = { "application/json" })
+    @RequestMapping(value = "/{cubeName}/refresh_lookup", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
     @ResponseBody
-    public JobInstance reBuildLookupSnapshot(@PathVariable String cubeName, @RequestBody LookupSnapshotBuildRequest request) {
+    public JobInstance reBuildLookupSnapshot(@PathVariable String cubeName,
+            @RequestBody LookupSnapshotBuildRequest request) {
         try {
             final CubeManager cubeMgr = cubeService.getCubeManager();
             final CubeInstance cube = cubeMgr.getCube(cubeName);
             String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
-            return jobService.submitLookupSnapshotJob(cube, request.getLookupTableName(), request.getSegmentIDs(), submitter);
+            return jobService.submitLookupSnapshotJob(cube, request.getLookupTableName(), request.getSegmentIDs(),
+                    submitter);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
@@ -1007,14 +1011,13 @@ public class CubeController extends BasicController {
         CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
         if (cubeInstance == null) {
             Message msg = MsgPicker.getMsg();
-            throw new NotFoundException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
+            throw new NotFoundException(String.format(Locale.ROOT, msg.getCUBE_NOT_FOUND(), cubeName));
         }
     }
 
     private void checkBuildingSegment(CubeInstance cube) {
         checkBuildingSegment(cube, cube.getConfig().getMaxBuildingSegments());
     }
-
 
     private void checkBuildingSegment(CubeInstance cube, int maxBuildingSeg) {
         if (cube.getBuildingSegments().size() >= maxBuildingSeg) {

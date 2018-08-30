@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.model;
 import java.io.Serializable;
 import java.util.List;
 
+import java.util.Locale;
 import org.apache.kylin.common.util.StringUtil;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -54,7 +55,7 @@ public class ModelDimensionDesc implements Serializable {
     }
 
     void init(DataModelDesc model) {
-        table = table.toUpperCase();
+        table = table.toUpperCase(Locale.ROOT);
         if (columns != null) {
             StringUtil.toUpperCaseArray(columns, columns);
         }

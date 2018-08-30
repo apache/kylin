@@ -21,6 +21,7 @@ package org.apache.kylin.job.execution;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
@@ -169,7 +170,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     @Override
     public void addTask(AbstractExecutable executable) {
-        executable.setId(getId() + "-" + String.format("%02d", subTasks.size()));
+        executable.setId(getId() + "-" + String.format(Locale.ROOT, "%02d", subTasks.size()));
         this.subTasks.add(executable);
     }
 
@@ -200,7 +201,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         }
         return true;
     }
-    
+
     @Override
     public int getDefaultPriority() {
         return DEFAULT_PRIORITY;

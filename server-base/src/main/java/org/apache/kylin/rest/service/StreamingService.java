@@ -21,6 +21,7 @@ package org.apache.kylin.rest.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
@@ -50,7 +51,8 @@ public class StreamingService extends BasicService {
         return streamingConfigs;
     }
 
-    public List<StreamingConfig> getStreamingConfigs(final String table, final String project, final Integer limit, final Integer offset) throws IOException {
+    public List<StreamingConfig> getStreamingConfigs(final String table, final String project, final Integer limit,
+            final Integer offset) throws IOException {
         aclEvaluate.checkProjectWritePermission(project);
         List<StreamingConfig> streamingConfigs;
         streamingConfigs = listAllStreamingConfigs(table);
@@ -71,7 +73,8 @@ public class StreamingService extends BasicService {
         Message msg = MsgPicker.getMsg();
 
         if (getStreamingManager().getStreamingConfig(config.getName()) != null) {
-            throw new BadRequestException(String.format(msg.getSTREAMING_CONFIG_ALREADY_EXIST(), config.getName()));
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getSTREAMING_CONFIG_ALREADY_EXIST(), config.getName()));
         }
         StreamingConfig streamingConfig = getStreamingManager().createStreamingConfig(config);
         return streamingConfig;

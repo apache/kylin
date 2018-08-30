@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metrics.lib.impl;
 
+import java.util.Locale;
+
 import com.google.common.base.Strings;
 
 public enum TimePropertyEnum {
@@ -36,7 +38,7 @@ public enum TimePropertyEnum {
             return null;
         }
         for (TimePropertyEnum property : TimePropertyEnum.values()) {
-            if (property.propertyName.equals(propertyName.toUpperCase())) {
+            if (property.propertyName.equals(propertyName.toUpperCase(Locale.ROOT))) {
                 return property;
             }
         }

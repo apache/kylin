@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -253,8 +254,8 @@ public class SparkExecutable extends AbstractExecutable {
             }
 
             stringBuilder.append("--jars %s %s %s");
-            final String cmd = String.format(stringBuilder.toString(), hadoopConf, KylinConfig.getSparkHome(), jars,
-                    jobJar, formatArgs());
+            final String cmd = String.format(Locale.ROOT, stringBuilder.toString(), hadoopConf,
+                    KylinConfig.getSparkHome(), jars, jobJar, formatArgs());
             logger.info("cmd: " + cmd);
             final ExecutorService executorService = Executors.newSingleThreadExecutor();
             final CliCommandExecutor exec = new CliCommandExecutor();
@@ -315,7 +316,7 @@ public class SparkExecutable extends AbstractExecutable {
 
                 // read counter from hdfs
                 String counterOutput = getParam(BatchConstants.ARG_COUNTER_OUPUT);
-                if (counterOutput != null){
+                if (counterOutput != null) {
                     Map<String, String> counterMap = HadoopUtil.readFromSequenceFile(counterOutput);
                     joblogInfo.putAll(counterMap);
                 }
@@ -364,7 +365,7 @@ public class SparkExecutable extends AbstractExecutable {
     private String getAppState(String appId) throws IOException {
         CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
         PatternedLogger patternedLogger = new PatternedLogger(logger);
-        String stateCmd = String.format("yarn application -status %s", appId);
+        String stateCmd = String.format(Locale.ROOT, "yarn application -status %s", appId);
         executor.execute(stateCmd, patternedLogger);
         Map<String, String> info = patternedLogger.getInfo();
         return info.get(ExecutableConstants.YARN_APP_STATE);
@@ -372,7 +373,7 @@ public class SparkExecutable extends AbstractExecutable {
 
     private void killApp(String appId) throws IOException, InterruptedException {
         CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
-        String killCmd = String.format("yarn application -kill %s", appId);
+        String killCmd = String.format(Locale.ROOT, "yarn application -kill %s", appId);
         executor.execute(killCmd);
     }
 
@@ -414,7 +415,8 @@ public class SparkExecutable extends AbstractExecutable {
             // cube statistics is not available for new segment
             dumpList.add(segment.getStatisticsResourcePath());
         }
-        JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig(), this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
+        JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig(),
+                this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
     }
 
     private void attachSegmentsMetadataWithDict(List<CubeSegment> segments) throws IOException {
@@ -428,7 +430,8 @@ public class SparkExecutable extends AbstractExecutable {
                 dumpList.add(segment.getStatisticsResourcePath());
             }
         }
-        JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segments.get(0).getConfig(), this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
+        JobRelatedMetaUtil.dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segments.get(0).getConfig(),
+                this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
     }
 
     private void readCounters(final Map<String, String> info) {

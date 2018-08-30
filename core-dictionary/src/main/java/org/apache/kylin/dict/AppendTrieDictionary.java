@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
@@ -60,9 +61,10 @@ import com.google.common.cache.RemovalNotification;
  *
  * @author sunyerui
  */
-@SuppressWarnings({"rawtypes", "unchecked", "serial"})
+@SuppressWarnings({ "rawtypes", "unchecked", "serial" })
 public class AppendTrieDictionary<T> extends CacheDictionary<T> {
-    public static final byte[] HEAD_MAGIC = new byte[]{0x41, 0x70, 0x70, 0x65, 0x63, 0x64, 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74}; // "AppendTrieDict"
+    public static final byte[] HEAD_MAGIC = new byte[] { 0x41, 0x70, 0x70, 0x65, 0x63, 0x64, 0x54, 0x72, 0x69, 0x65,
+            0x44, 0x69, 0x63, 0x74 }; // "AppendTrieDict"
     public static final int HEAD_SIZE_I = HEAD_MAGIC.length;
     private static final Logger logger = LoggerFactory.getLogger(AppendTrieDictionary.class);
 
@@ -85,19 +87,23 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         final Path latestVersionPath = globalDictStore.getVersionDir(latestVersion);
         this.metadata = globalDictStore.getMetadata(latestVersion);
         this.bytesConvert = metadata.bytesConverter;
-        this.dictCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<AppendDictSliceKey, AppendDictSlice>() {
-            @Override
-            public void onRemoval(RemovalNotification<AppendDictSliceKey, AppendDictSlice> notification) {
-                logger.info("Evict slice with key {} and value {} caused by {}, size {}/{}", notification.getKey(), notification.getValue(), notification.getCause(), dictCache.size(), metadata.sliceFileMap.size());
-            }
-        }).build(new CacheLoader<AppendDictSliceKey, AppendDictSlice>() {
-            @Override
-            public AppendDictSlice load(AppendDictSliceKey key) throws Exception {
-                AppendDictSlice slice = globalDictStore.readSlice(latestVersionPath.toString(), metadata.sliceFileMap.get(key));
-                logger.trace("Load slice with key {} and value {}", key, slice);
-                return slice;
-            }
-        });
+        this.dictCache = CacheBuilder.newBuilder().softValues()
+                .removalListener(new RemovalListener<AppendDictSliceKey, AppendDictSlice>() {
+                    @Override
+                    public void onRemoval(RemovalNotification<AppendDictSliceKey, AppendDictSlice> notification) {
+                        logger.info("Evict slice with key {} and value {} caused by {}, size {}/{}",
+                                notification.getKey(), notification.getValue(), notification.getCause(),
+                                dictCache.size(), metadata.sliceFileMap.size());
+                    }
+                }).build(new CacheLoader<AppendDictSliceKey, AppendDictSlice>() {
+                    @Override
+                    public AppendDictSlice load(AppendDictSliceKey key) throws Exception {
+                        AppendDictSlice slice = globalDictStore.readSlice(latestVersionPath.toString(),
+                                metadata.sliceFileMap.get(key));
+                        logger.trace("Load slice with key {} and value {}", key, slice);
+                        return slice;
+                    }
+                });
     }
 
     @Override
@@ -162,7 +168,8 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
 
     @Override
     public void dump(PrintStream out) {
-        out.println(String.format("Total %d values and %d slices", metadata.nValues, metadata.sliceFileMap.size()));
+        out.println(String.format(Locale.ROOT, "Total %d values and %d slices", metadata.nValues,
+                metadata.sliceFileMap.size()));
     }
 
     @Override
@@ -184,7 +191,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
 
     @Override
     public String toString() {
-        return String.format("AppendTrieDictionary(%s)", baseDir);
+        return String.format(Locale.ROOT, "AppendTrieDictionary(%s)", baseDir);
     }
 
     @Override
@@ -221,7 +228,8 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         if (paths.length == 2) {
             return kylinConfig.getHdfsWorkingDirectory() + "/resources/SegmentDict/" + paths[1];
         } else {
-            throw new RuntimeException("the basic directory of global dictionary only support the format which contains '/resources/GlobalDict/' or '/resources/SegmentDict/'");
+            throw new RuntimeException(
+                    "the basic directory of global dictionary only support the format which contains '/resources/GlobalDict/' or '/resources/SegmentDict/'");
         }
     }
 
@@ -230,7 +238,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
      *
      * @param flag
      */
-   void setSaveAbsolutePath(Boolean flag) {
+    void setSaveAbsolutePath(Boolean flag) {
         this.isSaveAbsolutePath = flag;
     }
 }

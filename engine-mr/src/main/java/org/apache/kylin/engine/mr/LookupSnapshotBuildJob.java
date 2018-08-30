@@ -21,6 +21,7 @@ package org.apache.kylin.engine.mr;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import org.apache.kylin.common.KylinConfig;
@@ -58,7 +59,7 @@ public class LookupSnapshotBuildJob extends DefaultChainedExecutable {
         }
 
         LookupSnapshotBuildJob result = new LookupSnapshotBuildJob();
-        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss", Locale.ROOT);
         format.setTimeZone(TimeZone.getTimeZone(kylinConfig.getTimeZone()));
         result.setDeployEnvName(kylinConfig.getDeployEnv());
         result.setProjectName(projList.get(0).getName());

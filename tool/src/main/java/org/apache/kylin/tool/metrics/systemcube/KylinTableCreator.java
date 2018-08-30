@@ -47,7 +47,7 @@ public class KylinTableCreator {
         TableMetadataManager.TABLE_SERIALIZER.serialize(kylinTable, dout);
         dout.close();
         buf.close();
-        System.out.println(buf.toString());
+        System.out.println(buf.toString("UTF-8"));
     }
 
     public static TableDesc generateKylinTableForMetricsQuery(KylinConfig kylinConfig, SinkTool sinkTool) {

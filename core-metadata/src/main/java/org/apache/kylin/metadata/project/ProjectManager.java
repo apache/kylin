@@ -18,9 +18,16 @@
 
 package org.apache.kylin.metadata.project;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -41,14 +48,9 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
@@ -66,11 +68,11 @@ public class ProjectManager {
 
     private KylinConfig config;
     private ProjectL2Cache l2Cache;
-    
+
     // project name => ProjectInstance
     private CaseInsensitiveStringCache<ProjectInstance> projectMap;
     private CachedCrudAssist<ProjectInstance> crud;
-    
+
     // protects concurrent operations around the cached map, to avoid for example
     // writing an entity in the middle of reloading it (dirty read)
     private AutoReadWriteLock prjMapLock = new AutoReadWriteLock();
@@ -245,7 +247,7 @@ public class ProjectManager {
                 throw new IllegalArgumentException("Project " + newProjectName + " does not exist.");
             }
             prj.addModel(modelName);
-            
+
             return save(prj);
         }
     }
@@ -366,7 +368,7 @@ public class ProjectManager {
             save(projectInstance);
         }
     }
-    
+
     private ProjectInstance save(ProjectInstance prj) throws IOException {
         crud.save(prj);
         clearL2Cache(prj.getName());
@@ -459,15 +461,15 @@ public class ProjectManager {
     }
 
     public Set<IRealization> getRealizationsByTable(String project, String tableName) {
-        return l2Cache.getRealizationsByTable(project, tableName.toUpperCase());
+        return l2Cache.getRealizationsByTable(project, tableName.toUpperCase(Locale.ROOT));
     }
 
     public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable) {
-        return l2Cache.listEffectiveRewriteMeasures(project, factTable.toUpperCase(), true);
+        return l2Cache.listEffectiveRewriteMeasures(project, factTable.toUpperCase(Locale.ROOT), true);
     }
 
     public List<MeasureDesc> listEffectiveMeasures(String project, String factTable) {
-        return l2Cache.listEffectiveRewriteMeasures(project, factTable.toUpperCase(), false);
+        return l2Cache.listEffectiveRewriteMeasures(project, factTable.toUpperCase(Locale.ROOT), false);
     }
 
     KylinConfig getConfig() {

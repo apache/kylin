@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import java.util.Locale;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -69,11 +70,11 @@ public class UpdateHTableHostCLI {
         }
 
         List<String> tableNames = getHTableNames(KylinConfig.getInstanceFromEnv());
-        if (!args[0].toLowerCase().equals("-from")) {
+        if (!args[0].toLowerCase(Locale.ROOT).equals("-from")) {
             printUsageAndExit();
         }
-        String oldHostValue = args[1].toLowerCase();
-        String filterType = args[2].toLowerCase();
+        String oldHostValue = args[1].toLowerCase(Locale.ROOT);
+        String filterType = args[2].toLowerCase(Locale.ROOT);
         if (filterType.equals("-table")) {
             tableNames = filterByTables(tableNames, Arrays.asList(args).subList(3, args.length));
         } else if (filterType.equals("-cube")) {

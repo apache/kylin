@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metrics.property;
 
+import java.util.Locale;
+
 import com.google.common.base.Strings;
 
 public enum JobPropertyEnum {
@@ -41,7 +43,7 @@ public enum JobPropertyEnum {
             return null;
         }
         for (JobPropertyEnum property : JobPropertyEnum.values()) {
-            if (property.propertyName.equals(name.toUpperCase())) {
+            if (property.propertyName.equals(name.toUpperCase(Locale.ROOT))) {
                 return property;
             }
         }

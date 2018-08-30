@@ -19,6 +19,7 @@
 package org.apache.kylin.cube.model;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
@@ -56,7 +57,7 @@ public class DimensionDesc implements java.io.Serializable {
         DataModelDesc model = cubeDesc.getModel();
 
         if (name != null)
-            name = name.toUpperCase();
+            name = name.toUpperCase(Locale.ROOT);
 
         tableRef = model.findTable(table);
         table = tableRef.getAlias();

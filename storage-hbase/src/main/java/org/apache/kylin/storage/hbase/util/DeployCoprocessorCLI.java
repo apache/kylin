@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -115,7 +116,7 @@ public class DeployCoprocessorCLI {
             List<String> tableNames = getHTableNames(kylinConfig);
             logger.info("Identify tables " + tableNames);
 
-            String filterType = args[curIdx++].toLowerCase();
+            String filterType = args[curIdx++].toLowerCase(Locale.ROOT);
             if (filterType.equals("-table")) {
                 tableNames = filterByTables(tableNames, Arrays.asList(args).subList(curIdx, args.length));
             } else if (filterType.equals("-cube")) {

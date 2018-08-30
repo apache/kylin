@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
 
@@ -118,7 +119,8 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/saved_queries", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
-    public List<Query> getQueries(@RequestParam(value = "project", required = false) String project) throws IOException {
+    public List<Query> getQueries(@RequestParam(value = "project", required = false) String project)
+            throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         return queryService.getQueries(creator, project);
     }
@@ -137,7 +139,7 @@ public class QueryController extends BasicController {
         SQLResponse result = queryService.doQueryWithCache(sqlRequest);
         response.setContentType("text/" + format + ";charset=utf-8");
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.ROOT);
         Date now = new Date();
         String nowStr = sdf.format(now);
         response.setHeader("Content-Disposition", "attachment; filename=\"" + nowStr + ".result." + format + "\"");

@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
 
+import java.util.Locale;
 import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -202,7 +203,7 @@ public class ColumnDesc implements Serializable {
         this.table = table;
 
         if (name != null)
-            name = name.toUpperCase();
+            name = name.toUpperCase(Locale.ROOT);
 
         if (id != null)
             zeroBasedIndex = Integer.parseInt(id) - 1;

@@ -20,6 +20,7 @@ package org.apache.kylin.dict;
 
 import java.io.IOException;
 
+import java.util.Locale;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.Dictionary;
@@ -59,7 +60,8 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             this.builder = new AppendTrieDictionaryBuilder(baseDir, maxEntriesPerSlice, true);
         } catch (Throwable e) {
             lock.unlock(getLockPath(sourceColumn));
-            throw new RuntimeException(String.format("Failed to create global dictionary on %s ", sourceColumn), e);
+            throw new RuntimeException(
+                    String.format(Locale.ROOT, "Failed to create global dictionary on %s ", sourceColumn), e);
         }
         this.baseId = baseId;
     }
@@ -70,7 +72,8 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             if (lock.lock(getLockPath(sourceColumn))) {
                 logger.info("processed {} values for {}", counter, sourceColumn);
             } else {
-                throw new RuntimeException("Failed to create global dictionary on " + sourceColumn + " This client doesn't keep the lock");
+                throw new RuntimeException(
+                        "Failed to create global dictionary on " + sourceColumn + " This client doesn't keep the lock");
             }
         }
 
@@ -82,7 +85,8 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             builder.addValue(value);
         } catch (Throwable e) {
             lock.unlock(getLockPath(sourceColumn));
-            throw new RuntimeException(String.format("Failed to create global dictionary on %s ", sourceColumn), e);
+            throw new RuntimeException(
+                    String.format(Locale.ROOT, "Failed to create global dictionary on %s ", sourceColumn), e);
         }
 
         return true;

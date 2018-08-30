@@ -20,6 +20,7 @@ package org.apache.kylin.common.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
@@ -53,6 +54,6 @@ public class ZipFileUtils {
     }
 
     private static boolean validateZipFilename(String filename) {
-        return !StringUtils.isEmpty(filename) && filename.trim().toLowerCase().endsWith(".zip");
+        return !StringUtils.isEmpty(filename) && filename.trim().toLowerCase(Locale.ROOT).endsWith(".zip");
     }
 }

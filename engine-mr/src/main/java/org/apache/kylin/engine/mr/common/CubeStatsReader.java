@@ -18,15 +18,20 @@
 
 package org.apache.kylin.engine.mr.common;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -361,7 +366,7 @@ public class CubeStatsReader {
     }
 
     private static String formatDouble(double input) {
-        return new DecimalFormat("#.##").format(input);
+        return new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ROOT)).format(input);
     }
 
     public static class CubeStatsResult {
@@ -423,7 +428,8 @@ public class CubeStatsReader {
         CubeInstance cube = CubeManager.getInstance(config).getCube(args[0]);
         List<CubeSegment> segments = cube.getSegments();
 
-        PrintWriter out = new PrintWriter(System.out);
+        PrintWriter out = new PrintWriter(
+                new BufferedWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8)));
         for (CubeSegment seg : segments) {
             try {
                 new CubeStatsReader(seg, config).print(out);

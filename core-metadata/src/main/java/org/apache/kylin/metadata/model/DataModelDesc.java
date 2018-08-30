@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -282,7 +283,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public TblColRef findColumn(String table, String column) throws IllegalArgumentException {
         TableRef tableRef = findTable(table);
-        TblColRef result = tableRef.getColumn(column.toUpperCase());
+        TblColRef result = tableRef.getColumn(column.toUpperCase(Locale.ROOT));
         if (result == null)
             throw new IllegalArgumentException("Column not found by " + table + "." + column);
         return result;
@@ -292,7 +293,7 @@ public class DataModelDesc extends RootPersistentEntity {
         TblColRef result = null;
         String input = column;
 
-        column = column.toUpperCase();
+        column = column.toUpperCase(Locale.ROOT);
         int cut = column.lastIndexOf('.');
         if (cut > 0) {
             // table specified
@@ -314,7 +315,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
     // find by unique name, that must uniquely identifies a table in the model
     public TableRef findTable(String table) throws IllegalArgumentException {
-        TableRef result = tableNameMap.get(table.toUpperCase());
+        TableRef result = tableNameMap.get(table.toUpperCase(Locale.ROOT));
         if (result == null) {
             throw new IllegalArgumentException("Table not found by " + table);
         }
@@ -388,7 +389,7 @@ public class DataModelDesc extends RootPersistentEntity {
             throw new IllegalStateException("root fact table should not be empty");
         }
 
-        rootFactTable = rootFactTable.toUpperCase();
+        rootFactTable = rootFactTable.toUpperCase(Locale.ROOT);
         if (tables.containsKey(rootFactTable) == false)
             throw new IllegalStateException("Root fact table does not exist:" + rootFactTable);
 
@@ -399,7 +400,7 @@ public class DataModelDesc extends RootPersistentEntity {
         factTableRefs.add(rootFactTableRef);
 
         for (JoinTableDesc join : joinTables) {
-            join.setTable(join.getTable().toUpperCase());
+            join.setTable(join.getTable().toUpperCase(Locale.ROOT));
 
             if (tables.containsKey(join.getTable()) == false)
                 throw new IllegalStateException("Join table does not exist:" + join.getTable());
@@ -409,7 +410,7 @@ public class DataModelDesc extends RootPersistentEntity {
             if (alias == null) {
                 alias = tableDesc.getName();
             }
-            alias = alias.toUpperCase();
+            alias = alias.toUpperCase(Locale.ROOT);
             join.setAlias(alias);
 
             boolean isLookup = join.getKind() == TableKind.LOOKUP;

@@ -18,14 +18,16 @@
 
 package org.apache.kylin.cube.cuboid.algorithm;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.Set;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Calculate the benefit based on Benefit Per Unit Space.
@@ -132,8 +134,8 @@ public class BPUSCalculator implements BenefitPolicy {
     @Override
     public boolean ifEfficient(CuboidBenefitModel best) {
         if (best.getBenefit() < getMinBenefitRatio()) {
-            logger.info(String.format("The recommended cuboid %s doesn't meet minimum benifit ratio %f", best,
-                    getMinBenefitRatio()));
+            logger.info(String.format(Locale.ROOT, "The recommended cuboid %s doesn't meet minimum benifit ratio %f",
+                    best, getMinBenefitRatio()));
             return false;
         }
         return true;

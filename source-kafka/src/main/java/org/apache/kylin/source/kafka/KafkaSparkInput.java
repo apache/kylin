@@ -18,6 +18,7 @@
 package org.apache.kylin.source.kafka;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
@@ -84,8 +85,8 @@ public class KafkaSparkInput extends KafkaInputBase implements ISparkInput {
                 jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId(), tableLocation, seg));
                 intermediatePaths.add(tableLocation);
             } else {
-                final String mockFactTableName = MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + cubeName.toLowerCase()
-                        + "_" + seg.getUuid().replaceAll("-", "_") + "_fact";
+                final String mockFactTableName = MetadataConstants.KYLIN_INTERMEDIATE_PREFIX
+                        + cubeName.toLowerCase(Locale.ROOT) + "_" + seg.getUuid().replaceAll("-", "_") + "_fact";
                 jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId(), baseLocation + "/" + mockFactTableName, seg));
                 jobFlow.addTask(createFlatTable(hiveTableDatabase, mockFactTableName, baseLocation, cubeName, cubeDesc,
                         flatDesc, intermediateTables, intermediatePaths));

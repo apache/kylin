@@ -20,6 +20,7 @@ package org.apache.kylin.tool.metrics.systemcube;
 
 import java.util.List;
 
+import java.util.Locale;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metrics.lib.ActiveReservoirReporter;
@@ -264,7 +265,7 @@ public class HiveTableCreator {
                 return null;
             }
             for (HiveTypeEnum hiveType : HiveTypeEnum.values()) {
-                if (hiveType.typeName.equals(typeName.toLowerCase())) {
+                if (hiveType.typeName.equals(typeName.toLowerCase(Locale.ROOT))) {
                     return hiveType;
                 }
             }

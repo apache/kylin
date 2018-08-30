@@ -19,12 +19,15 @@
 package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.io.IOUtils;
@@ -54,8 +57,8 @@ public class HbaseStreamingInput {
     private static final Logger logger = LoggerFactory.getLogger(HbaseStreamingInput.class);
 
     private static final int CELL_SIZE = 128 * 1024; // 128 KB
-    private static final byte[] CF = "F".getBytes();
-    private static final byte[] QN = "C".getBytes();
+    private static final byte[] CF = "F".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] QN = "C".getBytes(StandardCharsets.UTF_8);
 
     public static void createTable(String tableName) throws IOException {
         Connection conn = getConnection();
@@ -197,7 +200,8 @@ public class HbaseStreamingInput {
                         logger.error("value size invalid!!!!!");
                     }
 
-                    hash += Arrays.hashCode(Arrays.copyOfRange(value, cell.getValueOffset(), cell.getValueLength() + cell.getValueOffset()));
+                    hash += Arrays.hashCode(Arrays.copyOfRange(value, cell.getValueOffset(),
+                            cell.getValueLength() + cell.getValueOffset()));
                     rowCount++;
                 }
                 scanner.close();
@@ -231,8 +235,8 @@ public class HbaseStreamingInput {
     }
 
     private static String formatTime(long time) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        Calendar cal = Calendar.getInstance();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.ROOT);
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.ROOT);
         cal.setTimeInMillis(time);
         return dateFormat.format(cal.getTime());
     }

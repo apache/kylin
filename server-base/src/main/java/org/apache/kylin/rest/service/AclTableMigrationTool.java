@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -198,8 +199,8 @@ public class AclTableMigrationTool {
 
     private ObjectIdentityImpl getDomainObjectInfoFromRs(Result result) {
         String type = new String(result.getValue(Bytes.toBytes(AclConstant.ACL_INFO_FAMILY),
-                Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_TYPE_COLUMN)));
-        String id = new String(result.getRow());
+                Bytes.toBytes(AclConstant.ACL_INFO_FAMILY_TYPE_COLUMN)), StandardCharsets.UTF_8);
+        String id = new String(result.getRow(), StandardCharsets.UTF_8);
         ObjectIdentityImpl newInfo = new ObjectIdentityImpl(type, id);
         return newInfo;
     }
@@ -228,7 +229,7 @@ public class AclTableMigrationTool {
 
         if (familyMap != null && !familyMap.isEmpty()) {
             for (Map.Entry<byte[], byte[]> entry : familyMap.entrySet()) {
-                String sid = new String(entry.getKey());
+                String sid = new String(entry.getKey(), StandardCharsets.UTF_8);
                 LegacyAceInfo aceInfo = aceSerializer.deserialize(entry.getValue());
                 if (null != aceInfo) {
                     allAceInfoMap.put(sid, aceInfo);

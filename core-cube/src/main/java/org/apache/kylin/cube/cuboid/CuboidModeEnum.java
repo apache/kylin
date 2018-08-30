@@ -18,6 +18,8 @@
 
 package org.apache.kylin.cube.cuboid;
 
+import java.util.Locale;
+
 import com.google.common.base.Strings;
 
 public enum CuboidModeEnum {
@@ -39,7 +41,7 @@ public enum CuboidModeEnum {
             return null;
         }
         for (CuboidModeEnum mode : CuboidModeEnum.values()) {
-            if (mode.modeName.equals(modeName.toUpperCase())) {
+            if (mode.modeName.equals(modeName.toUpperCase(Locale.ROOT))) {
                 return mode;
             }
         }
