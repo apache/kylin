@@ -18,10 +18,14 @@
 
 package org.apache.kylin.cube.cuboid.algorithm.greedy;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.kylin.cube.cuboid.algorithm.AbstractRecommendAlgorithm;
 import org.apache.kylin.cube.cuboid.algorithm.BenefitPolicy;
 import org.apache.kylin.cube.cuboid.algorithm.CuboidBenefitModel;
@@ -29,12 +33,10 @@ import org.apache.kylin.cube.cuboid.algorithm.CuboidStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * A simple implementation of the Greedy Algorithm , it chooses the cuboids which give
@@ -100,7 +102,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
             benefitPolicy.propagateAggregationCost(best.getCuboidId(), selected);
             round++;
             if (logger.isTraceEnabled()) {
-                logger.trace(String.format("Recommend in round %d : %s", round, best.toString()));
+                logger.trace(String.format(Locale.ROOT, "Recommend in round %d : %s", round, best.toString()));
             }
         }
 
@@ -116,7 +118,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
             logger.trace("Excluded cuboidId size:" + excluded.size());
             logger.trace("Excluded cuboidId detail:");
             for (Long cuboid : excluded) {
-                logger.trace(String.format("cuboidId %d and Cost: %d and Space: %f", cuboid,
+                logger.trace(String.format(Locale.ROOT, "cuboidId %d and Cost: %d and Space: %f", cuboid,
                         cuboidStats.getCuboidQueryCost(cuboid), cuboidStats.getCuboidSize(cuboid)));
             }
             logger.trace("Total Space:" + (spaceLimit - remainingSpace));

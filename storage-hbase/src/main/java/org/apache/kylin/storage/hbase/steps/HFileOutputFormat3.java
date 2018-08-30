@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -94,55 +95,45 @@ import com.google.common.annotations.VisibleForTesting;
  */
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
-public class HFileOutputFormat3
-        extends FileOutputFormat<ImmutableBytesWritable, Cell> {
+public class HFileOutputFormat3 extends FileOutputFormat<ImmutableBytesWritable, Cell> {
     static Log LOG = LogFactory.getLog(HFileOutputFormat3.class);
 
     // The following constants are private since these are used by
     // HFileOutputFormat2 to internally transfer data between job setup and
     // reducer run using conf.
     // These should not be changed by the client.
-    private static final String COMPRESSION_FAMILIES_CONF_KEY =
-            "hbase.hfileoutputformat.families.compression";
-    private static final String BLOOM_TYPE_FAMILIES_CONF_KEY =
-            "hbase.hfileoutputformat.families.bloomtype";
-    private static final String BLOCK_SIZE_FAMILIES_CONF_KEY =
-            "hbase.mapreduce.hfileoutputformat.blocksize";
-    private static final String DATABLOCK_ENCODING_FAMILIES_CONF_KEY =
-            "hbase.mapreduce.hfileoutputformat.families.datablock.encoding";
+    private static final String COMPRESSION_FAMILIES_CONF_KEY = "hbase.hfileoutputformat.families.compression";
+    private static final String BLOOM_TYPE_FAMILIES_CONF_KEY = "hbase.hfileoutputformat.families.bloomtype";
+    private static final String BLOCK_SIZE_FAMILIES_CONF_KEY = "hbase.mapreduce.hfileoutputformat.blocksize";
+    private static final String DATABLOCK_ENCODING_FAMILIES_CONF_KEY = "hbase.mapreduce.hfileoutputformat.families.datablock.encoding";
 
     // This constant is public since the client can modify this when setting
     // up their conf object and thus refer to this symbol.
     // It is present for backwards compatibility reasons. Use it only to
     // override the auto-detection of datablock encoding.
-    public static final String DATABLOCK_ENCODING_OVERRIDE_CONF_KEY =
-            "hbase.mapreduce.hfileoutputformat.datablock.encoding";
+    public static final String DATABLOCK_ENCODING_OVERRIDE_CONF_KEY = "hbase.mapreduce.hfileoutputformat.datablock.encoding";
 
     @Override
-    public RecordWriter<ImmutableBytesWritable, Cell> getRecordWriter(
-            final TaskAttemptContext context) throws IOException, InterruptedException {
+    public RecordWriter<ImmutableBytesWritable, Cell> getRecordWriter(final TaskAttemptContext context)
+            throws IOException, InterruptedException {
         return createRecordWriter(context, this.getOutputCommitter(context));
     }
 
-    static <V extends Cell> RecordWriter<ImmutableBytesWritable, V>
-    createRecordWriter(final TaskAttemptContext context, final OutputCommitter committer)
-            throws IOException, InterruptedException {
+    static <V extends Cell> RecordWriter<ImmutableBytesWritable, V> createRecordWriter(final TaskAttemptContext context,
+            final OutputCommitter committer) throws IOException, InterruptedException {
 
         // Get the path of the temporary output file
-        final Path outputdir = ((FileOutputCommitter)committer).getWorkPath();
+        final Path outputdir = ((FileOutputCommitter) committer).getWorkPath();
         final Configuration conf = context.getConfiguration();
         LOG.debug("Task output path: " + outputdir);
         final FileSystem fs = outputdir.getFileSystem(conf);
         // These configs. are from hbase-*.xml
-        final long maxsize = conf.getLong(HConstants.HREGION_MAX_FILESIZE,
-                HConstants.DEFAULT_MAX_FILE_SIZE);
+        final long maxsize = conf.getLong(HConstants.HREGION_MAX_FILESIZE, HConstants.DEFAULT_MAX_FILE_SIZE);
         // Invented config.  Add to hbase-*.xml if other than default compression.
-        final String defaultCompressionStr = conf.get("hfile.compression",
-                Compression.Algorithm.NONE.getName());
-        final Algorithm defaultCompression = AbstractHFileWriter
-                .compressionByName(defaultCompressionStr);
-        final boolean compactionExclude = conf.getBoolean(
-                "hbase.mapreduce.hfileoutputformat.compaction.exclude", false);
+        final String defaultCompressionStr = conf.get("hfile.compression", Compression.Algorithm.NONE.getName());
+        final Algorithm defaultCompression = AbstractHFileWriter.compressionByName(defaultCompressionStr);
+        final boolean compactionExclude = conf.getBoolean("hbase.mapreduce.hfileoutputformat.compaction.exclude",
+                false);
 
         // create a map from column family to the compression algorithm
         final Map<byte[], Algorithm> compressionMap = createFamilyCompressionMap(conf);
@@ -150,8 +141,7 @@ public class HFileOutputFormat3
         final Map<byte[], Integer> blockSizeMap = createFamilyBlockSizeMap(conf);
 
         String dataBlockEncodingStr = conf.get(DATABLOCK_ENCODING_OVERRIDE_CONF_KEY);
-        final Map<byte[], DataBlockEncoding> datablockEncodingMap
-                = createFamilyDataBlockEncodingMap(conf);
+        final Map<byte[], DataBlockEncoding> datablockEncodingMap = createFamilyDataBlockEncodingMap(conf);
         final DataBlockEncoding overriddenEncoding;
         if (dataBlockEncodingStr != null) {
             overriddenEncoding = DataBlockEncoding.valueOf(dataBlockEncodingStr);
@@ -161,23 +151,21 @@ public class HFileOutputFormat3
 
         return new RecordWriter<ImmutableBytesWritable, V>() {
             // Map of families to writers and how much has been output on the writer.
-            private final Map<byte [], WriterLength> writers =
-                    new TreeMap<byte [], WriterLength>(Bytes.BYTES_COMPARATOR);
-            private byte [] previousRow = HConstants.EMPTY_BYTE_ARRAY;
-            private final byte [] now = Bytes.toBytes(System.currentTimeMillis());
+            private final Map<byte[], WriterLength> writers = new TreeMap<byte[], WriterLength>(Bytes.BYTES_COMPARATOR);
+            private byte[] previousRow = HConstants.EMPTY_BYTE_ARRAY;
+            private final byte[] now = Bytes.toBytes(System.currentTimeMillis());
             private boolean rollRequested = false;
 
             @Override
-            public void write(ImmutableBytesWritable row, V cell)
-                    throws IOException {
+            public void write(ImmutableBytesWritable row, V cell) throws IOException {
                 KeyValue kv = KeyValueUtil.ensureKeyValue(cell);
                 if (row == null && kv == null) {
                     rollWriters();
                     return;
                 }
-                byte [] rowKey = CellUtil.cloneRow(kv);
+                byte[] rowKey = CellUtil.cloneRow(kv);
                 long length = kv.getLength();
-                byte [] family = CellUtil.cloneFamily(kv);
+                byte[] family = CellUtil.cloneFamily(kv);
                 WriterLength wl = this.writers.get(family);
                 if (wl == null) {
                     fs.mkdirs(new Path(outputdir, Bytes.toString(family)));
@@ -200,8 +188,7 @@ public class HFileOutputFormat3
             private void rollWriters() throws IOException {
                 for (WriterLength wl : this.writers.values()) {
                     if (wl.writer != null) {
-                        LOG.info("Writer=" + wl.writer.getPath() +
-                                ((wl.written == 0)? "": ", wrote=" + wl.written));
+                        LOG.info("Writer=" + wl.writer.getPath() + ((wl.written == 0) ? "" : ", wrote=" + wl.written));
                         close(wl.writer);
                     }
                     wl.writer = null;
@@ -210,10 +197,8 @@ public class HFileOutputFormat3
                 this.rollRequested = false;
             }
 
-            @edu.umd.cs.findbugs.annotations.SuppressWarnings(value="BX_UNBOXING_IMMEDIATELY_REBOXED",
-                    justification="Not important")
-            private WriterLength getNewWriter(byte[] family, Configuration conf)
-                    throws IOException {
+            @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "BX_UNBOXING_IMMEDIATELY_REBOXED", justification = "Not important")
+            private WriterLength getNewWriter(byte[] family, Configuration conf) throws IOException {
                 WriterLength wl = new WriterLength();
                 Path familydir = new Path(outputdir, Bytes.toString(family));
                 Algorithm compression = compressionMap.get(family);
@@ -227,18 +212,15 @@ public class HFileOutputFormat3
                 encoding = encoding == null ? DataBlockEncoding.NONE : encoding;
                 Configuration tempConf = new Configuration(conf);
                 tempConf.setFloat(HConstants.HFILE_BLOCK_CACHE_SIZE_KEY, 0.0f);
-                HFileContextBuilder contextBuilder = new HFileContextBuilder()
-                        .withCompression(compression)
+                HFileContextBuilder contextBuilder = new HFileContextBuilder().withCompression(compression)
                         .withChecksumType(HStore.getChecksumType(conf))
-                        .withBytesPerCheckSum(HStore.getBytesPerChecksum(conf))
-                        .withBlockSize(blockSize);
+                        .withBytesPerCheckSum(HStore.getBytesPerChecksum(conf)).withBlockSize(blockSize);
                 contextBuilder.withDataBlockEncoding(encoding);
                 HFileContext hFileContext = contextBuilder.build();
 
-                wl.writer = new StoreFile.WriterBuilder(conf, new CacheConfig(tempConf), fs)
-                        .withOutputDir(familydir).withBloomType(bloomType)
-                        .withComparator(KeyValue.COMPARATOR)
-                        .withFileContext(hFileContext).build();
+                wl.writer = new StoreFile.WriterBuilder(conf, new CacheConfig(tempConf), fs).withOutputDir(familydir)
+                        .withBloomType(bloomType).withComparator(KeyValue.COMPARATOR).withFileContext(hFileContext)
+                        .build();
 
                 this.writers.put(family, wl);
                 return wl;
@@ -246,23 +228,18 @@ public class HFileOutputFormat3
 
             private void close(final StoreFile.Writer w) throws IOException {
                 if (w != null) {
-                    w.appendFileInfo(StoreFile.BULKLOAD_TIME_KEY,
-                            Bytes.toBytes(System.currentTimeMillis()));
-                    w.appendFileInfo(StoreFile.BULKLOAD_TASK_KEY,
-                            Bytes.toBytes(context.getTaskAttemptID().toString()));
-                    w.appendFileInfo(StoreFile.MAJOR_COMPACTION_KEY,
-                            Bytes.toBytes(true));
-                    w.appendFileInfo(StoreFile.EXCLUDE_FROM_MINOR_COMPACTION_KEY,
-                            Bytes.toBytes(compactionExclude));
+                    w.appendFileInfo(StoreFile.BULKLOAD_TIME_KEY, Bytes.toBytes(System.currentTimeMillis()));
+                    w.appendFileInfo(StoreFile.BULKLOAD_TASK_KEY, Bytes.toBytes(context.getTaskAttemptID().toString()));
+                    w.appendFileInfo(StoreFile.MAJOR_COMPACTION_KEY, Bytes.toBytes(true));
+                    w.appendFileInfo(StoreFile.EXCLUDE_FROM_MINOR_COMPACTION_KEY, Bytes.toBytes(compactionExclude));
                     w.appendTrackedTimestampsToMetadata();
                     w.close();
                 }
             }
 
             @Override
-            public void close(TaskAttemptContext c)
-                    throws IOException, InterruptedException {
-                for (WriterLength wl: this.writers.values()) {
+            public void close(TaskAttemptContext c) throws IOException, InterruptedException {
+                for (WriterLength wl : this.writers.values()) {
                     close(wl.writer);
                 }
             }
@@ -281,11 +258,9 @@ public class HFileOutputFormat3
      * Return the start keys of all of the regions in this table,
      * as a list of ImmutableBytesWritable.
      */
-    private static List<ImmutableBytesWritable> getRegionStartKeys(RegionLocator table)
-            throws IOException {
+    private static List<ImmutableBytesWritable> getRegionStartKeys(RegionLocator table) throws IOException {
         byte[][] byteKeys = table.getStartKeys();
-        ArrayList<ImmutableBytesWritable> ret =
-                new ArrayList<ImmutableBytesWritable>(byteKeys.length);
+        ArrayList<ImmutableBytesWritable> ret = new ArrayList<ImmutableBytesWritable>(byteKeys.length);
         for (byte[] byteKey : byteKeys) {
             ret.add(new ImmutableBytesWritable(byteKey));
         }
@@ -297,8 +272,8 @@ public class HFileOutputFormat3
      * {@link TotalOrderPartitioner} that contains the split points in startKeys.
      */
     @SuppressWarnings("deprecation")
-    private static void writePartitions(Configuration conf, Path partitionsPath,
-                                        List<ImmutableBytesWritable> startKeys) throws IOException {
+    private static void writePartitions(Configuration conf, Path partitionsPath, List<ImmutableBytesWritable> startKeys)
+            throws IOException {
         LOG.info("Writing partition information to " + partitionsPath);
         if (startKeys.isEmpty()) {
             throw new IllegalArgumentException("No regions passed");
@@ -308,21 +283,18 @@ public class HFileOutputFormat3
         // have keys < the first region (which has an empty start key)
         // so we need to remove it. Otherwise we would end up with an
         // empty reducer with index 0
-        TreeSet<ImmutableBytesWritable> sorted =
-                new TreeSet<ImmutableBytesWritable>(startKeys);
+        TreeSet<ImmutableBytesWritable> sorted = new TreeSet<ImmutableBytesWritable>(startKeys);
 
         ImmutableBytesWritable first = sorted.first();
         if (!first.equals(HConstants.EMPTY_BYTE_ARRAY)) {
-            throw new IllegalArgumentException(
-                    "First region of table should have empty start key. Instead has: "
-                            + Bytes.toStringBinary(first.get()));
+            throw new IllegalArgumentException("First region of table should have empty start key. Instead has: "
+                    + Bytes.toStringBinary(first.get()));
         }
         sorted.remove(first);
 
         // Write the actual file
         FileSystem fs = partitionsPath.getFileSystem(conf);
-        SequenceFile.Writer writer = SequenceFile.createWriter(
-                fs, conf, partitionsPath, ImmutableBytesWritable.class,
+        SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, partitionsPath, ImmutableBytesWritable.class,
                 NullWritable.class);
 
         try {
@@ -351,8 +323,7 @@ public class HFileOutputFormat3
      * @deprecated Use {@link #configureIncrementalLoad(Job, Table, RegionLocator)} instead.
      */
     @Deprecated
-    public static void configureIncrementalLoad(Job job, HTable table)
-            throws IOException {
+    public static void configureIncrementalLoad(Job job, HTable table) throws IOException {
         configureIncrementalLoad(job, table.getTableDescriptor(), table.getRegionLocator());
     }
 
@@ -370,8 +341,7 @@ public class HFileOutputFormat3
      * The user should be sure to set the map output value class to either KeyValue or Put before
      * running this function.
      */
-    public static void configureIncrementalLoad(Job job, Table table, RegionLocator regionLocator)
-            throws IOException {
+    public static void configureIncrementalLoad(Job job, Table table, RegionLocator regionLocator) throws IOException {
         configureIncrementalLoad(job, table.getTableDescriptor(), regionLocator);
     }
 
@@ -389,14 +359,13 @@ public class HFileOutputFormat3
      * The user should be sure to set the map output value class to either KeyValue or Put before
      * running this function.
      */
-    public static void configureIncrementalLoad(Job job, HTableDescriptor tableDescriptor,
-                                                RegionLocator regionLocator) throws IOException {
+    public static void configureIncrementalLoad(Job job, HTableDescriptor tableDescriptor, RegionLocator regionLocator)
+            throws IOException {
         configureIncrementalLoad(job, tableDescriptor, regionLocator, HFileOutputFormat3.class);
     }
 
-    static void configureIncrementalLoad(Job job, HTableDescriptor tableDescriptor,
-                                         RegionLocator regionLocator, Class<? extends OutputFormat<?, ?>> cls) throws IOException,
-            UnsupportedEncodingException {
+    static void configureIncrementalLoad(Job job, HTableDescriptor tableDescriptor, RegionLocator regionLocator,
+            Class<? extends OutputFormat<?, ?>> cls) throws IOException, UnsupportedEncodingException {
         Configuration conf = job.getConfiguration();
         job.setOutputKeyClass(ImmutableBytesWritable.class);
         job.setOutputValueClass(KeyValue.class);
@@ -415,15 +384,13 @@ public class HFileOutputFormat3
             LOG.warn("Unknown map output value type:" + job.getMapOutputValueClass());
         }
 
-        conf.setStrings("io.serializations", conf.get("io.serializations"),
-                MutationSerialization.class.getName(), ResultSerialization.class.getName(),
-                KeyValueSerialization.class.getName());
+        conf.setStrings("io.serializations", conf.get("io.serializations"), MutationSerialization.class.getName(),
+                ResultSerialization.class.getName(), KeyValueSerialization.class.getName());
 
         // Use table's region boundaries for TOP split points.
         LOG.info("Looking up current regions for table " + tableDescriptor.getTableName());
         List<ImmutableBytesWritable> startKeys = getRegionStartKeys(regionLocator);
-        LOG.info("Configuring " + startKeys.size() + " reduce partitions " +
-                "to match current region count");
+        LOG.info("Configuring " + startKeys.size() + " reduce partitions " + "to match current region count");
         job.setNumReduceTasks(startKeys.size());
 
         configurePartitioner(job, startKeys);
@@ -465,12 +432,9 @@ public class HFileOutputFormat3
      * @return a map from column family to the configured compression algorithm
      */
     @VisibleForTesting
-    static Map<byte[], Algorithm> createFamilyCompressionMap(Configuration
-                                                                     conf) {
-        Map<byte[], String> stringMap = createFamilyConfValueMap(conf,
-                COMPRESSION_FAMILIES_CONF_KEY);
-        Map<byte[], Algorithm> compressionMap = new TreeMap<byte[],
-                Algorithm>(Bytes.BYTES_COMPARATOR);
+    static Map<byte[], Algorithm> createFamilyCompressionMap(Configuration conf) {
+        Map<byte[], String> stringMap = createFamilyConfValueMap(conf, COMPRESSION_FAMILIES_CONF_KEY);
+        Map<byte[], Algorithm> compressionMap = new TreeMap<byte[], Algorithm>(Bytes.BYTES_COMPARATOR);
         for (Map.Entry<byte[], String> e : stringMap.entrySet()) {
             Algorithm algorithm = AbstractHFileWriter.compressionByName(e.getValue());
             compressionMap.put(e.getKey(), algorithm);
@@ -487,10 +451,8 @@ public class HFileOutputFormat3
      */
     @VisibleForTesting
     static Map<byte[], BloomType> createFamilyBloomTypeMap(Configuration conf) {
-        Map<byte[], String> stringMap = createFamilyConfValueMap(conf,
-                BLOOM_TYPE_FAMILIES_CONF_KEY);
-        Map<byte[], BloomType> bloomTypeMap = new TreeMap<byte[],
-                BloomType>(Bytes.BYTES_COMPARATOR);
+        Map<byte[], String> stringMap = createFamilyConfValueMap(conf, BLOOM_TYPE_FAMILIES_CONF_KEY);
+        Map<byte[], BloomType> bloomTypeMap = new TreeMap<byte[], BloomType>(Bytes.BYTES_COMPARATOR);
         for (Map.Entry<byte[], String> e : stringMap.entrySet()) {
             BloomType bloomType = BloomType.valueOf(e.getValue());
             bloomTypeMap.put(e.getKey(), bloomType);
@@ -507,10 +469,8 @@ public class HFileOutputFormat3
      */
     @VisibleForTesting
     static Map<byte[], Integer> createFamilyBlockSizeMap(Configuration conf) {
-        Map<byte[], String> stringMap = createFamilyConfValueMap(conf,
-                BLOCK_SIZE_FAMILIES_CONF_KEY);
-        Map<byte[], Integer> blockSizeMap = new TreeMap<byte[],
-                Integer>(Bytes.BYTES_COMPARATOR);
+        Map<byte[], String> stringMap = createFamilyConfValueMap(conf, BLOCK_SIZE_FAMILIES_CONF_KEY);
+        Map<byte[], Integer> blockSizeMap = new TreeMap<byte[], Integer>(Bytes.BYTES_COMPARATOR);
         for (Map.Entry<byte[], String> e : stringMap.entrySet()) {
             Integer blockSize = Integer.parseInt(e.getValue());
             blockSizeMap.put(e.getKey(), blockSize);
@@ -527,18 +487,14 @@ public class HFileOutputFormat3
      *         configured data block type for the family
      */
     @VisibleForTesting
-    static Map<byte[], DataBlockEncoding> createFamilyDataBlockEncodingMap(
-            Configuration conf) {
-        Map<byte[], String> stringMap = createFamilyConfValueMap(conf,
-                DATABLOCK_ENCODING_FAMILIES_CONF_KEY);
-        Map<byte[], DataBlockEncoding> encoderMap = new TreeMap<byte[],
-                DataBlockEncoding>(Bytes.BYTES_COMPARATOR);
+    static Map<byte[], DataBlockEncoding> createFamilyDataBlockEncodingMap(Configuration conf) {
+        Map<byte[], String> stringMap = createFamilyConfValueMap(conf, DATABLOCK_ENCODING_FAMILIES_CONF_KEY);
+        Map<byte[], DataBlockEncoding> encoderMap = new TreeMap<byte[], DataBlockEncoding>(Bytes.BYTES_COMPARATOR);
         for (Map.Entry<byte[], String> e : stringMap.entrySet()) {
             encoderMap.put(e.getKey(), DataBlockEncoding.valueOf((e.getValue())));
         }
         return encoderMap;
     }
-
 
     /**
      * Run inside the task to deserialize column family to given conf value map.
@@ -547,8 +503,7 @@ public class HFileOutputFormat3
      * @param confName conf key to read from the configuration
      * @return a map of column family to the given configuration value
      */
-    private static Map<byte[], String> createFamilyConfValueMap(
-            Configuration conf, String confName) {
+    private static Map<byte[], String> createFamilyConfValueMap(Configuration conf, String confName) {
         Map<byte[], String> confValMap = new TreeMap<byte[], String>(Bytes.BYTES_COMPARATOR);
         String confVal = conf.get(confName, "");
         for (String familyConf : confVal.split("&")) {
@@ -557,7 +512,7 @@ public class HFileOutputFormat3
                 continue;
             }
             try {
-                confValMap.put(URLDecoder.decode(familySplit[0], "UTF-8").getBytes(),
+                confValMap.put(URLDecoder.decode(familySplit[0], "UTF-8").getBytes(StandardCharsets.UTF_8),
                         URLDecoder.decode(familySplit[1], "UTF-8"));
             } catch (UnsupportedEncodingException e) {
                 // will not happen with UTF-8 encoding
@@ -571,8 +526,7 @@ public class HFileOutputFormat3
      * Configure <code>job</code> with a TotalOrderPartitioner, partitioning against
      * <code>splitPoints</code>. Cleans up the partitions file after job exists.
      */
-    static void configurePartitioner(Job job, List<ImmutableBytesWritable> splitPoints)
-            throws IOException {
+    static void configurePartitioner(Job job, List<ImmutableBytesWritable> splitPoints) throws IOException {
         Configuration conf = job.getConfiguration();
         // create the partitions file
         FileSystem fs = FileSystem.get(conf);
@@ -595,13 +549,12 @@ public class HFileOutputFormat3
      * @throws IOException
      *           on failure to read column family descriptors
      */
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-            value="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
     @VisibleForTesting
     static void configureCompression(Configuration conf, HTableDescriptor tableDescriptor)
             throws UnsupportedEncodingException {
         StringBuilder compressionConfigValue = new StringBuilder();
-        if(tableDescriptor == null){
+        if (tableDescriptor == null) {
             // could happen with mock table instance
             return;
         }
@@ -611,11 +564,9 @@ public class HFileOutputFormat3
             if (i++ > 0) {
                 compressionConfigValue.append('&');
             }
-            compressionConfigValue.append(URLEncoder.encode(
-                    familyDescriptor.getNameAsString(), "UTF-8"));
+            compressionConfigValue.append(URLEncoder.encode(familyDescriptor.getNameAsString(), "UTF-8"));
             compressionConfigValue.append('=');
-            compressionConfigValue.append(URLEncoder.encode(
-                    familyDescriptor.getCompression().getName(), "UTF-8"));
+            compressionConfigValue.append(URLEncoder.encode(familyDescriptor.getCompression().getName(), "UTF-8"));
         }
         // Get rid of the last ampersand
         conf.set(COMPRESSION_FAMILIES_CONF_KEY, compressionConfigValue.toString());
@@ -644,11 +595,9 @@ public class HFileOutputFormat3
             if (i++ > 0) {
                 blockSizeConfigValue.append('&');
             }
-            blockSizeConfigValue.append(URLEncoder.encode(
-                    familyDescriptor.getNameAsString(), "UTF-8"));
+            blockSizeConfigValue.append(URLEncoder.encode(familyDescriptor.getNameAsString(), "UTF-8"));
             blockSizeConfigValue.append('=');
-            blockSizeConfigValue.append(URLEncoder.encode(
-                    String.valueOf(familyDescriptor.getBlocksize()), "UTF-8"));
+            blockSizeConfigValue.append(URLEncoder.encode(String.valueOf(familyDescriptor.getBlocksize()), "UTF-8"));
         }
         // Get rid of the last ampersand
         conf.set(BLOCK_SIZE_FAMILIES_CONF_KEY, blockSizeConfigValue.toString());
@@ -677,8 +626,7 @@ public class HFileOutputFormat3
             if (i++ > 0) {
                 bloomTypeConfigValue.append('&');
             }
-            bloomTypeConfigValue.append(URLEncoder.encode(
-                    familyDescriptor.getNameAsString(), "UTF-8"));
+            bloomTypeConfigValue.append(URLEncoder.encode(familyDescriptor.getNameAsString(), "UTF-8"));
             bloomTypeConfigValue.append('=');
             String bloomType = familyDescriptor.getBloomFilterType().toString();
             if (bloomType == null) {
@@ -699,8 +647,8 @@ public class HFileOutputFormat3
      *           on failure to read column family descriptors
      */
     @VisibleForTesting
-    static void configureDataBlockEncoding(HTableDescriptor tableDescriptor,
-                                           Configuration conf) throws UnsupportedEncodingException {
+    static void configureDataBlockEncoding(HTableDescriptor tableDescriptor, Configuration conf)
+            throws UnsupportedEncodingException {
         if (tableDescriptor == null) {
             // could happen with mock table instance
             return;
@@ -712,17 +660,14 @@ public class HFileOutputFormat3
             if (i++ > 0) {
                 dataBlockEncodingConfigValue.append('&');
             }
-            dataBlockEncodingConfigValue.append(
-                    URLEncoder.encode(familyDescriptor.getNameAsString(), "UTF-8"));
+            dataBlockEncodingConfigValue.append(URLEncoder.encode(familyDescriptor.getNameAsString(), "UTF-8"));
             dataBlockEncodingConfigValue.append('=');
             DataBlockEncoding encoding = familyDescriptor.getDataBlockEncoding();
             if (encoding == null) {
                 encoding = DataBlockEncoding.NONE;
             }
-            dataBlockEncodingConfigValue.append(URLEncoder.encode(encoding.toString(),
-                    "UTF-8"));
+            dataBlockEncodingConfigValue.append(URLEncoder.encode(encoding.toString(), "UTF-8"));
         }
-        conf.set(DATABLOCK_ENCODING_FAMILIES_CONF_KEY,
-                dataBlockEncodingConfigValue.toString());
+        conf.set(DATABLOCK_ENCODING_FAMILIES_CONF_KEY, dataBlockEncodingConfigValue.toString());
     }
 }

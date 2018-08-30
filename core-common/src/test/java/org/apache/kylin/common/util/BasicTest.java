@@ -28,6 +28,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,19 +56,6 @@ import com.google.common.collect.Maps;
 @SuppressWarnings("unused")
 public class BasicTest {
     protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(BasicTest.class);
-
-    private void log(ByteBuffer a) {
-        Integer x = 4;
-        foo(x);
-    }
-
-    private void foo(Long a) {
-        System.out.printf("a");
-    }
-
-    private void foo(Integer b) {
-        System.out.printf("b");
-    }
 
     private enum MetricType {
         Count, DimensionAsMetric, DistinctCount, Normal
@@ -185,9 +174,9 @@ public class BasicTest {
         long current = System.currentTimeMillis();
         System.out.println(time(current));
 
-        Calendar a = Calendar.getInstance();
-        Calendar b = Calendar.getInstance();
-        Calendar c = Calendar.getInstance();
+        Calendar a = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
+        Calendar b = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
+        Calendar c = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
         b.clear();
         c.clear();
 
@@ -244,8 +233,8 @@ public class BasicTest {
     }
 
     private static String time(long t) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        Calendar cal = Calendar.getInstance();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.ROOT);
+        Calendar cal = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
         cal.setTimeInMillis(t);
         return dateFormat.format(cal.getTime());
     }

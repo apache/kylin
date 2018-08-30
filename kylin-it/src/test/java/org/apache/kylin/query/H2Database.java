@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -80,7 +81,7 @@ public class H2Database {
 
     private void loadH2Table(String tableName) throws SQLException {
         TableMetadataManager metaMgr = TableMetadataManager.getInstance(config);
-        TableDesc tableDesc = metaMgr.getTableDesc(tableName.toUpperCase(), project);
+        TableDesc tableDesc = metaMgr.getTableDesc(tableName.toUpperCase(Locale.ROOT), project);
         File tempFile = null;
 
         try {
@@ -162,11 +163,11 @@ public class H2Database {
     }
 
     private static String getH2DataType(String javaDataType) {
-        String hiveDataType = javaToH2DataTypeMapping.get(javaDataType.toLowerCase());
+        String hiveDataType = javaToH2DataTypeMapping.get(javaDataType.toLowerCase(Locale.ROOT));
         if (hiveDataType == null) {
             hiveDataType = javaDataType;
         }
-        return hiveDataType.toLowerCase();
+        return hiveDataType.toLowerCase(Locale.ROOT);
     }
 
 }

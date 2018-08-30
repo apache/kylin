@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.util.Locale;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -73,7 +74,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             options.addOption(OPTION_DICTIONARY_SHRUNKEN_PATH);
             parseOptions(options, args);
 
-            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase(Locale.ROOT);
             String segmentID = getOptionValue(OPTION_SEGMENT_ID);
             String output = getOptionValue(OPTION_OUTPUT_PATH);
 

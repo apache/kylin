@@ -20,13 +20,13 @@ package org.apache.kylin.rest.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.Lists;
+
 /**
  */
 @Component("adminService")
@@ -49,7 +51,7 @@ public class AdminService extends BasicService {
      * Get Java Env info as string
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public String getEnv() throws ConfigurationException {
+    public String getEnv() throws ConfigurationException, UnsupportedEncodingException {
         PropertiesConfiguration tempConfig = new PropertiesConfiguration();
         OrderedProperties orderedProperties = new OrderedProperties(new TreeMap<String, String>());
         // Add Java Env
@@ -76,7 +78,7 @@ public class AdminService extends BasicService {
 
         // do save
         tempConfig.save(baos);
-        content = baos.toString();
+        content = baos.toString("UTF-8");
         return content;
     }
 

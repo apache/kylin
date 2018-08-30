@@ -73,13 +73,14 @@ public class BackwardCompatibilityConfig {
         for (Entry<Object, Object> kv : props.entrySet()) {
             String key = (String) kv.getKey();
             String value = (String) kv.getValue();
-            
+
             if (key.equals(value))
                 continue; // no change
-            
+
             if (value.contains(key))
-                throw new IllegalStateException("New key '" + value + "' contains old key '" + key + "' causes trouble to repeated find & replace");
-            
+                throw new IllegalStateException("New key '" + value + "' contains old key '" + key
+                        + "' causes trouble to repeated find & replace");
+
             if (value.endsWith("."))
                 old2newPrefix.put(key, value);
             else
@@ -122,7 +123,7 @@ public class BackwardCompatibilityConfig {
         return result;
     }
 
-    public OrderedProperties check(OrderedProperties props){
+    public OrderedProperties check(OrderedProperties props) {
         OrderedProperties result = new OrderedProperties();
         for (Entry<String, String> kv : props.entrySet()) {
             result.setProperty(check(kv.getKey()), kv.getValue());
@@ -147,7 +148,7 @@ public class BackwardCompatibilityConfig {
         // generate sed file
         File sedFile = new File(outputDir, "upgrade-old-config.sed");
         try {
-            out = new PrintWriter(sedFile);
+            out = new PrintWriter(sedFile, "UTF-8");
             for (Entry<String, String> e : bcc.old2new.entrySet()) {
                 out.println("s/" + quote(e.getKey()) + "/" + e.getValue() + "/g");
             }
@@ -161,7 +162,7 @@ public class BackwardCompatibilityConfig {
         // generate sh file
         File shFile = new File(outputDir, "upgrade-old-config.sh");
         try {
-            out = new PrintWriter(shFile);
+            out = new PrintWriter(shFile, "UTF-8");
             out.println("#!/bin/bash");
             Stack<File> stack = new Stack<>();
             stack.push(repoDir);
@@ -180,7 +181,7 @@ public class BackwardCompatibilityConfig {
         } finally {
             IOUtils.closeQuietly(out);
         }
-        
+
         System.out.println("Files generated:");
         System.out.println(shFile);
         System.out.println(sedFile);
@@ -211,6 +212,7 @@ public class BackwardCompatibilityConfig {
         else if (name.endsWith("-site.xml"))
             return false;
         else
-            return name.endsWith(".java") || name.endsWith(".js") || name.endsWith(".sh") || name.endsWith(".properties") || name.endsWith(".xml");
+            return name.endsWith(".java") || name.endsWith(".js") || name.endsWith(".sh")
+                    || name.endsWith(".properties") || name.endsWith(".xml");
     }
 }

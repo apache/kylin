@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
@@ -167,7 +168,7 @@ public class BuildCubeWithStream {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+                SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
                 f.setTimeZone(TimeZone.getTimeZone("GMT"));
                 long dateStart = 0;
                 try {

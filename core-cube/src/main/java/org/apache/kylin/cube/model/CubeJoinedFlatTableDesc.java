@@ -20,6 +20,7 @@ package org.apache.kylin.cube.model;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.kylin.cube.CubeSegment;
@@ -78,9 +79,9 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, Serializab
 
     protected String makeTableName(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         if (cubeSegment == null) {
-            return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + cubeDesc.getName().toLowerCase();
+            return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + cubeDesc.getName().toLowerCase(Locale.ROOT);
         } else {
-            return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + cubeDesc.getName().toLowerCase() + "_"
+            return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + cubeDesc.getName().toLowerCase(Locale.ROOT) + "_"
                     + cubeSegment.getUuid().replaceAll("-", "_");
         }
     }

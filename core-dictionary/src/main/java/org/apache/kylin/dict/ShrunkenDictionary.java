@@ -22,6 +22,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
@@ -107,7 +108,7 @@ public class ShrunkenDictionary<T> extends Dictionary<T> {
     }
 
     public void dump(PrintStream out) {
-        out.println(String.format("Total %d values for ShrunkenDictionary", valueToIdMap.size()));
+        out.println(String.format(Locale.ROOT, "Total %d values for ShrunkenDictionary", valueToIdMap.size()));
     }
 
     public void write(DataOutput out) throws IOException {

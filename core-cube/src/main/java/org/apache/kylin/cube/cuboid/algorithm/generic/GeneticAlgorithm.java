@@ -18,7 +18,10 @@
 
 package org.apache.kylin.cube.cuboid.algorithm.generic;
 
-import com.google.common.collect.Lists;
+import java.util.BitSet;
+import java.util.List;
+import java.util.Locale;
+
 import org.apache.commons.math3.genetics.Chromosome;
 import org.apache.commons.math3.genetics.ElitisticListPopulation;
 import org.apache.commons.math3.genetics.FixedGenerationCount;
@@ -30,8 +33,7 @@ import org.apache.kylin.cube.cuboid.algorithm.CuboidStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.BitSet;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * Implementation of a genetic algorithm to recommend a list of cuboids.
@@ -101,10 +103,10 @@ public class GeneticAlgorithm extends AbstractRecommendAlgorithm {
             for (Long cuboid : finalList) {
                 Double unitSpace = cuboidStats.getCuboidSize(cuboid);
                 if (unitSpace != null) {
-                    logger.trace(String.format("cuboidId %d and Space: %f", cuboid, unitSpace));
+                    logger.trace(String.format(Locale.ROOT, "cuboidId %d and Space: %f", cuboid, unitSpace));
                     totalSpace += unitSpace;
                 } else {
-                    logger.trace(String.format("mandatory cuboidId %d", cuboid));
+                    logger.trace(String.format(Locale.ROOT, "mandatory cuboidId %d", cuboid));
                 }
             }
             logger.trace("Total Space:" + totalSpace);

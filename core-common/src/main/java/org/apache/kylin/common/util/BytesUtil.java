@@ -20,6 +20,7 @@ package org.apache.kylin.common.util;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.util.Locale;
 
 import com.google.common.primitives.Shorts;
 
@@ -452,7 +453,7 @@ public class BytesUtil {
         StringBuilder sb = new StringBuilder(length * 4);
         for (int i = 0; i < length; i++) {
             int b = array[offset + i];
-            sb.append(String.format("\\x%02X", b & 0xFF));
+            sb.append(String.format(Locale.ROOT, "\\x%02X", b & 0xFF));
         }
         return sb.toString();
     }

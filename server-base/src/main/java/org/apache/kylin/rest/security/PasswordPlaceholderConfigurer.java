@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
+import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
@@ -72,7 +73,7 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
     }
 
     protected String resolvePlaceholder(String placeholder, Properties props) {
-        if (placeholder.toLowerCase().contains("password")) {
+        if (placeholder.toLowerCase(Locale.ROOT).contains("password")) {
             return EncryptUtil.decrypt(props.getProperty(placeholder));
         } else {
             return props.getProperty(placeholder);

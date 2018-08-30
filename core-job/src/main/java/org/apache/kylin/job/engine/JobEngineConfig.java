@@ -21,6 +21,7 @@ package org.apache.kylin.job.engine;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Locale;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
@@ -52,7 +53,7 @@ public class JobEngineConfig {
     private String getHadoopJobConfFilePath(String suffix, boolean appendSuffix) throws IOException {
         String hadoopJobConfFile;
         if (suffix != null && appendSuffix) {
-            hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + suffix.toLowerCase() + ".xml");
+            hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + suffix.toLowerCase(Locale.ROOT) + ".xml");
         } else {
             hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + ".xml");
         }

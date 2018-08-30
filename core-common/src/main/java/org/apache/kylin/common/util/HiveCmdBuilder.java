@@ -19,6 +19,7 @@
 package org.apache.kylin.common.util;
 
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -47,7 +48,7 @@ public class HiveCmdBuilder {
     }
 
     public String build() {
-        HiveClientMode clientMode = HiveClientMode.valueOf(kylinConfig.getHiveClientMode().toUpperCase());
+        HiveClientMode clientMode = HiveClientMode.valueOf(kylinConfig.getHiveClientMode().toUpperCase(Locale.ROOT));
         String beelineShell = kylinConfig.getHiveBeelineShell();
         String beelineParams = kylinConfig.getHiveBeelineParams();
         if (kylinConfig.getEnableSparkSqlForTableOps()) {
@@ -80,7 +81,7 @@ public class HiveCmdBuilder {
                     hql.append(statement);
                     hql.append("\n");
                 }
-                String createFileCmd = String.format(CREATE_HQL_TMP_FILE_TEMPLATE, tmpHqlPath, hql);
+                String createFileCmd = String.format(Locale.ROOT, CREATE_HQL_TMP_FILE_TEMPLATE, tmpHqlPath, hql);
                 buf.append(createFileCmd);
                 buf.append("\n");
                 buf.append(beelineShell);

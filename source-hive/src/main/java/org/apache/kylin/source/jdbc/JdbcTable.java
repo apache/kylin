@@ -19,7 +19,7 @@
 package org.apache.kylin.source.jdbc;
 
 import java.io.IOException;
-
+import java.util.Locale;
 
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
@@ -35,7 +35,6 @@ public class JdbcTable implements IReadableTable {
     final private String database;
     final private String tableName;
 
-
     public JdbcTable(TableDesc tableDesc) {
         this.database = tableDesc.getDatabase();
         this.tableName = tableDesc.getName();
@@ -48,12 +47,12 @@ public class JdbcTable implements IReadableTable {
 
     @Override
     public TableSignature getSignature() throws IOException {
-        String path = String.format("%s.%s", database, tableName);
+        String path = String.format(Locale.ROOT, "%s.%s", database, tableName);
         long lastModified = System.currentTimeMillis(); // assume table is ever changing
-        int size=0;
+        int size = 0;
         return new TableSignature(path, size, lastModified);
     }
-    
+
     @Override
     public boolean exists() {
         return true;

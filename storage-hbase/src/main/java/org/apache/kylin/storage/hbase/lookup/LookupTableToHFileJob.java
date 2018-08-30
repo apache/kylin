@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.hbase.lookup;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Random;
 
 import org.apache.commons.cli.Options;
@@ -87,7 +88,7 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
             parseOptions(options, args);
 
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
-            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase(Locale.ROOT);
             String tableName = getOptionValue(OPTION_TABLE_NAME);
             String lookupSnapshotID = getOptionValue(OPTION_LOOKUP_SNAPSHOT_ID);
             String jobId = getOptionValue(OPTION_CUBING_JOB_ID);

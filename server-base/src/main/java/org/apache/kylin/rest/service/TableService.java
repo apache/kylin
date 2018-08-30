@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -138,7 +139,8 @@ public class TableService extends BasicService {
         return loadTablesToProject(Lists.newArrayList(Pair.newPair(tableDesc, extDesc)), project);
     }
 
-    private String[] loadTablesToProject(List<Pair<TableDesc, TableExtDesc>> allMeta, String project) throws IOException {
+    private String[] loadTablesToProject(List<Pair<TableDesc, TableExtDesc>> allMeta, String project)
+            throws IOException {
         aclEvaluate.checkProjectAdminPermission(project);
         // do schema check
         TableMetadataManager metaMgr = getTableManager();
@@ -187,7 +189,7 @@ public class TableService extends BasicService {
         return result;
     }
 
-    public List<Pair<TableDesc, TableExtDesc>> extractHiveTableMeta(String[] tables, String project) throws Exception {        // de-dup
+    public List<Pair<TableDesc, TableExtDesc>> extractHiveTableMeta(String[] tables, String project) throws Exception { // de-dup
         SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
         for (String fullTableName : tables) {
             String[] parts = HadoopUtil.parseHiveTableName(fullTableName);
@@ -201,10 +203,10 @@ public class TableService extends BasicService {
         for (Map.Entry<String, String> entry : db2tables.entries()) {
             Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue(), project);
             TableDesc tableDesc = pair.getFirst();
-            Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey().toUpperCase()));
-            Preconditions.checkState(tableDesc.getName().equals(entry.getValue().toUpperCase()));
+            Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey().toUpperCase(Locale.ROOT)));
+            Preconditions.checkState(tableDesc.getName().equals(entry.getValue().toUpperCase(Locale.ROOT)));
             Preconditions.checkState(tableDesc.getIdentity()
-                    .equals(entry.getKey().toUpperCase() + "." + entry.getValue().toUpperCase()));
+                    .equals(entry.getKey().toUpperCase(Locale.ROOT) + "." + entry.getValue().toUpperCase(Locale.ROOT)));
             TableExtDesc extDesc = pair.getSecond();
             Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getIdentity()));
             allMeta.add(pair);
@@ -250,7 +252,7 @@ public class TableService extends BasicService {
             rtn = true;
         } else {
             List<String> models = modelService.getModelsUsingTable(desc, project);
-            throw new BadRequestException(String.format(msg.getTABLE_IN_USE_BY_MODEL(), models));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getTABLE_IN_USE_BY_MODEL(), models));
         }
 
         // it is a project local table, ready to remove since no model is using it within the project
@@ -347,7 +349,8 @@ public class TableService extends BasicService {
         ExtTableSnapshotInfo extTableSnapshotInfo = snapshotInfoManager.getSnapshot(tableName, snapshotID);
         TableDesc tableDesc = getTableManager().getTableDesc(tableName, project);
         if (extTableSnapshotInfo == null) {
-            throw new IllegalArgumentException("cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
+            throw new IllegalArgumentException(
+                    "cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
         }
         LookupProviderFactory.rebuildLocalCache(tableDesc, extTableSnapshotInfo);
     }
@@ -356,7 +359,8 @@ public class TableService extends BasicService {
         ExtTableSnapshotInfoManager snapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
         ExtTableSnapshotInfo extTableSnapshotInfo = snapshotInfoManager.getSnapshot(tableName, snapshotID);
         if (extTableSnapshotInfo == null) {
-            throw new IllegalArgumentException("cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
+            throw new IllegalArgumentException(
+                    "cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
         }
         LookupProviderFactory.removeLocalCache(extTableSnapshotInfo);
     }
@@ -365,7 +369,8 @@ public class TableService extends BasicService {
         ExtTableSnapshotInfoManager snapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
         ExtTableSnapshotInfo extTableSnapshotInfo = snapshotInfoManager.getSnapshot(tableName, snapshotID);
         if (extTableSnapshotInfo == null) {
-            throw new IllegalArgumentException("cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
+            throw new IllegalArgumentException(
+                    "cannot find ext snapshot info for table:" + tableName + " snapshot:" + snapshotID);
         }
         CacheState cacheState = LookupProviderFactory.getCacheState(extTableSnapshotInfo);
         return cacheState.name();
@@ -378,7 +383,8 @@ public class TableService extends BasicService {
         return internalGetLookupTableSnapshots(tableName, signature);
     }
 
-    List<TableSnapshotResponse> internalGetLookupTableSnapshots(String tableName, TableSignature signature) throws IOException {
+    List<TableSnapshotResponse> internalGetLookupTableSnapshots(String tableName, TableSignature signature)
+            throws IOException {
         ExtTableSnapshotInfoManager extSnapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(getConfig());
         SnapshotManager snapshotManager = SnapshotManager.getInstance(getConfig());
         List<ExtTableSnapshotInfo> extTableSnapshots = extSnapshotInfoManager.getSnapshots(tableName);
@@ -459,7 +465,8 @@ public class TableService extends BasicService {
         TableDesc table = getTableManager().getTableDesc(tableName, prj);
         final TableExtDesc tableExt = getTableManager().getTableExt(tableName, prj);
         if (table == null) {
-            BadRequestException e = new BadRequestException(String.format(msg.getTABLE_DESC_NOT_FOUND(), tableName));
+            BadRequestException e = new BadRequestException(
+                    String.format(Locale.ROOT, msg.getTABLE_DESC_NOT_FOUND(), tableName));
             logger.error("Cannot find table descriptor " + tableName, e);
             throw e;
         }
@@ -495,6 +502,6 @@ public class TableService extends BasicService {
 
     public String normalizeHiveTableName(String tableName) {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
-        return (dbTableName[0] + "." + dbTableName[1]).toUpperCase();
+        return (dbTableName[0] + "." + dbTableName[1]).toUpperCase(Locale.ROOT);
     }
 }

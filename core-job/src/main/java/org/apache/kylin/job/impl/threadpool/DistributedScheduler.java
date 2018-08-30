@@ -20,6 +20,7 @@ package org.apache.kylin.job.impl.threadpool;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
@@ -61,7 +62,7 @@ import com.google.common.collect.Maps;
  */
 public class DistributedScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
     private static final Logger logger = LoggerFactory.getLogger(DistributedScheduler.class);
-    
+
     public static final String ZOOKEEPER_LOCK_PATH = "/job_engine/lock"; // note ZookeeperDistributedLock will ensure zk path prefix: /${kylin.env.zookeeper-base-path}/metadata
 
     public static DistributedScheduler getInstance(KylinConfig config) {
@@ -74,7 +75,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     }
 
     // ============================================================================
-    
+
     private ExecutableManager executableManager;
     private FetcherRunner fetcher;
     private ScheduledExecutorService fetcherPool;
@@ -189,7 +190,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     @Override
     public synchronized void init(JobEngineConfig jobEngineConfig, JobLock jobLock) throws SchedulerException {
         String serverMode = jobEngineConfig.getConfig().getServerMode();
-        if (!("job".equals(serverMode.toLowerCase()) || "all".equals(serverMode.toLowerCase()))) {
+        if (!("job".equals(serverMode.toLowerCase(Locale.ROOT)) || "all".equals(serverMode.toLowerCase(Locale.ROOT)))) {
             logger.info("server mode: " + serverMode + ", no need to run job scheduler");
             return;
         }

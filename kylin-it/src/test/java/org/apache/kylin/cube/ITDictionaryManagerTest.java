@@ -21,9 +21,13 @@ package org.apache.kylin.cube;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Dictionary;
@@ -60,7 +64,8 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void basic() throws Exception {
         dictMgr = DictionaryManager.getInstance(getTestConfig());
-        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_desc");
+        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig())
+                .getCubeDesc("test_kylin_cube_without_slr_desc");
         TblColRef col = cubeDesc.findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
 
         MockDistinctColumnValuesProvider mockupData = new MockDistinctColumnValuesProvider("A", "B", "C");
@@ -105,7 +110,8 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
 
         public MockDistinctColumnValuesProvider(String... values) throws IOException {
             File tmpFile = File.createTempFile("MockDistinctColumnValuesProvider", ".txt");
-            PrintWriter out = new PrintWriter(tmpFile);
+            PrintWriter out = new PrintWriter(
+                    new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tmpFile), StandardCharsets.UTF_8)));
 
             set = Sets.newTreeSet();
             for (String value : values) {

@@ -181,7 +181,7 @@ public class JobService extends BasicService implements InitializingBean {
         case STOPPED:
             return ExecutableState.STOPPED;
         default:
-            throw new BadRequestException(String.format(msg.getILLEGAL_EXECUTABLE_STATE(), status));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getILLEGAL_EXECUTABLE_STATE(), status));
         }
     }
 
@@ -204,7 +204,7 @@ public class JobService extends BasicService implements InitializingBean {
         case ALL:
             return 0;
         default:
-            throw new BadRequestException(String.format(msg.getILLEGAL_TIME_FILTER(), timeFilter));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getILLEGAL_TIME_FILTER(), timeFilter));
         }
     }
 
@@ -224,7 +224,7 @@ public class JobService extends BasicService implements InitializingBean {
         Message msg = MsgPicker.getMsg();
 
         if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
-            throw new BadRequestException(String.format(msg.getBUILD_BROKEN_CUBE(), cube.getName()));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getBUILD_BROKEN_CUBE(), cube.getName()));
         }
 
         checkCubeDescSignature(cube);
@@ -252,7 +252,7 @@ public class JobService extends BasicService implements InitializingBean {
                 newSeg = getCubeManager().refreshSegment(cube, tsRange, segRange);
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter);
             } else {
-                throw new BadRequestException(String.format(msg.getINVALID_BUILD_TYPE(), buildType));
+                throw new BadRequestException(String.format(Locale.ROOT, msg.getINVALID_BUILD_TYPE(), buildType));
             }
 
             getExecutableManager().addJob(job);
@@ -289,7 +289,7 @@ public class JobService extends BasicService implements InitializingBean {
         Message msg = MsgPicker.getMsg();
 
         if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
-            throw new BadRequestException(String.format(msg.getBUILD_BROKEN_CUBE(), cube.getName()));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getBUILD_BROKEN_CUBE(), cube.getName()));
         }
 
         checkCubeDescSignature(cube);
@@ -414,7 +414,7 @@ public class JobService extends BasicService implements InitializingBean {
 
         if (!cube.getDescriptor().checkSignature())
             throw new BadRequestException(
-                    String.format(msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
+                    String.format(Locale.ROOT, msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
     }
 
     private void checkAllowBuilding(CubeInstance cube) {
@@ -476,7 +476,7 @@ public class JobService extends BasicService implements InitializingBean {
             return null;
         }
         if (!(job instanceof CubingJob)) {
-            throw new BadRequestException(String.format(msg.getILLEGAL_JOB_TYPE(), job.getId()));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getILLEGAL_JOB_TYPE(), job.getId()));
         }
 
         CubingJob cubeJob = (CubingJob) job;
@@ -536,7 +536,7 @@ public class JobService extends BasicService implements InitializingBean {
             return null;
         }
         if (!(job instanceof CheckpointExecutable)) {
-            throw new BadRequestException(String.format(msg.getILLEGAL_JOB_TYPE(), job.getId()));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getILLEGAL_JOB_TYPE(), job.getId()));
         }
 
         CheckpointExecutable checkpointExecutable = (CheckpointExecutable) job;
@@ -736,7 +736,7 @@ public class JobService extends BasicService implements InitializingBean {
             aclEvaluate.checkProjectOperationPermission(projectName);
         }
         // prepare time range
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
         calendar.setTime(new Date());
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
         long timeEndInMillis = Long.MAX_VALUE;
@@ -786,7 +786,8 @@ public class JobService extends BasicService implements InitializingBean {
                                     if (nameExactMatch)
                                         return executableCubeName.equalsIgnoreCase(cubeName);
                                     else
-                                        return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
+                                        return executableCubeName.toLowerCase(Locale.ROOT)
+                                                .contains(cubeName.toLowerCase(Locale.ROOT));
                                 } else {
                                     return false;
                                 }
@@ -835,7 +836,8 @@ public class JobService extends BasicService implements InitializingBean {
                                 if (nameExactMatch) {
                                     return cubeJob.getName().equalsIgnoreCase(jobName);
                                 } else {
-                                    return cubeJob.getName().toLowerCase().contains(jobName.toLowerCase());
+                                    return cubeJob.getName().toLowerCase(Locale.ROOT)
+                                            .contains(jobName.toLowerCase(Locale.ROOT));
                                 }
                             }
                         })));
@@ -846,7 +848,7 @@ public class JobService extends BasicService implements InitializingBean {
             final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
         // TODO: use cache of jobs for this method
         // prepare time range
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
         calendar.setTime(new Date());
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
         long timeEndInMillis = Long.MAX_VALUE;
@@ -884,7 +886,8 @@ public class JobService extends BasicService implements InitializingBean {
                                     if (nameExactMatch)
                                         return executableCubeName.equalsIgnoreCase(cubeName);
                                     else
-                                        return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
+                                        return executableCubeName.toLowerCase(Locale.ROOT)
+                                                .contains(cubeName.toLowerCase(Locale.ROOT));
                                 } else {
                                     return false;
                                 }
@@ -933,7 +936,8 @@ public class JobService extends BasicService implements InitializingBean {
                                 if (nameExactMatch) {
                                     return checkpointExecutable.getName().equalsIgnoreCase(jobName);
                                 } else {
-                                    return checkpointExecutable.getName().toLowerCase().contains(jobName.toLowerCase());
+                                    return checkpointExecutable.getName().toLowerCase(Locale.ROOT)
+                                            .contains(jobName.toLowerCase(Locale.ROOT));
                                 }
                             }
                         })));
@@ -1006,7 +1010,7 @@ public class JobService extends BasicService implements InitializingBean {
             aclEvaluate.checkProjectOperationPermission(projectName);
         }
         // prepare time range
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
         calendar.setTime(new Date());
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
         long timeEndInMillis = Long.MAX_VALUE;
@@ -1038,7 +1042,7 @@ public class JobService extends BasicService implements InitializingBean {
             aclEvaluate.checkProjectOperationPermission(projectName);
         }
         // prepare time range
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault(), Locale.ROOT);
         calendar.setTime(new Date());
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
         long timeEndInMillis = Long.MAX_VALUE;
@@ -1087,7 +1091,8 @@ public class JobService extends BasicService implements InitializingBean {
                                     if (nameExactMatch)
                                         return executableCubeName.equalsIgnoreCase(cubeName);
                                     else
-                                        return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
+                                        return executableCubeName.toLowerCase(Locale.ROOT)
+                                                .contains(cubeName.toLowerCase(Locale.ROOT));
                                 } else {
                                     return false;
                                 }
@@ -1133,7 +1138,8 @@ public class JobService extends BasicService implements InitializingBean {
                                 if (nameExactMatch) {
                                     return cubeJob.getName().equalsIgnoreCase(jobName);
                                 } else {
-                                    return cubeJob.getName().toLowerCase().contains(jobName.toLowerCase());
+                                    return cubeJob.getName().toLowerCase(Locale.ROOT)
+                                            .contains(jobName.toLowerCase(Locale.ROOT));
                                 }
                             }
                         })));
@@ -1160,7 +1166,8 @@ public class JobService extends BasicService implements InitializingBean {
                                     if (nameExactMatch)
                                         return executableCubeName.equalsIgnoreCase(cubeName);
                                     else
-                                        return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
+                                        return executableCubeName.toLowerCase(Locale.ROOT)
+                                                .contains(cubeName.toLowerCase(Locale.ROOT));
                                 } else {
                                     return false;
                                 }
@@ -1206,7 +1213,8 @@ public class JobService extends BasicService implements InitializingBean {
                                 if (nameExactMatch) {
                                     return checkpointExecutable.getName().equalsIgnoreCase(jobName);
                                 } else {
-                                    return checkpointExecutable.getName().toLowerCase().contains(jobName.toLowerCase());
+                                    return checkpointExecutable.getName().toLowerCase(Locale.ROOT)
+                                            .contains(jobName.toLowerCase(Locale.ROOT));
                                 }
                             }
                         })));

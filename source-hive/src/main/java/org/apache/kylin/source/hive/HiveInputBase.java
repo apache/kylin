@@ -20,6 +20,7 @@ package org.apache.kylin.source.hive;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -54,7 +55,7 @@ public class HiveInputBase {
         String tableName = (table.isView()) ? table.getMaterializedName(uuid) : table.getName();
         String database = (table.isView()) ? KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable()
                 : table.getDatabase();
-        return String.format("%s.%s", database, tableName).toUpperCase();
+        return String.format(Locale.ROOT, "%s.%s", database, tableName).toUpperCase(Locale.ROOT);
     }
 
     protected void addStepPhase1_DoCreateFlatTable(DefaultChainedExecutable jobFlow, String hdfsWorkingDir,

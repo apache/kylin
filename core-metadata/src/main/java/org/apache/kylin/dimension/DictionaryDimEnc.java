@@ -23,6 +23,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.Locale;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Dictionary;
@@ -100,7 +101,8 @@ public class DictionaryDimEnc extends DimensionEncoding implements Serializable 
             for (int i = outputOffset; i < outputOffset + fixedLen; i++) {
                 output[i] = defaultByte;
             }
-            logger.error("Can't translate value " + valueStr + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value " + String.format("\\x%02X", defaultByte));
+            logger.error("Can't translate value " + valueStr + " to dictionary ID, roundingFlag " + roundingFlag + "."
+                    + " Using default value " + String.format(Locale.ROOT, "\\x%02X", defaultByte));
         }
     }
 

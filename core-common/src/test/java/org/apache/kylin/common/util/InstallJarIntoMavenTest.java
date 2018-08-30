@@ -19,8 +19,12 @@
 package org.apache.kylin.common.util;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,7 +39,8 @@ public class InstallJarIntoMavenTest {
         File folder = new File("/export/home/b_kylin/tmp");
         File out = new File("/export/home/b_kylin/tmp/out.sh");
         out.createNewFile();
-        FileWriter fw = new FileWriter(out);
+
+        Writer fw = new OutputStreamWriter(new FileOutputStream(out), StandardCharsets.UTF_8);
 
         for (File file : folder.listFiles()) {
             String name = file.getName();
@@ -53,7 +58,8 @@ public class InstallJarIntoMavenTest {
             String artifactId = name.substring(0, match.start());
             String version = name.substring(match.start() + 1, lastDot);
 
-            fw.write(String.format("mvn install:install-file -Dfile=%s -DgroupId=%s -DartifactId=%s -Dversion=%s -Dpackaging=jar", name, "org.apache." + groupId, artifactId, version));
+            fw.write(String.format(Locale.ROOT, "mvn install:install-file -Dfile=%s -DgroupId=%s -DartifactId=%s "
+                    + "-Dversion=%s " + "-Dpackaging=jar", name, "org.apache." + groupId, artifactId, version));
             fw.write("\n");
         }
         fw.close();

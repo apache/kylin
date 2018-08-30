@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
@@ -70,7 +71,8 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
     public void beforeTest() {
         staticCreateTestMetadata();
         KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.append-entry-size", "50000");
-        BASE_DIR = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict" + RESOURCE_DIR + "/";
+        BASE_DIR = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict" + RESOURCE_DIR
+                + "/";
         LOCAL_BASE_DIR = getLocalWorkingDirectory() + "/resources/GlobalDict" + RESOURCE_DIR + "/";
     }
 
@@ -88,11 +90,19 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         }
     }
 
-    private static final String[] words = new String[]{"paint", "par", "part", "parts", "partition", "partitions", "party", "partie", "parties", "patient", "taste", "tar", "trie", "try", "tries", "字典", "字典树", "字母", // non-ascii characters
+    private static final String[] words = new String[] { "paint", "par", "part", "parts", "partition", "partitions",
+            "party", "partie", "parties", "patient", "taste", "tar", "trie", "try", "tries", "字典", "字典树", "字母", // non-ascii characters
             "", // empty
-            "paiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii", "paiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiipaiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
-            "paintjkjdfklajkdljfkdsajklfjklsadjkjekjrklewjrklewjklrjklewjkljkljkljkljweklrjewkljrklewjrlkjewkljrkljkljkjlkjjkljkljkljkljlkjlkjlkjljdfadfads" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
-                    + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk" + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk",
+            "paiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+            "paiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiipaiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+            "paintjkjdfklajkdljfkdsajklfjklsadjkjekjrklewjrklewjklrjklewjkljkljkljkljweklrjewkljrklewjrlkjewkljrkljkljkjlkjjkljkljkljkljlkjlkjlkjljdfadfads"
+                    + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                    + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                    + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                    + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                    + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                    + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk"
+                    + "dddddddddddddddddddddddddddddddddddddddddddddddddkfjadslkfjdsakljflksadjklfjklsjfkljwelkrjewkljrklewjklrjelkwjrklewjrlkjwkljerklkljlkjrlkwejrk",
             "paint", "tar", "try", // some dup
     };
 
@@ -172,7 +182,8 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         dict.dump(System.out);
     }
 
-    private void testStringDictAppend(ArrayList<String> list, ArrayList<String> notfound, boolean shuffleList) throws IOException {
+    private void testStringDictAppend(ArrayList<String> list, ArrayList<String> notfound, boolean shuffleList)
+            throws IOException {
         Random rnd = new Random(System.currentTimeMillis());
         ArrayList<String> strList = new ArrayList<String>();
         strList.addAll(list);
@@ -198,8 +209,10 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
             String str = strList.get(checkIndex);
             byte[] bytes = converter.convertToBytes(str);
             int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
-            assertNotEquals(String.format("Value %s not exist", str), -1, id);
-            assertFalse(String.format("Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)), checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
+            assertNotEquals(String.format(Locale.ROOT, "Value %s not exist", str), -1, id);
+            assertFalse(
+                    String.format(Locale.ROOT, "Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)),
+                    checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
             checkMap.put(id, str);
         }
 
@@ -218,12 +231,13 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
             String str = strList.get(checkIndex);
             byte[] bytes = converter.convertToBytes(str);
             int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
-            assertNotEquals(String.format("Value %s not exist", str), -1, id);
+            assertNotEquals(String.format(Locale.ROOT, "Value %s not exist", str), -1, id);
             if (checkIndex < firstAppend) {
                 assertEquals("Except id " + id + " for " + str + " but " + checkMap.get(id), str, checkMap.get(id));
             } else {
                 // check second append str, should be new id
-                assertFalse(String.format("Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)), checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
+                assertFalse(String.format(Locale.ROOT, "Id %d for %s should be empty, but is %s", id, str,
+                        checkMap.get(id)), checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
                 checkMap.put(id, str);
             }
         }
@@ -243,12 +257,13 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
             String str = strList.get(checkIndex);
             byte[] bytes = converter.convertToBytes(str);
             int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
-            assertNotEquals(String.format("Value %s not exist", str), -1, id);
+            assertNotEquals(String.format(Locale.ROOT, "Value %s not exist", str), -1, id);
             if (checkIndex < secondAppend) {
                 assertEquals("Except id " + id + " for " + str + " but " + checkMap.get(id), str, checkMap.get(id));
             } else {
                 // check third append str, should be new id
-                assertFalse(String.format("Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)), checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
+                assertFalse(String.format(Locale.ROOT, "Id %d for %s should be empty, but is %s", id, str,
+                        checkMap.get(id)), checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
                 checkMap.put(id, str);
             }
         }
@@ -264,12 +279,13 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         for (String str : strList) {
             byte[] bytes = converter.convertToBytes(str);
             int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
-            assertNotEquals(String.format("Value %s not exist", str), -1, id);
+            assertNotEquals(String.format(Locale.ROOT, "Value %s not exist", str), -1, id);
             assertEquals("Except id " + id + " for " + str + " but " + checkMap.get(id), str, checkMap.get(id));
         }
     }
 
-    private static AppendTrieDictionary<String> testSerialize(AppendTrieDictionary<String> dict, BytesConverter converter) {
+    private static AppendTrieDictionary<String> testSerialize(AppendTrieDictionary<String> dict,
+            BytesConverter converter) {
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             DataOutputStream dataout = new DataOutputStream(bout);
@@ -347,14 +363,14 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
     public void testSerialize() throws IOException {
         AppendTrieDictionaryBuilder builder = createBuilder();
         AppendTrieDictionary dict = builder.build(0);
-        
+
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         DataOutputStream dataout = new DataOutputStream(bout);
         dict.write(dataout);
         dataout.close();
         ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
         DataInputStream datain = new DataInputStream(bin);
-        
+
         assertNull(new Path(datain.readUTF()).toUri().getScheme());
         datain.close();
     }
@@ -369,7 +385,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         AppendTrieDictionary dict = builder.build(0);
         TreeMap checkMap = new TreeMap();
         BytesConverter converter = new StringBytesConverter();
-        for (String str: strList) {
+        for (String str : strList) {
             byte[] bytes = converter.convertToBytes(str);
             int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
             checkMap.put(id, str);
@@ -388,7 +404,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         for (String str : strList) {
             byte[] bytes = converter.convertToBytes(str);
             int id = r.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
-            assertNotEquals(String.format("Value %s not exist", str), -1, id);
+            assertNotEquals(String.format(Locale.ROOT, "Value %s not exist", str), -1, id);
             assertEquals("Except id " + id + " for " + str + " but " + checkMap.get(id), str, checkMap.get(id));
         }
     }
@@ -566,7 +582,8 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         Path v2IndexFile = new Path(versionPath, V2_INDEX_NAME);
 
         fs.delete(v2IndexFile, true);
-        GlobalDictHDFSStore.IndexFormat indexFormatV1 = new GlobalDictHDFSStore.IndexFormatV1(fs, HadoopUtil.getCurrentConfiguration());
+        GlobalDictHDFSStore.IndexFormat indexFormatV1 = new GlobalDictHDFSStore.IndexFormatV1(fs,
+                HadoopUtil.getCurrentConfiguration());
         indexFormatV1.writeIndexFile(versionPath, metadata);
 
         //convert v2 fileName format to v1 fileName format

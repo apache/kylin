@@ -18,6 +18,8 @@
 
 package org.apache.kylin.cube.model;
 
+import java.util.Locale;
+
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -45,11 +47,11 @@ public class DictionaryDesc implements java.io.Serializable {
     void init(CubeDesc cubeDesc) {
         DataModelDesc model = cubeDesc.getModel();
 
-        column = column.toUpperCase();
+        column = column.toUpperCase(Locale.ROOT);
         colRef = model.findColumn(column);
 
         if (reuseColumn != null) {
-            reuseColumn = reuseColumn.toUpperCase();
+            reuseColumn = reuseColumn.toUpperCase(Locale.ROOT);
             reuseColRef = model.findColumn(reuseColumn);
         }
     }

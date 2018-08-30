@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -97,8 +98,10 @@ public class ModelService extends BasicService {
         List<DataModelDesc> filterModels = new ArrayList<DataModelDesc>();
         for (DataModelDesc modelDesc : models) {
             boolean isModelMatch = (null == modelName) || modelName.length() == 0
-                    || (exactMatch && modelDesc.getName().toLowerCase().equals(modelName.toLowerCase()))
-                    || (!exactMatch && modelDesc.getName().toLowerCase().contains(modelName.toLowerCase()));
+                    || (exactMatch
+                            && modelDesc.getName().toLowerCase(Locale.ROOT).equals(modelName.toLowerCase(Locale.ROOT)))
+                    || (!exactMatch && modelDesc.getName().toLowerCase(Locale.ROOT)
+                            .contains(modelName.toLowerCase(Locale.ROOT)));
 
             if (isModelMatch) {
                 filterModels.add(modelDesc);
@@ -130,7 +133,7 @@ public class ModelService extends BasicService {
         aclEvaluate.checkProjectWritePermission(projectName);
         Message msg = MsgPicker.getMsg();
         if (getDataModelManager().getDataModelDesc(desc.getName()) != null) {
-            throw new BadRequestException(String.format(msg.getDUPLICATE_MODEL_NAME(), desc.getName()));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getDUPLICATE_MODEL_NAME(), desc.getName()));
         }
 
         String factTableName = desc.getRootFactTableName();
@@ -159,7 +162,8 @@ public class ModelService extends BasicService {
         List<CubeDesc> cubeDescs = getCubeDescManager().listAllDesc();
         for (CubeDesc cubeDesc : cubeDescs) {
             if (cubeDesc.getModelName().equals(desc.getName())) {
-                throw new BadRequestException(String.format(msg.getDROP_REFERENCED_MODEL(), cubeDesc.getName()));
+                throw new BadRequestException(
+                        String.format(Locale.ROOT, msg.getDROP_REFERENCED_MODEL(), cubeDesc.getName()));
             }
         }
 
@@ -338,7 +342,7 @@ public class ModelService extends BasicService {
         }
         if (!ValidateUtil.isAlphanumericUnderscore(modelName)) {
             logger.info("Invalid model name {}, only letters, numbers and underscore supported.", modelDesc.getName());
-            throw new BadRequestException(String.format(msg.getINVALID_MODEL_NAME(), modelName));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getINVALID_MODEL_NAME(), modelName));
         }
     }
 
@@ -368,7 +372,7 @@ public class ModelService extends BasicService {
         }
 
         if (!modelDesc.getError().isEmpty()) {
-            throw new BadRequestException(String.format(msg.getBROKEN_MODEL_DESC(), modelDesc.getName()));
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getBROKEN_MODEL_DESC(), modelDesc.getName()));
         }
 
         return modelDesc;

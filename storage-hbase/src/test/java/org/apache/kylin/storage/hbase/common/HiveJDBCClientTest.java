@@ -19,8 +19,11 @@
 package org.apache.kylin.storage.hbase.common;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -53,9 +56,9 @@ public class HiveJDBCClientTest {
 
         if (!testFile.exists()) {
 
-            FileWriter writer;
+            Writer writer;
             try {
-                writer = new FileWriter(testFile);
+                writer = new OutputStreamWriter(new FileOutputStream(testFile), StandardCharsets.UTF_8);
                 writer.write("1 a\n");
                 writer.write("2 b\n");
 
@@ -86,7 +89,8 @@ public class HiveJDBCClientTest {
         Statement stmt = con.createStatement();
         String tableName = "testHiveDriverTable";
         stmt.execute("drop table if exists " + tableName);
-        stmt.execute("create table " + tableName + " (key int, value string) row format delimited fields terminated by ' '");
+        stmt.execute(
+                "create table " + tableName + " (key int, value string) row format delimited fields terminated by ' '");
         // show tables
         String sql = "show tables '" + tableName + "'";
         System.out.println("Running: " + sql);

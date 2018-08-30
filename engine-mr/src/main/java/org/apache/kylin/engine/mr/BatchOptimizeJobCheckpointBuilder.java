@@ -21,6 +21,7 @@ package org.apache.kylin.engine.mr;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
@@ -35,7 +36,7 @@ import com.google.common.base.Preconditions;
 
 public class BatchOptimizeJobCheckpointBuilder {
 
-    protected static SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
+    protected static SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss", Locale.ROOT);
 
     final protected CubeInstance cube;
     final protected String submitter;

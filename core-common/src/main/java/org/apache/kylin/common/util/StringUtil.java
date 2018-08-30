@@ -21,6 +21,7 @@ package org.apache.kylin.common.util;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import java.util.Locale;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -79,7 +80,7 @@ public class StringUtil {
         if (source != null) {
             for (int i = 0; i < source.length; i++) {
                 if (source[i] != null) {
-                    target[i] = source[i].toUpperCase();
+                    target[i] = source[i].toUpperCase(Locale.ROOT);
                 }
             }
         }

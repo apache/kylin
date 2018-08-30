@@ -42,7 +42,7 @@ public class CubeInstanceCreator {
         CubeManager.CUBE_SERIALIZER.serialize(cubeInstance, dout);
         dout.close();
         buf.close();
-        System.out.println(buf.toString());
+        System.out.println(buf.toString("UTF-8"));
     }
 
     public static CubeInstance generateKylinCubeInstanceForMetricsQuery(String owner, KylinConfig config,

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -143,10 +144,11 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
                 jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId(), tableLocation, seg));
                 intermediatePaths.add(tableLocation);
             } else {
-                final String mockFactTableName = MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + cubeName.toLowerCase()
-                        + "_" + seg.getUuid().replaceAll("-", "_") + "_fact";
+                final String mockFactTableName = MetadataConstants.KYLIN_INTERMEDIATE_PREFIX
+                        + cubeName.toLowerCase(Locale.ROOT) + "_" + seg.getUuid().replaceAll("-", "_") + "_fact";
                 jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId(), baseLocation + "/" + mockFactTableName, seg));
-                jobFlow.addTask(createFlatTable(hiveTableDatabase, mockFactTableName, baseLocation, cubeName, cubeDesc, flatDesc, intermediateTables, intermediatePaths));
+                jobFlow.addTask(createFlatTable(hiveTableDatabase, mockFactTableName, baseLocation, cubeName, cubeDesc,
+                        flatDesc, intermediateTables, intermediatePaths));
             }
         }
 

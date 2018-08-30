@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metrics.property;
 
+import java.util.Locale;
+
 import com.google.common.base.Strings;
 
 public enum QueryCubePropertyEnum {
@@ -39,7 +41,7 @@ public enum QueryCubePropertyEnum {
             return null;
         }
         for (QueryCubePropertyEnum property : QueryCubePropertyEnum.values()) {
-            if (property.propertyName.equals(name.toUpperCase())) {
+            if (property.propertyName.equals(name.toUpperCase(Locale.ROOT))) {
                 return property;
             }
         }

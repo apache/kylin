@@ -54,7 +54,7 @@ public class ModelCreator {
         MODELDESC_SERIALIZER.serialize(kylinModel, dout);
         dout.close();
         buf.close();
-        System.out.println(buf.toString());
+        System.out.println(buf.toString("UTF-8"));
     }
 
     public static PartitionDesc getPartitionDesc(String tableName) {

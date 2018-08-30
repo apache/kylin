@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.model.tool;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -69,7 +70,7 @@ public class CalciteParser {
         //n = 1 is getting column
         //n = 2 is getting table's alias, if has.
         //n = 3 is getting database name, if has.
-        return id.names.get(id.names.size() - n).replace("\"", "").toUpperCase();
+        return id.names.get(id.names.size() - n).replace("\"", "").toUpperCase(Locale.ROOT);
     }
 
     public static void ensureNoAliasInExpr(String expr) {

@@ -20,6 +20,7 @@ package org.apache.kylin.provision;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 
@@ -38,7 +39,8 @@ import kafka.server.KafkaServerStartable;
 import kafka.utils.ZkUtils;
 
 public class MockKafka {
-    private static Properties createProperties(ZkConnection zkServerConnection, String logDir, String port, String brokerId) {
+    private static Properties createProperties(ZkConnection zkServerConnection, String logDir, String port,
+            String brokerId) {
         Properties properties = new Properties();
         properties.put("port", port);
         properties.put("broker.id", brokerId);
@@ -59,7 +61,8 @@ public class MockKafka {
     private ZkConnection zkConnection;
 
     public MockKafka(ZkConnection zkServerConnection) {
-        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + RandomUtil.randomUUID().toString(), "9092", "1");
+        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + RandomUtil.randomUUID().toString(),
+                "9092", "1");
         start();
     }
 
@@ -69,14 +72,16 @@ public class MockKafka {
     }
 
     public MockKafka(ZkConnection zkServerConnection, int port, int brokerId) {
-        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + RandomUtil.randomUUID().toString(), String.valueOf(port), String.valueOf(brokerId));
+        this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + RandomUtil.randomUUID().toString(),
+                String.valueOf(port), String.valueOf(brokerId));
         //start();
     }
 
     private MockKafka(ZkConnection zkServerConnection, String logDir, String port, String brokerId) {
         this(createProperties(zkServerConnection, logDir, port, brokerId));
         this.zkConnection = zkServerConnection;
-        System.out.println(String.format("Kafka %s:%s dir:%s", kafkaServer.serverConfig().brokerId(), kafkaServer.serverConfig().port(), kafkaServer.serverConfig().logDirs()));
+        System.out.println(String.format(Locale.ROOT, "Kafka %s:%s dir:%s", kafkaServer.serverConfig().brokerId(),
+                kafkaServer.serverConfig().port(), kafkaServer.serverConfig().logDirs()));
     }
 
     public void createTopic(String topic, int partition, int replication) {
