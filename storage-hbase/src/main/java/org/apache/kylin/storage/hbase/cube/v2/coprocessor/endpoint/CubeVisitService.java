@@ -24,6 +24,7 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -31,12 +32,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
-import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
 import org.apache.hadoop.hbase.DoNotRetryIOException;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorException;
-import org.apache.hadoop.hbase.coprocessor.CoprocessorService;
+import org.apache.hadoop.hbase.coprocessor.RegionCoprocessor;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
@@ -78,7 +78,7 @@ import com.sun.management.OperatingSystemMXBean;
 
 @SuppressWarnings("unused")
 //used in hbase endpoint
-public class CubeVisitService extends CubeVisitProtos.CubeVisitService implements Coprocessor, CoprocessorService {
+public class CubeVisitService extends CubeVisitProtos.CubeVisitService implements RegionCoprocessor {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeVisitService.class);
     //TODO limit memory footprint
@@ -448,7 +448,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
     }
 
     @Override
-    public Service getService() {
-        return this;
+    public Iterable<Service> getServices() {
+        return Collections.singleton(this);
     }
 }
