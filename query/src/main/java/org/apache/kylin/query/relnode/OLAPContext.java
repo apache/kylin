@@ -313,7 +313,7 @@ public class OLAPContext {
                     String str = value.toString();
                     if (compFilter.getColumn().getType().isDateTimeFamily())
                         str = String.valueOf(DateFormat.stringToMillis(str));
-
+                    compFilter.clearPreviousVariableValues(variable);
                     compFilter.bindVariable(variable, str);
                 }
 
