@@ -34,13 +34,25 @@ kylin.rest.servers=host1:7070,host2:7070
 ```
 
  *  `kylin.server.mode`
-	确保只有一个实例的 `kylin.server.mode` 设置为 "all" 或 "job", 其余的应该为 "query"
+
+
+默认情况下，只有一个实例的 `kylin.server.mode` 设置为 "all" 或 "job", 其余的为 "query"。
 
 ```
 kylin.server.mode=all
 ```
 
+也即默认情况下，只有一个节点用于调度构建任务的执行。如果您需要配置多个节点同时执行任务构建，以满足高可用和高并发的需求，请参考 "启用多个任务引擎" 的内容，在 [高级设置](advance_settings.html) 页.
+
 ### 安装负载均衡器
 
 为确保 Kylin 服务器的高可用性, 您需要在这些服务器之前安装负载均衡器, 让其将传入的请求路由至集群。客户端和负载均衡器通信代替和特定的 Kylin 实例通信。安装负载均衡器超出了范围，您可以选择像 Nginx, F5 或 cloud LB 服务这样的实现。
 	
+### 读／写分离的双集群配置
+
+Kylin 可以连接两个集群以获得更好的稳定性和性能：
+
+ * 一个 Hadoop 集群用作 Cube 构建; 这个集群可以是一个大的、与其它应用共享的集群；
+ * 一个 HBase 集群用作 SQL 查询；通常这个集群是专门为 Kylin 配置的，节点数不用像 Hadoop 集群那么多。HBase 的配置可以更加针对 Kylin Cube 只读的特性而进行优化。  
+
+这种部署策略已经被很多大企业所采纳并得到验证。它是迄今我们知道适合生产环境的最佳部署方案。关于如何配置这种架构，请参考 [Deploy Apache Kylin with Standalone HBase Cluster](/blog/2016/06/10/standalone-hbase-cluster/)

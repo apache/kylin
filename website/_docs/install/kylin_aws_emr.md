@@ -145,6 +145,22 @@ Don't forget to enable the 7070 port access in the security group for EMR master
 
 Build the sample Cube, and then run queries when the Cube is ready. You can browse S3 to see whether the data is safely persisted.
 
+### Spark Configuration
+
+EMR's Spark version may be incompatible with Kylin, so you couldn't directly use EMR's Spark. You need to set "SPARK_HOME" environment variable to Kylin's Spark folder (KYLIN_HOME/spark) before start Kylin. To access files on S3 or EMRFS, we need to copy EMR's implementation jars to Spark.
+
+```
+export SPARK_HOME=$KYLIN_HOME/spark
+
+cp /usr/lib/hadoop-lzo/lib/*.jar $KYLIN_HOME/spark/jars/
+cp /usr/share/aws/emr/emrfs/lib/emrfs-hadoop-assembly-*.jar $KYLIN_HOME/spark/jars/
+cp /usr/lib/hadoop/hadoop-common*-amzn-*.jar $KYLIN_HOME/spark/jars/
+
+$KYLIN_HOME/bin/kylin.sh start
+```
+
+You can also copy EMR's spark-defauts configuration to Kylin's spark for a better utilization of the cluster resources.
+
 ### Shut down EMR Cluster
 
 Before you shut down EMR cluster, we suggest you take a backup for Kylin metadata and upload it to S3.

@@ -87,7 +87,7 @@ To enable the distributed job scheduler, you need to set or update the configs i
 
 ```
 kylin.job.scheduler.default=2
-kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock
+kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
 ```
 Please add all job servers and query servers to the `kylin.server.cluster-servers`.
 

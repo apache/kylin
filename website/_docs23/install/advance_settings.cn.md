@@ -87,7 +87,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX:MaxPermSize=128M -v
 
 ```
 kylin.job.scheduler.default=2
-kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock
+kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
 ```
 并记得将所有任务和查询节点的地址注册到 `kylin.server.cluster-servers`.
 

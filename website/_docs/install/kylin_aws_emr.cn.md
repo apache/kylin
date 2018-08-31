@@ -145,6 +145,22 @@ $KYLIN_HOME/bin/kylin.sh start
 
 Build 同一个 Cube，当 Cube 准备好后运行查询。您可以浏览 S3 查看数据是否安全的持久化了。
 
+### Spark 配置
+
+EMR 的 Spark 版本很可能与 Kylin 编译的版本不一致，因此您通常不能直接使用 EMR 打包的 Spark 用于 Kylin 的任务。 您需要在启动 Kylin 之前，将 "SPARK_HOME" 环境变量设置指向 Kylin 的 Spark 子目录 (KYLIN_HOME/spark) 。此外，为了从 Spark 中访问 S3 或 EMRFS 上的文件，您需要将 EMR 的扩展类从 EMR 的目录拷贝到 Kylin 的 Spark 下。
+
+```
+export SPARK_HOME=$KYLIN_HOME/spark
+
+cp /usr/lib/hadoop-lzo/lib/*.jar $KYLIN_HOME/spark/jars/
+cp /usr/share/aws/emr/emrfs/lib/emrfs-hadoop-assembly-*.jar $KYLIN_HOME/spark/jars/
+cp /usr/lib/hadoop/hadoop-common*-amzn-*.jar $KYLIN_HOME/spark/jars/
+
+$KYLIN_HOME/bin/kylin.sh start
+```
+
+您也可以参考 EMR Spark 的 spark-defauts 来设置 Kylin 的 Spark 配置，以获得更好的对集群资源的适配。
+
 ### 关闭 EMR 集群
 
 关闭 EMR 集群前，我们建议您为 Kylin metadata 做备份且将其上传到 S3。
