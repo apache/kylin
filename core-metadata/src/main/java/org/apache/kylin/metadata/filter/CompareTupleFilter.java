@@ -135,6 +135,17 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
         this.firstCondValue = this.conditionValues.iterator().next();
     }
 
+    public void clearPreviousVariableValues(String variable) {
+        Object previousValue = dynamicVariables.get(variable);
+        if (previousValue == null) {
+            return;
+        }
+        if (this.firstCondValue == previousValue) {
+            this.firstCondValue = null;
+        }
+        this.conditionValues.remove(previousValue);
+    }
+
     @Override
     public TupleFilter copy() {
         return new CompareTupleFilter(this);
