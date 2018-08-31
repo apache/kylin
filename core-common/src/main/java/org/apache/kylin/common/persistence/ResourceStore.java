@@ -231,6 +231,11 @@ abstract public class ResourceStore {
      */
     abstract protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException;
 
+    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive,
+                                                    boolean isAllowBroken) throws IOException {
+        return getAllResourcesImpl(folderPath, timeStart, timeEndExclusive);
+    }
+
     /**
      * returns null if not exists
      */
