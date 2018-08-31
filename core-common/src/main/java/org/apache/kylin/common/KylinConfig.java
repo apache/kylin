@@ -534,4 +534,26 @@ public class KylinConfig extends KylinConfigBase {
             return this.base() == ((KylinConfig) another).base();
     }
 
+    public String getMetadataDialect() {
+        return SYS_ENV_INSTANCE.getOptional("kylin.metadata.jdbc.dialect", "mysql");
+    }
+
+    public boolean isJsonAlwaysSmallCell() {
+        return Boolean.valueOf(SYS_ENV_INSTANCE.getOptional("kylin.metadata.jdbc.json-always-small-cell", "true"));
+    }
+
+    public int getSmallCellMetadataWarningThreshold() {
+        return Integer.parseInt(SYS_ENV_INSTANCE.getOptional("kylin.metadata.jdbc.small-cell-meta-size-warning-threshold",
+                String.valueOf(100 << 20)));
+    }
+
+    public int getSmallCellMetadataErrorThreshold() {
+        return Integer.parseInt(
+                SYS_ENV_INSTANCE.getOptional("kylin.metadata.jdbc.small-cell-meta-size-error-threshold", String.valueOf(1 << 30)));
+    }
+
+    public int getJdbcResourceStoreMaxCellSize() {
+        return Integer.parseInt(SYS_ENV_INSTANCE.getOptional("kylin.metadata.jdbc.max-cell-size", "262144")); //256k
+    }
+
 }
