@@ -18,12 +18,6 @@
 
 package org.apache.kylin.common.persistence;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import org.apache.commons.io.IOUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.StorageURL;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -31,11 +25,18 @@ import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+
 public class JDBCResourceStore extends ResourceStore {
 
     private static final String JDBC_SCHEME = "jdbc";
 
-    private String[] tablesName = new String[2];
+    private String metadataIdentifier;
 
     private JDBCResourceDAO resourceDAO;
 
@@ -43,9 +44,8 @@ public class JDBCResourceStore extends ResourceStore {
         super(kylinConfig);
         StorageURL metadataUrl = kylinConfig.getMetadataUrl();
         checkScheme(metadataUrl);
-        tablesName[0] = metadataUrl.getIdentifier();
-        tablesName[1] = metadataUrl.getIdentifier() + "1";
-        this.resourceDAO = new JDBCResourceDAO(kylinConfig, tablesName);
+        metadataIdentifier = metadataUrl.getIdentifier();
+        this.resourceDAO = new JDBCResourceDAO(kylinConfig, metadataUrl.getIdentifier());
     }
 
     @Override
@@ -106,7 +106,7 @@ public class JDBCResourceStore extends ResourceStore {
 
     @Override
     protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive,
-                                                    final boolean isAllowBroken) throws IOException {
+            final boolean isAllowBroken) throws IOException {
         final List<RawResource> result = Lists.newArrayList();
         try {
             List<JDBCResource> allResource = resourceDAO.getAllResource(makeFolderPath(folderPath), timeStart,
@@ -155,7 +155,7 @@ public class JDBCResourceStore extends ResourceStore {
 
     @Override
     protected String getReadableResourcePathImpl(String resPath) {
-        return tablesName + "(key='" + resPath + "')@" + kylinConfig.getMetadataUrl();
+        return metadataIdentifier + "(key='" + resPath + "')@" + kylinConfig.getMetadataUrl();
     }
 
     private String makeFolderPath(String folderPath) {

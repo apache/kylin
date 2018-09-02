@@ -88,9 +88,11 @@ public class ITJDBCResourceStoreTest extends HBaseMetadataTestCase {
             connectionManager = JDBCConnectionManager.getConnectionManager();
             conn = connectionManager.getConn();
             statement = conn.createStatement();
-            String sql = new MessageFormat(sqlQueryFormat.getTestDropSql(), Locale.ROOT).format(mainIdentifier, new StringBuffer(), new FieldPosition(0)).toString();
+            String sql = new MessageFormat(sqlQueryFormat.getTestDropSql(), Locale.ROOT)
+                    .format(mainIdentifier, new StringBuffer(), new FieldPosition(0)).toString();
             statement.executeUpdate(sql);
-            sql = new MessageFormat(sqlQueryFormat.getTestDropSql(), Locale.ROOT).format(copyIdentifier, new StringBuffer(), new FieldPosition(0)).toString();
+            sql = new MessageFormat(sqlQueryFormat.getTestDropSql(), Locale.ROOT)
+                    .format(copyIdentifier, new StringBuffer(), new FieldPosition(0)).toString();
             statement.executeUpdate(sql);
             jdbcConnectable = true;
             ResourceTool.copy(configBackup, kylinConfig);
@@ -138,13 +140,6 @@ public class ITJDBCResourceStoreTest extends HBaseMetadataTestCase {
             JDBCConnectionManager.closeQuietly(conn);
         }
     }
-
-    //   Support other db except mysql
-    //   @Test
-    //    public void testGetDbcpProperties() {
-    //        Properties prop = JDBCConnectionManager.getConnectionManager().getDbcpProperties();
-    //        assertEquals("com.mysql.jdbc.Driver", prop.get("driverClassName"));
-    //    }
 
     @Test
     public void testMsgFormatter() {

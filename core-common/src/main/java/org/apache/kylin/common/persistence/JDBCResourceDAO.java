@@ -18,17 +18,6 @@
 
 package org.apache.kylin.common.persistence;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -45,6 +34,18 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TreeSet;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+
 public class JDBCResourceDAO {
 
     private static Logger logger = LoggerFactory.getLogger(JDBCResourceDAO.class);
@@ -59,21 +60,30 @@ public class JDBCResourceDAO {
 
     private JDBCSqlQueryFormat jdbcSqlQueryFormat;
 
-    private String[] tablesName;
+    private String[] tableNames = new String[2];
 
     private KylinConfig kylinConfig;
 
     // For test
     private long queriedSqlNum = 0;
 
-    public JDBCResourceDAO(KylinConfig kylinConfig, String[] tablesName) throws SQLException {
+    private FileSystem redirectFileSystem;
+
+    public JDBCResourceDAO(KylinConfig kylinConfig, String metadataIdentifier) throws SQLException {
         this.kylinConfig = kylinConfig;
         this.connectionManager = JDBCConnectionManager.getConnectionManager();
-        this.jdbcSqlQueryFormat = JDBCSqlQueryFormatProvider.createJDBCSqlQueriesFormat(kylinConfig.getMetadataDialect());
-        this.tablesName = tablesName;
-        for (int i = 0; i < tablesName.length; i++) {
-            createTableIfNeeded(tablesName[i]);
-            createIndex("IDX_" + META_TABLE_TS, tablesName[i], META_TABLE_TS);
+        this.jdbcSqlQueryFormat = JDBCSqlQueryFormatProvider
+                .createJDBCSqlQueriesFormat(kylinConfig.getMetadataDialect());
+        this.tableNames[0] = metadataIdentifier;
+        this.tableNames[1] = metadataIdentifier + "_log";
+        for (int i = 0; i < tableNames.length; i++) {
+            createTableIfNeeded(tableNames[i]);
+            createIndex("IDX_" + META_TABLE_TS, tableNames[i], META_TABLE_TS);
+        }
+        try {
+            redirectFileSystem = HadoopUtil.getReadFileSystem();
+        } catch (IOException e) {
+            throw new SQLException(e);
         }
     }
 
@@ -87,7 +97,7 @@ public class JDBCResourceDAO {
     }
 
     public JDBCResource getResource(final String resourcePath, final boolean fetchContent, final boolean fetchTimestamp,
-                                    final boolean isAllowBroken) throws SQLException {
+            final boolean isAllowBroken) throws SQLException {
         final JDBCResource resource = new JDBCResource();
         logger.trace("getResource method. resourcePath : {} , fetchConetent : {} , fetch TS : {}", resourcePath,
                 fetchContent, fetchTimestamp);
@@ -162,7 +172,7 @@ public class JDBCResourceDAO {
     }
 
     public List<JDBCResource> getAllResource(final String folderPath, final long timeStart, final long timeEndExclusive,
-                                             final boolean isAllowBroken) throws SQLException {
+            final boolean isAllowBroken) throws SQLException {
         final List<JDBCResource> allResource = Lists.newArrayList();
         executeSql(new SqlOperation() {
             @Override
@@ -236,12 +246,9 @@ public class JDBCResourceDAO {
     }
 
     private void deleteHDFSResourceIfExist(String resourcePath) throws IOException {
-
         Path redirectPath = bigCellHDFSPath(resourcePath);
-        FileSystem fileSystem = HadoopUtil.getFileSystem(redirectPath);
-
-        if (fileSystem.exists(redirectPath)) {
-            fileSystem.delete(redirectPath, true);
+        if (redirectFileSystem.exists(redirectPath)) {
+            redirectFileSystem.delete(redirectPath, true);
         }
 
     }
@@ -480,79 +487,104 @@ public class JDBCResourceDAO {
     }
 
     private String getCheckTableExistsSql(final String tableName) {
-        final String sql = new MessageFormat(jdbcSqlQueryFormat.getCheckTableExistsSql(), Locale.ROOT).format(tableName, new StringBuffer(), new FieldPosition(0)).toString();
+        final String sql = new MessageFormat(jdbcSqlQueryFormat.getCheckTableExistsSql(), Locale.ROOT)
+                .format(tableName, new StringBuffer(), new FieldPosition(0)).toString();
         return sql;
     }
 
     //sql queries
     private String getCreateIfNeededSql(String tableName) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getCreateIfNeedSql(), Locale.ROOT).format(new Object[]{tableName, META_TABLE_KEY,
-                META_TABLE_TS, META_TABLE_CONTENT}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getCreateIfNeedSql(), Locale.ROOT)
+                .format(new Object[] { tableName, META_TABLE_KEY, META_TABLE_TS, META_TABLE_CONTENT },
+                        new StringBuffer(), new FieldPosition(0))
+                .toString();
         return sql;
     }
 
     //sql queries
     private String getCreateIndexSql(String indexName, String tableName, String indexCol) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getCreateIndexSql(), Locale.ROOT).format(new Object[] {indexName, tableName, indexCol}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getCreateIndexSql(), Locale.ROOT)
+                .format(new Object[] { indexName, tableName, indexCol }, new StringBuffer(), new FieldPosition(0))
+                .toString();
         return sql;
     }
 
     private String getKeyEqualSqlString(String tableName, boolean fetchContent, boolean fetchTimestamp) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getKeyEqualsSql(), Locale.ROOT).format(new Object[] {getSelectList(fetchContent, fetchTimestamp), tableName, META_TABLE_KEY}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getKeyEqualsSql(), Locale.ROOT)
+                .format(new Object[] { getSelectList(fetchContent, fetchTimestamp), tableName, META_TABLE_KEY },
+                        new StringBuffer(), new FieldPosition(0))
+                .toString();
         return sql;
     }
 
     private String getDeletePstatSql(String tableName) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getDeletePstatSql(), Locale.ROOT).format(new Object[] {tableName, META_TABLE_KEY}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getDeletePstatSql(), Locale.ROOT)
+                .format(new Object[] { tableName, META_TABLE_KEY }, new StringBuffer(), new FieldPosition(0))
+                .toString();
         return sql;
     }
 
     private String getListResourceSqlString(String tableName) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getListResourceSql(), Locale.ROOT).format(new Object[] {META_TABLE_KEY, tableName,
-                META_TABLE_KEY}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getListResourceSql(), Locale.ROOT)
+                .format(new Object[] { META_TABLE_KEY, tableName, META_TABLE_KEY }, new StringBuffer(),
+                        new FieldPosition(0))
+                .toString();
         return sql;
     }
 
     private String getAllResourceSqlString(String tableName) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getAllResourceSql(), Locale.ROOT).format(new Object[] {getSelectList(true, true), tableName,
-                META_TABLE_KEY, META_TABLE_TS, META_TABLE_TS}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getAllResourceSql(), Locale.ROOT).format(
+                new Object[] { getSelectList(true, true), tableName, META_TABLE_KEY, META_TABLE_TS, META_TABLE_TS },
+                new StringBuffer(), new FieldPosition(0)).toString();
         return sql;
     }
 
     private String getReplaceSql(String tableName) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getReplaceSql(), Locale.ROOT).format(new Object[] {tableName, META_TABLE_TS,
-                META_TABLE_CONTENT, META_TABLE_KEY}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getReplaceSql(), Locale.ROOT)
+                .format(new Object[] { tableName, META_TABLE_TS, META_TABLE_CONTENT, META_TABLE_KEY },
+                        new StringBuffer(), new FieldPosition(0))
+                .toString();
         return sql;
     }
 
     private String getInsertSql(String tableName) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getInsertSql(), Locale.ROOT).format(new Object[] {tableName, META_TABLE_KEY, META_TABLE_TS,
-                META_TABLE_CONTENT}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getInsertSql(), Locale.ROOT)
+                .format(new Object[] { tableName, META_TABLE_KEY, META_TABLE_TS, META_TABLE_CONTENT },
+                        new StringBuffer(), new FieldPosition(0))
+                .toString();
         return sql;
     }
 
     @SuppressWarnings("unused")
     private String getReplaceSqlWithoutContent(String tableName) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getReplaceSqlWithoutContent(), Locale.ROOT).format(new Object[] {tableName, META_TABLE_TS,
-                META_TABLE_KEY}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getReplaceSqlWithoutContent(), Locale.ROOT)
+                .format(new Object[] { tableName, META_TABLE_TS, META_TABLE_KEY }, new StringBuffer(),
+                        new FieldPosition(0))
+                .toString();
         return sql;
     }
 
     private String getInsertSqlWithoutContent(String tableName) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getInsertSqlWithoutContent(), Locale.ROOT).format(new Object[] {tableName, META_TABLE_KEY,
-                META_TABLE_TS}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getInsertSqlWithoutContent(), Locale.ROOT)
+                .format(new Object[] { tableName, META_TABLE_KEY, META_TABLE_TS }, new StringBuffer(),
+                        new FieldPosition(0))
+                .toString();
         return sql;
     }
 
     private String getUpdateSqlWithoutContent(String tableName) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getUpdateSqlWithoutContent(), Locale.ROOT).format(new Object[] {tableName, META_TABLE_TS,
-                META_TABLE_KEY, META_TABLE_TS}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getUpdateSqlWithoutContent(), Locale.ROOT)
+                .format(new Object[] { tableName, META_TABLE_TS, META_TABLE_KEY, META_TABLE_TS }, new StringBuffer(),
+                        new FieldPosition(0))
+                .toString();
         return sql;
     }
 
     private String getUpdateContentSql(String tableName) {
-        String sql = new MessageFormat(jdbcSqlQueryFormat.getUpdateContentSql(), Locale.ROOT).format(new Object[] {tableName, META_TABLE_CONTENT,
-                META_TABLE_KEY}, new StringBuffer(), new FieldPosition(0)).toString();
+        String sql = new MessageFormat(jdbcSqlQueryFormat.getUpdateContentSql(), Locale.ROOT)
+                .format(new Object[] { tableName, META_TABLE_CONTENT, META_TABLE_KEY }, new StringBuffer(),
+                        new FieldPosition(0))
+                .toString();
         return sql;
     }
 
@@ -576,8 +608,7 @@ public class JDBCResourceDAO {
             return inputStream;
         } else {
             Path redirectPath = bigCellHDFSPath(resPath);
-            FileSystem fileSystem = HadoopUtil.getFileSystem(redirectPath);
-            return fileSystem.open(redirectPath);
+            return redirectFileSystem.open(redirectPath);
         }
     }
 
@@ -587,21 +618,15 @@ public class JDBCResourceDAO {
         FSDataOutputStream out = null;
         Path redirectPath = bigCellHDFSPath(resPath);
         Path oldPath = new Path(redirectPath.toString() + "_old");
-        FileSystem fileSystem = null;
         try {
-            fileSystem = HadoopUtil.getFileSystem(redirectPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            isResourceExist = fileSystem.exists(redirectPath);
+            isResourceExist = redirectFileSystem.exists(redirectPath);
             if (isResourceExist) {
-                FileUtil.copy(fileSystem, redirectPath, fileSystem, oldPath, false,
+                FileUtil.copy(redirectFileSystem, redirectPath, redirectFileSystem, oldPath, false,
                         HadoopUtil.getCurrentConfiguration());
-                fileSystem.delete(redirectPath, true);
+                redirectFileSystem.delete(redirectPath, true);
                 logger.debug("a copy of hdfs file {} is made", redirectPath);
             }
-            out = fileSystem.create(redirectPath);
+            out = redirectFileSystem.create(redirectPath);
             out.write(largeColumn);
             return redirectPath;
         } catch (Throwable e) {
@@ -619,28 +644,22 @@ public class JDBCResourceDAO {
     public void rollbackLargeCellFromHdfs(String resPath) throws SQLException {
         Path redirectPath = bigCellHDFSPath(resPath);
         Path oldPath = new Path(redirectPath.toString() + "_old");
-        FileSystem fileSystem = null;
         try {
-            fileSystem = HadoopUtil.getFileSystem(redirectPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            if (fileSystem.exists(oldPath)) {
-                FileUtil.copy(fileSystem, oldPath, fileSystem, redirectPath, true, true,
+            if (redirectFileSystem.exists(oldPath)) {
+                FileUtil.copy(redirectFileSystem, oldPath, redirectFileSystem, redirectPath, true, true,
                         HadoopUtil.getCurrentConfiguration());
                 logger.info("roll back hdfs file {}", resPath);
             } else {
-                fileSystem.delete(redirectPath, true);
+                redirectFileSystem.delete(redirectPath, true);
                 logger.warn("no backup for hdfs file {} is found, clean it", resPath);
             }
         } catch (Throwable e) {
 
             try {
                 //last try to delete redirectPath, because we prefer a deleted rather than incomplete
-                fileSystem.delete(redirectPath, true);
-            } catch (Throwable ignore) {
-                // ignore it
+                redirectFileSystem.delete(redirectPath, true);
+            } catch (Throwable ex) {
+                logger.error("fail to delete resource " + redirectPath + " in hdfs", ex);
             }
 
             throw new SQLException(e);
@@ -650,15 +669,9 @@ public class JDBCResourceDAO {
     private void cleanOldLargeCellFromHdfs(String resPath) throws SQLException {
         Path redirectPath = bigCellHDFSPath(resPath);
         Path oldPath = new Path(redirectPath.toString() + "_old");
-        FileSystem fileSystem = null;
         try {
-            fileSystem = HadoopUtil.getFileSystem(redirectPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            if (fileSystem.exists(oldPath)) {
-                fileSystem.delete(oldPath, true);
+            if (redirectFileSystem.exists(oldPath)) {
+                redirectFileSystem.delete(oldPath, true);
             }
         } catch (Throwable e) {
             logger.warn("error cleaning the backup file for " + redirectPath + ", leave it as garbage", e);
@@ -666,8 +679,9 @@ public class JDBCResourceDAO {
     }
 
     public Path bigCellHDFSPath(String resPath) {
-        String metastoreBigCellHdfsDirectory = this.kylinConfig.getMetastoreBigCellHdfsDirectory();
-        Path redirectPath = new Path(metastoreBigCellHdfsDirectory, "resources-jdbc" + resPath);
+        String hdfsWorkingDirectory = this.kylinConfig.getHdfsWorkingDirectory();
+        Path redirectPath = new Path(hdfsWorkingDirectory, "resources-jdbc" + resPath);
+        redirectPath = Path.getPathWithoutSchemeAndAuthority(redirectPath);
         return redirectPath;
     }
 
@@ -675,14 +689,18 @@ public class JDBCResourceDAO {
         return queriedSqlNum;
     }
 
+    /**
+     * Persist metadata to different SQL tables
+     * @param resPath the metadata path key
+     * @return the table name
+     */
     public String getMetaTableName(String resPath) {
-        if (resPath.startsWith(ResourceStore.BAD_QUERY_RESOURCE_ROOT) || resPath.startsWith(ResourceStore.CUBE_STATISTICS_ROOT)
-                || resPath.startsWith(ResourceStore.DICT_RESOURCE_ROOT) || resPath.startsWith(ResourceStore.EXECUTE_RESOURCE_ROOT)
-                || resPath.startsWith(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT) || resPath.startsWith(ResourceStore.EXT_SNAPSHOT_RESOURCE_ROOT)
+        if (resPath.startsWith(ResourceStore.BAD_QUERY_RESOURCE_ROOT)
+                || resPath.startsWith(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT)
                 || resPath.startsWith(ResourceStore.TEMP_STATMENT_RESOURCE_ROOT)) {
-            return tablesName[1];
+            return tableNames[1];
         } else {
-            return tablesName[0];
+            return tableNames[0];
         }
     }
 
