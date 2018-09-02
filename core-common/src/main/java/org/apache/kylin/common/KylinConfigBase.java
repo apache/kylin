@@ -261,60 +261,14 @@ abstract public class KylinConfigBase implements Serializable {
         return cachedHdfsWorkingDirectory;
     }
 
-    public String getMetastoreBigCellHdfsDirectory() {
-
-        if (cachedBigCellDirectory != null)
-            return cachedBigCellDirectory;
-
-
-        String root = getOptional("kylin.env.hdfs-metastore-bigcell-dir");
-
-        if (root == null) {
-            return getJdbcHdfsWorkingDirectory();
+    public String getReadHdfsWorkingDirectory() {
+        if (StringUtils.isNotEmpty(getHBaseClusterFs())) {
+            Path workingDir = new Path(getHdfsWorkingDirectory());
+            return new Path(getHBaseClusterFs(), Path.getPathWithoutSchemeAndAuthority(workingDir)).toString()
+                    + "/";
         }
 
-        Path path = new Path(root);
-        if (!path.isAbsolute())
-            throw new IllegalArgumentException(
-                    "kylin.env.hdfs-metastore-bigcell-dir must be absolute, but got " + root);
-
-        // make sure path is qualified
-        try {
-            FileSystem fs = HadoopUtil.getReadFileSystem();
-            path = fs.makeQualified(path);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        root = new Path(path, StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).toString();
-
-        if (!root.endsWith("/"))
-            root += "/";
-
-        cachedBigCellDirectory = root;
-        if (cachedBigCellDirectory.startsWith("file:")) {
-            cachedBigCellDirectory = cachedBigCellDirectory.replace("file:", "file://");
-        } else if (cachedBigCellDirectory.startsWith("maprfs:")) {
-            cachedBigCellDirectory = cachedBigCellDirectory.replace("maprfs:", "maprfs://");
-        }
-
-        return cachedBigCellDirectory;
-    }
-
-    private String getJdbcHdfsWorkingDirectory() {
-        if (StringUtils.isNotEmpty(getJdbcFileSystem())) {
-            Path workingDir = new Path(getReadHdfsWorkingDirectory());
-            return new Path(getJdbcFileSystem(), Path.getPathWithoutSchemeAndAuthority(workingDir)).toString() + "/";
-        }
-
-        return getReadHdfsWorkingDirectory();
-    }
-
-    /**
-     * Consider use kylin.env.hdfs-metastore-bigcell-dir instead of kylin.storage.columnar.jdbc.file-system
-     */
-    private String getJdbcFileSystem() {
-        return getOptional("kylin.storage.columnar.jdbc.file-system", "");
+        return getHdfsWorkingDirectory();
     }
 
     public String getHdfsWorkingDirectory(String project) {
@@ -323,30 +277,6 @@ abstract public class KylinConfigBase implements Serializable {
         } else {
             return getHdfsWorkingDirectory();
         }
-    }
-
-    private String getReadHdfsWorkingDirectory() {
-        if (StringUtils.isNotEmpty(getParquetReadFileSystem())) {
-            Path workingDir = new Path(getHdfsWorkingDirectory());
-            return new Path(getParquetReadFileSystem(), Path.getPathWithoutSchemeAndAuthority(workingDir)).toString()
-                    + "/";
-        }
-
-        return getHdfsWorkingDirectory();
-    }
-
-    public String getReadHdfsWorkingDirectory(String project) {
-        if (StringUtils.isNotEmpty(getParquetReadFileSystem())) {
-            Path workingDir = new Path(getHdfsWorkingDirectory(project));
-            return new Path(getParquetReadFileSystem(), Path.getPathWithoutSchemeAndAuthority(workingDir)).toString()
-                    + "/";
-        }
-
-        return getHdfsWorkingDirectory(project);
-    }
-
-    public String getParquetReadFileSystem() {
-        return getOptional("kylin.storage.columnar.file-system", "");
     }
 
     public String getZookeeperBasePath() {
@@ -1822,5 +1752,30 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getAutoMigrateCubeDestConfig() {
         return getOptional("kylin.tool.auto-migrate-cube.dest-config", "");
+    }
+
+    // ============================================================================
+    // jdbc metadata resource store
+    // ============================================================================
+
+    public String getMetadataDialect() {
+        return getOptional("kylin.metadata.jdbc.dialect", "mysql");
+    }
+
+    public boolean isJsonAlwaysSmallCell() {
+        return Boolean.valueOf(getOptional("kylin.metadata.jdbc.json-always-small-cell", "true"));
+    }
+
+    public int getSmallCellMetadataWarningThreshold() {
+        return Integer.parseInt(getOptional("kylin.metadata.jdbc.small-cell-meta-size-warning-threshold",
+                String.valueOf(100 << 20))); //100mb
+    }
+
+    public int getSmallCellMetadataErrorThreshold() {
+        return Integer.parseInt(getOptional("kylin.metadata.jdbc.small-cell-meta-size-error-threshold", String.valueOf(1 << 30))); // 1gb
+    }
+
+    public int getJdbcResourceStoreMaxCellSize() {
+        return Integer.parseInt(getOptional("kylin.metadata.jdbc.max-cell-size", "1048576")); // 1mb
     }
 }

@@ -137,13 +137,6 @@ public class ITJDBCResourceStoreTest extends HBaseMetadataTestCase {
         }
     }
 
-    //   Support other db except mysql
-    //   @Test
-    //    public void testGetDbcpProperties() {
-    //        Properties prop = JDBCConnectionManager.getConnectionManager().getDbcpProperties();
-    //        assertEquals("com.mysql.jdbc.Driver", prop.get("driverClassName"));
-    //    }
-
     @Test
     public void testMsgFormatter() {
         System.out.println(MessageFormatter.format("{}:{}", "a", "b"));
