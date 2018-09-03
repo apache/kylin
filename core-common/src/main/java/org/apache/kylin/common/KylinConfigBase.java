@@ -505,7 +505,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public long getCubeAggrGroupMaxCombination() {
-        return Long.parseLong(getOptional("kylin.cube.aggrgroup.max-combination", "4096"));
+        return Long.parseLong(getOptional("kylin.cube.aggrgroup.max-combination", "32768"));
     }
 
     public boolean getCubeAggrGroupIsMandatoryOnlyValid() {
@@ -541,11 +541,11 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public boolean isCubePlannerEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", "true"));
     }
 
     public boolean isCubePlannerEnabledForExistingCube() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled-for-existing-cube", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled-for-existing-cube", "true"));
     }
 
     public double getCubePlannerExpansionRateThreshold() {
@@ -561,7 +561,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getCubePlannerAgreedyAlgorithmAutoThreshold() {
-        return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-greedy", "10"));
+        return Integer.parseInt(getOptional("kylin.cube.cubeplanner.algorithm-threshold-greedy", "8"));
     }
 
     public int getCubePlannerGeneticAlgorithmAutoThreshold() {
