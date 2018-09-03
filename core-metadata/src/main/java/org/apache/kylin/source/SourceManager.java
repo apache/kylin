@@ -140,8 +140,8 @@ public class SourceManager {
         });
     }
 
-    public static IReadableTable createReadableTable(TableDesc table) {
-        return getSource(table).createReadableTable(table);
+    public static IReadableTable createReadableTable(TableDesc table, String uuid) {
+        return getSource(table).createReadableTable(table, uuid);
     }
 
     public static <T> T createEngineAdapter(ISourceAware table, Class<T> engineInterface) {

@@ -50,7 +50,8 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     public static final String JOB_TITLE = "Kylin Hive Column Cardinality Job";
 
     @SuppressWarnings("static-access")
-    protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
+    protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true)
+            .withDescription("The hive table name").create("table");
 
     public HiveColumnCardinalityJob() {
     }
@@ -90,7 +91,8 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
         job.getConfiguration().set("mapreduce.output.fileoutputformat.compress", "false");
 
         // Mapper
-        IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table, project);
+        IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table, project,
+                getOptionValue(OPTION_CUBING_JOB_ID));
         tableInputFormat.configureJob(job);
 
         job.setMapperClass(ColumnCardinalityMapper.class);

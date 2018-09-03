@@ -165,6 +165,10 @@ public class CnMessage extends Message {
         return "Cube 不能被重命名";
     }
 
+    public String getREBUILD_SNAPSHOT_OF_VIEW() {
+        return "不支持重新构建 Hive view '%s' 的 snapshot, 请刷新 Cube 的 segment";
+    }
+
     // Model
     public String getINVALID_MODEL_DEFINITION() {
         return "非法模型定义";

@@ -62,6 +62,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private KylinConfig config;
     private String name;
     private String id;
+    private AbstractExecutable parentExecutable = null;
     private Map<String, String> params = Maps.newHashMap();
 
     public AbstractExecutable() {
@@ -394,6 +395,13 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         } else {
             return endTime - startTime - interruptTime;
         }
+    }
+
+    public AbstractExecutable getParentExecutable() {
+        return parentExecutable;
+    }
+    public void setParentExecutable(AbstractExecutable parentExecutable) {
+        this.parentExecutable = parentExecutable;
     }
 
     public static long getExtraInfoAsLong(Output output, String key, long defaultValue) {

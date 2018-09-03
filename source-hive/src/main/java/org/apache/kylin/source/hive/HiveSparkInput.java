@@ -85,7 +85,8 @@ public class HiveSparkInput extends HiveInputBase implements ISparkInput {
 
             // then count and redistribute
             if (cubeConfig.isHiveRedistributeEnabled()) {
-                jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc, cubeInstance.getDescriptor()));
+                jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc,
+                        cubeInstance.getDescriptor()));
             }
 
             // special for hive
@@ -96,7 +97,8 @@ public class HiveSparkInput extends HiveInputBase implements ISparkInput {
             final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
             final String jobWorkingDir = getJobWorkingDir(jobFlow, hdfsWorkingDir);
 
-            AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir, flatDesc, hiveViewIntermediateTables);
+            AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir,
+                    flatDesc, hiveViewIntermediateTables, jobFlow.getId());
             if (task != null) {
                 jobFlow.addTask(task);
             }

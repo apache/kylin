@@ -42,26 +42,28 @@ public class DictionaryGeneratorCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGeneratorCLI.class);
 
-    public static void processSegment(KylinConfig config, String cubeName, String segmentID, DistinctColumnValuesProvider factTableValueProvider, DictionaryProvider dictProvider) throws IOException {
+    public static void processSegment(KylinConfig config, String cubeName, String segmentID, String uuid,
+            DistinctColumnValuesProvider factTableValueProvider, DictionaryProvider dictProvider) throws IOException {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeSegment segment = cube.getSegmentById(segmentID);
 
-        processSegment(config, segment, factTableValueProvider, dictProvider);
+        processSegment(config, segment, uuid, factTableValueProvider, dictProvider);
     }
 
-    private static void processSegment(KylinConfig config, CubeSegment cubeSeg, DistinctColumnValuesProvider factTableValueProvider, DictionaryProvider dictProvider) throws IOException {
+    private static void processSegment(KylinConfig config, CubeSegment cubeSeg, String uuid,
+            DistinctColumnValuesProvider factTableValueProvider, DictionaryProvider dictProvider) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(config);
 
         // dictionary
         for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionaryBuilt()) {
             logger.info("Building dictionary for " + col);
             IReadableTable inpTable = factTableValueProvider.getDistinctValuesFor(col);
-            
+
             Dictionary<String> preBuiltDict = null;
             if (dictProvider != null) {
                 preBuiltDict = dictProvider.getDictionary(col);
             }
-        
+
             if (preBuiltDict != null) {
                 logger.debug("Dict for '" + col.getName() + "' has already been built, save it");
                 cubeMgr.saveDictionary(cubeSeg, col, inpTable, preBuiltDict);
@@ -87,9 +89,9 @@ public class DictionaryGeneratorCLI {
 
         for (String tableIdentity : toSnapshot) {
             logger.info("Building snapshot of " + tableIdentity);
-            cubeMgr.buildSnapshotTable(cubeSeg, tableIdentity);
+            cubeMgr.buildSnapshotTable(cubeSeg, tableIdentity, uuid);
         }
-        
+
         CubeInstance updatedCube = cubeMgr.getCube(cubeSeg.getCubeInstance().getName());
         cubeSeg = updatedCube.getSegmentById(cubeSeg.getUuid());
         for (TableRef lookup : toCheckLookup) {
