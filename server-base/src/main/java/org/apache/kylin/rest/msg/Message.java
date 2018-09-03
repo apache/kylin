@@ -165,6 +165,10 @@ public class Message {
         return "Cube renaming is not allowed.";
     }
 
+    public String getREBUILD_SNAPSHOT_OF_VIEW() {
+        return "Rebuild snapshot of hive view '%s' is not supported, please refresh segment of the cube";
+    }
+
     // Model
     public String getINVALID_MODEL_DEFINITION() {
         return "The data model definition is invalid.";

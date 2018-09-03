@@ -42,13 +42,13 @@ public class MRUtil {
         return SourceManager.createEngineAdapter(seg, IMRInput.class).getBatchCubingInputSide(flatDesc);
     }
 
-    public static IMRTableInputFormat getTableInputFormat(String tableName, String prj) {
+    public static IMRTableInputFormat getTableInputFormat(String tableName, String prj, String uuid) {
         TableDesc t = getTableDesc(tableName, prj);
-        return SourceManager.createEngineAdapter(t, IMRInput.class).getTableInputFormat(t);
+        return SourceManager.createEngineAdapter(t, IMRInput.class).getTableInputFormat(t, uuid);
     }
 
-    public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc) {
-        return SourceManager.createEngineAdapter(tableDesc, IMRInput.class).getTableInputFormat(tableDesc);
+    public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc, String uuid) {
+        return SourceManager.createEngineAdapter(tableDesc, IMRInput.class).getTableInputFormat(tableDesc, uuid);
     }
 
     private static TableDesc getTableDesc(String tableName, String prj) {

@@ -61,7 +61,7 @@ public class LookupSnapshotToMetaStoreStep extends AbstractExecutable {
         CubeDesc cubeDesc = cube.getDescriptor();
         try {
             TableDesc tableDesc = metaMgr.getTableDesc(lookupTableName, cube.getProject());
-            IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc);
+            IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc, null);
             logger.info("take snapshot for table:" + lookupTableName);
             SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc, cube.getConfig());
 

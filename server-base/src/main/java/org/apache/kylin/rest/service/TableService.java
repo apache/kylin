@@ -378,7 +378,7 @@ public class TableService extends BasicService {
 
     public List<TableSnapshotResponse> getLookupTableSnapshots(String project, String tableName) throws IOException {
         TableDesc tableDesc = getTableManager().getTableDesc(tableName, project);
-        IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc);
+        IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc, null);
         TableSignature signature = hiveTable.getSignature();
         return internalGetLookupTableSnapshots(tableName, signature);
     }

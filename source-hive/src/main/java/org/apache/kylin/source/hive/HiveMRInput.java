@@ -58,8 +58,8 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
     }
 
     @Override
-    public IMRTableInputFormat getTableInputFormat(TableDesc table) {
-        return new HiveTableInputFormat(getTableNameForHCat(table));
+    public IMRTableInputFormat getTableInputFormat(TableDesc table, String uuid) {
+        return new HiveTableInputFormat(getTableNameForHCat(table, uuid));
     }
 
     @Override
@@ -139,7 +139,8 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
 
             // then count and redistribute
             if (cubeConfig.isHiveRedistributeEnabled()) {
-                jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc, cubeInstance.getDescriptor()));
+                jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc,
+                        cubeInstance.getDescriptor()));
             }
 
             // special for hive
@@ -158,7 +159,8 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
             final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
             final String jobWorkingDir = getJobWorkingDir(jobFlow, hdfsWorkingDir);
 
-            AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir, flatDesc, hiveViewIntermediateTables);
+            AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir,
+                    flatDesc, hiveViewIntermediateTables, jobFlow.getId());
             if (task != null) {
                 jobFlow.addTask(task);
             }
@@ -194,7 +196,8 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
      * @deprecated For backwards compatibility.
      */
     @Deprecated
-    public static class RedistributeFlatHiveTableStep extends org.apache.kylin.source.hive.RedistributeFlatHiveTableStep {
+    public static class RedistributeFlatHiveTableStep
+            extends org.apache.kylin.source.hive.RedistributeFlatHiveTableStep {
 
     }
 

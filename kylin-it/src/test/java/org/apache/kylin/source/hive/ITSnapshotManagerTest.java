@@ -56,7 +56,7 @@ public class ITSnapshotManagerTest extends HBaseMetadataTestCase {
     public void basicTest() throws Exception {
         String tableName = "EDW.TEST_SITES";
         TableDesc tableDesc = TableMetadataManager.getInstance(getTestConfig()).getTableDesc(tableName, "default");
-        IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc);
+        IReadableTable hiveTable = SourceManager.createReadableTable(tableDesc, null);
         String snapshotPath = snapshotMgr.buildSnapshot(hiveTable, tableDesc, getTestConfig()).getResourcePath();
 
         snapshotMgr.wipeoutCache();
