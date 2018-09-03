@@ -107,6 +107,12 @@ module.exports = function (grunt) {
           },
           {
             expand: true,
+            cwd: 'app',
+            src: ['fonts/*'],
+            dest: 'dist/'
+          },
+          {
+            expand: true,
             cwd: 'app/components/ace/',
             src: ['fonts/*'],
             dest: 'dist/'
