@@ -71,7 +71,7 @@ public class KafkaSource implements ISource {
     }
 
     @Override
-    public IReadableTable createReadableTable(TableDesc tableDesc) {
+    public IReadableTable createReadableTable(TableDesc tableDesc, String uuid) {
         throw new UnsupportedOperationException();
     }
 

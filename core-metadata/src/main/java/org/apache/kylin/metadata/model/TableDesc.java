@@ -359,6 +359,14 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + database.getName() + "_" + name;
     }
 
+    public String getMaterializedName(String uuid) {
+        if (uuid == null) {
+            return getMaterializedName();
+        } else
+            return MetadataConstants.KYLIN_INTERMEDIATE_PREFIX + database.getName() + "_" + name + "_"
+                    + uuid.replaceAll("-", "_");
+    }
+
     @Override
     public String toString() {
         return "TableDesc{" + "name='" + name + '\'' + ", columns=" + Arrays.toString(columns) + ", sourceType="

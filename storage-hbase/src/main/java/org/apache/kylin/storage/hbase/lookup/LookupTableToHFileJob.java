@@ -90,6 +90,7 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             String tableName = getOptionValue(OPTION_TABLE_NAME);
             String lookupSnapshotID = getOptionValue(OPTION_LOOKUP_SNAPSHOT_ID);
+            String jobId = getOptionValue(OPTION_CUBING_JOB_ID);
 
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
@@ -101,7 +102,7 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
             ExtTableSnapshotInfoManager extSnapshotInfoManager = ExtTableSnapshotInfoManager.getInstance(kylinConfig);
             removeSnapshotIfExist(extSnapshotInfoManager, kylinConfig, tableName, lookupSnapshotID);
 
-            IReadableTable sourceTable = SourceManager.createReadableTable(tableDesc);
+            IReadableTable sourceTable = SourceManager.createReadableTable(tableDesc, jobId);
 
             logger.info("create HTable for source table snapshot:{}", tableName);
             Pair<String, Integer> hTableNameAndShard = createHTable(tableName, sourceTable, kylinConfig);
@@ -118,7 +119,7 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
 
             FileOutputFormat.setOutputPath(job, output);
 
-            IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(tableDesc);
+            IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(tableDesc, jobId);
             tableInputFormat.configureJob(job);
             job.setMapperClass(LookupTableToHFileMapper.class);
 

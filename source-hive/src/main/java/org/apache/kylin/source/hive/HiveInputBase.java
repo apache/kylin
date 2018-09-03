@@ -50,8 +50,8 @@ public class HiveInputBase {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HiveInputBase.class);
 
-    protected static String getTableNameForHCat(TableDesc table) {
-        String tableName = (table.isView()) ? table.getMaterializedName() : table.getName();
+    protected static String getTableNameForHCat(TableDesc table, String uuid) {
+        String tableName = (table.isView()) ? table.getMaterializedName(uuid) : table.getName();
         String database = (table.isView()) ? KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable()
                 : table.getDatabase();
         return String.format("%s.%s", database, tableName).toUpperCase();
@@ -93,7 +93,7 @@ public class HiveInputBase {
     }
 
     protected static ShellExecutable createLookupHiveViewMaterializationStep(String hiveInitStatements,
-            String jobWorkingDir, IJoinedFlatTableDesc flatDesc, List<String> intermediateTables) {
+            String jobWorkingDir, IJoinedFlatTableDesc flatDesc, List<String> intermediateTables, String uuid) {
         ShellExecutable step = new ShellExecutable();
         step.setName(ExecutableConstants.STEP_NAME_MATERIALIZE_HIVE_VIEW_IN_LOOKUP);
 
@@ -118,8 +118,8 @@ public class HiveInputBase {
         hiveCmdBuilder.addStatement(hiveInitStatements);
         for (TableDesc lookUpTableDesc : lookupViewsTables) {
             String identity = lookUpTableDesc.getIdentity();
-            String intermediate = lookUpTableDesc.getMaterializedName();
             if (lookUpTableDesc.isView()) {
+                String intermediate = lookUpTableDesc.getMaterializedName(uuid);
                 String materializeViewHql = materializeViewHql(intermediate, identity, jobWorkingDir);
                 hiveCmdBuilder.addStatement(materializeViewHql);
                 intermediateTables.add(intermediate);
@@ -134,7 +134,7 @@ public class HiveInputBase {
     protected static String materializeViewHql(String viewName, String tableName, String jobWorkingDir) {
         StringBuilder createIntermediateTableHql = new StringBuilder();
         createIntermediateTableHql.append("DROP TABLE IF EXISTS " + viewName + ";\n");
-        createIntermediateTableHql.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + viewName + " LIKE " + tableName
+        createIntermediateTableHql.append("CREATE TABLE IF NOT EXISTS " + viewName + " LIKE " + tableName
                 + " LOCATION '" + jobWorkingDir + "/" + viewName + "';\n");
         createIntermediateTableHql.append("ALTER TABLE " + viewName + " SET TBLPROPERTIES('auto.purge'='true');\n");
         createIntermediateTableHql.append("INSERT OVERWRITE TABLE " + viewName + " SELECT * FROM " + tableName + ";\n");

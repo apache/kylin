@@ -43,7 +43,7 @@ public interface ISource extends Closeable {
     /**
      * Return a ReadableTable that can iterate through the rows of given table.
      */
-    IReadableTable createReadableTable(TableDesc tableDesc);
+    IReadableTable createReadableTable(TableDesc tableDesc, String uuid);
 
     /**
      * Give the source a chance to enrich a SourcePartition before build start.

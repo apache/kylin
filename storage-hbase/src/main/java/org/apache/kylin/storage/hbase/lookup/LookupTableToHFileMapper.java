@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.KylinConfig;
@@ -79,7 +80,8 @@ public class LookupTableToHFileMapper<KEYIN> extends KylinMapper<KEYIN, Object, 
             keyColumns[i] = keyColRefs[i].getName();
         }
         encoder = new HBaseLookupRowEncoder(tableDesc, keyColumns, shardNum);
-        lookupTableInputFormat = MRUtil.getTableInputFormat(tableDesc);
+        Configuration conf = context.getConfiguration();
+        lookupTableInputFormat = MRUtil.getTableInputFormat(tableDesc, conf.get(BatchConstants.ARG_CUBING_JOB_ID));
     }
 
     @Override

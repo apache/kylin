@@ -530,6 +530,10 @@ public class ExecutableManager {
             if (tasks != null && !tasks.isEmpty()) {
                 Preconditions.checkArgument(result instanceof ChainedExecutable);
                 for (ExecutablePO subTask : tasks) {
+                    AbstractExecutable subTaskExecutable = parseTo(subTask);
+                    if (subTaskExecutable != null) {
+                        subTaskExecutable.setParentExecutable(result);
+                    }
                     ((ChainedExecutable) result).addTask(parseTo(subTask));
                 }
             }

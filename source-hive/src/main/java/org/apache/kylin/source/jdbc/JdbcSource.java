@@ -51,7 +51,7 @@ public class JdbcSource implements ISource {
     }
 
     @Override
-    public IReadableTable createReadableTable(TableDesc tableDesc) {
+    public IReadableTable createReadableTable(TableDesc tableDesc, String uuid) {
         return new JdbcTable(tableDesc);
     }
 

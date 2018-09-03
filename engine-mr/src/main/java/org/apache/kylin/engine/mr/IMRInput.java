@@ -36,7 +36,7 @@ public interface IMRInput {
     public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc);
 
     /** Return an InputFormat that reads from specified table. */
-    public IMRTableInputFormat getTableInputFormat(TableDesc table);
+    public IMRTableInputFormat getTableInputFormat(TableDesc table, String uuid);
 
     /** Return a helper to participate in batch cubing merge job flow. */
     public IMRBatchMergeInputSide getBatchMergeInputSide(ISegment seg);
