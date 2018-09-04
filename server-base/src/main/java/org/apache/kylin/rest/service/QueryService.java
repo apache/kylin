@@ -77,6 +77,7 @@ import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.badquery.BadQueryEntry;
@@ -92,6 +93,7 @@ import org.apache.kylin.metadata.querymeta.ColumnMetaWithType;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.metadata.querymeta.TableMetaWithType;
+import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.PushDownUtil;
@@ -112,6 +114,8 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.AclPermissionUtil;
 import org.apache.kylin.rest.util.QueryRequestLimits;
 import org.apache.kylin.rest.util.TableauInterceptor;
+import org.apache.kylin.storage.hybrid.HybridInstance;
+import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -590,7 +594,8 @@ public class QueryService extends BasicService {
                         borrowPrepareContext = false;
                         preparedContext = createPreparedContext(sqlRequest.getProject(), sqlRequest.getSql());
                     }
-                    for(OLAPContext olapContext : preparedContext.olapContexts) {
+                    for (OLAPContext olapContext : preparedContext.olapContexts) {
+                        resetRealizationInContext(olapContext);
                         OLAPContext.registerContext(olapContext);
                     }
                 } else {
@@ -608,6 +613,20 @@ public class QueryService extends BasicService {
                     preparedContext.close();
                 }
             }
+        }
+    }
+
+    private void resetRealizationInContext(OLAPContext olapContext) {
+        IRealization realization = olapContext.realization;
+        KylinConfig config = getConfig();
+        HybridInstance hybridInstance = HybridManager.getInstance(config).getHybridInstance(realization.getName());
+        if (hybridInstance != null) {
+            olapContext.realization = hybridInstance;
+            return;
+        }
+        CubeInstance cubeInstance = CubeManager.getInstance(config).getCube(realization.getName());
+        if (cubeInstance != null) {
+            olapContext.realization = cubeInstance;
         }
     }
 
