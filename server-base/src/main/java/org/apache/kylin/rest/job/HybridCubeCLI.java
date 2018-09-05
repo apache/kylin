@@ -202,10 +202,6 @@ public class HybridCubeCLI extends AbstractApplication {
     }
 
     private void checkSegmentOffset(List<RealizationEntry> realizationEntries) {
-        if (realizationEntries == null || realizationEntries.size() == 0)
-            throw new IllegalArgumentException("No realization found");
-        if (realizationEntries.size() == 1)
-            throw new IllegalArgumentException("Hybrid needs at least 2 cubes");
         long lastOffset = -1;
         for (RealizationEntry entry : realizationEntries) {
             if (entry.getType() != RealizationType.CUBE) {
