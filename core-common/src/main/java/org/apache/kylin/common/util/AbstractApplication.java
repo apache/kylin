@@ -39,7 +39,7 @@ public abstract class AbstractApplication {
             optionsHelper.printUsage(this.getClass().getName(), getOptions());
             throw new RuntimeException("error parsing args", e);
         } catch (Exception e) {
-            throw new RuntimeException("error execute " + this.getClass().getName(), e);
+            throw new RuntimeException("error execute " + this.getClass().getName() + ". Root cause: " + e.getMessage(), e);
         }
     }
 }
