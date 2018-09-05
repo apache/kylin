@@ -118,9 +118,8 @@ KylinApp.controller('HybridInstanceSchema', function (
     var schema = getSchema();
 
     return Object.keys(schema).every(function(key) {
-      // Array.length for checking select cubes count >= 2
       // otherwise checking empty value
-      return schema[key] instanceof Array ? schema[key].length > 1 : schema[key];
+      return !!schema[key];
     });
   };
 
