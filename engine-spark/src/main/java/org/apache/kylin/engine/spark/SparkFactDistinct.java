@@ -209,19 +209,22 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                 NullWritable.class, LongWritable.class);
 
         FileOutputFormat.setOutputPath(job, new Path(outputPath));
+        FileOutputFormat.setCompressOutput(job, false);
 
         // prevent to create zero-sized default output
         LazyOutputFormat.setOutputFormatClass(job, SequenceFileOutputFormat.class);
+
 
         MultipleOutputsRDD multipleOutputsRDD = MultipleOutputsRDD.rddToMultipleOutputsRDD(outputRDD);
 
         multipleOutputsRDD.saveAsNewAPIHadoopDatasetWithMultipleOutputs(job.getConfiguration());
 
-        logger.info("Map input records={}", recordRDD.count());
+        long recordCount = recordRDD.count();
+        logger.info("Map input records={}", recordCount);
         logger.info("HDFS Read: {} HDFS Write", bytesWritten.value());
 
         Map<String, String> counterMap = Maps.newHashMap();
-        counterMap.put(ExecutableConstants.SOURCE_RECORDS_COUNT, String.valueOf(recordRDD.count()));
+        counterMap.put(ExecutableConstants.SOURCE_RECORDS_COUNT, String.valueOf(recordCount));
         counterMap.put(ExecutableConstants.SOURCE_RECORDS_SIZE, String.valueOf(bytesWritten.value()));
 
         // save counter to hdfs
