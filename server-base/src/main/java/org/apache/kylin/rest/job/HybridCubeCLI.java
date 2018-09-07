@@ -20,11 +20,14 @@ package org.apache.kylin.rest.job;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -143,6 +146,17 @@ public class HybridCubeCLI extends AbstractApplication {
                 owner = cube.getOwner();
             }
             realizationEntries.add(RealizationEntry.create(RealizationType.CUBE, cube.getName()));
+        }
+
+        int realizationEntriesLen = realizationEntries.size();
+        HashSet<RealizationEntry> hashSet = new HashSet<>();
+        for (int i = 0; i < realizationEntriesLen; i++) {
+            hashSet.add(realizationEntries.get(i));
+        }
+        int hashSetLen = hashSet.size();
+        if (realizationEntriesLen != hashSetLen) {
+            Collection<RealizationEntry> duplicateCubes = CollectionUtils.subtract(realizationEntries, hashSet);
+            throw new IllegalArgumentException("The Cubes name does duplicate, could not create: " + duplicateCubes);
         }
 
         if ("create".equals(action)) {
