@@ -488,7 +488,7 @@ public class JDBCResourceDAO {
 
     private String getCheckTableExistsSql(final String tableName) {
         final String sql = new MessageFormat(jdbcSqlQueryFormat.getCheckTableExistsSql(), Locale.ROOT)
-                .format(tableName, new StringBuffer(), new FieldPosition(0)).toString();
+                .format(new Object[] { tableName }, new StringBuffer(), new FieldPosition(0)).toString();
         return sql;
     }
 
