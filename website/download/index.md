@@ -7,13 +7,13 @@ permalink: /download/index.html
 You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://kylin.apache.org/KEYS).
 
 
-#### v2.4.0
-- This is a major release after 2.3.x, with 8 new features and more than 30 bug fixes and enhancement. For the detail list please check release notes. 
+#### v2.4.1
+- This is a bug fix release after 2.4.0, with 22 bug fixes and enhancement. For the detail list please check release notes. 
 - [Release notes](/docs/release_notes.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
-- Source download: [apache-kylin-2.4.0-src.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-source-release.zip.asc)\] \[[sha1](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-source-release.zip.sha1)\]
+- Source download: [apache-kylin-2.4.1-src.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-source-release.zip.sha256)\]
 - Binary download:
-  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.4.0-bin-hbase1x.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-hbase1x.tar.gz.asc)\] \[[sha1](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-hbase1x.tar.gz.sha1)\]
-  - for CDH 5.7+ - [apache-kylin-2.4.0-bin-cdh57.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-cdh57.tar.gz.asc)\] \[[sha1](https://www.apache.org/dist/kylin/apache-kylin-2.4.0/apache-kylin-2.4.0-bin-cdh57.tar.gz.tar.gz.sha1)\]
+  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.4.1-bin-hbase1x.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-hbase1x.tar.gz.sha256)\]
+  - for CDH 5.7+ - [apache-kylin-2.4.1-bin-cdh57.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-cdh57.tar.gz.sha256)\]
 
 #### v2.3.2
 - This is a bug fix release after 2.3.1, with 12 bug fixes and enhancements. For the detail list please check release notes. 
