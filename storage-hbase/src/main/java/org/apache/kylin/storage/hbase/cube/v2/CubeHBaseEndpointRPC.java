@@ -18,20 +18,13 @@
 
 package org.apache.kylin.storage.hbase.cube.v2;
 
-import java.io.IOException;
-import java.nio.BufferOverflowException;
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.zip.DataFormatException;
-
+import com.google.common.collect.Lists;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.HBaseZeroCopyByteString;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
-import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.CoprocessorRpcUtils;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.common.KylinConfig;
@@ -62,9 +55,14 @@ import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.Cub
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.HBaseZeroCopyByteString;
+import java.io.IOException;
+import java.nio.BufferOverflowException;
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.zip.DataFormatException;
 
 public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
@@ -180,7 +178,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                 @Override
                 public void run() {
 
-                    final String logHeader = String.format("<sub-thread for Query %s GTScanRequest %s>", queryId, Integer.toHexString(System.identityHashCode(scanRequest)));
+                    final String logHeader = String.format(Locale.ROOT, "<sub-thread for Query %s GTScanRequest %s>", queryId, Integer.toHexString(System.identityHashCode(scanRequest)));
                     final AtomicReference<RuntimeException> regionErrorHolder = new AtomicReference<>();
 
                     try {

@@ -100,10 +100,10 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             Configuration hbaseConf = HBaseConfiguration.create(getConf());
 
-            String hTableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
+            String htable = getOptionValue(OPTION_HTABLE_NAME);
             connection = ConnectionFactory.createConnection(hbaseConf);
-            Table table = connection.getTable(TableName.valueOf(hTableName));
-            RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(hTableName));
+            Table table = connection.getTable(TableName.valueOf(htable));
+            RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(htable));
             // Automatic config !
             HFileOutputFormat2.configureIncrementalLoad(job, table, regionLocator);
             reconfigurePartitions(hbaseConf, partitionFilePath);
