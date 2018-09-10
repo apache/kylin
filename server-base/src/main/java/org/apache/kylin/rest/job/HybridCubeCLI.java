@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
@@ -38,6 +39,8 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataModelManager;
+import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -45,6 +48,8 @@ import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 /**
  * 1. Create new HybridCube
@@ -202,23 +207,28 @@ public class HybridCubeCLI extends AbstractApplication {
     }
 
     private void checkSegmentOffset(List<RealizationEntry> realizationEntries) {
-        long lastOffset = -1;
+        List<SegmentRange> segmentRanges = Lists.newArrayList();
+
         for (RealizationEntry entry : realizationEntries) {
             if (entry.getType() != RealizationType.CUBE) {
                 throw new IllegalArgumentException("Wrong realization type: " + entry.getType() + ", only cube supported. ");
             }
 
             CubeInstance cubeInstance = cubeManager.getCube(entry.getRealization());
-            CubeSegment segment = cubeInstance.getLastSegment();
-            if (segment == null)
-                continue;
-            if (lastOffset == -1) {
-                lastOffset = (Long) segment.getSegRange().end.v;
-            } else {
-                if (lastOffset > (Long) segment.getSegRange().start.v) {
-                    throw new IllegalArgumentException("Segments has overlap, could not hybrid. Last Segment End: " + lastOffset + ", Next Segment Start: " + segment.getSegRange().start.v);
+            Segments<CubeSegment> segments = cubeInstance.getSegments();
+
+            for (CubeSegment segment : segments) {
+                segmentRanges.add(segment.getSegRange());
+            }
+        }
+
+        if (segmentRanges.size() >= 2) {
+            Collections.sort(segmentRanges);
+
+            for (int i = 0; i < segmentRanges.size() - 1; i++) {
+                if (segmentRanges.get(i).overlaps(segmentRanges.get(i + 1))) {
+                    throw new IllegalArgumentException("Segments has overlap, could not hybrid. First Segment Range: [" + segmentRanges.get(i).start.v + "," + segmentRanges.get(i).end.v + "], Second Segment Range: [" + segmentRanges.get(i + 1).start.v + "," + segmentRanges.get(i + 1).end.v + "]");
                 }
-                lastOffset = (Long) segment.getSegRange().end.v;
             }
         }
     }
