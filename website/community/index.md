@@ -167,7 +167,7 @@ permalink: /community/index.html
   <ul>
   	<li>Thanks <a href="https://www.ebayinc.com/">eBay Inc.</a> to donated this project to open source community, first announement at <a href="http://www.ebaytechblog.com/2014/10/20/announcing-kylin-extreme-olap-engine-for-big-data/">eBay Techblog</a>. </li>
   	<li>Thanks <a href="https://www.jetbrains.com/">JetBrains</a> for providing us a free license of <a href="https://www.jetbrains.com/idea/">IntelliJ IDEA</a>.</li>
-  	<li>Thanks to <a href="vikash_agarwal@hotmail.com">Vikash Agarwal</a>, his artical <a href="http://www.drdobbs.com/windows/odbc-driver-development/184416434?pgno=5">ODBC Driver Development</a> and sample code introdued the basic idea about how to write an ODBC driver from scratch.</li>
+  	<li>Thanks to <a href="vikash_agarwal@hotmail.com">Vikash Agarwal</a>, his article <a href="http://www.drdobbs.com/windows/odbc-driver-development/184416434?pgno=5">ODBC Driver Development</a> and sample code introdued the basic idea about how to write an ODBC driver from scratch.</li>
   </ul>
 
 </div>
