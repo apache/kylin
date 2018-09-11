@@ -36,6 +36,7 @@ abstract public class DataTypeOrder implements Comparator<String> {
     public static final DataTypeOrder DECIMAL_ORDER = new DecimalOrder();
     public static final DataTypeOrder DATETIME_ORDER = new DateTimeOrder();
     public static final DataTypeOrder STRING_ORDER = new StringOrder();
+    public static final DataTypeOrder BOOLEAN_ORDER = new BooleanOrder();
 
     // package private, access via DataType.getOrder()
     static DataTypeOrder getInstance(DataType type) throws IllegalArgumentException {
@@ -49,6 +50,8 @@ abstract public class DataTypeOrder implements Comparator<String> {
             return DOUBLE_ORDER;
         else if (type.isDecimal())
             return DECIMAL_ORDER;
+        else if (type.isBoolean())
+            return BOOLEAN_ORDER;
         else
             throw new IllegalArgumentException("Unsupported data type " + type);
     }
@@ -151,5 +154,11 @@ abstract public class DataTypeOrder implements Comparator<String> {
                 return DateFormat.stringToMillis(s);
         }
     }
-    
+
+    private static class BooleanOrder extends DataTypeOrder {
+        @Override
+        public String toComparable(String s) {
+            return s;
+        }
+    }
 }

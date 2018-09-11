@@ -313,6 +313,10 @@ public class DataType implements Serializable {
         return name.equals("decimal");
     }
 
+    public boolean isBoolean() {
+        return name.equals("boolean");
+    }
+
     public String getName() {
         return name;
     }
