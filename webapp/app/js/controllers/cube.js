@@ -169,7 +169,7 @@ KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, Mes
                 }
             }, function(e) {
                 loadingRequest.hide();
-                SweetAlert.swal('Oops...', 'Failed to get recommend cuboid.', 'error');
+                SweetAlert.swal('Oops...', 'Failed to get recommend Cuboid; Check whether you have enabled System Cube.', 'error');
                 console.error('recommend cuboid error', e.data);
             });
         } else {
