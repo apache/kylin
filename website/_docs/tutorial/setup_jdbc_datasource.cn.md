@@ -78,7 +78,7 @@ kylin.source.jdbc.sqoop-mapper-num=4
  * Numeric 列，如果存在;
  * 随便选一个。
 
-请注意，当在 `conf/kylin.properties` 中配置这些参数时，您所有的 projects 使用 JDBC 作为数据源。如果您需要访问不同类型的数据源，您需要在 project 级别配置这些参数，这是推荐的方式（自从 Kylin v2.4.0）。
+请注意，当在 `conf/kylin.properties` 中配置这些参数时，您所有的 projects 使用 JDBC 作为数据源。
 
 ## 从 JDBC 数据源加载表
 

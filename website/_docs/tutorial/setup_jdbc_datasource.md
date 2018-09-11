@@ -78,7 +78,7 @@ To make each mapper gets even input, the splitting column is selected by the fol
  * Numeric column, if exists;
  * A column at first glance.
 
-Please note, when configure these parameters in `conf/kylin.properties`, all your projects are using the JDBC as data source. If you need access different types of data source, you need configure these parameters at project level, this is the recommended way (since Kylin v2.4.0).
+Please note, when configure these parameters in `conf/kylin.properties`, all your projects are using the JDBC as data source. 
 
 ## Load tables from JDBC data source
 
