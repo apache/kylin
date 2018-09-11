@@ -60,16 +60,17 @@ public class GarbageCollectionStep extends AbstractExecutable {
         StringBuffer output = new StringBuffer();
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         final List<String> hiveTables = this.getIntermediateTables();
-        for (String hiveTable : hiveTables) {
-            if (config.isHiveKeepFlatTable() == false && StringUtils.isNotEmpty(hiveTable)) {
-                hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
-                hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTable + ";");
-
-                output.append("Hive table " + hiveTable + " is dropped. \n");
+        if (!config.isHiveKeepFlatTable()){
+            for (String hiveTable : hiveTables) {
+                if (StringUtils.isNotEmpty(hiveTable)) {
+                    hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
+                    hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTable + ";");
+                    output.append("Hive table " + hiveTable + " is dropped. \n");
+                }
             }
+            rmdirOnHDFS(getExternalDataPaths());
         }
         config.getCliCommandExecutor().execute(hiveCmdBuilder.build());
-        rmdirOnHDFS(getExternalDataPaths());
         output.append("Path " + getExternalDataPaths() + " is deleted. \n");
 
         return output.toString();
