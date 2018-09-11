@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
@@ -311,24 +312,25 @@ public class SparkExecutable extends AbstractExecutable {
 
                     throw new IllegalStateException();
                 }
-                // done, update all properties
-                Map<String, String> joblogInfo = patternedLogger.getInfo();
-
-                // read counter from hdfs
-                String counterOutput = getParam(BatchConstants.ARG_COUNTER_OUPUT);
-                if (counterOutput != null) {
-                    Map<String, String> counterMap = HadoopUtil.readFromSequenceFile(counterOutput);
-                    joblogInfo.putAll(counterMap);
-                }
-
-                readCounters(joblogInfo);
-                getManager().addJobInfo(getId(), joblogInfo);
 
                 if (result == null) {
                     result = future.get();
                 }
-
                 if (result != null && result.getFirst() == 0) {
+                    // done, update all properties
+                    Map<String, String> joblogInfo = patternedLogger.getInfo();
+                    // read counter from hdfs
+                    String counterOutput = getParam(BatchConstants.ARG_COUNTER_OUPUT);
+                    if (counterOutput != null) {
+                        if (HadoopUtil.getWorkingFileSystem().exists(new Path(counterOutput))) {
+                            Map<String, String> counterMap = HadoopUtil.readFromSequenceFile(counterOutput);
+                            joblogInfo.putAll(counterMap);
+                        } else {
+                            logger.warn("Spark counter output path not exists");
+                        }
+                    }
+                    readCounters(joblogInfo);
+                    getManager().addJobInfo(getId(), joblogInfo);
                     return new ExecuteResult(ExecuteResult.State.SUCCEED, patternedLogger.getBufferedLog());
                 }
 
