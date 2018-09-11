@@ -4,7 +4,7 @@ title: Download
 permalink: /download/index.html
 ---
 
-You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://kylin.apache.org/KEYS).
+You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://www.apache.org/dist/kylin/KEYS).
 
 
 #### v2.4.1

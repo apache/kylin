@@ -3,7 +3,7 @@ layout: download-cn
 title: 下载
 ---
 
-您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](https://kylin.apache.org/KEYS)来验证下载文件的有效性.
+您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](https://www.apache.org/dist/kylin/KEYS)来验证下载文件的有效性.
 
 #### v2.4.1
 - This is a bug fix release after 2.4.0, with 22 bug fixes and enhancement. For the detail list please check release notes. 
