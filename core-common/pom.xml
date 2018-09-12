@@ -102,33 +102,4 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>mysql</groupId>
-                                    <artifactId>mysql-connector-java</artifactId>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.basedir}/../../build/ext</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>true</overWriteSnapshots>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>
