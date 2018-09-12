@@ -38,6 +38,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -439,10 +440,15 @@ public class JDBCResourceDAO {
             private boolean checkTableExists(final String tableName, final Connection connection) throws SQLException {
                 final PreparedStatement ps = connection.prepareStatement(getCheckTableExistsSql(tableName));
                 final ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    if (tableName.equals(rs.getString(1))) {
-                        return true;
+                try {
+                    while (rs.next()) {
+                        if (tableName.equals(rs.getString(1))) {
+                            return true;
+                        }
                     }
+                } finally {
+                    DBUtils.closeQuietly(rs);
+                    DBUtils.closeQuietly(ps);
                 }
 
                 return false;
