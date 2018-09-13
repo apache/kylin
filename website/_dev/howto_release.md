@@ -18,6 +18,9 @@ Make sure you have avaliable account and privilege for following applications:
 * Apache Nexus (maven repo): [https://repository.apache.org](https://repository.apache.org)  
 * Apache Kylin dist repo: [https://dist.apache.org/repos/dist/dev/kylin](https://dist.apache.org/repos/dist/dev/kylin)  
 
+## Install Java 8 and Maven 3.5.3+
+Make sure you have Java 8 and Maven 3.5.3 or above installed.
+
 ## Setup GPG signing keys  
 Follow instructions at [http://www.apache.org/dev/release-signing](http://www.apache.org/dev/release-signing) to create a key pair  
 Install gpg (On Mac OS X as sample):  
@@ -139,7 +142,12 @@ $ mvn -Papache-release -DskipTests -Dgpg.passphrase=${GPG_PASSPHRASE} deploy
 
 __Prepare__
 
-Create a release branch named after the release, e.g. v0.7.2-release, and push it to Apache.  
+Make sure your can ssh connection to github:
+{% highlight bash %}
+ssh -T git@github.com
+{% endhighlight %}
+
+Create a branch for release work from your current development branch, named with this release version, e.g. v2.5.0-release, and then push it to Apache.  
 {% highlight bash %}
 $ git checkout -b vX.Y.Z-release
 $ git push -u origin vX.Y.Z-release
@@ -154,23 +162,23 @@ $ read -s GPG_PASSPHRASE
 $ git clean -xf
 $ mvn clean
 
-# Optionally, do a dry run of the release:prepare step, which sets version numbers.
+# Optionally, do a dry run of the release:prepare step, which sets version numbers. e.g. releaseVersion=2.5.0, developmentVersion=2.5.1-SNAPSHOT, use default tag kylin-2.5.0
 $ mvn -DdryRun=true -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:prepare 2>&1 | tee /tmp/prepare-dry.log
 {% endhighlight %}
 
 __Check the dry run output:__
 
 * In the `target` directory should be these 8 files, among others:
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.zip
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.asc
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.md5
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.sha1
-* Remove the .zip, .zip.asc, .zip.md5 and zip.sha1 file as they are not needed.
+  * apache-kylin-X.Y.Z-SNAPSHOT-source-release.zip
+  * apache-kylin-X.Y.Z-SNAPSHOT-source-release.zip.asc
+  * apache-kylin-X.Y.Z-SNAPSHOT-source-release.zip.asc.sha256
+  * apache-kylin-X.Y.Z-SNAPSHOT-source-release.zip.sha256
+* Remove the .zip.asc.sha256 file as it is not needed.
 * Note that the file names start `apache-kylin-`.
-* In the source distro `.tar.gz`, check that all files belong to a directory called
-  `apache-kylin-X.Y.Z-src`.
+* In the source distro `.zip`, check that all files belong to a directory called
+  `apache-kylin-X.Y.Z-SNAPSHOT`.
 * That directory must contain files `NOTICE`, `LICENSE`, `README.md`
-* Check PGP, per [this](https://httpd.apache.org/dev/verification.html)
+* Check PGP, per [this](https://httpd.apache.org/dev/verification.html).
 
 __Run real release:__
 Now, run the release for real.  
@@ -182,25 +190,6 @@ $ mvn -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT
 $ mvn -DskipTests -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:perform
 {% endhighlight %}
 
-__Cleaning up after a failed release attempt:__
-{% highlight bash %}
-# Make sure that the tag you are about to generate does not already
-# exist (due to a failed release attempt)
-$ git tag
-
-# If the tag exists, delete it locally and remotely
-$ git tag -d kylin-X.Y.Z
-$ git push origin :refs/tags/kylin-X.Y.Z
-
-# Remove modified files
-$ mvn release:clean
-
-# Check whether there are modified files and if so, go back to the
-# original git commit
-$ git status
-$ git reset --hard HEAD
-{% endhighlight %}
-
 __Close the staged artifacts in the Nexus repository:__
 
 * Go to [https://repository.apache.org/](https://repository.apache.org/) and login
@@ -208,7 +197,7 @@ __Close the staged artifacts in the Nexus repository:__
 * In the `Staging Repositories` tab there should be a line with profile `org.apache.kylin`
 * Navigate through the artifact tree and make sure the .jar, .pom, .asc files are present
 * Check the box on in the first column of the row, and press the 'Close' button to publish the repository at
-  [https://repository.apache.org/content/repositories/orgapachekylin-1006](https://repository.apache.org/content/repositories/orgapachekylin-1006)
+  [https://repository.apache.org/content/repositories/orgapachekylin-1055](https://repository.apache.org/content/repositories/orgapachekylin-1055)
   (or a similar URL)
 
 __Upload to staging area:__  
@@ -224,6 +213,9 @@ $ popd
 $ cd target
 $ mkdir ~/dist/dev/kylin/apache-kylin-X.Y.Z-rcN
 $ mv apache-kylin-* ~/dist/dev/kylin/apache-kylin-X.Y.Z-rcN
+
+## Remove the .zip.asc.sha256 file as it is not needed.
+$ rm ~/dist/dev/kylin/apache-kylin-X.Y.Z-rcN/apache-kylin-X.Y.Z-SNAPSHOT-source-release.zip.asc.sha256
 
 ## Check in
 $ cd ~/dist/dev/kylin
@@ -261,27 +253,23 @@ $ gpg --recv-keys key
 # Check keys
 $ curl -O https://dist.apache.org/repos/dist/release/kylin/KEYS
 
-## Sign/check md5 and sha1 hashes
- _(Assumes your O/S has 'md5' and 'openssl' commands.)_
+# Sign/check sha256 hashes
+# (Assumes your O/S has a 'shasum' command.)
 function checkHash() {
   cd "$1"
-  for i in *.{zip,asc}; do
+  for i in *.{pom,gz}; do
     if [ ! -f $i ]; then
       continue
     fi
-    if [ -f $i.md5 ]; then
-      if [ "$(cat $i.md5)" = "$(md5 -q $i)" ]; then
-        echo $i.md5 present and correct
+    if [ -f $i.sha256 ]; then
+      if [ "$(cat $i.sha256)" = "$(shasum -a 256 $i)" ]; then
+        echo $i.sha256 present and correct
       else
-        echo $i.md5 does not match
+        echo $i.sha256 does not match
       fi
-    fi
-    if [ -f $i.sha1 ]; then
-      if [ "$(cat $i.sha1)" = "$(openssl sha1 $i | cut -d ' ' -f 2)" ]; then
-        echo $i.sha1 present and correct
-      else
-        echo $i.sha1 does not match
-      fi
+    else
+      shasum -a 256 $i > $i.sha256
+      echo $i.sha256 created
     fi
   done
 };
@@ -306,7 +294,7 @@ Changes highlights:
 
 Thanks to everyone who has contributed to this release.
 Here’s release notes:
-https://github.com/apache/kylin/blob/XXX/docs/release_notes.md
+https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12316121&version=12343540
 
 The commit to be voted upon:
 
@@ -317,9 +305,8 @@ Its hash is xxx.
 The artifacts to be voted on are located here:
 https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-X.Y.Z-rcN/
 
-The hashes of the artifacts are as follows:
-src.tar.gz.md5 xxx
-src.tar.gz.sha1 xxx
+The hashe of the artifact is as follows:
+apache-kylin-X.Y.Z-source-release.zip.sha256 xxx
 
 A staged Maven repository is available for review at:
 https://repository.apache.org/content/repositories/orgapachekylin-XXXX/
@@ -346,7 +333,7 @@ Here is my vote:
 
 After vote finishes, send out the result:  
 {% highlight text %}
-Subject: [RESULT] [VOTE] Release apache-kylin-X.Y.Z (RC[N])
+Subject: [RESULT][VOTE] Release apache-kylin-X.Y.Z (RC[N])
 To: dev@kylin.apache.org
 
 Thanks to everyone who has tested the release candidate and given
@@ -363,7 +350,6 @@ No 0s or -1s.
 Therefore I am delighted to announce that the proposal to release
 Apache-Kylin-X.Y.Z has passed.
 
-Luke
 
 {% endhighlight %}
 
@@ -411,7 +397,7 @@ Svnpubsub will publish to
 [https://dist.apache.org/repos/dist/release/kylin](https://dist.apache.org/repos/dist/release/kylin) and propagate to
 [http://www.apache.org/dyn/closer.cgi/kylin](http://www.apache.org/dyn/closer.cgi/kylin) within 24 hours.
 
-If there are now more than 2 releases, clear out the oldest ones:
+If there are more than 2 releases, clear out the oldest ones:
 
 {% highlight bash %}
 cd ~/dist/release/kylin
@@ -432,13 +418,13 @@ After publish the release, you need generate the binary packages and then put th
 * Make a binary package by refering to [this doc](howto_package.html);
 * Sign the generated binary package with gpg, e.g,:
   {% highlight bash %}
-  gpg --armor --output apache-kylin-1.5.0-bin.tar.gz.asc --detach-sig apache-kylin-1.5.0-bin.tar.gz
+  gpg --armor --output apache-kylin-2.5.0-bin.tar.gz.asc --detach-sig apache-kylin-2.5.0-bin.tar.gz
   {% endhighlight %}
-* Generate the md5 file for the binary package, e.g,:
+* Generate the sha256 file for the binary package, e.g,:
   {% highlight bash %}
-  md5sum < apache-kylin-1.5.0-bin.tar.gz > apache-kylin-1.5.0-bin.tar.gz.md5
+  shasum -a 256 apache-kylin-2.5.0-bin.tar.gz > apache-kylin-2.5.0-bin.tar.gz.sha256
   {% endhighlight %}
-* Push the binary package, the signature file and the md5 file to the svn __dev__ repo, then run `svn mv <files-in-dev> <files-in-release>` to move them to svn __release__ repo.
+* Push the binary package, the signature file and the sha256 file to the svn __dev__ repo, then run `svn mv <files-in-dev> <files-in-release>` to move them to svn __release__ repo.
 * For different Hadoop/HBase version, you may need repeat the above steps;
 * Add the files and then commit the svn changes. 
 
@@ -452,7 +438,7 @@ After publish the release, you need to manually update some source code:
 Refer to [How to document](howto_docs.html) for more detail.
 
 ## Send announcement mail to mailing list
-Send one mail with subject like "[Announce] Apache Kylin x.y.z released" to following list:
+Send one mail with subject like "[Announce] Apache Kylin X.Y.Z released" to following list:
 
 * Apache Kylin Dev mailing list: dev@kylin.apache.org
 * Apache Kylin User mailing list: user@kylin.apache.org
@@ -462,10 +448,10 @@ Send one mail with subject like "[Announce] Apache Kylin x.y.z released" to foll
 Here is a sample of announcement email (by studying Kafka's):
 
 {% highlight text %} 
-The Apache Kylin team is pleased to announce the immediate availability of the 2.1.0 release. 
+The Apache Kylin team is pleased to announce the immediate availability of the 2.5.0 release. 
 
-This is a major release after 2.0, with more than 100 bug fixes and enhancements; All of the changes in this release can be found in:
-https://kylin.apache.org/docs21/release_notes.html
+This is a major release after 2.4, with more than 100 bug fixes and enhancements; All of the changes in this release can be found in:
+https://kylin.apache.org/docs/release_notes.html
 
 You can download the source release and binary packages from Apache Kylin's download page: https://kylin.apache.org/download/
 
@@ -476,7 +462,7 @@ Apache Kylin lets you query massive data set at sub-second latency in 3 steps:
 2. Build Cube on Hadoop.
 3. Query data with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.
 
-Thanks everyone who have contributed to the 2.1.0 release.
+Thanks everyone who have contributed to the 2.5.0 release.
 
 We welcome your help and feedback. For more information on how to
 report problems, and to get involved, visit the project website at

@@ -18,6 +18,9 @@ _对于中国用户，请谨慎使用代理以避免潜在的防火墙问题。_
 * Apache Nexus (maven 仓库): [https://repository.apache.org](https://repository.apache.org)  
 * Apache Kylin dist 仓库: [https://dist.apache.org/repos/dist/dev/kylin](https://dist.apache.org/repos/dist/dev/kylin)  
 
+## 安装使用 Java 8 和 Maven 3.5.3+
+开始之前，确保已经安装了 Java 8，以及 Maven 3.5.3 或更高版本。
+
 ## 设置 GPG 签名密钥  
 按照 [http://www.apache.org/dev/release-signing](http://www.apache.org/dev/release-signing) 上的说明创建密钥对  
 安装 gpg (以 Mac OS X 为例):  
@@ -138,8 +141,12 @@ $ mvn -Papache-release -DskipTests -Dgpg.passphrase=${GPG_PASSPHRASE} deploy
 {% endhighlight %}
 
 __准备__
+检查并确保你可以 ssh 连接到 github:
+{% highlight bash %}
+ssh -T git@github.com
+{% endhighlight %}
 
-创建一个以 release 后命名的发布分支，例如，v0.7.2-release，并将其推到 Apache。  
+基于要当前的开发分支，创建一个以 release 版本号命名的发布分支，例如，v2.5.0-release，并将其推到服务器端。  
 {% highlight bash %}
 $ git checkout -b vX.Y.Z-release
 $ git push -u origin vX.Y.Z-release
@@ -154,22 +161,22 @@ $ read -s GPG_PASSPHRASE
 $ git clean -xf
 $ mvn clean
 
-# Optionally, do a dry run of the release:prepare step, which sets version numbers.
+# 可选的, do a dry run of the release:prepare step, which sets version numbers.
 $ mvn -DdryRun=true -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:prepare 2>&1 | tee /tmp/prepare-dry.log
 {% endhighlight %}
 
 __查看 dry run 输出:__
 
 * 在 `target` 目录中应该是这 8 个文件，其中包括：
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.zip
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.asc
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.md5
-  * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.sha1
-* 移除 .zip, .zip.asc, .zip.md5 和 zip.sha1 文件因为不需要。
+  * apache-kylin-X.Y.Z-SNAPSHOT-source-release.zip
+  * apache-kylin-X.Y.Z-SNAPSHOT-source-release.zip.asc
+  * apache-kylin-X.Y.Z-SNAPSHOT-source-release.zip.asc.sha256
+  * apache-kylin-X.Y.Z-SNAPSHOT-source-release.zip.sha256
+* 移除 .zip.asc.sha256 文件因为不需要。
 * 注意文件名以 `apache-kylin-` 开始
-* 在源发行版 `.tar.gz` 中，检查所有文件是否属于名为 `apache-kylin-X.Y.Z-src` 的目录。
+* 在源发行版 `.zip` 文件中，检查所有文件是否属于名为 `apache-kylin-X.Y.Z-SNAPSHOT` 的目录。
 * 该目录必须包含 `NOTICE`, `LICENSE`, `README.md` 文件
-* 按[此](https://httpd.apache.org/dev/verification.html)检查 PGP
+* 按[此](https://httpd.apache.org/dev/verification.html)检查 PGP。
 
 __运行真实的 release:__
 现在真正开始 release  
@@ -224,29 +231,13 @@ $ cd target
 $ mkdir ~/dist/dev/kylin/apache-kylin-X.Y.Z-rcN
 $ mv apache-kylin-* ~/dist/dev/kylin/apache-kylin-X.Y.Z-rcN
 
+## Remove the .zip.asc.sha256 file as it is not needed.
+$ rm ~/dist/dev/kylin/apache-kylin-X.Y.Z-rcN/apache-kylin-X.Y.Z-SNAPSHOT-source-release.zip.asc.sha256
+
 ## Check in
 $ cd ~/dist/dev/kylin
 $ svn add apache-kylin-X.Y.Z-rcN
 $ svn commit -m 'Upload release artifacts to staging' --username <YOUR_APACHE_ID>
-{% endhighlight %}
-
-__一个失败的 release 尝试后进行清理：__
-{% highlight bash %}
-# Make sure that the tag you are about to generate does not already
-# exist (due to a failed release attempt)
-$ git tag
-
-# If the tag exists, delete it locally and remotely
-$ git tag -d kylin-X.Y.Z
-$ git push origin :refs/tags/kylin-X.Y.Z
-
-# Remove modified files
-$ mvn release:clean
-
-# Check whether there are modified files and if so, go back to the
-# original git commit
-$ git status
-$ git reset --hard HEAD
 {% endhighlight %}
 
 # 验证 release
@@ -260,27 +251,23 @@ $ gpg --recv-keys key
 # Check keys
 $ curl -O https://dist.apache.org/repos/dist/release/kylin/KEYS
 
-## Sign/check md5 and sha1 hashes
- _(Assumes your O/S has 'md5' and 'openssl' commands.)_
+# Sign/check sha256 hashes
+# (Assumes your O/S has a 'shasum' command.)
 function checkHash() {
   cd "$1"
-  for i in *.{zip,asc}; do
+  for i in *.{pom,gz}; do
     if [ ! -f $i ]; then
       continue
     fi
-    if [ -f $i.md5 ]; then
-      if [ "$(cat $i.md5)" = "$(md5 -q $i)" ]; then
-        echo $i.md5 present and correct
+    if [ -f $i.sha256 ]; then
+      if [ "$(cat $i.sha256)" = "$(shasum -a 256 $i)" ]; then
+        echo $i.sha256 present and correct
       else
-        echo $i.md5 does not match
+        echo $i.sha256 does not match
       fi
-    fi
-    if [ -f $i.sha1 ]; then
-      if [ "$(cat $i.sha1)" = "$(openssl sha1 $i | cut -d ' ' -f 2)" ]; then
-        echo $i.sha1 present and correct
-      else
-        echo $i.sha1 does not match
-      fi
+    else
+      shasum -a 256 $i > $i.sha256
+      echo $i.sha256 created
     fi
   done
 };
@@ -316,9 +303,8 @@ Its hash is xxx.
 The artifacts to be voted on are located here:
 https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-X.Y.Z-rcN/
 
-The hashes of the artifacts are as follows:
-src.tar.gz.md5 xxx
-src.tar.gz.sha1 xxx
+The hash of the artifact is as follows:
+apache-kylin-X.Y.Z-source-release.zip.sha256 xxx
 
 A staged Maven repository is available for review at:
 https://repository.apache.org/content/repositories/orgapachekylin-XXXX/
@@ -345,7 +331,7 @@ Here is my vote:
 
 投票完成后，发出结果：  
 {% highlight text %}
-Subject: [RESULT] [VOTE] Release apache-kylin-X.Y.Z (RC[N])
+Subject: [RESULT][VOTE] Release apache-kylin-X.Y.Z (RC[N])
 To: dev@kylin.apache.org
 
 Thanks to everyone who has tested the release candidate and given
@@ -362,12 +348,11 @@ No 0s or -1s.
 Therefore I am delighted to announce that the proposal to release
 Apache-Kylin-X.Y.Z has passed.
 
-Luke
 
 {% endhighlight %}
 
 ## 发布  
-成功发布投票后，我们需要推动发行到镜像，以及其他任务。
+成功发布投票后，我们需要推动发行到镜像，以及其它任务。
 
 在 JIRA 中，搜索
 [all issues resolved in this release](https://issues.apache.org/jira/issues/?jql=project%20%3D%20KYLIN%20),
@@ -429,13 +414,13 @@ svn commit -m 'Remove old release'
 * 通过参考[此文档](howto_package.html)制作二进制包;
 * 使用 gpg 对生成的二进制包进行签名，例如：
   {% highlight bash %}
-  gpg --armor --output apache-kylin-1.5.0-bin.tar.gz.asc --detach-sig apache-kylin-1.5.0-bin.tar.gz
+  gpg --armor --output apache-kylin-2.5.0-bin.tar.gz.asc --detach-sig apache-kylin-2.5.0-bin.tar.gz
   {% endhighlight %}
-* 生成二进制包的 md5 文件，例如：
+* 生成二进制包的 sha256 文件，例如：
   {% highlight bash %}
-  md5sum < apache-kylin-1.5.0-bin.tar.gz > apache-kylin-1.5.0-bin.tar.gz.md5
+  shasum -a 256 apache-kylin-2.5.0-bin.tar.gz > apache-kylin-2.5.0-bin.tar.gz.sha256
   {% endhighlight %}
-* 将二进制包，签名文件和 md5 文件推送到 svn __dev__ 仓库，然后运行 `svn mv <files-in-dev> <files-in-release>` 命令将他们移动到 svn __release__ 仓库。
+* 将二进制包，签名文件和 sha256 文件推送到 svn __dev__ 仓库，然后运行 `svn mv <files-in-dev> <files-in-release>` 命令将他们移动到 svn __release__ 仓库。
 * 对于不同的 Hadoop/HBase 版本，您可能需要上述步骤；
 * 添加文件，然后将更改提交 svn。 
 
@@ -459,10 +444,10 @@ svn commit -m 'Remove old release'
 这是一个公告电子邮件的样本（通过研究 Kafka):
 
 {% highlight text %} 
-The Apache Kylin team is pleased to announce the immediate availability of the 2.1.0 release. 
+The Apache Kylin team is pleased to announce the immediate availability of the 2.5.0 release. 
 
-This is a major release after 2.0, with more than 100 bug fixes and enhancements; All of the changes in this release can be found in:
-https://kylin.apache.org/docs21/release_notes.html
+This is a major release after 2.4, with more than 100 bug fixes and enhancements; All of the changes in this release can be found in:
+https://kylin.apache.org/docs/release_notes.html
 
 You can download the source release and binary packages from Apache Kylin's download page: https://kylin.apache.org/download/
 

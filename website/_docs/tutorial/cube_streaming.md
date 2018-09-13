@@ -7,7 +7,7 @@ permalink: /docs/tutorial/cube_streaming.html
 Kylin v1.6 releases the scalable streaming cubing function, it leverages Hadoop to consume the data from Kafka to build the cube, you can check [this blog](/blog/2016/10/18/new-nrt-streaming/) for the high level design. This doc is a step by step tutorial, illustrating how to create and build a sample cube;
 
 ## Preparation
-To finish this tutorial, you need a Hadoop environment which has kylin v1.6.0 or above installed, and also have a Kafka (v0.10.0 or above) running; Previous Kylin version has a couple issues so please upgrade your Kylin instance at first.
+To finish this tutorial, you need a Hadoop environment which has kylin v1.6.0 or above installed, and also have a Kafka (v0.10.0 or above) running.
 
 In this tutorial, we will use Hortonworks HDP 2.2.4 Sandbox VM + Kafka v0.10.0(Scala 2.10) as the environment.
 
@@ -92,7 +92,8 @@ Click "Submit" to save the configurations. Now a "Streaming" table is created.
 ## Define data model
 With the table defined in previous step, now we can create the data model. The step is almost the same as you create a normal data model, but it has two requirement:
 
-* Streaming Cube doesn't support join with lookup tables; When define the data model, only select fact table, no lookup table;
+* Before v2.4.0, Streaming Cube doesn't support join with lookup tables; When define the data model, only select fact table, no lookup table;
+* If with v2.4.0 or above, you can add lookup tables to the data model. All lookup tables need to be Hive tables;
 * Streaming Cube must be partitioned; If you're going to build the Cube incrementally at minutes level, select "MINUTE_START" as the cube's partition date column. If at hours level, select "HOUR_START".
 
 Here we pick 13 dimension and 2 measure columns:

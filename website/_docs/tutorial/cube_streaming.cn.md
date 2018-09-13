@@ -7,7 +7,7 @@ permalink: /cn/docs/tutorial/cube_streaming.html
 Kylin v1.6 发布了可扩展的 streaming cubing 功能，它利用 Hadoop 消费 Kafka 数据的方式构建 cube，您可以查看 [这篇博客](/blog/2016/10/18/new-nrt-streaming/) 以进行高级别的设计。本文档是一步接一步的阐述如何创建和构建样例 cube 的教程;
 
 ## 前期准备
-您需要一个安装了 kylin v1.6.0 或以上版本和可运行的 Kafka（v0.10.0 或以上版本）的 Hadoop 环境；先前的 Kylin 版本有一定的问题因此请首先升级您的 Kylin 实例。
+您需要一个安装了 kylin v1.6.0 或以上版本和可运行的 Kafka（v0.10.0 或以上版本）的 Hadoop 环境。
 
 本教程中我们使用 Hortonworks HDP 2.2.4 Sandbox VM + Kafka v0.10.0(Scala 2.10) 作为环境。
 
@@ -92,7 +92,8 @@ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic kylin_st
 ## 定义数据模型
 有了上一步创建的表，现在我们可以创建数据模型了。步骤和您创建普通数据模型是一样的，但有两个要求:
 
-* Streaming Cube 不支持与 lookup 表进行 join；当定义数据模型时，只选择 fact 表，不选 lookup 表;
+* 在 v2.4.0 以前，Streaming Cube 不支持与 lookup 表进行 join；当定义数据模型时，只选择 fact 表，不选 lookup 表;
+* 如果您使用的是 v2.4.0 或更高版本，可以添加多个 lookup 表到模型中， 所有 lookup 表需要是 Hive 表;
 * Streaming Cube 必须进行分区；如果您想要在分钟级别增量的构建 Cube，选择 "MINUTE_START" 作为 cube 的分区日期列。如果是在小时级别，选择 "HOUR_START"。
 
 这里我们选择 13 个 dimension 和 2 个 measure 列:
