@@ -82,7 +82,7 @@ public class RocksDBLookupTableCacheTest extends LocalFileMetadataTestCase {
     @Test
     public void testBuildTableCache() throws Exception {
         String snapshotID = RandomUtil.randomUUID().toString();
-        ExtTableSnapshotInfo snapshotInfo = buildSnapshotCache(snapshotID, 100000);
+        ExtTableSnapshotInfo snapshotInfo = buildSnapshotCache(snapshotID, 10000);
         assertEquals(CacheState.AVAILABLE, RocksDBLookupTableCache.getInstance(kylinConfig).getCacheState(snapshotInfo));
     }
 
