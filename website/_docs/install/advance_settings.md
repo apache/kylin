@@ -111,3 +111,42 @@ kylin.job.admin.dls=adminstrator-address
 Restart Kylin server to take effective. To disable, set `mail.enabled` back to `false`.
 
 Administrator will get notifications for all jobs. Modeler and Analyst need enter email address into the "Notification List" at the first page of cube wizard, and then will get notified for that cube.
+
+
+## Enable MySQL as Kylin metadata storage(Beta)
+
+Kylin supports MySQL as metadata storage; To enable this, you should perform the following steps: 
+<ol>
+<li>Create a new database named kylin in the MySQL database</li>
+<li>Edit `conf/kylin.properties`, set the following parameters:</li>
+{% highlight Groff markup %}
+kylin.metadata.url={your_metadata_tablename}@jdbc,url=jdbc:mysql://localhost:3306/kylin,username={your_username},password={your_password}
+kylin.metadata.jdbc.dialect=mysql
+kylin.metadata.jdbc.json-always-small-cell=true
+kylin.metadata.jdbc.small-cell-meta-size-warning-threshold=100mb
+kylin.metadata.jdbc.small-cell-meta-size-error-threshold=1gb
+kylin.metadata.jdbc.max-cell-size=1mb
+{% endhighlight %}
+The configuration items have the following meanings, `url`, `username`, and `password` are required configuration items. If not configured, the default configuration items will be used:
+{% highlight Groff markup %}
+Url: JDBC url
+Username: JDBC username
+Password: JDBC password, if encryption is selected, please write the encrypted password here;
+driverClassName: JDBC driver class name, the default value is com.mysql.jdbc.Driver
+maxActive: the maximum number of database connections, the default value is 5;
+maxIdle: the maximum number of connections waiting, the default value is 5;
+maxWait: The maximum number of milliseconds to wait for connection. The default value is 1000.
+removeAbandoned: Whether to automatically reclaim timeout connections, the default value is true;
+removeAbandonedTimeout: the number of seconds in the timeout period, the default is 300;
+passwordEncrypted: Whether to encrypt the JDBC password, the default is false;
+{% endhighlight %}
+<li>(Optional) Encrypt password in this way:</li>
+{% highlight Groff markup %}
+cd $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib
+java -classpath kylin-server-base-\<version\>.jar:kylin-core-common-\<version\>.jar:spring-beans-4.3.10.RELEASE.jar:spring-core-4.3.10.RELEASE.jar:commons-codec-1.7.jar org.apache.kylin.rest.security.PasswordPlaceholderConfigurer AES <your_password>
+{% endhighlight %}
+<li>Copy the JDBC connector jar to $KYLIN_HOME/ext (if it does not exist, create it yourself)</li>
+<li>Start Kylin</li>
+</ol>
+
+*Note: The function is still in the test, it is recommended that you use it with caution*

@@ -49,6 +49,7 @@
   - tutorial/use_cube_planner
   - tutorial/use_dashboard
   - tutorial/setup_jdbc_datasource
+  - tutorial/hybrid
 
 - title: Integration
   docs:
