@@ -16,7 +16,7 @@ Kylin 实例是无状态的。其运行时状态存于存储在 HBase (由 `conf
  *  **query** : 只运行 query engine; Kylin query engine 接收和回应你的 SQL 查询;
  *  **all** : 在实例中既运行 job engine 也运行 query engines。 
 
-注意只有一个实例可以运行 job engine ("all" 或 "job" 模式), 其他必须是 "query" 模式。 
+注意默认情况下只有一个实例可以运行 job engine ("all" 或 "job" 模式), 其它需要是 "query" 模式。 
 
 下图中描绘了一个典型场景:
 
@@ -24,10 +24,10 @@ Kylin 实例是无状态的。其运行时状态存于存储在 HBase (由 `conf
 
 ### 配置多个 Kylin 服务器
 
-当您在拥有多个 Kylin 服务器实例的集群运行 Kylin 时, 请确保您为每一个实例在 `conf/kylin.properties` 中正确的配置了以下属性。
+当您在拥有多个 Kylin 服务器实例的集群运行 Kylin 时, 请确保您为每个实例在 `conf/kylin.properties` 中正确的配置了以下属性。
 
  *  `kylin.rest.servers`
-	使用中的服务器列表, 当事件变化时，让一个实例去通知其他服务器。例如: 
+	Kylin 节点列表, 要包括每个节点（强调一下，是每个，包括自己！）当事件变化时，接收变化的节点需要通知其它节点（也包括自己）清理缓存。例如: 
 
 ```
 kylin.rest.servers=host1:7070,host2:7070
@@ -42,7 +42,7 @@ kylin.rest.servers=host1:7070,host2:7070
 kylin.server.mode=all
 ```
 
-也即默认情况下，只有一个节点用于调度构建任务的执行。如果您需要配置多个节点同时执行任务构建，以满足高可用和高并发的需求，请参考 "启用多个任务引擎" 的内容，在 [高级设置](advance_settings.html) 页.
+默认情况下，只有一个节点用于调度构建任务的执行。如果您需要配置多个节点同时执行任务构建，以满足高可用和高并发的需求，请参考 "启用多个任务引擎" 的内容，在 [高级设置](advance_settings.html) 页.
 
 ### 安装负载均衡器
 

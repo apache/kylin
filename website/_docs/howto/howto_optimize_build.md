@@ -111,7 +111,7 @@ You can reduce the sampling percentage (kylin.job.cubing.inmem.sampling.percen i
 
 ## Build Dimension Dictionary
 
-With the distinct values fetched in previous step, Kylin will build dictionaries in memory (in next version this will be moved to MR). Usually this step is fast, but if the value set is large, Kylin may report error like "Too high cardinality is not suitable for dictionary". For UHC column, please use other encoding method for the UHC column, such as "fixed_length", "integer" and so on.
+With the distinct values fetched in previous step, Kylin will build dictionaries in memory. Usually this step is fast, but if the value set is large, Kylin may report error like "Too high cardinality is not suitable for dictionary". For UHC column, please use other encoding method for the UHC column, such as "fixed_length", "integer" and so on.
 
 
 

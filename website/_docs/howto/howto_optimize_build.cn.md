@@ -99,7 +99,7 @@ INSERT OVERWRITE TABLE kylin_intermediate_airline_cube_v3610f668a3cdb437e8373c03
 
 ## 构建维度字典
 
-有了前一步提取的维度列唯一值，Kylin会在内存里构建字典（在下个版本将改为MapReduce任务）。通常这一步比较快，但如果唯一值集合很大，Kylin可能会报出类似“字典不支持过高基数”。对于UHC类型的列，请使用其他编码方式，比如“fixed_length”、“integer”等等。
+有了前一步提取的维度列唯一值，Kylin会在内存里构建字典。通常这一步比较快，但如果唯一值集合很大，Kylin可能会报出类似“字典不支持过高基数”。对于UHC类型的列，请使用其他编码方式，比如“fixed_length”、“integer”等等。
 
 ## 保存cuboid的统计数据和创建 HTable
 

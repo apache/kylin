@@ -26,7 +26,7 @@ A typical scenario is depicted in the following chart:
 
 ### Configure Multiple Kylin Servers
 
-If you are running Kylin in a cluster where you have multiple Kylin server instances, please make sure you have the following property correctly configured in `conf/kylin.properties` for EVERY instance.
+If you are running Kylin in a cluster where you have multiple Kylin server instances, please make sure you have the following property correctly configured in `conf/kylin.properties` for EVERY instance (both job and query).
 
  *  `kylin.rest.servers`
 	List of servers in use, this enables one instance to notify other servers when there is event change. For example: 
@@ -36,7 +36,7 @@ kylin.rest.servers=host1:7070,host2:7070
 ```
 
  *  `kylin.server.mode`
-	Make sure there is only one instance whose `kylin.server.mode` is set to "all" or "job", others should be "query"
+	By default, only one instance whose `kylin.server.mode` is set to "all" or "job", the others be "query"
 
 ```
 kylin.server.mode=all
