@@ -33,7 +33,7 @@
 
   <div class="row" ng-controller="HybridInstanceSchema">
     <div class="col-xs-12">
-      <form role="form" name="hybrid_cube_form form-inline" novalidate>
+      <ng-form role="form" name="$validator" novalidate>
 
         <h1 class="form-title">Hybrid Designer</h1>
 
@@ -41,8 +41,9 @@
           <div class="col-xs-5 form-group">
             <div class="row">
               <label class="col-xs-3 control-label no-padding-right font-color-default" for="hybridName">Hybrid Name</label>
-              <div class="col-xs-9">
-                <input type="text" class="form-control" id="hybridName" placeholder="Hybrid Name" ng-disabled="isFormDisabled || isEdit" ng-model="form.name">
+              <div class="col-xs-9" ng-class="{ 'has-error': $validator.name.$invalid && $validator.name.$dirty }">
+                <input type="text" name="name" class="form-control" id="hybridName" placeholder="Hybrid Name" ng-disabled="isFormDisabled || isEdit" ng-model="form.name" ng-pattern="/^\w+$/">
+                <small class="help-block" ng-show="!$validator.name.$error.required && $validator.name.$invalid && $validator.name.$dirty">Hybrid name is invalid.</small>
               </div>
             </div>
           </div>
@@ -170,7 +171,7 @@
           </div>
         </div>
 
-      </form>
+      </ng-form>
     </div>
   </div>
 </div>
