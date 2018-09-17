@@ -48,6 +48,7 @@ KylinApp.controller('HybridInstanceSchema', function (
     name: '',
     model: ''
   };
+  $scope.$validator = {}
 
   resetPageData();
 
