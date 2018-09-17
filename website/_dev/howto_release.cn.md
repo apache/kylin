@@ -419,6 +419,9 @@ svn commit -m 'Remove old release'
 * 生成二进制包的 sha256 文件，例如：
   {% highlight bash %}
   shasum -a 256 apache-kylin-2.5.0-bin.tar.gz > apache-kylin-2.5.0-bin.tar.gz.sha256
+
+  on Linux:
+  openssl sha256 apache-kylin-2.5.0-bin.tar.gz > apache-kylin-2.5.0-bin.tar.gz.sha256
   {% endhighlight %}
 * 将二进制包，签名文件和 sha256 文件推送到 svn __dev__ 仓库，然后运行 `svn mv <files-in-dev> <files-in-release>` 命令将他们移动到 svn __release__ 仓库。
 * 对于不同的 Hadoop/HBase 版本，您可能需要上述步骤；
