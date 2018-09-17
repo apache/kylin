@@ -21,7 +21,6 @@ package org.apache.kylin.storage.hbase.steps;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.hadoop.hbase.KeyValue;
@@ -69,14 +68,14 @@ public class CubeHFileMapperTest {
         Pair<RowKeyWritable, KeyValue> p2 = result.get(1);
 
         assertEquals(key, p1.getFirst());
-        assertEquals("cf1", new String(p1.getSecond().getFamily(), StandardCharsets.UTF_8));
-        assertEquals("usd_amt", new String(p1.getSecond().getQualifier(), StandardCharsets.UTF_8));
-        assertEquals("35.43", new String(p1.getSecond().getValue(), StandardCharsets.UTF_8));
+        assertEquals("cf1", new String(copy(p1.getSecond())));
+        assertEquals("usd_amt", new String(copy(p1.getSecond())));
+        assertEquals("35.43", new String(copy(p1.getSecond())));
 
         assertEquals(key, p2.getFirst());
-        assertEquals("cf1", new String(p2.getSecond().getFamily(), StandardCharsets.UTF_8));
-        assertEquals("item_count", new String(p2.getSecond().getQualifier(), StandardCharsets.UTF_8));
-        assertEquals("2", new String(p2.getSecond().getValue(), StandardCharsets.UTF_8));
+        assertEquals("cf1", new String(copy(p2.getSecond())));
+        assertEquals("item_count", new String(copy(p2.getSecond())));
+        assertEquals("2", new String(copy(p2.getSecond())));
     }
 
     private byte[] copy(KeyValue kv) {

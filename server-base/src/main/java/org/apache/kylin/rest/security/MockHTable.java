@@ -41,11 +41,13 @@ import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
@@ -63,6 +65,7 @@ import org.apache.hadoop.hbase.client.Row;
 import org.apache.hadoop.hbase.client.RowMutations;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
 import org.apache.hadoop.hbase.filter.CompareFilter;
@@ -137,11 +140,16 @@ public class MockHTable implements Table {
      */
     @Override
     public HTableDescriptor getTableDescriptor() throws IOException {
-        HTableDescriptor table = new HTableDescriptor(tableName);
+        HTableDescriptor table = new HTableDescriptor(TableName.valueOf(tableName));
         for (String columnFamily : columnFamilies) {
             table.addFamily(new HColumnDescriptor(columnFamily));
         }
         return table;
+    }
+
+    @Override
+    public TableDescriptor getDescriptor() throws IOException {
+        return null;
     }
 
     /**
@@ -194,6 +202,11 @@ public class MockHTable implements Table {
     public boolean exists(Get get) throws IOException {
         Result result = get(get);
         return result != null && result.isEmpty() == false;
+    }
+
+    @Override
+    public boolean[] exists(List<Get> list) throws IOException {
+        return new boolean[0];
     }
 
     @Override
@@ -541,6 +554,11 @@ public class MockHTable implements Table {
         return false;
     }
 
+    @Override
+    public boolean checkAndPut(byte[] bytes, byte[] bytes1, byte[] bytes2, CompareOperator compareOperator, byte[] bytes3, Put put) throws IOException {
+        return false;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -605,6 +623,16 @@ public class MockHTable implements Table {
         return false;
     }
 
+    @Override
+    public boolean checkAndDelete(byte[] bytes, byte[] bytes1, byte[] bytes2, CompareOperator compareOperator, byte[] bytes3, Delete delete) throws IOException {
+        return false;
+    }
+
+    @Override
+    public CheckAndMutateBuilder checkAndMutate(byte[] bytes, byte[] bytes1) {
+        return null;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -654,23 +682,6 @@ public class MockHTable implements Table {
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getWriteBufferSize() {
-        throw new NotImplementedException();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setWriteBufferSize(long writeBufferSize) throws IOException {
-        throw new NotImplementedException();
-
-    }
-
     @Override
     public <R extends Message> Map<byte[], R> batchCoprocessorService(Descriptors.MethodDescriptor methodDescriptor,
             Message request, byte[] startKey, byte[] endKey, R responsePrototype) throws ServiceException, Throwable {
@@ -691,6 +702,16 @@ public class MockHTable implements Table {
             byte[] value, RowMutations mutation) throws IOException {
         throw new NotImplementedException();
 
+    }
+
+    @Override
+    public boolean checkAndMutate(byte[] bytes, byte[] bytes1, byte[] bytes2, CompareOperator compareOperator, byte[] bytes3, RowMutations rowMutations) throws IOException {
+        return false;
+    }
+
+    @Override
+    public long getRpcTimeout(TimeUnit timeUnit) {
+        return 0;
     }
 
     /***
@@ -719,6 +740,11 @@ public class MockHTable implements Table {
     }
 
     @Override
+    public long getReadRpcTimeout(TimeUnit timeUnit) {
+        return 0;
+    }
+
+    @Override
     public int getReadRpcTimeout() {
         return 0;
     }
@@ -729,6 +755,11 @@ public class MockHTable implements Table {
     }
 
     @Override
+    public long getWriteRpcTimeout(TimeUnit timeUnit) {
+        return 0;
+    }
+
+    @Override
     public int getWriteRpcTimeout() {
         return 0;
     }
@@ -736,5 +767,10 @@ public class MockHTable implements Table {
     @Override
     public void setWriteRpcTimeout(int i) {
 
+    }
+
+    @Override
+    public long getOperationTimeout(TimeUnit timeUnit) {
+        return 0;
     }
 }

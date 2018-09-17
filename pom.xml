@@ -1410,14 +1410,14 @@
             </build>
         </profile>
         <profile>
-            <id>cdh5.7</id>
+            <id>cdh60</id>
             <properties>
-                <hadoop2.version>2.6.0-cdh5.7.0</hadoop2.version>
-                <yarn.version>2.6.0-cdh5.7.0</yarn.version>
-                <hive.version>1.1.0-cdh5.7.0</hive.version>
-                <hive-hcatalog.version>1.1.0-cdh5.7.0</hive-hcatalog.version>
-                <hbase-hadoop2.version>1.2.0-cdh5.7.0</hbase-hadoop2.version>
-                <zookeeper.version>3.4.5-cdh5.7.0</zookeeper.version>
+                <hadoop2.version>3.0.0-cdh6.0.0</hadoop2.version>
+                <yarn.version>3.0.0-cdh6.0.0</yarn.version>
+                <hive.version>2.1.1-cdh6.0.0</hive.version>
+                <hive-hcatalog.version>2.1.1-cdh6.0.0</hive-hcatalog.version>
+                <hbase-hadoop2.version>2.0.0-cdh6.0.0</hbase-hadoop2.version>
+                <zookeeper.version>3.4.5-cdh6.0.0</zookeeper.version>
             </properties>
             <build>
                 <plugins>
