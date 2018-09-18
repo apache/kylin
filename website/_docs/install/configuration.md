@@ -59,6 +59,7 @@ The main configuration file of Kylin.
 | kylin.env.zookeeper-acl-enabled                       | false                |                                                              | No                        |
 | kylin.env.zookeeper.zk-auth                           | digest:ADMIN:KYLIN   |                                                              | No                        |
 | kylin.env.zookeeper.zk-acl                            | world:anyone:rwcda   |                                                              | No                        |
+| kylin.metadata.dimension-encoding-max-length          | 256                  | Max length for one dimension's encoding                      | Yes                       |
 | kylin.metadata.url                                    | kylin_metadata@hbase | Kylin metadata storage                                       | No                        |
 | kylin.metadata.sync-retries                           | 3                    |                                                              | No                        |
 | kylin.metadata.sync-error-handler                     |                      |                                                              | No                        |
@@ -66,6 +67,12 @@ The main configuration file of Kylin.
 | kylin.metadata.hbase-client-scanner-timeout-period    | 10000                |                                                              | No                        |
 | kylin.metadata.hbase-rpc-timeout                      | 5000                 |                                                              | No                        |
 | kylin.metadata.hbase-client-retries-number            | 1                    |                                                              | No                        |
+| kylin.metadata.jdbc.dialect                           | mysql                | clarify the type of dialect                                  | Yes                       |
+| kylin.metadata.resource-store-provider.jdbc           | org.apache.kylin.common.persistence.JDBCResourceStore| specify the class that jdbc used|                        |
+| kylin.metadata.jdbc.json-always-small-cell            | true                 |                                                              | Yes                       |
+| kylin.metadata.jdbc.small-cell-meta-size-warning-threshold| 100mb            |                                                              | Yes                       |
+| kylin.metadata.jdbc.small-cell-meta-size-error-threshold| 1gb                |                                                              | Yes                       |
+| kylin.metadata.jdbc.max-cell-size                     | 1mb                  |                                                              | Yes                       |
 | kylin.dictionary.use-forest-trie                      | true                 |                                                              | No                        |
 | kylin.dictionary.forest-trie-max-mb                   | 500                  |                                                              | No                        |
 | kylin.dictionary.max-cache-entry                      | 3000                 |                                                              | No                        |
@@ -73,6 +80,8 @@ The main configuration file of Kylin.
 | kylin.dictionary.append-entry-size                    | 10000000             |                                                              | No                        |
 | kylin.dictionary.append-max-versions                  | 3                    |                                                              | No                        |
 | kylin.dictionary.append-version-ttl                   | 259200000            |                                                              | No                        |
+| kylin.dictionary.resuable                             | false                | Whether reuse dict                                           | Yes                       |
+| kylin.dictionary.shrunken-from-global-enabled         | false                | Whether shrink global dict                                   | Yes                       |
 | kylin.snapshot.max-cache-entry                        | 500                  |                                                              | No                        |
 | kylin.snapshot.max-mb                                 | 300                  |                                                              | No                        |
 | kylin.snapshot.ext.shard-mb                           | 500                  |                                                              | No                        |
@@ -80,16 +89,23 @@ The main configuration file of Kylin.
 | kylin.snapshot.ext.local.cache.max-size-gb            | 200                  |                                                              | No                        |
 | kylin.cube.size-estimate-ratio                        | 0.25                 |                                                              | Yes                       |
 | kylin.cube.size-estimate-memhungry-ratio              | 0.05                 | Deprecated                                                   | Yes                       |
-| kylin.cube.size-estimate-countdistinct-ratio          | 0.05                 |                                                              | Yes                       |
+| kylin.cube.size-estimate-countdistinct-ratio          | 0.5                  |                                                              | Yes                       |
+| kylin.cube.size-estimate-topn-ratio                   | 0.5                  |                                                              | Yes                       |
 | kylin.cube.algorithm                                  | auto                 | Cubing algorithm for MR engine, other options: layer, inmem  | Yes                       |
 | kylin.cube.algorithm.layer-or-inmem-threshold         | 7                    |                                                              | Yes                       |
 | kylin.cube.algorithm.inmem-split-limit                | 500                  |                                                              | Yes                       |
 | kylin.cube.algorithm.inmem-concurrent-threads         | 1                    |                                                              | Yes                       |
 | kylin.cube.ignore-signature-inconsistency             | false                |                                                              |                           |
-| kylin.cube.aggrgroup.max-combination                  | 4096                 | Max cuboid numbers in a Cube                                 | Yes                       |
+| kylin.cube.aggrgroup.max-combination                  | 32768                | Max cuboid numbers in a Cube                                 | Yes                       |
 | kylin.cube.aggrgroup.is-mandatory-only-valid          | false                | Whether allow a Cube only has the base cuboid.               | Yes                       |
+| kylin.cube.cubeplanner.enabled                        | true                 | Whether enable cubeplanner                                   | Yes                       |
+| kylin.cube.cubeplanner.enabled-for-existing-cube      | true                 | Whether enable cubeplanner for existing cube                 | Yes                       |
+| kylin.cube.cubeplanner.algorithm-threshold-greedy     | 8                    |                                                              | Yes                       |
+| kylin.cube.cubeplanner.expansion-threshold            | 15.0                 |                                                              | Yes                       |
+| kylin.cube.cubeplanner.recommend-cache-max-size       | 200                  |                                                              | No                        |
+| kylin.cube.cubeplanner.mandatory-rollup-threshold     | 1000                 |                                                              | Yes                       |
+| kylin.cube.cubeplanner.algorithm-threshold-genetic    | 23                   |                                                              | Yes                       |
 | kylin.cube.rowkey.max-size                            | 63                   | Max columns in Rowkey                                        | No                        |
-| kylin.metadata.dimension-encoding-max-length          | 256                  | Max length for one dimension's encoding                      | Yes                       |
 | kylin.cube.max-building-segments                      | 10                   | Max building segments in one Cube                            | Yes                       |
 | kylin.cube.allow-appear-in-multiple-projects          | false                | Whether allow a Cueb appeared in multiple projects           | No                        |
 | kylin.cube.gtscanrequest-serialization-level          | 1                    |                                                              |                           |
@@ -112,11 +128,13 @@ The main configuration file of Kylin.
 | kylin.job.scheduler.priority-bar-fetch-from-queue     | 20                   |                                                              | No                        |
 | kylin.job.scheduler.poll-interval-second              | 30                   |                                                              | No                        |
 | kylin.job.error-record-threshold                      | 0                    |                                                              | No                        |
+| kylin.job.cube-auto-ready-enabled                     | true                 | Whether enable the cube automatically when finish build      | Yes                       |
 | kylin.source.hive.keep-flat-table                     | false                | Whether keep the intermediate Hive table after job finished. | No                        |
 | kylin.source.hive.database-for-flat-table             | default              | Hive database to create the intermediate table.              | No                        |
 | kylin.source.hive.flat-table-storage-format           | SEQUENCEFILE         |                                                              | No                        |
 | kylin.source.hive.flat-table-field-delimiter          | \u001F               |                                                              | No                        |
 | kylin.source.hive.redistribute-flat-table             | true                 | Whether or not to redistribute the flat table.               | Yes                       |
+| kylin.source.hive.redistribute-column-count           | 3                    | The number of redistribute column                            | Yes                       |
 | kylin.source.hive.client                              | cli                  |                                                              | No                        |
 | kylin.source.hive.beeline-shell                       | beeline              |                                                              | No                        |
 | kylin.source.hive.beeline-params                      |                      |                                                              | No                        |
@@ -166,6 +184,7 @@ The main configuration file of Kylin.
 | kylin.storage.hbase.max-hconnection-threads           | 2048                 |                                                              |                           |
 | kylin.storage.hbase.core-hconnection-threads          | 2048                 |                                                              |                           |
 | kylin.storage.hbase.hconnection-threads-alive-seconds | 60                   |                                                              |                           |
+| kylin.storage.hbase.replication-scope                 | 0                    | whether config hbase cluster replication                     | Yes                       |
 | kylin.engine.mr.lib-dir                               |                      |                                                              |                           |
 | kylin.engine.mr.reduce-input-mb                       | 500                  |                                                              |                           |
 | kylin.engine.mr.reduce-count-ratio                    | 1.0                  |                                                              |                           |
@@ -182,7 +201,12 @@ The main configuration file of Kylin.
 | kylin.engine.spark.min-partition                      | 1                    | Spark Cubing RDD min partition number                        | Yes                       |
 | kylin.engine.spark.max-partition                      | 5000                 | RDD max partition number                                     | Yes                       |
 | kylin.engine.spark.storage-level                      | MEMORY_AND_DISK_SER  | RDD persistent level.                                        | Yes                       |
-| kylin.query.skip-empty-segments                       | true                 | Whether directly skip empty segment (metadata shows size be 0) when run SQL query. | Yes                       |
+| kylin.engine.spark-conf.spark.hadoop.dfs.replication  | 2                    |                                                              |                           |
+| kylin.engine.spark-conf.spark.hadoop.mapreduce.output.fileoutputformat.compress| true|                                                      |                           |
+| kylin.engine.spark-conf.spark.hadoop.mapreduce.output.fileoutputformat.compress.codec  | org.apache.hadoop.io.compress.DefaultCodec|        |                           |
+| kylin.engine.spark-conf-mergedict.spark.executor.memory| 6G                  |                                                              | Yes                       |
+| kylin.engine.spark-conf-mergedict.spark.memory.fraction| 0.2                 |                                                              | Yes                       |
+| kylin.query.skip-empty-segments                       | true                 | Whether directly skip empty segment (metadata shows size be 0) when run SQL query. | Yes |
 | kylin.query.force-limit                               | -1                   |                                                              |                           |
 | kylin.query.max-scan-bytes                            | 0                    |                                                              |                           |
 | kylin.query.max-return-rows                           | 5000000              |                                                              |                           |
@@ -193,6 +217,7 @@ The main configuration file of Kylin.
 | kylin.query.security-enabled                          | true                 |                                                              |                           |
 | kylin.query.cache-enabled                             | true                 |                                                              |                           |
 | kylin.query.timeout-seconds                           | 0                    |                                                              |                           |
+| kylin.query.timeout-seconds-coefficient               | 0.5                  | the coefficient to controll query timeout seconds            | Yes                       |
 | kylin.query.pushdown.runner-class-name                |                      |                                                              |                           |
 | kylin.query.pushdown.update-enabled                   | false                |                                                              |                           |
 | kylin.query.pushdown.cache-enabled                    | false                |                                                              |                           |
@@ -204,6 +229,13 @@ The main configuration file of Kylin.
 | kylin.query.pushdown.jdbc.pool-max-idle               | 8                    |                                                              |                           |
 | kylin.query.pushdown.jdbc.pool-min-idle               | 0                    |                                                              |                           |
 | kylin.query.security.table-acl-enabled                | true                 |                                                              | No                        |
+| kylin.query.calcite.extras-props.conformance          | LENIENT              |                                                              | Yes                       |
+| kylin.query.calcite.extras-props.caseSensitive        | true                 | Whether enable case sensitive                                | Yes                       |
+| kylin.query.calcite.extras-props.unquotedCasing       | TO_UPPER             | Options: UNCHANGED, TO_UPPER, TO_LOWER                       | Yes                       |
+| kylin.query.calcite.extras-props.quoting              | DOUBLE_QUOTE         | Options: DOUBLE_QUOTE, BACK_TICK, BRACKET                    | Yes                       |
+| kylin.query.statement-cache-max-num                   | 50000                | Max number for cache query statement                         | Yes                       |
+| kylin.query.statement-cache-max-num-per-key           | 50                   |                                                              | Yes                       |
+| kylin.query.enable-dict-enumerator                    | false                | Whether enable dict enumerator                               | Yes                       |
 | kylin.server.mode                                     | all                  | Kylin node mode: all\|job\|query.                            | No                        |
 | kylin.server.cluster-servers                          | localhost:7070       |                                                              | No                        |
 | kylin.server.cluster-name                             |                      |                                                              | No                        |
@@ -219,5 +251,5 @@ The main configuration file of Kylin.
 | kylin.web.cross-domain-enabled                        | true                 |                                                              | No                        |
 | kylin.web.export-allow-admin                          | true                 |                                                              | No                        |
 | kylin.web.export-allow-other                          | true                 |                                                              | No                        |
-| kylin.web.dashboard-enabled                           | false                |                                                              | No            |
+| kylin.web.dashboard-enabled                           | false                |                                                              | No                        |
 

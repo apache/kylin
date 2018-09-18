@@ -1,0 +1,65 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to you under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+- title: 开始
+  docs:
+  - index
+
+- title: 安装
+  docs:
+  - install/index
+  - install/kylin_cluster
+  - install/configuration
+  - install/advance_settings
+  - install/kylin_aws_emr
+  - install/kylin_docker
+
+- title: 教程
+  docs:
+  - tutorial/kylin_sample
+  - tutorial/web
+  - tutorial/create_cube
+  - tutorial/cube_build_job
+  - tutorial/project_level_acl
+  - tutorial/cube_spark
+  - tutorial/cube_streaming
+  - tutorial/cube_build_performance
+  - tutorial/kylin_client_tool
+  - tutorial/setup_systemcube
+  - tutorial/use_cube_planner
+  - tutorial/use_dashboard
+  - tutorial/setup_jdbc_datasource
+
+- title: 工具集成
+  docs:
+  - tutorial/odbc
+  - tutorial/jdbc
+  - tutorial/tableau
+  - tutorial/tableau_91
+  - tutorial/powerbi
+  - tutorial/microstrategy
+  - tutorial/squirrel
+  - tutorial/Qlik
+  - tutorial/superset
+
+
+- title: 帮助
+  docs:  
+  - howto/howto_use_restapi
+  - howto/howto_build_cube_with_restapi
+  - howto/howto_optimize_cubes
+  - howto/howto_optimize_build
+  - howto/howto_backup_metadata
+  - howto/howto_cleanup_storage
+

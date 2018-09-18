@@ -32,7 +32,7 @@ kylin.metrics.monitor-enabled=true
 
 ## 如何使用
 
-*注意：Cube planner 优化不适合新的 Cube。优化前 Cube 应该在产品上线一段时间（如 3 个月）。因而 Kylin 平台从终端用户收集了足够真实的查询且使用他们优化 Cube。*  
+*注意：Cube planner 分为两个阶段。阶段 1 可以在构建 Cube 前基于估算的 cuboid 大小推荐 cuboid 列表，然而阶段 2 是根据统计信息为已存在的 Cube 推荐 cuboid 列表。优化前 Cube 应该在产品上线一段时间（如 3 个月）。因而 Kylin 平台从终端用户收集了足够真实的查询且使用他们优化 Cube。*  
 
 #### 步骤 1:
 

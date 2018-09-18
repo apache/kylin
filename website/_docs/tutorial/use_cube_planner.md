@@ -33,7 +33,7 @@ kylin.metrics.monitor-enabled=true
 
 ## How to use it
 
-*Note: Cube planner optimization is not suitable for new Cube. Cube should be online on production for a while (like 3 months) before optimizing it. So that Kylin platform collects enough real queries from end user and use them to optimize the Cube.*  
+*Note: Cube planner is divided into two phase. Phase 1 can recommend cuboid list based on estimated cuboid size before building the Cube, while phase 2 recommends cuboid list for existing Cube according to query statistics. Cube should be online on production for a while (like 3 months) before optimizing it. So that Kylin platform collects enough real queries from end user and use them to optimize the Cube.*  
 
 #### Step 1:
 

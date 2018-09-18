@@ -141,6 +141,21 @@
 .docs ol {
   padding-left: 20px;
 }
+#pjax > article > table {
+    word-break: break-all;
+	border: 1px solid black;
+	text-align: center;
+}
+#pjax > article > table th {
+    border: 1px solid black;
+    text-align: center;
+}
+#pjax > article > table td {
+    border: 1px solid black;
+}
+#pjax > article > table tr {
+    height: 60px;
+}
 @media only screen and (max-width: 767px) {
   
   .aside2 {
