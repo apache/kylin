@@ -90,7 +90,7 @@ public class KylinUserService implements UserService {
 
     @Override
     public void deleteUser(String userName) {
-        if (userName.equals(SUPER_ADMIN)) {
+        if (userName.equalsIgnoreCase(SUPER_ADMIN)) {
             throw new InternalErrorException("User " + userName + " is not allowed to be deleted.");
         }
 

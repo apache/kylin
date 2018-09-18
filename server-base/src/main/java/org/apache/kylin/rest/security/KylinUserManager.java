@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -119,6 +120,7 @@ public class KylinUserManager {
             if (exist != null) {
                 user.setLastModified(exist.getLastModified());
             }
+            user.setUsername(user.getUsername().toUpperCase(Locale.ROOT));
             crud.save(user);
         } catch (IOException e) {
             throw new RuntimeException("Can not update user.", e);
@@ -127,7 +129,7 @@ public class KylinUserManager {
 
     public void delete(String username) {
         try (AutoReadWriteLock.AutoLock l = lock.lockForWrite()) {
-            crud.delete(username);
+            crud.delete(username.toUpperCase(Locale.ROOT));
         } catch (IOException e) {
             throw new RuntimeException("Can not delete user.", e);
         }
