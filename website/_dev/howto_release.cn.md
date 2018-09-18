@@ -18,8 +18,10 @@ _对于中国用户，请谨慎使用代理以避免潜在的防火墙问题。_
 * Apache Nexus (maven 仓库): [https://repository.apache.org](https://repository.apache.org)  
 * Apache Kylin dist 仓库: [https://dist.apache.org/repos/dist/dev/kylin](https://dist.apache.org/repos/dist/dev/kylin)  
 
-## 安装使用 Java 8 和 Maven 3.5.3+
-开始之前，确保已经安装了 Java 8，以及 Maven 3.5.3 或更高版本。
+## 软件要求
+* Java 8 or above; 
+* Maven 3.5.3 或更高版本。
+* 如果你是用 Mac OS X 做发布, 请安装 GNU TAR, 按照 [此文章](http://macappstore.org/gnu-tar/).
 
 ## 设置 GPG 签名密钥  
 按照 [http://www.apache.org/dev/release-signing](http://www.apache.org/dev/release-signing) 上的说明创建密钥对  
@@ -383,7 +385,8 @@ $ mkdir -p ~/dist/release
 $ cd ~/dist/release
 $ svn co https://dist.apache.org/repos/dist/release/kylin
 $ cd kylin
-$ cp -rp ../../dev/kylin/apache-kylin-X.Y.Z-rcN apache-kylin-X.Y.Z
+$ mkdir apache-kylin-X.Y.Z
+$ cp -rp ../../dev/kylin/apache-kylin-X.Y.Z-rcN/apache-kylin* apache-kylin-X.Y.Z/
 $ svn add apache-kylin-X.Y.Z
 
 # Check in.

@@ -7,6 +7,7 @@ permalink: /docs/gettingstarted/events.html
 
 __Conferences__
 
+* [Refactor your data warehouse with mobile analytics products](https://conferences.oreilly.com/strata/strata-ny/public/schedule/speaker/313314) by Zhi Zhu and Luke Han at Strata Data Conference New York, New York September 11–13, 2018
 * [Apache Kylin on HBase: Extreme OLAP engine for big data](https://www.slideshare.net/ShiShaoFeng1/apache-kylin-on-hbase-extreme-olap-engine-for-big-data) by Shaofeng Shi at [HBaseCon Asia 2018](https://hbase.apache.org/hbaseconasia-2018/)
 * [The Evolution of Apache Kylin: Realtime and Plugin Architecture in Kylin](https://www.youtube.com/watch?v=n74zvLmIgF0)([slides](http://www.slideshare.net/YangLi43/apache-kylin-15-updates)) by [Li Yang](https://github.com/liyang-gmt8), at [Hadoop Summit 2016 Dublin](http://hadoopsummit.org/dublin/agenda/), Ireland, 2016-04-14
 * [Apache Kylin - Balance Between Space and Time](http://www.chinahadoop.com/2015/July/Shanghai/agenda.php) ([slides](http://www.slideshare.net/qhzhou/apache-kylin-china-hadoop-summit-2015-shanghai)) by [Qianhao Zhou](https://github.com/qhzhou), at Hadoop Summit 2015 in Shanghai, China, 2015-07-24

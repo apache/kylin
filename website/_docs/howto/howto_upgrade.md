@@ -19,6 +19,13 @@ Running as a Hadoop client, Apache Kylin's metadata and Cube data are persistend
 
 Below are versions specific guides:
 
+## Upgrade from 2.4 to 2.5.0
+
+* Kylin 2.5 need Java 8; Please upgrade Java if you're running with Java 7.
+* Kylin metadata is compitable between 2.4 and 2.5. No migration is needed.
+* Spark engine will move more steps from MR to Spark, you may see performance difference for the same cube after the upgrade.
+* Property `kylin.source.jdbc.sqoop-home` need be the location of sqoop installation, not its "bin" subfolder, please modify it if you're using RDBMS as the data source. 
+* The Cube planner is enabled by default now; New cubes will be optimized by it on first build. System cube and dashboard still need manual enablement.
 
 ## Upgrade from v2.1.0 to v2.2.0
 

@@ -4,10 +4,10 @@ title:  Hybrid 模型
 categories: 教程
 permalink: /cn/docs/tutorial/hybrid.html
 version: v1.2
-since: v0.7.1
+since: v2.5.0
 ---
 
-本教材将会指导您创建一个 Hybrid 模型。 
+本教材将会指导您创建一个 Hybrid 模型。 关于 Hybrid 的概念，请参考[这篇博客](http://kylin.apache.org/blog/2015/09/25/hybrid-model/)。
 
 ### I. 创建 Hybrid 模型
 一个 Hybrid 模型可以包含多个 cube。
@@ -39,9 +39,9 @@ since: v0.7.1
 2. 点击 `Yes` 将 Hybrid 模型删除。 
 
 ### IV. 运行查询
-Hybrid 模型创建成功后，您可以直接进行查询。 
+Hybrid 模型创建成功后，您可以直接进行查询。 因为 hybrid 比 cube 有更高优先级，因此可以命中 cube 的查询会优先被 hybrid 执行，然后再转交给 cube。
 
-点击顶部的 `Insight`，然后输入您的 sql 语句。
+点击顶部的 `Insight`，然后输入您的 SQL 语句。
     ![]( /images/tutorial/2.5/Kylin-Hybrid-Creation-Tutorial/5 sql-statement.png)
-    
-其他事宜请参考[这篇博客](http://kylin.apache.org/blog/2015/09/25/hybrid-model/)。
+
+*请注意, Hybrid model 不适合 "bitmap" 类型的 count distinct 跨 cube 的二次合并，请务必在查询中带上日期维度. *

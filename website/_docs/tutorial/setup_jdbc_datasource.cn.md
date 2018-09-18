@@ -34,7 +34,7 @@ kylin.source.jdbc.driver=com.mysql.jdbc.Driver
 kylin.source.jdbc.dialect=mysql
 kylin.source.jdbc.user=your_username
 kylin.source.jdbc.pass=your_password
-kylin.source.jdbc.sqoop-home=/usr/hdp/current/sqoop-client/bin
+kylin.source.jdbc.sqoop-home=/usr/hdp/current/sqoop-client
 kylin.source.jdbc.filed-delimiter=|
 ```
 
@@ -47,7 +47,7 @@ kylin.source.jdbc.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
 kylin.source.jdbc.dialect=mssql
 kylin.source.jdbc.user=your_username
 kylin.source.jdbc.pass=your_password
-kylin.source.jdbc.sqoop-home=/usr/hdp/current/sqoop-client/bin
+kylin.source.jdbc.sqoop-home=/usr/hdp/current/sqoop-client
 kylin.source.jdbc.filed-delimiter=|
 ```
 
@@ -60,7 +60,7 @@ kylin.source.jdbc.driver=com.amazon.redshift.jdbc.Driver
 kylin.source.jdbc.dialect=default
 kylin.source.jdbc.user=user
 kylin.source.jdbc.pass=pass
-kylin.source.jdbc.sqoop-home=/usr/hdp/current/sqoop-client/bin
+kylin.source.jdbc.sqoop-home=/usr/hdp/current/sqoop-client
 kylin.source.default=8
 kylin.source.jdbc.filed-delimiter=|
 ```

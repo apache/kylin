@@ -18,8 +18,10 @@ Make sure you have avaliable account and privilege for following applications:
 * Apache Nexus (maven repo): [https://repository.apache.org](https://repository.apache.org)  
 * Apache Kylin dist repo: [https://dist.apache.org/repos/dist/dev/kylin](https://dist.apache.org/repos/dist/dev/kylin)  
 
-## Install Java 8 and Maven 3.5.3+
-Make sure you have Java 8 and Maven 3.5.3 or above installed.
+## Software requirement
+* Java 8 or above; 
+* Maven 3.5.3 or above;
+* If you're on Apple Mac OS X, please install GNU TAR, check [this post](http://macappstore.org/gnu-tar/).
 
 ## Setup GPG signing keys  
 Follow instructions at [http://www.apache.org/dev/release-signing](http://www.apache.org/dev/release-signing) to create a key pair  
@@ -386,7 +388,8 @@ $ mkdir -p ~/dist/release
 $ cd ~/dist/release
 $ svn co https://dist.apache.org/repos/dist/release/kylin
 $ cd kylin
-$ cp -rp ../../dev/kylin/apache-kylin-X.Y.Z-rcN apache-kylin-X.Y.Z
+$ mkdir apache-kylin-X.Y.Z
+$ cp -rp ../../dev/kylin/apache-kylin-X.Y.Z-rcN/apache-kylin* apache-kylin-X.Y.Z/
 $ svn add apache-kylin-X.Y.Z
 
 # Check in.

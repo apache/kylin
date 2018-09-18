@@ -116,9 +116,12 @@ kylin.job.admin.dls=adminstrator-address
 ## 支持 MySQL 作为 Kylin metadata 的存储(测试)
 
 Kylin 支持 MySQL 作为 metadata 的存储；为了使该功能生效，您需要执行以下步骤：
-<ol>
-<li>在 MySQL 数据库中新建名为 kylin 的数据库</li>
-<li>编辑 `conf/kylin.properties`，配置以下参数</li>
+
+* 安装 MySQL 服务，例如 v5.1.17；
+* 下载并拷贝 MySQL JDBC connector "mysql-connector-java-<version>.jar" 到 $KYLIN_HOME/ext 目录（如没有该目录请自行创建）
+* 在 MySQL 中新建一个专为 Kylin 元数据的数据库，例如 kylin_metadata;
+* 编辑 `conf/kylin.properties`，配置以下参数:
+
 {% highlight Groff markup %}
 kylin.metadata.url={your_metadata_tablename}@jdbc,url=jdbc:mysql://localhost:3306/kylin,username={your_username},password={your_password}
 kylin.metadata.jdbc.dialect=mysql
@@ -127,11 +130,13 @@ kylin.metadata.jdbc.small-cell-meta-size-warning-threshold=100mb
 kylin.metadata.jdbc.small-cell-meta-size-error-threshold=1gb
 kylin.metadata.jdbc.max-cell-size=1mb
 {% endhighlight %}
-配置项的含义如下，其中 `url`, `username`，和 `password` 为必须配置项。其余项若不配置将使用默认配置项：
+
+`kylin.metadata.url` 配置项中可以添加更多JDBC 连接的配置项；其中 `url`, `username`，和 `password` 为必须配置项。其余项若不配置将使用默认配置项：
+
 {% highlight Groff markup %}
-Url: JDBC 的 url
-Username: JDBC 的用户名
-Password: JDBC 的密码，如果选择了加密，那这里请写加密后的密码
+url: JDBC connection URL
+username: JDBC 的用户名
+password: JDBC 的密码，如果选择了加密，那这里请写加密后的密码
 driverClassName: JDBC 的 driver 类名，默认值为 com.mysql.jdbc.Driver
 maxActive: 最大数据库连接数，默认值为 5
 maxIdle: 最大等待中的连接数量，默认值为 5
@@ -140,13 +145,13 @@ removeAbandoned: 是否自动回收超时连接，默认值为 true
 removeAbandonedTimeout: 超时时间秒数，默认为 300
 passwordEncrypted: 是否对 JDBC 密码进行加密，默认为 false
 {% endhighlight %}
-<li>(可选)以这种方式加密：</li>
+
+你可以加密JDBC 连接密码：
 {% highlight Groff markup %}
 cd $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib
 java -classpath kylin-server-base-\<version\>.jar:kylin-core-common-\<version\>.jar:spring-beans-4.3.10.RELEASE.jar:spring-core-4.3.10.RELEASE.jar:commons-codec-1.7.jar org.apache.kylin.rest.security.PasswordPlaceholderConfigurer AES <your_password>
 {% endhighlight %}
-<li>拷贝 JDBC connector jar 到 $KYLIN_HOME/ext 目录（如没有该目录请自行创建）</li>
-<li>启动 Kylin</li>
-</ol>
+
+*启动 Kylin
 
 *注意：该功能还在测试中，建议您谨慎使用*
