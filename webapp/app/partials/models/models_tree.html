@@ -90,7 +90,7 @@
               </ul>
             </div>
           </div>
-          <span class="strong"><a style="cursor: pointer;word-break:break-all;" ng-click="openHybridInstance(hybridInstance)">{{hybridInstance.name}}</a></span>
+          <span class="strong"><a style="cursor: pointer;word-break:break-all;" ng-click="openHybridDetailModal(hybridInstance)">{{hybridInstance.name}}</a></span>
         </li>
       </ul>
       <div ng-if="hybridInstanceManager.loading === true"><i class="fa fa-2x fa-spinner fa-spin"></i> Loading..</div>
@@ -100,3 +100,4 @@
 </div>
 
 <div ng-include="'partials/models/model_detail.html'"></div>
+<div ng-include="'partials/cubes/hybrid_detail.html'"></div>

@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp.controller('HybridInstanceCtrl', function (
-  $scope, $q, $location,
+  $scope, $q, $location, $modal,
   ProjectModel, hybridInstanceManager, SweetAlert, HybridInstanceService, loadingRequest, MessageBox
 ) {
   $scope.projectModel = ProjectModel;
@@ -51,6 +51,30 @@ KylinApp.controller('HybridInstanceCtrl', function (
   $scope.$watch('projectModel.selectedProject', function() {
     $scope.list();
   });
+
+  var HybridDetailModalCtrl = function ($scope, $modalInstance, hybrid) {
+    $scope.hybrid = hybrid;
+    $scope.hybridModels = [{
+      name: hybrid.model
+    }];
+
+    $scope.cancel = function () {
+      $modalInstance.dismiss('cancel');
+    };
+  };
+
+  $scope.openHybridDetailModal = function (hybrid) {
+    $modal.open({
+      templateUrl: 'hybridDetail.html',
+      controller: HybridDetailModalCtrl,
+      resolve: {
+        hybrid: function () {
+          return hybrid;
+        }
+      },
+      windowClass: 'hybrid-detail'
+    });
+  };
 
   $scope.editHybridInstance = function(hybridInstance){
     // check for empty project of header, break the operation.
