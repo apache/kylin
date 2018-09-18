@@ -52,6 +52,7 @@ import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.mr.common.CuboidShardUtil;
 import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,7 +119,11 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 partitionFilePath.getParent());
 
         CubeHTableUtil.createHTable(cubeSegment, splitKeys);
-        exportHBaseConfiguration(cubeSegment.getStorageLocationIdentifier());
+
+        // export configuration in advance to avoid connecting to hbase from spark
+        if (cubeDesc.getEngineType()== IEngineAware.ID_SPARK){
+            exportHBaseConfiguration(cubeSegment.getStorageLocationIdentifier());
+        }
         return 0;
     }
 
