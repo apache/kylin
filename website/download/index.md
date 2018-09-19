@@ -11,8 +11,8 @@ You can verify the download by following these [procedures](https://www.apache.o
 - [Release notes](/docs/release_notes.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
 - Source download: [apache-kylin-2.5.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip.sha256)\]
 - Binary download:
-  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.5.0-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz.sha256)\]
-  - for CDH 5.7+ - [apache-kylin-2.5.0-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-cdh57.tar.gz.sha256)\]
+  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.5.0-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz.sha256)\]
+  - for CDH 5.7+ - [apache-kylin-2.5.0-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-cdh57.tar.gz.sha256)\]
 
 - Hadoop 3 API binary packages (for beta):
   - for Hadoop 3.1 + HBase 2.0 (includes Hortonworks HDP 3.0) - [apache-kylin-2.5.0-bin-hadoop3.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.5.0-rc2/apache-kylin-2.5.0-bin-hadoop3.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.5.0-rc2/apache-kylin-2.5.0-bin-hadoop3.tar.gz.asc)\] \[[sha256](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.5.0-rc2/apache-kylin-2.5.0-bin-hadoop3.tar.gz.sha256)\]
@@ -25,7 +25,6 @@ You can verify the download by following these [procedures](https://www.apache.o
 - Binary download:
   - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.4.1-bin-hbase1x.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-hbase1x.tar.gz.sha256)\]
   - for CDH 5.7+ - [apache-kylin-2.4.1-bin-cdh57.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.4.1/apache-kylin-2.4.1-bin-cdh57.tar.gz.sha256)\]
-
 
 
 #### JDBC Driver
