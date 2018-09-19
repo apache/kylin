@@ -24,7 +24,7 @@ since: v0.6.x
 
 #### Who are using Apache Kylin?
 
-  * Please check Kylin's powered by page(https://kylin.apache.org/community/poweredby.html) .
+  * You can find a list in Kylin's [powered by page](/community/poweredby.html). If you want to be added, please email to dev@kylin.apache.org with your use case.
 
 #### What's the expansion rate of Cube (compared with raw data)?
 
