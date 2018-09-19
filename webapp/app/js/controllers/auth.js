@@ -36,7 +36,9 @@ KylinApp.controller('LoginCtrl', function ($scope, $rootScope, $location, $base6
       $location.path(UserService.getHomePage());
     }, function (error) {
       $scope.loading = false;
-      $scope.error = "Unable to login, please check your username/password.";
+      $scope.error = error.status < 500
+        ? "Unable to login, please check your username/password."
+        : "System error, please contact your administrator.";
     });
   };
 });
