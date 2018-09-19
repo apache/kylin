@@ -1215,7 +1215,8 @@
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <version>3.4.1</version>
+        <!-- uncomment this on release -->
+        <!--<version>3.4.1</version>-->
       </plugin>
     </plugins>
   </build>
