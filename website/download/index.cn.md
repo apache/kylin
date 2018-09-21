@@ -6,7 +6,7 @@ title: 下载
 您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](https://www.apache.org/dist/kylin/KEYS)来验证下载文件的有效性.
 
 #### v2.5.0
-- 这是2.4版本后的一个主要发布版本，包含了96 个以及各种改进。关于具体内容请查看发布说明. 
+- 这是2.4版本后的一个主要发布版本，包含了96 个以及各种改进。关于具体内容请查看[v2.5.0 正式发布](/blog/2018/09/20/release-v2.5.0/). 
 - [发布说明](/docs/release_notes.html) and [升级指南](/docs/howto/howto_upgrade.html)
 - 源码下载: [apache-kylin-2.5.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip.sha256)\]
 - 二进制包下载:

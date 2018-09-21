@@ -7,7 +7,7 @@ permalink: /download/index.html
 You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://www.apache.org/dist/kylin/KEYS).
 
 #### v2.5.0
-- This is a major release after 2.4, with 96 bug fixes and enhancement. For the detail list please check release notes. 
+- This is a major release after 2.4, with 96 bug fixes and enhancement. Check the [v2.5.0 release announcement](/blog/2018/09/20/release-v2.5.0/) and the release notes. 
 - [Release notes](/docs/release_notes.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
 - Source download: [apache-kylin-2.5.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip.sha256)\]
 - Binary download:

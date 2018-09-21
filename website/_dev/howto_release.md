@@ -464,12 +464,12 @@ You can download the source release and binary packages from Apache Kylin's down
 
 Apache Kylin is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Apache Hadoop, supporting extremely large datasets.
 
-Apache Kylin lets you query massive data set at sub-second latency in 3 steps:
+Apache Kylin lets you query massive dataset at sub-second latency in 3 steps:
 1. Identify a star schema or snowflake schema data set on Hadoop.
 2. Build Cube on Hadoop.
 3. Query data with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.
 
-Thanks everyone who have contributed to the 2.5.0 release.
+Thanks to everyone who has contributed to the 2.5.0 release.
 
 We welcome your help and feedback. For more information on how to
 report problems, and to get involved, visit the project website at
