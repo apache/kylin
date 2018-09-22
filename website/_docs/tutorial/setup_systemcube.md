@@ -42,10 +42,10 @@ Run the following command in KYLIN_HOME folder to generate related metadata:
 ```
 ./bin/kylin.sh org.apache.kylin.tool.metrics.systemcube.SCCreator \
 -inputConfig SCSinkTools.json \
--output <output_forder>
+-output <output_folder>
 ```
 
-By this command, the related metadata will be generated and its location is under the directory `<output_forder>`. The details are as follows, system_cube is our `<output_forder>`:
+By this command, the related metadata will be generated and its location is under the directory `<output_folder>`. The details are as follows, system_cube is our `<output_folder>`:
 
 ![metadata](/images/SystemCube/metadata.png)
 
@@ -53,7 +53,7 @@ By this command, the related metadata will be generated and its location is unde
 Running the following command to create source hive tables:
 
 ```
-hive -f <output_forder>/create_hive_tables_for_system_cubes.sql
+hive -f <output_folder>/create_hive_tables_for_system_cubes.sql
 ```
 
 By this command, the related hive table will be created.
@@ -64,7 +64,7 @@ By this command, the related hive table will be created.
 Then we need to upload metadata to hbase by the following command:
 
 ```
-./bin/metastore.sh restore <output_forder>
+./bin/metastore.sh restore <output_folder>
 ```
 
 ### 4. Reload Metadata
@@ -248,7 +248,7 @@ This Cube is for collecting query metrics at the lowest level. For a query, the 
   </tr>
   <tr>
     <td>MAX, SUM of COUNT_SKIP</td>
-    <td>based on fuzzy filters or else, a few rows will be skiped. This indicates the skipped row count</td>
+    <td>based on fuzzy filters or else, a few rows will be skipped. This indicates the skipped row count</td>
   </tr>
   <tr>
     <td>MAX, SUM of SIZE_SCAN</td>
@@ -285,7 +285,7 @@ This Cube is for collecting query metrics at the Cube level. The most important 
   </tr>
   <tr>
     <td>CUBOID_TARGET</td>
-    <td>target cuboid already precalculated and served for source cuboid</td>
+    <td>target cuboid already pre-calculated and served for source cuboid</td>
   </tr>
   <tr>
     <td>IF_MATCH</td>
@@ -395,7 +395,7 @@ This Cube is for collecting job metrics. The details are as follows:
   </tr>
   <tr>
     <td>MIN, MAX, SUM of WAIT_RESOURCE_TIME</td>
-    <td>a job may includes serveral MR(map reduce) jobs. Those MR jobs may wait because of lack of Hadoop resources.</td>
+    <td>a job may includes several MR(map reduce) jobs. Those MR jobs may wait because of lack of Hadoop resources.</td>
   </tr>
 </table>
 

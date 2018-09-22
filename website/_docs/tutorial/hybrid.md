@@ -6,7 +6,7 @@ permalink: /docs/tutorial/hybrid.html
 since: v2.5.0
 ---
 
-This tutorial will guide you to create a hybrid model. Regarding the concept of hybri, please refer to [this blog](http://kylin.apache.org/blog/2015/09/25/hybrid-model/).
+This tutorial will guide you to create a hybrid model. Regarding the concept of hybrid, please refer to [this blog](http://kylin.apache.org/blog/2015/09/25/hybrid-model/).
 
 ### I. Create a hybrid model
 One Hybrid model can refer to multiple cubes.
@@ -25,7 +25,7 @@ One Hybrid model can refer to multiple cubes.
     ![]( /images/tutorial/2.5/Kylin-Hybrid-Creation-Tutorial/3 hybrid-created.png)
 
 ### II. Update a hybrid model
-1. Place the mouse over the hybrid name, then click `Action` button, in the drop-down list select `Edit`. You can update the ybrid by adding(> button) or deleting(< button) cubes to/from it. 
+1. Place the mouse over the hybrid name, then click `Action` button, in the drop-down list select `Edit`. You can update the hybrid by adding(> button) or deleting(< button) cubes to/from it. 
     ![]( /images/tutorial/2.5/Kylin-Hybrid-Creation-Tutorial/4 edit-hybrid.png)
 
 2. Click `Submit` to save the Hybrid model. 

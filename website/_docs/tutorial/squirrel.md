@@ -53,7 +53,7 @@ On left menu: ![alt text](/images/SQuirreL-Tutorial/12.png)  > ![alt text](/imag
   ![](/images/SQuirreL-Tutorial/14.png)
 
 
-And automatically launch conection:
+And automatically launch connection:
 
   ![](/images/SQuirreL-Tutorial/15.png)
 
@@ -71,7 +71,7 @@ Choose Tab: and write a query  (whe use Kylin’s example cube):
 
 
 ```
-select part_dt, sum(price) as total_selled, count(distinct seller_id) as sellers 
+select part_dt, sum(price) as total_sold, count(distinct seller_id) as sellers 
 from kylin_sales group by part_dt 
 order by part_dt
 ```

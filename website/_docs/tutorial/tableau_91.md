@@ -31,7 +31,7 @@ To use customized SQL, click `New Custom SQL` in left panel and type SQL stateme
 ![](/images/tutorial/odbc/tableau_91/5.png)
 
 ### Visualization
-Now you can start to enjou analyzing with Tableau 9.1.
+Now you can start to enjoy analyzing with Tableau 9.1.
 ![](/images/tutorial/odbc/tableau_91/6.png)
 
 ### Publish to Tableau Server

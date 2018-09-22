@@ -246,4 +246,4 @@ Now you can read Kylin’s data from Apache Flink, great!
 
 [Full Code Example](https://github.com/albertoRamon/Flink/tree/master/ReadKylinFromFlink/flink-scala-project)
 
-Solved all integration problems, and tested with different types of data (Long, BigDecimal and Dates). The patch has been comited at 15 Oct, then, will be part of Flink 1.2.
+Solved all integration problems, and tested with different types of data (Long, BigDecimal and Dates). The patch has been committed at 15 Oct, then, will be part of Flink 1.2.

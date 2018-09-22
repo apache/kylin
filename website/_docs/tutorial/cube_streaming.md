@@ -108,9 +108,9 @@ Save the data model.
 The streaming Cube is almost the same as a normal cube. a couple of points need get your attention:
 
 * The partition time column should be a dimension of the Cube. In Streaming OLAP the time is always a query condition, and Kylin will leverage this to narrow down the scanned partitions.
-* Don't use "order\_time" as dimension as that is pretty fine-grained; suggest to use "mintue\_start", "hour\_start" or other, depends on how you will inspect the data.
+* Don't use "order\_time" as dimension as that is pretty fine-grained; suggest to use "minute\_start", "hour\_start" or other, depends on how you will inspect the data.
 * Define "year\_start", "quarter\_start", "month\_start", "day\_start", "hour\_start", "minute\_start" as a hierarchy to reduce the combinations to calculate.
-* In the "refersh setting" step, create more merge ranges, like 0.5 hour, 4 hours, 1 day, and then 7 days; This will help to control the cube segment number.
+* In the "refresh setting" step, create more merge ranges, like 0.5 hour, 4 hours, 1 day, and then 7 days; This will help to control the cube segment number.
 * In the "rowkeys" section, drag&drop the "minute\_start" to the head position, as for streaming queries, the time condition is always appeared; putting it to head will help to narrow down the scan range.
 
 	![](/images/tutorial/1.6/Kylin-Cube-Streaming-Tutorial/8_Cube_dimension.png)

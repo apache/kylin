@@ -80,7 +80,7 @@ The main configuration file of Kylin.
 | kylin.dictionary.append-entry-size                    | 10000000             |                                                              | No                        |
 | kylin.dictionary.append-max-versions                  | 3                    |                                                              | No                        |
 | kylin.dictionary.append-version-ttl                   | 259200000            |                                                              | No                        |
-| kylin.dictionary.resuable                             | false                | Whether reuse dict                                           | Yes                       |
+| kylin.dictionary.reusable                             | false                | Whether reuse dict                                           | Yes                       |
 | kylin.dictionary.shrunken-from-global-enabled         | false                | Whether shrink global dict                                   | Yes                       |
 | kylin.snapshot.max-cache-entry                        | 500                  |                                                              | No                        |
 | kylin.snapshot.max-mb                                 | 300                  |                                                              | No                        |
@@ -217,7 +217,7 @@ The main configuration file of Kylin.
 | kylin.query.security-enabled                          | true                 |                                                              |                           |
 | kylin.query.cache-enabled                             | true                 |                                                              |                           |
 | kylin.query.timeout-seconds                           | 0                    |                                                              |                           |
-| kylin.query.timeout-seconds-coefficient               | 0.5                  | the coefficient to controll query timeout seconds            | Yes                       |
+| kylin.query.timeout-seconds-coefficient               | 0.5                  | the coefficient to control query timeout seconds            | Yes                       |
 | kylin.query.pushdown.runner-class-name                |                      |                                                              |                           |
 | kylin.query.pushdown.update-enabled                   | false                |                                                              |                           |
 | kylin.query.pushdown.cache-enabled                    | false                |                                                              |                           |

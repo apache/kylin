@@ -51,7 +51,7 @@ kylin.query.pushdown.jdbc.pool-min-idle=0
 
 ### Do Query Pushdown
 
-After Query Pushdown is configured, user is allowed to do flexible queries to the imported tables without avaible cubes.
+After Query Pushdown is configured, user is allowed to do flexible queries to the imported tables without available cubes.
 
    ![](/images/tutorial/2.1/push_down/push_down_1.png)
 

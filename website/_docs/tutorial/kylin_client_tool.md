@@ -33,7 +33,7 @@ Options:
   -p, --password TEXT   Kylin password  [required]
   --project TEXT        Kylin project  [required]
   --prefix TEXT         Kylin RESTful prefix of url, default: "/kylin/api"
-  --debug / --no-debug  show debug infomation
+  --debug / --no-debug  show debug information
   --help                Show this message and exit.
 
 Commands:

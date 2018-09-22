@@ -27,7 +27,7 @@ The server to run Kylin need 4 core CPU, 16 GB memory and 100 GB disk as the min
 
 Kylin depends on Hadoop cluster to process the massive data set. You need prepare a well configured Hadoop cluster for Kylin to run, with the common services includes HDFS, YARN, MapReduce, Hive, HBase, Zookeeper and other services. It is most common to install Kylin on a Hadoop client machine, from which Kylin can talk with the Hadoop cluster via command lines including `hive`, `hbase`, `hadoop`, etc. 
 
-Kylin itself can be started in any node of the Hadoop cluster. For simplity, you can run it in the master node. But to get better stability, we suggest you to deploy it a pure Hadoop client node, on which the command lines like `hive`, `hbase`, `hadoop`, `hdfs` already be installed and the client congfigurations (core-site.xml, hive-site.xml, hbase-site.xml, etc) are properly configured and will be automatically syned with other nodes. The Linux account that running Kylin has the permission to access the Hadoop cluster, including create/write HDFS folders, hive tables, hbase tables and submit MR jobs. 
+Kylin itself can be started in any node of the Hadoop cluster. For simplity, you can run it in the master node. But to get better stability, we suggest you to deploy it a pure Hadoop client node, on which the command lines like `hive`, `hbase`, `hadoop`, `hdfs` already be installed and the client congfigurations (core-site.xml, hive-site.xml, hbase-site.xml, etc) are properly configured and will be automatically synced with other nodes. The Linux account that running Kylin has the permission to access the Hadoop cluster, including create/write HDFS folders, hive tables, hbase tables and submit MR jobs. 
 
 ## Installation Kylin
 

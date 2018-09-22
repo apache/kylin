@@ -18,7 +18,7 @@ title: Home
                 <ol class="none-icon">
                   <li>
                     <span class="li-circle">1</span>
-                    Identify a Star/Snowfalke Schema on Hadoop.
+                    Identify a Star/Snowflake Schema on Hadoop.
                   </li>
                   <li>
                     <span class="li-circle">2</span>

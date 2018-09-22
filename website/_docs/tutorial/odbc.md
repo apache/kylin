@@ -23,7 +23,7 @@ since: v0.7.1
 2. ODBC driver internally gets results from a REST server, make sure you have access to one
 
 ## Installation
-1. Uninstall existing Kylin ODBC first, if you already installled it before
+1. Uninstall existing Kylin ODBC first, if you already installed it before
 2. Download ODBC Driver from [download](../../download/).
    * For 32 bit Tableau Desktop: Please install KylinODBCDriver (x86).exe
    * For 64 bit Tableau Desktop: Please install KylinODBCDriver (x64).exe

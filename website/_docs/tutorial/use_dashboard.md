@@ -17,7 +17,7 @@ Kylin Dashboard shows useful Cube usage statistics, which are very important to 
 
 To enable Dashboard on WebUI, you need to ensure these are all set:
 * Set **kylin.web.dashboard-enabled=true** in **kylin.properties**.
-* Setup system Cubes according to [toturial](setup_systemcube.html).
+* Setup system Cubes according to [tutorial](setup_systemcube.html).
 
 ## How to use it
 
@@ -37,7 +37,7 @@ You should now click on the calender to modify the '**Time Period**'.
 
 ![SelectPeriod](/images/Dashboard/SelectPeriod.png)
 
-- '**Time period**' is set deafult to **'Last 7 Days**'.
+- '**Time period**' is set default to **'Last 7 Days**'.
 
 - There are **2** ways to modify the time period, one is *using standard time period*s and the other is *customizing your time period*.
 
@@ -54,7 +54,7 @@ You should now click on the calender to modify the '**Time Period**'.
 
 #### Step 3:
 
-Now the data analysis will be changed and shown on the same page. (Important information has been pixilated.)
+Now the data analysis will be changed and shown on the same page. (Important information has been pixelated.)
 
 - Numbers in '**Total Cube Count**' and '**Avg Cube Expansion**' are in **Blue**.
 
@@ -62,7 +62,7 @@ Now the data analysis will be changed and shown on the same page. (Important inf
 
 - Numbers in '**Query Count**', '**Average Query Latency**', '**Job Count**' and '**Average Build Time per MB**' are in **Green**.
 
-  You can click on these four rectangles to get detail infomation about the data you selected. The detail information will then be shown as diagrams and displayed in '**Data grouped by Project**' and '**Data grouped by Time**' boxes.
+  You can click on these four rectangles to get detail information about the data you selected. The detail information will then be shown as diagrams and displayed in '**Data grouped by Project**' and '**Data grouped by Time**' boxes.
 
   1. '**Query Count**' and '**Average Query Latency**'
 

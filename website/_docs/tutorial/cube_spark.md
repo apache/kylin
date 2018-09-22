@@ -29,7 +29,7 @@ To run Spark on Yarn, need specify **HADOOP_CONF_DIR** environment variable, whi
 
 ## Check Spark configuration
 
-Kylin embedes a Spark binary (v2.1.0) in $KYLIN_HOME/spark, all the Spark configurations can be managed in $KYLIN_HOME/conf/kylin.properties with prefix *"kylin.engine.spark-conf."*. These properties will be extracted and applied when runs submit Spark job; E.g, if you configure "kylin.engine.spark-conf.spark.executor.memory=4G", Kylin will use "--conf spark.executor.memory=4G" as parameter when execute "spark-submit".
+Kylin embeds a Spark binary (v2.1.0) in $KYLIN_HOME/spark, all the Spark configurations can be managed in $KYLIN_HOME/conf/kylin.properties with prefix *"kylin.engine.spark-conf."*. These properties will be extracted and applied when runs submit Spark job; E.g, if you configure "kylin.engine.spark-conf.spark.executor.memory=4G", Kylin will use "--conf spark.executor.memory=4G" as parameter when execute "spark-submit".
 
 Before you run Spark cubing, suggest take a look on these configurations and do customization according to your cluster. Below is the recommended configurations:
 
@@ -63,7 +63,7 @@ kylin.engine.spark-conf.spark.history.fs.logDirectory=hdfs\:///kylin/spark-histo
 
 {% endhighlight %}
 
-For running on Hortonworks platform, need specify "hdp.version" as Java options for Yarn containers, so please uncommment the last three lines in kylin.properties. 
+For running on Hortonworks platform, need specify "hdp.version" as Java options for Yarn containers, so please uncomment the last three lines in kylin.properties. 
 
 Besides, in order to avoid repeatedly uploading Spark jars to Yarn, you can manually do that once, and then configure the jar's HDFS location; Please note, the HDFS location need be full qualified name.
 
@@ -103,7 +103,7 @@ Click "Next" to the "Configuration Overwrites" page, click "+Property" to add pr
 
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/2_overwrite_partition.png)
 
-The sample cube has two memory hungry measures: a "COUNT DISTINCT" and a "TOPN(100)"; Their size estimation can be inaccurate when the source data is small: the estimized size is much larger than the real size, that causes much more RDD partitions be splitted, which slows down the build. Here 100 is a more reasonable number for it. Click "Next" and "Save" to save the cube.
+The sample cube has two memory hungry measures: a "COUNT DISTINCT" and a "TOPN(100)"; Their size estimation can be inaccurate when the source data is small: the estimated size is much larger than the real size, that causes much more RDD partitions be splitted, which slows down the build. Here 100 is a more reasonable number for it. Click "Next" and "Save" to save the cube.
 
 
 ## Build Cube with Spark

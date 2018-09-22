@@ -27,7 +27,7 @@ This tutorial will guide you to create a cube. It need you have at least 1 sampl
 
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/4 +table.png)
 
-2. Enter the hive table names, separated with commad, and then click `Sync` .
+2. Enter the hive table names, separated with comma, and then click `Sync` .
 
    ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/5 hive-table.png)
 
@@ -185,7 +185,7 @@ For more please read this blog: [New Aggregation Group](/blog/2016/02/18/new-agg
 
 `Rowkeys`: the rowkeys are composed by the dimension encoded values. "Dictionary" is the default encoding method; If a dimension is not fit with dictionary (e.g., cardinality > 10 million), select "false" and then enter the fixed length for that dimension, usually that is the max length of that column; if a value is longer than that size it will be truncated. Please note, without dictionary encoding, the cube size might be much bigger.
 
-You can drag & drop a dimension column to adjust its position in rowkey; Put the mandantory dimension at the begining, then followed the dimensions that heavily involved in filters (where condition). Put high cardinality dimensions ahead of low cardinality dimensions.
+You can drag & drop a dimension column to adjust its position in rowkey; Put the mandatory dimension at the beginning, then followed the dimensions that heavily involved in filters (where condition). Put high cardinality dimensions ahead of low cardinality dimensions.
 
 `Mandatory Cuboids`: Whitelist of the cuboids that you want to build.
 

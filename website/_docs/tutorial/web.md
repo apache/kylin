@@ -79,7 +79,7 @@ There's one simple pivot and visualization analysis tool in Kylin's web for user
 
 * General Information:
 
-   When the query execute success, it will present a success indictor and also a cube's name which be hit. 
+   When the query execute success, it will present a success indicator and also a cube's name which be hit. 
    Also it will present how long this query be executed in backend engine (not cover network traffic from Kylin server to browser).
 
    ![](/images/tutorial/1.5/Kylin-Web-Tutorial/12 general.png)

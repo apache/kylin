@@ -181,8 +181,8 @@ The tunning process has been:
 
 
 Now, there are three types of cubes:
-* Cubes with low cardinality in their dimensions (Like cube 4, most of time is usend in flat table steps)
-* Cubes with high cardinality in their dimensions (Like cube 6,most of time is usend on Build cube, the flat table steps are lower than 10%)
+* Cubes with low cardinality in their dimensions (Like cube 4, most of time is used in flat table steps)
+* Cubes with high cardinality in their dimensions (Like cube 6,most of time is used on Build cube, the flat table steps are lower than 10%)
 * The third type, ultra high cardinality (UHC) which is outside the scope of this article
 
 

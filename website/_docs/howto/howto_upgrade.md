@@ -22,7 +22,7 @@ Below are versions specific guides:
 ## Upgrade from 2.4 to 2.5.0
 
 * Kylin 2.5 need Java 8; Please upgrade Java if you're running with Java 7.
-* Kylin metadata is compitable between 2.4 and 2.5. No migration is needed.
+* Kylin metadata is compatible between 2.4 and 2.5. No migration is needed.
 * Spark engine will move more steps from MR to Spark, you may see performance difference for the same cube after the upgrade.
 * Property `kylin.source.jdbc.sqoop-home` need be the location of sqoop installation, not its "bin" subfolder, please modify it if you're using RDBMS as the data source. 
 * The Cube planner is enabled by default now; New cubes will be optimized by it on first build. System cube and dashboard still need manual enablement.
@@ -72,7 +72,7 @@ Kylin v1.5.4 and v1.6.0 are compatible in metadata. Please follow the common upg
 Kylin v1.5.3 and v1.5.4 are compatible in metadata. Please follow the common upgrade steps above.
 
 ## Upgrade from 1.5.2 to v1.5.3
-Kylin v1.5.3 metadata is compitible with v1.5.2, your cubes don't need rebuilt, as usual, some actions need to be performed:
+Kylin v1.5.3 metadata is compatible with v1.5.2, your cubes don't need rebuilt, as usual, some actions need to be performed:
 
 #### 1. Update HBase coprocessor
 The HBase tables for existing cubes need be updated to the latest coprocessor; Follow [this guide](howto_update_coprocessor.html) to update;
@@ -82,7 +82,7 @@ From 1.5.3, Kylin doesn't need Hive to merge small files anymore; For users who 
 
 
 ## Upgrade from 1.5.1 to v1.5.2
-Kylin v1.5.2 metadata is compitible with v1.5.1, your cubes don't need upgrade, while some actions need to be performed:
+Kylin v1.5.2 metadata is compatible with v1.5.1, your cubes don't need upgrade, while some actions need to be performed:
 
 #### 1. Update HBase coprocessor
 The HBase tables for existing cubes need be updated to the latest coprocessor; Follow [this guide](howto_update_coprocessor.html) to update;

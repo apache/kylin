@@ -65,7 +65,7 @@ kylin.source.default=8
 kylin.source.jdbc.filed-delimiter=|
 ```
 
-There is another parameter specifing how many splits should be divided. Sqoop would run a mapper for each split.
+There is another parameter specifying how many splits should be divided. Sqoop would run a mapper for each split.
 
 ```
 kylin.source.jdbc.sqoop-mapper-num=4
