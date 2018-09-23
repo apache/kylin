@@ -221,6 +221,7 @@ public class DriverTest {
         assertEquals("test_url", ((KylinConnection) conn).getBaseUrl());
         assertEquals("test_db", ((KylinConnection) conn).getProject());
         assertTrue(Boolean.parseBoolean((String) ((KylinConnection) conn).getConnectionProperties().get("ssl")));
+        conn.close();
     }
 
     @Test
@@ -245,6 +246,8 @@ public class DriverTest {
         assertEquals("false", connProps2.getProperty("kylin.query.calcite.extras-props.caseSensitive"));
         assertEquals("UNCHANGED", connProps2.getProperty("kylin.query.calcite.extras-props.unquotedCasing"));
         assertEquals("BACK_TICK", connProps2.getProperty("kylin.query.calcite.extras-props.quoting"));
+        conn.close();
+        conn2.close();
     }
 
     private void printResultSet(ResultSet rs) throws SQLException {
