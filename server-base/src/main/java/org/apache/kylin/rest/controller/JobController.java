@@ -78,7 +78,7 @@ public class JobController extends BasicController {
             try {
                 jobSearchMode = JobService.JobSearchMode.valueOf(jobRequest.getJobSearchMode());
             } catch (IllegalArgumentException e) {
-                logger.error("Invalid value for JobSearchMode: '" + jobRequest.getJobSearchMode() + "', skip it.", e);
+                logger.warn("Invalid value for JobSearchMode: '" + jobRequest.getJobSearchMode() + "', skip it.");
             }
         }
 
