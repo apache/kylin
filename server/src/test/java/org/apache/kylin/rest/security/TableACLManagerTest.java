@@ -46,12 +46,12 @@ public class TableACLManagerTest extends MultiNodeManagerTestBase {
         Assert.assertEquals(0, tableACLManagerB.getTableACLByCache(PROJECT).size());
         tableACLManagerA.addTableACL(PROJECT, USER, TABLE, MetadataConstants.TYPE_USER);
         // if don't sleep, manager B's get method is faster than notify
-        Thread.sleep(1000);
+        Thread.sleep(3000);
         Assert.assertEquals(1, tableACLManagerB.getTableACLByCache(PROJECT).size());
 
         Assert.assertEquals(1, tableACLManagerA.getTableACLByCache(PROJECT).size());
         tableACLManagerB.deleteTableACL(PROJECT, USER, TABLE, MetadataConstants.TYPE_USER);
-        Thread.sleep(1000);
+        Thread.sleep(3000);
         Assert.assertEquals(0, tableACLManagerA.getTableACLByCache(PROJECT).size());
     }
 }

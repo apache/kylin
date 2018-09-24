@@ -122,16 +122,4 @@ public class JobControllerTest extends ServiceTestBase {
         }
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testResume() throws IOException {
-        JobBuildRequest jobBuildRequest = new JobBuildRequest();
-        jobBuildRequest.setBuildType("BUILD");
-        jobBuildRequest.setStartTime(20130331080000L);
-        jobBuildRequest.setEndTime(20131212080000L);
-
-        // Yang: how to rebuild a cube does not exists?!
-        JobInstance job = cubeController.rebuild(CUBE_NAME, jobBuildRequest);
-
-        jobSchedulerController.resume(job.getId());
-    }
 }
