@@ -262,11 +262,10 @@ public class RecordEvent implements Record, Map<String, Object>, Serializable {
 
         public RecordReserveKeyEnum getByKey(String key) {
             for (RecordReserveKeyEnum reserveKey : RecordReserveKeyEnum.values()) {
-                if (reserveKey.reserveKey == key) {
+                if (reserveKey.reserveKey.equals(key)) {
                     return reserveKey;
                 }
             }
-
             return null;
         }
     }
