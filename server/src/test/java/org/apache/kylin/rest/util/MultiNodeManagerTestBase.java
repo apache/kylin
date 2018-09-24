@@ -33,13 +33,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MultiNodeManagerTestBase extends LocalFileMetadataTestCase {
-    private static Server server;
+    private Server server;
     protected static String PROJECT = "default";
     protected static String USER = "u1";
     protected static String TABLE = "t1";
 
-    protected static KylinConfig configA;
-    protected static KylinConfig configB;
+    protected KylinConfig configA;
+    protected KylinConfig configB;
     private static final Logger logger = LoggerFactory.getLogger(MultiNodeManagerTestBase.class);
 
     @Before

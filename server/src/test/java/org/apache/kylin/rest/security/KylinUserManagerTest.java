@@ -36,15 +36,15 @@ public class KylinUserManagerTest extends MultiNodeManagerTestBase {
         final KylinUserManager managerB = new KylinUserManager(configB);
         ManagedUser u1 = new ManagedUser("u1", "skippped", false, Lists.<GrantedAuthority> newArrayList());
         managerA.update(u1);
-        Thread.sleep(1000);
+        Thread.sleep(3000);
         ManagedUser u11 = new ManagedUser("u1", "password", false,
                 Lists.<GrantedAuthority> newArrayList(new SimpleGrantedAuthority(Constant.ROLE_ANALYST)));
         managerB.update(u11);
-        Thread.sleep(1000);
+        Thread.sleep(3000);
         Assert.assertEquals("password", managerA.get("u1").getPassword());
         Assert.assertEquals("password", managerB.get("u1").getPassword());
         managerB.delete("u1");
-        Thread.sleep(1000);
+        Thread.sleep(3000);
         Assert.assertNull(managerA.get("u1"));
         Assert.assertNull(managerB.get("u1"));
     }
