@@ -18,8 +18,11 @@
 
 package org.apache.kylin.source.kafka;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
@@ -32,7 +35,10 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.hive.CreateFlatHiveTableStep;
 import org.apache.kylin.source.hive.GarbageCollectionStep;
@@ -89,7 +95,23 @@ public class KafkaInputBase {
 
             @Override
             public List<TblColRef> getAllColumns() {
-                return flatDesc.getFactColumns();
+                final Set<TblColRef> factTableColumnSet = Sets.newHashSet();
+                TableRef rootFactTable = getDataModel().getRootFactTable();
+                for (TblColRef colRef : flatDesc.getAllColumns()) {
+                    if (colRef.getTableRef().equals(rootFactTable)) {
+                        factTableColumnSet.add(colRef);
+                    }
+                }
+                // Add column which belongs to root fact table in join relation but lost
+                for (JoinTableDesc joinTableDesc : getDataModel().getJoinTables()) {
+                    JoinDesc join = joinTableDesc.getJoin();
+                    for (TblColRef colRef : join.getForeignKeyColumns()) {
+                        if (colRef.getTableRef().equals(rootFactTable)) {
+                            factTableColumnSet.add(colRef);
+                        }
+                    }
+                }
+                return new LinkedList<>(factTableColumnSet);
             }
 
             @Override
