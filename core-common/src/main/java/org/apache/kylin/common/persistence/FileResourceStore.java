@@ -127,8 +127,9 @@ public class FileResourceStore extends ResourceStore {
 
             File f = file(resPath);
             if (f.exists() && f.isFile()) {
-                logger.info("file length = " + f.length() + " , " + f.getAbsolutePath());
-
+                if (f.length() == 0) {
+                    logger.warn("Zero length file: " + f.getAbsolutePath());
+                }
                 FileInputStream resource = new FileInputStream(f);
                 return new RawResource(resource, f.lastModified());
             } else {
