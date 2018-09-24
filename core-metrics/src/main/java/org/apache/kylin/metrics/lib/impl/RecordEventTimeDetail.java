@@ -71,7 +71,7 @@ public class RecordEventTimeDetail {
         this.second = calendar.get(Calendar.SECOND);
 
         long timeStampForWeekBegin = timeStamp;
-        timeStampForWeekBegin -= 3600000 * 24 * (calendar.get(Calendar.DAY_OF_WEEK) - 1);
+        timeStampForWeekBegin -= 3600000L * 24 * (calendar.get(Calendar.DAY_OF_WEEK) - 1);
         calendar.setTimeInMillis(timeStampForWeekBegin);
         this.week_begin_date = dateFormat.format(calendar.getTime());
     }
