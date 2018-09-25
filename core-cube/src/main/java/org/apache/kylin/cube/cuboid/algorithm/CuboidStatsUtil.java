@@ -87,7 +87,10 @@ public class CuboidStatsUtil {
                         return o1.getValue().compareTo(o2.getValue());
                     }
                 });
-        sortedStatsSet.addAll(statistics.entrySet());
+        //sortedStatsSet.addAll(statistics.entrySet()); KYLIN-3580
+        for(Map.Entry<Long, Long> entry : statistics.entrySet()){
+            sortedStatsSet.add(entry);
+        }
         for (Long cuboid : mandatoryCuboidSet) {
             if (statistics.get(cuboid) == null) {
                 // Get estimate row count for mandatory cuboid
