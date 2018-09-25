@@ -60,15 +60,15 @@ public class BPUSCalculator implements BenefitPolicy {
                 cuboidAggCostMap.put(cuboid, getCuboidCost(cuboid));
             }
         }
-        Set<Long> mandatoryCuboidSetWithStats = cuboidAggCostMap.keySet();
+
         //Initialize stats for selection cuboids
         long baseCuboidCost = getCuboidCost(cuboidStats.getBaseCuboid());
         for (Long cuboid : cuboidStats.getAllCuboidsForSelection()) {
             long leastCost = baseCuboidCost;
-            for (Long cuboidTarget : mandatoryCuboidSetWithStats) {
-                if ((cuboid | cuboidTarget) == cuboidTarget) {
-                    if (leastCost > cuboidAggCostMap.get(cuboidTarget)) {
-                        leastCost = cuboidAggCostMap.get(cuboidTarget);
+            for (Map.Entry<Long, Long> cuboidTargetEntry : cuboidAggCostMap.entrySet()) {
+                if ((cuboid | cuboidTargetEntry.getKey()) == cuboidTargetEntry.getKey()) {
+                    if (leastCost > cuboidTargetEntry.getValue()) {
+                        leastCost = cuboidTargetEntry.getValue();
                     }
                 }
             }
@@ -106,9 +106,9 @@ public class BPUSCalculator implements BenefitPolicy {
         }
         double totalCostSaving = 0;
         int benefitCount = 0;
-        for (Long cuboid : cuboidAggCostMapCopy.keySet()) {
-            if (cuboidAggCostMapCopy.get(cuboid) < processCuboidAggCostMap.get(cuboid)) {
-                totalCostSaving += processCuboidAggCostMap.get(cuboid) - cuboidAggCostMapCopy.get(cuboid);
+        for (Map.Entry<Long, Long> entry : cuboidAggCostMapCopy.entrySet()) {
+            if (entry.getValue() < processCuboidAggCostMap.get(entry.getKey())) {
+                totalCostSaving += processCuboidAggCostMap.get(entry.getKey()) - entry.getValue();
                 benefitCount++;
             }
         }
