@@ -51,7 +51,11 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
     public static DefaultScheduler getInstance() {
         if (INSTANCE == null) {
-            INSTANCE = createInstance();
+            synchronized (DefaultScheduler.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = createInstance();
+                }
+            }
         }
         return INSTANCE;
     }
