@@ -36,7 +36,7 @@ public class MetricsFactory {
     /**
      * Initializes static Metrics instance.
      */
-    public synchronized static void init() {
+    public static synchronized void init() {
         if (metrics == null) {
             Class metricsClass = MetricsFactory.class;
             metrics = new CodahaleMetrics();
@@ -53,7 +53,7 @@ public class MetricsFactory {
     /**
      * Closes and removes static Metrics instance.
      */
-    public synchronized static void close() throws Exception {
+    public static synchronized void close() throws Exception {
         if (metrics != null) {
             metrics.close();
             metrics = null;

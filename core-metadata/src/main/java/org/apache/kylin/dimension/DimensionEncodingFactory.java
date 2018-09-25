@@ -97,7 +97,7 @@ public abstract class DimensionEncodingFactory {
                 });
     }
 
-    private synchronized static void initFactoryMap() {
+    private static synchronized void initFactoryMap() {
         if (factoryMap == null) {
             Map<Pair<String, Integer>, DimensionEncodingFactory> map = Maps.newConcurrentMap();
 

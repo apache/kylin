@@ -56,13 +56,13 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         return INSTANCE;
     }
 
-    public synchronized static DefaultScheduler createInstance() {
+    public static synchronized DefaultScheduler createInstance() {
         destroyInstance();
         INSTANCE = new DefaultScheduler();
         return INSTANCE;
     }
 
-    public synchronized static void destroyInstance() {
+    public static synchronized void destroyInstance() {
         DefaultScheduler tmp = INSTANCE;
         INSTANCE = null;
         if (tmp != null) {
