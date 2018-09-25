@@ -7,16 +7,16 @@ permalink: /docs/install/index.html
 
 ## Software requirements
 
-* Hadoop: 2.7+
+* Hadoop: 2.7+, 3.1+ (since v2.5)
 * Hive: 0.13 - 1.2.1+
-* HBase: 1.1+
+* HBase: 1.1+, 2.0 (since v2.5)
 * Spark 2.1.1+
-* JDK: 1.7+
+* JDK: 1.8+ (since v2.5)
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
 
-Tested with Hortonworks HDP 2.2 - 2.6, Cloudera CDH 5.7 - 5.11, AWS EMR 5.7 - 5.10, Azure HDInsight 3.5 - 3.6.
+Tested with Hortonworks HDP 2.4 - 2.6 and 3.0, Cloudera CDH 5.7 - 5.11 and 6.0, AWS EMR 5.7 - 5.10, Azure HDInsight 3.5 - 3.6.
 
-For trial and development purpose, we recommend you try Kylin with an all-in-one sandbox VM, like [HDP sandbox](http://hortonworks.com/products/hortonworks-sandbox/), and give it 10 GB memory. We suggest you using bridged mode instead of NAT mode in Virtual Box settings. 
+For trial and development purpose, we recommend you try Kylin with an all-in-one sandbox VM, like [Hortonworks HDP sandbox](http://hortonworks.com/products/hortonworks-sandbox/), and give it 10 GB memory. We suggest you using bridged mode instead of NAT mode in Virtual Box settings. 
 
 ## Hardware requirements
 

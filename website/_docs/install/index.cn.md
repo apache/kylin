@@ -7,15 +7,15 @@ permalink: /cn/docs/install/index.html
 
 ## 软件要求
 
-* Hadoop: 2.7+
+* Hadoop: 2.7+, 3.1+ (since v2.5)
 * Hive: 0.13 - 1.2.1+
-* HBase: 1.1+
+* HBase: 1.1+, 2.0 (since v2.5)
 * Spark (可选) 2.1.1+
 * Kafka (可选) 0.10.0+
-* JDK: 1.7+
+* JDK: 1.8+ (since v2.5)
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
 
-在 Hortonworks HDP 2.2 - 2.6, Cloudera CDH 5.7 - 5.11, AWS EMR 5.7 - 5.10, Azure HDInsight 3.5 - 3.6 上测试通过。
+在 Hortonworks HDP 2.2 - 2.6 and 3.0, Cloudera CDH 5.7 - 5.11 and 6.0, AWS EMR 5.7 - 5.10, Azure HDInsight 3.5 - 3.6 上测试通过。
 
 出于试用和开发的目的，我们建议您使用集成的 sandbox 来试用 Kylin，比如 [HDP sandbox](http://hortonworks.com/products/hortonworks-sandbox/)，且其要保证 10 GB memory。我们建议您在 Virtual Box settings 中使用桥接模式代替 NAT 模式。 
 

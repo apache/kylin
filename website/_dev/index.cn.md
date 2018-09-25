@@ -16,7 +16,6 @@ Commits [总结](https://github.com/apache/kylin/commits/master)
 Gitbox 的镜像：[https://gitbox.apache.org/repos/asf?p=kylin.git ](https://gitbox.apache.org/repos/asf?p=kylin.git )
 
 ### CI 和代码分析
-使用 JDK 1.7（过时）的 master 分支上的 UT：[Kylin-Master-JDK-1.7](https://builds.apache.org/job/Kylin-Master-JDK-1.7/) 
 使用 JDK 1.8 的 master 分支上的 UT：[Kylin-Master-JDK-1.8](https://builds.apache.org/job/Kylin-Master-JDK-1.8/) 
 静态代码分析：[SonarCube dashboard](https://builds.apache.org/analysis/overview?id=org.apache.kylin%3Akylin)
 

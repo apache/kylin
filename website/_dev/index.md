@@ -16,7 +16,6 @@ Source Repo: [https://github.com/apache/kylin ](https://github.com/apache/kylin 
 Mirrored to Gitbox: [https://gitbox.apache.org/repos/asf?p=kylin.git ](https://gitbox.apache.org/repos/asf?p=kylin.git )
 
 ### CI and Code Analysis
-UT on master branch with JDK 1.7(deprecated): [Kylin-Master-JDK-1.7](https://builds.apache.org/job/Kylin-Master-JDK-1.7/) 
 UT on master branch with JDK 1.8: [Kylin-Master-JDK-1.8](https://builds.apache.org/job/Kylin-Master-JDK-1.8/) 
 Static Code Analysis: [SonarCube dashboard](https://builds.apache.org/analysis/overview?id=org.apache.kylin%3Akylin)
 
