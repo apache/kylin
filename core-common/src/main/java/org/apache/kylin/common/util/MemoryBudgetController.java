@@ -20,6 +20,7 @@ package org.apache.kylin.common.util;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
@@ -68,6 +69,7 @@ public class MemoryBudgetController {
     private final ConcurrentMap<MemoryConsumer, ConsumerEntry> booking = new ConcurrentHashMap<MemoryConsumer, ConsumerEntry>();
     private int totalReservedMB;
     private final ReentrantLock lock = new ReentrantLock();
+    private Condition memoryCondition = lock.newCondition();
 
     public MemoryBudgetController(int totalBudgetMB) {
         Preconditions.checkArgument(totalBudgetMB >= 0);
@@ -116,13 +118,14 @@ public class MemoryBudgetController {
             if (waitStart == 0)
                 waitStart = System.currentTimeMillis();
 
-            synchronized (lock) {
-                try {
-                    lock.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new NotEnoughBudgetException(e);
-                }
+            try {
+                lock.lock();
+                memoryCondition.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new NotEnoughBudgetException(e);
+            }finally {
+                lock.unlock();
             }
         }
     }
@@ -231,9 +234,7 @@ public class MemoryBudgetController {
         }
 
         if (delta < 0) {
-            synchronized (lock) {
-                lock.notifyAll();
-            }
+            memoryCondition.signalAll();
         }
 
         return true;
