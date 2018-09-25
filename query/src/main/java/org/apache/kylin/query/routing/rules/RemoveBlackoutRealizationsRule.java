@@ -59,13 +59,16 @@ public class RemoveBlackoutRealizationsRule extends RoutingRule {
     private static IRealizationFilter getFilterImpl(KylinConfig conf) {
         IRealizationFilter filter = filters.get(conf);
         if (filter == null) {
-            try {
-                Class<? extends IRealizationFilter> clz = ClassUtil.forName(conf.getQueryRealizationFilter(), IRealizationFilter.class);
-                filter = clz.getConstructor(KylinConfig.class).newInstance(conf);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            synchronized (RemoveBlackoutRealizationsRule.class) {
+                try {
+                    Class<? extends IRealizationFilter> clz = ClassUtil.forName(conf.getQueryRealizationFilter(),
+                            IRealizationFilter.class);
+                    filter = clz.getConstructor(KylinConfig.class).newInstance(conf);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                filters.put(conf, filter);
             }
-            filters.put(conf, filter);
         }
         return filter;
     }
