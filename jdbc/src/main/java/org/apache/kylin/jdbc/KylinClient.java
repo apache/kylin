@@ -379,7 +379,7 @@ public class KylinClient implements IRemoteClient {
         addHttpHeaders(post);
 
         String postBody = jsonMapper.writeValueAsString(request);
-        logger.debug("Post body:\n " + postBody);
+        logger.debug("Post body:\n {}", postBody);
         StringEntity requestEntity = new StringEntity(postBody, ContentType.create("application/json", "UTF-8"));
         post.setEntity(requestEntity);
 

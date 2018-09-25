@@ -18,8 +18,13 @@
 
 package org.apache.kylin.common.debug;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.Pair;
 
@@ -154,6 +159,35 @@ public class BackdoorToggles {
 
     public static void cleanToggles() {
         _backdoorToggles.remove();
+    }
+
+    /**
+     * get extra calcite props from jdbc client
+     */
+    public static Properties getJdbcDriverClientCalciteProps() {
+        Properties props = new Properties();
+        String propsStr = getString(JDBC_CLIENT_CALCITE_PROPS);
+        if (propsStr == null) {
+            return props;
+        }
+        try {
+            props.load(new StringReader(propsStr));
+        } catch (IOException ignored) {
+            // ignored
+        }
+        final Set<String> allowedPropsNames = Sets.newHashSet(
+                "caseSensitive",
+                "unquotedCasing",
+                "quoting",
+                "conformance"
+        );
+        // remove un-allowed props
+        for (String key : props.stringPropertyNames()) {
+            if (!allowedPropsNames.contains(key)) {
+                props.remove(key);
+            }
+        }
+        return props;
     }
 
     /**
@@ -313,4 +347,9 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_HTRACE_ENABLED = "DEBUG_TOGGLE_HTRACE_ENABLED";
+
+    /**
+     * extra calcite props from jdbc client
+     */
+    public static final String JDBC_CLIENT_CALCITE_PROPS = "JDBC_CLIENT_CALCITE_PROPS";
 }
