@@ -22,6 +22,7 @@ This is a major release after 2.4, with 96 bug fixes and enhancement. Check [How
 __New Feature__
 * [KYLIN-2565] - Support Hadoop 3.0
 * [KYLIN-3488] - Support MySQL as Kylin metadata storage
+* [KYLIN-3366] - Configure automatic enabling of cubes after a build process
 
 __Improvement__
 * [KYLIN-2998] - Kill spark app when cube job was discarded
@@ -163,7 +164,6 @@ __New Feature__
 * [KYLIN-3315] - Allow each project to set its own source at project level
 * [KYLIN-3343] - Support JDBC source on UI
 * [KYLIN-3358] - Support sum(case when...), sum(2*price+1), count(column) and more
-* [KYLIN-3366] - Configure automatic enabling of cubes after a build process
 * [KYLIN-3378] - Support Kafka table join with Hive tables
 
 __Improvement__

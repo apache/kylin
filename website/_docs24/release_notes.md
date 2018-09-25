@@ -58,7 +58,6 @@ __New Feature__
 * [KYLIN-3315] - Allow each project to set its own source at project level
 * [KYLIN-3343] - Support JDBC source on UI
 * [KYLIN-3358] - Support sum(case when...), sum(2*price+1), count(column) and more
-* [KYLIN-3366] - Configure automatic enabling of cubes after a build process
 * [KYLIN-3378] - Support Kafka table join with Hive tables
 
 __Improvement__
