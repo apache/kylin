@@ -27,7 +27,14 @@ public class EncryptUtilTest {
     public void testAESEncrypt(){
         String input = "hello world";
         String result = EncryptUtil.encrypt(input);
-        Assert.assertEquals("4stv/RRleOtvie/8SLHmXA==", result);
+        Assert.assertEquals("dImt2pa7nDD7STLgdzFXGg==", result);
+    }
+
+    @Test
+    public void testAESDecrypt(){
+        String input = "F2nAgzbBcGRs8wtObIaXfQ==";
+        String result = EncryptUtil.decrypt(input);
+        Assert.assertEquals("wordcount", result);
     }
 
 }
