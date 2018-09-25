@@ -19,11 +19,13 @@
 package org.apache.kylin.jdbc;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.calcite.avatica.AvaticaParameter;
@@ -58,11 +60,13 @@ public class KylinResultSet extends AvaticaResultSet {
             paramValues = ((KylinPreparedStatement) statement).getParameterJDBCValues();
         }
 
-        IRemoteClient client = ((KylinConnection) statement.connection).getRemoteClient();
+        KylinConnection connection = (KylinConnection) statement.connection;
+        IRemoteClient client = connection.getRemoteClient();
 
         Map<String, String> queryToggles = new HashMap<>();
         int maxRows = statement.getMaxRows();
         queryToggles.put("ATTR_STATEMENT_MAX_ROWS", String.valueOf(maxRows));
+        addServerProps(queryToggles, connection);
 
         QueryResult result;
         try {
@@ -76,6 +80,32 @@ public class KylinResultSet extends AvaticaResultSet {
 
         cursor = MetaImpl.createCursor(signature.cursorFactory, result.iterable);
         return super.execute2(cursor, columnMetaDataList);
+    }
+
+    /**
+     * add calcite props into queryToggles
+     */
+    private void addServerProps(Map<String, String> queryToggles, KylinConnection connection) {
+        Properties connProps = connection.getConnectionProperties();
+        Properties props = new Properties();
+        for (String key : connProps.stringPropertyNames()) {
+            if (Driver.CLIENT_CALCITE_PROP_NAMES.contains(key)) {
+                props.put(key, connProps.getProperty(key));
+            }
+        }
+
+        if (props.isEmpty()) {
+            return;
+        }
+
+        StringWriter writer = new StringWriter();
+        try {
+            props.store(writer, "");
+        } catch (IOException ignored) {
+            // ignored
+            return;
+        }
+        queryToggles.put("JDBC_CLIENT_CALCITE_PROPS", writer.toString());
     }
 
 }
