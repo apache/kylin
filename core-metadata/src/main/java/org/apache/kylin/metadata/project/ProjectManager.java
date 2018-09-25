@@ -303,7 +303,7 @@ public class ProjectManager {
             for (String tableId : tableIdentities) {
                 TableDesc table = metaMgr.getTableDesc(tableId, projectName);
                 if (table == null) {
-                    throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
+                    throw new IllegalStateException("Cannot find table '" + tableId + "' in metadata manager");
                 }
                 projectInstance.addTable(table.getIdentity());
             }
@@ -312,13 +312,13 @@ public class ProjectManager {
         }
     }
 
-    public void removeTableDescFromProject(String tableIdentities, String projectName) throws IOException {
+    public void removeTableDescFromProject(String tableId, String projectName) throws IOException {
         try (AutoLock lock = prjMapLock.lockForWrite()) {
             TableMetadataManager metaMgr = getTableManager();
             ProjectInstance projectInstance = getProject(projectName);
-            TableDesc table = metaMgr.getTableDesc(tableIdentities, projectName);
+            TableDesc table = metaMgr.getTableDesc(tableId, projectName);
             if (table == null) {
-                throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
+                throw new IllegalStateException("Cannot find table '" + tableId + "' in metadata manager");
             }
 
             projectInstance.removeTable(table.getIdentity());
