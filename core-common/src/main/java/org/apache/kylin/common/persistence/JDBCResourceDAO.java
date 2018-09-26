@@ -32,8 +32,10 @@ import java.text.FieldPosition;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.NavigableSet;
 import java.util.TreeSet;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -116,7 +118,7 @@ public class JDBCResourceDAO {
                     if (fetchContent) {
                         try {
                             resource.setContent(getInputStream(resourcePath, rs));
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                             if (!isAllowBroken) {
                                 throw new SQLException(e);
                             }
@@ -147,8 +149,8 @@ public class JDBCResourceDAO {
     }
 
     //fetch primary key only
-    public TreeSet<String> listAllResource(final String folderPath, final boolean recursive) throws SQLException {
-        final TreeSet<String> allResourceName = new TreeSet<>();
+    public NavigableSet<String> listAllResource(final String folderPath, final boolean recursive) throws SQLException {
+        final NavigableSet<String> allResourceName = new TreeSet<>();
         executeSql(new SqlOperation() {
             @Override
             public void execute(Connection connection) throws SQLException {
@@ -158,7 +160,7 @@ public class JDBCResourceDAO {
                 rs = pstat.executeQuery();
                 while (rs.next()) {
                     String path = rs.getString(META_TABLE_KEY);
-                    assert path.startsWith(folderPath);
+                    Preconditions.checkState(path.startsWith(folderPath));
                     if (recursive) {
                         allResourceName.add(path);
                     } else {
@@ -192,7 +194,7 @@ public class JDBCResourceDAO {
                         resource.setTimestamp(rs.getLong(META_TABLE_TS));
                         try {
                             resource.setContent(getInputStream(resPath, rs));
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                             if (!isAllowBroken) {
                                 throw new SQLException(e);
                             }
@@ -240,7 +242,7 @@ public class JDBCResourceDAO {
         if (!skipHdfs) {
             try {
                 deleteHDFSResourceIfExist(resourcePath);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw new SQLException(e);
             }
         }
@@ -389,7 +391,7 @@ public class JDBCResourceDAO {
             bout = new ByteArrayOutputStream();
             IOUtils.copy(resource.getContent(), bout);
             return bout.toByteArray();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SQLException(e);
         } finally {
             IOUtils.closeQuietly(bout);
@@ -635,10 +637,10 @@ public class JDBCResourceDAO {
             out = redirectFileSystem.create(redirectPath);
             out.write(largeColumn);
             return redirectPath;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             try {
                 rollbackLargeCellFromHdfs(resPath);
-            } catch (Throwable ex) {
+            } catch (Exception ex) {
                 logger.error("fail to roll back resource " + resPath + " in hdfs", ex);
             }
             throw new SQLException(e);
@@ -659,12 +661,12 @@ public class JDBCResourceDAO {
                 redirectFileSystem.delete(redirectPath, true);
                 logger.warn("no backup for hdfs file {} is found, clean it", resPath);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
 
             try {
                 //last try to delete redirectPath, because we prefer a deleted rather than incomplete
                 redirectFileSystem.delete(redirectPath, true);
-            } catch (Throwable ex) {
+            } catch (Exception ex) {
                 logger.error("fail to delete resource " + redirectPath + " in hdfs", ex);
             }
 
@@ -679,7 +681,7 @@ public class JDBCResourceDAO {
             if (redirectFileSystem.exists(oldPath)) {
                 redirectFileSystem.delete(oldPath, true);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             logger.warn("error cleaning the backup file for " + redirectPath + ", leave it as garbage", e);
         }
     }
