@@ -33,6 +33,10 @@ import org.slf4j.LoggerFactory;
 public class SqlUtil {
     private static final Logger logger = LoggerFactory.getLogger(SqlUtil.class);
 
+    private SqlUtil() {
+        throw new IllegalStateException("Class CheckUtil is an utility class !");
+    }
+
     public static void closeResources(Connection con, Statement statement) {
         try {
             if (statement != null && !statement.isClosed()) {

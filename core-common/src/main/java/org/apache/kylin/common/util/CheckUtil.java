@@ -28,6 +28,10 @@ import org.slf4j.LoggerFactory;
 public class CheckUtil {
     public static final Logger logger = LoggerFactory.getLogger(CheckUtil.class);
 
+    private CheckUtil(){
+        throw new IllegalStateException("Class CheckUtil is an utility class !");
+    }
+
     public static boolean checkCondition(boolean condition, String message, Object... args) {
         if (condition) {
             return true;
@@ -53,27 +57,14 @@ public class CheckUtil {
      * @param port the port to check for availability
      */
     public static boolean checkPortAvailable(int port) {
-        ServerSocket ss = null;
-        DatagramSocket ds = null;
-        try {
-            ss = new ServerSocket(port);
+
+        try(ServerSocket ss = new ServerSocket(port);
+            DatagramSocket ds = new DatagramSocket(port);
+            ) {
             ss.setReuseAddress(true);
-            ds = new DatagramSocket(port);
             ds.setReuseAddress(true);
             return true;
         } catch (IOException e) {
-        } finally {
-            if (ds != null) {
-                ds.close();
-            }
-
-            if (ss != null) {
-                try {
-                    ss.close();
-                } catch (IOException e) {
-                    /* should not be thrown */
-                }
-            }
         }
 
         return false;

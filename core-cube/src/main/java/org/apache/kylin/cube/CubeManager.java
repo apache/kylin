@@ -125,7 +125,7 @@ public class CubeManager implements IRealizationProvider {
     private DictionaryAssist dictAssist = new DictionaryAssist();
 
     private CubeManager(KylinConfig cfg) throws IOException {
-        logger.info("Initializing CubeManager with config " + cfg);
+        logger.info("Initializing CubeManager with config {}", cfg);
         this.config = cfg;
         this.cubeMap = new CaseInsensitiveStringCache<CubeInstance>(config, "cube");
         this.crud = new CachedCrudAssist<CubeInstance>(getStore(), ResourceStore.CUBE_RESOURCE_ROOT, CubeInstance.class,
@@ -222,7 +222,7 @@ public class CubeManager implements IRealizationProvider {
     public CubeInstance createCube(String cubeName, String projectName, CubeDesc desc, String owner)
             throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
-            logger.info("Creating cube '" + projectName + "-->" + cubeName + "' from desc '" + desc.getName() + "'");
+            logger.info("Creating cube '{}-->{}' from desc '{}'", projectName, cubeName, desc.getName());
 
             // save cube resource
             CubeInstance cube = CubeInstance.create(cubeName, desc);
@@ -238,7 +238,7 @@ public class CubeManager implements IRealizationProvider {
 
     public CubeInstance createCube(CubeInstance cube, String projectName, String owner) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
-            logger.info("Creating cube '" + projectName + "-->" + cube.getName() + "' from instance object. '");
+            logger.info("Creating cube '{}-->{}' from instance object. '", projectName, cube.getName());
 
             // save cube resource
             cube.setOwner(owner);
@@ -313,7 +313,7 @@ public class CubeManager implements IRealizationProvider {
             throw new IllegalStateException();
 
         CubeInstance cube = update.getCubeInstance();
-        logger.info("Updating cube instance '" + cube.getName() + "'");
+        logger.info("Updating cube instance '{}'", cube.getName());
 
         Segments<CubeSegment> newSegs = (Segments) cube.getSegments().clone();
 
@@ -327,7 +327,7 @@ public class CubeManager implements IRealizationProvider {
                 CubeSegment currentSeg = iterator.next();
                 for (CubeSegment toRemoveSeg : update.getToRemoveSegs()) {
                     if (currentSeg.getUuid().equals(toRemoveSeg.getUuid())) {
-                        logger.info("Remove segment " + currentSeg.toString());
+                        logger.info("Remove segment {}", currentSeg.toString());
                         toRemoveResources.add(currentSeg.getStatisticsResourcePath());
                         iterator.remove();
                         break;
@@ -380,7 +380,7 @@ public class CubeManager implements IRealizationProvider {
         try {
             cube = crud.save(cube);
         } catch (WriteConflictException ise) {
-            logger.warn("Write conflict to update cube " + cube.getName() + " at try " + retry + ", will retry...");
+            logger.warn("Write conflict to update cube {} at try {}, will retry...", cube.getName(), retry);
             if (retry >= 7) {
                 logger.error("Retried 7 times till got error, abandoning...", ise);
                 throw ise;
@@ -396,7 +396,7 @@ public class CubeManager implements IRealizationProvider {
                 try {
                     getStore().deleteResource(resource);
                 } catch (IOException ioe) {
-                    logger.error("Failed to delete resource " + toRemoveResources.toString());
+                    logger.error("Failed to delete resource {}", toRemoveResources.toString());
                 }
             }
         }
@@ -438,7 +438,7 @@ public class CubeManager implements IRealizationProvider {
 
     public CubeInstance dropCube(String cubeName, boolean deleteDesc) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
-            logger.info("Dropping cube '" + cubeName + "'");
+            logger.info("Dropping cube '{}'", cubeName);
             // load projects before remove cube from project
 
             // delete cube instance and cube desc
@@ -872,7 +872,7 @@ public class CubeManager implements IRealizationProvider {
                         "For cube " + cubeCopy + ", segment " + newSegCopy + " missing LastBuildJobID");
 
             if (isReady(newSegCopy) == true) {
-                logger.warn("For cube " + cubeCopy + ", segment " + newSegCopy + " state should be NEW but is READY");
+                logger.warn("For cube {}, segment {} state should be NEW but is READY", cubeCopy, newSegCopy);
             }
 
             List<CubeSegment> tobe = cubeCopy.calculateToBeSegments(newSegCopy);
@@ -889,8 +889,7 @@ public class CubeManager implements IRealizationProvider {
                     toRemoveSegs.add(segment);
             }
 
-            logger.info("Promoting cube " + cubeCopy + ", new segment " + newSegCopy + ", to remove segments "
-                    + toRemoveSegs);
+            logger.info("Promoting cube {}, new segment {}, to remove segments {}", cubeCopy, newSegCopy, toRemoveSegs);
 
             CubeUpdate update = new CubeUpdate(cubeCopy);
             update.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()]))
@@ -941,8 +940,8 @@ public class CubeManager implements IRealizationProvider {
                 seg.setStatus(SegmentStatusEnum.READY);
             }
 
-            logger.info("Promoting cube " + cubeCopy + ", new segments " + Arrays.toString(optSegCopy)
-                    + ", to remove segments " + originalSegments);
+            logger.info("Promoting cube {}, new segments {}, to remove segments {}",
+                         cubeCopy, Arrays.toString(optSegCopy), originalSegments);
 
             CubeUpdate update = new CubeUpdate(cubeCopy);
             update.setToRemoveSegs(originalSegments) //
@@ -975,7 +974,7 @@ public class CubeManager implements IRealizationProvider {
             DataModelDesc modelDesc = cube.getModel();
             Preconditions.checkNotNull(cube);
             final List<CubeSegment> segments = cube.getSegments();
-            logger.info("totally " + segments.size() + " cubeSegments");
+            logger.info("totally {} cubeSegments", segments.size());
             if (segments.size() == 0) {
                 return holes;
             }
