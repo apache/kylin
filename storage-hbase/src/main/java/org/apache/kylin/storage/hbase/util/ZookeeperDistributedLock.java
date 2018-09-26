@@ -140,22 +140,22 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     public boolean lock(String lockPath) {
         lockPath = norm(lockPath);
 
-        logger.debug(client + " trying to lock " + lockPath);
+        logger.debug("{} trying to lock {}", client, lockPath);
 
         try {
             curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(lockPath, clientBytes);
         } catch (KeeperException.NodeExistsException ex) {
-            logger.debug(client + " see " + lockPath + " is already locked");
+            logger.debug("{} see {} is already locked", client, lockPath);
         } catch (Exception ex) {
             throw new RuntimeException("Error while " + client + " trying to lock " + lockPath, ex);
         }
 
         String lockOwner = peekLock(lockPath);
         if (client.equals(lockOwner)) {
-            logger.info(client + " acquired lock at " + lockPath);
+            logger.info("{} acquired lock at {}", client, lockPath);
             return true;
         } else {
-            logger.debug(client + " failed to acquire lock at " + lockPath + ", which is held by " + lockOwner);
+            logger.debug("{} failed to acquire lock at {}, which is held by {}", client, lockPath, lockOwner);
             return false;
         }
     }
@@ -170,7 +170,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
         if (timeout <= 0)
             timeout = Long.MAX_VALUE;
 
-        logger.debug(client + " will wait for lock path " + lockPath);
+        logger.debug("{} will wait for lock path {}", client, lockPath);
         long waitStart = System.currentTimeMillis();
         Random random = new Random();
         long sleep = 10 * 1000; // 10 seconds
@@ -183,7 +183,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             }
 
             if (lock(lockPath)) {
-                logger.debug(client + " waited " + (System.currentTimeMillis() - waitStart) + " ms for lock path " + lockPath);
+                logger.debug("{} waited {} ms for lock path {}", client, (System.currentTimeMillis() - waitStart), lockPath);
                 return true;
             }
         }
@@ -220,7 +220,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     public void unlock(String lockPath) {
         lockPath = norm(lockPath);
 
-        logger.debug(client + " trying to unlock " + lockPath);
+        logger.debug("{} trying to unlock {}", client, lockPath);
 
         String owner = peekLock(lockPath);
         if (owner == null)
@@ -231,7 +231,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
         try {
             curator.delete().guaranteed().deletingChildrenIfNeeded().forPath(lockPath);
 
-            logger.info(client + " released lock at " + lockPath);
+            logger.info("{} released lock at {}", client, lockPath);
 
         } catch (Exception ex) {
             throw new RuntimeException("Error while " + client + " trying to unlock " + lockPath, ex);
@@ -245,7 +245,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
         try {
             curator.delete().guaranteed().deletingChildrenIfNeeded().forPath(lockPathRoot);
 
-            logger.info(client + " purged all locks under " + lockPathRoot);
+            logger.info("{} purged all locks under {}", client, lockPathRoot);
 
         } catch (Exception ex) {
             throw new RuntimeException("Error while " + client + " trying to purge " + lockPathRoot, ex);
