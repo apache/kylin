@@ -485,7 +485,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         private final int[] rowkeyColIndex;
         private final Long[] cuboidIds;
         private final Integer[][] cuboidsBitSet;
-        private volatile HLLCounter[] cuboidsHLL;
+        private HLLCounter[] cuboidsHLL;
 
         //about details of the new algorithm, please see KYLIN-2518
         private final boolean isNewAlgorithm;
