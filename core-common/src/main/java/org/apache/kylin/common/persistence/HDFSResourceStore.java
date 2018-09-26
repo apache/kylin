@@ -65,18 +65,18 @@ public class HDFSResourceStore extends ResourceStore {
         if (path == null) {
             // missing path is not expected, but don't fail it
             path = kylinConfig.getHdfsWorkingDirectory() + "tmp_metadata";
-            logger.warn("Missing path, fall back to " + path);
+            logger.warn("Missing path, fall back to {0}", path);
         }
         
         fs = HadoopUtil.getFileSystem(path);
         Path metadataPath = new Path(path);
         if (fs.exists(metadataPath) == false) {
-            logger.warn("Path not exist in HDFS, create it: " + path);
+            logger.warn("Path not exist in HDFS, create it: {0}", path);
             createMetaFolder(metadataPath);
         }
 
         hdfsMetaPath = metadataPath;
-        logger.info("hdfs meta path : " + hdfsMetaPath.toString());
+        logger.info("hdfs meta path : {0}", hdfsMetaPath.toString());
 
     }
 
@@ -86,7 +86,7 @@ public class HDFSResourceStore extends ResourceStore {
             fs.mkdirs(metaDirName);
         }
 
-        logger.info("hdfs meta path created: " + metaDirName.toString());
+        logger.info("hdfs meta path created: {0}", metaDirName.toString());
     }
 
     @Override
@@ -159,7 +159,7 @@ public class HDFSResourceStore extends ResourceStore {
         Path p = getRealHDFSPath(resPath);
         if (fs.exists(p) && fs.isFile(p)) {
             if (fs.getFileStatus(p).getLen() == 0) {
-                logger.warn("Zero length file: " + p.toString());
+                logger.warn("Zero length file: {0}", p.toString());
             }
             FSDataInputStream in = fs.open(p);
             long t = in.readLong();
@@ -190,9 +190,9 @@ public class HDFSResourceStore extends ResourceStore {
 
     @Override
     protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
-        logger.trace("res path : " + resPath);
+        logger.trace("res path : {0}", resPath);
         Path p = getRealHDFSPath(resPath);
-        logger.trace("put resource : " + p.toUri());
+        logger.trace("put resource : {0}", p.toUri());
         FSDataOutputStream out = null;
         try {
             out = fs.create(p, true);
