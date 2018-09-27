@@ -143,7 +143,7 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
         };
 
         final PairFunction convertTextFunction = new PairFunction<Tuple2<Text, Object[]>, org.apache.hadoop.io.Text, org.apache.hadoop.io.Text>() {
-            private volatile transient boolean initialized = false;
+            private transient volatile boolean initialized = false;
             BufferedMeasureCodec codec;
 
             @Override
@@ -231,12 +231,11 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
         }
         // output the data size to console, job engine will parse and save the metric
         // please note: this mechanism won't work when spark.submit.deployMode=cluster
-        logger.info("HDFS: Number of bytes written=" + jobListener.metrics.getBytesWritten());
-        //        HadoopUtil.deleteHDFSMeta(metaUrl);
+        logger.info("HDFS: Number of bytes written={}", jobListener.metrics.getBytesWritten());
     }
 
     static class ReEncodCuboidFunction implements PairFunction<Tuple2<Text, Text>, Text, Object[]> {
-        private volatile transient boolean initialized = false;
+        private transient volatile boolean initialized = false;
         private String cubeName;
         private String sourceSegmentId;
         private String mergedSegmentId;

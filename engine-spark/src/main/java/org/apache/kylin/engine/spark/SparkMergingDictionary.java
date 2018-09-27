@@ -156,8 +156,8 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
         colToDictPathRDD.coalesce(1, false).saveAsNewAPIHadoopFile(dictOutputPath, Text.class, Text.class, SequenceFileOutputFormat.class);
     }
 
-    static public class MergeDictAndStatsFunction implements PairFunction<Integer, Text, Text> {
-        private volatile transient boolean initialized = false;
+    public static class MergeDictAndStatsFunction implements PairFunction<Integer, Text, Text> {
+        private transient volatile boolean initialized = false;
         private String cubeName;
         private String metaUrl;
         private String segmentId;
@@ -165,7 +165,7 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
         private String statOutputPath;
         private TblColRef[] tblColRefs;
         private SerializableConfiguration conf;
-        private DictionaryManager dictMgr;
+        private transient DictionaryManager dictMgr;
         private KylinConfig kylinConfig;
         private List<CubeSegment> mergingSegments;
 
@@ -236,32 +236,27 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
 
                     for (CubeSegment cubeSegment : mergingSegments) {
                         String filePath = cubeSegment.getStatisticsResourcePath();
-                        InputStream is = rs.getResource(filePath).inputStream;
-                        File tempFile;
-                        FileOutputStream tempFileStream = null;
 
-                        try {
-                            tempFile = File.createTempFile(segmentId, ".seq");
-                            tempFileStream = new FileOutputStream(tempFile);
+                        File tempFile = File.createTempFile(segmentId, ".seq");
+
+                        try(InputStream is = rs.getResource(filePath).inputStream;
+                            FileOutputStream tempFileStream = new FileOutputStream(tempFile)) {
+
                             org.apache.commons.io.IOUtils.copy(is, tempFileStream);
-                        } finally {
-                            IOUtils.closeStream(is);
-                            IOUtils.closeStream(tempFileStream);
                         }
 
                         FileSystem fs = HadoopUtil.getFileSystem("file:///" + tempFile.getAbsolutePath());
-                        SequenceFile.Reader reader = null;
 
-                        try {
-                            conf = HadoopUtil.getCurrentConfiguration();
+                        conf = HadoopUtil.getCurrentConfiguration();
+
+                        try(SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(tempFile.getAbsolutePath()), conf)) {
                             //noinspection deprecation
-                            reader = new SequenceFile.Reader(fs, new Path(tempFile.getAbsolutePath()), conf);
                             LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
                             BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
 
                             while (reader.next(key, value)) {
                                 if (key.get() == 0L) {
-                                    // sampling percentage;
+                                    // sampling percentage
                                     averageSamplingPercentage += Bytes.toInt(value.getBytes());
                                 } else if (key.get() > 0) {
                                     HLLCounter hll = new HLLCounter(kylinConfig.getCubeStatsHLLPrecision());
@@ -275,8 +270,6 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
                                     }
                                 }
                             }
-                        } finally {
-                            IOUtils.closeStream(reader);
                         }
                     }
 
