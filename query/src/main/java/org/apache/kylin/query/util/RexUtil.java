@@ -28,6 +28,10 @@ import org.apache.kylin.metadata.filter.CompareTupleFilter;
 
 public class RexUtil {
 
+    private RexUtil() {
+        throw new IllegalStateException("Class RexUtil is an utility class !");
+    }
+
     public static CompareTupleFilter.CompareResultType getCompareResultType(RexCall whenCall) {
         List<RexNode> operands = whenCall.getOperands();
         if (SqlKind.EQUALS == whenCall.getKind() && operands != null && operands.size() == 2) {

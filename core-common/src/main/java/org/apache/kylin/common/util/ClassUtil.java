@@ -36,6 +36,10 @@ public class ClassUtil {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ClassUtil.class);
 
+    private ClassUtil() {
+        throw new IllegalStateException("Class ClassUtil is an utility class !");
+    }
+
     public static void addClasspath(String path) {
         logger.info("Adding path " + path + " to class path");
         File file = new File(path);

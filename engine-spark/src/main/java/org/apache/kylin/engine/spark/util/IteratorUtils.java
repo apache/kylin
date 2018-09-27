@@ -30,6 +30,10 @@ import scala.Tuple2;
  */
 public class IteratorUtils {
 
+    private IteratorUtils() {
+        throw new IllegalStateException("Class IteratorUtils is an utility class !");
+    }
+
     public static <K, V> Iterator<Tuple2<K, V>> merge(final Iterator<Tuple2<K, V>> input, final Comparator<K> comparator, final Function<Iterable<V>, V> converter) {
         return new Iterator<Tuple2<K, V>>() {
 

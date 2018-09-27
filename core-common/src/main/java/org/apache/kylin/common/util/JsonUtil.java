@@ -38,6 +38,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class JsonUtil {
 
+    private JsonUtil() {
+        throw new IllegalStateException("Class JsonUtil is an utility class !");
+    }
+
     // reuse the object mapper to save memory footprint
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final ObjectMapper indentMapper = new ObjectMapper();

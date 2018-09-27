@@ -38,6 +38,10 @@ public class QueryUtil {
 
     protected static final Logger logger = LoggerFactory.getLogger(QueryUtil.class);
 
+    private QueryUtil() {
+        throw new IllegalStateException("Class QueryUtil is an utility class !");
+    }
+
     private static List<IQueryTransformer> queryTransformers;
 
     public interface IQueryTransformer {

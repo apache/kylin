@@ -39,6 +39,10 @@ import java.util.Properties;
  */
 public class KafkaClient {
 
+    private KafkaClient() {
+        throw new IllegalStateException("Class KafkaClient is an utility class !");
+    }
+
     public static KafkaConsumer getKafkaConsumer(String brokers, String consumerGroup, Properties properties) {
         Properties props = constructDefaultKafkaConsumerProperties(brokers, consumerGroup, properties);
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);

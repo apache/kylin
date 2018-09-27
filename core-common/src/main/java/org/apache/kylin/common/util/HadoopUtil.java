@@ -46,6 +46,9 @@ public class HadoopUtil {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HadoopUtil.class);
     private static final transient ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
+    private HadoopUtil() {
+        throw new IllegalStateException("Class HadoopUtil is an utility class !");
+    }
 
     public static void setCurrentConfiguration(Configuration conf) {
         hadoopConfig.set(conf);

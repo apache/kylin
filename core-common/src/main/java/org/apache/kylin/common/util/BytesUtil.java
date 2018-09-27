@@ -26,6 +26,10 @@ import com.google.common.primitives.Shorts;
 
 public class BytesUtil {
 
+    private BytesUtil() {
+        throw new IllegalStateException("Class BytesUtil is an utility class !");
+    }
+
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
     public static void writeByte(byte num, byte[] bytes, int offset, int size) {

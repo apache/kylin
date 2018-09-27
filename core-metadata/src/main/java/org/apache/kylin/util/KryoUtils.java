@@ -30,6 +30,10 @@ public class KryoUtils {
 
     private static ThreadLocal<Kryo> _Kryo = new ThreadLocal<>();
 
+    private KryoUtils() {
+        throw new IllegalStateException("Class KryoUtils is an utility class !");
+    }
+
     public static byte[] serialize(Object obj) {
         Kryo kryo = getKryo();
         Output output = new Output(1024, 8 * 1024 * 1024);

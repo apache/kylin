@@ -30,6 +30,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 public class AclPermissionUtil {
 
+    private AclPermissionUtil() {
+        throw new IllegalStateException("Class AclPermissionUtil is an utility class !");
+    }
+
     public static List<String> transformAuthorities(Collection<? extends GrantedAuthority> authorities) {
         List<String> ret = new ArrayList<String>();
         for (GrantedAuthority auth : authorities) {

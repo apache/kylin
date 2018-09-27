@@ -36,6 +36,10 @@ import com.google.common.collect.Iterables;
 public class ZooKeeperUtil {
     private static final Logger logger = LoggerFactory.getLogger(ZooKeeperUtil.class);
 
+    private ZooKeeperUtil() {
+        throw new IllegalStateException("Class ZooKeeperUtil is an utility class !");
+    }
+
     public static String getZKConnectStringFromHBase() {
         Configuration hconf = null;
         try {

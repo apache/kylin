@@ -34,6 +34,10 @@ import com.google.common.collect.Range;
  */
 public class RangeUtil {
 
+    private RangeUtil() {
+        throw new IllegalStateException("Class RangeUtil is an utility class !");
+    }
+
     /**
      * for NavigableMap sorted by C, given a range of C, return the sub map whose key falls in the range
      */

@@ -28,6 +28,10 @@ import org.apache.commons.lang.StringUtils;
  */
 public class StringUtil {
 
+    private StringUtil() {
+        throw new IllegalStateException("Class StringUtil is an utility class !");
+    }
+
     public static String[] filterSystemArgs(String[] args) {
         ArrayList<String> whatsLeft = new ArrayList<String>();
         for (String a : args) {
