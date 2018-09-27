@@ -54,6 +54,7 @@ TOMCAT_BACKUP_FILE="${KYLIN_HOME}/tomcat/conf/server.xml.backup"
 TOMCAT_CONFIG_FILE="${KYLIN_HOME}/tomcat/conf/server.xml"
 KYLIN_CONFIG_FILE="${KYLIN_HOME}/conf/kylin.properties"
 KYLIN_BACKUP_FILE="${KYLIN_HOME}/conf/kylin.properties.backup"
+BUILD_CUBE_FILE="${KYLIN_HOME}/bin/build-incremental-cube.sh"
 TOMCAT_PORT_LIST=(9005 7070 9443 7443 9009)
 KYLIN_DEFAULT_PORT=7070
 
@@ -101,9 +102,13 @@ then
       sed -i "s/$port/${new_port}/g" ${TOMCAT_CONFIG_FILE}
 
     done
+
+    #replace ports in build-incremental-cube.sh
+    sed -i "s/$PORT=\"[0-9]*\"/$PORT=\"${new_kylin_port}\"/g" ${BUILD_CUBE_FILE}
     echo "Files below modified:"
     echo ${KYLIN_CONFIG_FILE}
     echo ${TOMCAT_CONFIG_FILE}
+    echo ${BUILD_CUBE_FILE}
 elif [ "$1" == "reset" ]
 then
     #reset kylin.properties
@@ -111,9 +116,11 @@ then
     cp  -f ${TOMCAT_BACKUP_FILE} ${TOMCAT_CONFIG_FILE}
     rm  -f ${KYLIN_BACKUP_FILE}
     rm  -f ${TOMCAT_BACKUP_FILE}
+    sed -i "s/$PORT=\"[0-9]*\"/$PORT=\"${KYLIN_DEFAULT_PORT}\"/g" ${BUILD_CUBE_FILE}
     echo "Files below reset to original:"
     echo ${KYLIN_CONFIG_FILE}
     echo ${TOMCAT_CONFIG_FILE}
+    echo ${BUILD_CUBE_FILE}
 else
     echo "Unrecognized command"
     exit 1
