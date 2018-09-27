@@ -73,7 +73,7 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         beforeExtract();
 
-        int logPeriod = optionsHelper.hasOption(OPTION_LOG_PERIOD) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_LOG_PERIOD)) : DEFAULT_LOG_PERIOD;
+        int logPeriod = optionsHelper.hasOption(OPTION_LOG_PERIOD) ? Integer.parseInt(optionsHelper.getOptionValue(OPTION_LOG_PERIOD)) : DEFAULT_LOG_PERIOD;
 
         if (logPeriod < 1) {
             logger.warn("No logs to extract.");
