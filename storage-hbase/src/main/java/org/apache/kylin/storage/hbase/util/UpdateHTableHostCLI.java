@@ -82,7 +82,7 @@ public class UpdateHTableHostCLI {
         } else if (!filterType.equals("-all")) {
             printUsageAndExit();
         }
-        logger.info("These htables are needed to be updated: " + StringUtils.join(tableNames, ","));
+        logger.info("These htables are needed to be updated: {}", StringUtils.join(tableNames, ","));
 
         UpdateHTableHostCLI updateHTableHostCLI = new UpdateHTableHostCLI(tableNames, oldHostValue);
         updateHTableHostCLI.execute();
@@ -119,13 +119,13 @@ public class UpdateHTableHostCLI {
     private static List<String> getHTableNames(KylinConfig config) {
         CubeManager cubeMgr = CubeManager.getInstance(config);
 
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
             for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
                 String tableName = seg.getStorageLocationIdentifier();
                 if (!StringUtils.isBlank(tableName)) {
                     result.add(tableName);
-                    System.out.println("added new table: " + tableName);
+                    logger.info("added new table: {}", tableName);
                 }
             }
         }

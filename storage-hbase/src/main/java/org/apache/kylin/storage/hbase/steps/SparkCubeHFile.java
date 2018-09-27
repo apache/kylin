@@ -171,21 +171,21 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
             Writable value = NullWritable.get();
             while (reader.next(key, value)) {
                 keys.add(key);
-                logger.info(" ------- split key: " + key);
+                logger.info(" ------- split key: {}", key);
                 key = new RowKeyWritable(); // important, new an object!
             }
         }
 
-        logger.info("There are " + keys.size() + " split keys, totally " + (keys.size() + 1) + " hfiles");
+        logger.info("There are {} split keys, totally {} hfiles", keys.size(), (keys.size() + 1));
 
         //HBase conf
-        logger.info("Loading HBase configuration from:" + hbaseConfFile);
+        logger.info("Loading HBase configuration from:{}", hbaseConfFile);
         FSDataInputStream confInput = fs.open(new Path(hbaseConfFile));
 
         Configuration hbaseJobConf = new Configuration();
         hbaseJobConf.addResource(confInput);
         hbaseJobConf.set("spark.hadoop.dfs.replication", "3"); // HFile, replication=3
-        Job job = new Job(hbaseJobConf, cubeSegment.getStorageLocationIdentifier());
+        Job job = Job.getInstance(hbaseJobConf, cubeSegment.getStorageLocationIdentifier());
 
         FileOutputFormat.setOutputPath(job, new Path(outputPath));
 
@@ -233,15 +233,13 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
                     }
                 }).saveAsNewAPIHadoopDataset(job.getConfiguration());
 
-        logger.info("HDFS: Number of bytes written=" + jobListener.metrics.getBytesWritten());
+        logger.info("HDFS: Number of bytes written={}", jobListener.metrics.getBytesWritten());
 
         Map<String, String> counterMap = Maps.newHashMap();
         counterMap.put(ExecutableConstants.HDFS_BYTES_WRITTEN, String.valueOf(jobListener.metrics.getBytesWritten()));
 
         // save counter to hdfs
         HadoopUtil.writeToSequenceFile(sc.hadoopConfiguration(), counterPath, counterMap);
-
-        //HadoopUtil.deleteHDFSMeta(metaUrl);
     }
 
     static class HFilePartitioner extends Partitioner {

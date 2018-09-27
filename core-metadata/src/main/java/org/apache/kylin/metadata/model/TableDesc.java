@@ -74,7 +74,8 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         if (cut >= 0)
             path = path.substring(cut + 1);
 
-        String table, prj;
+        String table;
+        String prj;
         int dash = path.indexOf("--");
         if (dash >= 0) {
             table = path.substring(0, dash);
@@ -153,9 +154,10 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
                 if (existingColumns[i].getName().equalsIgnoreCase(computedColumns[j].getName())) {
                     // if we're adding a computed column twice, it should be allowed without producing duplicates
                     if (!existingColumns[i].isComputedColumn()) {
-                        throw new IllegalArgumentException(String.format(Locale.ROOT,
+                        String errorMsg = String.format(Locale.ROOT,
                                 "There is already a column named %s on table %s, please change your computed column name",
-                                new Object[] { computedColumns[j].getName(), this.getIdentity() }));
+                                computedColumns[j].getName(), this.getIdentity());
+                        throw new IllegalArgumentException(errorMsg);
                     } else {
                         isFreshCC = false;
                     }
@@ -178,7 +180,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     public ColumnDesc findColumnByName(String name) {
         //ignore the db name and table name if exists
-        int lastIndexOfDot = name.lastIndexOf(".");
+        int lastIndexOfDot = name.lastIndexOf('.');
         if (lastIndexOfDot >= 0) {
             name = name.substring(lastIndexOfDot + 1);
         }
@@ -204,6 +206,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
      * @deprecated this is for compatible with data model v1;
      * @return
      */
+    @Deprecated
     public String getResourcePathV1() {
         return concatResourcePath(name, null);
     }
