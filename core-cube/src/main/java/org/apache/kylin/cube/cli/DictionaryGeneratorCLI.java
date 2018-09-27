@@ -21,6 +21,7 @@ package org.apache.kylin.cube.cli;
 import java.io.IOException;
 import java.util.Set;
 
+import org.apache.hadoop.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
@@ -29,6 +30,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.DictionaryProvider;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
+import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -98,7 +100,10 @@ public class DictionaryGeneratorCLI {
             logger.info("Checking snapshot of " + lookup);
             try {
                 JoinDesc join = cubeSeg.getModel().getJoinsTree().getJoinByPKSide(lookup);
-                cubeMgr.getLookupTable(cubeSeg, join);
+                ILookupTable table = cubeMgr.getLookupTable(cubeSeg, join);
+                if (table != null) {
+                    IOUtils.closeStream(table);
+                }
             } catch (Throwable th) {
                 throw new RuntimeException("Checking snapshot of " + lookup + " failed.", th);
             }
