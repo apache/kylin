@@ -20,6 +20,13 @@
 <div ng-controller="CubeMeasuresCtrl">
   <ng-form name="forms.cube_measure_form">
       <div class="dataTables_wrapper form-inline no-footer" ng-if="cubeMetaFrame.measures.length > 0">
+              <div class="row">
+                  <div class="col-xs-6" ng-if="state.mode=='edit'">
+                      <button type="button" class="btn btn-default" ng-disabled="!metaModel.model.fact_table.length||instance.status=='READY'" ng-click="openBulkAddModal()" >
+                        <i class="fa fa-building-o"></i> Bulk Add Measures
+                      </button>
+                  </div>
+              </div>
               <table class="table table-striped table-hover">
                   <thead>
                       <tr>
@@ -341,6 +348,50 @@
   </ng-form>
 </div>
 
+<script type="text/ng-template" id="bulkAddMeasures.html">
+  <ng-form name="bulk_add_mes_form">
+    <div class="modal-header large-popover">
+      <h4 class="box-title lighter">Bulk Add Measures</h4>
+      <div class="row">
+        <div class="col-xs-12 col-sm-5 btn-group" >
+          <button type="button" class="btn btn-primary" ng-repeat="expressionOpt in bulkMeasureOptions.expressionList" ng-model="bulkMeasureOptions.currentExpression" btn-radio="expressionOpt">{{expressionOpt.expression}}</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th> <input type="checkbox" ng-model="bulkMeasureOptions.currentExpression.selectAll" ng-change="selectAll()" ng-disabled="bulkMeasureOptions.currentExpression.force" /></th>
+                <th>Name</th>
+                <th>Parameters</th>
+                <th>Return Type</th>
+            </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="measure in bulkMeasuresView[bulkMeasureOptions.currentExpression.expression] track by $index">
+            <td>
+               <input type="checkbox" ng-model="measure.select" ng-disabled="measure.force" ng-change="measureChange()"/>
+            </td>
+            <td>
+               <input type="text" ng-model="measure.name" ng-disabled="measure.force" style="width:90%;">
+            </td>
+            <td>
+              <span>{{measure.parameter}}</span>
+            </td>
+            <td>
+              <span>{{measure.returntype}}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-info" ng-disabled="bulk_add_mes_form.$invalid" ng-click="saveBulkMeasures()">OK</button>
+      <button class="btn btn-link" ng-click="cancel()">Cancel</button>
+    </div>
+  </ng-form>
+</script>
 
 <script type="text/ng-template" id="expressionTip.html">
   <p>All cubes have to contain one measure for Count(1), suggest use "_Count_" as name (Has been generated automatically)</p>
