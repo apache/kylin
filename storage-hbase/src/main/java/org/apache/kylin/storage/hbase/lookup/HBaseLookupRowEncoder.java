@@ -109,7 +109,7 @@ public class HBaseLookupRowEncoder extends AbstractLookupRowEncoder<HBaseRow> {
         for (Entry<byte[], byte[]> qualifierValEntry : qualifierValMap.entrySet()) {
             byte[] qualifier = qualifierValEntry.getKey();
             byte[] value = qualifierValEntry.getValue();
-            int valIdx = Integer.valueOf(Bytes.toString(qualifier));
+            int valIdx = Integer.parseInt(Bytes.toString(qualifier));
             result[valIdx] = fromBytes(value);
         }
     }
