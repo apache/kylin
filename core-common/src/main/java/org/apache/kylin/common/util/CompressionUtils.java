@@ -30,6 +30,10 @@ import org.slf4j.LoggerFactory;
 public class CompressionUtils {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CompressionUtils.class);
 
+    private CompressionUtils() {
+        throw new IllegalStateException("Class CompressionUtils is an utility class !");
+    }
+
     public static byte[] compress(byte[] data) throws IOException {
         long startTime = System.currentTimeMillis();
         Deflater deflater = new Deflater(1);

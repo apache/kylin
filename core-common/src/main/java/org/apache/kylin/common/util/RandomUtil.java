@@ -22,6 +22,11 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class RandomUtil {
+
+    private RandomUtil() {
+        throw new IllegalStateException("Class RandomUtil is an utility class !");
+    }
+
     public static UUID randomUUID() {
         return new UUID(ThreadLocalRandom.current().nextLong(), ThreadLocalRandom.current().nextLong());
     }

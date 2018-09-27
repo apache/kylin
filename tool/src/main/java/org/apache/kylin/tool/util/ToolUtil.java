@@ -31,6 +31,11 @@ import java.net.UnknownHostException;
 import java.util.Map;
 
 public class ToolUtil {
+
+    private ToolUtil() {
+        throw new IllegalStateException("Class ToolUtil is an utility class !");
+    }
+
     public static String getConfFolder() {
         final String CONF = "conf";
         String path = System.getProperty(KylinConfig.KYLIN_CONF);

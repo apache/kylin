@@ -35,6 +35,10 @@ public class ZipFileUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(ZipFileUtils.class);
 
+    private ZipFileUtils() {
+        throw new IllegalStateException("Class ZipFileUtils is an utility class !");
+    }
+
     public static void compressZipFile(String sourceDir, String zipFileName) throws IOException, ArchiveException {
         if (!validateZipFilename(zipFileName)) {
             throw new RuntimeException("Zip file must end with .zip");

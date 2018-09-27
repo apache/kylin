@@ -109,7 +109,7 @@ public class QueryRequestLimits implements AutoCloseable {
         boolean ok = openQueryRequest(project, maxConcurrentQuery);
         if (!ok) {
             Message msg = MsgPicker.getMsg();
-            logger.warn("Directly return exception as too many concurrent query requests for project:" + project);
+            logger.warn("Directly return exception as too many concurrent query requests for project: {}", project);
             throw new BadRequestException(msg.getQUERY_TOO_MANY_RUNNING());
         }
     }

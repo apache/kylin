@@ -26,6 +26,11 @@ import com.google.common.collect.TreeMultimap;
 /**
  */
 public class SortUtil {
+
+    private SortUtil() {
+        throw new IllegalStateException("Class SortUtil is an utility class !");
+    }
+
     public static <T extends Comparable, E extends Comparable> Iterator<T> extractAndSort(Iterator<T> input, Function<T, E> extractor) {
         TreeMultimap<E, T> reorgnized = TreeMultimap.create();
         while (input.hasNext()) {

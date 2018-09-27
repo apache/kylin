@@ -62,6 +62,10 @@ import com.google.common.collect.Lists;
 public class PushDownUtil {
     private static final Logger logger = LoggerFactory.getLogger(PushDownUtil.class);
 
+    private PushDownUtil() {
+        throw new IllegalStateException("Class PushDownUtil is an utility class !");
+    }
+
     public static Pair<List<List<String>>, List<SelectedColumnMeta>> tryPushDownSelectQuery(String project, String sql,
             String defaultSchema, SQLException sqlException, boolean isPrepare) throws Exception {
         return tryPushDownQuery(project, sql, defaultSchema, sqlException, true, isPrepare);

@@ -41,6 +41,10 @@ public class SourceConfigurationUtil {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SourceConfigurationUtil.class);
     private static final String HIVE_CONF_PREFIX = "hiveconf:";
 
+    private SourceConfigurationUtil() {
+        throw new IllegalStateException("Class SourceConfigurationUtil is an utility class !");
+    }
+
     public static final String HIVE_CONF_FILENAME = "kylin_hive_conf";
     public static final String SQOOP_CONF_FILENAME = "kylin_sqoop_conf";
 

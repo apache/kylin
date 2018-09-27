@@ -26,6 +26,10 @@ import java.util.TimeZone;
  */
 public class TimeUtil {
 
+    private TimeUtil() {
+        throw new IllegalStateException("Class TimeUtil is an utility class !");
+    }
+
     private static TimeZone gmt = TimeZone.getTimeZone("GMT");
     private static long ONE_MINUTE_TS = 60 * 1000L;
     private static long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;

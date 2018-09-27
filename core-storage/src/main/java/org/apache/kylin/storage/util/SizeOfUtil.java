@@ -25,6 +25,7 @@ import net.sf.ehcache.pool.sizeof.ReflectionSizeOf;
 public final class SizeOfUtil {
 
     private SizeOfUtil() {
+        throw new IllegalStateException("Class SizeOfUtil is an utility class !");
     }
 
     private static final ReflectionSizeOf DEFAULT_SIZE_OF = new ReflectionSizeOf();

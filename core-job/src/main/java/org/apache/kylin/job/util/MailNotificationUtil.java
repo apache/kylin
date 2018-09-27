@@ -45,6 +45,10 @@ public class MailNotificationUtil {
         }
     }
 
+    private MailNotificationUtil() {
+        throw new IllegalStateException("Class MailNotificationUtil is an utility class !");
+    }
+
     private static String getMailTemplateKey(ExecutableState state) {
         switch (state) {
         case ERROR:
