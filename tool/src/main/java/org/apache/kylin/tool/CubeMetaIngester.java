@@ -94,11 +94,11 @@ public class CubeMetaIngester extends AbstractApplication {
         kylinConfig = KylinConfig.getInstanceFromEnv();
 
         if (optionsHelper.hasOption(OPTION_FORCE_INGEST)) {
-            forceIngest = Boolean.valueOf(optionsHelper.getOptionValue(OPTION_FORCE_INGEST));
+            forceIngest = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_FORCE_INGEST));
         }
 
         if (optionsHelper.hasOption(OPTION_OVERWRITE_TABLES)) {
-            overwriteTables = Boolean.valueOf(optionsHelper.getOptionValue(OPTION_OVERWRITE_TABLES));
+            overwriteTables = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_OVERWRITE_TABLES));
         }
 
         targetProjectName = optionsHelper.getOptionValue(OPTION_PROJECT);

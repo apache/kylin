@@ -150,7 +150,7 @@ public class MassInTupleFilter extends FunctionTupleFilter {
         filterTableName = BytesUtil.readUTFString(buffer);
         filterTableResourceIdentifier = BytesUtil.readUTFString(buffer);
         filterTableType = Functions.FilterTableType.valueOf(BytesUtil.readUTFString(buffer));
-        reverse = Boolean.valueOf(BytesUtil.readUTFString(buffer));
+        reverse = Boolean.parseBoolean(BytesUtil.readUTFString(buffer));
     }
 
     public static boolean containsMassInTupleFilter(TupleFilter filter) {

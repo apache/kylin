@@ -68,7 +68,7 @@ public class ExtractTupleFilter extends TupleFilter {
         }
 
         // extract date
-        this.date = extractDate(extractType, Integer.valueOf(tupleValue));
+        this.date = extractDate(extractType, Integer.parseInt(tupleValue));
         return true;
     }
 
