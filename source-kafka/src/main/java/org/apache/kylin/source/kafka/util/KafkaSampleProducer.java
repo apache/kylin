@@ -55,7 +55,7 @@ public class KafkaSampleProducer {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) throws Exception {
-        logger.info("args: " + Arrays.toString(args));
+        logger.info("args: {}", Arrays.toString(args));
         OptionsHelper optionsHelper = new OptionsHelper();
         Options options = new Options();
         String topic, broker;
@@ -64,7 +64,7 @@ public class KafkaSampleProducer {
         options.addOption(OPTION_INTERVAL);
         optionsHelper.parseOptions(options, args);
 
-        logger.info("options: '" + optionsHelper.getOptionsAsString() + "'");
+        logger.info("options: '{}'", optionsHelper.getOptionsAsString());
 
         topic = optionsHelper.getOptionValue(OPTION_TOPIC);
         broker = optionsHelper.getOptionValue(OPTION_BROKER);
@@ -75,7 +75,7 @@ public class KafkaSampleProducer {
             interval = Long.parseLong(intervalString);
         }
 
-        List<String> countries = new ArrayList();
+        List<String> countries = new ArrayList<>();
         countries.add("AUSTRALIA");
         countries.add("CANADA");
         countries.add("CHINA");
@@ -84,19 +84,19 @@ public class KafkaSampleProducer {
         countries.add("KOREA");
         countries.add("US");
         countries.add("Other");
-        List<String> category = new ArrayList();
+        List<String> category = new ArrayList<>();
         category.add("BOOK");
         category.add("TOY");
         category.add("CLOTH");
         category.add("ELECTRONIC");
         category.add("Other");
-        List<String> devices = new ArrayList();
+        List<String> devices = new ArrayList<>();
         devices.add("iOS");
         devices.add("Windows");
         devices.add("Andriod");
         devices.add("Other");
 
-        List<String> genders = new ArrayList();
+        List<String> genders = new ArrayList<>();
         genders.add("Male");
         genders.add("Female");
 
@@ -110,34 +110,32 @@ public class KafkaSampleProducer {
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-        Producer<String, String> producer = new KafkaProducer<>(props);
-
-        boolean alive = true;
-        Random rnd = new Random();
-        Map<String, Object> record = new HashMap();
-        while (alive == true) {
-            //add normal record
-            record.put("order_time", (new Date().getTime()));
-            record.put("country", countries.get(rnd.nextInt(countries.size())));
-            record.put("category", category.get(rnd.nextInt(category.size())));
-            record.put("device", devices.get(rnd.nextInt(devices.size())));
-            record.put("qty", rnd.nextInt(10));
-            record.put("currency", "USD");
-            record.put("amount", rnd.nextDouble() * 100);
-            //add embedded record
-            Map<String, Object> user = new HashMap();
-            user.put("id", RandomUtil.randomUUID().toString());
-            user.put("gender", genders.get(rnd.nextInt(2)));
-            user.put("age", rnd.nextInt(20) + 10);
-            user.put("first_name", "unknown");
-            record.put("user", user);
-            //send message
-            ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
-            System.out.println("Sending 1 message: " + JsonUtil.writeValueAsString(record));
-            producer.send(data);
-            Thread.sleep(interval);
+        try (Producer<String, String> producer = new KafkaProducer<>(props)) {
+            boolean alive = true;
+            Random rnd = new Random();
+            Map<String, Object> record = new HashMap<>();
+            while (alive == true) {
+                //add normal record
+                record.put("order_time", (new Date().getTime()));
+                record.put("country", countries.get(rnd.nextInt(countries.size())));
+                record.put("category", category.get(rnd.nextInt(category.size())));
+                record.put("device", devices.get(rnd.nextInt(devices.size())));
+                record.put("qty", rnd.nextInt(10));
+                record.put("currency", "USD");
+                record.put("amount", rnd.nextDouble() * 100);
+                //add embedded record
+                Map<String, Object> user = new HashMap<>();
+                user.put("id", RandomUtil.randomUUID().toString());
+                user.put("gender", genders.get(rnd.nextInt(2)));
+                user.put("age", rnd.nextInt(20) + 10);
+                user.put("first_name", "unknown");
+                record.put("user", user);
+                //send message
+                ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
+                System.out.println("Sending 1 message: " + JsonUtil.writeValueAsString(record));
+                producer.send(data);
+                Thread.sleep(interval);
+            }
         }
-        producer.close();
     }
-
 }

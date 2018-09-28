@@ -98,14 +98,23 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
                     return scanRequest.getInfo();
                 }
 
-                public void close() throws IOException {}
+                public void close() {
+                    // Underlying resource is hold by scanner and it will be closed at
+                    // SegmentCubeTupleIterator#close, caller is SequentialCubeTupleIterator
+                }
 
                 public Iterator<GTRecord> iterator() {
                     return records;
                 }
             };
-            GTStreamAggregateScanner aggregator = new GTStreamAggregateScanner(inputScanner, scanRequest);
-            return aggregator.valuesIterator(gtDimsIdx, gtMetricsIdx);
+            Iterator<Object[]> result;
+            try (GTStreamAggregateScanner aggregator = new GTStreamAggregateScanner(inputScanner, scanRequest)) {
+                result = aggregator.valuesIterator(gtDimsIdx, gtMetricsIdx);
+            } catch (IOException ioe) {
+                // implementation of close method of anonymous IGTScanner is empty, no way throw exception
+                throw new IllegalStateException("IOException is not expected here.", ioe);
+            }
+            return result;
         }
 
         // simply decode records
@@ -149,10 +158,10 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
         if (!gtValues.hasNext()) {
             return false;
         }
-        Object[] gtValues = this.gtValues.next();
+        Object[] values = this.gtValues.next();
 
         // translate into tuple
-        advMeasureFillers = cubeTupleConverter.translateResult(gtValues, tuple);
+        advMeasureFillers = cubeTupleConverter.translateResult(values, tuple);
 
         // the simple case
         if (advMeasureFillers == null) {
