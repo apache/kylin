@@ -93,7 +93,7 @@ public class MailService {
         if (starttlsEnabled) {
             email.setSslSmtpPort(port);
         } else {
-            email.setSmtpPort(Integer.valueOf(port));
+            email.setSmtpPort(Integer.parseInt(port));
         }
         
         if (username != null && username.trim().length() > 0) {

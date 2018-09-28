@@ -85,9 +85,9 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         String exportDest = optionsHelper.getOptionValue(options.getOption("destDir"));
         boolean shouldCompress = optionsHelper.hasOption(OPTION_COMPRESS)
-                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS)) : true;
+                ? Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_COMPRESS)) : true;
         boolean isSubmodule = optionsHelper.hasOption(OPTION_SUBMODULE)
-                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_SUBMODULE)) : false;
+                ? Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_SUBMODULE)) : false;
         packageType = optionsHelper.getOptionValue(OPTION_PACKAGETYPE);
 
         if (packageType == null)

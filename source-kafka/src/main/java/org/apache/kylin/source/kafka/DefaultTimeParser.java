@@ -41,7 +41,7 @@ public class DefaultTimeParser extends AbstractTimeParser {
             t = 0;
         } else {
             try {
-                t = Long.valueOf(time);
+                t = Long.parseLong(time);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException(e);
             }

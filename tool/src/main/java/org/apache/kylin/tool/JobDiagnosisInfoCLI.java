@@ -100,16 +100,16 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         String kylinJobId = optionsHelper.getOptionValue(OPTION_JOB_ID);
         boolean includeCube = optionsHelper.hasOption(OPTION_INCLUDE_CUBE)
-                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CUBE))
+                ? Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_INCLUDE_CUBE))
                 : true;
         boolean includeYarnLogs = optionsHelper.hasOption(OPTION_INCLUDE_YARN_LOGS)
-                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_YARN_LOGS))
+                ? Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_INCLUDE_YARN_LOGS))
                 : true;
         boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT)
-                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT))
+                ? Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT))
                 : true;
         boolean includeConf = optionsHelper.hasOption(OPTION_INCLUDE_CONF)
-                ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CONF))
+                ? Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_INCLUDE_CONF))
                 : true;
 
         // dump job output

@@ -116,7 +116,7 @@ public class HybridCubeCLI extends AbstractApplication {
         String projectName = optionsHelper.getOptionValue(OPTION_PROJECT);
         String modelName = optionsHelper.getOptionValue(OPTION_MODEL);
         String cubeNamesStr = optionsHelper.getOptionValue(OPTION_CUBES);
-        boolean checkCubeSize = optionsHelper.hasOption(OPTION_CHECK) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_CHECK)) : true;
+        boolean checkCubeSize = optionsHelper.hasOption(OPTION_CHECK) ? Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_CHECK)) : true;
 
         HybridInstance hybridInstance = hybridManager.getHybridInstance(hybridName);
 

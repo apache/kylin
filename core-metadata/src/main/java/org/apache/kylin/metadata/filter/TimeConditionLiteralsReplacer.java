@@ -82,7 +82,7 @@ public class TimeConditionLiteralsReplacer implements TupleFilterSerializer.Deco
             return dateStr;
         }
 
-        long millis = Long.valueOf(dateStr);
+        long millis = Long.parseLong(dateStr);
         if (dataType.isTimestamp()) {
             return DateFormat.formatToTimeStr(millis);
         } else if (dataType.isDate()) {

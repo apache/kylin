@@ -134,7 +134,7 @@ public class DefaultQueryTransformer implements IQueryTransformer {
             if (!m.find())
                 break;
 
-            int value = (int) Math.floor(Double.valueOf(m.group(2)));
+            int value = (int) Math.floor(Double.parseDouble(m.group(2)));
             sql = sql.substring(0, m.start(1)) + "'" + value + "'" + sql.substring(m.end(3));
         }
         

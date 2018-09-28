@@ -279,7 +279,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                 conf.set(entry.getKey(), entry.getValue());
             }
             if (conf.get("mapreduce.job.is-mem-hungry") != null
-                    && Boolean.valueOf(conf.get("mapreduce.job.is-mem-hungry"))) {
+                    && Boolean.parseBoolean(conf.get("mapreduce.job.is-mem-hungry"))) {
                 for (Map.Entry<String, String> entry : CubeManager.getInstance(config).getCube(cubeName).getConfig()
                         .getMemHungryConfigOverride().entrySet()) {
                     conf.set(entry.getKey(), entry.getValue());

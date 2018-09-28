@@ -151,7 +151,7 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         try {
-            boolean includeTaskDetails = optionsHelper.hasOption(OPTION_INCLUDE_DETAILS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_DETAILS)) : true;
+            boolean includeTaskDetails = optionsHelper.hasOption(OPTION_INCLUDE_DETAILS) ? Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_INCLUDE_DETAILS)) : true;
             String mrJobId = optionsHelper.getOptionValue(OPTION_MR_JOB_ID);
             extractRestCheckUrl();
 

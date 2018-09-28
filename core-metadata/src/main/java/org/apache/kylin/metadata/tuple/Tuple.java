@@ -178,7 +178,7 @@ public class Tuple implements ITuple {
         if (partitionCol.getDatatype().equals("date")) {
             return epicDaysToMillis(Integer.valueOf(row.getValue(partitionCol).toString()));
         } else {
-            return Long.valueOf(row.getValue(partitionCol).toString());
+            return Long.parseLong(row.getValue(partitionCol).toString());
         }
     }
 
