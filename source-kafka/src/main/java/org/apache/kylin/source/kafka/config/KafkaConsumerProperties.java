@@ -20,6 +20,7 @@ package org.apache.kylin.source.kafka.config;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -28,7 +29,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -56,8 +56,8 @@ public class KafkaConsumerProperties {
                 try {
                     KafkaConsumerProperties config = new KafkaConsumerProperties();
                     config.properties = config.loadKafkaConsumerProperties();
-
-                    logger.info("Initialized a new KafkaConsumerProperties from getInstanceFromEnv : " + System.identityHashCode(config));
+                    logger.info("Initialized a new KafkaConsumerProperties from getInstanceFromEnv : {}",
+                            System.identityHashCode(config));
                     ENV_INSTANCE = config;
                 } catch (IllegalArgumentException e) {
                     throw new IllegalStateException("Failed to find KafkaConsumerProperties ", e);
@@ -79,7 +79,7 @@ public class KafkaConsumerProperties {
         Set<String> configNames = new HashSet<String>();
         try {
             configNames = ConsumerConfig.configNames();
-        } catch (Error e) {
+        } catch (Exception e) {
             // the Kafka configNames api is supported on 0.10.1.0+, in case NoSuchMethodException which is an Error, not Exception
             String[] configNamesArray = ("metric.reporters, metadata.max.age.ms, partition.assignment.strategy, reconnect.backoff.ms," + "sasl.kerberos.ticket.renew.window.factor, max.partition.fetch.bytes, bootstrap.servers, ssl.keystore.type," + " enable.auto.commit, sasl.mechanism, interceptor.classes, exclude.internal.topics, ssl.truststore.password," + " client.id, ssl.endpoint.identification.algorithm, max.poll.records, check.crcs, request.timeout.ms, heartbeat.interval.ms," + " auto.commit.interval.ms, receive.buffer.bytes, ssl.truststore.type, ssl.truststore.location, ssl.keystore.password, fetch.min.bytes," + " fetch.max.bytes, send.buffer.bytes, max.poll.interval.ms, value.deserializer, group.id, retry.backoff.ms,"
                     + " ssl.secure.random.implementation, sasl.kerberos.kinit.cmd, sasl.kerberos.service.name, sasl.kerberos.ticket.renew.jitter, ssl.trustmanager.algorithm, ssl.key.password, fetch.max.wait.ms, sasl.kerberos.min.time.before.relogin, connections.max.idle.ms, session.timeout.ms, metrics.num.samples, key.deserializer, ssl.protocol, ssl.provider, ssl.enabled.protocols, ssl.keystore.location, ssl.cipher.suites, security.protocol, ssl.keymanager.algorithm, metrics.sample.window.ms, auto.offset.reset").split(",");
@@ -101,27 +101,27 @@ public class KafkaConsumerProperties {
     private Properties loadKafkaConsumerProperties() {
         File propFile = getKafkaConsumerFile();
         if (propFile == null || !propFile.exists()) {
-            logger.warn("fail to locate " + KAFKA_CONSUMER_FILE + ", use empty kafka consumer properties");
+            logger.warn("fail to locate {}, use empty kafka consumer properties", KAFKA_CONSUMER_FILE);
             return new Properties();
         }
         Properties properties = new Properties();
-        try {
-            FileInputStream is = new FileInputStream(propFile);
+        try (FileInputStream is = new FileInputStream(propFile)) {
             Configuration conf = new Configuration();
             conf.addResource(is);
             properties.putAll(extractKafkaConfigToProperties(conf));
-            IOUtils.closeQuietly(is);
 
             File propOverrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
             if (propOverrideFile.exists()) {
-                FileInputStream ois = new FileInputStream(propOverrideFile);
-                Configuration oconf = new Configuration();
-                oconf.addResource(ois);
-                properties.putAll(extractKafkaConfigToProperties(oconf));
-                IOUtils.closeQuietly(ois);
+                try (FileInputStream ois = new FileInputStream(propOverrideFile)) {
+                    Configuration oconf = new Configuration();
+                    oconf.addResource(ois);
+                    properties.putAll(extractKafkaConfigToProperties(oconf));
+                }
             }
+        } catch (FileNotFoundException fne) {
+            throw new IllegalArgumentException(fne);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            // close inputStream quietly
         }
 
         return properties;
@@ -135,7 +135,7 @@ public class KafkaConsumerProperties {
     private File getKafkaConsumerFile() {
         String kylinConfHome = System.getProperty(KylinConfig.KYLIN_CONF);
         if (!StringUtils.isEmpty(kylinConfHome)) {
-            logger.info("Use KYLIN_CONF=" + kylinConfHome);
+            logger.info("Use KYLIN_CONF={}", kylinConfHome);
             return getKafkaConsumerFile(kylinConfHome);
         }
 
