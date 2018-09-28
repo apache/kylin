@@ -521,5 +521,18 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             long comp = this.childCuboidId - o.childCuboidId;
             return comp < 0 ? -1 : (comp > 0 ? 1 : 0);
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            CuboidTask that = (CuboidTask) o;
+            return compareTo(that) == 0;
+        }
+
+        @Override
+        public int hashCode() {
+            return Long.hashCode(childCuboidId);
+        }
     }
 }
