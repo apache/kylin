@@ -46,6 +46,8 @@ import com.google.common.collect.Sets;
 
 public class GTUtil {
 
+    private GTUtil(){}
+
     static final TableDesc MOCKUP_TABLE = TableDesc.mockup("GT_MOCKUP_TABLE");
 
     static TblColRef tblColRef(int col, String datatype) {
@@ -185,14 +187,14 @@ public class GTUtil {
         protected final Set<TblColRef> unevaluatableColumnCollector;
         protected final Map<TblColRef, Integer> colMapping;
         protected final GTInfo info;
-        protected final boolean encodeConstants;
+        protected final boolean useEncodeConstants;
 
         public GTConvertDecorator(Set<TblColRef> unevaluatableColumnCollector, Map<TblColRef, Integer> colMapping,
                 GTInfo info, boolean encodeConstants) {
             this.unevaluatableColumnCollector = unevaluatableColumnCollector;
             this.colMapping = colMapping;
             this.info = info;
-            this.encodeConstants = encodeConstants;
+            this.useEncodeConstants = encodeConstants;
             buf = ByteBuffer.allocate(info.getMaxColumnLength());
         }
 
@@ -228,7 +230,7 @@ public class GTUtil {
             }
 
             // encode constants
-            if (encodeConstants && filter instanceof CompareTupleFilter) {
+            if (useEncodeConstants && filter instanceof CompareTupleFilter) {
                 return encodeConstants((CompareTupleFilter) filter);
             }
 

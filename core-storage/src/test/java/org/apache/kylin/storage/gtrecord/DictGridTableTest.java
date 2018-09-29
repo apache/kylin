@@ -369,13 +369,13 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         CompareTupleFilter fComp2 = compare(info.colRef(1), FilterOperatorEnum.GT, enc(info, 1, "10"));
         LogicalTupleFilter filter = and(fComp1, fComp2);
 
-        FilterResultCache.ENABLED = false;
+        FilterResultCache.DEFAULT_OPTION = false;
         testFilterScannerPerfInner(table, info, filter);
-        FilterResultCache.ENABLED = true;
+        FilterResultCache.DEFAULT_OPTION = true;
         testFilterScannerPerfInner(table, info, filter);
-        FilterResultCache.ENABLED = false;
+        FilterResultCache.DEFAULT_OPTION = false;
         testFilterScannerPerfInner(table, info, filter);
-        FilterResultCache.ENABLED = true;
+        FilterResultCache.DEFAULT_OPTION = true;
         testFilterScannerPerfInner(table, info, filter);
     }
 
@@ -393,7 +393,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         scanner.close();
         long end = System.currentTimeMillis();
         System.out.println(
-                (end - start) + "ms with filter cache enabled=" + FilterResultCache.ENABLED + ", " + i + " rows");
+                (end - start) + "ms with filter cache enabled=" + FilterResultCache.DEFAULT_OPTION + ", " + i + " rows");
     }
 
     @Test
