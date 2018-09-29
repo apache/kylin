@@ -124,36 +124,38 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
         conf.set("spark.kryo.registrator", "org.apache.kylin.engine.spark.KylinKryoRegistrator");
         conf.set("spark.kryo.registrationRequired", "true").registerKryoClasses(kryoClassArray);
 
-        JavaSparkContext sc = new JavaSparkContext(conf);
-        KylinSparkJobListener jobListener = new KylinSparkJobListener();
-        sc.sc().addSparkListener(jobListener);
+        try (JavaSparkContext sc = new JavaSparkContext(conf)) {
+            KylinSparkJobListener jobListener = new KylinSparkJobListener();
+            sc.sc().addSparkListener(jobListener);
 
-        HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(dictOutputPath));
+            HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(dictOutputPath));
 
-        final SerializableConfiguration sConf = new SerializableConfiguration(sc.hadoopConfiguration());
-        final KylinConfig envConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
+            final SerializableConfiguration sConf = new SerializableConfiguration(sc.hadoopConfiguration());
+            final KylinConfig envConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
 
-        final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
-        final CubeDesc cubeDesc = CubeDescManager.getInstance(envConfig).getCubeDesc(cubeInstance.getDescName());
+            final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
+            final CubeDesc cubeDesc = CubeDescManager.getInstance(envConfig).getCubeDesc(cubeInstance.getDescName());
 
-        logger.info("Dictionary output path: {}", dictOutputPath);
-        logger.info("Statistics output path: {}", statOutputPath);
+            logger.info("Dictionary output path: {}", dictOutputPath);
+            logger.info("Statistics output path: {}", statOutputPath);
 
-        final TblColRef[] tblColRefs = cubeDesc.getAllColumnsNeedDictionaryBuilt().toArray(new TblColRef[0]);
-        final int columnLength = tblColRefs.length;
+            final TblColRef[] tblColRefs = cubeDesc.getAllColumnsNeedDictionaryBuilt().toArray(new TblColRef[0]);
+            final int columnLength = tblColRefs.length;
 
-        List<Integer> indexs = Lists.newArrayListWithCapacity(columnLength);
+            List<Integer> indexs = Lists.newArrayListWithCapacity(columnLength);
 
-        for (int i = 0; i <= columnLength; i++) {
-            indexs.add(i);
+            for (int i = 0; i <= columnLength; i++) {
+                indexs.add(i);
+            }
+
+            JavaRDD<Integer> indexRDD = sc.parallelize(indexs, columnLength + 1);
+
+            JavaPairRDD<Text, Text> colToDictPathRDD = indexRDD.mapToPair(new MergeDictAndStatsFunction(cubeName,
+                    metaUrl, segmentId, segmentIds.split(","), statOutputPath, tblColRefs, sConf));
+
+            colToDictPathRDD.coalesce(1, false).saveAsNewAPIHadoopFile(dictOutputPath, Text.class, Text.class,
+                    SequenceFileOutputFormat.class);
         }
-
-        JavaRDD<Integer> indexRDD = sc.parallelize(indexs, columnLength + 1);
-
-        JavaPairRDD<Text, Text> colToDictPathRDD = indexRDD.mapToPair(new MergeDictAndStatsFunction(cubeName, metaUrl,
-                segmentId, segmentIds.split(","), statOutputPath, tblColRefs, sConf));
-
-        colToDictPathRDD.coalesce(1, false).saveAsNewAPIHadoopFile(dictOutputPath, Text.class, Text.class, SequenceFileOutputFormat.class);
     }
 
     public static class MergeDictAndStatsFunction implements PairFunction<Integer, Text, Text> {

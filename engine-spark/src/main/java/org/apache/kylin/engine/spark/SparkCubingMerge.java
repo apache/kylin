@@ -111,127 +111,128 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
         conf.set("spark.kryo.registrator", "org.apache.kylin.engine.spark.KylinKryoRegistrator");
         conf.set("spark.kryo.registrationRequired", "true").registerKryoClasses(kryoClassArray);
 
-        JavaSparkContext sc = new JavaSparkContext(conf);
-        SparkUtil.modifySparkHadoopConfiguration(sc.sc()); // set dfs.replication=2 and enable compress
-        KylinSparkJobListener jobListener = new KylinSparkJobListener();
-        sc.sc().addSparkListener(jobListener);
+        try (JavaSparkContext sc = new JavaSparkContext(conf)) {
+            SparkUtil.modifySparkHadoopConfiguration(sc.sc()); // set dfs.replication=2 and enable compress
+            KylinSparkJobListener jobListener = new KylinSparkJobListener();
+            sc.sc().addSparkListener(jobListener);
 
-        HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(outputPath));
-        final SerializableConfiguration sConf = new SerializableConfiguration(sc.hadoopConfiguration());
-        final KylinConfig envConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
+            HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(outputPath));
+            final SerializableConfiguration sConf = new SerializableConfiguration(sc.hadoopConfiguration());
+            final KylinConfig envConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
 
-        final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
-        final CubeDesc cubeDesc = CubeDescManager.getInstance(envConfig).getCubeDesc(cubeInstance.getDescName());
-        final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
-        final CubeStatsReader cubeStatsReader = new CubeStatsReader(cubeSegment, envConfig);
+            final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
+            final CubeDesc cubeDesc = CubeDescManager.getInstance(envConfig).getCubeDesc(cubeInstance.getDescName());
+            final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+            final CubeStatsReader cubeStatsReader = new CubeStatsReader(cubeSegment, envConfig);
 
-        logger.info("Input path: {}", inputPath);
-        logger.info("Output path: {}", outputPath);
+            logger.info("Input path: {}", inputPath);
+            logger.info("Output path: {}", outputPath);
 
-        final Job job = Job.getInstance(sConf.get());
+            final Job job = Job.getInstance(sConf.get());
 
-        SparkUtil.setHadoopConfForCuboid(job, cubeSegment, metaUrl);
+            SparkUtil.setHadoopConfForCuboid(job, cubeSegment, metaUrl);
 
-        final MeasureAggregators aggregators = new MeasureAggregators(cubeDesc.getMeasures());
-        final Function2 reduceFunction = new Function2<Object[], Object[], Object[]>() {
-            @Override
-            public Object[] call(Object[] input1, Object[] input2) throws Exception {
-                Object[] measureObjs = new Object[input1.length];
-                aggregators.aggregate(input1, input2, measureObjs);
-                return measureObjs;
-            }
-        };
+            final MeasureAggregators aggregators = new MeasureAggregators(cubeDesc.getMeasures());
+            final Function2 reduceFunction = new Function2<Object[], Object[], Object[]>() {
+                @Override
+                public Object[] call(Object[] input1, Object[] input2) throws Exception {
+                    Object[] measureObjs = new Object[input1.length];
+                    aggregators.aggregate(input1, input2, measureObjs);
+                    return measureObjs;
+                }
+            };
 
-        final PairFunction convertTextFunction = new PairFunction<Tuple2<Text, Object[]>, org.apache.hadoop.io.Text, org.apache.hadoop.io.Text>() {
-            private transient volatile boolean initialized = false;
-            BufferedMeasureCodec codec;
+            final PairFunction convertTextFunction = new PairFunction<Tuple2<Text, Object[]>, org.apache.hadoop.io.Text, org.apache.hadoop.io.Text>() {
+                private transient volatile boolean initialized = false;
+                BufferedMeasureCodec codec;
 
-            @Override
-            public Tuple2<org.apache.hadoop.io.Text, org.apache.hadoop.io.Text> call(Tuple2<Text, Object[]> tuple2)
-                    throws Exception {
+                @Override
+                public Tuple2<org.apache.hadoop.io.Text, org.apache.hadoop.io.Text> call(Tuple2<Text, Object[]> tuple2)
+                        throws Exception {
 
-                if (initialized == false) {
-                    synchronized (SparkCubingMerge.class) {
-                        if (initialized == false) {
-                            synchronized (SparkCubingMerge.class) {
-                                if (initialized == false) {
-                                    KylinConfig kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
-                                    try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
-                                            .setAndUnsetThreadLocalConfig(kylinConfig)) {
-                                        CubeDesc desc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cubeName);
-                                        codec = new BufferedMeasureCodec(desc.getMeasures());
-                                        initialized = true;
+                    if (initialized == false) {
+                        synchronized (SparkCubingMerge.class) {
+                            if (initialized == false) {
+                                synchronized (SparkCubingMerge.class) {
+                                    if (initialized == false) {
+                                        KylinConfig kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
+                                        try (KylinConfig.SetAndUnsetThreadLocalConfig autoUnset = KylinConfig
+                                                .setAndUnsetThreadLocalConfig(kylinConfig)) {
+                                            CubeDesc desc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cubeName);
+                                            codec = new BufferedMeasureCodec(desc.getMeasures());
+                                            initialized = true;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    ByteBuffer valueBuf = codec.encode(tuple2._2());
+                    byte[] encodedBytes = new byte[valueBuf.position()];
+                    System.arraycopy(valueBuf.array(), 0, encodedBytes, 0, valueBuf.position());
+                    return new Tuple2<>(tuple2._1(), new org.apache.hadoop.io.Text(encodedBytes));
                 }
-                ByteBuffer valueBuf = codec.encode(tuple2._2());
-                byte[] encodedBytes = new byte[valueBuf.position()];
-                System.arraycopy(valueBuf.array(), 0, encodedBytes, 0, valueBuf.position());
-                return new Tuple2<>(tuple2._1(), new org.apache.hadoop.io.Text(encodedBytes));
-            }
-        };
+            };
 
-        final int totalLevels = cubeSegment.getCuboidScheduler().getBuildLevel();
-        final String[] inputFolders = StringSplitter.split(inputPath, ",");
-        FileSystem fs = HadoopUtil.getWorkingFileSystem();
-        boolean isLegacyMode = false;
-        for (String inputFolder : inputFolders) {
-            Path baseCuboidPath = new Path(BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(inputFolder, 0));
-            if (fs.exists(baseCuboidPath) == false) {
-                // doesn't exist sub folder, that means the merged cuboid in one folder (not by layer)
-                isLegacyMode = true;
-                break;
-            }
-        }
-
-        if (isLegacyMode == true) {
-            // merge all layer's cuboid at once, this might be hard for Spark
-            List<JavaPairRDD<Text, Object[]>> mergingSegs = Lists.newArrayListWithExpectedSize(inputFolders.length);
-            for (int i = 0; i < inputFolders.length; i++) {
-                String path = inputFolders[i];
-                JavaPairRDD segRdd = SparkUtil.parseInputPath(path, fs, sc, Text.class, Text.class);
-                CubeSegment sourceSegment = findSourceSegment(path, cubeInstance);
-                // re-encode with new dictionaries
-                JavaPairRDD<Text, Object[]> newEcoddedRdd = segRdd.mapToPair(new ReEncodCuboidFunction(cubeName,
-                        sourceSegment.getUuid(), cubeSegment.getUuid(), metaUrl, sConf));
-                mergingSegs.add(newEcoddedRdd);
+            final int totalLevels = cubeSegment.getCuboidScheduler().getBuildLevel();
+            final String[] inputFolders = StringSplitter.split(inputPath, ",");
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
+            boolean isLegacyMode = false;
+            for (String inputFolder : inputFolders) {
+                Path baseCuboidPath = new Path(BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(inputFolder, 0));
+                if (fs.exists(baseCuboidPath) == false) {
+                    // doesn't exist sub folder, that means the merged cuboid in one folder (not by layer)
+                    isLegacyMode = true;
+                    break;
+                }
             }
 
-            FileOutputFormat.setOutputPath(job, new Path(outputPath));
-            sc.union(mergingSegs.toArray(new JavaPairRDD[mergingSegs.size()]))
-                    .reduceByKey(reduceFunction, SparkUtil.estimateTotalPartitionNum(cubeStatsReader, envConfig))
-                    .mapToPair(convertTextFunction).saveAsNewAPIHadoopDataset(job.getConfiguration());
-
-        } else {
-            // merge by layer
-            for (int level = 0; level <= totalLevels; level++) {
-                List<JavaPairRDD<Text, Object[]>> mergingSegs = Lists.newArrayList();
+            if (isLegacyMode == true) {
+                // merge all layer's cuboid at once, this might be hard for Spark
+                List<JavaPairRDD<Text, Object[]>> mergingSegs = Lists.newArrayListWithExpectedSize(inputFolders.length);
                 for (int i = 0; i < inputFolders.length; i++) {
                     String path = inputFolders[i];
+                    JavaPairRDD segRdd = SparkUtil.parseInputPath(path, fs, sc, Text.class, Text.class);
                     CubeSegment sourceSegment = findSourceSegment(path, cubeInstance);
-                    final String cuboidInputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(path, level);
-                    JavaPairRDD<Text, Text> segRdd = sc.sequenceFile(cuboidInputPath, Text.class, Text.class);
                     // re-encode with new dictionaries
                     JavaPairRDD<Text, Object[]> newEcoddedRdd = segRdd.mapToPair(new ReEncodCuboidFunction(cubeName,
                             sourceSegment.getUuid(), cubeSegment.getUuid(), metaUrl, sConf));
                     mergingSegs.add(newEcoddedRdd);
                 }
 
-                final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(outputPath, level);
-                FileOutputFormat.setOutputPath(job, new Path(cuboidOutputPath));
-
+                FileOutputFormat.setOutputPath(job, new Path(outputPath));
                 sc.union(mergingSegs.toArray(new JavaPairRDD[mergingSegs.size()]))
-                        .reduceByKey(reduceFunction,
-                                SparkUtil.estimateLayerPartitionNum(level, cubeStatsReader, envConfig))
+                        .reduceByKey(reduceFunction, SparkUtil.estimateTotalPartitionNum(cubeStatsReader, envConfig))
                         .mapToPair(convertTextFunction).saveAsNewAPIHadoopDataset(job.getConfiguration());
+
+            } else {
+                // merge by layer
+                for (int level = 0; level <= totalLevels; level++) {
+                    List<JavaPairRDD<Text, Object[]>> mergingSegs = Lists.newArrayList();
+                    for (int i = 0; i < inputFolders.length; i++) {
+                        String path = inputFolders[i];
+                        CubeSegment sourceSegment = findSourceSegment(path, cubeInstance);
+                        final String cuboidInputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(path, level);
+                        JavaPairRDD<Text, Text> segRdd = sc.sequenceFile(cuboidInputPath, Text.class, Text.class);
+                        // re-encode with new dictionaries
+                        JavaPairRDD<Text, Object[]> newEcoddedRdd = segRdd.mapToPair(new ReEncodCuboidFunction(cubeName,
+                                sourceSegment.getUuid(), cubeSegment.getUuid(), metaUrl, sConf));
+                        mergingSegs.add(newEcoddedRdd);
+                    }
+
+                    final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(outputPath, level);
+                    FileOutputFormat.setOutputPath(job, new Path(cuboidOutputPath));
+
+                    sc.union(mergingSegs.toArray(new JavaPairRDD[mergingSegs.size()]))
+                            .reduceByKey(reduceFunction,
+                                    SparkUtil.estimateLayerPartitionNum(level, cubeStatsReader, envConfig))
+                            .mapToPair(convertTextFunction).saveAsNewAPIHadoopDataset(job.getConfiguration());
+                }
             }
+            // output the data size to console, job engine will parse and save the metric
+            // please note: this mechanism won't work when spark.submit.deployMode=cluster
+            logger.info("HDFS: Number of bytes written={}", jobListener.metrics.getBytesWritten());
         }
-        // output the data size to console, job engine will parse and save the metric
-        // please note: this mechanism won't work when spark.submit.deployMode=cluster
-        logger.info("HDFS: Number of bytes written={}", jobListener.metrics.getBytesWritten());
     }
 
     static class ReEncodCuboidFunction implements PairFunction<Tuple2<Text, Text>, Text, Object[]> {
