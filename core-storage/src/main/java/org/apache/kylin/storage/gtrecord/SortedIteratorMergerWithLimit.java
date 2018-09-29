@@ -44,7 +44,6 @@ import com.google.common.base.Preconditions;
  */
 public class SortedIteratorMergerWithLimit<E extends Cloneable> extends SortedIteratorMerger<E> {
     private int limit;
-    private Comparator<E> comparator;
 
     public SortedIteratorMergerWithLimit(Iterator<Iterator<E>> shardSubsets, int limit, Comparator<E> comparator) {
         super(shardSubsets, comparator);
@@ -52,6 +51,7 @@ public class SortedIteratorMergerWithLimit<E extends Cloneable> extends SortedIt
         this.comparator = comparator;
     }
 
+    @Override
     public Iterator<E> getIterator() {
         return new MergedIteratorWithLimit(limit, comparator);
     }
