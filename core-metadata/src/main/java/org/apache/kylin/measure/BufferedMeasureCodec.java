@@ -40,6 +40,10 @@ public class BufferedMeasureCodec implements java.io.Serializable {
     private transient ByteBuffer buf;
     final private int[] measureSizes;
 
+    public MeasureCodec getCodec() {
+        return codec;
+    }
+
     public BufferedMeasureCodec(Collection<MeasureDesc> measureDescs) {
         this.codec = new MeasureCodec(measureDescs);
         this.measureSizes = new int[codec.getMeasuresCount()];

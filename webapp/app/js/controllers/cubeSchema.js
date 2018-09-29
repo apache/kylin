@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService,VdmUtil) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService,VdmUtil, kylinConfig) {
     $scope.modelsManager = modelsManager;
     $scope.cubesManager = cubesManager;
     $scope.projects = [];
@@ -419,6 +419,13 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             }
         });
 
+        // set default value for null type
+        if ($scope.cubeMetaFrame.engine_type === null) {
+            $scope.cubeMetaFrame.engine_type = kylinConfig.getCubeEng();
+        }
+        if ($scope.cubeMetaFrame.storage_type === null) {
+            $scope.cubeMetaFrame.storage_type = kylinConfig.getStorageEng();
+        }
 
         var errorInfo = "";
         angular.forEach(errors,function(item){

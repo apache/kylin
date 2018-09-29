@@ -35,6 +35,8 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.kylin.metadata.model.IStorageAware.ID_PARQUET;
+
 /**
  */
 public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
@@ -73,11 +75,16 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         // add materialize lookup tables if needed
         LookupMaterializeContext lookupMaterializeContext = addMaterializeLookupTableSteps(result);
 
-        outputSide.addStepPhase2_BuildDictionary(result);
+        if (seg.getStorageType() != ID_PARQUET) {
+            outputSide.addStepPhase2_BuildDictionary(result);
+        }
 
         // Phase 3: Build Cube
         addLayerCubingSteps(result, jobId, cuboidRootPath); // layer cubing, only selected algorithm will execute
-        outputSide.addStepPhase3_BuildCube(result);
+
+        if (seg.getStorageType() != ID_PARQUET) {
+            outputSide.addStepPhase3_BuildCube(result);
+        }
 
         // Phase 4: Update Metadata & Cleanup
         result.addTask(createUpdateCubeInfoAfterBuildStep(jobId, lookupMaterializeContext));
@@ -116,7 +123,11 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
 
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {
         final SparkExecutable sparkExecutable = new SparkExecutable();
-        sparkExecutable.setClassName(SparkCubingByLayer.class.getName());
+        if (seg.getStorageType() == ID_PARQUET) {
+            sparkExecutable.setClassName(SparkCubingByLayerParquet.class.getName());
+        } else {
+            sparkExecutable.setClassName(SparkCubingByLayer.class.getName());
+        }
         configureSparkJob(seg, sparkExecutable, jobId, cuboidRootPath);
         result.addTask(sparkExecutable);
     }
@@ -142,6 +153,10 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
         sparkExecutable.setJars(jars.toString());
         sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE);
+
+        if (seg.getStorageType() == ID_PARQUET) {
+            sparkExecutable.setCounterSaveAs(",," + CubingJob.CUBE_SIZE_BYTES, getCounterOuputPath(jobId));
+        }
     }
 
     public String getSegmentMetadataUrl(KylinConfig kylinConfig, String jobId) {

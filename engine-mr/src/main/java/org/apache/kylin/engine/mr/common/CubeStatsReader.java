@@ -307,6 +307,11 @@ public class CubeStatsReader {
         return ret;
     }
 
+    public double estimateCuboidSize(long cuboidId) {
+        Map<Long, Double> cuboidSizeMap = getCuboidSizeMap();
+        return cuboidSizeMap.get(cuboidId);
+    }
+
     public List<Long> getCuboidsByLayer(int level) {
         if (cuboidScheduler == null) {
             throw new UnsupportedOperationException("cuboid scheduler is null");

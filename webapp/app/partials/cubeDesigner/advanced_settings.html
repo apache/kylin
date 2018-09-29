@@ -371,7 +371,7 @@
         <!--Cube Engine-->
         <div class="form-group large-popover" style="margin-bottom:30px;">
           <h3 style="margin-left:42px;margin-bottom:30px;">Cube Engine  <i kylinpopover placement="right" title="Cube Engine" template="CubeEngineTip.html" class="fa fa-info-circle"></i></h3>
-          <div class="row" style="margin-left:42px">
+          <div class="row" style="margin-left:42px;margin-bottom:20px;">
             <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Engine Type :</b></label>
             <div class="col-xs-12 col-sm-6">
               <select style="width: 100%" chosen
@@ -382,6 +382,19 @@
               </select>
               <span ng-if="state.mode=='view'&&cubeMetaFrame.engine_type==2">MapReduce</span>
               <span ng-if="state.mode=='view'&&cubeMetaFrame.engine_type==4">Spark</span>
+            </div>
+          </div>
+          <div class="row" style="margin-left:42px">
+            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Storage Type :</b></label>
+            <div class="col-xs-12 col-sm-6">
+              <select style="width: 100%" chosen
+                      ng-model="cubeMetaFrame.storage_type"
+                      ng-if="state.mode=='edit'"
+                      ng-options="st.value as st.name for st in cubeConfig.storageTypes">
+                <option value="">--Select Storage Type--</option>
+              </select>
+              <span ng-if="state.mode=='view'&&cubeMetaFrame.storage_type==2">HBase</span>
+              <span ng-if="state.mode=='view'&&cubeMetaFrame.storage_type==4">Parquet</span>
             </div>
           </div>
         </div>
