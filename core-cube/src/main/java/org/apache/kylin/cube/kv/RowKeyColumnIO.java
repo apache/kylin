@@ -56,11 +56,15 @@ public class RowKeyColumnIO implements java.io.Serializable {
         dimEnc.encode(value, output, outputOffset);
     }
 
-    public String readColumnString(TblColRef col, byte[] bytes, int offset, int length) {
+    public String readColumnStringKeepDicValue(TblColRef col, byte[] bytes, int offset, int length) {
         DimensionEncoding dimEnc = dimEncMap.get(col);
         if (dimEnc instanceof DictionaryDimEnc)
             return String.valueOf(BytesUtil.readUnsigned(bytes, offset, length));
         return dimEnc.decode(bytes, offset, length);
     }
 
+    public String readColumnString(TblColRef col, byte[] bytes, int offset, int length) {
+        DimensionEncoding dimEnc = dimEncMap.get(col);
+        return dimEnc.decode(bytes, offset, length);
+    }
 }

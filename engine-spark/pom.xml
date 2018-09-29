@@ -83,6 +83,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-tomcat-ext</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>

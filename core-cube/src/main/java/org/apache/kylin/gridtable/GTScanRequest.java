@@ -18,14 +18,9 @@
 
 package org.apache.kylin.gridtable;
 
-import java.io.IOException;
-import java.nio.BufferOverflowException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ByteArray;
@@ -45,9 +40,13 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.nio.BufferOverflowException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class GTScanRequest {
 
@@ -71,6 +70,7 @@ public class GTScanRequest {
 
     // optional filtering
     private TupleFilter filterPushDown;
+    private String filterPushDownSQL;
     private TupleFilter havingFilterPushDown;
 
     // optional aggregation
@@ -95,7 +95,7 @@ public class GTScanRequest {
     GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
             ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, ImmutableBitSet rtAggrMetrics, //
             ImmutableBitSet dynamicCols, Map<Integer, TupleExpression> tupleExpressionMap, //
-            TupleFilter filterPushDown, TupleFilter havingFilterPushDown, //
+            TupleFilter filterPushDown, String filterPushDownSQL, TupleFilter havingFilterPushDown, //
             boolean allowStorageAggregation, double aggCacheMemThreshold, int storageScanRowNumThreshold, //
             int storagePushDownLimit, StorageLimitLevel storageLimitLevel, String storageBehavior, long startTime,
             long timeout) {
@@ -107,6 +107,7 @@ public class GTScanRequest {
         }
         this.columns = dimensions;
         this.filterPushDown = filterPushDown;
+        this.filterPushDownSQL = filterPushDownSQL;
         this.havingFilterPushDown = havingFilterPushDown;
 
         this.aggrGroupBy = aggrGroupBy;
@@ -318,6 +319,10 @@ public class GTScanRequest {
         return filterPushDown;
     }
 
+    public String getFilterPushDownSQL() {
+        return filterPushDownSQL;
+    }
+
     public TupleFilter getHavingFilterPushDown() {
         return havingFilterPushDown;
     }
@@ -445,6 +450,7 @@ public class GTScanRequest {
             BytesUtil.writeVLong(value.startTime, out);
             BytesUtil.writeVLong(value.timeout, out);
             BytesUtil.writeUTFString(value.storageBehavior, out);
+            BytesUtil.writeUTFString(value.filterPushDownSQL, out);
 
             // for dynamic related info
             ImmutableBitSet.serializer.serialize(value.dynamicCols, out);
@@ -499,6 +505,7 @@ public class GTScanRequest {
             long startTime = BytesUtil.readVLong(in);
             long timeout = BytesUtil.readVLong(in);
             String storageBehavior = BytesUtil.readUTFString(in);
+            String filterPushDownSQL = BytesUtil.readUTFString(in);
 
             ImmutableBitSet aDynCols = ImmutableBitSet.serializer.deserialize(in);
 
@@ -516,7 +523,7 @@ public class GTScanRequest {
                     .setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs)
                     .setRtAggrMetrics(aRuntimeAggrMetrics).setDynamicColumns(aDynCols)
                     .setExprsPushDown(sTupleExpressionMap)
-                    .setFilterPushDown(sGTFilter).setHavingFilterPushDown(sGTHavingFilter)
+                    .setFilterPushDown(sGTFilter).setFilterPushDownSQL(filterPushDownSQL).setHavingFilterPushDown(sGTHavingFilter)
                     .setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB)
                     .setStorageScanRowNumThreshold(storageScanRowNumThreshold)
                     .setStoragePushDownLimit(storagePushDownLimit).setStorageLimitLevel(storageLimitLevel)

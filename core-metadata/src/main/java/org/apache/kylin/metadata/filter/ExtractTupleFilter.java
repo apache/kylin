@@ -122,4 +122,9 @@ public class ExtractTupleFilter extends TupleFilter {
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
     }
 
+    @Override
+    public String toSparkSqlFilter() {
+        return "1=1";
+    }
+
 }

@@ -18,9 +18,6 @@
 
 package org.apache.kylin.engine.spark;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.StringUtil;
@@ -35,7 +32,8 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.kylin.metadata.model.IStorageAware.ID_PARQUET;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  */
@@ -144,10 +142,6 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
         sparkExecutable.setJars(jars.toString());
         sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE);
-
-        if (seg.getStorageType() == ID_PARQUET) {
-            sparkExecutable.setCounterSaveAs(",," + CubingJob.CUBE_SIZE_BYTES, getCounterOutputPath(jobId));
-        }
     }
 
     public String getSegmentMetadataUrl(KylinConfig kylinConfig, String jobId) {

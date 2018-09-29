@@ -153,6 +153,11 @@ public class MassInTupleFilter extends FunctionTupleFilter {
         reverse = Boolean.parseBoolean(BytesUtil.readUTFString(buffer));
     }
 
+    @Override
+    public String toSparkSqlFilter() {
+        return "1=1";
+    }
+
     public static boolean containsMassInTupleFilter(TupleFilter filter) {
         if (filter == null)
             return false;

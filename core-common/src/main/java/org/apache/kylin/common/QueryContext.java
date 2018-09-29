@@ -19,10 +19,12 @@
 package org.apache.kylin.common;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -45,6 +47,21 @@ public class QueryContext {
         void stop(QueryContext query);
     }
 
+    private static final ThreadLocal<QueryContext> contexts = new ThreadLocal<QueryContext>() {
+        @Override
+        protected QueryContext initialValue() {
+            return new QueryContext();
+        }
+    };
+
+    public static QueryContext current() {
+        return contexts.get();
+    }
+
+    public static void reset() {
+        contexts.remove();
+    }
+
     private long queryStartMillis;
 
     private final String queryId;
@@ -54,6 +71,10 @@ public class QueryContext {
     private AtomicLong returnedRows = new AtomicLong();
     private AtomicLong scannedBytes = new AtomicLong();
     private Object calcitePlan;
+
+    private boolean isHighPriorityQuery = false;
+    private Set<Future> allRunningTasks = new HashSet<>();
+    private boolean isTimeout;
 
     private AtomicBoolean isRunning = new AtomicBoolean(true);
     private volatile Throwable throwable;
@@ -81,6 +102,35 @@ public class QueryContext {
             throw new KylinTimeoutException("Query timeout");
         }
     }
+
+    public boolean isHighPriorityQuery() {
+        return isHighPriorityQuery;
+    }
+
+    public void markHighPriorityQuery() {
+        isHighPriorityQuery = true;
+    }
+
+    public void addRunningTasks(Future task) {
+        this.allRunningTasks.add(task);
+    }
+
+    public Set<Future> getAllRunningTasks() {
+        return allRunningTasks;
+    }
+
+    public void removeRunningTask(Future task) {
+        this.allRunningTasks.remove(task);
+    }
+
+    public boolean isTimeout() {
+        return isTimeout;
+    }
+
+    public void setTimeout(boolean timeout) {
+        isTimeout = timeout;
+    }
+
 
     public String getQueryId() {
         return queryId == null ? "" : queryId;

@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -275,6 +276,31 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
             String name = BytesUtil.readUTFString(buffer);
             Object value = cs.deserialize(buffer);
             bindVariable(name, value);
+        }
+    }
+
+    @Override
+    public String toSparkSqlFilter() {
+        List<? extends TupleFilter> childFilter = this.getChildren();
+        switch (this.getOperator()) {
+            case EQ:
+            case NEQ:
+            case LT:
+            case GT:
+            case GTE:
+            case LTE:
+                assert childFilter.size() == 2;
+                return childFilter.get(0).toSparkSqlFilter() + toSparkOpMap.get(this.getOperator()) + childFilter.get(1).toSparkSqlFilter();
+            case IN:
+            case NOTIN:
+                assert childFilter.size() == 2;
+                return childFilter.get(0).toSparkSqlFilter() + toSparkOpMap.get(this.getOperator()) + "(" + childFilter.get(1).toSparkSqlFilter() + ")";
+            case ISNULL:
+            case ISNOTNULL:
+                assert childFilter.size() == 1;
+                return childFilter.get(0).toSparkSqlFilter() + toSparkOpMap.get(this.getOperator());
+            default:
+                throw new IllegalStateException("operator " + this.getOperator() + " not supported: ");
         }
     }
 

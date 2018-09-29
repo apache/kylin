@@ -96,6 +96,10 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-query</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-test</artifactId>
+        </dependency>
 
         <!-- Env & Test -->
 
@@ -338,6 +342,27 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>hbaseStorage</id>
+            <properties>
+                <storageType>2</storageType>
+                <excludeTest>**/ITCombination2Test.java,**/ITFailfastQuery2Test.java,**/ITJDBCDriver2Test.java</excludeTest>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+
+        <profile>
+            <id>parquetStorage</id>
+            <properties>
+                <storageType>4</storageType>
+                <excludeTest>**/ITCombinationTest.java,**/ITFailfastQueryTest.java,**/ITJDBCDriverTest.java,**/ITAclTableMigrationToolTest.java</excludeTest>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
@@ -361,123 +386,114 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!--CI plugins-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>integration-tests</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>verify</id>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*$*</exclude>
+                        <exclude>${excludeTest}</exclude>
+                    </excludes>
+                    <systemProperties>
+                        <property>
+                            <name>log4j.configuration</name>
+                            <value>
+                                file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                            </value>
+                        </property>
+                    </systemProperties>
+                    <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=512M
+                        -Dkylin.server.cluster-servers=localhost:7070
+                        -javaagent:${project.basedir}/..//dev-support/jacocoagent.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it.exec
+                    </argLine>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build_cube_with_engine</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <skip>${skipTests}</skip>
+                            <classpathScope>test</classpathScope>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>-Dhdp.version=${hdp.version}</argument>
+                                <argument>-DfastBuildMode=${fastBuildMode}</argument>
+                                <argument>
+                                    -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
+                                </argument>
+                                <argument>-DengineType=${engineType}</argument>
+                                <argument>-DstorageType=${storageType}</argument>
+                                <argument>
+                                    -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                </argument>
+                                <argument>
+                                    -javaagent:${project.basedir}/..//dev-support/jacocoagent.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-engine.exec
+                                </argument>
+                                <argument>-classpath</argument>
+                                <classpath />
+                                <argument>org.apache.kylin.provision.BuildCubeWithEngine
+                                </argument>
+                            </arguments>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build_cube_with_stream</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <skip>${skipTests}</skip>
+                            <classpathScope>test</classpathScope>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>-Dhdp.version=${hdp.version}</argument>
+                                <argument>-DfastBuildMode=${fastBuildMode}</argument>
+                                <argument>
+                                    -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
+                                </argument>
+                                <argument>
+                                    -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                </argument>
+                                <argument>
+                                    -javaagent:${project.basedir}/..//dev-support/jacocoagent.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-stream.exec
+                                </argument>
+                                <argument>-classpath</argument>
+                                <classpath />
+                                <argument>org.apache.kylin.provision.BuildCubeWithStream
+                                </argument>
+                            </arguments>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>sandbox</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>integration-tests</id>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>verify</id>
-                                <goals>
-                                    <goal>verify</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <excludes>
-                                <exclude>**/*$*</exclude>
-                            </excludes>
-                            <systemProperties>
-                                <property>
-                                    <name>log4j.configuration</name>
-                                    <value>
-                                        file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
-                                    </value>
-                                </property>
-                            </systemProperties>
-                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=512M
-                                -Dkylin.server.cluster-servers=localhost:7070
-                                -javaagent:${project.basedir}/..//dev-support/jacocoagent.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it.exec
-                            </argLine>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>build_cube_with_engine</id>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <phase>pre-integration-test</phase>
-                                <configuration>
-                                    <skip>${skipTests}</skip>
-                                    <classpathScope>test</classpathScope>
-                                    <executable>java</executable>
-                                    <arguments>
-                                        <argument>-Dhdp.version=${hdp.version}</argument>
-                                        <argument>-DfastBuildMode=${fastBuildMode}</argument>
-                                        <argument>
-                                            -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
-                                        </argument>
-                                        <argument>-DengineType=${engineType}</argument>
-                                        <argument>
-                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
-                                        </argument>
-                                        <argument>
-                                            -javaagent:${project.basedir}/..//dev-support/jacocoagent.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-engine.exec
-                                        </argument>
-                                        <argument>-classpath</argument>
-                                        <classpath />
-                                        <argument>org.apache.kylin.provision.BuildCubeWithEngine
-                                        </argument>
-                                    </arguments>
-                                    <workingDirectory>${project.basedir}</workingDirectory>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>build_cube_with_stream</id>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <phase>pre-integration-test</phase>
-                                <configuration>
-                                    <skip>${skipTests}</skip>
-                                    <classpathScope>test</classpathScope>
-                                    <executable>java</executable>
-                                    <arguments>
-                                        <argument>-Dhdp.version=${hdp.version}</argument>
-                                        <argument>-DfastBuildMode=${fastBuildMode}</argument>
-                                        <argument>
-                                            -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
-                                        </argument>
-                                        <argument>
-                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
-                                        </argument>
-                                        <argument>
-                                            -javaagent:${project.basedir}/..//dev-support/jacocoagent.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-stream.exec
-                                        </argument>
-                                        <argument>-classpath</argument>
-                                        <classpath />
-                                        <argument>org.apache.kylin.provision.BuildCubeWithStream
-                                        </argument>
-                                    </arguments>
-                                    <workingDirectory>${project.basedir}</workingDirectory>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
 </project>

@@ -33,6 +33,7 @@ public class GTScanRequestBuilder {
     private GTInfo info;
     private List<GTScanRange> ranges;
     private TupleFilter filterPushDown;
+    private String filterPushDownSQL;
     private TupleFilter havingFilterPushDown;
     private ImmutableBitSet dimensions;
     private ImmutableBitSet aggrGroupBy = null;
@@ -77,6 +78,11 @@ public class GTScanRequestBuilder {
 
     public GTScanRequestBuilder setFilterPushDown(TupleFilter filterPushDown) {
         this.filterPushDown = filterPushDown;
+        return this;
+    }
+
+    public GTScanRequestBuilder setFilterPushDownSQL(String filterPushDownSQL) {
+        this.filterPushDownSQL = filterPushDownSQL;
         return this;
     }
 
@@ -180,7 +186,7 @@ public class GTScanRequestBuilder {
         this.timeout = timeout == -1 ? 300000 : timeout;
 
         return new GTScanRequest(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, rtAggrMetrics,
-                dynamicColumns, exprsPushDown, filterPushDown, havingFilterPushDown, allowStorageAggregation,
+                dynamicColumns, exprsPushDown, filterPushDown, filterPushDownSQL, havingFilterPushDown, allowStorageAggregation,
                 aggCacheMemThreshold, storageScanRowNumThreshold, storagePushDownLimit, storageLimitLevel,
                 storageBehavior, startTime, timeout);
     }

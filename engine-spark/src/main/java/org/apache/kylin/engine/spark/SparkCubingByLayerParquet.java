@@ -56,6 +56,8 @@ import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.measure.basic.BigDecimalIngester;
 import org.apache.kylin.measure.basic.DoubleIngester;
 import org.apache.kylin.measure.basic.LongIngester;
+import org.apache.kylin.measure.percentile.PercentileSerializer;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.parquet.example.data.Group;
@@ -75,6 +77,7 @@ import scala.Tuple2;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -264,6 +267,8 @@ public class SparkCubingByLayerParquet extends SparkCubingByLayer {
         private Map<MeasureDesc, String> meaTypeMap;
         private GroupFactory factory;
         private BufferedMeasureCodec measureCodec;
+        private PercentileSerializer serializer;
+        private ByteBuffer byteBuffer;
 
         public GenerateGroupRDDFunction(String cubeName, String segmentId, String metaurl, SerializableConfiguration conf, Map<TblColRef, String> colTypeMap, Map<MeasureDesc, String> meaTypeMap) {
             this.cubeName = cubeName;
@@ -284,6 +289,8 @@ public class SparkCubingByLayerParquet extends SparkCubingByLayer {
             decoder = new RowKeyDecoder(cubeSegment);
             factory = new SimpleGroupFactory(GroupWriteSupport.getSchema(conf.get()));
             measureCodec = new BufferedMeasureCodec(cubeDesc.getMeasures());
+            serializer = new PercentileSerializer(DataType.getType("percentile(100)"));
+
         }
 
         @Override
@@ -319,7 +326,7 @@ public class SparkCubingByLayerParquet extends SparkCubingByLayer {
             int valueOffset = 0;
             for (int i = 0; i < valueLengths.length; ++i) {
                 MeasureDesc measureDesc = measureDescs.get(i);
-                parseMeaValue(group, measureDesc, encodedBytes, valueOffset, valueLengths[i]);
+                parseMeaValue(group, measureDesc, encodedBytes, valueOffset, valueLengths[i], tuple._2[i]);
                 valueOffset += valueLengths[i];
             }
 
@@ -340,13 +347,18 @@ public class SparkCubingByLayerParquet extends SparkCubingByLayer {
             }
         }
 
-        private void parseMeaValue(final Group group, final MeasureDesc measureDesc, final byte[] value, final int offset, final int length) {
+        private void parseMeaValue(final Group group, final MeasureDesc measureDesc, final byte[] value, final int offset, final int length, final Object d) {
             switch (meaTypeMap.get(measureDesc)) {
                 case "long":
                     group.append(measureDesc.getName(), BytesUtil.readLong(value, offset, length));
                     break;
                 case "double":
                     group.append(measureDesc.getName(), ByteBuffer.wrap(value, offset, length).getDouble());
+                    break;
+                case "decimal":
+                    BigDecimal decimal = (BigDecimal)d;
+                    decimal = decimal.setScale(4);
+                    group.append(measureDesc.getName(), Binary.fromConstantByteArray(decimal.unscaledValue().toByteArray()));
                     break;
                 default:
                     group.append(measureDesc.getName(), Binary.fromConstantByteArray(value, offset, length));

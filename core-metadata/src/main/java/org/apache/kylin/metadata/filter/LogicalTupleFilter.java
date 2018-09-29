@@ -155,6 +155,31 @@ public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupl
     }
 
     @Override
+    public String toSparkSqlFilter() {
+        StringBuilder result = new StringBuilder("");
+        switch (this.getOperator()) {
+            case AND:
+            case OR:
+                result.append("(");
+                String op = toSparkOpMap.get(this.getOperator());
+                int index = 0;
+                for (TupleFilter filter : this.getChildren()) {
+                    result.append(filter.toSparkSqlFilter());
+                    if (index < this.getChildren().size() - 1) {
+                        result.append(op);
+                    }
+                    index ++;
+                }
+                result.append(")");
+                break;
+            default:
+                throw new IllegalArgumentException("Operator " + this.getOperator() + " is not supported");
+        }
+
+        return result.toString();
+    }
+
+    @Override
     public TupleFilter acceptOptimizeTransformer(FilterOptimizeTransformer transformer) {
         List<TupleFilter> newChildren = Lists.newArrayList();
         for (TupleFilter child : this.getChildren()) {

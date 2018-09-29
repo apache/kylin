@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.slf4j.Logger;
@@ -33,6 +34,19 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.AND;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.EQ;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.GT;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.GTE;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.IN;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.ISNOTNULL;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.ISNULL;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.LT;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.LTE;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.NEQ;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.NOTIN;
+import static org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum.OR;
 
 /**
  * 
@@ -42,6 +56,35 @@ import com.google.common.collect.Sets;
 public abstract class TupleFilter {
 
     static final Logger logger = LoggerFactory.getLogger(TupleFilter.class);
+
+    public static final Map<TupleFilter.FilterOperatorEnum, String> toSparkOpMap = ImmutableMap.<TupleFilter.FilterOperatorEnum, String>builder()
+            .put(EQ, " = ")
+            .put(NEQ, " != ")
+            .put(LT, " < ")
+            .put(GT, " > ")
+            .put(GTE, " >= ")
+            .put(LTE, " <= ")
+            .put(ISNULL, " is null")
+            .put(ISNOTNULL, " is not null")
+            .put(IN, " in ")
+            .put(NOTIN, " not in ")
+            .put(AND, " and ")
+            .put(OR, " or ")
+            .build();
+
+    //TODO all function mapping
+    public static final Map<String, String> toSparkFuncMap = ImmutableMap.<String, String>builder()
+            .put("LOWER", "LOWER")
+            .put("UPPER", "UPPER")
+            .put("CHAR_LENGTH", "LENGTH")
+            .put("SUBSTRING", "SUBSTRING")
+            .put("LIKE", " LIKE ")
+            .put("||", "CONCAT")
+            .build();
+
+    public void removeAllChildren() {
+        this.children.clear();
+    }
 
     public enum FilterOperatorEnum {
         EQ(1), NEQ(2), GT(3), LT(4), GTE(5), LTE(6), ISNULL(7), ISNOTNULL(8), IN(9), NOTIN(10), AND(20), OR(21), NOT(22), COLUMN(30), CONSTANT(31), DYNAMIC(32), EXTRACT(33), CASE(34), FUNCTION(35), MASSIN(36), EVAL_FUNC(37), UNSUPPORTED(38);
@@ -377,5 +420,7 @@ public abstract class TupleFilter {
             collectColumns(child, collector);
         }
     }
+
+    public abstract String toSparkSqlFilter();
 
 }

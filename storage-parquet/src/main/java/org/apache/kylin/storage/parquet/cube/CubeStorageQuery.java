@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.parquet.cube;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
@@ -38,6 +39,6 @@ public class CubeStorageQuery extends GTCubeStorageQueryBase {
 
     @Override
     protected String getGTStorage() {
-        return null;
+        return KylinConfig.getInstanceFromEnv().getSparkCubeGTStorage();
     }
 }

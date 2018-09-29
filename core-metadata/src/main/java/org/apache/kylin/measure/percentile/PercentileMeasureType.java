@@ -108,4 +108,6 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
     public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {
         return UDAF_MAP;
     }
+
+
 }

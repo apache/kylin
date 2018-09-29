@@ -72,6 +72,8 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
     protected CubeSegment cubeSegment;
     protected CubeDesc cubeDesc;
     protected Cuboid cuboid;
+    protected String filterPushDownSQL;
+    protected CuboidToGridTableMapping mapping;
 
     public CubeScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions, //
             Set<TblColRef> groupByDims, List<TblColRef> dynGroupsDims, List<TupleExpression> dynGroupExprs, //
@@ -87,7 +89,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         this.cubeDesc = cubeSegment.getCubeDesc();
         this.cuboid = cuboid;
 
-        final CuboidToGridTableMapping mapping = context.getMapping();
+        mapping = context.getMapping();
 
         this.gtInfo = CubeGridTable.newGTInfo(cuboid, new CubeDimEncMap(cubeSegment), mapping);
 
@@ -98,12 +100,20 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         this.rangeEndComparator = RecordComparators.getRangeEndComparator(comp);
         //start key GTRecord compare to stop key GTRecord
         this.rangeStartEndComparator = RecordComparators.getRangeStartEndComparator(comp);
-
         //replace the constant values in filter to dictionary codes
         Set<TblColRef> groupByPushDown = Sets.newHashSet(groupByDims);
         groupByPushDown.addAll(dynGroupsDims);
+
         this.gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, gtInfo, mapping.getDim2gt(), groupByPushDown);
+
+        TupleFilter convertedFilter = GTUtil.convertFilterColumnsAndConstants(filter, gtInfo, mapping.getDim2gt(), groupByPushDown, true);
+
         this.havingFilter = havingFilter;
+
+        if (convertedFilter != null) {
+            this.filterPushDownSQL = convertedFilter.toSparkSqlFilter();
+            logger.info("--filterPushDownSQL--: {}", this.filterPushDownSQL);
+        }
 
         this.gtDimensions = mapping.makeGridTableColumns(dimensions);
         this.gtAggrGroups = mapping.makeGridTableColumns(replaceDerivedColumns(groupByPushDown, cubeSegment.getCubeDesc()));
@@ -171,6 +181,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
             scanRequest = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(scanRanges).setDimensions(gtDimensions)
                     .setAggrGroupBy(gtAggrGroups).setAggrMetrics(gtAggrMetrics).setAggrMetricsFuncs(gtAggrFuncs)
                     .setFilterPushDown(gtFilter)//
+                    .setFilterPushDownSQL(filterPushDownSQL)
                     .setRtAggrMetrics(gtRtAggrMetrics).setDynamicColumns(gtDynColumns)
                     .setExprsPushDown(tupleExpressionMap)//
                     .setAllowStorageAggregation(context.isNeedStorageAggregation())

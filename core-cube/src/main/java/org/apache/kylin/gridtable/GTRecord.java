@@ -18,14 +18,23 @@
 
 package org.apache.kylin.gridtable;
 
+import com.google.common.base.Preconditions;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.dimension.DictionaryDimEnc;
+import org.apache.kylin.measure.bitmap.BitmapSerializer;
+import org.apache.kylin.measure.dim.DimCountDistincSerializer;
+import org.apache.kylin.measure.extendedcolumn.ExtendedColumnSerializer;
+import org.apache.kylin.measure.hllc.HLLCSerializer;
+import org.apache.kylin.measure.percentile.PercentileSerializer;
+import org.apache.kylin.measure.raw.RawSerializer;
+import org.apache.kylin.measure.topn.TopNCounterSerializer;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Comparator;
-
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.ImmutableBitSet;
-
-import com.google.common.base.Preconditions;
 
 public class GTRecord implements Comparable<GTRecord> {
 
@@ -99,6 +108,40 @@ public class GTRecord implements Comparable<GTRecord> {
             int newPos = buf.position();
             cols[c].reset(buf.array(), buf.arrayOffset() + pos, newPos - pos);
             pos = newPos;
+        }
+        return this;
+    }
+
+    /** set record to the codes of specified values, reuse given space to hold the codes */
+    public GTRecord setValuesParquet(ImmutableBitSet selectedCols, ByteArray space, Object... values) {
+        assert selectedCols.cardinality() == values.length;
+
+        ByteBuffer buf = space.asBuffer();
+        int pos = buf.position();
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+
+            DataTypeSerializer serializer = info.codeSystem.getSerializer(c);
+            if (serializer instanceof DictionaryDimEnc.DictionarySerializer) {
+                int len = serializer.peekLength(buf);
+                BytesUtil.writeUnsigned((Integer) values[i], len, buf);
+                int newPos = buf.position();
+                cols[c].reset(buf.array(), buf.arrayOffset() + pos, newPos - pos);
+                pos = newPos;
+            } else if (serializer instanceof TopNCounterSerializer ||
+                    serializer instanceof HLLCSerializer ||
+                    serializer instanceof BitmapSerializer ||
+                    serializer instanceof ExtendedColumnSerializer ||
+                    serializer instanceof PercentileSerializer ||
+                    serializer instanceof DimCountDistincSerializer ||
+                    serializer instanceof RawSerializer) {
+                cols[c].reset((byte[]) values[i], 0, ((byte[]) values[i]).length);
+            } else {
+                info.codeSystem.encodeColumnValue(c, values[i], buf);
+                int newPos = buf.position();
+                cols[c].reset(buf.array(), buf.arrayOffset() + pos, newPos - pos);
+                pos = newPos;
+            }
         }
         return this;
     }

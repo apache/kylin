@@ -36,12 +36,12 @@ import org.apache.kylin.metadata.model.TblColRef;
  */
 public class RowKeyDecoder {
 
-    private final CubeDesc cubeDesc;
-    private final RowKeyColumnIO colIO;
-    private final RowKeySplitter rowKeySplitter;
+    protected final CubeDesc cubeDesc;
+    protected final RowKeyColumnIO colIO;
+    protected final RowKeySplitter rowKeySplitter;
 
-    private Cuboid cuboid;
-    private List<String> values;
+    protected Cuboid cuboid;
+    protected List<String> values;
 
     public RowKeyDecoder(CubeSegment cubeSegment) {
         this.cubeDesc = cubeSegment.getCubeDesc();
@@ -76,7 +76,7 @@ public class RowKeyDecoder {
         this.cuboid = Cuboid.findForMandatory(cubeDesc, cuboidID);
     }
 
-    private void collectValue(TblColRef col, byte[] valueBytes, int offset, int length) throws IOException {
+    protected void collectValue(TblColRef col, byte[] valueBytes, int offset, int length) throws IOException {
         String strValue = colIO.readColumnString(col, valueBytes, offset, length);
         values.add(strValue);
     }

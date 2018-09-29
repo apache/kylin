@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.filter;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
@@ -88,6 +89,10 @@ public class ConstantTupleFilter extends TupleFilter {
         return this.constantValues;
     }
 
+    public void setValues(List<Object> constantValues) {
+        this.constantValues = constantValues;
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void serialize(IFilterCodeSystem cs, ByteBuffer buffer) {
@@ -106,6 +111,38 @@ public class ConstantTupleFilter extends TupleFilter {
         for (int i = 0; i < size; i++) {
             this.constantValues.add(cs.deserialize(buffer));
         }
+    }
+
+    @Override
+    public String toSparkSqlFilter() {
+        if (this.equals(TRUE)) {
+            return "true";
+        } else if (this.equals(FALSE)) {
+            return "false";
+        }
+
+        StringBuilder sb = new StringBuilder("");
+
+        if (constantValues.isEmpty()) {
+            sb.append("null");
+        } else {
+            for (Object value : constantValues) {
+                if (value == null) {
+                    sb.append("null");
+                }
+                if (value instanceof String) {
+                    sb.append("'" + value + "'");
+                } else {
+                    sb.append(value);
+                }
+                sb.append(",");
+            }
+        }
+        String result = sb.toString();
+        if (result.endsWith(",")) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
     }
 
     @Override public boolean equals(Object o) {

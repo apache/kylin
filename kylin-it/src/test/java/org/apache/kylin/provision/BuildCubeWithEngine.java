@@ -18,25 +18,9 @@
 
 package org.apache.kylin.provision;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -74,9 +58,24 @@ import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class BuildCubeWithEngine {
 
@@ -86,6 +85,7 @@ public class BuildCubeWithEngine {
     protected ExecutableManager jobService;
     private static boolean fastBuildMode = false;
     private static int engineType;
+    private static int storageType;
 
     private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithEngine.class);
 
@@ -131,9 +131,13 @@ public class BuildCubeWithEngine {
         String specifiedEngineType = System.getProperty("engineType");
         if (StringUtils.isNotEmpty(specifiedEngineType)) {
             engineType = Integer.parseInt(specifiedEngineType);
-        } else {
-            engineType = 2;
         }
+
+        String specifiedStorageType = System.getProperty("storageType");
+        if (StringUtils.isNotEmpty(specifiedEngineType)) {
+            storageType = Integer.parseInt(specifiedStorageType);
+        }
+        logger.info("==storageType: " + specifiedStorageType);
 
         System.setProperty(KylinConfig.KYLIN_CONF, confDir);
         System.setProperty("SPARK_HOME", "/usr/local/spark"); // need manually create and put spark to this folder on Jenkins
@@ -195,6 +199,9 @@ public class BuildCubeWithEngine {
         }
 
         cubeDescManager = CubeDescManager.getInstance(kylinConfig);
+
+        // update enginType and storageTpye
+        updateCubeDesc("ci_inner_join_cube", "ci_left_join_cube");
     }
 
     public void after() {
@@ -353,12 +360,30 @@ public class BuildCubeWithEngine {
         return doBuildAndMergeOnCube(cubeName);
     }
 
-    @SuppressWarnings("unused")
     private void updateCubeEngineType(String cubeName) throws IOException {
-        CubeDesc cubeDesc = cubeDescManager.getCubeDesc(cubeName);
-        if (cubeDesc.getEngineType() != engineType) {
-            cubeDesc.setEngineType(engineType);
-            cubeDescManager.updateCubeDesc(cubeDesc);
+        if (engineType != 0) {
+            CubeDesc cubeDesc = cubeDescManager.getCubeDesc(cubeName);
+            if (cubeDesc.getEngineType() != engineType) {
+                cubeDesc.setEngineType(engineType);
+                cubeDescManager.updateCubeDesc(cubeDesc);
+            }
+        }
+    }
+
+    private void updateCubeStorageType(String cubeName) throws IOException {
+        if (storageType != 0) {
+            CubeDesc cubeDesc = cubeDescManager.getCubeDesc(cubeName);
+            if (cubeDesc.getStorageType() != storageType) {
+                cubeDesc.setStorageType(storageType);
+                cubeDescManager.updateCubeDesc(cubeDesc);
+            }
+        }
+    }
+
+    private void updateCubeDesc(String... cubeNames) throws IOException {
+        for (String cubeName : cubeNames) {
+            updateCubeEngineType(cubeName);
+            updateCubeStorageType(cubeName);
         }
     }
 

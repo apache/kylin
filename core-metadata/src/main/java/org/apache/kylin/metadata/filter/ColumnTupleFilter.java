@@ -46,12 +46,18 @@ public class ColumnTupleFilter extends TupleFilter {
     private TblColRef columnRef;
     private Object tupleValue;
     private List<Object> values;
+    private String colName;
 
     public ColumnTupleFilter(TblColRef column) {
+        this(column, null);
+    }
+
+    public ColumnTupleFilter(TblColRef column, String colName) {
         super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.COLUMN);
         this.columnRef = column;
         this.values = new ArrayList<Object>(1);
         this.values.add(null);
+        this.colName = colName;
     }
 
     public TblColRef getColumn() {
@@ -154,5 +160,10 @@ public class ColumnTupleFilter extends TupleFilter {
 
             this.columnRef = column.getRef();
         }
+    }
+
+    @Override
+    public String toSparkSqlFilter() {
+        return this.columnRef.getTableAlias() + "_" + this.columnRef.getName();
     }
 }

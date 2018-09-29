@@ -24,9 +24,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
+import org.apache.kylin.dimension.AbstractDateDimEnc;
+import org.apache.kylin.dimension.DictionaryDimEnc;
+import org.apache.kylin.dimension.DimensionEncoding;
+import org.apache.kylin.dimension.FixedLenDimEnc;
+import org.apache.kylin.dimension.IntDimEnc;
+import org.apache.kylin.dimension.IntegerDimEnc;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.expression.TupleExpressionSerializer;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
@@ -43,6 +51,8 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import static org.apache.kylin.metadata.filter.ConstantTupleFilter.TRUE;
 
 public class GTUtil {
 
@@ -76,8 +86,22 @@ public class GTUtil {
     }
 
     public static TupleFilter convertFilterColumnsAndConstants(TupleFilter rootFilter, GTInfo info, //
-            Map<TblColRef, Integer> colMapping, Set<TblColRef> unevaluatableColumnCollector) {
-        TupleFilter filter = convertFilter(rootFilter, info, colMapping, true, unevaluatableColumnCollector);
+                                                               Map<TblColRef, Integer> colMapping, Set<TblColRef> unevaluatableColumnCollector) {
+        return convertFilterColumnsAndConstants(rootFilter, info, colMapping, unevaluatableColumnCollector, false);
+    }
+
+    public static TupleFilter convertFilterColumnsAndConstants(TupleFilter rootFilter, GTInfo info, //
+            Map<TblColRef, Integer> colMapping, Set<TblColRef> unevaluatableColumnCollector, boolean isParquet) {
+        if (rootFilter == null) {
+            return null;
+        }
+
+        TupleFilter filter;
+        if (isParquet) {
+            filter = convertFilter(rootFilter, new GTConvertDecoratorParquet(unevaluatableColumnCollector, colMapping, info, true));
+        } else {
+            filter = convertFilter(rootFilter, info, colMapping, true, unevaluatableColumnCollector);
+        }
 
         // optimize the filter: after translating with dictionary, some filters become determined
         // e.g.
@@ -108,6 +132,20 @@ public class GTUtil {
 
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, decorator, filterCodeSystem);
         return TupleFilterSerializer.deserialize(bytes, filterCodeSystem);
+    }
+
+    private static TupleFilter convertFilter(TupleFilter rootFilter, GTConvertDecorator decorator) {
+        rootFilter = decorator.onSerialize(rootFilter);
+        List<TupleFilter> newChildren = Lists.newArrayListWithCapacity(rootFilter.getChildren().size());
+        if (rootFilter.hasChildren()) {
+            for (TupleFilter childFilter : rootFilter.getChildren()) {
+                newChildren.add(convertFilter(childFilter, decorator));
+
+            }
+            rootFilter.removeAllChildren();
+            rootFilter.addChildren(newChildren);
+        }
+        return rootFilter;
     }
 
     public static TupleExpression convertFilterColumnsAndConstants(TupleExpression rootExpression, GTInfo info,
@@ -183,6 +221,43 @@ public class GTUtil {
         };
     }
 
+    private static class GTConvertDecoratorParquet extends GTConvertDecorator {
+        public GTConvertDecoratorParquet(Set<TblColRef> unevaluatableColumnCollector, Map<TblColRef, Integer> colMapping,
+                                         GTInfo info, boolean encodeConstants) {
+            super(unevaluatableColumnCollector, colMapping, info, encodeConstants);
+        }
+
+        @Override
+        protected TupleFilter convertColumnFilter(ColumnTupleFilter columnFilter) {
+            return columnFilter;
+        }
+
+        @Override
+        protected Object translate(int col, Object value, int roundingFlag) {
+            try {
+                buf.clear();
+                DimensionEncoding dimEnc = info.codeSystem.getDimEnc(col);
+                info.codeSystem.encodeColumnValue(col, value, roundingFlag, buf);
+                DataTypeSerializer serializer = dimEnc.asDataTypeSerializer();
+                buf.flip();
+                if (dimEnc instanceof DictionaryDimEnc) {
+                    int id = BytesUtil.readUnsigned(buf, dimEnc.getLengthOfEncoding());
+                    return id;
+                } else if (dimEnc instanceof AbstractDateDimEnc) {
+                    return Long.valueOf((String)serializer.deserialize(buf));
+                } else if (dimEnc instanceof FixedLenDimEnc) {
+                    return serializer.deserialize(buf);
+                } else if (dimEnc instanceof IntegerDimEnc || dimEnc instanceof IntDimEnc) {
+                    return Integer.valueOf((String)serializer.deserialize(buf));
+                } else {
+                    return value;
+                }
+            } catch (IllegalArgumentException ex) {
+                return null;
+            }
+        }
+    }
+
     protected static class GTConvertDecorator implements TupleFilterSerializer.Decorator {
         protected final Set<TblColRef> unevaluatableColumnCollector;
         protected final Map<TblColRef, Integer> colMapping;
@@ -190,7 +265,7 @@ public class GTUtil {
         protected final boolean useEncodeConstants;
 
         public GTConvertDecorator(Set<TblColRef> unevaluatableColumnCollector, Map<TblColRef, Integer> colMapping,
-                GTInfo info, boolean encodeConstants) {
+                                  GTInfo info, boolean encodeConstants) {
             this.unevaluatableColumnCollector = unevaluatableColumnCollector;
             this.colMapping = colMapping;
             this.info = info;
@@ -213,20 +288,18 @@ public class GTUtil {
             // will always return FALSE.
             if (filter.getOperator() == FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
                 TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
-                return ConstantTupleFilter.TRUE;
+                return TRUE;
             }
 
             // shortcut for unEvaluatable filter
             if (!filter.isEvaluable()) {
                 TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
-                return ConstantTupleFilter.TRUE;
+                return TRUE;
             }
 
             // map to column onto grid table
             if (colMapping != null && filter instanceof ColumnTupleFilter) {
-                ColumnTupleFilter colFilter = (ColumnTupleFilter) filter;
-                int gtColIdx = mapCol(colFilter.getColumn());
-                return new ColumnTupleFilter(info.colRef(gtColIdx));
+                return convertColumnFilter((ColumnTupleFilter) filter);
             }
 
             // encode constants
@@ -235,6 +308,11 @@ public class GTUtil {
             }
 
             return filter;
+        }
+
+        protected TupleFilter convertColumnFilter(ColumnTupleFilter columnFilter) {
+            int gtColIdx = mapCol(columnFilter.getColumn());
+            return new ColumnTupleFilter(info.colRef(gtColIdx));
         }
 
         protected TupleFilter encodeConstants(CompareTupleFilter oldCompareFilter) {
@@ -261,7 +339,7 @@ public class GTUtil {
             int col = colMapping == null ? externalCol.getColumnDesc().getZeroBasedIndex() : mapCol(externalCol);
 
             TupleFilter result;
-            ByteArray code;
+            Object code;
 
             // translate constant into code
             switch (newCompareFilter.getOperator()) {
@@ -353,7 +431,7 @@ public class GTUtil {
             return result;
         }
 
-        private TupleFilter newCompareFilter(FilterOperatorEnum op, TblColRef col, ByteArray code) {
+        private TupleFilter newCompareFilter(FilterOperatorEnum op, TblColRef col, Object code) {
             CompareTupleFilter r = new CompareTupleFilter(op);
             r.addChild(new ColumnTupleFilter(col));
             r.addChild(new ConstantTupleFilter(code));
@@ -368,7 +446,7 @@ public class GTUtil {
 
         transient ByteBuffer buf;
 
-        protected ByteArray translate(int col, Object value, int roundingFlag) {
+        protected Object translate(int col, Object value, int roundingFlag) {
             try {
                 buf.clear();
                 info.codeSystem.encodeColumnValue(col, value, roundingFlag, buf);

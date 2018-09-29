@@ -56,4 +56,9 @@ public class UnsupportedTupleFilter extends TupleFilter {
     @Override
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
     }
+
+    @Override
+    public String toSparkSqlFilter() {
+        return "1=1";
+    }
 }

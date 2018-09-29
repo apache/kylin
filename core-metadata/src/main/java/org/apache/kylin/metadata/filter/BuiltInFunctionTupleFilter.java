@@ -177,6 +177,46 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     }
 
     @Override
+    public String toSparkSqlFilter() {
+        List<? extends TupleFilter> childFilter = this.getChildren();
+        String op = this.getName();
+        switch (op) {
+            case "LIKE":
+                assert childFilter.size() == 2;
+                return childFilter.get(0).toSparkSqlFilter() + toSparkFuncMap.get(op) + childFilter.get(1).toSparkSqlFilter();
+            case "||":
+                StringBuilder result = new StringBuilder().append(toSparkFuncMap.get(op)).append("(");
+                int index = 0;
+                for (TupleFilter filter : childFilter) {
+                    result.append(filter.toSparkSqlFilter());
+                    if (index < childFilter.size() - 1) {
+                        result.append(",");
+                    }
+                    index ++;
+                }
+                result.append(")");
+                return result.toString();
+            case "LOWER":
+            case "UPPER":
+            case "CHAR_LENGTH":
+                assert childFilter.size() == 1;
+                return toSparkFuncMap.get(op) + "(" + childFilter.get(0).toSparkSqlFilter() + ")";
+            case "SUBSTRING":
+                assert childFilter.size() == 3;
+                return toSparkFuncMap.get(op) + "(" + childFilter.get(0).toSparkSqlFilter() + "," + childFilter.get(1).toSparkSqlFilter() + "," + childFilter.get(2).toSparkSqlFilter() + ")";
+            default:
+                if (childFilter.size() == 1) {
+                    return op + "(" + childFilter.get(0).toSparkSqlFilter() + ")";
+                } else if (childFilter.size() == 2) {
+                    return childFilter.get(0).toSparkSqlFilter() + op + childFilter.get(1).toSparkSqlFilter();
+                } else if (childFilter.size() == 3) {
+                    return op + "(" + childFilter.get(0).toSparkSqlFilter() + "," + childFilter.get(1).toSparkSqlFilter() + "," + childFilter.get(2).toSparkSqlFilter() + ")";
+                }
+                throw new IllegalArgumentException("Operator " + op + " is not supported");
+        }
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if (isReversed)

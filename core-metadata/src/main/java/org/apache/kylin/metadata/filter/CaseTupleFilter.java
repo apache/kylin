@@ -134,6 +134,21 @@ public class CaseTupleFilter extends TupleFilter implements IOptimizeableTupleFi
     }
 
     @Override
+    public String toSparkSqlFilter() {
+        String result = "(case ";
+        TupleFilter whenFilter;
+        TupleFilter thenFilter;
+        for (int i = 0; i < this.getWhenFilters().size(); i++) {
+            whenFilter = this.getWhenFilters().get(i);
+            thenFilter = this.getThenFilters().get(i);
+            result += " when " + whenFilter.toSparkSqlFilter() + " then " + thenFilter.toSparkSqlFilter();
+        }
+        result += " else " + this.getElseFilter().toSparkSqlFilter();
+        result += " end)";
+        return result;
+    }
+
+    @Override
     public TupleFilter acceptOptimizeTransformer(FilterOptimizeTransformer transformer) {
         List<TupleFilter> newChildren = Lists.newArrayList();
         for (TupleFilter child : this.getChildren()) {

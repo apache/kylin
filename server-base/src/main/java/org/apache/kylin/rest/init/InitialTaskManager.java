@@ -21,8 +21,10 @@ package org.apache.kylin.rest.init;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.ext.ClassLoaderUtils;
 import org.apache.kylin.rest.metrics.QueryMetrics2Facade;
 import org.apache.kylin.rest.metrics.QueryMetricsFacade;
+import org.apache.spark.sql.SparderEnv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -37,6 +39,8 @@ public class InitialTaskManager implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         logger.info("Kylin service is starting.....");
+
+        checkAndInitSpark();
 
         runInitialTasks();
     }
@@ -61,6 +65,28 @@ public class InitialTaskManager implements InitializingBean {
                 }
             }
             logger.info("All initial tasks finished.");
+        }
+    }
+
+    private void checkAndInitSpark() {
+        boolean hasSparkJar = true;
+        // if in ut, has not spark jar.
+        try {
+            Class.forName("org.apache.spark.sql.SparkSession");
+        } catch (ClassNotFoundException e) {
+            logger.info("Can not find org.apache.spark.sql.SparkSession.Spark has not started.");
+            hasSparkJar = false;
+        }
+
+        if (hasSparkJar) {
+            ClassLoader originClassLoader = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(ClassLoaderUtils.getSparkClassLoader());
+            try {
+                SparderEnv.init();
+            } catch (Throwable ex) {
+                logger.error("Initial Spark Context at starting failed", ex);
+            }
+            Thread.currentThread().setContextClassLoader(originClassLoader);
         }
     }
 }

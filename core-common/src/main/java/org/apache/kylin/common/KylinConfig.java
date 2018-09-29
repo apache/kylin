@@ -18,6 +18,16 @@
 
 package org.apache.kylin.common;
 
+import com.google.common.base.Preconditions;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.FileUtils;
+import org.apache.kylin.common.util.OrderedProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,16 +44,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.restclient.RestClient;
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.OrderedProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 /**
  */
@@ -555,4 +555,44 @@ public class KylinConfig extends KylinConfigBase {
             return this.base() == ((KylinConfig) another).base();
     }
 
+    public Map<String, String> getSparkConf() {
+        return getPropertiesByPrefix("kylin.storage.columnar.spark-conf.");
+    }
+
+    public String getColumnarSparkEnv(String conf) {
+        return getPropertiesByPrefix("kylin.storage.columnar.spark-env.").get(conf);
+    }
+
+    public boolean isParquetSeparateFsEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.storage.columnar.separate-fs-enable", "false"));
+    }
+
+    public String getParquetSeparateOverrideFiles() {
+        return getOptional("kylin.storage.columnar.separate-override-files",
+                "core-site.xml,hdfs-site.xml,yarn-site.xml");
+    }
+
+    public String getSparkCubeGTStorage() {
+        return getOptional("kylin.storage.parquet.gtstorage",
+                "org.apache.kylin.storage.parquet.cube.CubeSparkRPC");
+    }
+
+    public boolean isParquetSparkCleanCachedRDDAfterUse() {
+        return Boolean.parseBoolean(getOptional("kylin.storage.parquet.clean-cached-rdd-after-use", "false"));
+    }
+
+    public String sparderJars() {
+        try {
+            File storageFile = FileUtils.findFile(KylinConfigBase.getKylinHome() + "/lib",
+                    "kylin-storage-parquet-.*.jar");
+            String path1 = "";
+            if (storageFile != null) {
+                path1 = storageFile.getCanonicalPath();
+            }
+
+            return getOptional("kylin.query.parquet-additional-jars", path1);
+        } catch (IOException e) {
+            return "";
+        }
+    }
 }

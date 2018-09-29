@@ -195,7 +195,7 @@ public class ParameterDesc implements Serializable {
      * 1. easy to compare without considering order
      * 2. easy to compare one by one
      */
-    private static class PlainParameter {
+    private static class PlainParameter implements Serializable{
         private String type;
         private String value;
         private TblColRef colRef = null;

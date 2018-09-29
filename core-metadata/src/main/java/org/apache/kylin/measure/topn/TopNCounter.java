@@ -59,6 +59,11 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
         counterList = Lists.newLinkedList();
     }
 
+    public TopNCounter(TopNCounter another) {
+        this(another.capacity);
+        merge(another);
+    }
+
     public int getCapacity() {
         return capacity;
     }

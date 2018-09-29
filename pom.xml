@@ -61,6 +61,7 @@
 
     <!-- Spark versions -->
     <spark.version>2.3.2</spark.version>
+
     <kryo.version>4.0.0</kryo.version>
 
     <!-- mysql versions -->
@@ -297,6 +298,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-storage-parquet</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-query</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -333,6 +339,16 @@
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-it</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-tomcat-ext</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-test</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -1283,6 +1299,7 @@
     <module>source-jdbc</module>
     <module>source-kafka</module>
     <module>storage-hbase</module>
+    <module>storage-parquet</module>
     <module>query</module>
     <module>server-base</module>
     <module>server</module>
@@ -1297,6 +1314,7 @@
     <module>metrics-reporter-kafka</module>
     <module>cache</module>
     <module>datasource-sdk</module>
+    <module>kylin-test</module>
   </modules>
 
   <reporting>

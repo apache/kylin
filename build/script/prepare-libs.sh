@@ -32,6 +32,7 @@ rm -rf build/lib build/tool
 mkdir build/lib build/tool
 cp assembly/target/kylin-assembly-${version}-job.jar build/lib/kylin-job-${version}.jar
 cp storage-hbase/target/kylin-storage-hbase-${version}-coprocessor.jar build/lib/kylin-coprocessor-${version}.jar
+cp storage-parquet/target/kylin-storage-parquet-${version}-spark.jar build/lib/kylin-storage-parquet-${version}.jar
 cp jdbc/target/kylin-jdbc-${version}.jar build/lib/kylin-jdbc-${version}.jar
 cp tool-assembly/target/kylin-tool-assembly-${version}-assembly.jar build/tool/kylin-tool-${version}.jar
 cp datasource-sdk/target/kylin-datasource-sdk-${version}-lib.jar build/lib/kylin-datasource-sdk-${version}.jar
@@ -39,6 +40,7 @@ cp datasource-sdk/target/kylin-datasource-sdk-${version}-lib.jar build/lib/kylin
 # Copied file becomes 000 for some env (e.g. my Cygwin)
 chmod 644 build/lib/kylin-job-${version}.jar
 chmod 644 build/lib/kylin-coprocessor-${version}.jar
+chmod 644 build/lib/kylin-storage-parquet-${version}.jar
 chmod 644 build/lib/kylin-jdbc-${version}.jar
 chmod 644 build/tool/kylin-tool-${version}.jar
 chmod 644 build/lib/kylin-datasource-sdk-${version}.jar

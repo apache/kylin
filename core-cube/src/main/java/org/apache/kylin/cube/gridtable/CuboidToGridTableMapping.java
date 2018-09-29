@@ -51,6 +51,7 @@ public class CuboidToGridTableMapping {
 
     private int nDimensions;
     private Map<TblColRef, Integer> dim2gt;
+    private Map<MeasureDesc, Integer> met2gt;
     private ImmutableBitSet gtPrimaryKey;
 
     private int nMetrics;
@@ -68,6 +69,7 @@ public class CuboidToGridTableMapping {
 
         // dimensions
         dim2gt = Maps.newHashMap();
+        met2gt = Maps.newHashMap();
         BitSet pk = new BitSet();
         for (TblColRef dimension : cuboid.getColumns()) {
             gtDataTypes.add(dimension.getType());
@@ -96,6 +98,7 @@ public class CuboidToGridTableMapping {
             // Ensure the holistic version if exists is always the first.
             FunctionDesc func = measure.getFunction();
             metrics2gt.put(func, gtColIdx);
+            met2gt.put(measure, gtColIdx);
             gtDataTypes.add(func.getReturnDataType());
 
             // map to column block
@@ -244,5 +247,9 @@ public class CuboidToGridTableMapping {
 
     public Map<TblColRef, Integer> getDim2gt() {
         return ImmutableMap.copyOf(dim2gt);
+    }
+
+    public Map<MeasureDesc, Integer> getMet2gt() {
+        return ImmutableMap.copyOf(met2gt);
     }
 }

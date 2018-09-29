@@ -46,6 +46,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.kv.RowKeyDecoder;
+import org.apache.kylin.cube.kv.RowKeyDecoderParquet;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dimension.AbstractDateDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
@@ -67,6 +68,8 @@ import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.measure.basic.BigDecimalIngester;
 import org.apache.kylin.measure.basic.DoubleIngester;
 import org.apache.kylin.measure.basic.LongIngester;
+import org.apache.kylin.metadata.datatype.BigDecimalSerializer;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.parquet.example.data.Group;
@@ -90,10 +93,10 @@ import scala.Tuple2;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 
 public class SparkCubeParquet extends AbstractApplication implements Serializable{
@@ -151,13 +154,14 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
         KylinSparkJobListener jobListener = new KylinSparkJobListener();
         try (JavaSparkContext sc = new JavaSparkContext(conf)){
             sc.sc().addSparkListener(jobListener);
+
+            HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(outputPath));
             final SerializableConfiguration sConf = new SerializableConfiguration(sc.hadoopConfiguration());
 
             final KylinConfig envConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
 
             final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
             final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
-
 
             final FileSystem fs = new Path(inputPath).getFileSystem(sc.hadoopConfiguration());
 
@@ -174,6 +178,8 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
                 allRDDs[level] = SparkUtil.parseInputPath(cuboidPath, fs, sc, Text.class, Text.class);
                 saveToParquet(allRDDs[level], metaUrl, cubeName, cubeSegment, outputPath, level, job, envConfig);
             }
+
+            logger.info("HDFS: Number of bytes written={}", jobListener.metrics.getBytesWritten());
 
             Map<String, String> counterMap = Maps.newHashMap();
             counterMap.put(ExecutableConstants.HDFS_BYTES_WRITTEN, String.valueOf(jobListener.metrics.getBytesWritten()));
@@ -217,11 +223,12 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
     }
 
     static class CuboidPartitioner extends Partitioner {
-
         private CuboidToPartitionMapping mapping;
+        private boolean enableSharding;
 
-        public CuboidPartitioner(CuboidToPartitionMapping cuboidToPartitionMapping) {
+        public CuboidPartitioner(CuboidToPartitionMapping cuboidToPartitionMapping, boolean enableSharding) {
             this.mapping = cuboidToPartitionMapping;
+            this.enableSharding =enableSharding;
         }
 
         @Override
@@ -330,6 +337,7 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
             int partition = (int) (cuboidSize / (rddCut * 10));
             partition = Math.max(kylinConfig.getSparkMinPartition(), partition);
             partition = Math.min(kylinConfig.getSparkMaxPartition(), partition);
+            logger.info("cuboid:{}, est_size:{}, partitions:{}", cuboidId, cuboidSize, partition);
             return partition;
         }
 
@@ -377,6 +385,8 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
         private Map<MeasureDesc, String> meaTypeMap;
         private GroupFactory factory;
         private BufferedMeasureCodec measureCodec;
+        private BigDecimalSerializer serializer;
+        private int count = 0;
 
         public GenerateGroupRDDFunction(String cubeName, String segmentId, String metaurl, SerializableConfiguration conf, Map<TblColRef, String> colTypeMap, Map<MeasureDesc, String> meaTypeMap) {
             this.cubeName = cubeName;
@@ -394,15 +404,15 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
             CubeDesc cubeDesc = cubeInstance.getDescriptor();
             CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
             measureDescs = cubeDesc.getMeasures();
-            decoder = new RowKeyDecoder(cubeSegment);
+            decoder = new RowKeyDecoderParquet(cubeSegment);
             factory = new SimpleGroupFactory(GroupWriteSupport.getSchema(conf.get()));
             measureCodec = new BufferedMeasureCodec(cubeDesc.getMeasures());
+            serializer = new BigDecimalSerializer(DataType.getType("decimal"));
+            initialized = true;
         }
 
         @Override
         public Tuple2<Void, Group> call(Tuple2<Text, Text> tuple) throws Exception {
-
-            logger.debug("call: transfer Text to byte[]");
             if (initialized == false) {
                 synchronized (SparkCubeParquet.class) {
                     if (initialized == false) {
@@ -412,7 +422,7 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
                 }
             }
 
-            long cuboid = decoder.decode(tuple._1.getBytes());
+            long cuboid = decoder.decode4Parquet(tuple._1.getBytes());
             List<String> values = decoder.getValues();
             List<TblColRef> columns = decoder.getColumns();
 
@@ -426,8 +436,9 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
                 parseColValue(group, column, values.get(i));
             }
 
+            count ++;
 
-            byte[] encodedBytes = tuple._2().copyBytes();
+            byte[] encodedBytes = tuple._2().getBytes();
             int[] valueLengths = measureCodec.getCodec().getPeekLength(ByteBuffer.wrap(encodedBytes));
 
             int valueOffset = 0;
@@ -465,10 +476,15 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
             }
             switch (meaTypeMap.get(measureDesc)) {
                 case "long":
-                    group.append(measureDesc.getName(), BytesUtil.readLong(value, offset, length));
+                    group.append(measureDesc.getName(), BytesUtil.readVLong(ByteBuffer.wrap(value, offset, length)));
                     break;
                 case "double":
                     group.append(measureDesc.getName(), ByteBuffer.wrap(value, offset, length).getDouble());
+                    break;
+                case "decimal":
+                    BigDecimal decimal = serializer.deserialize(ByteBuffer.wrap(value, offset, length));
+                    decimal = decimal.setScale(4);
+                    group.append(measureDesc.getName(), Binary.fromConstantByteArray(decimal.unscaledValue().toByteArray()));
                     break;
                 default:
                     group.append(measureDesc.getName(), Binary.fromConstantByteArray(value, offset, length));
@@ -492,14 +508,8 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
                 colTypeMap.put(colRef, "long");
             } else if (dimEnc instanceof FixedLenDimEnc || dimEnc instanceof FixedLenHexDimEnc) {
                 org.apache.kylin.metadata.datatype.DataType colDataType = colRef.getType();
-                if (colDataType.isNumberFamily() || colDataType.isDateTimeFamily()){
-                    builder.optional(PrimitiveType.PrimitiveTypeName.INT64).named(getColName(colRef));
-                    colTypeMap.put(colRef, "long");
-                } else {
-                    // stringFamily && default
-                    builder.optional(PrimitiveType.PrimitiveTypeName.BINARY).as(OriginalType.UTF8).named(getColName(colRef));
-                    colTypeMap.put(colRef, "string");
-                }
+                builder.optional(PrimitiveType.PrimitiveTypeName.BINARY).as(OriginalType.UTF8).named(getColName(colRef));
+                colTypeMap.put(colRef, "string");
             } else {
                 builder.optional(PrimitiveType.PrimitiveTypeName.INT32).named(getColName(colRef));
                 colTypeMap.put(colRef, "int");
