@@ -116,8 +116,8 @@ public class ModelController extends BasicController {
         if (!ValidateUtil.isAlphanumericUnderscore(modelDesc.getName())) {
             throw new BadRequestException(
                     String.format(Locale.ROOT,
-                            "Invalid model name %s, only letters, numbers and underscore " + "supported."),
-                    modelDesc.getName());
+                            "Invalid model name %s, only letters, numbers and underscore supported.",
+                    modelDesc.getName()));
         }
 
         try {

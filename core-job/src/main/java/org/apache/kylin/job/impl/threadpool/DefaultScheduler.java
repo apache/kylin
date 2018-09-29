@@ -47,15 +47,11 @@ import com.google.common.collect.Maps;
  */
 public class DefaultScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
 
-    private static DefaultScheduler INSTANCE = null;
+    private static DefaultScheduler INSTANCE;
 
-    public static DefaultScheduler getInstance() {
+    public synchronized static DefaultScheduler getInstance() {
         if (INSTANCE == null) {
-            synchronized (DefaultScheduler.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = createInstance();
-                }
-            }
+            INSTANCE = createInstance();
         }
         return INSTANCE;
     }

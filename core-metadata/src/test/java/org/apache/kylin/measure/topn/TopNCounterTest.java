@@ -98,7 +98,8 @@ public class TopNCounterTest {
         return tempFile.getAbsolutePath();
     }
 
-    //@Test
+    @Ignore
+    @Test
     public void testSingleSpaceSaving() throws IOException {
         String dataFile = prepareTestDate();
         TopNCounterTest.SpaceSavingConsumer spaceSavingCounter = new TopNCounterTest.SpaceSavingConsumer(
