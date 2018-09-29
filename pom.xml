@@ -40,7 +40,7 @@
 
   <properties>
     <!-- General Properties -->
-    <javaVersion>1.7</javaVersion>
+    <javaVersion>1.8</javaVersion>
     <maven-model.version>3.3.9</maven-model.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -76,11 +76,11 @@
     <avatica.version>1.10.0</avatica.version>
 
     <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
-    <zookeeper.version>3.4.12</zookeeper.version>
+    <zookeeper.version>3.4.13</zookeeper.version>
     <curator.version>2.12.0</curator.version>
     <jsr305.version>3.0.1</jsr305.version>
     <guava.version>14.0</guava.version>
-    <jsch.version>0.1.53</jsch.version>
+    <jsch.version>0.1.54</jsch.version>
     <commons-cli.version>1.2</commons-cli.version>
     <commons-lang.version>2.6</commons-lang.version>
     <commons-io.version>2.4</commons-io.version>
@@ -107,7 +107,7 @@
     <commons-lang3.version>3.4</commons-lang3.version>
     <commons-email.version>1.5</commons-email.version>
     <commons-validator.version>1.4.0</commons-validator.version>
-    <commons-compress>1.17</commons-compress>
+    <commons-compress>1.18</commons-compress>
 
     <!-- Utility -->
     <log4j.version>1.2.17</log4j.version>
