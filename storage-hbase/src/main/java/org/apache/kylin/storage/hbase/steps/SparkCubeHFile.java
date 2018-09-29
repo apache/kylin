@@ -134,112 +134,113 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         conf.set("spark.kryo.registrationRequired", "true").registerKryoClasses(kryoClassArray);
 
         KylinSparkJobListener jobListener = new KylinSparkJobListener();
-        JavaSparkContext sc = new JavaSparkContext(conf);
-        sc.sc().addSparkListener(jobListener);
-        final FileSystem fs = partitionFilePath.getFileSystem(sc.hadoopConfiguration());
-        if (!fs.exists(partitionFilePath)) {
-            throw new IllegalArgumentException("File not exist: " + partitionFilePath.toString());
-        }
-
-        HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(outputPath));
-        final SerializableConfiguration sConf = new SerializableConfiguration(sc.hadoopConfiguration());
-
-        final KylinConfig envConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
-
-        final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
-        final CubeDesc cubeDesc = cubeInstance.getDescriptor();
-        final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
-
-        final MeasureCodec inputCodec = new MeasureCodec(cubeDesc.getMeasures());
-        final List<KeyValueCreator> keyValueCreators = Lists.newArrayList();
-
-        for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
-            for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                keyValueCreators.add(new KeyValueCreator(cubeDesc, colDesc));
+        try (JavaSparkContext sc = new JavaSparkContext(conf)) {
+            sc.sc().addSparkListener(jobListener);
+            final FileSystem fs = partitionFilePath.getFileSystem(sc.hadoopConfiguration());
+            if (!fs.exists(partitionFilePath)) {
+                throw new IllegalArgumentException("File not exist: " + partitionFilePath.toString());
             }
-        }
 
-        final int cfNum = keyValueCreators.size();
-        final boolean quickPath = (keyValueCreators.size() == 1) && keyValueCreators.get(0).isFullCopy;
+            HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(outputPath));
+            final SerializableConfiguration sConf = new SerializableConfiguration(sc.hadoopConfiguration());
 
-        logger.info("Input path: {}", inputPath);
-        logger.info("Output path: {}", outputPath);
-        // read partition split keys
-        List<RowKeyWritable> keys = new ArrayList<>();
-        try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, partitionFilePath, sc.hadoopConfiguration())) {
-            RowKeyWritable key = new RowKeyWritable();
-            Writable value = NullWritable.get();
-            while (reader.next(key, value)) {
-                keys.add(key);
-                logger.info(" ------- split key: {}", key);
-                key = new RowKeyWritable(); // important, new an object!
+            final KylinConfig envConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(sConf, metaUrl);
+
+            final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
+            final CubeDesc cubeDesc = cubeInstance.getDescriptor();
+            final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+
+            final MeasureCodec inputCodec = new MeasureCodec(cubeDesc.getMeasures());
+            final List<KeyValueCreator> keyValueCreators = Lists.newArrayList();
+
+            for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
+                for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
+                    keyValueCreators.add(new KeyValueCreator(cubeDesc, colDesc));
+                }
             }
-        }
 
-        logger.info("There are {} split keys, totally {} hfiles", keys.size(), (keys.size() + 1));
+            final int cfNum = keyValueCreators.size();
+            final boolean quickPath = (keyValueCreators.size() == 1) && keyValueCreators.get(0).isFullCopy;
 
-        //HBase conf
-        logger.info("Loading HBase configuration from:{}", hbaseConfFile);
-        FSDataInputStream confInput = fs.open(new Path(hbaseConfFile));
-
-        Configuration hbaseJobConf = new Configuration();
-        hbaseJobConf.addResource(confInput);
-        hbaseJobConf.set("spark.hadoop.dfs.replication", "3"); // HFile, replication=3
-        Job job = Job.getInstance(hbaseJobConf, cubeSegment.getStorageLocationIdentifier());
-
-        FileOutputFormat.setOutputPath(job, new Path(outputPath));
-
-        JavaPairRDD<Text, Text> inputRDDs = SparkUtil.parseInputPath(inputPath, fs, sc, Text.class, Text.class);
-        final JavaPairRDD<RowKeyWritable, KeyValue> hfilerdd;
-        if (quickPath) {
-            hfilerdd = inputRDDs.mapToPair(new PairFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
-                @Override
-                public Tuple2<RowKeyWritable, KeyValue> call(Tuple2<Text, Text> textTextTuple2) throws Exception {
-                    KeyValue outputValue = keyValueCreators.get(0).create(textTextTuple2._1,
-                            textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength());
-                    return new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()), outputValue);
+            logger.info("Input path: {}", inputPath);
+            logger.info("Output path: {}", outputPath);
+            // read partition split keys
+            List<RowKeyWritable> keys = new ArrayList<>();
+            try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, partitionFilePath, sc.hadoopConfiguration())) {
+                RowKeyWritable key = new RowKeyWritable();
+                Writable value = NullWritable.get();
+                while (reader.next(key, value)) {
+                    keys.add(key);
+                    logger.info(" ------- split key: {}", key);
+                    key = new RowKeyWritable(); // important, new an object!
                 }
-            });
-        } else {
-            hfilerdd = inputRDDs.flatMapToPair(new PairFlatMapFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
-                @Override
-                public Iterator<Tuple2<RowKeyWritable, KeyValue>> call(Tuple2<Text, Text> textTextTuple2)
-                        throws Exception {
+            }
 
-                    List<Tuple2<RowKeyWritable, KeyValue>> result = Lists.newArrayListWithExpectedSize(cfNum);
-                    Object[] inputMeasures = new Object[cubeDesc.getMeasures().size()];
-                    inputCodec.decode(ByteBuffer.wrap(textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength()),
-                            inputMeasures);
+            logger.info("There are {} split keys, totally {} hfiles", keys.size(), (keys.size() + 1));
 
-                    for (int i = 0; i < cfNum; i++) {
-                        KeyValue outputValue = keyValueCreators.get(i).create(textTextTuple2._1, inputMeasures);
-                        result.add(new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()),
-                                outputValue));
-                    }
+            //HBase conf
+            logger.info("Loading HBase configuration from:{}", hbaseConfFile);
+            FSDataInputStream confInput = fs.open(new Path(hbaseConfFile));
 
-                    return result.iterator();
-                }
-            });
-        }
+            Configuration hbaseJobConf = new Configuration();
+            hbaseJobConf.addResource(confInput);
+            hbaseJobConf.set("spark.hadoop.dfs.replication", "3"); // HFile, replication=3
+            Job job = Job.getInstance(hbaseJobConf, cubeSegment.getStorageLocationIdentifier());
 
-        hfilerdd.repartitionAndSortWithinPartitions(new HFilePartitioner(keys),
-                RowKeyWritable.RowKeyComparator.INSTANCE)
-                .mapToPair(new PairFunction<Tuple2<RowKeyWritable, KeyValue>, ImmutableBytesWritable, KeyValue>() {
+            FileOutputFormat.setOutputPath(job, new Path(outputPath));
+
+            JavaPairRDD<Text, Text> inputRDDs = SparkUtil.parseInputPath(inputPath, fs, sc, Text.class, Text.class);
+            final JavaPairRDD<RowKeyWritable, KeyValue> hfilerdd;
+            if (quickPath) {
+                hfilerdd = inputRDDs.mapToPair(new PairFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
                     @Override
-                    public Tuple2<ImmutableBytesWritable, KeyValue> call(
-                            Tuple2<RowKeyWritable, KeyValue> rowKeyWritableKeyValueTuple2) throws Exception {
-                        return new Tuple2<>(new ImmutableBytesWritable(rowKeyWritableKeyValueTuple2._2.getKey()),
-                                rowKeyWritableKeyValueTuple2._2);
+                    public Tuple2<RowKeyWritable, KeyValue> call(Tuple2<Text, Text> textTextTuple2) throws Exception {
+                        KeyValue outputValue = keyValueCreators.get(0).create(textTextTuple2._1,
+                                textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength());
+                        return new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()), outputValue);
                     }
-                }).saveAsNewAPIHadoopDataset(job.getConfiguration());
+                });
+            } else {
+                hfilerdd = inputRDDs.flatMapToPair(new PairFlatMapFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
+                    @Override
+                    public Iterator<Tuple2<RowKeyWritable, KeyValue>> call(Tuple2<Text, Text> textTextTuple2)
+                            throws Exception {
 
-        logger.info("HDFS: Number of bytes written={}", jobListener.metrics.getBytesWritten());
+                        List<Tuple2<RowKeyWritable, KeyValue>> result = Lists.newArrayListWithExpectedSize(cfNum);
+                        Object[] inputMeasures = new Object[cubeDesc.getMeasures().size()];
+                        inputCodec.decode(ByteBuffer.wrap(textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength()),
+                                inputMeasures);
 
-        Map<String, String> counterMap = Maps.newHashMap();
-        counterMap.put(ExecutableConstants.HDFS_BYTES_WRITTEN, String.valueOf(jobListener.metrics.getBytesWritten()));
+                        for (int i = 0; i < cfNum; i++) {
+                            KeyValue outputValue = keyValueCreators.get(i).create(textTextTuple2._1, inputMeasures);
+                            result.add(new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()),
+                                    outputValue));
+                        }
 
-        // save counter to hdfs
-        HadoopUtil.writeToSequenceFile(sc.hadoopConfiguration(), counterPath, counterMap);
+                        return result.iterator();
+                    }
+                });
+            }
+
+            hfilerdd.repartitionAndSortWithinPartitions(new HFilePartitioner(keys),
+                    RowKeyWritable.RowKeyComparator.INSTANCE)
+                    .mapToPair(new PairFunction<Tuple2<RowKeyWritable, KeyValue>, ImmutableBytesWritable, KeyValue>() {
+                        @Override
+                        public Tuple2<ImmutableBytesWritable, KeyValue> call(
+                                Tuple2<RowKeyWritable, KeyValue> rowKeyWritableKeyValueTuple2) throws Exception {
+                            return new Tuple2<>(new ImmutableBytesWritable(rowKeyWritableKeyValueTuple2._2.getKey()),
+                                    rowKeyWritableKeyValueTuple2._2);
+                        }
+                    }).saveAsNewAPIHadoopDataset(job.getConfiguration());
+
+            logger.info("HDFS: Number of bytes written={}", jobListener.metrics.getBytesWritten());
+
+            Map<String, String> counterMap = Maps.newHashMap();
+            counterMap.put(ExecutableConstants.HDFS_BYTES_WRITTEN, String.valueOf(jobListener.metrics.getBytesWritten()));
+
+            // save counter to hdfs
+            HadoopUtil.writeToSequenceFile(sc.hadoopConfiguration(), counterPath, counterMap);
+        }
     }
 
     static class HFilePartitioner extends Partitioner {
