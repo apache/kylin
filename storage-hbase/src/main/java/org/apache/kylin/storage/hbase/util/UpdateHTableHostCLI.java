@@ -59,9 +59,10 @@ public class UpdateHTableHostCLI {
     public UpdateHTableHostCLI(List<String> htables, String oldHostValue) throws IOException {
         this.htables = htables;
         this.oldHostValue = oldHostValue;
-        Connection conn = ConnectionFactory.createConnection(HBaseConfiguration.create());
-        hbaseAdmin = conn.getAdmin();
-        this.kylinConfig = KylinConfig.getInstanceFromEnv();
+        try (Connection conn = ConnectionFactory.createConnection(HBaseConfiguration.create());) {
+            hbaseAdmin = conn.getAdmin();
+            this.kylinConfig = KylinConfig.getInstanceFromEnv();
+        }
     }
 
     public static void main(String[] args) throws Exception {
