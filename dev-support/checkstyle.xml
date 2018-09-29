@@ -28,11 +28,31 @@
     <module name="FileTabCharacter"/>
     <module name="SuppressWarningsFilter"/>
     <module name="TreeWalker">
+
+        <!-- Checks for Naming Conventions.                  -->
+        <!-- See http://checkstyle.sf.net/config_naming.html -->
+        <!-- <module name="ConstantName"/> -->
+        <module name="LocalVariableName"/>
+        <module name="LocalFinalVariableName">
+            <property name="format" value="^[a-zA-Z0-9]*$$"/>
+        </module>
+        <module name="MemberName"/>
+        <!-- <module name="MethodName"/> -->
+        <!-- <module name="ParameterName"/> -->
+        <!-- <module name="StaticVariableName"/> -->
+        <module name="TypeName"/>
+
         <module name="AvoidStarImport"/>
+        <module name="IllegalImport"/>
         <module name="RedundantImport"/>
         <module name="UnusedImports">
             <property name="processJavadoc" value="true"/>
         </module>
+        <!-- <module name="SimplifyBooleanExpression"/> -->
+        <module name="OneStatementPerLine"/>
+        <!-- <module name="SimplifyBooleanReturn"/> -->
+
+        <!-- code quality -->
         <module name="LineLength">
             <property name="max" value="1000"/>
             <property name="ignorePattern"
@@ -40,6 +60,15 @@
         </module>
         <module name="MethodLength"/>
         <module name="MethodParamPad"/>
+        <module name="ParameterNumber">
+            <!-- default is 8 -->
+            <property name="max" value="12"/>
+        </module>
+        <module name="BooleanExpressionComplexity">
+            <!-- default is 3 -->
+            <property name="max" value="5"/>
+        </module>
+
         <module name="ParenPad"/>
         <module name="EmptyStatement"/>
         <module name="EmptyBlock">
