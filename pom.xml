@@ -139,7 +139,7 @@
     <!-- Sonar -->
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-    <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+    <sonar.jacoco.reportPaths>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPaths>
     <sonar.language>java</sonar.language>
     <sonar.jacoco.excludes>
       org/apache/kylin/**/tools/**:**/*CLI.java
@@ -1303,7 +1303,27 @@
               <fork>true</fork>
               <meminitial>1024m</meminitial>
               <maxmem>2048m</maxmem>
+              <compilerId>javac-with-errorprone</compilerId>
+              <forceJavacCompilerUse>true</forceJavacCompilerUse>
+              <!--<showWarnings>true</showWarnings>-->
+              <source>${javaVersion}</source>
+              <target>${javaVersion}</target>
+              <compilerArgs>
+                <arg>-XepDisableWarningsInGeneratedCode</arg>
+              </compilerArgs>
             </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-compiler-javac-errorprone</artifactId>
+                <version>2.8.5</version>
+              </dependency>
+              <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_core</artifactId>
+                <version>2.3.1</version>
+              </dependency>
+            </dependencies>
           </plugin>
 
           <plugin>
@@ -1379,7 +1399,7 @@
                 </goals>
                 <configuration>
                   <append>true</append>
-                  <destFile>${sonar.jacoco.reportPath}</destFile>
+                  <destFile>${sonar.jacoco.reportPaths}</destFile>
                   <propertyName>surefireArgLine</propertyName>
                 </configuration>
               </execution>
@@ -1390,7 +1410,7 @@
                   <goal>report</goal>
                 </goals>
                 <configuration>
-                  <dataFile>${sonar.jacoco.reportPath}</dataFile>
+                  <dataFile>${sonar.jacoco.reportPaths}</dataFile>
                 </configuration>
               </execution>
             </executions>
@@ -1450,7 +1470,27 @@
               <fork>true</fork>
               <meminitial>1024m</meminitial>
               <maxmem>2048m</maxmem>
+              <compilerId>javac-with-errorprone</compilerId>
+              <forceJavacCompilerUse>true</forceJavacCompilerUse>
+              <!--<showWarnings>true</showWarnings>-->
+              <source>${javaVersion}</source>
+              <target>${javaVersion}</target>
+              <compilerArgs>
+                <arg>-XepDisableWarningsInGeneratedCode</arg>
+              </compilerArgs>
             </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-compiler-javac-errorprone</artifactId>
+                <version>2.8.5</version>
+              </dependency>
+              <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_core</artifactId>
+                <version>2.3.1</version>
+              </dependency>
+            </dependencies>
           </plugin>
 
           <plugin>
@@ -1484,7 +1524,7 @@
             <configuration>
               <append>true</append>
               <destFile>
-                ${sonar.jacoco.reportPath}
+                ${sonar.jacoco.reportPaths}
               </destFile>
             </configuration>
             <executions>

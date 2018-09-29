@@ -170,7 +170,7 @@ public class DimensionDesc implements java.io.Serializable {
             return false;
         }
 
-        if (derived != null ? !derived.equals(that.derived) : that.derived != null) {
+        if (derived != null ? !Arrays.equals(derived, that.derived) : that.derived != null) {
             return false;
         }
 

@@ -32,7 +32,7 @@ public final class SparkEntry {
             throw new IllegalArgumentException(String.valueOf("-className is required"));
         }
         final String className = args[1];
-        final Object o = Class.<AbstractApplication> forName(className).newInstance();
+        final Object o = Class.forName(className).newInstance();
         if (!(o instanceof AbstractApplication)) {
             throw new IllegalArgumentException(String.valueOf(className + " is not a subClass of AbstractApplication"));
         }

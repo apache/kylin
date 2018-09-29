@@ -35,12 +35,11 @@ public class AclPermissionUtil {
     }
 
     public static List<String> transformAuthorities(Collection<? extends GrantedAuthority> authorities) {
-        List<String> ret = new ArrayList<String>();
-        for (GrantedAuthority auth : authorities) {
-            if (!authorities.contains(auth.getAuthority())) {
-                ret.add(auth.getAuthority());
-            }
+        Set<String> groups = new HashSet<>();
+        for (GrantedAuthority authority : authorities) {
+            groups.add(authority.getAuthority());
         }
+        List<String> ret = new ArrayList<>(groups);
         return ret;
     }
 
