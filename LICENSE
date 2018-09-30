@@ -265,5 +265,8 @@ RocksDB is dual-licensed under both the GPLv2 and Apache 2.0 License.You may
 select, at your option, one of the above-listed licenses.
 https://github.com/facebook/rocksdb/blob/master/LICENSE.Apache
 
-
-
+==============================================================================
+For HadoopMetrics2Reporter:
+==============================================================================
+HadoopMetrics2Reporter is licensed under Apache 2.0 License.
+https://github.com/joshelser/dropwizard-hadoop-metrics2
