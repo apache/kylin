@@ -53,7 +53,6 @@
   - tutorial/squirrel
   - tutorial/Qlik
   - tutorial/superset
-  - tutorial/tools
 
 
 - title: 帮助
@@ -64,4 +63,5 @@
   - howto/howto_optimize_build
   - howto/howto_backup_metadata
   - howto/howto_cleanup_storage
+  - howto/howto_use_cli
 

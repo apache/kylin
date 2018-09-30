@@ -1,38 +1,39 @@
 ---
-layout: docs-cn
-title:  "Kylin 中的工具类"
-categories: tutorial
-permalink: /cn/docs/tutorial/tools.html
+layout: docs
+title:  Use Utility CLIs
+categories: howto
+permalink: /docs/howto/howto_use_cli.html
 ---
-Kylin 有很多好的工具类。这篇文档会介绍以下几个工具类：KylinConfigCLI.java，CubeMetaExtractor.java，CubeMetaIngester.java，CubeMigrationCLI.java 和 CubeMigrationCheckCLI.java。在使用这些工具类前，首先要切换到 KYLIN_HOME 目录下。
+Kylin has some client utility tools. This document will introduce the following class: KylinConfigCLI.java, CubeMetaExtractor.java, CubeMetaIngester.java, CubeMigrationCLI.java and CubeMigrationCheckCLI.java. Before using these tools, you have to switch to the KYLIN_HOME directory. 
 
 ## KylinConfigCLI.java
 
-### 作用
-KylinConfigCLI 工具类会将您输入的 Kylin 参数的值输出。 
+### Function
+KylinConfigCLI.java outputs the value of Kylin properties. 
 
-### 如何使用
-类名后只能写一个参数，conf_name 即您想要知道其值的参数名称。
+### How to use 
+After the class name, you can only write one parameter, `conf_name` which is the parameter name that you want to know its value.
 {% highlight Groff markup %}
 ./bin/kylin.sh org.apache.kylin.tool.KylinConfigCLI <conf_name>
 {% endhighlight %}
-例如： 
+For example: 
 {% highlight Groff markup %}
 ./bin/kylin.sh org.apache.kylin.tool.KylinConfigCLI kylin.server.mode
 {% endhighlight %}
-结果：
+Result:
 {% highlight Groff markup %}
 all
 {% endhighlight %}
-如果您不知道参数的准确名称，您可以使用以下命令，然后所有以该前缀为前缀的参数的值都会被列出。
+
+If you do not know the full parameter name, you can use the following command, then all parameters prefixed by this prefix will be listed:
 {% highlight Groff markup %}
 ./bin/kylin.sh org.apache.kylin.tool.KylinConfigCLI <prefix>.
 {% endhighlight %}
-例如：
+For example: 
 {% highlight Groff markup %}
 ./bin/kylin.sh org.apache.kylin.tool.KylinConfigCLI kylin.job.
 {% endhighlight %}
-结果：
+Result:
 {% highlight Groff markup %}
 max-concurrent-jobs=10
 retry=3
@@ -41,22 +42,22 @@ sampling-percentage=100
 
 ## CubeMetaExtractor.java
 
-### 作用
-CubeMetaExtractor.java 用于提取与 Cube 相关的信息以达到调试/分发的目的。  
+### Function
+CubeMetaExtractor.java is to extract Cube related info for debugging / distributing purpose.  
 
-### 如何使用
-类名后至少写两个参数。
+### How to use
+At least two parameters should be followed. 
 {% highlight Groff markup %}
 ./bin/kylin.sh org.apache.kylin.tool.CubeMetaExtractor -<conf_name> <conf_value> -destDir <your_dest_dir>
 {% endhighlight %}
-例如：
+For example: 
 {% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMetaExtractor -cube querycube -destDir /root/newconfigdir1
+./bin/kylin.sh org.apache.kylin.tool.CubeMetaExtractor -cube kylin_sales_cube -destDir /tmp/kylin_sales_cube
 {% endhighlight %}
-结果：
-命令执行成功后，您想要抽取的 Cube / project / hybrid 将会存在于您指定的 destDir 目录中。
+Result:
+After the command is executed, the cube, project or hybrid you want to extract will be dumped in the specified path.
 
-下面会列出所有支持的参数：
+All supported parameters are listed below:  
 
 | Parameter                                             | Description                                                                                         |
 | ----------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
@@ -64,35 +65,36 @@ CubeMetaExtractor.java 用于提取与 Cube 相关的信息以达到调试/分�
 | compress <compress>                                   | Specify whether to compress the output with zip. Default true.                                      | 
 | cube <cube>                                           | Specify which Cube to extract                                                                       |
 | destDir <destDir>                                     | (Required) Specify the dest dir to save the related information                                     |
-| engineType <engineType>                               | Specify the engine type to overwrite. Default is empty, keep origin.                                |
 | hybrid <hybrid>                                       | Specify which hybrid to extract                                                                     |
 | includeJobs <includeJobs>                             | Set this to true if want to extract job info/outputs too. Default false                             |
 | includeSegmentDetails <includeSegmentDetails>         | Set this to true if want to extract segment details too, such as dict, tablesnapshot. Default false |
 | includeSegments <includeSegments>                     | Set this to true if want extract the segments info. Default true                                    |
 | onlyOutput <onlyOutput>                               | When include jobs, only extract output of job. Default true                                         |
 | packagetype <packagetype>                             | Specify the package type                                                                            |
-| project <project>                                     | Specify realizations in which project to extract                                                    |
-| storageType <storageType>                             | Specify the storage type to overwrite. Default is empty, keep origin.                               |
-| submodule <submodule>                                 | Specify whether this is a submodule of other CLI tool. Default false.                               |
+| project <project>                                     | Which project to extract                                                    |
+                             |
 
 ## CubeMetaIngester.java
 
-### 作用
-CubeMetaIngester.java 将提取的 Cube 吞并到另一个 metadata store 中。目前其只支持吞并 cube。  
+### Function
+CubeMetaIngester.java is to ingest the extracted cube meta data into another metadata store. It only supports ingest cube now. 
 
-### 如何使用
-类名后至少写两个参数。请确保您想要吞并的 Cube 在要吞并到的 project 中不存在。注意：zip 文件解压后必须只能包含一个目录。
+### How to use
+At least two parameters should be specified. Please make sure the cube you want to ingest does not exist in the target project. 
+
+Note: The zip file must contain only one directory after it has been decompressed.
+
 {% highlight Groff markup %}
 ./bin/kylin.sh org.apache.kylin.tool.CubeMetaIngester -project <target_project> -srcPath <your_src_dir>
 {% endhighlight %}
-例如：
+For example: 
 {% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMetaIngester -project querytest -srcPath /root/newconfigdir1/cubes.zip
+./bin/kylin.sh org.apache.kylin.tool.CubeMetaIngester -project querytest -srcPath /tmp/newconfigdir1/cubes.zip
 {% endhighlight %}
-结果：
-命令执行成功后，您想要吞并的 Cube 将会存在于您指定的 srcPath 目录中。
+Result:
+After the command is successfully executed, the cube you want to ingest will exist in the srcPath.
 
-下面会列出所有支持的参数：
+All supported parameters are listed below:
 
 | Parameter                         | Description                                                                                                                                                                                        |
 | --------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -101,56 +103,59 @@ CubeMetaIngester.java 将提取的 Cube 吞并到另一个 metadata store 中。
 | project <project>                 | (Required) Specify the target project for the new cubes.                                                                                                                                           |
 | srcPath <srcPath>                 | (Required) Specify the path to the extracted Cube metadata zip file.                                                                                                                               |
 
-##  CubeMigrationCLI.java
+## CubeMigrationCLI.java
 
-### 作用
-CubeMigrationCLI.java 用于迁移 cubes。例如：将 Cube 从开发环境迁移到测试（生产）环境，反之亦然。请注意，我们假设不同的环境是共享相同的 Hadoop 集群，包括 HDFS，HBase 和 HIVE。  
+### Function
+CubeMigrationCLI.java can migrate a cube from a Kylin environment to another, for example, promote a well tested cube from the testing env to production env. Note that the different Kylin environments should share the same Hadoop cluster, including HDFS, HBase and HIVE. 
 
-### 如何使用
-前八个参数必须有且次序不能改变。
+Please note, this tool will migrate the Kylin metadata, rename the Kylin HDFS folders and update HBase table's metadata. It doesn't migrate data across Hadoop clusters. 
+
+### How to use
+
+
 {% highlight Groff markup %}
 ./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI <srcKylinConfigUri> <dstKylinConfigUri> <cubeName> <projectName> <copyAclOrNot> <purgeOrNot> <overwriteIfExists> <realExecute> <migrateSegmentOrNot>
 {% endhighlight %}
-例如：
+For example: 
 {% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI /root/apache-kylin-2.5.0-bin-hbase1x/conf/kylin.properties /root/me/apache-kylin-2.5.0-bin-hbase1x/conf/kylin.properties querycube IngesterTest true false false true false
+./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCLI kylin-qa:7070 kylin-prod:7070 kylin_sales_cube learn_kylin true false false true false
 {% endhighlight %}
-命令执行成功后，请 reload metadata，您想要迁移的 Cube 将会存在于迁移后的 project 中。
+After the command is successfully executed, please reload Kylin metadata, the cube you want to migrate will appear in the target environment.
 
-下面会列出所有支持的参数：
-　如果您使用 `cubeName` 这个参数，但想要迁移的 Cube 所对应的 model 在要迁移的环境中不存在，不必担心，model 的数据也会迁移过去。
-　如果您将 `overwriteIfExists` 设置为 false，且该 Cube 已存在于要迁移的环境中，当您运行命令，Cube 存在的提示信息将会出现。
-　如果您将 `migrateSegmentOrNot` 设置为 true，请保证 Kylin metadata 的 HDFS 目录存在且 Cube 的状态为 READY。
+All supported parameters are listed below:
+　If the data model of the cube you want to migrate does not exist in the target environment, this tool will also migrate the model.
+　If you set `overwriteIfExists` to `false`, and the cube exists in the target environment, the tool will stop to proceed.
+　If you set `migrateSegmentOrNot` to `true`, please make sure the cube has `READY` segments, they will be migrated to target environment together.
 
 | Parameter           | Description                                                                                |
 | ------------------- | :----------------------------------------------------------------------------------------- |
-| srcKylinConfigUri   | The KylinConfig of the Cube’s source                                                      |
-| dstKylinConfigUri   | The KylinConfig of the Cube’s new home                                                    |
-| cubeName            | the name of Cube to be migrated.(Make sure it exist)                                       |
-| projectName         | The target project in the target environment.(Make sure it exist)                          |
-| copyAclOrNot        | True or false: whether copy Cube ACL to target environment.                                |
-| purgeOrNot          | True or false: whether purge the Cube from src server after the migration.                 |
-| overwriteIfExists   | Overwrite Cube if it already exists in the target environment.                             |
-| realExecute         | If false, just print the operations to take, if true, do the real migration.               |
-| migrateSegmentOrNot | (Optional) true or false: whether copy segment data to target environment. Default true.   |
+| srcKylinConfigUri   | The URL of the source environment's Kylin configuration. It can be `host:7070`, or an absolute file path to the `kylin.properties`.                                                      |
+| dstKylinConfigUri   | The URL of the target environment's Kylin configuration.                                                     |
+| cubeName            | the name of cube to be migrated.                                        |
+| projectName         | The target project in the target environment. If it doesn't exist, create it before run this command.                          |
+| copyAclOrNot        | `true` or `false`: whether copy the cube ACL to target environment.                                |
+| purgeOrNot          | `true` or `false`: whether to purge the cube from source environment after it be migrated to target environment.                 |
+| overwriteIfExists   | `true` or `false`: whether to overwrite if it already exists in the target environment.                             |
+| realExecute         | `true` or `false`: If false, just print the operations to take (dry-run mode); if true, do the real migration.               |
+| migrateSegmentOrNot | (Optional) `true` or `false`: whether copy segment info to the target environment. Default true.   |
 
 ## CubeMigrationCheckCLI.java
 
-### 作用
-CubeMigrationCheckCLI.java 用于在迁移 Cube 之后检查“KYLIN_HOST”属性是否与 dst 中所有 Cube segment 对应的 HTable 的 MetadataUrlPrefix 一致。CubeMigrationCheckCLI.java 会在 CubeMigrationCLI.java 中被调用，通常不单独使用。
+### Function
+CubeMigrationCheckCLI.java serves for the purpose of checking the "KYLIN_HOST" property to be consistent with the dst's MetadataUrlPrefix for all of Cube segments' corresponding HTables after migrating a Cube. CubeMigrationCheckCLI.java will be called in CubeMigrationCLI.java and is usually not used separately. 
 
-### 如何使用
+### How to use
 {% highlight Groff markup %}
 ./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCheckCLI -fix <conf_value> -dstCfgUri <dstCfgUri_value> -cube <cube_name>
 {% endhighlight %}
-例如：
+For example: 
 {% highlight Groff markup %}
-./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCheckCLI -fix true -dstCfgUri /root/me/apache-kylin-2.5.0-bin-hbase1x/conf/kylin.properties -cube querycube
+./bin/kylin.sh org.apache.kylin.tool.CubeMigrationCheckCLI -fix true -dstCfgUri kylin-prod:7070 -cube querycube
 {% endhighlight %}
-下面会列出所有支持的参数：
+All supported parameters are listed below:
 
 | Parameter           | Description                                                                   |
 | ------------------- | :---------------------------------------------------------------------------- |
 | fix                 | Fix the inconsistent Cube segments' HOST, default false                       |
 | dstCfgUri           | The KylinConfig of the Cube’s new home                                       |
-| cube                | The name of Cube migrated                                                     |
+| cube                | The cube name.                                                     |

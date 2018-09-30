@@ -12,7 +12,7 @@ since: v0.6.x
 
 #### How to compare Kylin with other SQL engines like Hive, Presto, Spark SQL, Impala?
 
-  * They answer a query in different ways. Kylin is not a replacement for them, but a supplement (query accelerator). Many users run Kylin together with other SQL engines. For the high frequent query patterns, building Cubes can greatly improve the performance and also offload cluster workloads. For less queried patterns or ad-hoc queries, other engines are more flexible.
+  * They answer a query in different ways. Kylin is not a replacement for them, but a supplement (query accelerator). Many users run Kylin together with other SQL engines. For the high frequent query patterns, building Cubes can greatly improve the performance and also offload cluster workloads. For less queried patterns or ad-hoc queries, ther MPP engines are more flexible.
 
 #### What's a typical scenario to use Apache Kylin?
 
@@ -86,7 +86,7 @@ But if you do want, there are some workarounds. 1) Add the primary key as a dime
 
   * Cube is stored in HBase. Each cube segment is an HBase table. The dimension values will be composed as the row key. The measures will be serialized in columns. To improve the storage efficiency, both dimension and measure values will be encoded to bytes. Kylin will decode the bytes to origin values after fetching from HBase. Without Kylin's metadata, the HBase tables are not readable.
 
-#### How to encrypt Cube Data?
+#### How to encrypt cube data?
 
   * You can enable encryption at HBase side. Refer https://hbase.apache.org/book.html#hbase.encryption.server for more details.
 
