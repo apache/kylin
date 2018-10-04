@@ -27,6 +27,8 @@ import org.junit.Test;
 
 public class QueryUtilTest extends LocalFileMetadataTestCase {
 
+    static final String catalog = "CATALOG";
+
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
@@ -230,5 +232,35 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     public void testUnknownErrorResponseMessage() {
         String msg = QueryUtil.makeErrorMsgUserFriendly(new NullPointerException());
         Assert.assertEquals("Unknown error.", msg);
+    }
+
+    @Test
+    public void testRemoveCatalog() {
+
+        String[] beforeRemoveSql = new String[] {
+                "select name, count(*) as cnt from schema1.user where bb.dd >2 group by name",
+                "select name, count(*) as cnt from .default2.user where dd >2 group by name",
+                "select name, count(*) as cnt from %s.default2.user where dd >2 group by name",
+                "select name, count(*) as cnt from %s.user.a.cu where dd >2 group by name",
+                "select name, count(*) as cnt from %s.default2.user where dd >2 group by name",
+                "select name, count() as cnt from %s.test.kylin_sales inner join " + "%s.test.kylin_account "
+                        + "ON kylin_sales.BUYER_ID=kylin_account.ACCOUNT_ID group by name",
+                "select schema1.table1.col1 from %s.schema1.table1" };
+        String[] afterRemoveSql = new String[] {
+                "select name, count(*) as cnt from schema1.user where bb.dd >2 group by name",
+                "select name, count(*) as cnt from .default2.user where dd >2 group by name",
+                "select name, count(*) as cnt from default2.user where dd >2 group by name",
+                "select name, count(*) as cnt from user.a.cu where dd >2 group by name",
+                "select name, count(*) as cnt from default2.user where dd >2 group by name",
+                "select name, count() as cnt from test.kylin_sales inner join " + "test.kylin_account "
+                        + "ON kylin_sales.BUYER_ID=kylin_account.ACCOUNT_ID group by name",
+                "select schema1.table1.col1 from schema1.table1" };
+        Assert.assertEquals(afterRemoveSql.length, beforeRemoveSql.length);
+        for (int i = 0; i < beforeRemoveSql.length; i++) {
+            String before = beforeRemoveSql[i];
+            before = before.replace("%s", catalog);
+            String after = afterRemoveSql[i];
+            Assert.assertEquals(after, QueryUtil.removeCatalog(before, catalog));
+        }
     }
 }
