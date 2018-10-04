@@ -48,6 +48,10 @@ public class QueryUtil {
         String transform(String sql, String project, String defaultSchema);
     }
 
+    /**
+     * @deprecated Deprecated because of KYLIN-3594
+     */
+    @Deprecated
     public static String massageSql(String sql, String project, int limit, int offset, String defaultSchema) {
         sql = sql.trim();
         sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
@@ -59,7 +63,7 @@ public class QueryUtil {
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
 
-        String sql1=sql;
+        String sql1 = sql;
         final String suffixPattern = "^.+?\\s(limit\\s\\d+)?\\s(offset\\s\\d+)?\\s*$";
         sql = sql.replaceAll("\\s+", " ");
         Pattern pattern = Pattern.compile(suffixPattern);
@@ -88,6 +92,29 @@ public class QueryUtil {
             sql1 = t.transform(sql1, project, defaultSchema);
         }
         return sql1;
+    }
+
+    /**
+     * add remove catalog step at final
+     */
+    public static String massageSql(String sql, String project, int limit, int offset, String defaultSchema, String catalog) {
+        String correctedSql = massageSql(sql, project, limit, offset, defaultSchema);
+        correctedSql = removeCatalog(correctedSql, catalog);
+        return correctedSql;
+    }
+
+    /**
+     * Although SQL standard define CATALOG concept, ISV has right not to implement it.
+     * We remove it in before send it to SQL parser.
+     *
+     * @param sql query which maybe has such pattern: [[catalogName.]schemaName.]tableName
+     * @return replace [[catalogName.]schemaName.]tableName with [schemaName.]tableName
+     */
+    static String removeCatalog(String sql, String catalog) {
+        if (catalog == null)
+            return sql;
+        else
+            return sql.replace(catalog + ".", "");
     }
 
     private static void initQueryTransformers() {
