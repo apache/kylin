@@ -114,7 +114,7 @@ public class BackdoorToggles {
         if (v == null)
             return -1;
         else
-            return Integer.valueOf(v);
+            return Integer.parseInt(v);
     }
 
     public static Pair<Short, Short> getShardAssignment() {
