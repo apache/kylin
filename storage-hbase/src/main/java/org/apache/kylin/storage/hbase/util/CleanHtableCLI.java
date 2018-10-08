@@ -51,7 +51,7 @@ public class CleanHtableCLI extends AbstractApplication {
                 System.out.println(descriptor);
                 System.out.println();
 
-                descriptor.setValue(IRealizationConstants.HTableOwner, "DL-eBay-Kylin@ebay.com");
+                descriptor.setValue(IRealizationConstants.HTableOwner, "whoami@kylin.apache.org");
                 hbaseAdmin.modifyTable(TableName.valueOf(descriptor.getNameAsString()), descriptor);
             }
         }
