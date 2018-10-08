@@ -65,28 +65,28 @@ public class HDFSResourceStore extends ResourceStore {
         if (path == null) {
             // missing path is not expected, but don't fail it
             path = kylinConfig.getHdfsWorkingDirectory() + "tmp_metadata";
-            logger.warn("Missing path, fall back to {0}", path);
+            logger.warn("Missing path, fall back to %s", path);
         }
         
         fs = HadoopUtil.getFileSystem(path);
         Path metadataPath = new Path(path);
         if (fs.exists(metadataPath) == false) {
-            logger.warn("Path not exist in HDFS, create it: {0}", path);
+            logger.warn("Path not exist in HDFS, create it: %s", path);
             createMetaFolder(metadataPath);
         }
 
         hdfsMetaPath = metadataPath;
-        logger.info("hdfs meta path : {0}", hdfsMetaPath.toString());
+        logger.info("hdfs meta path : %s", hdfsMetaPath);
 
     }
 
-    private void createMetaFolder(Path metaDirName) throws Exception {
+    private void createMetaFolder(Path metaDirName) throws IOException {
         //create hdfs meta path
         if (!fs.exists(metaDirName)) {
             fs.mkdirs(metaDirName);
         }
 
-        logger.info("hdfs meta path created: {0}", metaDirName.toString());
+        logger.info("hdfs meta path created: %s", metaDirName);
     }
 
     @Override
@@ -175,17 +175,10 @@ public class HDFSResourceStore extends ResourceStore {
         if (!fs.exists(p) || !fs.isFile(p)) {
             return 0;
         }
-        FSDataInputStream in = null;
-        try {
-            in = fs.open(p);
+        try (FSDataInputStream in = fs.open(p)) {
             long t = in.readLong();
             return t;
-        } catch (Exception e) {
-            throw new IOException("Put resource fail", e);
-        } finally {
-            IOUtils.closeQuietly(in);
         }
-
     }
 
     @Override
@@ -193,16 +186,11 @@ public class HDFSResourceStore extends ResourceStore {
         logger.trace("res path : {0}", resPath);
         Path p = getRealHDFSPath(resPath);
         logger.trace("put resource : {0}", p.toUri());
-        FSDataOutputStream out = null;
-        try {
-            out = fs.create(p, true);
+        try (FSDataOutputStream out = fs.create(p, true)) {
             out.writeLong(ts);
             IOUtils.copy(content, out);
-
-        } catch (Exception e) {
-            throw new IOException("Put resource fail", e);
         } finally {
-            IOUtils.closeQuietly(out);
+            IOUtils.closeQuietly(content);
         }
     }
 
@@ -245,7 +233,7 @@ public class HDFSResourceStore extends ResourceStore {
         if (resourcePath.equals("/"))
             return this.hdfsMetaPath;
         if (resourcePath.startsWith("/") && resourcePath.length() > 1)
-            resourcePath = resourcePath.substring(1, resourcePath.length());
+            resourcePath = resourcePath.substring(1);
         return new Path(this.hdfsMetaPath, resourcePath);
     }
 }

@@ -117,7 +117,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         try {
             slice = dictCache.get(sliceKey);
         } catch (ExecutionException e) {
-            throw new RuntimeException("Failed to load slice with key " + sliceKey, e.getCause());
+            throw new IllegalStateException("Failed to load slice with key " + sliceKey, e.getCause());
         }
         return slice.getIdFromValueBytesImpl(value, offset, len, roundingFlag);
     }
