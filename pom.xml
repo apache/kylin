@@ -1303,27 +1303,7 @@
               <fork>true</fork>
               <meminitial>1024m</meminitial>
               <maxmem>2048m</maxmem>
-              <compilerId>javac-with-errorprone</compilerId>
-              <forceJavacCompilerUse>true</forceJavacCompilerUse>
-              <!--<showWarnings>true</showWarnings>-->
-              <source>${javaVersion}</source>
-              <target>${javaVersion}</target>
-              <compilerArgs>
-                <arg>-XepDisableWarningsInGeneratedCode</arg>
-              </compilerArgs>
             </configuration>
-            <dependencies>
-              <dependency>
-                <groupId>org.codehaus.plexus</groupId>
-                <artifactId>plexus-compiler-javac-errorprone</artifactId>
-                <version>2.8.5</version>
-              </dependency>
-              <dependency>
-                <groupId>com.google.errorprone</groupId>
-                <artifactId>error_prone_core</artifactId>
-                <version>2.3.1</version>
-              </dependency>
-            </dependencies>
           </plugin>
 
           <plugin>
@@ -1470,115 +1450,95 @@
               <fork>true</fork>
               <meminitial>1024m</meminitial>
               <maxmem>2048m</maxmem>
-              <compilerId>javac-with-errorprone</compilerId>
-              <forceJavacCompilerUse>true</forceJavacCompilerUse>
-              <!--<showWarnings>true</showWarnings>-->
-              <source>${javaVersion}</source>
-              <target>${javaVersion}</target>
-              <compilerArgs>
-                <arg>-XepDisableWarningsInGeneratedCode</arg>
-              </compilerArgs>
             </configuration>
-            <dependencies>
-              <dependency>
-                <groupId>org.codehaus.plexus</groupId>
-                <artifactId>plexus-compiler-javac-errorprone</artifactId>
-                <version>2.8.5</version>
-              </dependency>
-              <dependency>
-                <groupId>com.google.errorprone</groupId>
-                <artifactId>error_prone_core</artifactId>
-                <version>2.3.1</version>
-              </dependency>
-            </dependencies>
           </plugin>
 
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>copy-jamm</id>
-                <goals>
-                  <goal>copy</goal>
-                </goals>
-                <phase>generate-test-resources</phase>
-                <configuration>
-                  <artifactItems>
-                    <artifactItem>
-                      <groupId>com.github.jbellis</groupId>
-                      <artifactId>jamm</artifactId>
-                      <outputDirectory>${project.build.testOutputDirectory}
-                      </outputDirectory>
-                      <destFileName>jamm.jar</destFileName>
-                    </artifactItem>
-                  </artifactItems>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-dependency-plugin</artifactId>
+      <executions>
+        <execution>
+          <id>copy-jamm</id>
+          <goals>
+            <goal>copy</goal>
+          </goals>
+          <phase>generate-test-resources</phase>
+          <configuration>
+            <artifactItems>
+              <artifactItem>
+                <groupId>com.github.jbellis</groupId>
+                <artifactId>jamm</artifactId>
+                <outputDirectory>${project.build.testOutputDirectory}
+                </outputDirectory>
+                <destFileName>jamm.jar</destFileName>
+              </artifactItem>
+            </artifactItems>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
 
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <configuration>
-              <append>true</append>
-              <destFile>
-                ${sonar.jacoco.reportPaths}
-              </destFile>
-            </configuration>
-            <executions>
-              <execution>
-                <id>pre-test</id>
-                <goals>
-                  <goal>prepare-agent</goal>
-                </goals>
-                <configuration>
-                  <propertyName>surefireArgLine</propertyName>
-                </configuration>
-              </execution>
-              <execution>
-                <id>post-test</id>
-                <phase>test</phase>
-                <goals>
-                  <goal>report</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.21.0</version>
-            <configuration>
-              <reportsDirectory>${project.basedir}/../target/surefire-reports
-              </reportsDirectory>
-              <excludes>
-                <exclude>**/IT*.java</exclude>
-              </excludes>
-              <systemProperties>
-                <property>
-                  <name>buildCubeUsingProvidedData</name>
-                  <value>false</value>
-                </property>
-                <property>
-                  <name>log4j.configuration</name>
-                  <value>
-                    file:${project.basedir}/../build/conf/kylin-tools-log4j.properties
-                  </value>
-                </property>
-              </systemProperties>
-              <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar
-                ${argLine} ${surefireArgLine}
-              </argLine>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <!-- This profile adds/overrides few features of the 'apache-release'
-           profile in the parent pom. -->
+    <plugin>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <configuration>
+        <append>true</append>
+        <destFile>
+          ${sonar.jacoco.reportPaths}
+        </destFile>
+      </configuration>
+      <executions>
+        <execution>
+          <id>pre-test</id>
+          <goals>
+            <goal>prepare-agent</goal>
+          </goals>
+          <configuration>
+            <propertyName>surefireArgLine</propertyName>
+          </configuration>
+        </execution>
+        <execution>
+          <id>post-test</id>
+          <phase>test</phase>
+          <goals>
+            <goal>report</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-surefire-plugin</artifactId>
+      <version>2.21.0</version>
+      <configuration>
+        <reportsDirectory>${project.basedir}/../target/surefire-reports
+        </reportsDirectory>
+        <excludes>
+          <exclude>**/IT*.java</exclude>
+        </excludes>
+        <systemProperties>
+          <property>
+            <name>buildCubeUsingProvidedData</name>
+            <value>false</value>
+          </property>
+          <property>
+            <name>log4j.configuration</name>
+            <value>
+              file:${project.basedir}/../build/conf/kylin-tools-log4j.properties
+            </value>
+          </property>
+        </systemProperties>
+        <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar
+          ${argLine} ${surefireArgLine}
+        </argLine>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+</profile>
+<profile>
+<!-- This profile adds/overrides few features of the 'apache-release'
+     profile in the parent pom. -->
       <id>apache-release</id>
       <activation>
         <property>
