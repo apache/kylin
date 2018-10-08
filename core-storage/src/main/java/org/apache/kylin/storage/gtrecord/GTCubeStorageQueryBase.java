@@ -306,8 +306,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     private long getQueryFilterMask(Set<TblColRef> filterColumnD) {
         long filterMask = 0;
 
-        logger.info("Filter column set for query: {0}", filterColumnD.toString());
-        if (filterColumnD.size() != 0) {
+        logger.info("Filter column set for query: %s", filterColumnD);
+        if (filterColumnD.isEmpty() == false) {
             RowKeyColDesc[] allColumns = cubeDesc.getRowkey().getRowKeyColumns();
             for (int i = 0; i < allColumns.length; i++) {
                 if (filterColumnD.contains(allColumns[i].getColRef())) {
@@ -600,7 +600,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         if (partDesc.isPartitioned()) {
             TblColRef col = partDesc.getPartitionDateColumnRef();
             if (!groups.contains(col) && !singleValuesD.contains(col)) {
-                logger.info("exactAggregation is false because cube is partitioned and " + col + " is not on group by");
+                logger.info("exactAggregation is false because cube is partitioned and %s is not on group by", col);
                 return false;
             }
         }

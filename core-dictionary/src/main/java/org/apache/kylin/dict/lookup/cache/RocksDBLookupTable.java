@@ -38,20 +38,18 @@ public class RocksDBLookupTable implements ILookupTable {
         RocksDB.loadLibrary();
     }
 
-    private TableDesc tableDesc;
     private RocksDB rocksDB;
     private Options options;
 
     private RocksDBLookupRowEncoder rowEncoder;
 
     public RocksDBLookupTable(TableDesc tableDesc, String[] keyColumns, String dbPath) {
-        this.tableDesc = tableDesc;
         this.options = new Options();
         this.rowEncoder = new RocksDBLookupRowEncoder(tableDesc, keyColumns);
         try {
             this.rocksDB = RocksDB.openReadOnly(options, dbPath);
         } catch (RocksDBException e) {
-            throw new RuntimeException("cannot open rocks db in path:" + dbPath, e);
+            throw new IllegalStateException("cannot open rocks db in path:" + dbPath, e);
         }
     }
 
@@ -65,7 +63,7 @@ public class RocksDBLookupTable implements ILookupTable {
             }
             return rowEncoder.decode(new KV(encodeKey, value));
         } catch (RocksDBException e) {
-            throw new RuntimeException("error when get key from rocksdb", e);
+            throw new IllegalStateException("error when get key from rocksdb", e);
         }
     }
 
@@ -76,6 +74,7 @@ public class RocksDBLookupTable implements ILookupTable {
 
         return new Iterator<String[]>() {
             int counter;
+
             @Override
             public boolean hasNext() {
                 boolean valid = rocksIterator.isValid();
@@ -87,7 +86,7 @@ public class RocksDBLookupTable implements ILookupTable {
 
             @Override
             public String[] next() {
-                counter ++;
+                counter++;
                 if (counter % 100000 == 0) {
                     logger.info("scanned {} rows from rocksDB", counter);
                 }

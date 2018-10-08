@@ -161,6 +161,7 @@ public class FileResourceStore extends ResourceStore {
                 IOUtils.copy(content, out);
             } finally {
                 IOUtils.closeQuietly(out);
+                IOUtils.closeQuietly(content);
             }
 
             f.setLastModified(ts);

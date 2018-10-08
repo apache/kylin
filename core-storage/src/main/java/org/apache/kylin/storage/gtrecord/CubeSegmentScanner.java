@@ -30,7 +30,6 @@ import org.apache.kylin.dict.BuiltInFunctionTransformer;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
-import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.ITupleFilterTransformer;
 import org.apache.kylin.metadata.filter.StringCodeSystem;
@@ -43,7 +42,7 @@ import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CubeSegmentScanner implements IGTScanner {
+public class CubeSegmentScanner implements Iterable<GTRecord> {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeSegmentScanner.class);
 
@@ -98,12 +97,10 @@ public class CubeSegmentScanner implements IGTScanner {
         return scanner.iterator();
     }
 
-    @Override
     public void close() throws IOException {
         scanner.close();
     }
 
-    @Override
     public GTInfo getInfo() {
         return scanRequest == null ? null : scanRequest.getInfo();
     }
