@@ -442,9 +442,11 @@ public class JDBCResourceDAO {
             }
 
             private boolean checkTableExists(final String tableName, final Connection connection) throws SQLException {
-                final PreparedStatement ps = connection.prepareStatement(getCheckTableExistsSql(tableName));
-                final ResultSet rs = ps.executeQuery();
+                PreparedStatement ps = null;
+                ResultSet rs = null;
                 try {
+                    ps = connection.prepareStatement(getCheckTableExistsSql(tableName));
+                    rs = ps.executeQuery();
                     while (rs.next()) {
                         if (tableName.equals(rs.getString(1))) {
                             return true;

@@ -180,58 +180,59 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
 
             //HBase conf
             logger.info("Loading HBase configuration from:{}", hbaseConfFile);
-            FSDataInputStream confInput = fs.open(new Path(hbaseConfFile));
 
-            Configuration hbaseJobConf = new Configuration();
-            hbaseJobConf.addResource(confInput);
-            hbaseJobConf.set("spark.hadoop.dfs.replication", "3"); // HFile, replication=3
-            Job job = Job.getInstance(hbaseJobConf, cubeSegment.getStorageLocationIdentifier());
+            try (FSDataInputStream confInput = fs.open(new Path(hbaseConfFile))) {
+                Configuration hbaseJobConf = new Configuration();
+                hbaseJobConf.addResource(confInput);
+                hbaseJobConf.set("spark.hadoop.dfs.replication", "3"); // HFile, replication=3
+                Job job = Job.getInstance(hbaseJobConf, cubeSegment.getStorageLocationIdentifier());
 
-            FileOutputFormat.setOutputPath(job, new Path(outputPath));
+                FileOutputFormat.setOutputPath(job, new Path(outputPath));
 
-            JavaPairRDD<Text, Text> inputRDDs = SparkUtil.parseInputPath(inputPath, fs, sc, Text.class, Text.class);
-            final JavaPairRDD<RowKeyWritable, KeyValue> hfilerdd;
-            if (quickPath) {
-                hfilerdd = inputRDDs.mapToPair(new PairFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
-                    @Override
-                    public Tuple2<RowKeyWritable, KeyValue> call(Tuple2<Text, Text> textTextTuple2) throws Exception {
-                        KeyValue outputValue = keyValueCreators.get(0).create(textTextTuple2._1,
-                                textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength());
-                        return new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()), outputValue);
-                    }
-                });
-            } else {
-                hfilerdd = inputRDDs.flatMapToPair(new PairFlatMapFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
-                    @Override
-                    public Iterator<Tuple2<RowKeyWritable, KeyValue>> call(Tuple2<Text, Text> textTextTuple2)
-                            throws Exception {
-
-                        List<Tuple2<RowKeyWritable, KeyValue>> result = Lists.newArrayListWithExpectedSize(cfNum);
-                        Object[] inputMeasures = new Object[cubeDesc.getMeasures().size()];
-                        inputCodec.decode(ByteBuffer.wrap(textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength()),
-                                inputMeasures);
-
-                        for (int i = 0; i < cfNum; i++) {
-                            KeyValue outputValue = keyValueCreators.get(i).create(textTextTuple2._1, inputMeasures);
-                            result.add(new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()),
-                                    outputValue));
-                        }
-
-                        return result.iterator();
-                    }
-                });
-            }
-
-            hfilerdd.repartitionAndSortWithinPartitions(new HFilePartitioner(keys),
-                    RowKeyWritable.RowKeyComparator.INSTANCE)
-                    .mapToPair(new PairFunction<Tuple2<RowKeyWritable, KeyValue>, ImmutableBytesWritable, KeyValue>() {
+                JavaPairRDD<Text, Text> inputRDDs = SparkUtil.parseInputPath(inputPath, fs, sc, Text.class, Text.class);
+                final JavaPairRDD<RowKeyWritable, KeyValue> hfilerdd;
+                if (quickPath) {
+                    hfilerdd = inputRDDs.mapToPair(new PairFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
                         @Override
-                        public Tuple2<ImmutableBytesWritable, KeyValue> call(
-                                Tuple2<RowKeyWritable, KeyValue> rowKeyWritableKeyValueTuple2) throws Exception {
-                            return new Tuple2<>(new ImmutableBytesWritable(rowKeyWritableKeyValueTuple2._2.getKey()),
-                                    rowKeyWritableKeyValueTuple2._2);
+                        public Tuple2<RowKeyWritable, KeyValue> call(Tuple2<Text, Text> textTextTuple2) throws Exception {
+                            KeyValue outputValue = keyValueCreators.get(0).create(textTextTuple2._1,
+                                    textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength());
+                            return new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()), outputValue);
                         }
-                    }).saveAsNewAPIHadoopDataset(job.getConfiguration());
+                    });
+                } else {
+                    hfilerdd = inputRDDs.flatMapToPair(new PairFlatMapFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
+                        @Override
+                        public Iterator<Tuple2<RowKeyWritable, KeyValue>> call(Tuple2<Text, Text> textTextTuple2)
+                                throws Exception {
+
+                            List<Tuple2<RowKeyWritable, KeyValue>> result = Lists.newArrayListWithExpectedSize(cfNum);
+                            Object[] inputMeasures = new Object[cubeDesc.getMeasures().size()];
+                            inputCodec.decode(ByteBuffer.wrap(textTextTuple2._2.getBytes(), 0, textTextTuple2._2.getLength()),
+                                    inputMeasures);
+
+                            for (int i = 0; i < cfNum; i++) {
+                                KeyValue outputValue = keyValueCreators.get(i).create(textTextTuple2._1, inputMeasures);
+                                result.add(new Tuple2<>(new RowKeyWritable(outputValue.createKeyOnly(false).getKey()),
+                                        outputValue));
+                            }
+
+                            return result.iterator();
+                        }
+                    });
+                }
+
+                hfilerdd.repartitionAndSortWithinPartitions(new HFilePartitioner(keys),
+                        RowKeyWritable.RowKeyComparator.INSTANCE)
+                        .mapToPair(new PairFunction<Tuple2<RowKeyWritable, KeyValue>, ImmutableBytesWritable, KeyValue>() {
+                            @Override
+                            public Tuple2<ImmutableBytesWritable, KeyValue> call(
+                                    Tuple2<RowKeyWritable, KeyValue> rowKeyWritableKeyValueTuple2) throws Exception {
+                                return new Tuple2<>(new ImmutableBytesWritable(rowKeyWritableKeyValueTuple2._2.getKey()),
+                                        rowKeyWritableKeyValueTuple2._2);
+                            }
+                        }).saveAsNewAPIHadoopDataset(job.getConfiguration());
+            }
 
             logger.info("HDFS: Number of bytes written={}", jobListener.metrics.getBytesWritten());
 
