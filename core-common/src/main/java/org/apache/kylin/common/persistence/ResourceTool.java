@@ -222,8 +222,11 @@ public class ResourceTool {
                 try {
                     RawResource res = src.getResource(path);
                     if (res != null) {
-                        dst.putResource(path, res.inputStream, res.timestamp);
-                        res.inputStream.close();
+                        try {
+                            dst.putResource(path, res.inputStream, res.timestamp);
+                        } finally {
+                            IOUtils.closeQuietly(res.inputStream);
+                        }
                     } else {
                         System.out.println("Resource not exist for " + path);
                     }

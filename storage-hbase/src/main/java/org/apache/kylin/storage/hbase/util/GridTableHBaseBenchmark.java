@@ -43,6 +43,8 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GridTableHBaseBenchmark {
 
@@ -54,6 +56,7 @@ public class GridTableHBaseBenchmark {
     private static final double DFT_HIT_RATIO = 0.3;
     private static final double DFT_INDEX_RATIO = 0.1;
     private static final int ROUND = 3;
+    protected static final Logger logger = LoggerFactory.getLogger(GridTableHBaseBenchmark.class);
 
     public static void main(String[] args) throws IOException {
         double hitRatio = DFT_HIT_RATIO;
@@ -74,7 +77,7 @@ public class GridTableHBaseBenchmark {
     }
 
     public static void testGridTable(double hitRatio, double indexRatio) throws IOException {
-        System.out.println("Testing grid table scanning, hit ratio " + hitRatio + ", index ratio " + indexRatio);
+        logger.info("Testing grid table scanning, hit ratio " + hitRatio + ", index ratio " + indexRatio);
         StorageURL hbaseUrl = StorageURL.valueOf("default@hbase"); // use hbase-site.xml on classpath
 
         Connection conn = HBaseConnection.get(hbaseUrl);
@@ -84,7 +87,7 @@ public class GridTableHBaseBenchmark {
         Hits hits = new Hits(N_ROWS, hitRatio, indexRatio);
 
         for (int i = 0; i < ROUND; i++) {
-            System.out.println("==================================== ROUND " + (i + 1)
+            logger.info("==================================== ROUND " + (i + 1)
                     + " ========================================");
             testRowScanWithIndex(conn, hits.getHitsForRowScanWithIndex());
             testRowScanNoIndexFullScan(conn, hits.getHitsForRowScanNoIndex());
@@ -222,14 +225,14 @@ public class GridTableHBaseBenchmark {
             }
 
             if (nRows > 0) {
-                System.out.println(nRows + " existing rows");
+                logger.info(nRows + " existing rows");
                 if (nRows != N_ROWS)
                     throw new IOException("Expect " + N_ROWS + " rows but it is not");
                 return;
             }
 
             // insert rows into empty table
-            System.out.println("Writing " + N_ROWS + " rows to " + TEST_TABLE);
+            logger.info("Writing " + N_ROWS + " rows to " + TEST_TABLE);
             long nBytes = 0;
             for (int i = 0; i < N_ROWS; i++) {
                 byte[] rowkey = Bytes.toBytes(i);
@@ -240,8 +243,7 @@ public class GridTableHBaseBenchmark {
                 nBytes += cell.length;
                 dot(i, N_ROWS);
             }
-            System.out.println();
-            System.out.println("Written " + N_ROWS + " rows, " + nBytes + " bytes");
+            logger.info("Written " + N_ROWS + " rows, " + nBytes + " bytes");
 
         } finally {
             IOUtils.closeQuietly(table);
@@ -274,11 +276,11 @@ public class GridTableHBaseBenchmark {
             }
 
             if (tableExist) {
-                System.out.println("HTable '" + tableName + "' already exists");
+                logger.info("HTable '" + tableName + "' already exists");
                 return;
             }
 
-            System.out.println("Creating HTable '" + tableName + "'");
+            logger.info("Creating HTable '" + tableName + "'");
 
             HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));
 
@@ -287,7 +289,7 @@ public class GridTableHBaseBenchmark {
             desc.addFamily(fd);
             hbase.createTable(desc);
 
-            System.out.println("HTable '" + tableName + "' created");
+            logger.info("HTable '" + tableName + "' created");
         } finally {
             hbase.close();
         }
@@ -381,14 +383,13 @@ public class GridTableHBaseBenchmark {
         }
 
         public void markStart() {
-            System.out.println(name + " starts");
+            logger.info(name + " starts");
             startTime = System.currentTimeMillis();
         }
 
         public void markEnd() {
             endTime = System.currentTimeMillis();
-            System.out.println();
-            System.out.println(name + " ends, " + (endTime - startTime) + " ms, " + rowsRead + " rows read, "
+            logger.info(name + " ends, " + (endTime - startTime) + " ms, " + rowsRead + " rows read, "
                     + bytesRead + " bytes read");
         }
     }
