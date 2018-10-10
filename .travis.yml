@@ -38,6 +38,7 @@ script:
   - if [[ -n "${TRAVIS_PULL_REQUEST_SLUG}" && "${TRAVIS_PULL_REQUEST_SLUG}" != "${TRAVIS_REPO_SLUG}" ]]; then
         echo "The pull request from ${TRAVIS_PULL_REQUEST_SLUG} is an EXTERNAL pull request. Skip sonar analysis.";
     else
+        git fetch --unshallow --quiet;
         mvn sonar:sonar;
     fi
 
@@ -54,3 +55,7 @@ before_cache:
   # Remove project's local artifacts to force maven reactor resolve
   - rm -rf $HOME/.m2/repository/org/apache/kylin
 
+# blocklist
+branches:
+  except:
+  - document
