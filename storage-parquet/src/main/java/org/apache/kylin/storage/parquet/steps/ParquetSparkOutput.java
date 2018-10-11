@@ -27,14 +27,16 @@ import java.util.List;
 public class ParquetSparkOutput implements ISparkOutput {
     @Override
     public ISparkBatchCubingOutputSide getBatchCubingOutputSide(CubeSegment seg) {
+        final ParquetJobSteps steps = new ParquetSparkSteps(seg);
+
         return new ISparkBatchCubingOutputSide() {
             @Override
             public void addStepPhase2_BuildDictionary(DefaultChainedExecutable jobFlow) {
-
             }
 
             @Override
             public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow) {
+                jobFlow.addTask(steps.createConvertToParquetStep(jobFlow.getId()));
 
             }
 
@@ -47,6 +49,7 @@ public class ParquetSparkOutput implements ISparkOutput {
 
     @Override
     public ISparkBatchMergeOutputSide getBatchMergeOutputSide(CubeSegment seg) {
+        final ParquetJobSteps steps = new ParquetSparkSteps(seg);
         return new ISparkBatchMergeOutputSide() {
             @Override
             public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
@@ -55,6 +58,7 @@ public class ParquetSparkOutput implements ISparkOutput {
 
             @Override
             public void addStepPhase2_BuildCube(CubeSegment set, List<CubeSegment> mergingSegments, DefaultChainedExecutable jobFlow) {
+                jobFlow.addTask(steps.createConvertToParquetStep(jobFlow.getId()));
 
             }
 

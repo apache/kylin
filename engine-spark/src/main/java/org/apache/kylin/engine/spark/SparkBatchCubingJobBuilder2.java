@@ -75,16 +75,11 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         // add materialize lookup tables if needed
         LookupMaterializeContext lookupMaterializeContext = addMaterializeLookupTableSteps(result);
 
-        if (seg.getStorageType() != ID_PARQUET) {
-            outputSide.addStepPhase2_BuildDictionary(result);
-        }
+        outputSide.addStepPhase2_BuildDictionary(result);
 
         // Phase 3: Build Cube
         addLayerCubingSteps(result, jobId, cuboidRootPath); // layer cubing, only selected algorithm will execute
-
-        if (seg.getStorageType() != ID_PARQUET) {
-            outputSide.addStepPhase3_BuildCube(result);
-        }
+        outputSide.addStepPhase3_BuildCube(result);
 
         // Phase 4: Update Metadata & Cleanup
         result.addTask(createUpdateCubeInfoAfterBuildStep(jobId, lookupMaterializeContext));
@@ -110,7 +105,7 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
 
         sparkExecutable.setJobId(jobId);
         sparkExecutable.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
-        sparkExecutable.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES, getCounterOuputPath(jobId));
+        sparkExecutable.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES, getCounterOutputPath(jobId));
 
         StringBuilder jars = new StringBuilder();
 
@@ -123,11 +118,7 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
 
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {
         final SparkExecutable sparkExecutable = new SparkExecutable();
-        if (seg.getStorageType() == ID_PARQUET) {
-            sparkExecutable.setClassName(SparkCubingByLayerParquet.class.getName());
-        } else {
-            sparkExecutable.setClassName(SparkCubingByLayer.class.getName());
-        }
+        sparkExecutable.setClassName(SparkCubingByLayer.class.getName());
         configureSparkJob(seg, sparkExecutable, jobId, cuboidRootPath);
         result.addTask(sparkExecutable);
     }
@@ -155,7 +146,7 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE);
 
         if (seg.getStorageType() == ID_PARQUET) {
-            sparkExecutable.setCounterSaveAs(",," + CubingJob.CUBE_SIZE_BYTES, getCounterOuputPath(jobId));
+            sparkExecutable.setCounterSaveAs(",," + CubingJob.CUBE_SIZE_BYTES, getCounterOutputPath(jobId));
         }
     }
 

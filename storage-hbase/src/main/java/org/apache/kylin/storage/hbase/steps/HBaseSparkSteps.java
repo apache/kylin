@@ -71,7 +71,7 @@ public class HBaseSparkSteps extends HBaseJobSteps {
         sparkExecutable.setJars(jars.toString());
 
         sparkExecutable.setName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE);
-        sparkExecutable.setCounterSaveAs(",," + CubingJob.CUBE_SIZE_BYTES, getCounterOuputPath(jobId));
+        sparkExecutable.setCounterSaveAs(",," + CubingJob.CUBE_SIZE_BYTES, getCounterOutputPath(jobId));
 
         return sparkExecutable;
     }

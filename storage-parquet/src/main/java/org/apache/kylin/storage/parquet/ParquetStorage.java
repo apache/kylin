@@ -19,12 +19,14 @@
 package org.apache.kylin.storage.parquet;
 
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.spark.ISparkOutput;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.IStorage;
 import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.parquet.cube.CubeStorageQuery;
+import org.apache.kylin.storage.parquet.steps.ParquetMROutput;
 import org.apache.kylin.storage.parquet.steps.ParquetSparkOutput;
 
 public class ParquetStorage implements IStorage {
@@ -42,7 +44,9 @@ public class ParquetStorage implements IStorage {
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
         if (engineInterface == ISparkOutput.class) {
             return (I) new ParquetSparkOutput();
-        } else {
+        } else if (engineInterface == IMROutput2.class) {
+            return (I) new ParquetMROutput();
+        } else{
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }
     }
