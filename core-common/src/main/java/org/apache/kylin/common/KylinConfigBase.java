@@ -57,6 +57,12 @@ abstract public class KylinConfigBase implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(KylinConfigBase.class);
 
+    private static final String DEFAULT = "default";
+    private static final String FALSE = "false";
+    private static final String TRUE = "true";
+    private static final String KYLIN_ENGINE_MR_JOB_JAR = "kylin.engine.mr.job-jar";
+    private static final String KYLIN_STORAGE_HBASE_COPROCESSOR_LOCAL_JAR = "kylin.storage.hbase.coprocessor-local-jar";
+
     /*
      * DON'T DEFINE CONSTANTS FOR PROPERTY KEYS!
      *
@@ -84,13 +90,13 @@ abstract public class KylinConfigBase implements Serializable {
     public static String getSparkHome() {
         String sparkHome = System.getenv("SPARK_HOME");
         if (StringUtils.isNotEmpty(sparkHome)) {
-            logger.info("SPARK_HOME was set to " + sparkHome);
+            logger.info("SPARK_HOME was set to {}", sparkHome);
             return sparkHome;
         }
 
         sparkHome = System.getProperty("SPARK_HOME");
         if (StringUtils.isNotEmpty(sparkHome)) {
-            logger.info("SPARK_HOME was set to " + sparkHome);
+            logger.info("SPARK_HOME was set to {}", sparkHome);
             return sparkHome;
         }
 
@@ -195,7 +201,7 @@ abstract public class KylinConfigBase implements Serializable {
      * Use with care, properties should be read-only. This is for testing only.
      */
     final public void setProperty(String key, String value) {
-        logger.info("Kylin Config was updated with " + key + " : " + value);
+        logger.info("Kylin Config was updated with {} : {}", key, value);
         properties.setProperty(BCC.check(key), value);
     }
 
@@ -228,7 +234,6 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     private String cachedHdfsWorkingDirectory;
-    private String cachedBigCellDirectory;
 
     public String getHdfsWorkingDirectory() {
         if (cachedHdfsWorkingDirectory != null)
@@ -301,7 +306,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isZookeeperAclEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.env.zookeeper-acl-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.env.zookeeper-acl-enabled", FALSE));
     }
 
     public String getZKAuths() {
@@ -381,7 +386,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isCheckCopyOnWrite() {
-        return Boolean.parseBoolean(getOptional("kylin.metadata.check-copy-on-write", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.metadata.check-copy-on-write", FALSE));
     }
 
     public String getHbaseClientScannerTimeoutPeriod() {
@@ -401,7 +406,7 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public boolean isUseForestTrieDictionary() {
-        return Boolean.parseBoolean(getOptional("kylin.dictionary.use-forest-trie", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.dictionary.use-forest-trie", TRUE));
     }
 
     public int getTrieDictionaryForestMaxTrieSizeMB() {
@@ -413,11 +418,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isGrowingDictEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.dictionary.growing-enabled", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.dictionary.growing-enabled", FALSE));
     }
 
     public boolean isDictResuable() {
-        return Boolean.parseBoolean(this.getOptional("kylin.dictionary.resuable", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.dictionary.resuable", FALSE));
     }
 
     public int getAppendDictEntrySize() {
@@ -453,7 +458,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isShrunkenDictFromGlobalEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.dictionary.shrunken-from-global-enabled", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.dictionary.shrunken-from-global-enabled", FALSE));
     }
 
     // ============================================================================
@@ -502,7 +507,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isIgnoreCubeSignatureInconsistency() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.ignore-signature-inconsistency", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.cube.ignore-signature-inconsistency", FALSE));
     }
 
     public long getCubeAggrGroupMaxCombination() {
@@ -510,7 +515,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean getCubeAggrGroupIsMandatoryOnlyValid() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.aggrgroup.is-mandatory-only-valid", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.cube.aggrgroup.is-mandatory-only-valid", FALSE));
     }
 
     public int getCubeRowkeyMaxSize() {
@@ -526,7 +531,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean allowCubeAppearInMultipleProjects() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.allow-appear-in-multiple-projects", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.cube.allow-appear-in-multiple-projects", FALSE));
     }
 
     public int getGTScanRequestSerializationLevel() {
@@ -534,7 +539,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isAutoMergeEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.is-automerge-enabled", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.cube.is-automerge-enabled", TRUE));
     }
 
     // ============================================================================
@@ -542,11 +547,11 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public boolean isCubePlannerEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled", TRUE));
     }
 
     public boolean isCubePlannerEnabledForExistingCube() {
-        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled-for-existing-cube", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.cube.cubeplanner.enabled-for-existing-cube", TRUE));
     }
 
     public double getCubePlannerExpansionRateThreshold() {
@@ -611,7 +616,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isEmptySegmentAllowed() {
-        return Boolean.parseBoolean(getOptional("kylin.job.allow-empty-segment", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.job.allow-empty-segment", TRUE));
     }
 
     public int getMaxConcurrentJobLimit() {
@@ -631,11 +636,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isMailEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.job.notification-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.job.notification-enabled", FALSE));
     }
 
     public boolean isStarttlsEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.job.notification-mail-enable-starttls", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.job.notification-mail-enable-starttls", FALSE));
     }
 
     public String getSmtpPort() {
@@ -688,7 +693,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean getSchedulerPriorityConsidered() {
-        return Boolean.parseBoolean(getOptional("kylin.job.scheduler.priority-considered", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.job.scheduler.priority-considered", FALSE));
     }
 
     public Integer getSchedulerPriorityBarFetchFromQueue() {
@@ -704,7 +709,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isAdvancedFlatTableUsed() {
-        return Boolean.parseBoolean(getOptional("kylin.job.use-advanced-flat-table", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.job.use-advanced-flat-table", FALSE));
     }
 
     public String getAdvancedFlatTableClass() {
@@ -720,7 +725,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isJobAutoReadyCubeEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.job.cube-auto-ready-enabled", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.job.cube-auto-ready-enabled", TRUE));
     }
 
     // ============================================================================
@@ -774,11 +779,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isHiveKeepFlatTable() {
-        return Boolean.parseBoolean(this.getOptional("kylin.source.hive.keep-flat-table", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.source.hive.keep-flat-table", FALSE));
     }
 
     public String getHiveDatabaseForIntermediateTable() {
-        return this.getOptional("kylin.source.hive.database-for-flat-table", "default");
+        return this.getOptional("kylin.source.hive.database-for-flat-table", DEFAULT);
     }
 
     public String getFlatTableStorageFormat() {
@@ -790,7 +795,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isHiveRedistributeEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.source.hive.redistribute-flat-table", "true"));
+        return Boolean.parseBoolean(this.getOptional("kylin.source.hive.redistribute-flat-table", TRUE));
     }
 
     public String getHiveClientMode() {
@@ -806,7 +811,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean getEnableSparkSqlForTableOps() {
-        return Boolean.parseBoolean(getOptional("kylin.source.hive.enable-sparksql-for-table-ops", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.source.hive.enable-sparksql-for-table-ops", FALSE));
     }
 
     public String getSparkSqlBeelineShell() {
@@ -818,7 +823,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean getHiveTableDirCreateFirst() {
-        return Boolean.parseBoolean(getOptional("kylin.source.hive.table-dir-create-first", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.source.hive.table-dir-create-first", FALSE));
     }
 
     public String getFlatHiveTableClusterByDictColumn() {
@@ -891,7 +896,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getJdbcSourceDialect() {
-        return getOptional("kylin.source.jdbc.dialect", "default");
+        return getOptional("kylin.source.jdbc.dialect", DEFAULT);
     }
 
     public String getJdbcSourceUser() {
@@ -951,7 +956,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getHBaseStorageNameSpace() {
-        return getOptional("kylin.storage.hbase.namespace", "default");
+        return getOptional("kylin.storage.hbase.namespace", DEFAULT);
     }
 
     public String getHBaseClusterFs() {
@@ -966,7 +971,7 @@ abstract public class KylinConfigBase implements Serializable {
     private static final Pattern JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-job-(.+)\\.jar");
 
     public String getCoprocessorLocalJar() {
-        final String coprocessorJar = getOptional("kylin.storage.hbase.coprocessor-local-jar");
+        final String coprocessorJar = getOptional(KYLIN_STORAGE_HBASE_COPROCESSOR_LOCAL_JAR);
         if (StringUtils.isNotEmpty(coprocessorJar)) {
             return coprocessorJar;
         }
@@ -978,8 +983,8 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public void overrideCoprocessorLocalJar(String path) {
-        logger.info("override " + "kylin.storage.hbase.coprocessor-local-jar" + " to " + path);
-        System.setProperty("kylin.storage.hbase.coprocessor-local-jar", path);
+        logger.info("override {} to {}", KYLIN_STORAGE_HBASE_COPROCESSOR_LOCAL_JAR, path);
+        System.setProperty(KYLIN_STORAGE_HBASE_COPROCESSOR_LOCAL_JAR, path);
     }
 
     private static String getFileName(String homePath, Pattern pattern) {
@@ -1016,7 +1021,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean getQueryRunLocalCoprocessor() {
-        return Boolean.parseBoolean(getOptional("kylin.storage.hbase.run-local-coprocessor", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.storage.hbase.run-local-coprocessor", FALSE));
     }
 
     public double getQueryCoprocessorMemGB() {
@@ -1024,7 +1029,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean getQueryCoprocessorSpillEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.storage.partition.aggr-spill-enabled", "true"));
+        return Boolean.parseBoolean(this.getOptional("kylin.storage.partition.aggr-spill-enabled", TRUE));
     }
 
     public long getPartitionMaxScanBytes() {
@@ -1087,7 +1092,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean getCompressionResult() {
-        return Boolean.parseBoolean(getOptional("kylin.storage.hbase.endpoint-compress-result", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.storage.hbase.endpoint-compress-result", TRUE));
     }
 
     public int getHBaseMaxConnectionThreads() {
@@ -1125,7 +1130,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getKylinJobJarPath() {
-        final String jobJar = getOptional("kylin.engine.mr.job-jar");
+        final String jobJar = getOptional(KYLIN_ENGINE_MR_JOB_JAR);
         if (StringUtils.isNotEmpty(jobJar)) {
             return jobJar;
         }
@@ -1137,8 +1142,8 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public void overrideMRJobJarPath(String path) {
-        logger.info("override " + "kylin.engine.mr.job-jar" + " to " + path);
-        System.setProperty("kylin.engine.mr.job-jar", path);
+        logger.info("override {} to {}", KYLIN_ENGINE_MR_JOB_JAR, path);
+        System.setProperty(KYLIN_ENGINE_MR_JOB_JAR, path);
     }
 
     public String getKylinJobMRLibDir() {
@@ -1214,11 +1219,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isBuildUHCDictWithMREnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.mr.build-uhc-dict-in-additional-step", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.engine.mr.build-uhc-dict-in-additional-step", FALSE));
     }
 
     public boolean isBuildDictInReducerEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.mr.build-dict-in-reducer", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.engine.mr.build-dict-in-reducer", TRUE));
     }
 
     public String getYarnStatusCheckUrl() {
@@ -1258,7 +1263,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isSparkSanityCheckEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.spark.sanity-check-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark.sanity-check-enabled", FALSE));
     }
 
     // ============================================================================
@@ -1266,19 +1271,19 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public boolean isDictionaryEnumeratorEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.enable-dict-enumerator", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.query.enable-dict-enumerator", FALSE));
     }
 
     public boolean isEnumerableRulesEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.calcite.enumerable-rules-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.query.calcite.enumerable-rules-enabled", FALSE));
     }
 
     public boolean isReduceExpressionsRulesEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.calcite.reduce-rules-enabled", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.query.calcite.reduce-rules-enabled", TRUE));
     }
 
     public boolean isConvertCreateTableToWith() {
-        return Boolean.parseBoolean(getOptional("kylin.query.convert-create-table-to-with", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.query.convert-create-table-to-with", FALSE));
     }
 
     /**
@@ -1318,24 +1323,24 @@ abstract public class KylinConfigBase implements Serializable {
     // check KYLIN-3358, need deploy coprocessor if enabled
     // finally should be deprecated
     public boolean isDynamicColumnEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.query.enable-dynamic-column", FALSE));
     }
 
     //check KYLIN-1684, in most cases keep the default value
     public boolean isSkippingEmptySegments() {
-        return Boolean.parseBoolean(getOptional("kylin.query.skip-empty-segments", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.query.skip-empty-segments", TRUE));
     }
 
     public boolean isDisableCubeNoAggSQL() {
-        return Boolean.parseBoolean(getOptional("kylin.query.disable-cube-noagg-sql", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.query.disable-cube-noagg-sql", FALSE));
     }
 
     public boolean isStreamAggregateEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.stream-aggregate-enabled", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.query.stream-aggregate-enabled", TRUE));
     }
 
     public boolean isProjectIsolationEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.storage.project-isolation-enable", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.storage.project-isolation-enable", TRUE));
     }
 
     @Deprecated //Limit is good even it's large. This config is meaning less since we already have scan threshold
@@ -1405,7 +1410,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean getBadQueryPersistentEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.badquery-persistent-enabled", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.query.badquery-persistent-enabled", TRUE));
     }
 
     public String[] getQueryTransformers() {
@@ -1429,15 +1434,15 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isQuerySecureEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.security-enabled", "true"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.security-enabled", TRUE));
     }
 
     public boolean isQueryCacheEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.cache-enabled", "true"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.cache-enabled", TRUE));
     }
 
     public boolean isQueryIgnoreUnknownFunction() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.ignore-unknown-function", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.ignore-unknown-function", FALSE));
     }
 
     public String getQueryAccessController() {
@@ -1480,7 +1485,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isPushDownUpdateEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.pushdown.update-enabled", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.pushdown.update-enabled", FALSE));
     }
 
     public String getSchemaFactory() {
@@ -1497,7 +1502,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isPushdownQueryCacheEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.pushdown.cache-enabled", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.pushdown.cache-enabled", FALSE));
     }
 
     public String getJdbcUrl() {
@@ -1529,11 +1534,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isTableACLEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.security.table-acl-enabled", "true"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.security.table-acl-enabled", TRUE));
     }
 
     public boolean isEscapeDefaultKeywordEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.escape-default-keyword", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.escape-default-keyword", FALSE));
     }
 
     public String getQueryRealizationFilter() {
@@ -1570,11 +1575,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean getQueryMetricsEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.server.query-metrics-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.server.query-metrics-enabled", FALSE));
     }
 
     public boolean getQueryMetrics2Enabled() {
-        return Boolean.parseBoolean(getOptional("kylin.server.query-metrics2-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.server.query-metrics2-enabled", FALSE));
     }
 
     public int[] getQueryMetricsPercentilesIntervals() {
@@ -1619,19 +1624,19 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isWebCrossDomainEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.web.cross-domain-enabled", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.web.cross-domain-enabled", TRUE));
     }
 
     public boolean isAdminUserExportAllowed() {
-        return Boolean.parseBoolean(getOptional("kylin.web.export-allow-admin", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.web.export-allow-admin", TRUE));
     }
 
     public boolean isNoneAdminUserExportAllowed() {
-        return Boolean.parseBoolean(getOptional("kylin.web.export-allow-other", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.web.export-allow-other", TRUE));
     }
 
     public boolean isWebDashboardEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.web.dashboard-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.web.dashboard-enabled", FALSE));
     }
 
     public String getPropertiesWhiteList() {
@@ -1680,23 +1685,23 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isShowingGuiTraceToggle() {
-        return Boolean.parseBoolean(getOptional("kylin.htrace.show-gui-trace-toggle", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.htrace.show-gui-trace-toggle", FALSE));
     }
 
     public boolean isHtraceTracingEveryQuery() {
-        return Boolean.parseBoolean(getOptional("kylin.htrace.trace-every-query", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.htrace.trace-every-query", FALSE));
     }
 
     public boolean isKylinMetricsMonitorEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.metrics.monitor-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.metrics.monitor-enabled", FALSE));
     }
 
     public boolean isKylinMetricsReporterForQueryEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.metrics.reporter-query-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.metrics.reporter-query-enabled", FALSE));
     }
 
     public boolean isKylinMetricsReporterForJobEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.metrics.reporter-job-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.metrics.reporter-job-enabled", FALSE));
     }
 
     public String getKylinMetricsPrefix() {
@@ -1744,15 +1749,15 @@ abstract public class KylinConfigBase implements Serializable {
     // tool
     // ============================================================================
     public boolean isAllowAutoMigrateCube() {
-        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.enabled", FALSE));
     }
 
     public boolean isAutoMigrateCubeCopyAcl() {
-        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.copy-acl", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.copy-acl", TRUE));
     }
 
     public boolean isAutoMigrateCubePurge() {
-        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.purge-src-cube", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.tool.auto-migrate-cube.purge-src-cube", TRUE));
     }
 
     public String getAutoMigrateCubeSrcConfig() {
@@ -1772,7 +1777,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isJsonAlwaysSmallCell() {
-        return Boolean.parseBoolean(getOptional("kylin.metadata.jdbc.json-always-small-cell", "true"));
+        return Boolean.parseBoolean(getOptional("kylin.metadata.jdbc.json-always-small-cell", TRUE));
     }
 
     public int getSmallCellMetadataWarningThreshold() {
