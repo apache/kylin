@@ -64,7 +64,6 @@ import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -357,26 +356,6 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
         doScanAndVerify(table, useDeserializedGTScanRequest(req), "[null, 20, null, null, 42.0]",
                 "[null, 30, null, null, 52.5]");
-    }
-
-    @Test
-    @Ignore
-    public void testFilterScannerPerf() throws IOException {
-        GridTable table = newTestPerfTable();
-        GTInfo info = table.getInfo();
-
-        CompareTupleFilter fComp1 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
-        CompareTupleFilter fComp2 = compare(info.colRef(1), FilterOperatorEnum.GT, enc(info, 1, "10"));
-        LogicalTupleFilter filter = and(fComp1, fComp2);
-
-        FilterResultCache.DEFAULT_OPTION = false;
-        testFilterScannerPerfInner(table, info, filter);
-        FilterResultCache.DEFAULT_OPTION = true;
-        testFilterScannerPerfInner(table, info, filter);
-        FilterResultCache.DEFAULT_OPTION = false;
-        testFilterScannerPerfInner(table, info, filter);
-        FilterResultCache.DEFAULT_OPTION = true;
-        testFilterScannerPerfInner(table, info, filter);
     }
 
     @SuppressWarnings("unused")

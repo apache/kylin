@@ -138,7 +138,7 @@ public class GTFilterScanner extends GTForwardingScanner {
     public static class FilterResultCache {
         static final int CHECKPOINT = 10000;
         static final double HIT_RATE_THRESHOLD = 0.5;
-        public static boolean DEFAULT_OPTION = true; // enable cache by default
+        public static final boolean DEFAULT_OPTION = true; // enable cache by default
         private boolean enabled = DEFAULT_OPTION;
         ImmutableBitSet colsInFilter;
         int count;
@@ -192,7 +192,7 @@ public class GTFilterScanner extends GTForwardingScanner {
         }
 
         private ImmutableBitSet collectColumnsInFilter(TupleFilter filter) {
-            Set<TblColRef> columnsInFilter = new HashSet<TblColRef>();
+            Set<TblColRef> columnsInFilter = new HashSet<>();
             TupleFilter.collectColumns(filter, columnsInFilter);
             BitSet result = new BitSet();
             for (TblColRef col : columnsInFilter)
