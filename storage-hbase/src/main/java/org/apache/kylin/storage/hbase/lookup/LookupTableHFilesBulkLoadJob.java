@@ -85,7 +85,7 @@ public class LookupTableHFilesBulkLoadJob extends AbstractHadoopJob {
         }
 
         if (exitCode != 0) {
-            logger.error("Failed to change the file permissions: " + input);
+            logger.error("Failed to change the file permissions: {}", input);
             throw new IOException("Failed to change the file permissions: " + input);
         }
 
