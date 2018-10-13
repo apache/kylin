@@ -21,24 +21,24 @@ java -classpath kylin-server-base-\<versioin\>.jar:kylin-core-common-\<versioin\
 Config them in the conf/kylin.properties:
 
 ```
-ldap.server=ldap://<your_ldap_host>:<port>
-ldap.username=<your_user_name>
-ldap.password=<your_password_encrypted>
+kylin.security.ldap.connection-server=ldap://<your_ldap_host>:<port>
+kylin.security.ldap.connection-username=<your_user_name>
+kylin.security.ldap.connection-password=<your_password_encrypted>
 ```
 
 Secondly, provide the user search patterns, this is by LDAP design, here is just a sample:
 
 ```
-ldap.user.searchBase=OU=UserAccounts,DC=mycompany,DC=com
-ldap.user.searchPattern=(&(cn={0})(memberOf=CN=MYCOMPANY-USERS,DC=mycompany,DC=com))
-ldap.user.groupSearchBase=OU=Group,DC=mycompany,DC=com
+kylin.security.ldap.user-search-base=OU=UserAccounts,DC=mycompany,DC=com
+kylin.security.ldap.user-search-pattern=(&(cn={0})(memberOf=CN=MYCOMPANY-USERS,DC=mycompany,DC=com))
+kylin.security.ldap.user-group-search-base=OU=Group,DC=mycompany,DC=com
 ```
 
-If you have service accounts (e.g, for system integration) which also need be authenticated, configure them in ldap.service.*; Otherwise, leave them be empty;
+If you have service accounts (e.g, for system integration) which also need be authenticated, configure them in kylin.security.ldap.service-.*; Otherwise, leave them be empty;
 
 ### Configure the administrator group
 
-To map an LDAP group to the admin group in Kylin, need set the "kylin.security.acl.admin-role" to the LDAP group name(shall keep the original case), and the users in this group will be global admin in Kylin.
+To map an LDAP group to the admin group in Kylin, need set the "kylin.security.acl.admin-role" to the LDAP group name (shall keep the original case), and the users in this group will be global admin in Kylin.
 
 For example, in LDAP the group "KYLIN-ADMIN-GROUP" is the list of administrators, here need set it as:
 
