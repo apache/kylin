@@ -57,7 +57,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
 
         @Override
         public MeasureType<List<ByteArray>> createMeasureType(String funcName, DataType dataType) {
-            return new RawMeasureType(funcName, dataType);
+            return new RawMeasureType();
         }
 
         @Override
@@ -76,11 +76,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
         }
     }
 
-    @SuppressWarnings("unused")
-    private final DataType dataType;
-
-    public RawMeasureType(String funcName, DataType dataType) {
-        this.dataType = dataType;
+    public RawMeasureType() {
     }
 
     public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {

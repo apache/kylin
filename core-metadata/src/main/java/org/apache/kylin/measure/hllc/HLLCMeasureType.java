@@ -43,7 +43,7 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
 
         @Override
         public MeasureType<HLLCounter> createMeasureType(String funcName, DataType dataType) {
-            return new HLLCMeasureType(funcName, dataType);
+            return new HLLCMeasureType(dataType);
         }
 
         @Override
@@ -66,7 +66,7 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
 
     private final DataType dataType;
 
-    public HLLCMeasureType(String funcName, DataType dataType) {
+    public HLLCMeasureType(DataType dataType) {
         // note at query parsing phase, the data type may be null, because only function and parameters are known
         this.dataType = dataType;
     }
