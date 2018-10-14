@@ -618,6 +618,9 @@ public class QueryService extends BasicService {
 
     private void resetRealizationInContext(OLAPContext olapContext) {
         IRealization realization = olapContext.realization;
+        if (realization == null) {
+            return;
+        }
         KylinConfig config = getConfig();
         HybridInstance hybridInstance = HybridManager.getInstance(config).getHybridInstance(realization.getName());
         if (hybridInstance != null) {
