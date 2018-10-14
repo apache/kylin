@@ -39,7 +39,7 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
     public static final String FUNC_PERCENTILE_APPROX = "PERCENTILE_APPROX";
     public static final String DATATYPE_PERCENTILE = "percentile";
 
-    public PercentileMeasureType(String funcName, DataType dataType) {
+    public PercentileMeasureType(DataType dataType) {
         this.dataType = dataType;
     }
 
@@ -47,7 +47,7 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
 
         @Override
         public MeasureType<PercentileCounter> createMeasureType(String funcName, DataType dataType) {
-            return new PercentileMeasureType(funcName, dataType);
+            return new PercentileMeasureType(dataType);
         }
 
         @Override

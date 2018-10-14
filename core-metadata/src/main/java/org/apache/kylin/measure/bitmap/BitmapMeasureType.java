@@ -52,7 +52,7 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
         @Override
         public MeasureType<BitmapCounter> createMeasureType(String funcName, DataType dataType) {
-            return new BitmapMeasureType(funcName, dataType);
+            return new BitmapMeasureType();
         }
 
         @Override
@@ -71,10 +71,7 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
         }
     }
 
-    public DataType dataType;
-
-    public BitmapMeasureType(String funcName, DataType dataType) {
-        this.dataType = dataType;
+    public BitmapMeasureType() {
     }
 
     @Override
