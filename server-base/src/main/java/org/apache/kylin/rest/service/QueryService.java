@@ -587,7 +587,7 @@ public class QueryService extends BasicService {
                 long prjLastModifyTime = getProjectManager().getProject(sqlRequest.getProject()).getLastModified();
                 preparedContextKey = new PreparedContextKey(sqlRequest.getProject(), prjLastModifyTime, correctedSql);
                 PrepareSqlRequest prepareSqlRequest = (PrepareSqlRequest) sqlRequest;
-                if (prepareSqlRequest.isEnableStatementCache()) {
+                if (getConfig().isQueryPreparedStatementCacheEnable() && prepareSqlRequest.isEnableStatementCache()) {
                     try {
                         preparedContext = preparedContextPool.borrowObject(preparedContextKey);
                         borrowPrepareContext = true;
