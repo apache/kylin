@@ -78,7 +78,7 @@ public class Driver extends UnregisteredDriver {
     /**
      * These calcite props can be configured by jdbc connection
      */
-    public static final Set<String> CLIENT_CALCITE_PROP_NAMES = Sets.newHashSet(
+    protected static final Set<String> CLIENT_CALCITE_PROP_NAMES = Sets.newHashSet(
             "caseSensitive",
             "unquotedCasing",
             "quoting",
