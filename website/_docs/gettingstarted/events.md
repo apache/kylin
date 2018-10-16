@@ -22,6 +22,7 @@ __Conferences__
 
 __Meetup__
 
+* [Apache Kylin Meetup @Hangzhou](http://www.huodongxing.com/event/7461326621900), China; 1:30PM - 17:00PM, Saturday, 2018-10-26
 * [CDAP in Cloud, Extreme OLAP w Apache Kylin, Twitter Reviews & DataStax](https://www.meetup.com/BigDataApps/events/253429041/) @ Google Cloud, US; 6:00PM to 8:00PM, 2018-8-29
 * [Apache Kylin Meetup @Beijing Meituan&Dianping](http://www.huodongxing.com/event/7452131278400), China; 1:30PM - 17:00PM, Saturday, 2018-8-11
 * [Apache Kylin Meetup @Shanghai Bestpay](http://www.huodongxing.com/event/2449364807100?td=4222685755750), China; 1:30PM - 17:00PM, Saturday, 2018-7-28
