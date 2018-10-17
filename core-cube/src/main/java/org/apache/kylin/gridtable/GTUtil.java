@@ -297,7 +297,7 @@ public class GTUtil {
             case NEQ:
                 code = translate(col, firstValue, 0);
                 if (code == null) {
-                    result = ConstantTupleFilter.TRUE;
+                    result = newCompareFilter(TupleFilter.FilterOperatorEnum.ISNOTNULL, externalCol);
                 } else {
                     newCompareFilter.addChild(new ConstantTupleFilter(code));
                     result = newCompareFilter;
@@ -308,7 +308,7 @@ public class GTUtil {
                 if (code == null) {
                     code = translate(col, firstValue, -1);
                     if (code == null)
-                        result = ConstantTupleFilter.FALSE;
+                        result = newCompareFilter(TupleFilter.FilterOperatorEnum.ISNOTNULL, externalCol);
                     else
                         result = newCompareFilter(FilterOperatorEnum.LTE, externalCol, code);
                 } else {
@@ -330,7 +330,7 @@ public class GTUtil {
                 if (code == null) {
                     code = translate(col, firstValue, 1);
                     if (code == null)
-                        result = ConstantTupleFilter.FALSE;
+                        result = newCompareFilter(TupleFilter.FilterOperatorEnum.ISNOTNULL, externalCol);
                     else
                         result = newCompareFilter(FilterOperatorEnum.GTE, externalCol, code);
                 } else {
@@ -357,6 +357,12 @@ public class GTUtil {
             CompareTupleFilter r = new CompareTupleFilter(op);
             r.addChild(new ColumnTupleFilter(col));
             r.addChild(new ConstantTupleFilter(code));
+            return r;
+        }
+
+        private TupleFilter newCompareFilter(TupleFilter.FilterOperatorEnum op, TblColRef col) {
+            CompareTupleFilter r = new CompareTupleFilter(op);
+            r.addChild(new ColumnTupleFilter(col));
             return r;
         }
 

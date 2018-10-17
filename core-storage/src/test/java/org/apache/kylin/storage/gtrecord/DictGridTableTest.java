@@ -415,7 +415,9 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         {
             LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.LT, "9"));
             TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
-            assertEquals(ConstantTupleFilter.FALSE, newFilter);
+            assertEquals(
+                    "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 ISNOTNULL []]",
+                    newFilter.toString());
         }
 
         // $1<"10" needs no rounding
@@ -480,7 +482,8 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         {
             LogicalTupleFilter filter = and(fComp1, compare(extColB, FilterOperatorEnum.GT, "101"));
             TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
-            assertEquals(ConstantTupleFilter.FALSE, newFilter);
+            assertEquals("AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 ISNOTNULL []]",
+                    newFilter.toString());
         }
 
         // $1>"100" needs no rounding
