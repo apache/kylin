@@ -78,6 +78,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     // ============================================================================
 
     private JobLock jobLock;
+    private ExecutableManager executableManager;
     private FetcherRunner fetcher;
     private ScheduledExecutorService fetcherPool;
     private ExecutorService jobPool;
@@ -92,10 +93,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         if (INSTANCE != null) {
             throw new IllegalStateException("DefaultScheduler has been initiated.");
         }
-    }
-
-    public ExecutableManager getExecutableManager() {
-        return ExecutableManager.getInstance(jobEngineConfig.getConfig());
     }
 
     public FetcherRunner getFetcherRunner() {
@@ -162,6 +159,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             throw new IllegalStateException("Cannot start job scheduler due to lack of job lock");
         }
 
+        executableManager = ExecutableManager.getInstance(jobEngineConfig.getConfig());
         //load all executable, set them to a consistent status
         fetcherPool = Executors.newScheduledThreadPool(1);
         int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();
@@ -170,7 +168,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         context = new DefaultContext(Maps.<String, Executable> newConcurrentMap(), jobEngineConfig.getConfig());
 
         logger.info("Staring resume all running jobs.");
-        ExecutableManager executableManager = getExecutableManager();
         executableManager.resumeAllRunningJobs();
         logger.info("Finishing resume all running jobs.");
 

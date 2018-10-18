@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
-import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -242,10 +241,6 @@ public class ExecutableDao {
         }
     }
 
-    public ExecutableOutputPO getJobOutputDigest(String uuid) {
-        return executableOutputDigestMap.get(uuid);
-    }
-
     public List<ExecutableOutputPO> getJobOutputDigests(long timeStart, long timeEndExclusive) {
         List<ExecutableOutputPO> jobOutputDigests = Lists.newArrayList();
         for (ExecutableOutputPO po : executableOutputDigestMap.values()) {
@@ -273,10 +268,6 @@ public class ExecutableDao {
         }
     }
 
-    public ExecutablePO getJobDigest(String uuid) {
-        return executableDigestMap.get(uuid);
-    }
-
     public List<ExecutablePO> getJobDigests(long timeStart, long timeEndExclusive) {
         List<ExecutablePO> jobDigests = Lists.newArrayList();
         for (ExecutablePO po : executableDigestMap.values()) {
@@ -284,11 +275,6 @@ public class ExecutableDao {
                 jobDigests.add(po);
         }
         return jobDigests;
-    }
-
-    public List<String> getJobIdsInCache() {
-        Set<String> idSet = executableDigestMap.keySet();
-        return Lists.newArrayList(idSet);
     }
 
     public List<String> getJobIds() throws PersistentException {
@@ -403,15 +389,6 @@ public class ExecutableDao {
         } catch (IOException e) {
             logger.error("error delete job:" + uuid, e);
             throw new PersistentException(e);
-        }
-    }
-
-    public void reloadAll() throws IOException {
-        try (AutoReadWriteLock.AutoLock lock = executableDigestMapLock.lockForWrite()) {
-            executableDigestCrud.reloadAll();
-        }
-        try (AutoReadWriteLock.AutoLock lock = executableOutputDigestMapLock.lockForWrite()) {
-            executableOutputDigestCrud.reloadAll();
         }
     }
 }
