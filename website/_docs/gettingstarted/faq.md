@@ -281,7 +281,7 @@ $2a$10$A7.J.GIEOQknHmJhEeXUdOnj2wrdG4jhopBgqShTgDkJDMoKxYHVu
 
 {% endhighlight %}
 
-Then you can set it into `kylinSecurity.xml'
+  * Then you can set it into `kylinSecurity.xml'
 
 {% highlight Groff markup %}
 
@@ -289,7 +289,7 @@ vi ./tomcat/webapps/kylin/WEB-INF/classes/kylinSecurity.xml
 
 {% endhighlight %}
 
-Replace the origin encrypted password with the new one: 
+  * Replace the origin encrypted password with the new one: 
 {% highlight Groff markup %}
 
         <bean class="org.springframework.security.core.userdetails.User" id="adminUser">
@@ -301,10 +301,20 @@ Replace the origin encrypted password with the new one:
         
 {% endhighlight %}
 
-Restart Kylin to take effective. If you have multiple Kylin server as a cluster, do the same on each instance. 
+  * Restart Kylin to take effective. If you have multiple Kylin server as a cluster, do the same on each instance. 
 
 #### What kind of data be left in 'kylin.env.hdfs-working-dir' ? We often execute kylin cleanup storage command, but now our working dir folder is about 300 GB size, can we delete old data manually?
 
-The data in 'hdfs-working-dir' ('hdfs:///kylin/kylin_metadata/' by default) includes intermediate files (will be GC) and Cuboid data (won't be GC). The Cuboid data is kept for the further segments' merge, as Kylin couldn't merge from HBase. If you're sure those segments won't be merged, you can move them to other paths or even delete.
+  * The data in 'hdfs-working-dir' ('hdfs:///kylin/kylin_metadata/' by default) includes intermediate files (will be GC) and Cuboid data (won't be GC). The Cuboid data is kept for the further segments' merge, as Kylin couldn't merge from HBase. If you're sure those segments won't be merged, you can move them to other paths or even delete.
 
-Please pay attention to the "resources" sub-folder under 'hdfs-working-dir', which persists some big metadata files like  dictionaries and lookup tables' snapshots. They shouldn't be moved.
+  * Please pay attention to the "resources" sub-folder under 'hdfs-working-dir', which persists some big metadata files like  dictionaries and lookup tables' snapshots. They shouldn't be moved.
+
+#### How to export/import cube/project across different Kylin environments?
+
+  * Please check: [http://kylin.apache.org/docs/howto/howto_use_cli.html]()
+
+#### How to define a snowflake model(with two fact tables)?
+
+  * In the snowflake model, there is only one fact table also. But you could define lookup table joins with another lookup table.
+  * If the query pattern between your two "fact" tables is fixed, just like factA left join with factB. You could define factB as a lookup table and skip the snapshot for this huge lookup table.
+
