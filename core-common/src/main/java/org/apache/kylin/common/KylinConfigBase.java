@@ -1555,7 +1555,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getSQLResponseSignatureClass() {
         return this.getOptional("kylin.query.signature-class",
-                "org.apache.kylin.rest.signature.RealizationSetCalculator");
+                "org.apache.kylin.rest.signature.FactTableRealizationSetCalculator");
     }
 
     public boolean isQueryCacheSignatureEnabled() {
