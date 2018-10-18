@@ -1558,6 +1558,10 @@ abstract public class KylinConfigBase implements Serializable {
                 "org.apache.kylin.rest.signature.RealizationSetCalculator");
     }
 
+    public boolean isQueryCacheSignatureEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.query.cache-signature-enabled", "false"));
+    }
+
     // ============================================================================
     // SERVER
     // ============================================================================
