@@ -1363,6 +1363,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.scan-threshold", "10000000"));
     }
 
+    public boolean isLazyQueryEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.lazy-query-enabled", "false"));
+    }
+
+    public long getLazyQueryWaitingTimeoutMilliSeconds() {
+        return Long.parseLong(getOptional("kylin.query.lazy-query-waiting-timeout-milliseconds", "60000L"));
+    }
+
     public int getQueryConcurrentRunningThresholdForProject() {
         // by default there's no limitation
         return Integer.parseInt(getOptional("kylin.query.project-concurrent-running-threshold", "0"));
