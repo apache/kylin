@@ -443,8 +443,16 @@ public class QueryService extends BasicService {
         Message msg = MsgPicker.getMsg();
         final QueryContext queryContext = QueryContextFacade.current();
 
+        boolean isDummpyResponseEnabled = queryCacheEnabled && kylinConfig.isLazyQueryEnabled();
         SQLResponse sqlResponse = null;
         try {
+            // Add dummy response which will be updated or evicted when query finishes
+            if (isDummpyResponseEnabled) {
+                SQLResponse dummyResponse = new SQLResponse();
+                dummyResponse.setLazyQueryStartTime(System.currentTimeMillis());
+                cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), dummyResponse);
+            }
+
             final boolean isSelect = QueryUtil.isSelectStatement(sqlRequest.getSql());
             if (isSelect) {
                 sqlResponse = query(sqlRequest, queryContext.getQueryId());
@@ -481,6 +489,8 @@ public class QueryService extends BasicService {
                             "query response is too large: {} ({})", sqlResponse.getResults().size(),
                             kylinConfig.getLargeQueryThreshold())) {
                 cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
+            } else if (isDummpyResponseEnabled) {
+                cacheManager.getCache(QUERY_CACHE).evict(sqlRequest.getCacheKey());
             }
 
         } catch (Throwable e) { // calcite may throw AssertError
@@ -528,6 +538,29 @@ public class QueryService extends BasicService {
         SQLResponse response = (SQLResponse) wrapper.get();
         if (response == null) {
             return null;
+        }
+
+        // Check whether duplicate query exists
+        while (response.isRunning()) {
+            // Wait at most one minute
+            if (System.currentTimeMillis() - response.getLazyQueryStartTime() >= getConfig()
+                    .getLazyQueryWaitingTimeoutMilliSeconds()) {
+                cache.evict(sqlRequest.getCacheKey());
+                return null;
+            }
+            logger.info("Duplicated SQL request is running, waiting...");
+            try {
+                Thread.sleep(100L);
+            } catch (InterruptedException e) {
+            }
+            wrapper = cache.get(sqlRequest.getCacheKey());
+            if (wrapper == null) {
+                return null;
+            }
+            response = (SQLResponse) wrapper.get();
+            if (response == null) {
+                return null;
+            }
         }
         logger.info("The sqlResponse is found in QUERY_CACHE");
         if (getConfig().isQueryCacheSignatureEnabled()
