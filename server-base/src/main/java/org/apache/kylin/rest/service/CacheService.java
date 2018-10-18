@@ -118,12 +118,10 @@ public class CacheService extends BasicService implements InitializingBean {
     public void cleanDataCache(String project) {
         if (cacheManager != null) {
             if (getConfig().isQueryCacheSignatureEnabled()) {
-                logger.info("cleaning cache for project " + project + " (currently remove exception entries)");
-                cacheManager.getCache(QueryService.EXCEPTION_QUERY_CACHE).removeAll();
+                logger.info("cleaning cache for project " + project + " (currently remove nothing)");
             } else {
                 logger.info("cleaning cache for project " + project + " (currently remove all entries)");
-                cacheManager.getCache(QueryService.SUCCESS_QUERY_CACHE).removeAll();
-                cacheManager.getCache(QueryService.EXCEPTION_QUERY_CACHE).removeAll();
+                cacheManager.getCache(QueryService.QUERY_CACHE).removeAll();
             }
         } else {
             logger.warn("skip cleaning cache for project " + project);
