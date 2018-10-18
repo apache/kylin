@@ -1457,6 +1457,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.query.ignore-unknown-function", FALSE));
     }
 
+    public String getMemCachedHosts() {
+        return getRequired("kylin.cache.memcached.hosts");
+    }
+
     public String getQueryAccessController() {
         return getOptional("kylin.query.access-controller", null);
     }
