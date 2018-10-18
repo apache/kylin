@@ -22,7 +22,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.rest.signature.RealizationSetCalculator;
+import org.apache.kylin.rest.signature.FactTableRealizationSetCalculator;
 import org.apache.kylin.rest.signature.SignatureCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class SQLResponseSignatureUtil {
             signatureCalculator = (SignatureCalculator) signatureClass.getConstructor().newInstance();
         } catch (Exception e) {
             logger.warn("Will use default signature since fail to construct signature due to " + e);
-            signatureCalculator = new RealizationSetCalculator();
+            signatureCalculator = new FactTableRealizationSetCalculator();
         }
         return signatureCalculator.calculateSignature(config, sqlResponse, project);
     }
@@ -62,7 +62,7 @@ public class SQLResponseSignatureUtil {
             return Class.forName(config.getSQLResponseSignatureClass());
         } catch (ClassNotFoundException e) {
             logger.warn("Will use default signature since cannot find class " + config.getSQLResponseSignatureClass());
-            return RealizationSetCalculator.class;
+            return FactTableRealizationSetCalculator.class;
         }
     }
 }
