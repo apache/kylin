@@ -44,10 +44,10 @@ ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
 
 ### 安装 Spark
 
-在像 /usr/local/spark 这样的本地文件夹下手动安装 spark-2.1.2-bin-hadoop2.7
+在像 /usr/local/spark 这样的本地文件夹下手动安装 Spark；你需要确认所需要的 Spark 的版本，以及从 Spark 下载页面获取下载链接。 Kylin 2.3 - 2.5 需要 Spark 2.1; 例如：
 
 {% highlight Groff markup %}
-wget -O /tmp/spark-2.1.2-bin-hadoop2.7.tgz http://d3kbcqa49mib13.cloudfront.net/spark-2.1.2-bin-hadoop2.7.tgz
+wget -O /tmp/spark-2.1.2-bin-hadoop2.7.tgz https://archive.apache.org/dist/spark/spark-2.1.2/spark-2.1.2-bin-hadoop2.7.tgz
 cd /usr/local
 tar -zxvf /tmp/spark-2.1.2-bin-hadoop2.7.tgz
 ln -s spark-2.1.2-bin-hadoop2.7 spark

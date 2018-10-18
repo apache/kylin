@@ -44,10 +44,11 @@ ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
 
 ### Install Spark
 
-Manually install spark-2.1.2-bin-hadoop2.7 in a local folder like /usr/local/spark
+Manually install the Spark binary in in a local folder like /usr/local/spark. You need to check what's the right version for your Kylin version, and then get the download link from Apache Spark website. Kylin 2.3 to 2.5 requires Spark 2.1; For example:
+
 
 {% highlight Groff markup %}
-wget -O /tmp/spark-2.1.2-bin-hadoop2.7.tgz http://d3kbcqa49mib13.cloudfront.net/spark-2.1.2-bin-hadoop2.7.tgz
+wget -O /tmp/spark-2.1.2-bin-hadoop2.7.tgz https://archive.apache.org/dist/spark/spark-2.1.2/spark-2.1.2-bin-hadoop2.7.tgz
 cd /usr/local
 tar -zxvf /tmp/spark-2.1.2-bin-hadoop2.7.tgz
 ln -s spark-2.1.2-bin-hadoop2.7 spark
