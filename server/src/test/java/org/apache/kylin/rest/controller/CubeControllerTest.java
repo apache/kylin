@@ -20,6 +20,7 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.apache.kylin.cube.CubeInstance;
@@ -185,7 +186,7 @@ public class CubeControllerTest extends ServiceTestBase {
     }
 
     @Test
-    public void testGetHoles() throws IOException {
+    public void testGetHoles() throws IOException, NoSuchAlgorithmException {
         String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
         CubeDesc[] cubes = cubeDescController.getCube(cubeName);
         Assert.assertNotNull(cubes);

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -388,7 +389,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetCubeNameWithNamespace() {
+    public void testGetCubeNameWithNamespace() throws NoSuchAlgorithmException {
         System.setProperty("kylin.storage.hbase.table-name-prefix", "HELLO_");
         try {
             CubeManager mgr = CubeManager.getInstance(getTestConfig());
@@ -409,7 +410,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testBuildCubeWithPartitionStartDate() throws IOException {
+    public void testBuildCubeWithPartitionStartDate() throws IOException, NoSuchAlgorithmException {
         Long PARTITION_DATE_START = 1513123200L;
         Long FIRST_BUILD_DATE_END = 1514764800L;
         Long SECOND_BUILD_DATE_END = 1540339200L;

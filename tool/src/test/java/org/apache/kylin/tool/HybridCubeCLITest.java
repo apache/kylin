@@ -19,6 +19,7 @@
 package org.apache.kylin.tool;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -98,7 +99,7 @@ public class HybridCubeCLITest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSegmentOverlap() throws IOException {
+    public void testSegmentOverlap() throws IOException, NoSuchAlgorithmException {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Segments has overlap");
 
@@ -119,7 +120,7 @@ public class HybridCubeCLITest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSegmentNotOverlap() throws IOException {
+    public void testSegmentNotOverlap() throws IOException, NoSuchAlgorithmException {
         HybridManager hybridManager = HybridManager.getInstance(KylinConfig.getInstanceFromEnv());
         Assert.assertNull(hybridManager.getHybridInstance("ssb_hybrid"));
         HybridCubeCLI.main(new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-cubes", "ssb_cube1,ssb_cube2", "-action", "create" });

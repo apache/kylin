@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -210,7 +211,7 @@ public class JobService extends BasicService implements InitializingBean {
 
     public JobInstance submitJob(CubeInstance cube, TSRange tsRange, SegmentRange segRange, //
             Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
-            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
+            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException, NoSuchAlgorithmException {
         aclEvaluate.checkProjectOperationPermission(cube);
         JobInstance jobInstance = submitJobInternal(cube, tsRange, segRange, sourcePartitionOffsetStart,
                 sourcePartitionOffsetEnd, buildType, force, submitter);
@@ -220,7 +221,7 @@ public class JobService extends BasicService implements InitializingBean {
 
     public JobInstance submitJobInternal(CubeInstance cube, TSRange tsRange, SegmentRange segRange, //
             Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd, //
-            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
+            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException, NoSuchAlgorithmException {
         Message msg = MsgPicker.getMsg();
 
         if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
@@ -278,14 +279,14 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public Pair<JobInstance, List<JobInstance>> submitOptimizeJob(CubeInstance cube, Set<Long> cuboidsRecommend,
-            String submitter) throws IOException, JobException {
+            String submitter) throws IOException, JobException, NoSuchAlgorithmException {
 
         Pair<JobInstance, List<JobInstance>> result = submitOptimizeJobInternal(cube, cuboidsRecommend, submitter);
         return result;
     }
 
     private Pair<JobInstance, List<JobInstance>> submitOptimizeJobInternal(CubeInstance cube,
-            Set<Long> cuboidsRecommend, String submitter) throws IOException {
+            Set<Long> cuboidsRecommend, String submitter) throws IOException, NoSuchAlgorithmException {
         Message msg = MsgPicker.getMsg();
 
         if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
@@ -335,7 +336,7 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public JobInstance submitRecoverSegmentOptimizeJob(CubeSegment segment, String submitter)
-            throws IOException, JobException {
+            throws IOException, JobException, NoSuchAlgorithmException {
         CubeInstance cubeInstance = segment.getCubeInstance();
 
         checkCubeDescSignature(cubeInstance);

@@ -19,6 +19,8 @@
 package org.apache.kylin.cube;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -510,11 +512,11 @@ public class CubeManager implements IRealizationProvider {
     }
 
     @VisibleForTesting
-    /*private*/ String generateStorageLocation() {
+    /*private*/ String generateStorageLocation() throws NoSuchAlgorithmException {
         String namePrefix = config.getHBaseTableNamePrefix();
         String namespace = config.getHBaseStorageNameSpace();
         String tableName = "";
-        Random ran = new Random();
+        Random ran = SecureRandom.getInstanceStrong();
         do {
             StringBuffer sb = new StringBuffer();
             if ((namespace.equals("default") || namespace.equals("")) == false) {
@@ -568,42 +570,42 @@ public class CubeManager implements IRealizationProvider {
     // ============================================================================
 
     // append a full build segment
-    public CubeSegment appendSegment(CubeInstance cube) throws IOException {
+    public CubeSegment appendSegment(CubeInstance cube) throws IOException, NoSuchAlgorithmException {
         return appendSegment(cube, null, null, null, null);
     }
 
-    public CubeSegment appendSegment(CubeInstance cube, TSRange tsRange) throws IOException {
+    public CubeSegment appendSegment(CubeInstance cube, TSRange tsRange) throws IOException, NoSuchAlgorithmException {
         return appendSegment(cube, tsRange, null, null, null);
     }
 
-    public CubeSegment appendSegment(CubeInstance cube, SourcePartition src) throws IOException {
+    public CubeSegment appendSegment(CubeInstance cube, SourcePartition src) throws IOException, NoSuchAlgorithmException {
         return appendSegment(cube, src.getTSRange(), src.getSegRange(), src.getSourcePartitionOffsetStart(),
                 src.getSourcePartitionOffsetEnd());
     }
 
     CubeSegment appendSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange,
             Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd)
-            throws IOException {
+            throws IOException, NoSuchAlgorithmException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             return segAssist.appendSegment(cube, tsRange, segRange, sourcePartitionOffsetStart,
                     sourcePartitionOffsetEnd);
         }
     }
 
-    public CubeSegment refreshSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange) throws IOException {
+    public CubeSegment refreshSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange) throws IOException, NoSuchAlgorithmException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             return segAssist.refreshSegment(cube, tsRange, segRange);
         }
     }
 
-    public CubeSegment[] optimizeSegments(CubeInstance cube, Set<Long> cuboidsRecommend) throws IOException {
+    public CubeSegment[] optimizeSegments(CubeInstance cube, Set<Long> cuboidsRecommend) throws IOException, NoSuchAlgorithmException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             return segAssist.optimizeSegments(cube, cuboidsRecommend);
         }
     }
 
     public CubeSegment mergeSegments(CubeInstance cube, TSRange tsRange, SegmentRange segRange, boolean force)
-            throws IOException {
+            throws IOException, NoSuchAlgorithmException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             return segAssist.mergeSegments(cube, tsRange, segRange, force);
         }
@@ -636,7 +638,7 @@ public class CubeManager implements IRealizationProvider {
 
         CubeSegment appendSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange,
                 Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd)
-                throws IOException {
+                throws IOException, NoSuchAlgorithmException {
             CubeInstance cubeCopy = cube.latestCopyForWrite(); // get a latest copy
 
             checkInputRanges(tsRange, segRange);
@@ -670,7 +672,7 @@ public class CubeManager implements IRealizationProvider {
         }
 
         public CubeSegment refreshSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange)
-                throws IOException {
+                throws IOException, NoSuchAlgorithmException {
             CubeInstance cubeCopy = cube.latestCopyForWrite(); // get a latest copy
 
             checkInputRanges(tsRange, segRange);
@@ -713,7 +715,7 @@ public class CubeManager implements IRealizationProvider {
             return newSegment;
         }
 
-        public CubeSegment[] optimizeSegments(CubeInstance cube, Set<Long> cuboidsRecommend) throws IOException {
+        public CubeSegment[] optimizeSegments(CubeInstance cube, Set<Long> cuboidsRecommend) throws IOException, NoSuchAlgorithmException {
             CubeInstance cubeCopy = cube.latestCopyForWrite(); // get a latest copy
 
             List<CubeSegment> readySegments = cubeCopy.getSegments(SegmentStatusEnum.READY);
@@ -735,7 +737,7 @@ public class CubeManager implements IRealizationProvider {
         }
 
         public CubeSegment mergeSegments(CubeInstance cube, TSRange tsRange, SegmentRange segRange, boolean force)
-                throws IOException {
+                throws IOException, NoSuchAlgorithmException {
             CubeInstance cubeCopy = cube.latestCopyForWrite(); // get a latest copy
 
             if (cubeCopy.getSegments().isEmpty())
@@ -833,7 +835,7 @@ public class CubeManager implements IRealizationProvider {
             }
         }
 
-        private CubeSegment newSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange) {
+        private CubeSegment newSegment(CubeInstance cube, TSRange tsRange, SegmentRange segRange) throws NoSuchAlgorithmException {
             DataModelDesc modelDesc = cube.getModel();
 
             CubeSegment segment = new CubeSegment();

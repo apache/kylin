@@ -19,6 +19,7 @@
 package org.apache.kylin.tool.job;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -91,7 +92,7 @@ public class CubeBuildingCLI extends AbstractApplication {
         run(cubeName, startTime, endTime, buildType);
     }
 
-    private void run(String cubeName, long startDate, long endDate, String buildType) throws IOException, JobException {
+    private void run(String cubeName, long startDate, long endDate, String buildType) throws IOException, JobException, NoSuchAlgorithmException {
         CubeInstance cube = cubeManager.getCube(cubeName);
         Preconditions.checkArgument(cube != null, "Cube named " + cubeName + " does not exist!!!");
         CubeBuildTypeEnum buildTypeEnum = CubeBuildTypeEnum.valueOf(buildType);
@@ -100,7 +101,7 @@ public class CubeBuildingCLI extends AbstractApplication {
     }
 
     private void submitJob(CubeInstance cube, TSRange tsRange, CubeBuildTypeEnum buildType,
-            boolean forceMergeEmptySeg, String submitter) throws IOException, JobException {
+            boolean forceMergeEmptySeg, String submitter) throws IOException, JobException, NoSuchAlgorithmException {
         checkCubeDescSignature(cube);
 
         DefaultChainedExecutable job;

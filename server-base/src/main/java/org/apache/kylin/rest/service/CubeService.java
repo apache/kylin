@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -586,7 +587,7 @@ public class CubeService extends BasicService implements InitializingBean {
         CubeManager.getInstance(getConfig()).updateCube(update);
     }
 
-    public void updateOnNewSegmentReady(String cubeName) {
+    public void updateOnNewSegmentReady(String cubeName) throws NoSuchAlgorithmException {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String serverMode = kylinConfig.getServerMode();
         if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase(Locale.ROOT))
@@ -636,7 +637,7 @@ public class CubeService extends BasicService implements InitializingBean {
         }
     }
 
-    private void mergeCubeSegment(String cubeName) {
+    private void mergeCubeSegment(String cubeName) throws NoSuchAlgorithmException {
         CubeInstance cube = getCubeManager().getCube(cubeName);
         if (!cube.needAutoMerge())
             return;

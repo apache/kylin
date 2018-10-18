@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.PartitionDesc;
@@ -45,7 +46,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAppendNonPartitioned() throws IOException {
+    public void testAppendNonPartitioned() throws IOException, NoSuchAlgorithmException {
         CubeManager mgr = mgr();
         CubeInstance cube = mgr.getCube("test_kylin_cube_without_slr_empty");
 
@@ -71,7 +72,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAppendNonPartitioned2() throws IOException {
+    public void testAppendNonPartitioned2() throws IOException, NoSuchAlgorithmException {
         CubeManager mgr = mgr();
         CubeInstance cube = mgr.getCube("test_kylin_cube_without_slr_ready");
 
@@ -102,7 +103,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testPartitioned() throws IOException {
+    public void testPartitioned() throws IOException, NoSuchAlgorithmException {
         CubeManager mgr = mgr();
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_left_join_empty");
 
@@ -157,7 +158,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testAllowGap() throws IOException {
+    public void testAllowGap() throws IOException, NoSuchAlgorithmException {
 
         CubeManager mgr = mgr();
         CubeInstance cube = mgr.getCube("test_kylin_cube_without_slr_left_join_empty");

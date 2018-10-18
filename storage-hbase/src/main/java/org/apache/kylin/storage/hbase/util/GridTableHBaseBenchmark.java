@@ -20,6 +20,8 @@ package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Random;
 
@@ -58,7 +60,7 @@ public class GridTableHBaseBenchmark {
     private static final int ROUND = 3;
     protected static final Logger logger = LoggerFactory.getLogger(GridTableHBaseBenchmark.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
         double hitRatio = DFT_HIT_RATIO;
         try {
             hitRatio = Double.parseDouble(args[0]);
@@ -76,7 +78,7 @@ public class GridTableHBaseBenchmark {
         testGridTable(hitRatio, indexRatio);
     }
 
-    public static void testGridTable(double hitRatio, double indexRatio) throws IOException {
+    public static void testGridTable(double hitRatio, double indexRatio) throws IOException, NoSuchAlgorithmException {
         logger.info("Testing grid table scanning, hit ratio {}, index ratio {}", hitRatio, indexRatio);
         StorageURL hbaseUrl = StorageURL.valueOf("default@hbase"); // use hbase-site.xml on classpath
 
@@ -210,7 +212,7 @@ public class GridTableHBaseBenchmark {
         }
     }
 
-    private static void prepareData(Connection conn) throws IOException {
+    private static void prepareData(Connection conn) throws IOException, NoSuchAlgorithmException {
         Table table = conn.getTable(TableName.valueOf(TEST_TABLE));
 
         try {
@@ -256,9 +258,9 @@ public class GridTableHBaseBenchmark {
             logger.info(".");
     }
 
-    private static byte[] randomBytes() {
+    private static byte[] randomBytes() throws NoSuchAlgorithmException {
         byte[] bytes = new byte[CELL_SIZE];
-        Random rand = new Random();
+        Random rand = SecureRandom.getInstanceStrong();
         rand.nextBytes(bytes);
         return bytes;
     }
