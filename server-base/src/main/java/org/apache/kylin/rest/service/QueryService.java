@@ -135,8 +135,7 @@ import com.google.common.collect.Lists;
 @Component("queryService")
 public class QueryService extends BasicService {
 
-    public static final String SUCCESS_QUERY_CACHE = "StorageCache";
-    public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";
+    public static final String QUERY_CACHE = "StorageCache";
     public static final String QUERY_STORE_PATH_PREFIX = "/query/";
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
     final BadQueryDetector badQueryDetector = new BadQueryDetector();
@@ -481,7 +480,7 @@ public class QueryService extends BasicService {
                     && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(),
                             "query response is too large: {} ({})", sqlResponse.getResults().size(),
                             kylinConfig.getLargeQueryThreshold())) {
-                cacheManager.getCache(SUCCESS_QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
+                cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
             }
 
         } catch (Throwable e) { // calcite may throw AssertError
@@ -495,7 +494,7 @@ public class QueryService extends BasicService {
 
             if (queryCacheEnabled && e.getCause() != null
                     && ExceptionUtils.getRootCause(e) instanceof ResourceLimitExceededException) {
-                Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+                Cache exceptionCache = cacheManager.getCache(QUERY_CACHE);
                 exceptionCache.put(sqlRequest.getCacheKey(), sqlResponse);
             }
         }
@@ -521,37 +520,28 @@ public class QueryService extends BasicService {
     }
 
     public SQLResponse searchQueryInCache(SQLRequest sqlRequest) {
-        String[] cacheTypes = new String[] { EXCEPTION_QUERY_CACHE, SUCCESS_QUERY_CACHE };
-        for (String cacheType : cacheTypes) {
-            Cache cache = cacheManager.getCache(cacheType);
-            Cache.ValueWrapper wrapper = cache.get(sqlRequest.getCacheKey());
-            if (wrapper == null) {
-                continue;
-            }
-            SQLResponse response = (SQLResponse) wrapper.get();
-            if (response == null) {
-                return null;
-            }
-            logger.info("The sqlResponse is found in " + cacheType);
-            if (getConfig().isQueryCacheSignatureEnabled()
-                    && !SQLResponseSignatureUtil.checkSignature(getConfig(), response, sqlRequest.getProject())) {
-                logger.info("The sql response signature is changed. Remove it from QUERY_CACHE.");
-                cache.evict(sqlRequest.getCacheKey());
-                return null;
-            } else {
-                switch (cacheType) {
-                case EXCEPTION_QUERY_CACHE:
-                    response.setHitExceptionCache(true);
-                    break;
-                case SUCCESS_QUERY_CACHE:
-                    response.setStorageCacheUsed(true);
-                    break;
-                default:
-                }
-            }
-            return response;
+        Cache cache = cacheManager.getCache(QUERY_CACHE);
+        Cache.ValueWrapper wrapper = cache.get(sqlRequest.getCacheKey());
+        if (wrapper == null) {
+            return null;
         }
-        return null;
+        SQLResponse response = (SQLResponse) wrapper.get();
+        if (response == null) {
+            return null;
+        }
+        logger.info("The sqlResponse is found in QUERY_CACHE");
+        if (getConfig().isQueryCacheSignatureEnabled()
+                && !SQLResponseSignatureUtil.checkSignature(getConfig(), response, sqlRequest.getProject())) {
+            logger.info("The sql response signature is changed. Remove it from QUERY_CACHE.");
+            cache.evict(sqlRequest.getCacheKey());
+            return null;
+        }
+        if (response.getIsException()) {
+            response.setHitExceptionCache(true);
+        } else {
+            response.setStorageCacheUsed(true);
+        }
+        return response;
     }
 
     private SQLResponse queryWithSqlMassage(SQLRequest sqlRequest) throws Exception {
