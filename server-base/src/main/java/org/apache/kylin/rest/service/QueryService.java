@@ -533,7 +533,8 @@ public class QueryService extends BasicService {
                 return null;
             }
             logger.info("The sqlResponse is found in " + cacheType);
-            if (!SQLResponseSignatureUtil.checkSignature(getConfig(), response, sqlRequest.getProject())) {
+            if (getConfig().isQueryCacheSignatureEnabled()
+                    && !SQLResponseSignatureUtil.checkSignature(getConfig(), response, sqlRequest.getProject())) {
                 logger.info("The sql response signature is changed. Remove it from QUERY_CACHE.");
                 cache.evict(sqlRequest.getCacheKey());
                 return null;
@@ -1091,7 +1092,9 @@ public class QueryService extends BasicService {
         response.setTotalScanCount(queryContext.getScannedRows());
         response.setTotalScanBytes(queryContext.getScannedBytes());
         response.setCubeSegmentStatisticsList(queryContext.getCubeSegmentStatisticsResultList());
-        response.setSignature(SQLResponseSignatureUtil.createSignature(getConfig(), response, projectName));
+        if (getConfig().isQueryCacheSignatureEnabled()) {
+            response.setSignature(SQLResponseSignatureUtil.createSignature(getConfig(), response, projectName));
+        }
         return response;
     }
 

@@ -19,8 +19,8 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-
 import java.util.Map;
+
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.storage.hbase.HBaseConnection;
@@ -117,9 +117,14 @@ public class CacheService extends BasicService implements InitializingBean {
 
     public void cleanDataCache(String project) {
         if (cacheManager != null) {
-            logger.info("cleaning cache for project " + project + " (currently remove exception entries)");
-            //            cacheManager.getCache(QueryService.SUCCESS_QUERY_CACHE).removeAll();
-            cacheManager.getCache(QueryService.EXCEPTION_QUERY_CACHE).removeAll();
+            if (getConfig().isQueryCacheSignatureEnabled()) {
+                logger.info("cleaning cache for project " + project + " (currently remove exception entries)");
+                cacheManager.getCache(QueryService.EXCEPTION_QUERY_CACHE).removeAll();
+            } else {
+                logger.info("cleaning cache for project " + project + " (currently remove all entries)");
+                cacheManager.getCache(QueryService.SUCCESS_QUERY_CACHE).removeAll();
+                cacheManager.getCache(QueryService.EXCEPTION_QUERY_CACHE).removeAll();
+            }
         } else {
             logger.warn("skip cleaning cache for project " + project);
         }
