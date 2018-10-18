@@ -47,7 +47,7 @@ ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
 Manually install spark-2.1.2-bin-hadoop2.7 in a local folder like /usr/local/spark
 
 {% highlight Groff markup %}
-wget -O /tmp/spark-2.1.2-bin-hadoop2.7.tgz http://d3kbcqa49mib13.cloudfront.net/spark-2.1.2-bin-hadoop2.7.tgz
+wget -O /tmp/spark-2.1.2-bin-hadoop2.7.tgz https://archive.apache.org/dist/spark/spark-2.1.2/spark-2.1.2-bin-hadoop2.7.tgz
 cd /usr/local
 tar -zxvf /tmp/spark-2.1.2-bin-hadoop2.7.tgz
 ln -s spark-2.1.2-bin-hadoop2.7 spark
