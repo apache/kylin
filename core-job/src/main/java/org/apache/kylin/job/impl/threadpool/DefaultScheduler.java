@@ -115,6 +115,10 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             } catch (ExecuteException e) {
                 logger.error("ExecuteException job:" + executable.getId(), e);
             } catch (Exception e) {
+                if (AbstractExecutable.isMetaDataPersistException(e, 5)) {
+                    // Job fail due to PersistException
+                    ExecutableManager.getInstance(jobEngineConfig.getConfig()).forceKillJobWithRetry(executable.getId());
+                }
                 logger.error("unknown error execute job:" + executable.getId(), e);
             } finally {
                 context.removeRunningJob(executable);
