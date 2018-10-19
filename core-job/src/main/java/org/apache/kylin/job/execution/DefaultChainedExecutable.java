@@ -111,9 +111,9 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                             "There shouldn't be a running subtask[jobId: {}, jobName: {}], \n"
                                     + "it might cause endless state, will retry to fetch subtask's state.",
                             task.getId(), task.getName());
-                    boolean retryRet = retryFetchTaskStatus(task);
-                    if (false == retryRet)
-                        hasError = true;
+                    getManager().updateJobOutput(task.getId(), ExecutableState.ERROR, null,
+                            "killed due to inconsistent state");
+                    hasError = true;
                 }
 
                 final ExecutableState status = task.getStatus();
@@ -173,34 +173,6 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         this.subTasks.add(executable);
     }
 
-    private boolean retryFetchTaskStatus(Executable task) {
-        boolean hasRunning = false;
-        int retry = 1;
-        while (retry <= 10) {
-            ExecutableState retryState = task.getStatus();
-            if (retryState == ExecutableState.RUNNING) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    logger.error("Failed to Sleep: ", e);
-                }
-                hasRunning = true;
-                logger.error("With {} times retry, it's state is still RUNNING", retry);
-            } else {
-                logger.info("With {} times retry, status is changed to: {}", retry, retryState);
-                hasRunning = false;
-                break;
-            }
-            retry++;
-        }
-        if (hasRunning) {
-            logger.error("Parent task: {} is finished, but it's subtask: {}'s state is still RUNNING \n"
-                    + ", mark parent task failed.", getName(), task.getName());
-            return false;
-        }
-        return true;
-    }
-    
     @Override
     public int getDefaultPriority() {
         return DEFAULT_PRIORITY;
