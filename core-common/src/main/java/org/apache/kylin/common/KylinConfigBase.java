@@ -103,6 +103,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getKylinHome() + File.separator + "spark";
     }
 
+    public static String getTempDir() {
+        return System.getProperty("java.io.tmpdir");
+    }
+
     // backward compatibility check happens when properties is loaded or updated
     static BackwardCompatibilityConfig BCC = new BackwardCompatibilityConfig();
 
