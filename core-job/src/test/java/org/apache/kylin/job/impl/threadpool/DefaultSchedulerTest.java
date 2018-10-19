@@ -150,7 +150,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         waitForJobFinish(job.getId(), 10000);
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
-        Assert.assertEquals(ExecutableState.RUNNING, execMgr.getOutput(task2.getId()).getState());
+        Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(task2.getId()).getState());
     }
 
     @SuppressWarnings("rawtypes")
