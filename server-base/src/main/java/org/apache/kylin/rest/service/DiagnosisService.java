@@ -42,16 +42,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
 @Component("diagnosisService")
 public class DiagnosisService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(DiagnosisService.class);
-
-    protected File getDumpDir() {
-        return Files.createTempDir();
-    }
 
     @Autowired
     private AclEvaluate aclEvaluate;
@@ -85,17 +80,15 @@ public class DiagnosisService extends BasicService {
         return getBadQueryHistoryManager().getBadQueriesForProject(project);
     }
 
-    public String dumpProjectDiagnosisInfo(String project) throws IOException {
+    public String dumpProjectDiagnosisInfo(String project, File exportPath) throws IOException {
         aclEvaluate.checkProjectOperationPermission(project);
-        File exportPath = getDumpDir();
         String[] args = { project, exportPath.getAbsolutePath() };
         runDiagnosisCLI(args);
         return getDiagnosisPackageName(exportPath);
     }
 
-    public String dumpJobDiagnosisInfo(String jobId) throws IOException {
+    public String dumpJobDiagnosisInfo(String jobId, File exportPath) throws IOException {
         aclEvaluate.checkProjectOperationPermission(jobService.getJobInstance(jobId));
-        File exportPath = getDumpDir();
         String[] args = { jobId, exportPath.getAbsolutePath() };
         runDiagnosisCLI(args);
         return getDiagnosisPackageName(exportPath);
