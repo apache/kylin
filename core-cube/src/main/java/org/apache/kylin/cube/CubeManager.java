@@ -19,6 +19,8 @@
 package org.apache.kylin.cube;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -514,18 +516,22 @@ public class CubeManager implements IRealizationProvider {
         String namePrefix = config.getHBaseTableNamePrefix();
         String namespace = config.getHBaseStorageNameSpace();
         String tableName = "";
-        Random ran = new Random();
-        do {
-            StringBuffer sb = new StringBuffer();
-            if ((namespace.equals("default") || namespace.equals("")) == false) {
-                sb.append(namespace).append(":");
-            }
-            sb.append(namePrefix);
-            for (int i = 0; i < HBASE_TABLE_LENGTH; i++) {
-                sb.append(ALPHA_NUM.charAt(ran.nextInt(ALPHA_NUM.length())));
-            }
-            tableName = sb.toString();
-        } while (this.usedStorageLocation.containsValue(tableName));
+        try {
+            Random ran = SecureRandom.getInstanceStrong();
+            do {
+                StringBuffer sb = new StringBuffer();
+                if ((namespace.equals("default") || namespace.equals("")) == false) {
+                    sb.append(namespace).append(":");
+                }
+                sb.append(namePrefix);
+                for (int i = 0; i < HBASE_TABLE_LENGTH; i++) {
+                    sb.append(ALPHA_NUM.charAt(ran.nextInt(ALPHA_NUM.length())));
+                }
+                tableName = sb.toString();
+            } while (this.usedStorageLocation.containsValue(tableName));
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SecureRandom.getInstanceStrong() can't get such algorithm.");
+        }
         return tableName;
     }
 

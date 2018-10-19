@@ -20,6 +20,8 @@ package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Random;
 
@@ -258,8 +260,12 @@ public class GridTableHBaseBenchmark {
 
     private static byte[] randomBytes() {
         byte[] bytes = new byte[CELL_SIZE];
-        Random rand = new Random();
-        rand.nextBytes(bytes);
+        try {
+            Random rand = SecureRandom.getInstanceStrong();
+            rand.nextBytes(bytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SecureRandom.getInstanceStrong() can't get such algorithm.");
+        }
         return bytes;
     }
 
