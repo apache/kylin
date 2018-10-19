@@ -78,7 +78,7 @@ public class DiagnosisController extends BasicController {
     @ResponseBody
     public void dumpProjectDiagnosisInfo(@PathVariable String project, final HttpServletRequest request,
             final HttpServletResponse response) {
-        try (AutoDeleteDirectory diagDir = new AutoDeleteDirectory("diag_project", "'")) {
+        try (AutoDeleteDirectory diagDir = new AutoDeleteDirectory("diag_project", "")) {
             String filePath = dgService.dumpProjectDiagnosisInfo(project, diagDir.getFile());
             setDownloadResponse(filePath, response);
         } catch (IOException e) {
@@ -94,7 +94,7 @@ public class DiagnosisController extends BasicController {
     @ResponseBody
     public void dumpJobDiagnosisInfo(@PathVariable String jobId, final HttpServletRequest request,
             final HttpServletResponse response) {
-        try (AutoDeleteDirectory diagDir = new AutoDeleteDirectory("diag_job", "'")) {
+        try (AutoDeleteDirectory diagDir = new AutoDeleteDirectory("diag_job", "")) {
             String filePath = dgService.dumpJobDiagnosisInfo(jobId, diagDir.getFile());
             setDownloadResponse(filePath, response);
         } catch (IOException e) {
