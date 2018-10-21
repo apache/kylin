@@ -1498,7 +1498,20 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public String getProject() {
-        return getModel().getProject();
+        DataModelDesc modelDesc = getModel();
+        if (modelDesc == null) {
+            // In case the model for cube not exists in metadata
+            List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE,
+                    name);
+
+            if (ownerPrj.size() == 1) {
+                return ownerPrj.get(0).getName();
+            } else {
+                throw new IllegalStateException("No project found for cube " + name);
+            }
+        } else {
+            return getModel().getProject();
+        }
     }
 
     public static CubeDesc getCopyOf(CubeDesc cubeDesc) {
