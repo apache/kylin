@@ -184,7 +184,7 @@ public class QueryUtil {
 
     public static String removeCommentInSql(String sql1) {
         // match two patterns, one is "-- comment", the other is "/* comment */"
-        final String[] commentPatterns = new String[] { "--[^\r\n]*", "/\\*[\\s\\S]*?\\*/" };
+        final String[] commentPatterns = new String[]{"--(?!.*\\*/).*?[\r\n]", "/\\*(.|\r|\n)*?\\*/"};
 
         for (int i = 0; i < commentPatterns.length; i++) {
             sql1 = sql1.replaceAll(commentPatterns[i], "");
