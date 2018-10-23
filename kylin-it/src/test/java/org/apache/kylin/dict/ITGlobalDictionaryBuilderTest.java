@@ -18,20 +18,21 @@
 
 package org.apache.kylin.dict;
 
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import org.junit.rules.ExpectedException;
 
 public class ITGlobalDictionaryBuilderTest extends HBaseMetadataTestCase {
     private DictionaryInfo dictionaryInfo;
@@ -48,8 +49,12 @@ public class ITGlobalDictionaryBuilderTest extends HBaseMetadataTestCase {
         staticCleanupTestMetadata();
     }
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     private void cleanup() {
-        String BASE_DIR = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict" + dictionaryInfo.getResourceDir() + "/";
+        String BASE_DIR = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict"
+                + dictionaryInfo.getResourceDir() + "/";
         Path basePath = new Path(BASE_DIR);
         try {
             HadoopUtil.getFileSystem(basePath).delete(basePath, true);
@@ -77,16 +82,33 @@ public class ITGlobalDictionaryBuilderTest extends HBaseMetadataTestCase {
         Dictionary<String> dict = builder.build();
 
         for (int i = 0; i < 10000; i++) {
-            assertNotEquals(-1, dict.getIdFromValue("t1_" + i));
+            Assert.assertNotEquals(-1, dict.getIdFromValue("t1_" + i));
         }
         for (int i = 0; i < 10; i++) {
-            assertNotEquals(-1, dict.getIdFromValue("t2_" + i));
+            Assert.assertNotEquals(-1, dict.getIdFromValue("t2_" + i));
         }
         for (int i = 0; i < 100000; i++) {
-            assertNotEquals(-1, dict.getIdFromValue("t3_" + i));
+            Assert.assertNotEquals(-1, dict.getIdFromValue("t3_" + i));
         }
 
-        assertEquals(110011, dict.getIdFromValue("success"));
+        Assert.assertEquals(110011, dict.getIdFromValue("success"));
+    }
+
+    @Test
+    public void testBuildGlobalDictFailed() throws IOException {
+        thrown.expect(IOException.class);
+        thrown.expectMessage("read failed.");
+
+        GlobalDictionaryBuilder builder = new GlobalDictionaryBuilder();
+        try {
+            DictionaryGenerator.buildDictionary(builder, dictionaryInfo, new ErrorDictionaryValueEnumerator());
+        } catch (Throwable e) {
+            DistributedLock lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
+            String lockPath = "/dict/" + dictionaryInfo.getSourceTable() + "_" + dictionaryInfo.getSourceColumn()
+                    + "/lock";
+            Assert.assertFalse(lock.isLocked(lockPath));
+            throw e;
+        }
     }
 
     private class SharedBuilderThread extends Thread {
@@ -116,6 +138,28 @@ public class ITGlobalDictionaryBuilderTest extends HBaseMetadataTestCase {
                 finishLatch.countDown();
             } catch (IOException e) {
             }
+        }
+    }
+
+    private class ErrorDictionaryValueEnumerator implements IDictionaryValueEnumerator {
+        private int idx = 0;
+
+        @Override
+        public String current() throws IOException {
+            return null;
+        }
+
+        @Override
+        public boolean moveNext() throws IOException {
+            idx++;
+            if (idx == 1)
+                throw new IOException("read failed.");
+            return true;
+        }
+
+        @Override
+        public void close() throws IOException {
+
         }
     }
 }
