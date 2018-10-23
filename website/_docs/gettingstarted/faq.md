@@ -10,10 +10,6 @@ since: v0.6.x
 
   * No, Kylin is an OLAP engine with SQL interface. The SQL queries need be matched with the pre-defined OLAP model.
 
-#### How to compare Kylin with other SQL engines like Hive, Presto, Spark SQL, Impala?
-
-  * They answer a query in different ways. Kylin is not a replacement for them, but a supplement (query accelerator). Many users run Kylin together with other SQL engines. For the high frequent query patterns, building Cubes can greatly improve the performance and also offload cluster workloads. For less queried patterns or ad-hoc queries, ther MPP engines are more flexible.
-
 #### What's a typical scenario to use Apache Kylin?
 
   * Kylin can be the best option if you have a huge table (e.g., >100 million rows), join with lookup tables, while queries need be finished in the second level (dashboards, interactive reports, business intelligence, etc), and the concurrent users can be dozens or hundreds.
@@ -30,6 +26,10 @@ since: v0.6.x
 
   * It depends on a couple of factors, for example, dimension/measure number, dimension cardinality, cuboid number, compression algorithm, etc. You can optimize the cube expansion in many ways to control the size.
 
+#### How to compare Kylin with other SQL engines like Hive, Presto, Spark SQL, Impala?
+
+  * They answer a query in different ways. Kylin is not a replacement for them, but a supplement (query accelerator). Many users run Kylin together with other SQL engines. For the high frequent query patterns, building Cubes can greatly improve the performance and also offload cluster workloads. For less queried patterns or ad-hoc queries, ther MPP engines are more flexible.
+  
 #### How to compare Kylin with Druid?
 
   * Druid is more suitable for real-time analysis. Kylin is more focus on OLAP case. Druid has good integration with Kafka as real-time streaming; Kylin fetches data from Hive or Kafka in batches. The real-time capability of Kylin is still under development.
@@ -82,9 +82,18 @@ But if you do want, there are some workarounds. 1) Add the primary key as a dime
 
   * Yes, but they are private APIs, incline to change over versions (without notification). By design, Kylin expects the user to create a new project/model/cube in Kylin's web GUI.
 
+#### How to define a snowflake model(with two fact tables)?
+
+  * In the snowflake model, there is only one fact table also. But you could define lookup table joins with another lookup table.
+  * If the query pattern between your two "fact" tables is fixed, just like factA left join with factB. You could define factB as a lookup table and skip the snapshot for this huge lookup table.
+
 #### Where does the cube locate, can I directly read cube from HBase without going through Kylin API?
 
   * Cube is stored in HBase. Each cube segment is an HBase table. The dimension values will be composed as the row key. The measures will be serialized in columns. To improve the storage efficiency, both dimension and measure values will be encoded to bytes. Kylin will decode the bytes to origin values after fetching from HBase. Without Kylin's metadata, the HBase tables are not readable.
+
+#### How to design a cube?
+
+  * Please check: [https://www.slideshare.net/YangLi43/design-cube-in-apache-kylin]()
 
 #### How to encrypt cube data?
 
@@ -94,6 +103,14 @@ But if you do want, there are some workarounds. 1) Add the primary key as a dime
 
   * Kylin doesn't have a built-in scheduler for this. You can trigger that through Rest API from external scheduler services, like Linux cron job, Apache Airflow, etc.
 
+#### How to export/import cube/project across different Kylin environments?
+
+  * Please check: [http://kylin.apache.org/docs/howto/howto_use_cli.html]()
+
+#### How to view kylin cube's hbase table without encoding?
+
+  * To view the origin data, please use SQL to query Kylin. Kylin will convert the SQL query to HBase access and then decode the data. You can use Rest API, JDBC, ODBC drivers to connect with Kylin.
+  
 #### Does Kylin support Hadoop 3 and HBase 2.0?
 
   * From v2.5.0, Kylin will provide a binary package for Hadoop 3 and HBase 2.
@@ -308,13 +325,3 @@ vi ./tomcat/webapps/kylin/WEB-INF/classes/kylinSecurity.xml
   * The data in 'hdfs-working-dir' ('hdfs:///kylin/kylin_metadata/' by default) includes intermediate files (will be GC) and Cuboid data (won't be GC). The Cuboid data is kept for the further segments' merge, as Kylin couldn't merge from HBase. If you're sure those segments won't be merged, you can move them to other paths or even delete.
 
   * Please pay attention to the "resources" sub-folder under 'hdfs-working-dir', which persists some big metadata files like  dictionaries and lookup tables' snapshots. They shouldn't be moved.
-
-#### How to export/import cube/project across different Kylin environments?
-
-  * Please check: [http://kylin.apache.org/docs/howto/howto_use_cli.html]()
-
-#### How to define a snowflake model(with two fact tables)?
-
-  * In the snowflake model, there is only one fact table also. But you could define lookup table joins with another lookup table.
-  * If the query pattern between your two "fact" tables is fixed, just like factA left join with factB. You could define factB as a lookup table and skip the snapshot for this huge lookup table.
-

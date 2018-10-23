@@ -236,6 +236,7 @@ The main configuration file of Kylin.
 | kylin.query.statement-cache-max-num                   | 50000                | Max number for cache query statement                         | Yes                       |
 | kylin.query.statement-cache-max-num-per-key           | 50                   |                                                              | Yes                       |
 | kylin.query.enable-dict-enumerator                    | false                | Whether enable dict enumerator                               | Yes                       |
+| kylin.query.enable-dynamic-column                     | false                |                                                              | No                        |
 | kylin.server.mode                                     | all                  | Kylin node mode: all\|job\|query.                            | No                        |
 | kylin.server.cluster-servers                          | localhost:7070       |                                                              | No                        |
 | kylin.server.cluster-name                             |                      |                                                              | No                        |
