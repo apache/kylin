@@ -39,6 +39,7 @@ import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -152,6 +153,13 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         public void onUnlock(String path, String nodeData) {
             String[] paths = path.split("/");
             String jobId = paths[paths.length - 1];
+
+            // Sync execute cache in case broadcast not available
+            try {
+                executableManager.syncDigestsOfJob(jobId);
+            } catch (PersistentException e) {
+                logger.error("Failed to sync cache of job: " + jobId + ", at server: " + serverName);
+            }
 
             final Output output = executableManager.getOutput(jobId);
             if (output.getState() == ExecutableState.RUNNING) {

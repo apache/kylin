@@ -50,7 +50,7 @@ public class DefaultFetcherRunner extends FetcherRunner {
             }
 
             int nRunning = 0, nReady = 0, nStopped = 0, nOthers = 0, nError = 0, nDiscarded = 0, nSUCCEED = 0;
-            for (final String id : executableManager.getAllJobIds()) {
+            for (final String id : executableManager.getAllJobIdsInCache()) {
                 if (isJobPoolFull()) {
                     return;
                 }
@@ -60,16 +60,16 @@ public class DefaultFetcherRunner extends FetcherRunner {
                     continue;
                 }
 
-                final Output output = executableManager.getOutput(id);
-                if ((output.getState() != ExecutableState.READY)) {
+                final Output outputDigest = executableManager.getOutputDigest(id);
+                if ((outputDigest.getState() != ExecutableState.READY)) {
                     // logger.debug("Job id:" + id + " not runnable");
-                    if (output.getState() == ExecutableState.SUCCEED) {
+                    if (outputDigest.getState() == ExecutableState.SUCCEED) {
                         nSUCCEED++;
-                    } else if (output.getState() == ExecutableState.ERROR) {
+                    } else if (outputDigest.getState() == ExecutableState.ERROR) {
                         nError++;
-                    } else if (output.getState() == ExecutableState.DISCARDED) {
+                    } else if (outputDigest.getState() == ExecutableState.DISCARDED) {
                         nDiscarded++;
-                    } else if (output.getState() == ExecutableState.STOPPED) {
+                    } else if (outputDigest.getState() == ExecutableState.STOPPED) {
                         nStopped++;
                     } else {
                         if (fetchFailed) {
