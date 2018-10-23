@@ -155,6 +155,14 @@ public class ExecutableManager {
         }
     }
 
+    public AbstractExecutable getJobDigest(String uuid) {
+        return parseTo(executableDao.getJobDigest(uuid));
+    }
+
+    public void syncDigestsOfJob(String uuid) throws PersistentException {
+        executableDao.syncDigestsOfJob(uuid);
+    }
+
     public Output getOutput(String uuid) {
         try {
             final ExecutableOutputPO jobOutput = executableDao.getJobOutput(uuid);
@@ -164,6 +172,12 @@ public class ExecutableManager {
             logger.error("fail to get job output:" + uuid, e);
             throw new RuntimeException(e);
         }
+    }
+
+    public Output getOutputDigest(String uuid) {
+        final ExecutableOutputPO jobOutput = executableDao.getJobOutputDigest(uuid);
+        Preconditions.checkArgument(jobOutput != null, "there is no related output for job id:" + uuid);
+        return parseOutput(jobOutput);
     }
 
     private DefaultOutput parseOutput(ExecutableOutputPO jobOutput) {
@@ -284,6 +298,10 @@ public class ExecutableManager {
             logger.error("error reset job status from RUNNING to ERROR", e);
             throw new RuntimeException(e);
         }
+    }
+
+    public List<String> getAllJobIdsInCache() {
+        return executableDao.getJobIdsInCache();
     }
 
     public void resumeAllRunningJobs() {
@@ -437,6 +455,10 @@ public class ExecutableManager {
             logger.error("error change job:" + jobId + " to " + newStatus);
             throw new RuntimeException(e);
         }
+    }
+
+    public void reloadAll() throws IOException {
+        executableDao.reloadAll();
     }
 
     public void forceKillJob(String jobId) {

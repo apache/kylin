@@ -57,8 +57,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static File localMetaDir;
     static String backup;
 
-    static final String jobId1 = "job1" + RandomUtil.randomUUID();
-    static final String jobId2 = "job2" + RandomUtil.randomUUID();
+    static final String jobId1 = RandomUtil.randomUUID().toString();
+    static final String jobId2 = RandomUtil.randomUUID().toString();
     static final String serverName1 = "serverName1";
     static final String serverName2 = "serverName2";
     static final String confDstPath1 = "target/kylin_metadata_dist_lock_test1/kylin.properties";
