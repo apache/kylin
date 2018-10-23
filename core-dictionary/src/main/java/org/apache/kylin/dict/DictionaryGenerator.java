@@ -75,13 +75,19 @@ public class DictionaryGenerator {
         builder.init(dictInfo, baseId, null);
 
         // add values
-        while (valueEnumerator.moveNext()) {
-            String value = valueEnumerator.current();
+        try {
+            while (valueEnumerator.moveNext()) {
+                String value = valueEnumerator.current();
 
-            boolean accept = builder.addValue(value);
+                boolean accept = builder.addValue(value);
 
-            if (accept && samples.size() < nSamples && samples.contains(value) == false)
-                samples.add(value);
+                if (accept && samples.size() < nSamples && samples.contains(value) == false)
+                    samples.add(value);
+            }
+        } catch (IOException e) {
+            logger.error("Error during adding dict value.", e);
+            builder.clear();
+            throw e;
         }
 
         // build
@@ -149,6 +155,12 @@ public class DictionaryGenerator {
 
             return new DateStrDictionary(datePattern, baseId);
         }
+
+
+        @Override
+        public void clear() {
+            // do nothing
+        }
     }
 
     private static class TimeDictBuilder implements IDictionaryBuilder {
@@ -170,6 +182,11 @@ public class DictionaryGenerator {
         @Override
         public Dictionary<String> build() throws IOException {
             return new TimeStrDictionary(); // base ID is always 0
+        }
+
+        @Override
+        public void clear() {
+
         }
     }
 
@@ -196,6 +213,11 @@ public class DictionaryGenerator {
         public Dictionary<String> build() throws IOException {
             return builder.build(baseId);
         }
+
+        @Override
+        public void clear() {
+
+        }
     }
 
     private static class StringTrieDictForestBuilder implements IDictionaryBuilder {
@@ -218,6 +240,11 @@ public class DictionaryGenerator {
         @Override
         public Dictionary<String> build() throws IOException {
             return builder.build();
+        }
+
+        @Override
+        public void clear() {
+
         }
     }
 
@@ -245,6 +272,11 @@ public class DictionaryGenerator {
         public Dictionary<String> build() throws IOException {
             return builder.build(baseId);
         }
+
+        @Override
+        public void clear() {
+
+        }
     }
 
     private static class NumberTrieDictForestBuilder implements IDictionaryBuilder {
@@ -267,6 +299,11 @@ public class DictionaryGenerator {
         @Override
         public Dictionary<String> build() throws IOException {
             return builder.build();
+        }
+
+        @Override
+        public void clear() {
+
         }
     }
 

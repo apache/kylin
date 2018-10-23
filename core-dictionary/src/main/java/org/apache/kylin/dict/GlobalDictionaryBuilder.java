@@ -19,8 +19,8 @@
 package org.apache.kylin.dict;
 
 import java.io.IOException;
-
 import java.util.Locale;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.Dictionary;
@@ -102,6 +102,13 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             lock.unlock(getLockPath(sourceColumn));
         }
         return new AppendTrieDictionary<>();
+    }
+
+    @Override
+    public void clear() {
+        if (lock.isLocked(getLockPath(sourceColumn))) {
+            lock.unlock(getLockPath(sourceColumn));
+        }
     }
 
     private String getLockPath(String pathName) {
