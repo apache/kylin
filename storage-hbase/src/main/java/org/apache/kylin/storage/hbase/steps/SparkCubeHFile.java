@@ -180,7 +180,9 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
 
         //HBase conf
         logger.info("Loading HBase configuration from:" + hbaseConfFile);
-        FSDataInputStream confInput = fs.open(new Path(hbaseConfFile));
+        final Path hbaseConfFilePath = new Path(hbaseConfFile);
+        final FileSystem hbaseClusterFs = hbaseConfFilePath.getFileSystem(sc.hadoopConfiguration());
+        FSDataInputStream confInput = hbaseClusterFs.open(new Path(hbaseConfFile));
 
         Configuration hbaseJobConf = new Configuration();
         hbaseJobConf.addResource(confInput);
@@ -189,7 +191,7 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
 
         FileOutputFormat.setOutputPath(job, new Path(outputPath));
 
-        JavaPairRDD<Text, Text> inputRDDs = SparkUtil.parseInputPath(inputPath, fs, sc, Text.class, Text.class);
+        JavaPairRDD<Text, Text> inputRDDs = SparkUtil.parseInputPath(inputPath, hbaseClusterFs, sc, Text.class, Text.class);
         final JavaPairRDD<RowKeyWritable, KeyValue> hfilerdd;
         if (quickPath) {
             hfilerdd = inputRDDs.mapToPair(new PairFunction<Tuple2<Text, Text>, RowKeyWritable, KeyValue>() {
@@ -241,7 +243,7 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
         // save counter to hdfs
         HadoopUtil.writeToSequenceFile(sc.hadoopConfiguration(), counterPath, counterMap);
 
-        //HadoopUtil.deleteHDFSMeta(metaUrl);
+        HadoopUtil.deleteHDFSMeta(metaUrl);
     }
 
     static class HFilePartitioner extends Partitioner {

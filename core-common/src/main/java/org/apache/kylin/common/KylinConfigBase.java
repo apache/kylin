@@ -1453,7 +1453,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isQueryPreparedStatementCacheEnable() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.statement-cache-enabled", TRUE));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.statement-cache-enabled", "true"));
     }
 
     public int getDimCountDistinctMaxCardinality() {
