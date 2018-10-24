@@ -198,10 +198,12 @@
         </div>
         <div class="form-group large-popover" >
           <h3 style="margin-left:42px">Rowkeys  <i kylinpopover placement="right" title="Rowkey" template="rowkeyTip.html" class="fa fa-info-circle"></i></h3>
-
+          <div style="padding: 0 42px; word-break: normal;">
+            <b>Important: </b>Dimension's positioin on HBase rowkey is critical for performance. You can drag and drop to adjust the sequence. In short, put filtering dimension before non-filtering dimension, and  put high cardinality dimension before low cardinality dimension.
+          </div>
           <div style="margin-left:42px">
               <div class="box-body">
-                <table style="margin-left:42px; width:92%;position:relative"
+                <table style="width:92%;position:relative"
                        ng-if="cubeMetaFrame.rowkey.rowkey_columns.length > 0"
                        class="table table-hover table-bordered list">
                   <thead>
@@ -303,7 +305,7 @@
           <div style="margin-left:42px;">
             <div class="box-body">
               <!-- view mode-->
-              <table ng-if="cubeMetaFrame.mandatory_dimension_set_list.length > 0 && state.mode!=='edit'" class="table table-hover table-bordered list" style="table-layout: fixed;margin-left:42px;width:92%;">
+              <table ng-if="cubeMetaFrame.mandatory_dimension_set_list.length > 0 && state.mode!=='edit'" class="table table-hover table-bordered list" style="table-layout: fixed;width:92%;">
                 <thead>
                   <tr>
                     <th>Cuboids</th>
@@ -318,7 +320,7 @@
                 </tbody>
               </table>
               <!-- edit mode-->
-              <table ng-if="state.mode=='edit'" class="table table-hover table-bordered list" style="table-layout: fixed;margin-left:42px;width:92%;">
+              <table ng-if="state.mode=='edit'" class="table table-hover table-bordered list" style="table-layout: fixed;width:92%;">
                 <thead>
                   <tr>
                     <th>Cuboids</th>
@@ -509,7 +511,7 @@
            <div style="margin-left:42px">
              <!-- edit mode-->
              <div ng-if="state.mode=='edit'" class="box-body">
-               <table class="table table-hover table-bordered list" style="table-layout: fixed;margin-left:42px;width:92%;">
+               <table class="table table-hover table-bordered list" style="table-layout: fixed;width:92%;">
                  <thead>
                    <tr>
                      <th style="width:60%">Snapshot Table</th>
@@ -571,7 +573,7 @@
              </div>
              <!-- view-->
              <div ng-if="state.mode=='view'" class="box-body">
-               <table class="table table-hover table-bordered list" style="table-layout: fixed;margin-left:42px;width:92%;">
+               <table class="table table-hover table-bordered list" style="table-layout: fixed;width:92%;">
                   <thead>
                    <tr>
                      <th style="width:60%">Snapshot Table</th>
