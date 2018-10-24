@@ -23,9 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-
+import java.util.Set;
 import javax.annotation.Nullable;
-
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -67,6 +66,9 @@ public class ProjectService extends BasicService {
 
     @Autowired
     private AclEvaluate aclEvaluate;
+
+    @Autowired
+    private TableService tableService;
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public ProjectInstance createProject(ProjectInstance newProject) throws IOException {
@@ -131,8 +133,11 @@ public class ProjectService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void deleteProject(String projectName, ProjectInstance project) throws IOException {
+        Set<String> tables = project.getTables();
+        for (String table : tables) {
+            tableService.unloadHiveTable(table, projectName);
+        }
         getProjectManager().dropProject(projectName);
-
         accessService.clean(project, true);
     }
 
