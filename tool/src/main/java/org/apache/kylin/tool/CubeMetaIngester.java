@@ -20,6 +20,8 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -28,6 +30,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.ZipFileUtils;
@@ -112,10 +115,9 @@ public class CubeMetaIngester extends AbstractApplication {
             throw new IllegalArgumentException(OPTION_SRC.getArgName() + " file does does exist");
         }
 
-        File tempFolder = File.createTempFile("_unzip", "folder");
+        Path tempPath = Files.createTempDirectory("_unzip");
+        File tempFolder = tempPath.toFile();
         tempFolder.deleteOnExit();
-        tempFolder.delete();
-        tempFolder.mkdir();
         ZipFileUtils.decompressZipfileToDirectory(srcPath, tempFolder);
         if (tempFolder.list().length != 1) {
             throw new IllegalStateException(Arrays.toString(tempFolder.list()));
@@ -182,43 +184,32 @@ public class CubeMetaIngester extends AbstractApplication {
 
         DataModelManager modelManager = DataModelManager.getInstance(kylinConfig);
         for (DataModelDesc dataModelDesc : srcModelManager.listDataModels()) {
-            DataModelDesc existing = modelManager.getDataModelDesc(dataModelDesc.getName());
-            if (existing != null) {
-                if (!forceIngest) {
-                    throw new IllegalStateException("Already exist a model called " + dataModelDesc.getName());
-                } else {
-                    logger.warn("Overwriting the old model desc: " + dataModelDesc.getName());
-                }
-            }
+            checkExesting(modelManager.getDataModelDesc(dataModelDesc.getName()), "model", dataModelDesc.getName());
             requiredResources.add(DataModelDesc.concatResourcePath(dataModelDesc.getName()));
         }
 
         CubeDescManager cubeDescManager = CubeDescManager.getInstance(kylinConfig);
         for (CubeDesc cubeDesc : srcCubeDescManager.listAllDesc()) {
-            CubeDesc existing = cubeDescManager.getCubeDesc(cubeDesc.getName());
-            if (existing != null) {
-                if (!forceIngest) {
-                    throw new IllegalStateException("Already exist a cube desc called " + cubeDesc.getName());
-                } else {
-                    logger.warn("Overwriting the old cube desc: " + cubeDesc.getName());
-                }
-            }
+            checkExesting(cubeDescManager.getCubeDesc(cubeDesc.getName()), "cube desc", cubeDesc.getName());
             requiredResources.add(CubeDesc.concatResourcePath(cubeDesc.getName()));
         }
 
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
         for (CubeInstance cube : srcCubeManager.listAllCubes()) {
-            CubeInstance existing = cubeManager.getCube(cube.getName());
-            if (existing != null) {
-                if (!forceIngest) {
-                    throw new IllegalStateException("Already exist a cube called " + cube.getName());
-                } else {
-                    logger.warn("Overwriting the old cube: " + cube.getName());
-                }
-            }
+            checkExesting(cubeManager.getCube(cube.getName()), "cube", cube.getName());
             requiredResources.add(CubeInstance.concatResourcePath(cube.getName()));
         }
 
+    }
+
+    private void checkExesting(RootPersistentEntity existing, String type, String name) {
+        if (existing != null) {
+            if (!forceIngest) {
+                throw new IllegalStateException("Already exist a " + type + " called " + name);
+            } else {
+                logger.warn("Overwriting the old {0} desc: {1}", type, name);
+            }
+        }
     }
 
     public static void main(String[] args) {
