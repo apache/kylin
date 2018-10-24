@@ -125,6 +125,8 @@ public class CubeManager implements IRealizationProvider {
     private SegmentAssist segAssist = new SegmentAssist();
     private DictionaryAssist dictAssist = new DictionaryAssist();
 
+    private Random ran = new Random();
+
     private CubeManager(KylinConfig cfg) throws IOException {
         logger.info("Initializing CubeManager with config {}", cfg);
         this.config = cfg;
@@ -524,7 +526,6 @@ public class CubeManager implements IRealizationProvider {
         String namePrefix = config.getHBaseTableNamePrefix();
         String namespace = config.getHBaseStorageNameSpace();
         String tableName = "";
-        Random ran = new Random();
         do {
             StringBuffer sb = new StringBuffer();
             if ((namespace.equals("default") || namespace.equals("")) == false) {

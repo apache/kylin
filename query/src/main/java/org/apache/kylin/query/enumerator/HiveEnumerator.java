@@ -62,7 +62,7 @@ public class HiveEnumerator implements Enumerator<Object[]> {
         String url = olapContext.olapSchema.getStarSchemaUrl();
         String user = olapContext.olapSchema.getStarSchemaUser();
         String pwd = olapContext.olapSchema.getStarSchemaPassword();
-        String sql = olapContext.sql;
+        String sql = olapContext.sql.toString();
         Statement stmt = null;
         try {
             conn = DriverManager.getConnection(url, user, pwd);
