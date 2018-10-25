@@ -33,14 +33,14 @@ Kylin 可以在 Hadoop 集群的任意节点上启动。方便起见，您可以
 
 ### Kylin 安装
 
-1. 从 [Apache Kylin下载网站](https://kylin.apache.org/download/) 下载一个适用于您 Hadoop 版本的二进制文件。例如，适用于 HBase 1.x 的 Kylin 2.5.0
+1. 从 [Apache Kylin下载网站](https://kylin.apache.org/download/) 下载一个适用于您 Hadoop 版本的二进制文件。例如，适用于 HBase 1.x 的 Kylin 2.5.0 可通过如下命令行下载得到：
 
 ```shell
 cd /usr/local/
 wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz
 ```
 
-2. 解压 tar 包，配置环境变量 `$KYLIN_HOME` 指向 Kylin 文件夹
+2. 解压 tar 包，配置环境变量 `$KYLIN_HOME` 指向 Kylin 文件夹。
 
 ```shell
 tar -zxvf apache-kylin-2.5.0-bin-hbase1x.tar.gz
