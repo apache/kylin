@@ -40,7 +40,7 @@ cd /usr/local/
 wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz
 ```
 
-2. 解压 tar 包，配置环境变量 `$KYLIN_HOME` 指向 Kylin 文件夹。
+2. 解压 tar 包，配置环境变量 `$KYLIN_HOME` 指向 Kylin 文件夹
 
 ```shell
 tar -zxvf apache-kylin-2.5.0-bin-hbase1x.tar.gz
