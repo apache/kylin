@@ -207,7 +207,7 @@ public class HBaseConnection {
             return;
         }
         Configuration hdfsConf = new Configuration(false);
-        hdfsConf.addResource(hdfsConfigFile);
+        hdfsConf.addResource(new Path(hdfsConfigFile));
         Collection<String> nameServices = hdfsConf.getTrimmedStringCollection(DFSConfigKeys.DFS_NAMESERVICES);
         Collection<String> mainNameServices = conf.getTrimmedStringCollection(DFSConfigKeys.DFS_NAMESERVICES);
         for (String serviceId : nameServices) {
