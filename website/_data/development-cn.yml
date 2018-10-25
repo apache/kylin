@@ -24,6 +24,7 @@
     - howto_test
     - howto_contribute
     - howto_docs
+    - doc_spec
     - howto_package
     - howto_hbase_branches
     - howto_release
