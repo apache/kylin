@@ -93,7 +93,7 @@ But if you do want, there are some workarounds. 1) Add the primary key as a dime
 
 #### How to design a cube?
 
-  * Please check: [https://www.slideshare.net/YangLi43/design-cube-in-apache-kylin]()
+  * Please check: [https://www.slideshare.net/YangLi43/design-cube-in-apache-kylin](https://www.slideshare.net/YangLi43/design-cube-in-apache-kylin)
 
 #### How to encrypt cube data?
 
@@ -105,7 +105,7 @@ But if you do want, there are some workarounds. 1) Add the primary key as a dime
 
 #### How to export/import cube/project across different Kylin environments?
 
-  * Please check: [http://kylin.apache.org/docs/howto/howto_use_cli.html]()
+  * Please check: [http://kylin.apache.org/docs/howto/howto_use_cli.html](http://kylin.apache.org/docs/howto/howto_use_cli.html)
 
 #### How to view kylin cube's hbase table without encoding?
 
@@ -125,7 +125,7 @@ But if you do want, there are some workarounds. 1) Add the primary key as a dime
 
 #### How to query Kylin in Python?
 
-  * Please check: [https://github.com/Kyligence/kylinpy]()
+  * Please check: [https://github.com/Kyligence/kylinpy](https://github.com/Kyligence/kylinpy)
 
 #### How to add dimension/measure to a cube?
 
