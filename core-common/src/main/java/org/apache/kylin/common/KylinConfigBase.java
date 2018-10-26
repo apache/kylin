@@ -746,6 +746,7 @@ abstract public class KylinConfigBase implements Serializable {
         r.put(0, "org.apache.kylin.source.hive.HiveSource");
         r.put(1, "org.apache.kylin.source.kafka.KafkaSource");
         r.put(8, "org.apache.kylin.source.jdbc.JdbcSource");
+        r.put(16, "org.apache.kylin.source.jdbc.extensible.JdbcSource");
         r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.source.provider.")));
         return r;
     }
@@ -1799,5 +1800,9 @@ abstract public class KylinConfigBase implements Serializable {
 
     public int getJdbcResourceStoreMaxCellSize() {
         return Integer.parseInt(getOptional("kylin.metadata.jdbc.max-cell-size", "1048576")); // 1mb
+    }
+
+    public String getJdbcSourceAdaptor() {
+        return getOptional("kylin.source.jdbc.adaptor");
     }
 }

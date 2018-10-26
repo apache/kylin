@@ -36,4 +36,6 @@ public interface ISourceMetadataExplorer {
     List<String> getRelatedKylinResources(TableDesc table);
     
     ColumnDesc[] evalQueryMetadata(String query);
+
+    void validateSQL(String query) throws Exception;
 }

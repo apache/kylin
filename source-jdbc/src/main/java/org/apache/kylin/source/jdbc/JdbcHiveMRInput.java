@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
 package org.apache.kylin.source.jdbc;
 
 import java.util.List;
@@ -96,7 +95,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
          * 6. Pick a column at first glance
          * @return A column reference <code>TblColRef</code>for sqoop split-by
          */
-        private TblColRef determineSplitColumn() {
+        protected TblColRef determineSplitColumn() {
             if (null != flatDesc.getClusterBy()) {
                 return flatDesc.getClusterBy();
             }
@@ -141,7 +140,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
             return DEFAULT_QUEUE;
         }
 
-        private AbstractExecutable createSqoopToFlatHiveStep(String jobWorkingDir, String cubeName) {
+        protected AbstractExecutable createSqoopToFlatHiveStep(String jobWorkingDir, String cubeName) {
             KylinConfig config = getConfig();
             PartitionDesc partitionDesc = flatDesc.getDataModel().getPartitionDesc();
             String partCol = null;

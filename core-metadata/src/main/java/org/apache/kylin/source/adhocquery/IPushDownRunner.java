@@ -49,4 +49,15 @@ public interface IPushDownRunner {
      */
     void executeUpdate(String sql) throws Exception;
 
+    /**
+     * Convert a sql to according to the sql dialect of underlying engine.
+     * @param kylinConfig
+     * @param sql
+     * @param project
+     * @param defaultSchema
+     * @param isPrepare
+     * @return
+     */
+    String convertSql(KylinConfig kylinConfig, String sql, String project, String defaultSchema, boolean isPrepare);
+
 }
