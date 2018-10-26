@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
 package org.apache.kylin.source.jdbc;
 
 import java.nio.charset.StandardCharsets;
@@ -275,6 +274,11 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
                 logger.warn("Failed to clean up temp view of query: {}", query, e);
             }
         }
+    }
+
+    @Override
+    public void validateSQL(String query) throws Exception {
+        executeSQL(query);
     }
 
     private ColumnDesc[] extractColumnFromMeta(ResultSet meta) throws SQLException {

@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.TableMetadataManager;
@@ -216,6 +217,18 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
             } catch (Exception e) {
                 logger.warn("Cannot drop temp view of query: {}", query, e);
             }
+        }
+    }
+
+    @Override
+    public void validateSQL(String query) throws Exception {
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement(query);
+
+        Pair<Integer, String> response = KylinConfig.getInstanceFromEnv().getCliCommandExecutor()
+                .execute(hiveCmdBuilder.toString());
+        if (response.getFirst() != 0) {
+            throw new IllegalArgumentException(response.getSecond());
         }
     }
 

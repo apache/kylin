@@ -18,6 +18,12 @@
 
 package org.apache.kylin.query.adhoc;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.source.adhocquery.AbstractPushdownRunner;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -27,13 +33,7 @@ import java.sql.Types;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.DBUtils;
-import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.source.adhocquery.IPushDownRunner;
-
-public class PushDownRunnerJdbcImpl implements IPushDownRunner {
+public class PushDownRunnerJdbcImpl extends AbstractPushdownRunner {
 
     private JdbcPushDownConnectionManager manager = null;
 

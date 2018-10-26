@@ -239,6 +239,12 @@ public class KafkaSource implements ISource {
             public ColumnDesc[] evalQueryMetadata(String query) {
                 throw new UnsupportedOperationException();
             }
+
+
+            @Override
+            public void validateSQL(String query) throws Exception {
+                throw new UnsupportedOperationException();
+            }
         };
     }
 
