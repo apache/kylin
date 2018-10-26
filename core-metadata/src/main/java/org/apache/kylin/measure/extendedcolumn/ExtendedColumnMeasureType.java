@@ -238,6 +238,11 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
                             truncateWhenUTF8(literal, dataType.getPrecision()).getBytes(StandardCharsets.UTF_8));
                 }
             }
+
+            @Override
+            public void reset() {
+
+            }
         };
     }
 

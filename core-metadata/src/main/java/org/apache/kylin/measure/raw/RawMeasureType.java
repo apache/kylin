@@ -123,6 +123,11 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
                 return valueList;
             }
 
+            @Override
+            public void reset() {
+
+            }
+
             //merge measure dictionary
             @Override
             public List<ByteArray> reEncodeDictionary(List<ByteArray> value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {

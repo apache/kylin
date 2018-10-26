@@ -163,6 +163,11 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             }
 
             @Override
+            public void reset() {
+
+            }
+
+            @Override
             public TopNCounter<ByteArray> reEncodeDictionary(TopNCounter<ByteArray> value, MeasureDesc measureDesc,
                     Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
                 TopNCounter<ByteArray> topNCounter = value;
