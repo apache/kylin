@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.JDBCConnectionManager;
+import org.apache.kylin.common.persistence.JDBCResourceDAO;
 import org.apache.kylin.common.persistence.JDBCResourceStore;
 import org.apache.kylin.common.persistence.JDBCSqlQueryFormat;
 import org.apache.kylin.common.persistence.JDBCSqlQueryFormatProvider;
@@ -88,7 +89,11 @@ public class ITJDBCResourceStoreTest extends HBaseMetadataTestCase {
             statement = conn.createStatement();
             String sql = MessageFormat.format(sqlQueryFormat.getTestDropSql(), mainIdentifier);
             statement.executeUpdate(sql);
+            sql = MessageFormat.format(sqlQueryFormat.getTestDropSql(), mainIdentifier + JDBCResourceDAO.LOG_TABLE_SUFFIX);
+            statement.executeUpdate(sql);
             sql = MessageFormat.format(sqlQueryFormat.getTestDropSql(), copyIdentifier);
+            statement.executeUpdate(sql);
+            sql = MessageFormat.format(sqlQueryFormat.getTestDropSql(), copyIdentifier + JDBCResourceDAO.LOG_TABLE_SUFFIX);
             statement.executeUpdate(sql);
             jdbcConnectable = true;
             ResourceTool.copy(configBackup, kylinConfig);
@@ -250,11 +255,11 @@ public class ITJDBCResourceStoreTest extends HBaseMetadataTestCase {
         long queryNumAfterCopy = store.getQueriedSqlNum();
         JDBCResourceStore resourceStoreCopy = (JDBCResourceStore) ResourceStore.getStore(tmpConfig);
 
-        int executeNum = store.listResources("/execute").size();
-        int executeOutputNum = store.listResources("/execute_output").size();
+        int executeNum = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT).size();
+        int executeOutputNum = store.listResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT).size();
 
-        assertEquals(executeNum, resourceStoreCopy.listResources("/execute").size());
-        assertEquals(executeOutputNum, resourceStoreCopy.listResources("/execute_output").size());
+        assertEquals(executeNum, resourceStoreCopy.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT).size());
+        assertEquals(executeOutputNum, resourceStoreCopy.listResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT).size());
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String startTime = sdf.format(new Date(Long.parseLong(String.valueOf(startTs))));

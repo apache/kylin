@@ -68,13 +68,15 @@ public class JDBCResourceDAO {
 
     private FileSystem redirectFileSystem;
 
+    public static final String LOG_TABLE_SUFFIX = "_log";
+
     public JDBCResourceDAO(KylinConfig kylinConfig, String metadataIdentifier) throws SQLException {
         this.kylinConfig = kylinConfig;
         this.connectionManager = JDBCConnectionManager.getConnectionManager();
         this.jdbcSqlQueryFormat = JDBCSqlQueryFormatProvider
                 .createJDBCSqlQueriesFormat(kylinConfig.getMetadataDialect());
         this.tableNames[0] = metadataIdentifier;
-        this.tableNames[1] = metadataIdentifier + "_log";
+        this.tableNames[1] = metadataIdentifier + LOG_TABLE_SUFFIX;
         for (int i = 0; i < tableNames.length; i++) {
             createTableIfNeeded(tableNames[i]);
             createIndex("IDX_" + META_TABLE_TS, tableNames[i], META_TABLE_TS);
