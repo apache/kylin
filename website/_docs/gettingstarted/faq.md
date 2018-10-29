@@ -91,7 +91,7 @@ But if you do want, there are some workarounds. 1) Add the primary key as a dime
 
   * Cube is stored in HBase. Each cube segment is an HBase table. The dimension values will be composed as the row key. The measures will be serialized in columns. To improve the storage efficiency, both dimension and measure values will be encoded to bytes. Kylin will decode the bytes to origin values after fetching from HBase. Without Kylin's metadata, the HBase tables are not readable.
 
-#### How to design a cube?
+#### What's the best practice to design a cube?
 
   * Please check: [https://www.slideshare.net/YangLi43/design-cube-in-apache-kylin](https://www.slideshare.net/YangLi43/design-cube-in-apache-kylin)
 
