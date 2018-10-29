@@ -14,7 +14,7 @@ kylin.metadata.url=kylin_metadata@hbase
 
 这表明元数据会被保存在一个叫作 “kylin_metadata”的htable 里。你可以在 hbase shell 里 scan 该 htbale 来获取它。
 
-## 使用二进制包来备份 metadata store
+## 使用二进制包来备份 metadata
 
 有时你需要将 Kylin 的 metadata store 从 hbase 备份到磁盘文件系统。在这种情况下，假设你在部署 Kylin 的 hadoop 命令行（或沙盒）里，你可以到KYLIN_HOME并运行：
 
@@ -24,7 +24,7 @@ kylin.metadata.url=kylin_metadata@hbase
 
 来将你的元数据导出到本地目录，这个目录在KYLIN_HOME/metadata_backps下，它的命名规则使用了当前时间作为参数：KYLIN_HOME/meta_backups/meta_year_month_day_hour_minute_second 。
 
-## 使用二进制包来恢复 metatdara store
+## 使用二进制包来恢复 metadata
 
 万一你发现你的元数据被搞得一团糟，想要恢复先前的备份：
 
@@ -38,6 +38,33 @@ kylin.metadata.url=kylin_metadata@hbase
 {% highlight Groff markup %}
 ./bin/metastore.sh restore $KYLIN_HOME/meta_backups/meta_xxxx_xx_xx_xx_xx_xx
 {% endhighlight %}
+
+## 有选择地恢复 metadata (推荐)
+如果只更改了几个元数据文件，管理员只需选择要还原的这些文件，而不必覆盖所有元数据。 与完全恢复相比，这种方法更有效，更安全，因此建议使用。
+
+创建一个新的空目录，然后根据要还原的元数据文件的位置在其中创建子目录; 例如，要恢复多维数据集实例，您应该创建一个“cube”子目录：
+
+{% highlight Groff markup %}
+mkdir /path/to/restore_new
+mkdir /path/to/restore_new/cube
+{% endhighlight %}
+
+将要还原的元数据文件复制到此新目录：
+
+{% highlight Groff markup %}
+cp meta_backups/meta_2016_06_10_20_24_50/cube/kylin_sales_cube.json /path/to/restore_new/cube/
+{% endhighlight %}
+
+此时，您可以手动修改/修复元数据。
+
+从此目录还原：
+
+{% highlight Groff markup %}
+cd $KYLIN_HOME
+./bin/metastore.sh restore /path/to/restore_new
+{% endhighlight %}
+
+只有在此文件夹中的文件才会上传到Kylin Metastore。 同样，在恢复完成后，单击 Web UI 上的“Reload Metadata”按钮以刷新缓存。
 
 ## 在开发环境备份/恢复元数据
 

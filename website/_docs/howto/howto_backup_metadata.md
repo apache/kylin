@@ -14,7 +14,7 @@ kylin.metadata.url=kylin_metadata@hbase
 
 This indicates that the metadata will be saved as a htable called `kylin_metadata`. You can scan the htable in hbase shell to check it out.
 
-## Backup metadata store with binary package
+## Backup metadata with binary package
 
 Sometimes you need to backup the Kylin's metadata store from hbase to your disk file system.
 In such cases, assuming you're on the hadoop CLI(or sandbox) where you deployed Kylin, you can go to KYLIN_HOME and run :
@@ -25,7 +25,7 @@ In such cases, assuming you're on the hadoop CLI(or sandbox) where you deployed 
 
 to dump your metadata to your local folder a folder under KYLIN_HOME/metadata_backps, the folder is named after current time with the syntax: KYLIN_HOME/meta_backups/meta_year_month_day_hour_minute_second
 
-## Restore metadata store with binary package
+## Restore metadata with binary package
 
 In case you find your metadata store messed up, and you want to restore to a previous backup:
 
@@ -39,6 +39,33 @@ Then upload the backup metadata to Kylin's metadata store:
 {% highlight Groff markup %}
 ./bin/metastore.sh restore $KYLIN_HOME/meta_backups/meta_xxxx_xx_xx_xx_xx_xx
 {% endhighlight %}
+
+## Restore metadata selectively (Recommended)
+If only changes a couple of metadata files, the administrator can just pick these files to restore, without having to cover all the metadata. Compared to the full recovery, this approach is more efficient, more safe, so it is recommended.
+
+Create a new empty directory, and then create subdirectories in it according to the location of the metadata files to restore; for example, to restore a Cube instance, you should create a "cube" subdirectory：
+
+{% highlight Groff markup %}
+mkdir /path/to/restore_new
+mkdir /path/to/restore_new/cube
+{% endhighlight %}
+
+Copy the metadata file to be restored to this new directory:
+
+{% highlight Groff markup %}
+cp meta_backups/meta_2016_06_10_20_24_50/cube/kylin_sales_cube.json /path/to/restore_new/cube/
+{% endhighlight %}
+
+At this point you can use modify/fix the metadata manually.
+
+Restore from this directory:
+
+{% highlight Groff markup %}
+cd $KYLIN_HOME
+./bin/metastore.sh restore /path/to/restore_new
+{% endhighlight %}
+
+Only the files in the folder will be uploaded to Kylin metastore. Similarly, after the recovery is finished, click Reload Metadata button on the Web UI to flush cache.
 
 ## Backup/restore metadata in development env 
 
