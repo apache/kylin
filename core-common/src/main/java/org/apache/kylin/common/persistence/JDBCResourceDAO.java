@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.NavigableSet;
 import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
@@ -43,6 +44,8 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Interner;
+import com.google.common.collect.Interners;
 import com.google.common.collect.Lists;
 
 public class JDBCResourceDAO {
@@ -69,6 +72,7 @@ public class JDBCResourceDAO {
     private FileSystem redirectFileSystem;
 
     public static final String LOG_TABLE_SUFFIX = "_log";
+    private Interner<String> interner = Interners.newStrongInterner();
 
     public JDBCResourceDAO(KylinConfig kylinConfig, String metadataIdentifier) throws SQLException {
         this.kylinConfig = kylinConfig;
@@ -160,7 +164,8 @@ public class JDBCResourceDAO {
         return allResourceName;
     }
 
-    private void listResource(final String tableName, final String folderPath, final TreeSet<String> allResourceName, final boolean recursive) throws SQLException {
+    private void listResource(final String tableName, final String folderPath,
+                              final NavigableSet<String> allResourceName, final boolean recursive) throws SQLException {
         executeSql(new SqlOperation() {
             @Override
             public void execute(Connection connection) throws SQLException {
@@ -278,7 +283,7 @@ public class JDBCResourceDAO {
             @Override
             public void execute(Connection connection) throws SQLException {
                 byte[] content = getResourceDataBytes(resource);
-                synchronized (resource.getPath().intern()) {
+                synchronized (interner.intern(resource.getPath())) {
                     boolean existing = existResource(resource.getPath());
                     String tableName = getMetaTableName(resource.getPath());
                     if (existing) {
@@ -329,7 +334,7 @@ public class JDBCResourceDAO {
         executeSql(new SqlOperation() {
             @Override
             public void execute(Connection connection) throws SQLException {
-                synchronized (resPath.intern()) {
+                synchronized (interner.intern(resPath)) {
                     String tableName = getMetaTableName(resPath);
                     if (!existResource(resPath)) {
                         if (oldTS != 0) {
@@ -460,8 +465,9 @@ public class JDBCResourceDAO {
 
             private boolean checkTableExists(final String tableName, final Connection connection) throws SQLException {
                 final PreparedStatement ps = connection.prepareStatement(getCheckTableExistsSql(tableName));
-                final ResultSet rs = ps.executeQuery();
+                ResultSet rs = null;
                 try {
+                    rs = ps.executeQuery();
                     while (rs.next()) {
                         if (tableName.equals(rs.getString(1))) {
                             return true;
