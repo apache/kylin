@@ -41,7 +41,7 @@ Then upload the backup metadata to Kylin's metadata store:
 {% endhighlight %}
 
 ## Restore metadata selectively (Recommended)
-If only changes a couple of metadata files, the administrator can just pick these files to restore, without having to cover all the metadata. Compared to the full recovery, this approach is more efficient, more safe, so it is recommended.
+If only changes a couple of metadata files, the administrator can just pick these files to restore, without having to cover all the metadata. Compared to the full recovery, this approach is more efficient, safer, so it is recommended.
 
 Create a new empty directory, and then create subdirectories in it according to the location of the metadata files to restore; for example, to restore a Cube instance, you should create a "cube" subdirectory：
 
@@ -56,7 +56,7 @@ Copy the metadata file to be restored to this new directory:
 cp meta_backups/meta_2016_06_10_20_24_50/cube/kylin_sales_cube.json /path/to/restore_new/cube/
 {% endhighlight %}
 
-At this point you can use modify/fix the metadata manually.
+At this point, you can modify/fix the metadata manually.
 
 Restore from this directory:
 
