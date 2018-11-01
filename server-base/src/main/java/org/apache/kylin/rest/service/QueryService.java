@@ -375,7 +375,7 @@ public class QueryService extends BasicService {
         // project not found
         ProjectManager mgr = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
         if (mgr.getProject(sqlRequest.getProject()) == null) {
-            throw new BadRequestException(msg.getPROJECT_NOT_FOUND());
+            throw new BadRequestException(String.format(Locale.ROOT, msg.getPROJECT_NOT_FOUND(), sqlRequest.getProject()));
         }
         if (StringUtils.isBlank(sqlRequest.getSql())) {
             throw new BadRequestException(msg.getNULL_EMPTY_SQL());
