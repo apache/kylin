@@ -135,6 +135,10 @@ When the new cube is built, please disable or drop the old one.
 
 If you can accept the absence of new dimensions for historical data, you can build the new cube since the end time of the old cube. And then create a hybrid model over the old and new cube.
 
+#### How to solve the data security problem of Tableau connection client?
+  
+  * Kylin's ACL control can solve this problem. Different analysts have the authority to work on different projects for Kylin. When you create a Kylin ODBC DSN, you can map different links to different analyst accounts.
+
 #### The query result is not exactly matched with that in Hive, what's the possible reason?
 
   * Possible reasons:

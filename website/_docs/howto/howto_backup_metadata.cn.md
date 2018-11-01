@@ -73,14 +73,14 @@ cd $KYLIN_HOME
 ## 从 metadata store 清理无用的资源
 随着运行时间增长，类似字典、表快照的资源变得没有用（cube segment被丢弃或者合并了），但是它们依旧占用空间，你可以运行命令来找到并清除它们：
 
-首先，运行一个检查，这是安全的因为它不会改变任何东西：
+首先，运行一个检查，这是安全的因为它不会改变任何东西，通过添加 "--jobThreshold 30(默认值，您可以改为任何数字)" 参数，您可以设置要保留的 metadata resource 天数：
 {% highlight Groff markup %}
-./bin/metastore.sh clean
+./bin/metastore.sh clean --jobThreshold 30
 {% endhighlight %}
 
 将要被删除的资源会被列出来：
 
 接下来，增加 “--delete true” 参数来清理这些资源；在这之前，你应该确保已经备份 metadata store：
 {% highlight Groff markup %}
-./bin/metastore.sh clean --delete true
+./bin/metastore.sh clean --delete true --jobThreshold 30
 {% endhighlight %}
