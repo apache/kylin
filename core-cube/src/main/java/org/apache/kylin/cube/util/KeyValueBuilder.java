@@ -56,7 +56,7 @@ public class KeyValueBuilder implements Serializable {
         }
     }
 
-    protected boolean isNull(String v) {
+    public boolean isNull(String v) {
         return nullStrs.contains(v);
     }
 
