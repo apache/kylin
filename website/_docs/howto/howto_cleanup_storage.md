@@ -19,4 +19,9 @@ Here please replace (version) with the specific Kylin jar version in your instal
 {% highlight Groff markup %}
 ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.StorageCleanupJob --delete true
 {% endhighlight %}
-On finish, the intermediate HDFS location and HTables should be dropped;
+On finish, the intermediate Hive tables, HDFS location and HTables should be dropped;
+3. If you want to delete all resources, then add the "--force true" option to start the cleanup:
+{% highlight Groff markup %}
+${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.StorageCleanupJob --force true --delete true
+{% endhighlight %}
+On finish, all the intermediate Hive tables, HDFS location and HTables should be dropped;

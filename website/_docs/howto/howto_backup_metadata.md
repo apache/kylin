@@ -74,14 +74,14 @@ When developing/debugging Kylin, typically you have a dev machine with an IDE, a
 ## Cleanup unused resources from metadata store
 As time goes on, some resources like dictionary, table snapshots became useless (as the cube segment be dropped or merged), but they still take space there; You can run command to find and cleanup them from metadata store:
 
-Firstly, run a check, this is safe as it will not change anything:
+Firstly, run a check, this is safe as it will not change anything, you can set the number of days to keep metadata resource by adding the "--jobThreshold 30(default, you can change to any number)" option:
 {% highlight Groff markup %}
-./bin/metastore.sh clean
+./bin/metastore.sh clean --jobThreshold 30
 {% endhighlight %}
 
 The resources that will be dropped will be listed;
 
 Next, add the "--delete true" parameter to cleanup those resources; before this, make sure you have made a backup of the metadata store;
 {% highlight Groff markup %}
-./bin/metastore.sh clean --delete true
+./bin/metastore.sh clean --delete true --jobThreshold 30
 {% endhighlight %}
