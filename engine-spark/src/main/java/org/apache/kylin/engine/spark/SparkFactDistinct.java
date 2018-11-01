@@ -58,6 +58,7 @@ import org.apache.kylin.cube.DimensionRangeInfo;
 import org.apache.kylin.cube.cuboid.CuboidUtil;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
+import org.apache.kylin.cube.util.KeyValueBuilder;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IDictionaryBuilder;
 import org.apache.kylin.engine.EngineFactory;
@@ -238,6 +239,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         private Map<Integer, DimensionRangeInfo> dimensionRangeInfoMap;
         private ByteBuffer tmpbuf;
         private LongAccumulator bytesWritten;
+        private KeyValueBuilder keyValueBuilder;
 
         public FlatOutputFucntion(String cubeName, String segmentId, String metaurl, SerializableConfiguration conf, int samplingPercent, LongAccumulator bytesWritten) {
             this.cubeName = cubeName;
@@ -259,6 +261,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                 CubeJoinedFlatTableEnrich intermediateTableDesc = new CubeJoinedFlatTableEnrich(
                         EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
 
+                keyValueBuilder = new KeyValueBuilder(intermediateTableDesc);
                 reducerMapping = new FactDistinctColumnsReducerMapping(cubeInstance);
                 tmpbuf = ByteBuffer.allocate(4096);
 
@@ -304,7 +307,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
                 for (int i = 0; i < allCols.size(); i++) {
                     String fieldValue = row[columnIndex[i]];
-                    if (fieldValue == null)
+                    if (fieldValue == null || keyValueBuilder.isNull(fieldValue))
                         continue;
 
                     final DataType type = allCols.get(i).getType();
