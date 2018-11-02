@@ -18,9 +18,10 @@
 
 package org.apache.kylin.common.util;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -39,8 +40,8 @@ public class HiveCmdBuilder {
     }
 
     private KylinConfig kylinConfig;
-    final private Map<String, String> hiveConfProps;
-    final private ArrayList<String> statements = Lists.newArrayList();
+    private final Map<String, String> hiveConfProps;
+    private final List<String> statements = Lists.newArrayList();
 
     public HiveCmdBuilder() {
         kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -61,7 +62,7 @@ public class HiveCmdBuilder {
             }
         }
 
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         switch (clientMode) {
         case CLI:
@@ -76,7 +77,7 @@ public class HiveCmdBuilder {
             String tmpHqlPath = null;
             StringBuilder hql = new StringBuilder();
             try {
-                tmpHqlPath = "/tmp/" + System.currentTimeMillis() + ".hql";
+                tmpHqlPath = "/tmp/" + UUID.randomUUID().toString() + ".hql";
                 for (String statement : statements) {
                     hql.append(statement);
                     hql.append("\n");
@@ -95,12 +96,12 @@ public class HiveCmdBuilder {
                 buf.append(";exit $ret_code");
             } finally {
                 if (tmpHqlPath != null && logger.isDebugEnabled()) {
-                    logger.debug("The SQL to execute in beeline: \n" + hql);
+                    logger.debug("The SQL to execute in beeline: {} \n", hql);
                 }
             }
             break;
         default:
-            throw new RuntimeException("Hive client cannot be recognized: " + clientMode);
+            throw new IllegalArgumentException("Hive client cannot be recognized: " + clientMode);
         }
 
         return buf.toString();
