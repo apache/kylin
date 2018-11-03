@@ -110,7 +110,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
      *          continuum
      * @param alg The hash algorithm to use when choosing a node in the Ketama
      *          consistent hash continuum
-     * @param weights node weights for ketama, a map from InetSocketAddress to
+     * @param nodeWeights node weights for ketama, a map from InetSocketAddress to
      *          weight as Integer
      * @param configuration node locator configuration
      */
@@ -233,7 +233,7 @@ public final class RefinedKetamaNodeLocator extends SpyObject implements NodeLoc
             if (isWeightedKetama) {
 
                 int thisWeight = weights.get(node.getSocketAddress());
-                float percent = (float) thisWeight / (float) totalWeight;
+                float percent = (totalWeight == 0 ? 0f : (float) thisWeight / (float) totalWeight);
                 int pointerPerServer = (int) ((Math.floor(
                         (float) (percent * (float) config.getNodeRepetitions() / 4 * (float) nodeCount + 0.0000000001)))
                         * 4);
