@@ -1368,7 +1368,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public long getLazyQueryWaitingTimeoutMilliSeconds() {
-        return Long.parseLong(getOptional("kylin.query.lazy-query-waiting-timeout-milliseconds", "60000L"));
+        return Long.parseLong(getOptional("kylin.query.lazy-query-waiting-timeout-milliseconds", "60000"));
     }
 
     public int getQueryConcurrentRunningThresholdForProject() {
