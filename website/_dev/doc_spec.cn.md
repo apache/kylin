@@ -49,7 +49,7 @@ permalink: /cn/development/doc_spec.html
   使用代码段标记**所有用户需要执行的 shell 命令和 config 配置**，统一格式且需要足够凸显。如：
 
   1. shell 命令
-  \`\`\`shell
+  \`\`\`sh
   $KYLIN_HOME/bin/kylin.sh start
   \`\`\`
 
