@@ -6,52 +6,34 @@ permalink: /docs/install/kylin_cluster.html
 ---
 
 
-### Kylin Server modes
+Kylin instances are stateless services, and runtime state information is stored in the HBase metastore. For load balancing purposes, you can enable multiple Kylin instances that share a metastore, so that each node shares query pressure and backs up each other, improving service availability. The following figure depicts a typical scenario for Kylin cluster mode deployment:
+![](/images/install/kylin_server_modes.png)
 
-Kylin instances are stateless, the runtime state is saved in its metadata store in HBase (specified by `kylin.metadata.url` in `conf/kylin.properties`). For load balance considerations it is recommended to run multiple Kylin instances sharing the same metadata store, thus they share the same state on table schemas, job status, Cube status, etc.
 
-Each of the Kylin instance has a "kylin.server.mode" entry in `conf/kylin.properties` specifying the runtime mode, it has three options: 
 
- *  **job** : run job engine in this instance; Kylin job engine manages the jobs to cluster;
- *  **query** : run query engine only; Kylin query engine accepts and answers your SQL queries;
- *  **all** : run both job engine and query engines in this instance. 
+### Kylin Node Configuration
 
- By default only one instance can run the job engine ("all" or "job" mode), the others should be in the "query" mode. 
+If you need to cluster multiple Kylin nodes, make sure they use the same Hadoop cluster, HBase cluster. Then do the following steps in each node's configuration file `$KYLIN_HOME/conf/kylin.properties`:
 
- If you want to run multiple job engines to get high availability or handle heavy concurrent jobs, please check "Enable multiple job engines" in [Advanced settings](advance_settings.html) page.
+1. Configure the same `kylin.metadata.url` value to configure all Kylin nodes to use the same HBase metastore.
+2. Configure the Kylin node list `kylin.server.cluster-servers`, including all nodes (the current node is also included). When the event changes, the node receiving the change needs to notify all other nodes (the current node is also included).
+3. Configure the running mode `kylin.server.mode` of the Kylin node. Optional values include `all`, `job`, `query`. The default value is *all*.
+The *job* mode means that the service is only used for task scheduling, not for queries; the *query* pattern means that the service is only used for queries, not for scheduling tasks; the *all* pattern represents the service for both task scheduling and queries.
+> *Note*:  By default, only *one instance* is used for the scheduling of the build job (ie `kylin.server.mode` is set to `all` or `job`), if you need to configure multiple Nodes as job mode to meet high-availability and high-concurrency requirements, please refer to the *Job Engine High Availability* section of the [Kylin Settings](/docs/install/configuration.html) page.
 
-A typical scenario is depicted in the following chart:
 
-![]( /images/install/kylin_server_modes.png)
 
-### Configure Multiple Kylin Servers
+### Installing a load balancer
 
-If you are running Kylin in a cluster where you have multiple Kylin server instances, please make sure you have the following property correctly configured in `conf/kylin.properties` for EVERY instance (both job and query).
+To send query requests to a cluster instead of a single node, you can deploy a load balancer such as [Nginx](http://nginx.org/en/), [F5](https://www.f5.com/) or [cloudlb](https://rubygems.org/gems/cloudlb/), etc., so that the client and load balancer communication instead communicate with a specific Kylin instance.
 
- *  `kylin.rest.servers`
-	List of servers in use, this enables one instance to notify other servers when there is event change. For example: 
 
-```
-kylin.rest.servers=host1:7070,host2:7070
-```
 
- *  `kylin.server.mode`
-	By default, only one instance whose `kylin.server.mode` is set to "all" or "job", the others be "query"
+### Read and write separation deployment
 
-```
-kylin.server.mode=all
-```
+For better stability and optimal performance, it is recommended to perform a read-write separation deployment, deploying Kylin on two clusters as follows:
 
-### Setup Load Balancer 
+* A Hadoop cluster used to *Cube build*, which can be a large cluster shared with other applications;
+* An HBase cluster used to *SQL query*. Usually this cluster is configured for Kylin. The number of nodes does not need to be as many as Hadoop clusters. HBase configuration can be optimized for Kylin Cube read-only features.
 
-To enable Kylin service high availability, you need setup a load balancer in front of these servers, letting it routes the incoming requests to the cluster. Client side communicates with the load balancer, instead of with a specific Kylin instance. The setup of load balancer is out of the scope; you may select an implementation like Nginx, F5 or cloud LB service. 
-	
-
-### Configure Read/Write separated deployment
-
-Kylin can work with two clusters to gain better stability and performance:
-
- * A Hadoop cluster for Cube building; This can be a shared, large cluster.
- * A HBase cluster for SQL queries; Usually this is a dedicated cluster with less nodes. The HBase configurations can be tuned for better read performance as Cubes are immutable after built.  
-
-This deployment has been adopted and verified by many large companies. It is the best solution for production deployment as we know. For how to do this, please refer to [Deploy Apache Kylin with Standalone HBase Cluster](/blog/2016/06/10/standalone-hbase-cluster/)
+This deployment strategy is the best deployment solution for the production environment. For how to perform read-write separation deployment, please refer to [Deploy Apache Kylin with Standalone HBase Cluster](/blog/2016/06/10/standalone-hbase-cluster/) .

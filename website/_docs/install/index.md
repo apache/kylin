@@ -5,74 +5,96 @@ categories: install
 permalink: /docs/install/index.html
 ---
 
-## Software requirements
+### Software Requirements
 
 * Hadoop: 2.7+, 3.1+ (since v2.5)
 * Hive: 0.13 - 1.2.1+
 * HBase: 1.1+, 2.0 (since v2.5)
-* Spark 2.1.1+
+* Spark (optional) 2.1.1+
+* Kafka (optional) 0.10.0+
 * JDK: 1.8+ (since v2.5)
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
 
-Tested with Hortonworks HDP 2.4 - 2.6 and 3.0, Cloudera CDH 5.7 - 5.11 and 6.0, AWS EMR 5.7 - 5.10, Azure HDInsight 3.5 - 3.6.
+Tests passed on Hortonworks HDP 2.2-2.6 and 3.0, Cloudera CDH 5.7-5.11 and 6.0, AWS EMR 5.7-5.10, Azure HDInsight 3.5-3.6.
 
-For trial and development purpose, we recommend you try Kylin with an all-in-one sandbox VM, like [Hortonworks HDP sandbox](http://hortonworks.com/products/hortonworks-sandbox/), and give it 10 GB memory. We suggest you using bridged mode instead of NAT mode in Virtual Box settings. 
-
-## Hardware requirements
-
-The server to run Kylin need 4 core CPU, 16 GB memory and 100 GB disk as the minimal configuration. For high workload scenario, 24 core CPU, 64 GB memory or more is recommended.
+We recommend you to try out Kylin or develop it using the integrated sandbox, such as [HDP sandbox](http://hortonworks.com/products/hortonworks-sandbox/), and make sure it has at least 10 GB of memory. When configuring a sandbox, we recommend that you use the Bridged Adapter model instead of the NAT model.
 
 
-## Hadoop Environment
 
-Kylin depends on Hadoop cluster to process the massive data set. You need prepare a well configured Hadoop cluster for Kylin to run, with the common services includes HDFS, YARN, MapReduce, Hive, HBase, Zookeeper and other services. It is most common to install Kylin on a Hadoop client machine, from which Kylin can talk with the Hadoop cluster via command lines including `hive`, `hbase`, `hadoop`, etc. 
+### Hardware Requirements
 
-Kylin itself can be started in any node of the Hadoop cluster. For simplity, you can run it in the master node. But to get better stability, we suggest you to deploy it a pure Hadoop client node, on which the command lines like `hive`, `hbase`, `hadoop`, `hdfs` already be installed and the client congfigurations (core-site.xml, hive-site.xml, hbase-site.xml, etc) are properly configured and will be automatically synced with other nodes. The Linux account that running Kylin has the permission to access the Hadoop cluster, including create/write HDFS folders, hive tables, hbase tables and submit MR jobs. 
+The minimum configuration of a server running Kylin is 4 core CPU, 16 GB RAM and 100 GB disk. For high-load scenarios, a 24-core CPU, 64 GB RAM or higher is recommended.
 
-## Installation Kylin
 
- * Download a version of Kylin binaries for your Hadoop version from a closer Apache download site. For example, Kylin 2.3.1 for HBase 1.x from US:
-{% highlight Groff markup %}
-cd /usr/local
-wget http://www-us.apache.org/dist/kylin/apache-kylin-2.3.1/apache-kylin-2.3.1-hbase1x-bin.tar.gz
-{% endhighlight %}
- * Uncompress the tarball and then export KYLIN_HOME pointing to the Kylin folder
-{% highlight Groff markup %}
-tar -zxvf apache-kylin-2.3.1-hbase1x-bin.tar.gz
-cd apache-kylin-2.3.1-bin
-export KYLIN_HOME=`pwd`
-{% endhighlight %}
- * Make sure the user has the privilege to run hadoop, hive and hbase cmd in shell. If you are not so sure, you can run `$KYLIN_HOME/bin/check-env.sh`, it will print out the detail information if you have some environment issues. If no error, that means the environment is ready.
-{% highlight Groff markup %}
--bash-4.1# $KYLIN_HOME/bin/check-env.sh
+
+### Hadoop Environment
+
+Kylin relies on Hadoop clusters to handle large data sets. You need to prepare a Hadoop cluster with HDFS, YARN, MapReduce, Hive, HBase, Zookeeper and other services for Kylin to run.
+Kylin can be launched on any node in a Hadoop cluster. For convenience, you can run Kylin on the master node. For better stability, it is recommended to deploy Kylin on a clean Hadoop client node with Hive, HBase, HDFS and other command lines installed and client configuration (such as `core-site.xml`, `hive-site.xml`, `hbase-site.xml` and others) are also reasonably configured and can be automatically synchronized with other nodes.
+
+Linux accounts running Kylin must have access to the Hadoop cluster, including the permission to create/write HDFS folders, Hive tables, HBase tables, and submit MapReduce tasks.
+
+
+
+### Kylin Installation
+
+1. Download a binary package for your Hadoop version from the [Apache Kylin Download Site](https://kylin.apache.org/download/). For example, Kylin 2.5.0 for HBase 1.x can be downloaded from the following command line:
+
+```shell
+Cd /usr/local/
+Wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz
+```
+
+2. Unzip the tarball and configure the environment variable `$KYLIN_HOME` to the Kylin folder.
+
+```shell
+Tar -zxvf apache-kylin-2.5.0-bin-hbase1x.tar.gz
+Cd apache-kylin-2.5.0-bin-hbase1x
+Export KYLIN_HOME=`pwd`
+```
+
+
+
+### Checking the operating environment
+
+Kylin runs on a Hadoop cluster and has certain requirements for the version, access rights, and CLASSPATH of each component. To avoid various environmental problems, you can run the script, `$KYLIN_HOME/bin/check-env.sh` to have a test on your environment, if there are any problems with your environment, the script will print a detailed error message. If there is no error message, it means that your environment is suitable for Kylin to run.
+
+
+
+### Start Kylin
+
+Run the script, `$KYLIN_HOME/bin/kylin.sh start` , to start Kylin. The interface output is as follows:
+
+```
 Retrieving hadoop conf dir...
-KYLIN_HOME is set to /usr/local/apache-kylin-2.3.1-bin
--bash-4.1#
-{% endhighlight %}
- * Start Kylin, run `$KYLIN_HOME/bin/kylin.sh start`, after the server starts, you can watch `$KYLIN_HOME/logs/kylin.log` for runtime logs;
-{% highlight Groff markup %}
--bash-4.1# $KYLIN_HOME/bin/kylin.sh start
-Retrieving hadoop conf dir...
-KYLIN_HOME is set to /usr/local/apache-kylin-2.3.1-bin
-Retrieving hive dependency...
-Retrieving hbase dependency...
-Retrieving hadoop conf dir...
-Retrieving kafka dependency...
-Retrieving Spark dependency...
-...
+KYLIN_HOME is set to /usr/local/apache-kylin-2.5.0-bin-hbase1x
+......
 A new Kylin instance is started by root. To stop it, run 'kylin.sh stop'
-Check the log at /usr/local/apache-kylin-2.3.1-bin/logs/kylin.log
+Check the log at /usr/local/apache-kylin-2.5.0-bin-hbase1x/logs/kylin.log
 Web UI is at http://<hostname>:7070/kylin
--bash-4.1#
-{% endhighlight %}
- * After Kylin started you can visit <http://hostname:7070/kylin> in your web browser. The initial username/password is ADMIN/KYLIN. 
- * To stop Kylin, run `$KYLIN_HOME/bin/kylin.sh stop`
-{% highlight Groff markup %}
--bash-4.1# $KYLIN_HOME/bin/kylin.sh stop
-Retrieving hadoop conf dir... 
-KYLIN_HOME is set to /usr/local/apache-kylin-2.3.1-bin
-Stopping Kylin: 7014
-Kylin with pid 7014 has been stopped.
-{% endhighlight %}
+```
 
 
+
+### Using Kylin
+
+Once Kylin is launched, you can access it via the browser `http://<hostname>:7070/kylin` with
+specifying `<hostname>` with IP address or domain name, and the default port is 7070.
+The initial username and password are `ADMIN/KYLIN`.
+After the server is started, you can view the runtime log, `$KYLIN_HOME/logs/kylin.log`.
+
+
+
+### Stop Kylin
+
+Run the `$KYLIN_HOME/bin/kylin.sh stop` script to stop Kylin. The console output is as follows:
+
+```
+Retrieving hadoop conf dir...
+KYLIN_HOME is set to /usr/local/apache-kylin-2.5.0-bin-hbase1x
+Stopping Kylin: 25964
+Stopping in progress. Will check after 2 secs again...
+Kylin with pid 25964 has been stopped.
+```
+
+You can run `ps -ef | grep kylin` to see if the Kylin process has stopped.

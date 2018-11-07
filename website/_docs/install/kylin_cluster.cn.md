@@ -16,7 +16,7 @@ Kylin 实例是无状态的服务，运行时的状态信息存储在 HBase meta
 
 1. 配置相同的 `kylin.metadata.url` 值，即配置所有的 Kylin 节点使用同一个 HBase metastore。
 2. 配置 Kylin 节点列表 `kylin.server.cluster-servers`，包括所有节点（包括当前节点），当事件变化时，接收变化的节点需要通知其他所有节点（包括当前节点）。
-3. 配置 Kylin 节点的运行模式 `kylin.server.mode`，参数值可选 `all`, `job`, `query` 中的一个，默认为 `all`。
+3. 配置 Kylin 节点的运行模式 `kylin.server.mode`，参数值可选 `all`, `job`, `query` 中的一个，默认值为 `all`。
 `job` 模式代表该服务仅用于任务调度，不用于查询；`query` 模式代表该服务仅用于查询，不用于构建任务的调度；`all` 模式代表该服务同时用于任务调度和 SQL 查询。
 > **注意：**默认情况下只有**一个实例**用于构建任务的调度 （即 `kylin.server.mode` 设置为 `all` 或者 `job` 模式），如果您需要配置多个节点进行任务构建，以满足高可用和高并发的需求，请参考 [Kylin 设置](/docs/install/configuration.html) 页中的**任务引擎高可用**的内容。
 

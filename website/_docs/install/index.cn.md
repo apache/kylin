@@ -15,13 +15,16 @@ permalink: /cn/docs/install/index.html
 * JDK: 1.8+ (since v2.5)
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
 
-在 Hortonworks HDP 2.2 - 2.6 and 3.0, Cloudera CDH 5.7 - 5.11 and 6.0, AWS EMR 5.7 - 5.10, Azure HDInsight 3.5 - 3.6 上测试通过。
+在 Hortonworks HDP 2.2-2.6 and 3.0, Cloudera CDH 5.7-5.11 and 6.0, AWS EMR 5.7-5.10, Azure HDInsight 3.5-3.6 上测试通过。
 
 我们建议您使用集成的 sandbox 来试用 Kylin 或进行开发，比如 [HDP sandbox](http://hortonworks.com/products/hortonworks-sandbox/)，且要保证其有至少 10 GB 内存。在配置沙箱时，我们推荐您使用 Bridged Adapter 模型替代 NAT 模型。
+
+
 
 ### 硬件要求
 
 运行 Kylin 的服务器的最低配置为 4 core CPU，16 GB 内存和 100 GB 磁盘。 对于高负载的场景，建议使用 24 core CPU，64 GB 内存或更高的配置。
+
 
 
 ### Hadoop 环境
@@ -30,6 +33,8 @@ Kylin 依赖于 Hadoop 集群处理大量的数据集。您需要准备一个配
 Kylin 可以在 Hadoop 集群的任意节点上启动。方便起见，您可以在 master 节点上运行 Kylin。但为了更好的稳定性，我们建议您将 Kylin 部署在一个干净的 Hadoop client 节点上，该节点上 Hive，HBase，HDFS 等命令行已安装好且 client 配置（如 `core-site.xml`，`hive-site.xml`，`hbase-site.xml`及其他）也已经合理的配置且其可以自动和其它节点同步。
 
 运行 Kylin 的 Linux 账户要有访问 Hadoop 集群的权限，包括创建/写入 HDFS 文件夹，Hive 表， HBase 表和提交 MapReduce 任务的权限。 
+
+
 
 ### Kylin 安装
 
@@ -49,9 +54,11 @@ export KYLIN_HOME=`pwd`
 ```
 
 
+
 ### 检查运行环境
 
 Kylin 运行在 Hadoop 集群上，对各个组件的版本、访问权限及 CLASSPATH 等都有一定的要求，为了避免遇到各种环境问题，您可以运行 `$KYLIN_HOME/bin/check-env.sh` 脚本来进行环境检测，如果您的环境存在任何的问题，脚本将打印出详细报错信息。如果没有报错信息，代表您的环境适合 Kylin 运行。
+
 
 
 ### 启动 Kylin
@@ -68,12 +75,14 @@ Web UI is at http://<hostname>:7070/kylin
 ```
 
 
+
 ### 使用 Kylin
 
 Kylin 启动后您可以通过浏览器 `http://<hostname>:7070/kylin` 进行访问。
 其中 `<hostname>` 为具体的机器名、IP 地址或域名，默认端口为 7070。
 初始用户名和密码是 `ADMIN/KYLIN`。
 服务器启动后，您可以通过查看 `$KYLIN_HOME/logs/kylin.log` 获得运行时日志。
+
 
 
 ### 停止 Kylin

@@ -30,7 +30,6 @@
   - install/index
   - install/kylin_cluster
   - install/configuration
-  - install/advance_settings
   - install/kylin_aws_emr
   - install/kylin_docker
   
