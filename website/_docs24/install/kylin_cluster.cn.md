@@ -26,7 +26,7 @@ Kylin 实例是无状态的。其运行时状态存于存储在 HBase (由 `conf
 
 当您在拥有多个 Kylin 服务器实例的集群运行 Kylin 时, 请确保您为每一个实例在 `conf/kylin.properties` 中正确的配置了以下属性。
 
- *  `kylin.rest.servers`
+ *  `kylin.server.cluster-servers`
 	使用中的服务器列表, 当事件变化时，让一个实例去通知其他服务器。例如: 
 
 ```
