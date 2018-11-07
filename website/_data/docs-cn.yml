@@ -21,7 +21,6 @@
   - install/index
   - install/kylin_cluster
   - install/configuration
-  - install/advance_settings
   - install/kylin_aws_emr
   - install/kylin_docker
 
@@ -41,6 +40,7 @@
   - tutorial/use_dashboard
   - tutorial/setup_jdbc_datasource
   - tutorial/hybrid
+  - tutorial/mysql_metastore
 
 - title: 工具集成
   docs:
