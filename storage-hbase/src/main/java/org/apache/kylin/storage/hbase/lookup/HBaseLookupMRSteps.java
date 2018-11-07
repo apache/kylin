@@ -163,7 +163,7 @@ public class HBaseLookupMRSteps {
     }
 
     public void appendMapReduceParameters(StringBuilder buf) {
-        appendMapReduceParameters(buf, JobEngineConfig.DEFAUL_JOB_CONF_SUFFIX);
+        appendMapReduceParameters(buf, JobEngineConfig.DEFAULT_JOB_CONF_SUFFIX);
     }
 
     public void appendMapReduceParameters(StringBuilder buf, String jobType) {
