@@ -49,6 +49,7 @@
   - tutorial/use_dashboard
   - tutorial/setup_jdbc_datasource
   - tutorial/hybrid
+  - tutorial/mysql_metastore
 
 - title: Integration
   docs:
