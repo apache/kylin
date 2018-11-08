@@ -1,52 +1,76 @@
 ---
-layout: docs-cn
-title:  基于 MySQL 的 Metastore 配置
-categories: 教程
-permalink: /cn/docs/tutorial/mysql_metastore.html
+layout: docs
+title:  Use MySQL as Metastore
+categories: tutorial
+permalink: /docs/tutorial/mysql_metastore.html
 since: v2.5.0
 ---
 
-Kylin 支持 MySQL 作为 Metastore 存储。
-> **注意**：该功能还在测试中，建议您谨慎使用*
+Kylin supports MySQL as Metastore.
 
-### 准备工作
-
-1.安装 MySQL 服务，例如 v5.1.17
-2.下载 MySQL 的  JDBC 驱动 ( `mysql-connector-java-<version>.jar`) 并放置到 `$KYLIN_HOME/ext/` 目录下
-> 提示：如果没有该目录，请自行创建。
+> *Note*: This feature is still under test and please use it with caution.
 
 
 
-### 配置方法
-1.在 MySQL 中新建一个专为存储 Kylin 元数据的数据库，例如 `kylin_metadata`;
-2.在配置文件 `kylin.properties` 中配置如下参数：
+### Prerequisites
+
+1. Install MySQL, such as v5.1.17
+2. Download the MySQL JDBC driver ( `mysql-connector-java-<version>.jar`) and place it in the `$KYLIN_HOME/ext/` directory.
+
+> Tip: Please create it yourself, if you do not have this directory.
+
+
+
+### Configuration Steps
+
+1. Create a new database in MySQL for storing Kylin metadata, such as `kylin`
+
+2. Configure `kylin.metadata.url={metadata_name}@jdbc` in the configuration file `kylin.properties`. 
+The description of each configuration item in this parameter is as follows, where `url`, `username` and `password` are required.
+
+> Tip: `{metadata_name}` needs to be replaced with the metadata the user needs to indicate that if the table already exists, the existing table will be used; if it does not exist, the table will be created automatically.
+
+- `url`: URL of the JDBC connection
+- `username`: JDBC username
+- `password`: JDBC password, if the password is encrypted, fill in the encrypted password
+- `driverClassName`: JDBC driver class name. The default value is *com.mysql.jdbc.Driver*
+- `maxActive`: Maximum number of database connections. The default value is 5
+- `maxIdle`: Maximum number of connections waiting. The default value is 5
+- `maxWait`: Maximum number of milliseconds to wait for connection. The default value is 1000.
+- `removeAbandoned`: Whether to automatically reclaim timeout connections. The default value is *TRUE*
+- `removeAbandonedTimeout`: timeout seconds. The default value is 300
+- `passwordEncrypted`: Whether to encrypt the JDBC password. The default value is *FALSE*
+
+> Note: To encrypt the JDBC password, run the following command under `$KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib/`:
+
+```sh
+Java -classpath kylin-server-base-<version>.jar\
+:kylin-core-common-<version>.jar\
+:spring-beans-4.3.10.RELEASE.jar:spring-core-4.3.10.RELEASE.jar\
+:commons-codec-1.7.jar \
+org.apache.kylin.rest.security.PasswordPlaceholderConfigurer \
+AES <your_password>
+```
+
+As in Kylin v2.5, execute the following command:
+
+```sh
+Java -classpath kylin-server-base-2.5.0.jar\
+:kylin-core-common-2.5.0.jar\
+:spring-beans-4.3.10.RELEASE.jar\
+:spring-core-4.3.10.RELEASE.jar\
+:commons-codec-1.7.jar \
+org.apache.kylin.rest.security.PasswordPlaceholderConfigurer \
+AES test123
+```
+
+3. Since the metadata does not depend on HBase, you need to add the ZooKeeper connection configuration `kylin.env.zookeeper-connect-string = host:port` in the configuration file `kylin.properties`.
+
+4. The sample configuration of `kylin.properties` is as follows:
 
 ```properties
-kylin.metadata.url={your_metadata_tablename}@jdbc,url=jdbc:mysql://localhost:3306/kylin,username={your_username},password={your_password}
-kylin.metadata.jdbc.dialect=mysql
-kylin.metadata.jdbc.json-always-small-cell=true
-kylin.metadata.jdbc.small-cell-meta-size-warning-threshold=100mb
-kylin.metadata.jdbc.small-cell-meta-size-error-threshold=1gb
-kylin.metadata.jdbc.max-cell-size=1mb
+Kylin.metadata.url=mysql_test@jdbc,url=jdbc:mysql://localhost:3306/kylin,username=kylin_test,password=bUmSqT/opyqz89Geu0yQ3g==,maxActive=10,maxIdle=10,passwordEncrypted=true
+Kylin.env.zookeeper-connect-string=localhost:2181
 ```
 
-`kylin.metadata.url` 中各配置项的含义如下，其中 `url`、`username` 和 `password` 为必须配置项，其他项如果不配置将使用默认值。
-
-- `url`：JDBC 连接的 URL
-- `username`：JDBC 的用户名
-- `password`：JDBC 的密码，如果对密码进行了加密，填写加密后的密码
-- `driverClassName`： JDBC 的 driver 类名，默认值为 com.mysql.jdbc.Driver
-- `maxActive`：最大数据库连接数，默认值为 5
-- `maxIdle`：最大等待中的连接数量，默认值为 5
-- `maxWait`：最大等待连接毫秒数，默认值为 1000
-- `removeAbandoned`：是否自动回收超时连接，默认值为 true
-- `removeAbandonedTimeout`：超时时间秒数，默认为 300
-- `passwordEncrypted`：是否对 JDBC 密码进行加密，默认为 false
-
-3.如果需要对 JDBC 密码进行加密，请在 `$KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib/`下运行如下命令：
-
-```shell
-java -classpath kylin-server-base-\<version\>.jar`kylin-core-common-\<version\>.jar`spring-beans-4.3.10.RELEASE.jar`spring-core-4.3.10.RELEASE.jar`commons-codec-1.7.jar org.apache.kylin.rest.security.PasswordPlaceholderConfigurer AES <your_password>
-```
-
-4.启动 Kylin
+5. Start Kylin
