@@ -27,7 +27,7 @@ Kylin 支持 MySQL 作为 Metastore 存储。
 
 2.在配置文件 `kylin.properties` 中配置 `kylin.metadata.url={metadata_name}@jdbc`，该参数中各配置项的含义如下，其中 `url`、`username` 和 `password` 为必须配置项，其他项如果不配置将使用默认值。
 
-> 提示：`{metadata_name}` 需要替换成用户需要的元数据表明，如果这张表已存在，会使用现有的表；如果不存在，则会自动创建该表。
+> 提示：`{metadata_name}` 需要替换成用户需要的元数据表名，如果这张表已存在，会使用现有的表；如果不存在，则会自动创建该表。
 
 - `url`：JDBC 连接的 URL
 - `username`：JDBC 的用户名
