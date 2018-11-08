@@ -72,7 +72,7 @@ class testBuildCube(unittest.TestCase):
             job_info = json.loads(job_response.text)
             job_status = job_info['job_status']
             try_time = 1
-            while job_status in ('RUNNING', 'PENDING') and try_time <= 20:
+            while job_status in ('RUNNING', 'PENDING') and try_time <= 30:
                 print 'Wait for job complete, try_time = ' + str(try_time)
                 try:
                     job_response = requests.request("GET", job_url, headers=headers)
