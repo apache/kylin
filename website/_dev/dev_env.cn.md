@@ -129,11 +129,22 @@ bower --allow-root install
 bower.cmd --allow-root install
 {% endhighlight %}
 
-在 IDE，运行 `org.apache.kylin.rest.DebugTomcat` 将工作目录设置为 /server 文件夹。(默认情况下 Kylin 服务器将会监听 7070 端口；如果您想要使用另一个端口，请在运行 `DebugTomcat` 时将其指定为参数)
+在 IDE，运行 `org.apache.kylin.rest.DebugTomcat` 将工作目录设置为 /server 文件夹，使用 "kylin-server" 的 classpath。对于 IntelliJ IDEA  2017 或之前的用户，需要修改 "server/kylin-server.iml" 文件，将所有的 "PROVIDED" 替换为 "COMPILE"；对于 IntelliJ IDEA 2018 用户，请勾选 “Include dependencies with 'Provided' scope”，否则可能会抛出 "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" 错误。
+
+调节 VM options，例如:
+
+```
+-Dhdp.version=2.4.0.0-169 -DSPARK_HOME=/usr/local/spark -Dkylin.hadoop.conf.dir=/workspace/kylin/examples/test_case_data/sandbox -Xms800m -Xmx800m -XX:PermSize=64M -XX:MaxNewSize=256m -XX:MaxPermSize=128m
+```
+
+添加 Hadoop 相关环境变量:
+
+```
+HADOOP_USER_NAME=root
+```
 
 查看 Kylin Web `http://localhost:7070/kylin`（用户名：ADMIN，密码：KYLIN)
 
-对于 IntelliJ IDEA 用户，需要修改 "server/kylin-server.iml" 文件，将所有的 "PROVIDED" 替换为 "COMPILE"，否则可能会抛出 "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" 错误。
 
 ## 安装 IDE 编码格式化工具
 

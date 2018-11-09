@@ -130,11 +130,24 @@ Note, if on Windows, after install bower, need to add the path of "bower.cmd" to
 bower.cmd --allow-root install
 {% endhighlight %}
 
-In IDE, launch `org.apache.kylin.rest.DebugTomcat` with working directory set to the /server folder. (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
+In IDE, launch `org.apache.kylin.rest.DebugTomcat`. Please set the path of "server" module as the "Working directory", set "kylin-server" for "Use classpath of module", and check "Include dependencies with 'Provided' scope" option in IntelliJ IDEA 2018. If you're using IntelliJ IDEA 2017 and older, you need modify "server/kylin-server.iml" file, replace all "PROVIDED" to "COMPILE", otherwise an "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" error may be thrown.. 
+
+You may also need to tune the VM options:
+
+```
+-Dhdp.version=2.4.0.0-169 -DSPARK_HOME=/usr/local/spark -Dkylin.hadoop.conf.dir=/workspace/kylin/examples/test_case_data/sandbox -Xms800m -Xmx800m -XX:PermSize=64M -XX:MaxNewSize=256m -XX:MaxPermSize=128m
+```
+
+And Hadoop environment variable:
+
+```
+HADOOP_USER_NAME=root
+```
+
+By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat`.
 
 Check Kylin Web at `http://localhost:7070/kylin` (user:ADMIN, password:KYLIN)
 
-For IntelliJ IDEA users, need modify "server/kylin-server.iml" file, replace all "PROVIDED" to "COMPILE", otherwise an "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" error may be thrown.
 
 ## Setup IDE code formatter
 
