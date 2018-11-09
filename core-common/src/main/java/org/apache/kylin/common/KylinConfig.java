@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common;
 
@@ -61,20 +61,23 @@ public class KylinConfig extends KylinConfigBase {
     // static cached instances
     private static KylinConfig SYS_ENV_INSTANCE = null;
 
+    // static default Ordered Properties, only need load from classpath once
+    private static OrderedProperties defaultOrderedProperties = new OrderedProperties();
+
     // thread-local instances, will override SYS_ENV_INSTANCE
     private static transient ThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new ThreadLocal<>();
 
     static {
         /*
          * Make Calcite to work with Unicode.
-         * 
+         *
          * Sets default char set for string literals in SQL and row types of
          * RelNode. This is more a label used to compare row type equality. For
          * both SQL string and row record, they are passed to Calcite in String
          * object and does not require additional codec.
-         * 
+         *
          * Ref SaffronProperties.defaultCharset
-         * Ref SqlUtil.translateCharacterSetName() 
+         * Ref SqlUtil.translateCharacterSetName()
          * Ref NlsString constructor()
          */
         // copied from org.apache.calcite.util.ConversionUtil.NATIVE_UTF16_CHARSET_NAME
@@ -82,6 +85,35 @@ public class KylinConfig extends KylinConfigBase {
         System.setProperty("saffron.default.charset", NATIVE_UTF16_CHARSET_NAME);
         System.setProperty("saffron.default.nationalcharset", NATIVE_UTF16_CHARSET_NAME);
         System.setProperty("saffron.default.collation.name", NATIVE_UTF16_CHARSET_NAME + "$en_US");
+
+    }
+
+    /**
+     * Build default ordered properties from classpath, due to those files exist in core-common.jar, no need to load them each time.
+     */
+    private static void buildDefaultOrderedProperties() {
+        // 1. load default configurations from classpath.
+        // we have a kylin-defaults.properties in kylin/core-common/src/main/resources
+        try{
+            URL resource = Thread.currentThread().getContextClassLoader().getResource(KYLIN_DEFAULT_CONF_PROPERTIES_FILE);
+            Preconditions.checkNotNull(resource);
+            logger.info("Loading kylin-defaults.properties from {}", resource.getPath());
+            loadPropertiesFromInputStream(resource.openStream(), defaultOrderedProperties);
+
+            // 2. load additional default configurations from classpath.
+            // This is old logic, will load kylin-defaults(0~9).properties in kylin/core-common/src/main/resources
+            // Suggest remove this logic if no needed.
+            for (int i = 0; i < 10; i++) {
+                String fileName = "kylin-defaults" + (i) + ".properties";
+                URL additionalResource = Thread.currentThread().getContextClassLoader().getResource(fileName);
+                if (additionalResource != null) {
+                    logger.info("Loading {} from {} ", fileName, additionalResource.getPath());
+                    loadPropertiesFromInputStream(additionalResource.openStream(), defaultOrderedProperties);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static KylinConfig getInstanceFromEnv() {
@@ -93,6 +125,10 @@ public class KylinConfig extends KylinConfigBase {
 
             if (SYS_ENV_INSTANCE == null) {
                 try {
+                    //build default ordered properties will only be called once.
+                    //This logic no need called by CoProcessor due to it didn't call getInstanceFromEnv.
+                    buildDefaultOrderedProperties();
+
                     config = new KylinConfig();
                     config.reloadKylinConfig(buildSiteProperties());
 
@@ -243,7 +279,7 @@ public class KylinConfig extends KylinConfigBase {
     public static SetAndUnsetThreadLocalConfig setAndUnsetThreadLocalConfig(KylinConfig config) {
         return new SetAndUnsetThreadLocalConfig(config);
     }
-    
+
     public static class SetAndUnsetThreadLocalConfig implements AutoCloseable {
 
         public SetAndUnsetThreadLocalConfig(KylinConfig config) {
@@ -325,22 +361,11 @@ public class KylinConfig extends KylinConfigBase {
     private static OrderedProperties buildSiteOrderedProps() {
 
         try {
-            // 1. load default configurations from classpath. 
-            // we have a kylin-defaults.properties in kylin/core-common/src/main/resources 
-            URL resource = Thread.currentThread().getContextClassLoader().getResource("kylin-defaults.properties");
-            Preconditions.checkNotNull(resource);
-            logger.info("Loading kylin-defaults.properties from {}", resource.getPath());
+            // 1. load default configurations from classpath.
+            // we have kylin-defaults.properties in kylin/core-common/src/main/resources
+            // Load them each time will caused thread block when multiple query request to Kylin
             OrderedProperties orderedProperties = new OrderedProperties();
-            loadPropertiesFromInputStream(resource.openStream(), orderedProperties);
-
-            for (int i = 0; i < 10; i++) {
-                String fileName = "kylin-defaults" + (i) + ".properties";
-                URL additionalResource = Thread.currentThread().getContextClassLoader().getResource(fileName);
-                if (additionalResource != null) {
-                    logger.info("Loading {} from {} ", fileName, additionalResource.getPath());
-                    loadPropertiesFromInputStream(additionalResource.openStream(), orderedProperties);
-                }
-            }
+            orderedProperties.putAll(defaultOrderedProperties);
 
             // 2. load site conf, to keep backward compatibility it's still named kylin.properties
             // actually it's better to be named kylin-site.properties
@@ -399,7 +424,7 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     // ============================================================================
-    
+
     transient Map<Class, Object> managersCache = new ConcurrentHashMap<>();
 
     private KylinConfig() {
@@ -418,19 +443,19 @@ public class KylinConfig extends KylinConfigBase {
         if (managersCache == null) {
             managersCache = new ConcurrentHashMap<>();
         }
-        
+
         Object mgr = managersCache.get(clz);
         if (mgr != null)
             return (T) mgr;
-        
+
         synchronized (clz) {
             mgr = managersCache.get(clz);
             if (mgr != null)
                 return (T) mgr;
-            
+
             try {
                 logger.info("Creating new manager instance of " + clz);
-                
+
                 // new manager via static Manager.newInstance()
                 Method method = clz.getDeclaredMethod("newInstance", KylinConfig.class);
                 method.setAccessible(true); // override accessibility
@@ -442,14 +467,14 @@ public class KylinConfig extends KylinConfigBase {
         }
         return (T) mgr;
     }
-    
+
     public void clearManagers() {
         KylinConfig base = base();
         if (base != this) {
             base.clearManagers();
             return;
         }
-        
+
         managersCache.clear();
     }
 
@@ -467,11 +492,7 @@ public class KylinConfig extends KylinConfigBase {
         for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
             String key = entry.getKey().toString();
             String value = entry.getValue().toString();
-            if (!orderedProperties.containsProperty(key)) {
-                orderedProperties.setProperty(key, value);
-            } else if (!orderedProperties.getProperty(key).equalsIgnoreCase(value)) {
-                orderedProperties.setProperty(key, value);
-            }
+            orderedProperties.setProperty(key, value);
         }
 
         final StringBuilder sb = new StringBuilder();
@@ -512,7 +533,7 @@ public class KylinConfig extends KylinConfigBase {
     public synchronized void reloadFromSiteProperties() {
         reloadKylinConfig(buildSiteProperties());
     }
-    
+
     public KylinConfig base() {
         return this;
     }
