@@ -352,8 +352,10 @@ public class RocksDBLookupTableCache implements IExtLookupTableCache {
                 List<Pair<String, File>> toRemovedCachedSnapshots = Lists.newArrayList(FluentIterable.from(
                         allCachedSnapshots).filter(new Predicate<Pair<String, File>>() {
                     @Override
-                    public boolean apply(@Nullable Pair<String, File> input) {
-                        return !activeSnapshotSet.contains(input.getFirst());
+                            public boolean apply(@Nullable Pair<String, File> input) {
+                                long lastModified = input.getSecond().lastModified();
+                                return !activeSnapshotSet.contains(input.getFirst()) && lastModified > 0
+                                        && lastModified < (System.currentTimeMillis() - config.getExtTableSnapshotLocalCacheCheckVolatileRange());
                     }
                 }));
                 for (Pair<String, File> toRemovedCachedSnapshot : toRemovedCachedSnapshots) {
