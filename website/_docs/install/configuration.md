@@ -258,14 +258,14 @@ This section introduces Kylin data modeling and build related configuration.
 - `kylin.cube.aggrgroup.max-combination`: specifies the max combination number of aggregation groups. The default value is 32768.
 - `kylin.cube.aggrgroup.is-mandatory-only-valid`: whether to allow Cube contains only Base Cuboid. The default value is *FALSE*, set to *TRUE* when using Spark Cubing
 - `kylin.cube.rowkey.max-size`: specifies the maximum number of columns that can be set to Rowkeys. The default value is 63.
-- `kylin.cube.allow-appear-in-mulNotele-projects`: whether to allow a cube to appear in mulNotele projects
+- `kylin.cube.allow-appear-in-multiple-projects`: whether to allow a cube to appear in multiple projects
 - `kylin.cube.gtscanrequest-serialization-level`: the default value is 1
 
 
 
 ### Cube Size Estimation {#cube-estimate}
 
-Both Kylin and HBase use compression when writing to disk, so Kylin will mulNotely its original size by the ratio to estimate the size of the cube.
+Both Kylin and HBase use compression when writing to disk, so Kylin will multiply its original size by the ratio to estimate the size of the cube.
 
 - `kylin.cube.size-estimate-ratio`: normal cube, default value is 0.25
 - `kylin.cube.size-estimate-memhungry-ratio`: Deprecated, default is 0.05
