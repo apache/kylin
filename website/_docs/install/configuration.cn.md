@@ -95,7 +95,7 @@ Kylin 的配置文件如下：
 
 ### Cube 配置重写		{#cube-config-override}
 
-在设计 Cube （**Cube Designer**）的 **Configuration overrides** 步骤可以添加配置项，进行 Cube 级别的配置重写，如下图所示：
+在设计 Cube （**Cube Designer**）的 **Configuration Overwrites** 步骤可以添加配置项，进行 Cube 级别的配置重写，如下图所示：
 ![](/images/install/override_config_cube.png)
 
 
@@ -104,7 +104,8 @@ Kylin 的配置文件如下：
 
 Kylin 支持在项目和 Cube 级别重写 `kylin_job_conf.xml` 和 `kylin_job_conf_inmem.xml` 中参数，以键值对的性质，按照如下格式替换：
 `kylin.job.mr.config.override.<key> = <value>`
-如果用户希望 Cube 的构建任务使用不同的 YARN resource queue，可以设置：`kylin.engine.mr.config-override.mapreduce.job.queuename={queueName}` 
+如果用户希望 Cube 的构建任务使用不同的 YARN resource queue，可以设置：
+`kylin.engine.mr.config-override.mapreduce.job.queuename={queueName}` 
 
 
 
@@ -112,7 +113,8 @@ Kylin 支持在项目和 Cube 级别重写 `kylin_job_conf.xml` 和 `kylin_job_c
 
 Kylin 支持在项目和 Cube 级别重写 `kylin_hive_conf.xml` 中参数，以键值对的性质，按照如下格式替换：
 `kylin.source.hive.config-override.<key> = <value>`
-如果用户希望 Hive 使用不同的 YARN resource queue，可以设置：`kylin.source.hive.config-override.mapreduce.job.queuename={queueName}` 
+如果用户希望 Hive 使用不同的 YARN resource queue，可以设置：
+`kylin.source.hive.config-override.mapreduce.job.queuename={queueName}` 
 
 
 
@@ -120,7 +122,8 @@ Kylin 支持在项目和 Cube 级别重写 `kylin_hive_conf.xml` 中参数，以
 
 Kylin 支持在项目和 Cube 级别重写 `kylin.properties` 中的 Spark 参数，以键值对的性质，按照如下格式替换：
 `kylin.engine.spark-conf.<key> = <value>`
-如果用户希望 Spark 使用不同的 YARN resource queue，可以设置：`kylin.engine.spark-conf.spark.yarn.queue={queueName}`
+如果用户希望 Spark 使用不同的 YARN resource queue，可以设置：
+`kylin.engine.spark-conf.spark.yarn.queue={queueName}`
 
 
 
@@ -137,7 +140,7 @@ Kylin 支持在项目和 Cube 级别重写 `kylin.properties` 中的 Spark 参�
 - `kylin.env.zookeeper-base-path`：指定 Kylin 服务所用的 ZooKeeper 路径，默认值为 `/kylin`
 - `kylin.env.zookeeper-connect-string`：指定 ZooKeeper 连接字符串，如果为空，使用 HBase 的 ZooKeeper
 - `kylin.env.hadoop-conf-dir`：指定 Hadoop 配置文件目录，如果不指定的话，获取环境中的 `HADOOP_CONF_DIR`
-- `kylin.server.mode`：指定 Kylin 实例的运行模式，参数值可选 (`all` | `job` | `query`)，默认值为 `all`，job 模式代表该服务仅用于任务调度，不用于查询；query 模式代表该服务仅用于查询，不用于构建任务的调度；all 模式代表该服务同时用于任务调度和 SQL 查询。
+- `kylin.server.mode`：指定 Kylin 实例的运行模式，参数值可选 `all`， `job`， `query`，默认值为 `all`，job 模式代表该服务仅用于任务调度，不用于查询；query 模式代表该服务仅用于查询，不用于构建任务的调度；all 模式代表该服务同时用于任务调度和 SQL 查询。
 - `kylin.server.cluster-name`：指定集群名称
 
 
@@ -277,7 +280,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 
 ### Cube 构建算法 {#cube-algorithm}
 
-- `kylin.cube.algorithm`：指定 Cube 构建的算法，参数值可选 `auto`，`layer` 和 `inmem`， 默认值为 `auto`，即 Kylin 会通过采集数据动态地选择一个算法 (layer or inmem)，如果用户很了解 Kylin 和自身的数据、集群，可以直接设置喜欢的算法
+- `kylin.cube.algorithm`：指定 Cube 构建的算法，参数值可选 `auto`，`layer` 和 `inmem`， 默认值为 auto，即 Kylin 会通过采集数据动态地选择一个算法 (layer or inmem)，如果用户很了解 Kylin 和自身的数据、集群，可以直接设置喜欢的算法
 - `kylin.cube.algorithm.layer-or-inmem-threshold`：默认值为 7
 - `kylin.cube.algorithm.inmem-split-limit`：默认值为 500
 - `kylin.cube.algorithm.inmem-concurrent-threads`：默认值为 1
@@ -319,7 +322,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.engine.mr.max-reducer-number`：MapReduce 任务中 Reducer 数目的最大值，默认值为 500
 - `kylin.engine.mr.mapper-input-rows`：每个 Mapper 可以处理的行数，默认值为 1000000，如果将这个值调小，会起更多的 Mapper
 - `kylin.engine.mr.max-cuboid-stats-calculator-number`：用于计算 Cube 统计数据的线程数量，默认值为 1
-- `kylin.engine.mr.build-dict-in-reducer`：是否在构建任务 **Extract Fact Table Distinct Columns** 的 Reduce 阶段构建字典，默认值为 `TRUE`
+- `kylin.engine.mr.build-dict-in-reducer`：是否在构建任务 **Extract Fact Table Distinct Columns** 的 Reduce 阶段构建字典，默认值为 TRUE
 - `kylin.engine.mr.yarn-check-interval-seconds`：构建引擎间隔多久检查 Hadoop 任务的状态，默认值为 10（s）    
 
 
@@ -341,16 +344,16 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 ### 超高基维度的处理 {#uhc-config}
 
 Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一列分配一个 Reducer，对于超高基维度，可以通过以下参数增加 Reducer 个数
-- `kylin.engine.mr.build-uhc-dict-in-additional-step`：默认值为 `FALSE`，设置为 `TRUE`
+- `kylin.engine.mr.build-uhc-dict-in-additional-step`：默认值为 FALSE，设置为 TRUE
 - `kylin.engine.mr.uhc-reducer-count`：默认值为 1，可以设置为 5，即为每个超高基的列分配 5 个 Reducer。
 
 
 
 ### Spark 构建引擎  {#spark-cubing}
 
-- `kylin.engine.spark-conf.spark.master`：指定 Spark 运行模式，默认值为 `yarn`
-- `kylin.engine.spark-conf.spark.submit.deployMode`：指定 Spark on YARN 的部署模式，默认值为 `cluster`
-- `kylin.engine.spark-conf.spark.yarn.queue`：指定 Spark 资源队列，默认值为 `default`
+- `kylin.engine.spark-conf.spark.master`：指定 Spark 运行模式，默认值为 yarn
+- `kylin.engine.spark-conf.spark.submit.deployMode`：指定 Spark on YARN 的部署模式，默认值为 cluster
+- `kylin.engine.spark-conf.spark.yarn.queue`：指定 Spark 资源队列，默认值为 default
 - `kylin.engine.spark-conf.spark.driver.memory`：指定 Spark Driver 内存大小，默认值为 2G
 - `kylin.engine.spark-conf.spark.executor.memory`：指定 Spark Executor 内存大小，默认值为 4G
 - `kylin.engine.spark-conf.spark.yarn.executor.memoryOverhead`：指定 Spark Executor 堆外内存大小，默认值为 1024(MB)
@@ -464,11 +467,12 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 
 Kylin 在默认状态下不会启用压缩，不支持的压缩算法会阻碍 Kylin 的构建任务，但是一个合适的压缩算法可以减少存储开销和网络开销，提高整体系统运行效率。
 Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输出压缩 和 MapReduce 任务输出压缩。 
+
 > **注意**：压缩设置只有在重启 Kylin 实例后才会生效。
 
 * HBase 表压缩
 
-该项压缩通过 `kyiln.properties` 中的 `kylin.hbase.default.compression.codec` 进行配置，参数值可选（ `none` | `snappy` | `lzo` | `gzip` | `lz4`），默认值为 `none`，即不压缩数据。
+该项压缩通过 `kyiln.properties` 中的 `kylin.hbase.default.compression.codec` 进行配置，参数值可选 `none`，`snappy`， `lzo`， `gzip`， `lz4`），默认值为 none，即不压缩数据。
 
 > **注意**：在修改压缩算法前，请确保用户的 HBase 集群支持所选压缩算法。
 
@@ -509,7 +513,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 
 
-### 查询配置 {$kylin-query}
+### 查询配置    {#kylin-query}
 
 本小节介绍 Kylin 查询有关的配置。
 
@@ -523,8 +527,8 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 - `kylin.query.security.table-acl-enabled`：是否在查询时检查对应表的 ACL，默认值为 TRUE 
 - `kylin.query.calcite.extras-props.conformance`：是否严格解析，默认值为 LENIENT
 - `kylin.query.calcite.extras-props.caseSensitive`：是否大小写敏感，默认值为 TRUE
-- `kylin.query.calcite.extras-props.unquotedCasing`：是否需要将查询语句进行大小写转换，参数值可选（ `UNCHANGED` | `TO_UPPER` | `TO_LOWER` ），默认值为 `TO_UPPER`，即全部大写
-- `kylin.query.calcite.extras-props.quoting`：是否添加引号，参数值可选（ `DOUBLE_QUOTE` | `BACK_TICK` | `BRACKET`），默认值为 `DOUBLE_QUOTE`
+- `kylin.query.calcite.extras-props.unquotedCasing`：是否需要将查询语句进行大小写转换，参数值可选 `UNCHANGED`， `TO_UPPER`， `TO_LOWER` ，默认值为 `TO_UPPER`，即全部大写
+- `kylin.query.calcite.extras-props.quoting`：是否添加引号，参数值可选 `DOUBLE_QUOTE`， `BACK_TICK`，`BRACKET`，默认值为 DOUBLE_QUOTE
 - `kylin.query.statement-cache-max-num`：缓存的 PreparedStatement 的最大条数，默认值为 50000
 - `kylin.query.statement-cache-max-num-per-key`：每个键缓存的 PreparedStatement 的最大条数，默认值为 50 
 - `kylin.query.enable-dict-enumerator`：是否启用字典枚举器，默认值为 FALSE
@@ -584,7 +588,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 ### 收集查询指标到 JMX {#jmx-metrics}
 
-- `kylin.server.query-metrics-enabled`：默认值为 `FALSE`，设为 `TRUE` 来将查询指标收集到 JMX
+- `kylin.server.query-metrics-enabled`：默认值为 FALSE，设为 TRUE 来将查询指标收集到 JMX
 
 > 提示：更多信息请参考 [JMX](https://www.oracle.com/technetwork/java/javase/tech/javamanagement-140525.html)
 
@@ -592,7 +596,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 ### 收集查询指标到 dropwizard {#dropwizard-metrics}
 
-- `kylin.server.query-metrics2-enabled`：默认值为 `FALSE`，设为 `TRUE` 来将查询指标收集到 dropwizard
+- `kylin.server.query-metrics2-enabled`：默认值为 FALSE，设为 TRUE 来将查询指标收集到 dropwizard
 
 > 提示：更多信息请参考 [dropwizard](https://metrics.dropwizard.io/4.0.0/)
 
@@ -607,7 +611,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 ### 集成 LDAP 实现单点登录	{#ldap-sso}
 
 - `kylin.security.profile=ldap`：启用 LDAP
-- `kylin.security.ldap.connection-server`：LDAP 服务器，如 `ldap://ldap_server:389`
+- `kylin.security.ldap.connection-server`：LDAP 服务器，如 ldap://ldap_server:389
 - `kylin.security.ldap.connection-username`：LDAP 用户名
 - `kylin.security.ldap.connection-password`：LDAP 密码
 - `kylin.security.ldap.user-search-base`：定义同步到 Kylin 的用户的范围
@@ -633,6 +637,6 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 ### 启用 ZooKeeper ACL {#zookeeper-acl}
 
-- `kylin.env.zookeeper-acl-enabled`：启用 ZooKeeper ACL 以阻止未经授权的用户访问 Znode 或降低由此导致的不良操作的风险，默认值为 `FALSE`
-- `kylin.env.zookeeper.zk-auth`：使用 用户名：密码 作为 ACL 标识，默认值为 `digest:ADMIN:KYLIN`
-- `kylin.env.zookeeper.zk-acl`：使用单个 ID 作为 ACL 标识，默认值为 `world:anyone:rwcda`，`anyone` 表示任何人
+- `kylin.env.zookeeper-acl-enabled`：启用 ZooKeeper ACL 以阻止未经授权的用户访问 Znode 或降低由此导致的不良操作的风险，默认值为 FALSE
+- `kylin.env.zookeeper.zk-auth`：使用 用户名：密码 作为 ACL 标识，默认值为 digest:ADMIN:KYLIN
+- `kylin.env.zookeeper.zk-acl`：使用单个 ID 作为 ACL 标识，默认值为 world:anyone:rwcda，anyone 表示任何人

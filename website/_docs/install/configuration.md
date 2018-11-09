@@ -146,7 +146,7 @@ This section introduces Kylin Deployment related configuration.
 - `kylin.storage.hbase.cluster-fs`: specifies the HDFS file system of the HBase cluster
 - `kylin.storage.hbase.cluster-hdfs-config-file`: specifies HDFS configuration file pointing to the HBase cluster
 
-> Tip: For more information, please refer to [Deploy Apache Kylin with Standalone HBase Cluster](http://kylin.apache.org/blog/2016/06/10/standalone-hbase-cluster/)
+> Note: For more information, please refer to [Deploy Apache Kylin with Standalone HBase Cluster](http://kylin.apache.org/blog/2016/06/10/standalone-hbase-cluster/)
 
 
 
@@ -180,15 +180,15 @@ This section introduces Kylin Metastore related configuration.
 
 ### Metadata {#metadata}
 
-- `kylin.metadata.url`: specifies the Metadata path. The default value is `kylin_metadata@hbase`
+- `kylin.metadata.url`: specifies the Metadata path. The default value is *kylin_metadata@hbase*
 - `kylin.metadata.dimension-encoding-max-length`: specifies the maximum length when the dimension is used as Rowkeys with fix_length encoding. The default value is 256.
 - `kylin.metadata.sync-retries`: specifies the number of Metadata sync retries. The default value is 3.
-- `kylin.metadata.sync-error-handler`: The default value is `DefaultSyncErrorHandler`
-- `kylin.metadata.check-copy-on-write`: whether clear metadata cache, default value is `FALSE`
+- `kylin.metadata.sync-error-handler`: The default value is *DefaultSyncErrorHandler*
+- `kylin.metadata.check-copy-on-write`: whether clear metadata cache, default value is *FALSE*
 - `kylin.metadata.hbase-client-scanner-timeout-period`: specifies the total timeout between the RPC call initiated by the HBase client. The default value is 10000 (ms).
 - `kylin.metadata.hbase-rpc-timeout`: specifies the timeout for HBase to perform RPC operations. The default value is 5000 (ms).
 - `kylin.metadata.hbase-client-retries-number`: specifies the number of HBase retries. The default value is 1 (times).
-- `kylin.metadata.resource-store-provider.jdbc`: specifies the class used by JDBC. The default value is `org.apache.kylin.common.persistence.JDBCResourceStore`
+- `kylin.metadata.resource-store-provider.jdbc`: specifies the class used by JDBC. The default value is *org.apache.kylin.common.persistence.JDBCResourceStore*
 
 
 
@@ -204,7 +204,7 @@ This section introduces Kylin Metastore related configuration.
 - `kylin.metadata.jdbc.max-cell-size`: The default value is 1 (MB)
 - `kylin.metadata.resource-store-provider.jdbc`: specifies the class used by JDBC. The default value is org.apache.kylin.common.persistence.JDBCResourceStore
 
-> Tip: For more information, please refer to [MySQL-based Metastore Configuration](/docs/tutorial/mysql_metastore.html)
+> Note: For more information, please refer to [MySQL-based Metastore Configuration](/docs/tutorial/mysql_metastore.html)
 
 
 
@@ -238,7 +238,7 @@ This section introduces Kylin data modeling and build related configuration.
 - `kylin.source.jdbc.sqoop-mapper-num`: specifies how many slices should be split. Sqoop will run a mapper for each slice. The default value is 4.
 - `kylin.source.jdbc.field-delimiter`: specifies the field separator. The default value is \
 
-> Tip: For more information, please refer to [Building a JDBC Data Source](/docs/tutorial/setup_jdbc_datasource.html).
+> Note: For more information, please refer to [Building a JDBC Data Source](/docs/tutorial/setup_jdbc_datasource.html).
 
 
 
@@ -258,14 +258,14 @@ This section introduces Kylin data modeling and build related configuration.
 - `kylin.cube.aggrgroup.max-combination`: specifies the max combination number of aggregation groups. The default value is 32768.
 - `kylin.cube.aggrgroup.is-mandatory-only-valid`: whether to allow Cube contains only Base Cuboid. The default value is *FALSE*, set to *TRUE* when using Spark Cubing
 - `kylin.cube.rowkey.max-size`: specifies the maximum number of columns that can be set to Rowkeys. The default value is 63.
-- `kylin.cube.allow-appear-in-multiple-projects`: whether to allow a cube to appear in multiple projects
+- `kylin.cube.allow-appear-in-mulNotele-projects`: whether to allow a cube to appear in mulNotele projects
 - `kylin.cube.gtscanrequest-serialization-level`: the default value is 1
 
 
 
 ### Cube Size Estimation {#cube-estimate}
 
-Both Kylin and HBase use compression when writing to disk, so Kylin will multiply its original size by the ratio to estimate the size of the cube.
+Both Kylin and HBase use compression when writing to disk, so Kylin will mulNotely its original size by the ratio to estimate the size of the cube.
 
 - `kylin.cube.size-estimate-ratio`: normal cube, default value is 0.25
 - `kylin.cube.size-estimate-memhungry-ratio`: Deprecated, default is 0.05
@@ -366,7 +366,7 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 - `kylin.engine.spark-conf-mergedict.spark.executor.memory`: whether to request more memory for merging dictionary.The default value is 6G.
 - `kylin.engine.spark-conf-mergedict.spark.memory.fraction`: specifies the percentage of memory reserved for the system. The default value is 0.2
 
-> Tip: For more information, please refer to [Building Cubes with Spark](/docs/tutorial/cube_spark.html).
+> Note: For more information, please refer to [Building Cubes with Spark](/docs/tutorial/cube_spark.html).
 
 
 
@@ -379,7 +379,7 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 - `kylin.engine.spark-conf.spark.dynamicAllocation.maxExecutors`: specifies the maximum number of Executors applied for
 - `kylin.engine.spark-conf.spark.dynamicAllocation.executorIdleTimeout`: specifies the threshold of Executor being removed after being idle. The default value is 60(s)
 
-> Tip: For more information, please refer to the official documentation: [Dynamic Resource Allocation](http://spark.apache.org/docs/1.6.2/job-scheduling.html#dynamic-resource-allocation).
+> Note: For more information, please refer to the official documentation: [Dynamic Resource Allocation](http://spark.apache.org/docs/1.6.2/job-scheduling.html#dynamic-resource-allocation).
 
 
 
@@ -426,7 +426,7 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 - `kylin.cube.cubeplanner.mandatory-rollup-threshold`: the default value is 1000
 - `kylin.cube.cubeplanner.algorithm-threshold-genetic`: the default value is 23
 
-> Tip: For more information, please refer to [Using Cube Planner](/docs/tutorial/use_cube_planner.html).
+> Note: For more information, please refer to [Using Cube Planner](/docs/tutorial/use_cube_planner.html).
 
 
 
@@ -461,11 +461,13 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 
 Kylin does not enable Enable Compression by default. Unsupported compression algorithms can hinder Kylin's build jobs, but a suitable compression algorithm can reduce storage overhead and network overhead and improve overall system operation efficiency.
 Kylin can use three types of compression, HBase table compression, Hive output compression, and MapReduce job output compression.
+
 > *Note*: The compression settings will not take effect until the Kylin instance is restarted.
 
 * HBase table compression
 
-This compression is configured by `kylin.hbase.default.compression.codec` in `kyiln.properties`. Optional values include `none`, `snappy`, `lzo`, `gzip` and `lz4`. The default value is `none`, which means no data is compressed.
+This compression is configured by `kylin.hbase.default.compression.codec` in `kyiln.properties`. Optional values include `none`, `snappy`, `lzo`, `gzip` and `lz4`. The default value is none, which means no data is compressed.
+
 > *Note*: Before modifying the compression algorithm, make sure userr HBase cluster supports the selected compression algorithm.
 
 
@@ -505,7 +507,7 @@ This compression is configured via `kylin_job_conf.xml` and `kylin_job_conf_inme
 
 
 
-### Query Configuration {$kylin-query}
+### Query Configuration    {#kylin-query}
 
 This section introduces Kylin query related configuration.
 
@@ -568,7 +570,7 @@ This section introduces Kylin query related configuration.
 - `kylin.query.pushdown.update-enabled`: specifies whether to enable update in Query Pushdown. The default value is *FALSE*
 - `kylin.query.pushdown.cache-enabled`: whether to enable the cache of the pushdown query to improve the query efficiency of the same query. The default value is *FALSE*
 
-> Tip: For more information, please refer to [Query Pushdown](/docs/tutorial/query_pushdown.html)
+> Note: For more information, please refer to [Query Pushdown](/docs/tutorial/query_pushdown.html)
 
 
 
@@ -582,7 +584,7 @@ This section introduces Kylin query related configuration.
 
 - `kylin.server.query-metrics-enabled`: the default value is *FALSE*, set to *TRUE* to collect query metrics to JMX
 
-> Tip: For more information, please refer to [JMX](https://www.oracle.com/technetwork/java/javase/tech/javamanagement-140525.html)
+> Note: For more information, please refer to [JMX](https://www.oracle.com/technetwork/java/javase/tech/javamanagement-140525.html)
 
 
 
@@ -590,7 +592,7 @@ This section introduces Kylin query related configuration.
 
 - `kylin.server.query-metrics2-enabled`: the default value is *FALSE*, set to *TRUE* to collect query metrics into dropwizard
 
-> Tip: For more information, please refer to [dropwizard](https://metrics.dropwizard.io/4.0.0/)
+> Note: For more information, please refer to [dropwizard](https://metrics.dropwizard.io/4.0.0/)
 
 
 
@@ -623,7 +625,7 @@ This section introduces Kylin security-related configuration.
 
 - `kylin.server.external-acl-provider=org.apache.ranger.authorization.kylin.authorizer.RangerKylinAuthorizer`
 
-> Tip: For more information, please refer to [How to integrate the Kylin plugin in the installation documentation for Ranger](https://cwiki.apache.org/confluence/display/RANGER/Kylin+Plugin)
+> Note: For more information, please refer to [How to integrate the Kylin plugin in the installation documentation for Ranger](https://cwiki.apache.org/confluence/display/RANGER/Kylin+Plugin)
 
 
 
