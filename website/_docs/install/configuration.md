@@ -66,7 +66,7 @@ This section introduces Kylin's configuration files and how to perform Configura
 
 ### Kylin Configuration Files	 {#kylin-config-file}
 
-Kylin will automatically read the Hadoop configuration (`core-site.xml`), Hive configuration (`hbase-site.xml`) and HBase configuration (`hbase-site.xml`) from the environment, in addition, Kylin's configuration files are in the `$KYLIN_HOME/conf/` directory.
+Kylin will automatically read the Hadoop configuration (`core-site.xml`), Hive configuration (`hive-site.xml`) and HBase configuration (`hbase-site.xml`) from the environment, in addition, Kylin's configuration files are in the `$KYLIN_HOME/conf/` directory.
 Kylin's configuration file is as follows:
 
 - `kylin_hive_conf.xml`: This file contains the configuration for the Hive job.

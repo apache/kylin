@@ -67,7 +67,7 @@ permalink: /cn/docs/install/configuration.html
 
 ### Kylin 配置文件	 {#kylin-config-file}
 
-Kylin 会自动从环境中读取 Hadoop 配置（`core-site.xml`），Hive 配置（`hbase-site.xml`）和 HBase 配置（`hbase-site.xml`），另外，Kylin 的配置文件在 `$KYLIN_HOME/conf/` 目录下。
+Kylin 会自动从环境中读取 Hadoop 配置（`core-site.xml`），Hive 配置（`hive-site.xml`）和 HBase 配置（`hbase-site.xml`），另外，Kylin 的配置文件在 `$KYLIN_HOME/conf/` 目录下。
 Kylin 的配置文件如下：
 
 - `kylin_hive_conf.xml`：该文件包含了 Hive 任务的配置项。
