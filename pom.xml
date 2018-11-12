@@ -72,7 +72,7 @@
     <!-- <reflections.version>0.9.10</reflections.version> -->
 
     <!-- Calcite Version -->
-    <calcite.version>1.13.0-kylin-r6-SNAPSHOT</calcite.version>
+    <calcite.version>1.16.0-kylin-r2-SNAPSHOT</calcite.version>
     <avatica.version>1.10.0</avatica.version>
 
     <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
@@ -1265,7 +1265,6 @@
   </build>
 
   <modules>
-    <module>atopcalcite</module>
     <module>core-common</module>
     <module>core-metadata</module>
     <module>core-dictionary</module>

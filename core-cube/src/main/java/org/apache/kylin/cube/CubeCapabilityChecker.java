@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.MeasureType;
@@ -71,6 +72,7 @@ public class CubeCapabilityChecker {
             //1. dimension as measure
 
             if (!unmatchedAggregations.isEmpty()) {
+                removeUnmatchedGroupingAgg(unmatchedAggregations);
                 tryDimensionAsMeasures(unmatchedAggregations, result,
                         cube.getDescriptor().listDimensionColumnsIncludingDerived());
             }
@@ -262,6 +264,17 @@ public class CubeCapabilityChecker {
         if (influencingMeasures.size() != 0)
             logger.info("Cube {} CapabilityInfluences: {}", cube.getCanonicalName(),
                     StringUtils.join(influencingMeasures, ","));
+    }
+
+    private static void removeUnmatchedGroupingAgg(Collection<FunctionDesc> unmatchedAggregations) {
+        if (CollectionUtils.isEmpty(unmatchedAggregations))
+            return;
+        Iterator<FunctionDesc> iterator = unmatchedAggregations.iterator();
+        while (iterator.hasNext()) {
+            if (FunctionDesc.FUNC_GROUPING.equalsIgnoreCase(iterator.next().getExpression())) {
+                iterator.remove();
+            }
+        }
     }
 
 }

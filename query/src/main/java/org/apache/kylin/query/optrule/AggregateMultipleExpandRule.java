@@ -106,23 +106,6 @@ public class AggregateMultipleExpandRule extends RelOptRule {
                 }
             }
 
-            // fill indicators if need, false when key is present and true if key is rolled up
-            if (aggr.indicator) {
-                groupSetIter = aggr.getGroupSet().iterator();
-                groupKeyIter = groupSet.iterator();
-                groupKey = groupKeyIter.next();
-                while (groupSetIter.hasNext()) {
-                    Integer aggrGroupKey = groupSetIter.next();
-                    RelDataType type = typeIterator.next().getType();
-                    if (groupKey == aggrGroupKey) {
-                        rexNodes.add(rexBuilder.makeLiteral(false, type, true));
-                        groupKey = groupKeyIter.next();
-                    } else {
-                        rexNodes.add(rexBuilder.makeLiteral(true, type, true));
-                    }
-                }
-            }
-
             // fill aggr calls input ref
             while (typeIterator.hasNext()) {
                 RelDataType type = typeIterator.next().getType();

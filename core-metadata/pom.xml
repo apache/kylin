@@ -60,8 +60,19 @@
             <artifactId>jsr305</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>atopcalcite</artifactId>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.calcite.avatica</groupId>
+                    <artifactId>avatica-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- It should be avatica(the shaded one), not avatica-core, since the inconsistency protobuf dependency with Hadoop -->
+        <dependency>
+            <groupId>org.apache.calcite.avatica</groupId>
+            <artifactId>avatica</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.calcite.avatica</groupId>
