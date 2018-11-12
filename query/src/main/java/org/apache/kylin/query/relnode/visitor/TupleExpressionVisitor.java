@@ -28,7 +28,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlCastFunction;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.util.NlsString;
 import org.apache.kylin.common.util.Pair;
@@ -61,9 +60,7 @@ public class TupleExpressionVisitor extends RexVisitorImpl<TupleExpression> {
     @Override
     public TupleExpression visitCall(RexCall call) {
         SqlOperator op = call.getOperator();
-        if (op == SqlStdOperatorTable.EXTRACT_DATE) {
-            return visitFirstRexInputRef(call);
-        } else if (op instanceof SqlCastFunction) {
+        if (op instanceof SqlCastFunction) {
             return call.getOperands().get(0).accept(this);
         } else if (op instanceof SqlUserDefinedFunction) {
             if (op.getName().equals("QUARTER")) {

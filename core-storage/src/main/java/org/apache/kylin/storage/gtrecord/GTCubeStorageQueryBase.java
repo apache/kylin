@@ -211,7 +211,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     protected void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions,
             Collection<FunctionDesc> metrics) {
         for (FunctionDesc func : sqlDigest.aggregations) {
-            if (!func.isDimensionAsMetric()) {
+            if (!func.isDimensionAsMetric() && !FunctionDesc.FUNC_GROUPING.equalsIgnoreCase(func.getExpression())) {
                 // use the FunctionDesc from cube desc as much as possible, that has more info such as HLLC precision
                 metrics.add(findAggrFuncFromCubeDesc(func));
             }
