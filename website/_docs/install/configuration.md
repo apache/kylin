@@ -16,11 +16,12 @@ permalink: /docs/install/configuration.html
         - [Spark Configuration Overriding](#spark-config-override)
 - [Deployment configuration](#kylin-deploy)
     - [Deploy Kylin](#deploy-config)
-	- [Job Engine HA](#job-engine-ha)
 	- [Allocate More Memory for Kylin](#kylin-jvm-settings)
+	- [Job Engine HA](#job-engine-ha)
+	- [Read/Write Separation](#rw-deploy)
 	- [RESTful Webservice](#rest-config)
 - [Metastore Configuration](#kylin_metastore)
-    - [Metadata](#metadata)
+    - [Metadata-related](#metadata)
     - [MySQL Metastore Configuration (Beta)](#mysql-metastore)
 - [Modeling Configuration](#kylin-build)
     - [Hive Client and SparkSQL](#hive-client-and-sparksql)
@@ -141,15 +142,6 @@ This section introduces Kylin Deployment related configuration.
 
 
 
-### Read and write separation configuration {#rw-deploy}
-
-- `kylin.storage.hbase.cluster-fs`: specifies the HDFS file system of the HBase cluster
-- `kylin.storage.hbase.cluster-hdfs-config-file`: specifies HDFS configuration file pointing to the HBase cluster
-
-> Note: For more information, please refer to [Deploy Apache Kylin with Standalone HBase Cluster](http://kylin.apache.org/blog/2016/06/10/standalone-hbase-cluster/)
-
-
-
 ### Allocate More Memory for Kylin {#kylin-jvm-settings}
 
 There are two sample settings for `KYLIN_JVM_SETTINGS` are given in `$KYLIN_HOME/conf/setenv.sh`.
@@ -159,6 +151,24 @@ The default setting use relatively less memory. You can comment it and then unco
 Export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -verbose`gc -XX`+PrintGCDetails -XX`+PrintGCDateStamps -Xloggc`$KYLIN_HOME/logs/kylin.gc.$$ -XX`+UseGCLogFileRotation - XX`NumberOfGCLogFiles=10 -XX`GCLogFileSize=64M"
 # export KYLIN_JVM_SETTINGS="-Xms16g -Xmx16g -XX`MaxPermSize=512m -XX`NewSize=3g -XX`MaxNewSize=3g -XX`SurvivorRatio=4 -XX`+CMSClassUnloadingEnabled -XX`+CMSParallelRemarkEnabled -XX`+UseConcMarkSweepGC -XX `+CMSIncrementalMode -XX`CMSInitiatingOccupancyFraction=70 -XX`+UseCMSInitiatingOccupancyOnly -XX`+DisableExplicitGC -XX`+HeapDumpOnOutOfMemoryError -verbose`gc -XX`+PrintGCDetails -XX`+PrintGCDateStamps -Xloggc`$KYLIN_HOME/logs/kylin.gc. $$ -XX`+UseGCLogFileRotation -XX`NumberOfGCLogFiles=10 -XX`GCLogFileSize=64M"
 ```
+
+
+
+### Job Engine HA  {#job-engine-ha}
+
+- `kylin.job.scheduler.default=2`: to enable the distributed job scheduler.
+- `kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock`: to enable distributed job lock
+
+> Note: For more information, please refer to the **Enable Job Engine HA** section in [Deploy in Cluster Mode](/docs/install/kylin_cluster.html) 
+
+
+
+### Read/Write Separation   {#rw-deploy}
+
+- `kylin.storage.hbase.cluster-fs`: specifies the HDFS file system of the HBase cluster
+- `kylin.storage.hbase.cluster-hdfs-config-file`: specifies HDFS configuration file pointing to the HBase cluster
+
+> Note: For more information, please refer to [Deploy Apache Kylin with Standalone HBase Cluster](http://kylin.apache.org/blog/2016/06/10/standalone-hbase-cluster/)
 
 
 
@@ -178,7 +188,7 @@ This section introduces Kylin Metastore related configuration.
 
 
 
-### Metadata {#metadata}
+### Metadata-related {#metadata}
 
 - `kylin.metadata.url`: specifies the Metadata path. The default value is *kylin_metadata@hbase*
 - `kylin.metadata.dimension-encoding-max-length`: specifies the maximum length when the dimension is used as Rowkeys with fix_length encoding. The default value is 256.
