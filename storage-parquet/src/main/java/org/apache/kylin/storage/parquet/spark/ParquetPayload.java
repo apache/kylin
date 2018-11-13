@@ -37,6 +37,7 @@ public class ParquetPayload {
     private long startTime;
     private int storageType;
 
+    @SuppressWarnings("checkstyle:ParameterNumber")
     private ParquetPayload(byte[] gtScanRequest, String gtScanRequestId, String kylinProperties, String realizationId,
                            String segmentId, String dataFolderName, int maxRecordLength, List<Integer> parquetColumns,
                            boolean isUseII, String realizationType, String queryId, boolean spillEnabled, long maxScanBytes,

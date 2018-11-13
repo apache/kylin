@@ -62,25 +62,25 @@ public class SparkClassLoader extends URLClassLoader {
     private static Logger logger = LoggerFactory.getLogger(SparkClassLoader.class);
 
     static {
-        String sparkclassloader_spark_cl_preempt_classes = System.getenv("SPARKCLASSLOADER_SPARK_CL_PREEMPT_CLASSES");
-        if (!StringUtils.isEmpty(sparkclassloader_spark_cl_preempt_classes)) {
-            SPARK_CL_PREEMPT_CLASSES = StringUtils.split(sparkclassloader_spark_cl_preempt_classes, ",");
+        String sparkclassloaderSparkClPreemptClasses = System.getenv("SPARKCLASSLOADER_SPARK_CL_PREEMPT_CLASSES");
+        if (!StringUtils.isEmpty(sparkclassloaderSparkClPreemptClasses)) {
+            SPARK_CL_PREEMPT_CLASSES = StringUtils.split(sparkclassloaderSparkClPreemptClasses, ",");
         }
 
-        String sparkclassloader_spark_cl_preempt_files = System.getenv("SPARKCLASSLOADER_SPARK_CL_PREEMPT_FILES");
-        if (!StringUtils.isEmpty(sparkclassloader_spark_cl_preempt_files)) {
-            SPARK_CL_PREEMPT_FILES = StringUtils.split(sparkclassloader_spark_cl_preempt_files, ",");
+        String sparkclassloaderSparkClPreemptFiles = System.getenv("SPARKCLASSLOADER_SPARK_CL_PREEMPT_FILES");
+        if (!StringUtils.isEmpty(sparkclassloaderSparkClPreemptFiles)) {
+            SPARK_CL_PREEMPT_FILES = StringUtils.split(sparkclassloaderSparkClPreemptFiles, ",");
         }
 
-        String sparkclassloader_this_cl_precedent_classes = System.getenv("SPARKCLASSLOADER_THIS_CL_PRECEDENT_CLASSES");
-        if (!StringUtils.isEmpty(sparkclassloader_this_cl_precedent_classes)) {
-            THIS_CL_PRECEDENT_CLASSES = StringUtils.split(sparkclassloader_this_cl_precedent_classes, ",");
+        String sparkclassloaderThisClPrecedentClasses = System.getenv("SPARKCLASSLOADER_THIS_CL_PRECEDENT_CLASSES");
+        if (!StringUtils.isEmpty(sparkclassloaderThisClPrecedentClasses)) {
+            THIS_CL_PRECEDENT_CLASSES = StringUtils.split(sparkclassloaderThisClPrecedentClasses, ",");
         }
 
-        String sparkclassloader_parent_cl_precedent_classes = System
+        String sparkclassloaderParentClPrecedentClasses = System
                 .getenv("SPARKCLASSLOADER_PARENT_CL_PRECEDENT_CLASSES");
-        if (!StringUtils.isEmpty(sparkclassloader_parent_cl_precedent_classes)) {
-            PARENT_CL_PRECEDENT_CLASSES = StringUtils.split(sparkclassloader_parent_cl_precedent_classes, ",");
+        if (!StringUtils.isEmpty(sparkclassloaderParentClPrecedentClasses)) {
+            PARENT_CL_PRECEDENT_CLASSES = StringUtils.split(sparkclassloaderParentClPrecedentClasses, ",");
         }
 
         try {
@@ -111,6 +111,7 @@ public class SparkClassLoader extends URLClassLoader {
         init();
     }
 
+    @SuppressWarnings("checkstyle:LocalVariableName")
     public void init() throws MalformedURLException {
         String spark_home = System.getenv("SPARK_HOME");
         if (spark_home == null) {

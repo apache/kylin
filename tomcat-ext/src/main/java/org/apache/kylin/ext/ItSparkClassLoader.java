@@ -66,15 +66,15 @@ public class ItSparkClassLoader extends URLClassLoader {
     }
 
     public void init() throws MalformedURLException {
-        String spark_home = System.getenv("SPARK_HOME");
-        if (spark_home == null) {
-            spark_home = System.getProperty("SPARK_HOME");
-            if (spark_home == null) {
+        String sparkHome = System.getenv("SPARK_HOME");
+        if (sparkHome == null) {
+            sparkHome = System.getProperty("SPARK_HOME");
+            if (sparkHome == null) {
                 throw new RuntimeException(
                         "Spark home not found; set it explicitly or use the SPARK_HOME environment variable.");
             }
         }
-        File file = new File(spark_home + "/jars");
+        File file = new File(sparkHome + "/jars");
         File[] jars = file.listFiles();
         for (File jar : jars) {
             addURL(jar.toURI().toURL());

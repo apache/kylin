@@ -107,6 +107,7 @@ public interface BatchConstants {
     String ARG_HBASE_CONF_PATH = "hbaseConfPath";
     String ARG_SHRUNKEN_DICT_PATH = "shrunkenDictPath";
     String ARG_COUNTER_OUPUT = "counterOutput";
+    String ARG_CUBOID_TO_PARTITION_MAPPING = "cuboidToPartitionMapping";
 
     /**
      * logger and counter

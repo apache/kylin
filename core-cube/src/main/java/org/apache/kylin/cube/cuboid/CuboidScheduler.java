@@ -20,8 +20,10 @@ package org.apache.kylin.cube.cuboid;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -70,6 +72,8 @@ abstract public class CuboidScheduler {
     // ============================================================================
     
     private transient List<List<Long>> cuboidsByLayer;
+
+    private transient Map<Long, Integer> cuboidLayerMap;
 
     public long getBaseCuboidId() {
         return Cuboid.getBaseCuboidId(cubeDesc);
@@ -125,7 +129,30 @@ abstract public class CuboidScheduler {
     public int getBuildLevel() {
         return getCuboidsByLayer().size() - 1;
     }
-    
+
+    public Map<Long, Integer> getCuboidLayerMap() {
+        if (cuboidLayerMap != null){
+            return cuboidLayerMap;
+        }
+        cuboidLayerMap = Maps.newHashMap();
+
+        if (cuboidsByLayer == null) {
+            cuboidsByLayer = getCuboidsByLayer();
+        }
+
+        for (int layerIndex = 0; layerIndex <= getBuildLevel(); layerIndex++){
+            List<Long> layeredCuboids = cuboidsByLayer.get(layerIndex);
+            for (Long cuboidId : layeredCuboids){
+                cuboidLayerMap.put(cuboidId, layerIndex);
+            }
+        }
+
+        int size = getAllCuboidIds().size();
+        int totalNum = cuboidLayerMap.size();
+        Preconditions.checkState(totalNum == size, "total Num: " + totalNum + " actual size: " + size);
+        return cuboidLayerMap;
+    }
+
     /** Returns the key for what this cuboid scheduler responsible for. */
     public String getCuboidCacheKey() {
         return cubeDesc.getName();

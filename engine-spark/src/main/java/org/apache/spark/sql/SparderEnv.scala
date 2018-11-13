@@ -57,14 +57,6 @@ object SparderEnv extends Logging {
     getSparkSession.sparkContext.conf.get(key)
   }
 
-  def getActiveJobs(): Int = {
-    SparderEnv.getSparkSession.sparkContext.jobProgressListener.activeJobs.size
-  }
-
-  def getFailedJobs(): Int = {
-    SparderEnv.getSparkSession.sparkContext.jobProgressListener.failedJobs.size
-  }
-
   def getAsyncResultCore: Int = {
     val sparkConf = getSparkSession.sparkContext.getConf
     val instances = sparkConf.get("spark.executor.instances").toInt

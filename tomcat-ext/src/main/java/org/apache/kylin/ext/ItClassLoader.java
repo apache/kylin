@@ -79,9 +79,9 @@ public class ItClassLoader extends URLClassLoader {
                 e.printStackTrace();
             }
         }
-        String spark_home = System.getenv("SPARK_HOME");
+        String sparkHome = System.getenv("SPARK_HOME");
         try {
-            File sparkJar = findFile(spark_home + "/jars", "spark-yarn_.*.jar");
+            File sparkJar = findFile(sparkHome + "/jars", "spark-yarn_.*.jar");
             addURL(sparkJar.toURI().toURL());
             addURL(new File("../examples/test_case_data/sandbox").toURI().toURL());
         } catch (MalformedURLException e) {

@@ -48,21 +48,21 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
     private static final Set<String> wontFindClasses = new HashSet<>();
 
     static {
-        String tomcatclassloader_parent_cl_precedent_classes = System
+        String tomcatclassloaderParentClPrecedentClasses = System
                 .getenv("TOMCATCLASSLOADER_PARENT_CL_PRECEDENT_CLASSES");
-        if (!StringUtils.isEmpty(tomcatclassloader_parent_cl_precedent_classes)) {
-            PARENT_CL_PRECEDENT_CLASSES = StringUtils.split(tomcatclassloader_parent_cl_precedent_classes, ",");
+        if (!StringUtils.isEmpty(tomcatclassloaderParentClPrecedentClasses)) {
+            PARENT_CL_PRECEDENT_CLASSES = StringUtils.split(tomcatclassloaderParentClPrecedentClasses, ",");
         }
 
-        String tomcatclassloader_this_cl_precedent_classes = System
+        String tomcatclassloaderThisClPrecedentClasses = System
                 .getenv("TOMCATCLASSLOADER_THIS_CL_PRECEDENT_CLASSES");
-        if (!StringUtils.isEmpty(tomcatclassloader_this_cl_precedent_classes)) {
-            THIS_CL_PRECEDENT_CLASSES = StringUtils.split(tomcatclassloader_this_cl_precedent_classes, ",");
+        if (!StringUtils.isEmpty(tomcatclassloaderThisClPrecedentClasses)) {
+            THIS_CL_PRECEDENT_CLASSES = StringUtils.split(tomcatclassloaderThisClPrecedentClasses, ",");
         }
 
-        String tomcatclassloader_codegen_classes = System.getenv("TOMCATCLASSLOADER_CODEGEN_CLASSES");
-        if (!StringUtils.isEmpty(tomcatclassloader_codegen_classes)) {
-            CODEGEN_CLASSES = StringUtils.split(tomcatclassloader_codegen_classes, ",");
+        String tomcatclassloaderCodegenClasses = System.getenv("TOMCATCLASSLOADER_CODEGEN_CLASSES");
+        if (!StringUtils.isEmpty(tomcatclassloaderCodegenClasses)) {
+            CODEGEN_CLASSES = StringUtils.split(tomcatclassloaderCodegenClasses, ",");
         }
 
         wontFindClasses.add("Class");
@@ -98,6 +98,7 @@ public class TomcatClassLoader extends ParallelWebappClassLoader {
         init();
     }
 
+    @SuppressWarnings("checkstyle:LocalVariableName")
     public void init() {
         String spark_home = System.getenv("SPARK_HOME");
         try {

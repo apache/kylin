@@ -1121,6 +1121,22 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
+    // STORAGE.Parquet
+    // ============================================================================
+
+    public float getParquetFileSizeMB() {
+        return Integer.parseInt(getOptional("kylin.storage.parquet.file-size-mb", "100"));
+    }
+
+    public int getParquetMinPartitions() {
+        return Integer.parseInt(getOptional("kylin.storage.parquet.min-partitions", "1"));
+    }
+
+    public int getParquetMaxPartitions() {
+        return Integer.parseInt(getOptional("kylin.storage.parquet.max-partitions", "5000"));
+    }
+
+    // ============================================================================
     // ENGINE.MR
     // ============================================================================
 
