@@ -239,7 +239,7 @@ public class PartitionDesc implements Serializable {
             String partitionColumnName = partitionColumn.getIdentity();
 
             if (endExclusive <= startInclusive) {
-                builder.append("1=1");
+                builder.append("1=0");
                 return;
             }
 
