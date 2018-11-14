@@ -403,6 +403,12 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     @Override
     public void validate() throws IllegalStateException {
+        if (cubeInstance.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
+            if (!isOffsetCube() && dateRangeStart >= dateRangeEnd)
+                throw new IllegalStateException("Invalid segment, dateRangeStart(" + dateRangeStart + ") must be smaller than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
+            if (isOffsetCube() && sourceOffsetStart >= sourceOffsetEnd)
+                throw new IllegalStateException("Invalid segment, sourceOffsetStart(" + sourceOffsetStart + ") must be smaller than sourceOffsetEnd(" + sourceOffsetEnd + ") in segment " + this);
+        }
     }
 
     public String getProject() {
