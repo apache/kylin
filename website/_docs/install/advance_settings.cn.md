@@ -91,6 +91,8 @@ kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
 ```
 并记得将所有任务和查询节点的地址注册到 `kylin.server.cluster-servers`.
 
+
+
 ## 支持 LDAP 或 SSO authentication
 
 查看 [How to Enable Security with LDAP and SSO](../howto/howto_ldap_and_sso.html)

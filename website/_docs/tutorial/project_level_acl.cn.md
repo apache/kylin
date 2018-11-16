@@ -1,6 +1,6 @@
 ---
 layout: docs-cn
-title: Project Level ACL
+title: 项目级 ACL
 categories: tutorial
 permalink: /cn/docs/tutorial/project_level_acl.html
 since: v2.1.0

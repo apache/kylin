@@ -8,7 +8,7 @@ You can verify the download by following these [procedures](https://www.apache.o
 
 #### v2.5.1
 - This is a bugfix release after 2.5.0, with 30 bug fixes and enhancement. Check the release notes. 
-- [Release notes](/docs/release_notes.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
+- [Kylin Release Notes](/docs/releases/kylin_release_notes.html) and [Upgrade Kylin From Old Versions](/docs/howto/howto_upgrade.html)
 - Source download: [apache-kylin-2.5.1-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-source-release.zip.sha256)\]
 - Binary download:
   - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.5.1-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-bin-hbase1x.tar.gz.sha256)\]
@@ -20,7 +20,7 @@ You can verify the download by following these [procedures](https://www.apache.o
 
 #### v2.5.0
 - This is a major release after 2.4, with 96 bug fixes and enhancement. Check the [v2.5.0 release announcement](/blog/2018/09/20/release-v2.5.0/) and the release notes. 
-- [Release notes](/docs/release_notes.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
+- [Kylin Release Notes](/docs/releases/kylin_release_notes.html) and [Upgrade Kylin From Old Versions](/docs/howto/howto_upgrade.html)
 - Source download: [apache-kylin-2.5.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-source-release.zip.sha256)\]
 - Binary download:
   - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.5.0-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0-bin-hbase1x.tar.gz.sha256)\]
@@ -33,7 +33,7 @@ You can verify the download by following these [procedures](https://www.apache.o
 
 #### JDBC Driver
 
-Kylin JDBC Driver, `kylin-jdbc-<version>.jar`, is in the "lib" folder of the binary package.
+Kylin JDBC Driver, `kylin-jdbc-<version>.jar`, is in the `lib/` folder of the binary package.
 
 #### ODBC Driver
 

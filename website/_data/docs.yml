@@ -18,7 +18,6 @@
 - title: Getting Started
   docs:
   - index
-  - release_notes
   - gettingstarted/concepts
   - gettingstarted/terminology
   - gettingstarted/faq
@@ -78,6 +77,10 @@
   - howto/howto_use_cli
   - howto/howto_ldap_and_sso
   - howto/howto_use_beeline
-  - howto/howto_update_coprocessor
+  - howto/howto_upgrade_coprocessor
   - howto/howto_install_ranger_kylin_plugin
   - howto/howto_enable_zookeeper_acl
+
+- title: Release Notes
+  docs:
+    - releases/kylin_release_notes
