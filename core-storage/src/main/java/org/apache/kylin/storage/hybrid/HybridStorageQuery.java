@@ -58,4 +58,15 @@ public class HybridStorageQuery implements IStorageQuery {
         return new CompoundTupleIterator(tupleIterators);
     }
 
+    @Override
+    public boolean keepRuntimeFilter() {
+        boolean result = storageEngines[0].keepRuntimeFilter();
+        for (int i = 1; i < storageEngines.length; i++) {
+            if (storageEngines[i].keepRuntimeFilter() ^ result) {
+                throw new RuntimeException("inconsistent between realizations, some keep runtime filter, some don't");
+            }
+        }
+        return result;
+    }
+
 }

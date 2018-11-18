@@ -62,6 +62,10 @@ public class FunctionDesc implements Serializable {
     public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
     public static final String FUNC_GROUPING = "GROUPING";
     public static final String FUNC_PERCENTILE = "PERCENTILE_APPROX";
+    public static final String FUNC_RAW = "RAW";
+    public static final String FUNC_TOP_N = "TOP_N";
+    public static final String DATATYPE_HLLC = "hllc";
+
     public static final Set<String> BUILT_IN_AGGREGATIONS = Sets.newHashSet();
 
     static {
@@ -200,6 +204,23 @@ public class FunctionDesc implements Serializable {
     public boolean isCountDistinct() {
         return FUNC_COUNT_DISTINCT.equalsIgnoreCase(expression);
     }
+
+    public boolean isHll() {
+        return FUNC_COUNT_DISTINCT.equalsIgnoreCase(expression) && DATATYPE_HLLC.equalsIgnoreCase(returnType);
+    }
+
+    public boolean isRaw() {
+        return FUNC_RAW.equalsIgnoreCase(expression);
+    }
+
+    public boolean isTopN() {
+        return FUNC_TOP_N.equalsIgnoreCase(expression);
+    }
+
+    public boolean isPercentile() {
+        return FUNC_PERCENTILE.equalsIgnoreCase(expression);
+    }
+
 
     /**
      * Get Full Expression such as sum(amount), count(1), count(*)...

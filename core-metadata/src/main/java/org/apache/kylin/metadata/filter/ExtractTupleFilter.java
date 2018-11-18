@@ -122,4 +122,9 @@ public class ExtractTupleFilter extends TupleFilter {
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
     }
 
+    @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitExtract(this);
+    }
+
 }

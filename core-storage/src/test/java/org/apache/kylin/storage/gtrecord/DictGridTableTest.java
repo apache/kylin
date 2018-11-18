@@ -54,10 +54,10 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
-import org.apache.kylin.metadata.filter.ExtractTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.filter.UnsupportedTupleFilter;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
@@ -304,7 +304,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         GTInfo info = table.getInfo();
 
         CompareTupleFilter fComp = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
-        ExtractTupleFilter fUnevaluatable = unevaluatable(info.colRef(1));
+        TupleFilter fUnevaluatable = unevaluatable(info.colRef(1));
         LogicalTupleFilter fNotPlusUnevaluatable = not(unevaluatable(info.colRef(1)));
         LogicalTupleFilter filter = and(fComp, fUnevaluatable, fNotPlusUnevaluatable);
 
@@ -574,8 +574,8 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         return ByteArray.copyOf(buf.array(), buf.arrayOffset(), buf.position());
     }
 
-    public static ExtractTupleFilter unevaluatable(TblColRef col) {
-        ExtractTupleFilter r = new ExtractTupleFilter(FilterOperatorEnum.EXTRACT);
+    public static TupleFilter unevaluatable(TblColRef col) {
+        UnsupportedTupleFilter r = new UnsupportedTupleFilter(FilterOperatorEnum.UNSUPPORTED);
         r.addChild(new ColumnTupleFilter(col));
         return r;
     }

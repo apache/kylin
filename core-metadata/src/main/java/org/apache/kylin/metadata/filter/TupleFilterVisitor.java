@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,16 +18,23 @@
 
 package org.apache.kylin.metadata.filter;
 
-import java.util.List;
+public interface TupleFilterVisitor<R> {
 
-public abstract class FunctionTupleFilter extends TupleFilter {
+    R visitCase(CaseTupleFilter filter);
 
-    protected FunctionTupleFilter(List<TupleFilter> filters, FilterOperatorEnum op) {
-        super(filters, op);
-    }
+    R visitColumn(ColumnTupleFilter filter);
 
-    @Override
-    public <R> R accept(TupleFilterVisitor<R> visitor) {
-        return visitor.visitFunction(this);
-    }
+    R visitCompare(CompareTupleFilter filter);
+
+    R visitConstant(ConstantTupleFilter filter);
+
+    R visitDynamic(DynamicTupleFilter filter);
+
+    R visitFunction(FunctionTupleFilter filter);
+
+    R visitLogical(LogicalTupleFilter filter);
+
+    R visitExtract(ExtractTupleFilter filter);
+
+    R visitUnsupported(UnsupportedTupleFilter filter);
 }

@@ -78,4 +78,9 @@ public class DynamicTupleFilter extends TupleFilter {
         this.variableName = BytesUtil.readUTFString(buffer);
     }
 
+    @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitDynamic(this);
+    }
+
 }

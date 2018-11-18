@@ -123,6 +123,8 @@ public class Tuple implements ITuple {
             }
         } else if ("float".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).floatValue();
+        } else if ("bigint".equals(dataType) && fieldValue instanceof Number) {
+            fieldValue = ((Number) fieldValue).longValue();
         } else if ("integer".equals(dataType) && fieldValue instanceof Number) {
             fieldValue = ((Number) fieldValue).intValue();
         } else if ("bigint".equals(dataType) && fieldValue instanceof Number) {

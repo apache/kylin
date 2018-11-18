@@ -56,4 +56,9 @@ public class UnsupportedTupleFilter extends TupleFilter {
     @Override
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
     }
+
+    @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitUnsupported(this);
+    }
 }

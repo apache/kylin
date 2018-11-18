@@ -28,4 +28,8 @@ public interface IStorageQuery {
 
     ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo);
 
+    /**
+     * @return whether calcite's runtime filter over scan node should be kept or not.
+     */
+    boolean keepRuntimeFilter();
 }

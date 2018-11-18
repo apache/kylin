@@ -122,4 +122,10 @@ public class ConstantTupleFilter extends TupleFilter {
     @Override public int hashCode() {
         return constantValues.hashCode();
     }
+
+    @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitConstant(this);
+    }
+
 }

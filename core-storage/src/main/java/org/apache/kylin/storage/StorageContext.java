@@ -20,7 +20,9 @@ package org.apache.kylin.storage;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
@@ -41,6 +43,7 @@ public class StorageContext {
     public final int ctxId;
 
     private StorageURL connUrl;
+    private final QueryContext queryContext;
     private int limit = Integer.MAX_VALUE;
     private boolean overlookOuterLimit = false;
     private int offset = 0;
@@ -70,6 +73,7 @@ public class StorageContext {
 
     public StorageContext(int ctxId) {
         this.ctxId = ctxId;
+        this.queryContext = QueryContextFacade.current();
     }
 
     public long getFilterMask() {
@@ -78,6 +82,10 @@ public class StorageContext {
 
     public void setFilterMask(long filterMask) {
         this.filterMask = filterMask;
+    }
+
+    public QueryContext getQueryContext() {
+        return queryContext;
     }
 
     public StorageURL getConnUrl() {

@@ -155,4 +155,9 @@ public class ColumnTupleFilter extends TupleFilter {
             this.columnRef = column.getRef();
         }
     }
+
+    @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitColumn(this);
+    }
 }
