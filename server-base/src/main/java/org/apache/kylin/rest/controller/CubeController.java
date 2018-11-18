@@ -51,6 +51,9 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.IStorageAware;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metrics.MetricsManager;
@@ -589,6 +592,8 @@ public class CubeController extends BasicController {
             throw new BadRequestException("Invalid Cube name, only letters, numbers and underscore supported.");
         }
 
+        validateStorageType(desc);
+
         try {
             desc.setUuid(RandomUtil.randomUUID().toString());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
@@ -606,6 +611,18 @@ public class CubeController extends BasicController {
         cubeRequest.setUuid(desc.getUuid());
         cubeRequest.setSuccessful(true);
         return cubeRequest;
+    }
+
+    private void validateStorageType(CubeDesc cubeDesc) {
+        if (cubeDesc.getStorageType() == IStorageAware.ID_SHARDED_DRUID) {
+            List<MeasureDesc> measureDescs = cubeDesc.getMeasures();
+            for(MeasureDesc measureDesc: measureDescs) {
+                FunctionDesc functionDesc = measureDesc.getFunction();
+                if (functionDesc.isHll() || functionDesc.isRaw() || functionDesc.isTopN() || functionDesc.isPercentile()) {
+                    throw new BadRequestException("Druid Storage Engine don't support HLL, Raw, TopN, Percentile measure, please choose HBase");
+                }
+            }
+        }
     }
 
     /**
@@ -634,6 +651,8 @@ public class CubeController extends BasicController {
                 updateRequest(cubeRequest, false, error);
                 return cubeRequest;
             }
+
+            validateStorageType(desc);
 
             //cube renaming is not allowed
             if (!cube.getDescriptor().getName().equalsIgnoreCase(desc.getName())) {

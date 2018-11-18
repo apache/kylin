@@ -18,6 +18,7 @@
 
 package org.apache.kylin.measure.bitmap;
 
+import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
 import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 public class RoaringBitmapCounterFactory implements BitmapCounterFactory, Serializable {
-    public static final BitmapCounterFactory INSTANCE = new RoaringBitmapCounterFactory();
+    public static final RoaringBitmapCounterFactory INSTANCE = new RoaringBitmapCounterFactory();
 
     private RoaringBitmapCounterFactory() {}
 
@@ -49,5 +50,9 @@ public class RoaringBitmapCounterFactory implements BitmapCounterFactory, Serial
         RoaringBitmapCounter counter = new RoaringBitmapCounter();
         counter.readFields(in);
         return counter;
+    }
+
+    public BitmapCounter newBitmap(ImmutableRoaringBitmap bitmap) {
+        return new RoaringBitmapCounter(bitmap);
     }
 }

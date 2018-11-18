@@ -24,6 +24,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -171,6 +173,14 @@ abstract public class KylinConfigBase implements Serializable {
             if (key.startsWith(prefix)) {
                 result.put(key.substring(prefix.length()), (String) entry.getValue());
             }
+        }
+        return result;
+    }
+
+    final protected String[] getRequiredStringArray(String prop) {
+        String[] result = getOptionalStringArray(prop, new String[0]);
+        if (result.length == 0) {
+            throw new IllegalArgumentException("missing '" + prop + "' in conf/kylin.properties");
         }
         return result;
     }
@@ -942,6 +952,7 @@ abstract public class KylinConfigBase implements Serializable {
         r.put(0, "org.apache.kylin.storage.hbase.HBaseStorage");
         r.put(1, "org.apache.kylin.storage.hybrid.HybridStorage");
         r.put(2, "org.apache.kylin.storage.hbase.HBaseStorage");
+        r.put(5, "org.apache.kylin.storage.druid.DruidStorage");
         r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.storage.provider.")));
         return r;
     }
@@ -1119,6 +1130,81 @@ abstract public class KylinConfigBase implements Serializable {
     public int getHBaseReplicationScope() {
         return Integer.parseInt(getOptional("kylin.storage.hbase.replication-scope", "0"));
     }
+
+    // ============================================================================
+    // STORAGE.DRUID
+    // ============================================================================
+
+    public String getDruidHdfsLocation() {
+        return getOptional("kylin.storage.druid.hdfs-location");
+    }
+
+    public double getDruidShardCutGB() {
+        return Double.valueOf(getOptional("kylin.storage.druid.shard-cut-gb", "0.5"));
+    }
+
+    public short getDruidMinShardCount() {
+        short val = Short.valueOf(getOptional("kylin.storage.druid.min-shard-count", "1"));
+        return (short) Math.max(val, 1);
+    }
+
+    public short getDruidMaxShardCount() {
+        short val = Short.valueOf(getOptional("kylin.storage.druid.max-shard-count", "100"));
+        return (short) Math.min(val, Short.MAX_VALUE);
+    }
+
+    public String[] getDruidCoordinatorAddresses() {
+        String[] hosts = getRequiredStringArray("kylin.storage.druid.coordinator-addresses");
+        for (String host : hosts) {
+            try {
+                new URL(host);
+            } catch (MalformedURLException e) {
+                throw new IllegalArgumentException("Invalid valuefor kylin.storage.druid.coordinator-addresses");
+            }
+        }
+        return hosts;
+    }
+
+    public String getDruidBrokerHost() {
+        return getRequired("kylin.storage.druid.broker-host");
+    }
+
+    public String getDruidMysqlUrl() {
+        return getRequired("kylin.storage.druid.mysql-url");
+    }
+
+    public String getDruidMysqlUser() {
+        return getRequired("kylin.storage.druid.mysql-user");
+    }
+
+    public String getDruidMysqlPassword() {
+        return getRequired("kylin.storage.druid.mysql-password");
+    }
+
+    public String getDruidMysqlSegTabel() {
+        return getRequired("kylin.storage.druid.mysql-seg-table");
+    }
+
+    public int getDruidReducerThreadsNum() {
+        return Integer.parseInt(getOptional("kylin.storage.druid.reducer-thread-num", "1"));
+    }
+
+    public Map<String, String> getDruidMRConfigOverride() {
+        return getPropertiesByPrefix("kylin.engine.mr.druid-config-override.");
+    }
+
+    public String getDruidTierName() {
+        return getOptional("kylin.storage.druid.tier-name", "_default_tier");
+    }
+
+    public int getDruidReplicationNum() {
+        return Integer.parseInt(getOptional("kylin.storage.druid.replication-num", "2"));
+    }
+
+    public int getDruidDerivedInThreshold() {
+        return Integer.parseInt(getOptional("kylin.storage.druid.derived-filter-translation-threshold", "1000"));
+    }
+
 
     // ============================================================================
     // ENGINE.MR

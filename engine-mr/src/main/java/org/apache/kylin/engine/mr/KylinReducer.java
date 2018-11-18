@@ -40,7 +40,7 @@ public class KylinReducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Reducer<KEYI
     }
 
     @Override
-    final protected void setup(Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
+    protected void setup(Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
             throws IOException, InterruptedException {
         try {
             logger.info("Do setup, available memory: {}m", MemoryBudgetController.getSystemAvailMB());

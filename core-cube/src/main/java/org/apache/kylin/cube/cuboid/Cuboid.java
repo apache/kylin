@@ -73,7 +73,7 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
     }
 
     @VisibleForTesting
-    static Cuboid findById(CubeDesc cubeDesc, long cuboidID) {
+    public static Cuboid findById(CubeDesc cubeDesc, long cuboidID) {
         return findById(cubeDesc.getInitialCuboidScheduler(), cuboidID);
     }
 

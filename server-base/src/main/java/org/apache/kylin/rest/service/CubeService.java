@@ -32,6 +32,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.kylin.storage.druid.common.DruidCoordinatorClient;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -80,6 +83,7 @@ import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ValidateUtil;
 import org.apache.kylin.storage.hybrid.HybridInstance;
+import org.apache.kylin.storage.druid.DruidSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -213,6 +217,8 @@ public class CubeService extends BasicService implements InitializingBean {
         CubeDesc createdDesc;
         CubeInstance createdCube;
 
+        setOnlineVersionForDruidStorage(desc, null);
+
         createdDesc = getCubeDescManager().createCubeDesc(desc);
 
         if (createdDesc.isBroken()) {
@@ -224,6 +230,23 @@ public class CubeService extends BasicService implements InitializingBean {
 
         createdCube = getCubeManager().createCube(cubeName, project.getName(), createdDesc, owner);
         return createdCube;
+    }
+
+
+    private void setOnlineVersionForDruidStorage(CubeDesc cubeDesc, CubeInstance cubeInstance) {
+        if (cubeDesc.getOnlineVersion() == 0 && cubeDesc.getStorageType() == 5 && (cubeInstance == null || cubeInstance.getSegments().size() == 0)) {
+            List<String> datasources = DruidCoordinatorClient.getSingleton().getDataSource();
+            int version = -1;
+            String regex = cubeDesc.getName() + "_(\\d*)";
+            Pattern pattern = Pattern.compile(regex);
+            for(String datasource: datasources) {
+                Matcher matcher = pattern.matcher(datasource);
+                if (matcher.matches()) {
+                    version = Math.max(version, Integer.parseInt(matcher.group(matcher.groupCount())));
+                }
+            }
+            cubeDesc.setOnlineVersion(++version);
+        }
     }
 
     public List<CubeInstance> listAllCubes(String projectName) {
@@ -277,15 +300,18 @@ public class CubeService extends BasicService implements InitializingBean {
         if (!cubingJobs.isEmpty()) {
             throw new BadRequestException(String.format(Locale.ROOT, msg.getDISCARD_JOB_FIRST(), cube.getName()));
         }
-
+        
         //double check again
         if (!forceUpdate && !cube.getDescriptor().consistentWith(desc)) {
             throw new BadRequestException(String.format(Locale.ROOT, msg.getINCONSISTENT_CUBE_DESC(), desc.getName()));
         }
 
+        setOnlineVersionForDruidStorage(desc, cube);
+
         CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
         int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc, false);
         logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
+
 
         ProjectManager projectManager = getProjectManager();
         if (!isCubeInProject(newProjectName, cube)) {
@@ -308,6 +334,12 @@ public class CubeService extends BasicService implements InitializingBean {
         }
 
         try {
+            //for Druid Storage
+            if (cube.getStorageType() == 5 && cube.getSegments().size() > 0) {
+                String dataSource = DruidSchema.getDataSource(cube.getDescriptor());
+                DruidCoordinatorClient.getSingleton().deleteDataSource(dataSource);
+            }
+
             this.releaseAllJobs(cube);
         } catch (Exception e) {
             logger.error("error when releasing all jobs", e);
@@ -373,9 +405,18 @@ public class CubeService extends BasicService implements InitializingBean {
                     String.format(Locale.ROOT, msg.getPURGE_NOT_DISABLED_CUBE(), cubeName, ostatus));
         }
 
-        this.releaseAllSegments(cube);
-        return cube;
+        try {
+            //for Druid Storage
+            if (cube.getStorageType() == 5 && cube.getSegments().size() > 0) {
+                String dataSource = DruidSchema.getDataSource(cube.getDescriptor());
+                DruidCoordinatorClient.getSingleton().deleteDataSource(dataSource);
+            }
 
+            this.releaseAllSegments(cube);
+            return cube;
+        } catch (IOException e) {
+            throw e;
+        }
     }
 
     /**

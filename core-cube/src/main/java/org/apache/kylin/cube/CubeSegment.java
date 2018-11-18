@@ -236,6 +236,10 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
         return createTimeUTC;
     }
 
+    public String getCreateTimeUTCStr() {
+        return "" + createTimeUTC;
+    }
+
     public void setCreateTimeUTC(long createTimeUTC) {
         this.createTimeUTC = createTimeUTC;
     }
@@ -521,6 +525,10 @@ public class CubeSegment implements IBuildable, ISegment, Serializable {
 
     public void setCuboidShardNums(Map<Long, Short> newCuboidShards) {
         this.cuboidShardNums = newCuboidShards;
+    }
+
+    public int getTotalShards() {
+        return totalShards;
     }
 
     public int getTotalShards(long cuboidId) {
