@@ -147,7 +147,7 @@ public class CuboidStatsUtilTest {
 
     @Test
     public void createDirectChildrenCacheStressTest() {
-        Stopwatch sw = Stopwatch.createStarted();
+        Stopwatch sw = new Stopwatch();
         Set<Long> cuboidSet = generateMassCuboidSet();
         System.out.println("Time elapsed for creating sorted cuboid list: " + sw.elapsed(TimeUnit.MILLISECONDS));
         sw.reset();

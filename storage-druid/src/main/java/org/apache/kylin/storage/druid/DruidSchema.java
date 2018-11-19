@@ -99,7 +99,7 @@ public class DruidSchema implements NameMapping {
         if (!segment.getCubeDesc().getModel().getPartitionDesc().isPartitioned()) {
             return Intervals.utc(0, segment.getCreateTimeUTC());
         }
-        return Intervals.utc(segment.getTSRange().start.v, segment.getTSRange().start.v);
+        return Intervals.utc(segment.getTSRange().start.v, segment.getTSRange().end.v);
     }
 
     public static String getDataSource(CubeDesc cubeDesc) {
