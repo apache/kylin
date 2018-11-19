@@ -308,7 +308,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
             setDatabase(getDatabase().toUpperCase(Locale.ROOT));
 
         if (columns != null) {
-            Arrays.sort(columns, new Comparator<ColumnDesc>() {
+            Arrays.parallelSort(columns, new Comparator<ColumnDesc>() {
                 @Override
                 public int compare(ColumnDesc col1, ColumnDesc col2) {
                     Integer id1 = Integer.parseInt(col1.getId());
