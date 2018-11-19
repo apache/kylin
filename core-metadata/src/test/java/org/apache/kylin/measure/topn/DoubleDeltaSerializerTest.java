@@ -67,7 +67,8 @@ public class DoubleDeltaSerializerTest {
         for (int i = 0; i < n; i++) {
             nums[i] = rand.nextDouble() * 1000000;
         }
-        Arrays.sort(nums);
+
+        Arrays.parallelSort(nums);
 
         buf.clear();
         dds.serialize(nums, buf);
@@ -86,7 +87,8 @@ public class DoubleDeltaSerializerTest {
         for (int i = 0; i < n; i++) {
             nums[i] = rand.nextInt();
         }
-        Arrays.sort(nums);
+        
+        Arrays.parallelSort(nums);
 
         buf.clear();
         dds.serialize(nums, buf);

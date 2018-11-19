@@ -220,7 +220,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         // exclude those already under merging segments
         readySegs.removeAll(mergingSegs);
 
-        Arrays.sort(timeRanges);
+        Arrays.parallelSort(timeRanges);
 
         for (int i = timeRanges.length - 1; i >= 0; i--) {
             long toMergeRange = timeRanges[i];

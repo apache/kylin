@@ -118,8 +118,9 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         }
 
         long[] spanningsArray = Longs.toArray(totalSpanning);
-        Arrays.sort(spanningsArray);
-        Arrays.sort(expectChildren);
+
+        Arrays.parallelSort(spanningsArray);
+        Arrays.parallelSort(expectChildren);
         assertArrayEquals(expectChildren, spanningsArray);
     }
 
