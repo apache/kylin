@@ -59,7 +59,7 @@ public class DefaultPartitionConditionBuilderTest extends LocalFileMetadataTestC
 
         range = new TSRange(0L, 0L);
         condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, null, range);
-        Assert.assertEquals("1=1", condition);
+        Assert.assertEquals("1=0", condition);
     }
 
     @Test
