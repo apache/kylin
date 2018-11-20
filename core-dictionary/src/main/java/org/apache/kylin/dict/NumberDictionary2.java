@@ -40,7 +40,7 @@ public class NumberDictionary2<T> extends NumberDictionary<T> {
     @Override
     protected void setConverterByName(String converterName) throws Exception {
         converterName = "org.apache.kylin.dict.Number2BytesConverter";
-        this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+        this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).getDeclaredConstructor().newInstance();
     }
 
 }

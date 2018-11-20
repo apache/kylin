@@ -211,7 +211,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
             String converterName = in.readUTF();
             BytesConverter<T> bytesConverter = null;
             if (converterName.isEmpty() == false)
-                bytesConverter = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                bytesConverter = ClassUtil.forName(converterName, BytesConverter.class).getDeclaredConstructor().newInstance();
             //init accuOffset
             int accuSize = in.readInt();
             ArrayList<Integer> accuOffset = new ArrayList<>();

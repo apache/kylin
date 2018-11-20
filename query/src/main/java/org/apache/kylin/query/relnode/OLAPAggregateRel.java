@@ -110,7 +110,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         for (String func : udafs.keySet()) {
             try {
                 AGGR_FUNC_PARAM_AS_MEASURE_MAP.put(func,
-                        ((ParamAsMeasureCount) (udafs.get(func).newInstance())).getParamAsMeasureCount());
+                        ((ParamAsMeasureCount) (udafs.get(func).getDeclaredConstructor().newInstance())).getParamAsMeasureCount());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
