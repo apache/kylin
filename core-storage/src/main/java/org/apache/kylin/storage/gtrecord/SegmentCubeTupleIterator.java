@@ -92,6 +92,7 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
 
         boolean hasMultiplePartitions = records instanceof SortMergedPartitionResultIterator;
         if (hasMultiplePartitions && context.isStreamAggregateEnabled()) {
+            logger.info("Using GTStreamAggregateScanner to pre-aggregate storage partition.");
             // input records are ordered, leverage stream aggregator to produce possibly fewer records
             IGTScanner inputScanner = new IGTScanner() {
                 public GTInfo getInfo() {
