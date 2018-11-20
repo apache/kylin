@@ -27,7 +27,6 @@ if [ "$verbose" = true ]; then
     shift
 fi
 
-source ${dir}/check-env.sh
 mkdir -p ${KYLIN_HOME}/logs
 mkdir -p ${KYLIN_HOME}/ext
 
@@ -66,7 +65,9 @@ then
           quit "Kylin is running, stop it first"
         fi
     fi
-    
+
+    source ${dir}/check-env.sh
+
     tomcat_root=${dir}/../tomcat
     export tomcat_root
 
