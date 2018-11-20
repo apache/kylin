@@ -81,3 +81,6 @@ then
         quit "Failed to create $SPARK_HISTORYLOG_DIR. Please make sure the user has right to access $SPARK_HISTORYLOG_DIR"
     fi
 fi
+
+${KYLIN_HOME}/bin/check-port-availability.sh ||  exit 1;
+
