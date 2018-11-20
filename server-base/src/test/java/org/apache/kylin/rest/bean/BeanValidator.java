@@ -67,7 +67,7 @@ public class BeanValidator {
                     try {
                         Object value = buildValue(returnType);
 
-                        T bean = clazz.newInstance();
+                        T bean = clazz.getDeclaredConstructor().newInstance();
 
                         setter.invoke(bean, value);
 

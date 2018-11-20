@@ -316,7 +316,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
                 String converterName = in.readUTF();
                 BytesConverter converter;
                 try {
-                    converter = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                    converter = ClassUtil.forName(converterName, BytesConverter.class).getDeclaredConstructor().newInstance();
                 } catch (Exception e) {
                     throw new RuntimeException("Fail to instantiate BytesConverter: " + converterName, e);
                 }
@@ -386,7 +386,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
                 String converterName = in.readUTF();
                 BytesConverter converter;
                 try {
-                    converter = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                    converter = ClassUtil.forName(converterName, BytesConverter.class).getDeclaredConstructor().newInstance();
                 } catch (Exception e) {
                     throw new RuntimeException("Fail to instantiate BytesConverter: " + converterName, e);
                 }
