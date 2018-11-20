@@ -180,7 +180,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("engine_type")
     private int engineType = IEngineAware.ID_MR_V2;
     @JsonProperty("storage_type")
-    private int storageType = IStorageAware.ID_HBASE;
+    private int storageType = IStorageAware.ID_SHARDED_HBASE;
     @JsonProperty("override_kylin_properties")
     private LinkedHashMap<String, String> overrideKylinProps = new LinkedHashMap<String, String>();
 
