@@ -490,7 +490,14 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     public static KylinConfig loadKylinConfigFromHdfs(SerializableConfiguration conf, String uri) {
         HadoopUtil.setCurrentConfiguration(conf.get());
-        return loadKylinConfigFromHdfs(uri);
+        KylinConfig config = loadKylinConfigFromHdfs(uri);
+
+        // This is a bad example where the thread local KylinConfig cannot be auto-closed due to
+        // limitation of MR API. It works because MR task runs its own process. Do not copy.
+        @SuppressWarnings("unused")
+        SetAndUnsetThreadLocalConfig shouldAutoClose = KylinConfig.setAndUnsetThreadLocalConfig(config);
+
+        return config;
     }
 
     public static KylinConfig loadKylinConfigFromHdfs(String uri) {
@@ -517,11 +524,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        
-        // This is a bad example where the thread local KylinConfig cannot be auto-closed due to 
-        // limitation of MR API. It works because MR task runs its own process. Do not copy.
-        @SuppressWarnings("unused")
-        SetAndUnsetThreadLocalConfig shouldAutoClose = KylinConfig.setAndUnsetThreadLocalConfig(config);
+
         kylinConfigCache.put(uri, config);
         return config;
     }
