@@ -87,15 +87,29 @@ Some configuration files in `$KYLIN_HOME/conf/` can be overridden in the Web UI.
 
 ### Project-level Configuration Overriding {#project-config-override}
 
-Click *Manage Project* in the web UI interface, select a project, click *Edit* -> *Project Config* -> *+ Property* to add configuration properties which could override property values in configuration files, as the figure below shown:
+Click *Manage Project* in the web UI interface, select a project, click *Edit* -> *Project Config* -> *+ Property* to add configuration properties which could override property values in configuration files, as the figure below shown,
 ![](/images/install/override_config_project.png)
 
 
 
 ### Cube-level Configuration Overriding		{#cube-config-override}
 
-In the *Configuration overrides* step of *Cube Designer*, user could rewrite property values to override those in project level and configuration files, as the figure below shown: 
+In the *Configuration overrides* step of *Cube Designer*, user could rewrite property values to override those in project level and configuration files, as the figure below shown,
 ![](/images/install/override_config_cube.png)
+
+The following configurations can be override in the Cube-level,
+
+- `kylin.cube.size-estimate*`
+- `kylin.cube.algorithm*`
+- `kylin.cube.aggrgroup*`
+- `kylin.metadata.dimension-encoding-max-length`
+- `kylin.cube.max-building-segments`
+- `kylin.cube.is-automerge-enabled`
+- `kylin.job.allow-empty-segment`
+- `kylin.job.sampling-percentage`
+- `kylin.source.hive.redistribute-flat-table`
+- `kylin.engine.spark*`
+- `kylin.query.skip-empty-segments`
 
 
 

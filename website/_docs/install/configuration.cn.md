@@ -10,8 +10,8 @@ permalink: /cn/docs/install/configuration.html
 - [配置文件及参数重写](#kylin-config)
     - [Kylin 配置文件](#kylin-config)
 	- [配置重写](#config-override)
-		- [项目配置重写](#project-config-override)
-		- [Cube 配置重写](#cube-config-override)
+		- [项目级别配置重写](#project-config-override)
+		- [Cube 级别配置重写](#cube-config-override)
 		- [重写 MapReduce 参数](#mr-config-override)
 		- [重写 Hive 参数](#hive-config-override)
         - [重写 Spark 参数](#spark-config-override)
@@ -27,7 +27,7 @@ permalink: /cn/docs/install/configuration.html
     - [Hive 客户端 & SparkSQL](#hive-client-and-sparksql)
     - [配置 JDBC 数据源](#jdbc-datasource)
     - [数据类型精度](#precision-config)
-    - [Cube 设置](#cube-config)
+    - [Cube 设计](#cube-config)
     - [Cube 大小估计](#cube-estimate)
 	- [Cube 构建算法](#cube-algorithm)
 	- [自动合并](#auto-merge)
@@ -86,17 +86,31 @@ Kylin 的配置文件如下：
 
 
 
-### 项目配置重写	{#project-config-override}
+### 项目级别配置重写	{#project-config-override}
 
 在 Web UI 界面点击 **Manage Project** ，选中某个项目，点击 **Edit** -> **Project Config** -> **+ Property**，进行项目级别的配置重写，如下图所示：
 ![](/images/install/override_config_project.png)
 
 
 
-### Cube 配置重写		{#cube-config-override}
+### Cube 级别配置重写		{#cube-config-override}
 
 在设计 Cube （**Cube Designer**）的 **Configuration Overwrites** 步骤可以添加配置项，进行 Cube 级别的配置重写，如下图所示：
 ![](/images/install/override_config_cube.png)
+
+以下参数可以在 Cube 级别重写：
+
+- `kylin.cube.size-estimate*`
+- `kylin.cube.algorithm*`
+- `kylin.cube.aggrgroup*`
+- `kylin.metadata.dimension-encoding-max-length`
+- `kylin.cube.max-building-segments`
+- `kylin.cube.is-automerge-enabled`
+- `kylin.job.allow-empty-segment`
+- `kylin.job.sampling-percentage`
+- `kylin.source.hive.redistribute-flat-table`
+- `kylin.engine.spark*`
+- `kylin.query.skip-empty-segments`
 
 
 
@@ -185,7 +199,6 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 ### 元数据 {#metadata}
 
 - `kylin.metadata.url`：指定元数据库路径，默认值为 kylin_metadata@hbase
-- `kylin.metadata.dimension-encoding-max-length`：指定维度作为 Rowkeys 时使用 fix_length 编码时的最大长度，默认值为 256
 - `kylin.metadata.sync-retries`：指定元数据同步重试次数，默认值为 3 
 - `kylin.metadata.sync-error-handler`：默认值为 `DefaultSyncErrorHandler`
 - `kylin.metadata.check-copy-on-write`：清除元数据缓存，默认值为 `FALSE`
@@ -256,7 +269,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 
 
 
-### Cube 设置 {#cube-config}
+### Cube 设计 {#cube-config}
 
 - `kylin.cube.ignore-signature-inconsistency`：Cube desc 中的 signature 信息能保证 Cube 不被更改为损坏状态，默认值为 FALSE
 - `kylin.cube.aggrgroup.max-combination`：指定一个 Cube 的聚合组 Cuboid 上限，默认值为 32768
@@ -264,6 +277,8 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 - `kylin.cube.rowkey.max-size`：指定可以设置为 Rowkeys 的最大列数，默认值为 63
 - `kylin.cube.allow-appear-in-multiple-projects`：是否允许一个 Cube 出现在多个项目中
 - `kylin.cube.gtscanrequest-serialization-level`：默认值为 1
+- `kylin.metadata.dimension-encoding-max-length`：指定维度作为 Rowkeys 时使用 fix_length 编码时的最大长度，默认值为 256
+
 
 
 
