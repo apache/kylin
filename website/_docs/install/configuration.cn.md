@@ -12,16 +12,17 @@ permalink: /cn/docs/install/configuration.html
 	- [配置重写](#config-override)
 		- [项目级别配置重写](#project-config-override)
 		- [Cube 级别配置重写](#cube-config-override)
-		- [重写 MapReduce 参数](#mr-config-override)
-		- [重写 Hive 参数](#hive-config-override)
-        - [重写 Spark 参数](#spark-config-override)
+		- [MapReduce 任务配置重写](#mr-config-override)
+		- [Hive 任务配置重写](#hive-config-override)
+		- [Spark 任务配置重写](#spark-config-override)
 - [部署配置](#kylin-deploy)
     - [部署 Kylin](#deploy-config)
-	- [任务引擎高可用](#job-engine-ha)
 	- [分配更多内存给 Kylin 实例](#kylin-jvm-settings)
+	- [任务引擎高可用](#job-engine-ha)
+	- [读写分离配置](#rw-deploy)
 	- [RESTful Webservice](#rest-config)
 - [Metastore 配置](#kylin_metastore)
-    - [元数据](#metadata)
+    - [元数据相关](#metadata)
     - [基于 MySQL 的 Metastore (测试)](#mysql-metastore)
 - [构建配置](#kylin-build)
     - [Hive 客户端 & SparkSQL](#hive-client-and-sparksql)
@@ -67,11 +68,10 @@ permalink: /cn/docs/install/configuration.html
 
 ### Kylin 配置文件	 {#kylin-config-file}
 
-Kylin 会自动从环境中读取 Hadoop 配置（`core-site.xml`），Hive 配置（`hive-site.xml`）和 HBase 配置（`hbase-site.xml`），另外，Kylin 的配置文件在 `$KYLIN_HOME/conf/` 目录下。
-Kylin 的配置文件如下：
+Kylin 会自动从环境中读取 Hadoop 配置（`core-site.xml`），Hive 配置（`hive-site.xml`）和 HBase 配置（`hbase-site.xml`），另外，Kylin 的配置文件在 `$KYLIN_HOME/conf/` 目录下，如下：
 
 - `kylin_hive_conf.xml`：该文件包含了 Hive 任务的配置项。
-- `kylin_job_conf.xml` & `kylin_job_conf_inmem.xml`：该文件包含了 MapReduce 任务的配置项。当执行**In-mem Cubing**任务时，需要在 `kylin_job_conf_inmem.xml` 中为 mapper 申请更多的内存
+- `kylin_job_conf.xml` & `kylin_job_conf_inmem.xml`：该文件包含了 MapReduce 任务的配置项。当执行 **In-mem Cubing** 任务时，需要在 `kylin_job_conf_inmem.xml` 中为 mapper 申请更多的内存
 - `kylin-kafka-consumer.xml`：该文件包含了 Kafka 任务的配置项。
 - `kylin-server-log4j.properties`：该文件包含了 Kylin 服务器的日志配置项。
 - `kylin-tools-log4j.properties`：该文件包含了 Kylin 命令行的日志配置项。
@@ -114,7 +114,7 @@ Kylin 的配置文件如下：
 
 
 
-### 重写 MapReduce 任务相关	{#mr-config-override}
+### MapReduce 任务配置重写	{#mr-config-override}
 
 Kylin 支持在项目和 Cube 级别重写 `kylin_job_conf.xml` 和 `kylin_job_conf_inmem.xml` 中参数，以键值对的性质，按照如下格式替换：
 `kylin.job.mr.config.override.<key> = <value>`
@@ -123,7 +123,7 @@ Kylin 支持在项目和 Cube 级别重写 `kylin_job_conf.xml` 和 `kylin_job_c
 
 
 
-### 重写 Hive 参数  {#hive-config-override}
+### Hive 任务配置重写  {#hive-config-override}
 
 Kylin 支持在项目和 Cube 级别重写 `kylin_hive_conf.xml` 中参数，以键值对的性质，按照如下格式替换：
 `kylin.source.hive.config-override.<key> = <value>`
@@ -132,7 +132,7 @@ Kylin 支持在项目和 Cube 级别重写 `kylin_hive_conf.xml` 中参数，以
 
 
 
-### 重写 Spark 参数   {#spark-config-override}
+### Spark 任务配置重写   {#spark-config-override}
 
 Kylin 支持在项目和 Cube 级别重写 `kylin.properties` 中的 Spark 参数，以键值对的性质，按照如下格式替换：
 `kylin.engine.spark-conf.<key> = <value>`
@@ -150,21 +150,12 @@ Kylin 支持在项目和 Cube 级别重写 `kylin.properties` 中的 Spark 参�
 ### 部署 Kylin  {#deploy-config}
 
 - `kylin.env.hdfs-working-dir`：指定 Kylin 服务所用的 HDFS 路径，默认值为 `/kylin`，请确保启动 Kylin 实例的用户有读写该目录的权限
-- `kylin.env`：指定 Kylin 部署的用途，参数值可选 (`DEV` | `QA` | `PROD`)，默认值为 `DEV`，在 DEV 模式下一些开发者功能将被启用
+- `kylin.env`：指定 Kylin 部署的用途，参数值可选 `DEV`，`QA`， `PROD`，默认值为 `DEV`，在 DEV 模式下一些开发者功能将被启用
 - `kylin.env.zookeeper-base-path`：指定 Kylin 服务所用的 ZooKeeper 路径，默认值为 `/kylin`
 - `kylin.env.zookeeper-connect-string`：指定 ZooKeeper 连接字符串，如果为空，使用 HBase 的 ZooKeeper
 - `kylin.env.hadoop-conf-dir`：指定 Hadoop 配置文件目录，如果不指定的话，获取环境中的 `HADOOP_CONF_DIR`
 - `kylin.server.mode`：指定 Kylin 实例的运行模式，参数值可选 `all`， `job`， `query`，默认值为 `all`，job 模式代表该服务仅用于任务调度，不用于查询；query 模式代表该服务仅用于查询，不用于构建任务的调度；all 模式代表该服务同时用于任务调度和 SQL 查询。
 - `kylin.server.cluster-name`：指定集群名称
-
-
-
-### 读写分离配置   {#rw-deploy}
-
-- `kylin.storage.hbase.cluster-fs`：指明 HBase 集群的 HDFS 文件系统
-- `kylin.storage.hbase.cluster-hdfs-config-file`：指向 HBase 集群的 HDFS 配置文件
-
-> 提示：更多信息请参考 [Deploy Apache Kylin with Standalone HBase Cluster](http://kylin.apache.org/blog/2016/06/10/standalone-hbase-cluster/)
 
 
 
@@ -177,6 +168,24 @@ Kylin 支持在项目和 Cube 级别重写 `kylin.properties` 中的 Spark 参�
 export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -verbose`gc -XX`+PrintGCDetails -XX`+PrintGCDateStamps -Xloggc`$KYLIN_HOME/logs/kylin.gc.$$ -XX`+UseGCLogFileRotation -XX`NumberOfGCLogFiles=10 -XX`GCLogFileSize=64M"
 # export KYLIN_JVM_SETTINGS="-Xms16g -Xmx16g -XX`MaxPermSize=512m -XX`NewSize=3g -XX`MaxNewSize=3g -XX`SurvivorRatio=4 -XX`+CMSClassUnloadingEnabled -XX`+CMSParallelRemarkEnabled -XX`+UseConcMarkSweepGC -XX`+CMSIncrementalMode -XX`CMSInitiatingOccupancyFraction=70 -XX`+UseCMSInitiatingOccupancyOnly -XX`+DisableExplicitGC -XX`+HeapDumpOnOutOfMemoryError -verbose`gc -XX`+PrintGCDetails -XX`+PrintGCDateStamps -Xloggc`$KYLIN_HOME/logs/kylin.gc.$$ -XX`+UseGCLogFileRotation -XX`NumberOfGCLogFiles=10 -XX`GCLogFileSize=64M"
 ```
+
+
+
+### 任务引擎高可用  {#job-engine-ha}
+
+- `kylin.job.scheduler.default=2`：启用分布式任务调度器
+- `kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock`：开启分布式任务锁
+
+> 提示：更多信息请参考 [集群模式部署](/cn/docs/install/kylin_cluster.html) 中的**任务引擎高可用**部分。
+
+
+
+### 读写分离配置   {#rw-deploy}
+
+- `kylin.storage.hbase.cluster-fs`：指明 HBase 集群的 HDFS 文件系统
+- `kylin.storage.hbase.cluster-hdfs-config-file`：指向 HBase 集群的 HDFS 配置文件
+
+> 提示：更多信息请参考 [Deploy Apache Kylin with Standalone HBase Cluster](http://kylin.apache.org/blog/2016/06/10/standalone-hbase-cluster/)
 
 
 
@@ -196,7 +205,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 
 
 
-### 元数据 {#metadata}
+### 元数据相关 {#metadata}
 
 - `kylin.metadata.url`：指定元数据库路径，默认值为 kylin_metadata@hbase
 - `kylin.metadata.sync-retries`：指定元数据同步重试次数，默认值为 3 
@@ -221,7 +230,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 - `kylin.metadata.jdbc.max-cell-size`：默认值为 1(MB)
 - `kylin.metadata.resource-store-provider.jdbc`：指定 JDBC 使用的类，默认值为 org.apache.kylin.common.persistence.JDBCResourceStore
 
-> 提示：更多信息请参考[基于 MySQL 的 Metastore 配置](/docs/tutorial/mysql_metastore.html)
+> 提示：更多信息请参考[基于 MySQL 的 Metastore 配置](/cn/docs/tutorial/mysql_metastore.html)
 
 
 
@@ -255,7 +264,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 - `kylin.source.jdbc.sqoop-mapper-num`：指定应该分为多少个切片，Sqoop 将为每一个切片运行一个 mapper，默认值为 4
 - `kylin.source.jdbc.field-delimiter`：指定字段分隔符， 默认值为 \
 
-> 提示：更多信息请参考[建立 JDBC 数据源](/docs/tutorial/setup_jdbc_datasource.html)。
+> 提示：更多信息请参考[建立 JDBC 数据源](/cn/docs/tutorial/setup_jdbc_datasource.html)。
 
 
 
@@ -329,7 +338,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.source.hive.redistribute-flat-table`：是否重分配 Hive 平表，默认值为 TRUE
 - `kylin.source.hive.redistribute-column-count`：重分配列的数量，默认值为 3
 - `kylin.source.hive.table-dir-create-first`：默认值为 FALSE
-- `kylin.storage.partition.aggr-spill-enabled`：默认值为 `TRUE` 
+- `kylin.storage.partition.aggr-spill-enabled`：默认值为 TRUE
 - `kylin.engine.mr.lib-dir`：指定 MapReduce 任务所使用的 jar 包的路径 
 - `kylin.engine.mr.reduce-input-mb`：MapReduce 任务启动前会依据输入预估 Reducer 接收数据的总量，再除以该参数得出 Reducer 的数目，默认值为 500（MB）                
 - `kylin.engine.mr.reduce-count-ratio`：用于估算 Reducer 数目，默认值为 1.0
@@ -386,7 +395,7 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 - `kylin.engine.spark-conf-mergedict.spark.executor.memory`：为合并字典申请更多的内存，默认值为 6G
 - `kylin.engine.spark-conf-mergedict.spark.memory.fraction`：给系统预留的内存百分比，默认值为 0.2
 
-> 提示：更多信息请参考 [用 Spark 构建 Cube](/docs/tutorial/cube_spark.html)。
+> 提示：更多信息请参考 [用 Spark 构建 Cube](/cn/docs/tutorial/cube_spark.html)。
 
 
 
@@ -447,7 +456,7 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 - `kylin.cube.cubeplanner.algorithm-threshold-genetic`：默认值为 23
 
 
-> 提示：更多信息请参考 [使用 Cube Planner](/docs/tutorial/use_cube_planner.html)。
+> 提示：更多信息请参考 [使用 Cube Planner](/cn/docs/tutorial/use_cube_planner.html)。
 
 
 
@@ -543,7 +552,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 - `kylin.query.calcite.extras-props.conformance`：是否严格解析，默认值为 LENIENT
 - `kylin.query.calcite.extras-props.caseSensitive`：是否大小写敏感，默认值为 TRUE
 - `kylin.query.calcite.extras-props.unquotedCasing`：是否需要将查询语句进行大小写转换，参数值可选 `UNCHANGED`， `TO_UPPER`， `TO_LOWER` ，默认值为 `TO_UPPER`，即全部大写
-- `kylin.query.calcite.extras-props.quoting`：是否添加引号，参数值可选 `DOUBLE_QUOTE`， `BACK_TICK`，`BRACKET`，默认值为 DOUBLE_QUOTE
+- `kylin.query.calcite.extras-props.quoting`：是否添加引号，参数值可选 `DOUBLE_QUOTE`， `BACK_TICK`，`BRACKET`，默认值为 `DOUBLE_QUOTE`
 - `kylin.query.statement-cache-max-num`：缓存的 PreparedStatement 的最大条数，默认值为 50000
 - `kylin.query.statement-cache-max-num-per-key`：每个键缓存的 PreparedStatement 的最大条数，默认值为 50 
 - `kylin.query.enable-dict-enumerator`：是否启用字典枚举器，默认值为 FALSE
@@ -580,18 +589,18 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 ### 查询下压		{#query-pushdown}
 
-- `kylin.query.pushdown.runner-class-name=org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl`：如果需要启用查询下压，需要移除这句配置的注释。
+- `kylin.query.pushdown.runner-class-name=org.apache.kylin.query.adhoc.PushDownRunnerJdbcImpl`：如果需要启用查询下压，需要移除这句配置的注释
 - `kylin.query.pushdown.jdbc.url`：JDBC 的 URL
-- `kylin.query.pushdown.jdbc.driver`：JDBC 的 driver 类名，默认值为 org.apache.hive.jdbc.HiveDriver
-- `kylin.query.pushdown.jdbc.username`：JDBC 对应数据库的用户名，默认值为 hive
-- `kylin.query.pushdown.jdbc.password`：JDBC 对应数据库的密码，默认值为 
+- `kylin.query.pushdown.jdbc.driver`：JDBC 的 driver 类名，默认值为 `org.apache.hive.jdbc.HiveDriver`
+- `kylin.query.pushdown.jdbc.username`：JDBC 对应数据库的用户名，默认值为 `hive`
+- `kylin.query.pushdown.jdbc.password`：JDBC 对应数据库的密码
 - `kylin.query.pushdown.jdbc.pool-max-total`：JDBC 连接池的最大连接数，默认值为8
 - `kylin.query.pushdown.jdbc.pool-max-idle`：JDBC 连接池的最大等待连接数，默认值为8
 - `kylin.query.pushdown.jdbc.pool-min-idle`：默认值为 0
 - `kylin.query.pushdown.update-enabled`：指定是否在查询下压中开启 update，默认值为 FALSE
 - `kylin.query.pushdown.cache-enabled`：是否开启下压查询的缓存来提高相同查询语句的查询效率，默认值为 FALSE
 
-> 提示：更多信息请参考[查询下压](/docs/tutorial/query_pushdown.html)
+> 提示：更多信息请参考[查询下压](/cn/docs/tutorial/query_pushdown.html)
 
 
 

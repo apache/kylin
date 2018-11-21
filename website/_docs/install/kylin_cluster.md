@@ -18,8 +18,24 @@ If you need to cluster multiple Kylin nodes, make sure they use the same Hadoop 
 1. Configure the same `kylin.metadata.url` value to configure all Kylin nodes to use the same HBase metastore.
 2. Configure the Kylin node list `kylin.server.cluster-servers`, including all nodes (the current node is also included). When the event changes, the node receiving the change needs to notify all other nodes (the current node is also included).
 3. Configure the running mode `kylin.server.mode` of the Kylin node. Optional values include `all`, `job`, `query`. The default value is *all*.
-The *job* mode means that the service is only used for task scheduling, not for queries; the *query* pattern means that the service is only used for queries, not for scheduling tasks; the *all* pattern represents the service for both task scheduling and queries.
-> *Note*:  By default, only *one instance* is used for the scheduling of the build job (ie `kylin.server.mode` is set to `all` or `job`), if you need to configure multiple Nodes as job mode to meet high-availability and high-concurrency requirements, please refer to the *Job Engine High Availability* section of the [Kylin Settings](/docs/install/configuration.html) page.
+The *job* mode means that the service is only used for job scheduling, not for queries; the *query* pattern means that the service is only used for queries, not for scheduling jobs; the *all* pattern represents the service for both job scheduling and queries.
+
+> *Note*:  By default, only *one instance* can be used for the job scheduling (ie., `kylin.server.mode` is set to `all` or `job`).
+
+
+
+### Enable Job Engine HA
+
+Since v2.0, Kylin supports multiple job engines running together, which is more extensible, available and reliable than the default job scheduler.
+
+To enable the distributed job scheduler, you need to set or update the configs in the `kylin.properties`:
+
+```properties
+kylin.job.scheduler.default=2
+kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
+```
+
+Please add all job servers and query servers to the `kylin.server.cluster-servers`.
 
 
 

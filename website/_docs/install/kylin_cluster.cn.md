@@ -10,7 +10,7 @@ Kylin 实例是无状态的服务，运行时的状态信息存储在 HBase meta
 
 
 
-### Kylin 节点配置
+### Kylin 集群模式部署
 
 如果您需要将多个 Kylin 节点组成集群，请确保他们使用同一个 Hadoop 集群、HBase 集群。然后在每个节点的配置文件 `$KYLIN_HOME/conf/kylin.properties` 中执行下述操作：
 
@@ -18,7 +18,22 @@ Kylin 实例是无状态的服务，运行时的状态信息存储在 HBase meta
 2. 配置 Kylin 节点列表 `kylin.server.cluster-servers`，包括所有节点（包括当前节点），当事件变化时，接收变化的节点需要通知其他所有节点（包括当前节点）。
 3. 配置 Kylin 节点的运行模式 `kylin.server.mode`，参数值可选 `all`, `job`, `query` 中的一个，默认值为 `all`。
 `job` 模式代表该服务仅用于任务调度，不用于查询；`query` 模式代表该服务仅用于查询，不用于构建任务的调度；`all` 模式代表该服务同时用于任务调度和 SQL 查询。
-> **注意：**默认情况下只有**一个实例**用于构建任务的调度 （即 `kylin.server.mode` 设置为 `all` 或者 `job` 模式），如果您需要配置多个节点进行任务构建，以满足高可用和高并发的需求，请参考 [Kylin 设置](/docs/install/configuration.html) 页中的**任务引擎高可用**的内容。
+
+> **注意：**默认情况下只有**一个实例**用于构建任务的调度 （即 `kylin.server.mode` 设置为 `all` 或者 `job` 模式）。
+
+
+
+### 任务引擎高可用
+
+从 v2.0 开始, Kylin 支持多个任务引擎一起运行，相比于默认单任务引擎的配置，多引擎可以保证任务构建的高可用。
+
+使用多任务引擎，你可以在多个 Kylin 节点上配置它的角色为 `job` 或 `all`。为了避免它们之间产生竞争，需要启用分布式任务锁，请在 `kylin.properties` 里配置：
+
+```properties
+kylin.job.scheduler.default=2
+kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperJobLock
+```
+并记得将所有任务和查询节点的地址注册到 `kylin.server.cluster-servers`。
 
 
 
