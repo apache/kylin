@@ -29,6 +29,8 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.lookup.ILookupTable;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.query.relnode.OLAPContext;
@@ -52,9 +54,15 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
         //TODO: assuming LookupTableEnumerator is handled by a cube
         CubeInstance cube = null;
 
-        if (olapContext.realization instanceof CubeInstance)
+        if (olapContext.realization instanceof CubeInstance) {
             cube = (CubeInstance) olapContext.realization;
-        else if (olapContext.realization instanceof HybridInstance) {
+            ProjectInstance project = cube.getProjectInstance();
+            List<RealizationEntry> realizationEntries = project.getRealizationEntries();
+            String lookupTableName = olapContext.firstTableScan.getTableName();
+            CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
+            cube = cubeMgr.findLatestSnapshot(realizationEntries, lookupTableName);
+            olapContext.realization = cube;
+        } else if (olapContext.realization instanceof HybridInstance) {
             final HybridInstance hybridInstance = (HybridInstance) olapContext.realization;
             final IRealization latestRealization = hybridInstance.getLatestRealization();
             if (latestRealization instanceof CubeInstance) {

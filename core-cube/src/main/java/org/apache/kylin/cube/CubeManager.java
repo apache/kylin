@@ -69,8 +69,10 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.IRealizationProvider;
+import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.source.IReadableTable;
@@ -1166,4 +1168,28 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    public CubeInstance findLatestSnapshot(List<RealizationEntry> realizationEntries, String lookupTableName) {
+        CubeInstance cube = null;
+        if (realizationEntries.size() > 0) {
+            long maxBuildTime = Long.MIN_VALUE;
+            RealizationRegistry registry = RealizationRegistry.getInstance(config);
+            for (RealizationEntry entry : realizationEntries) {
+                IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
+                if (realization != null && realization.isReady() && realization instanceof CubeInstance) {
+                    if (realization.getModel().isLookupTable(lookupTableName)) {
+                        CubeInstance current = (CubeInstance) realization;
+                        CubeSegment segment = current.getLatestReadySegment();
+                        if (segment != null) {
+                            long latestBuildTime = segment.getLastBuildTime();
+                            if (latestBuildTime > maxBuildTime) {
+                                maxBuildTime = latestBuildTime;
+                                cube = current;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return cube;
+    }
 }
