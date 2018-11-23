@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler.CuboidCostComparator;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler.CuboidTree;
 import org.junit.After;
@@ -94,7 +95,7 @@ public class ITAlgorithmTestBase {
                     StandardCharsets.UTF_8));
 
             while ((sCurrentLine = br.readLine()) != null) {
-                String[] statPair = sCurrentLine.split(" ");
+                String[] statPair = StringUtil.split(sCurrentLine, " ");
                 countMap.put(Long.valueOf(statPair[0]), Long.valueOf(statPair[1]));
             }
 

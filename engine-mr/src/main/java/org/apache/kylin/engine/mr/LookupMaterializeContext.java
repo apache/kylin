@@ -21,6 +21,7 @@ package org.apache.kylin.engine.mr;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 import com.google.common.collect.Maps;
@@ -74,9 +75,9 @@ public class LookupMaterializeContext {
      */
     public static Map<String, String> parseLookupSnapshots(String snapshotsString) {
         Map<String, String> lookupSnapshotMap = Maps.newHashMap();
-        String[] lookupSnapshotEntries = snapshotsString.split(",");
+        String[] lookupSnapshotEntries = StringUtil.splitByComma(snapshotsString);
         for (String lookupSnapshotEntryStr : lookupSnapshotEntries) {
-            String[] split = lookupSnapshotEntryStr.split("=");
+            String[] split = StringUtil.split(lookupSnapshotEntryStr, "=");
             lookupSnapshotMap.put(split[0], split[1]);
         }
         return lookupSnapshotMap;

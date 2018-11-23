@@ -32,6 +32,7 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -169,7 +170,7 @@ public class CubeMigrationCheckCLI {
         inconsistentHTables = Lists.newArrayList();
 
         for (String segFullName : segFullNameList) {
-            String[] sepNameList = segFullName.split(",");
+            String[] sepNameList = StringUtil.splitByComma(segFullName);
             try {
                 HTableDescriptor hTableDescriptor = hbaseAdmin.getTableDescriptor(TableName.valueOf(sepNameList[0]));
                 String host = hTableDescriptor.getValue(IRealizationConstants.HTableTag);
@@ -186,7 +187,7 @@ public class CubeMigrationCheckCLI {
     public void fixInconsistent() throws IOException {
         if (ifFix == true) {
             for (String segFullName : inconsistentHTables) {
-                String[] sepNameList = segFullName.split(",");
+                String[] sepNameList = StringUtil.splitByComma(segFullName);
                 HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(sepNameList[0]));
                 logger.info("Change the host of htable " + sepNameList[0] + "belonging to cube " + sepNameList[1] + " from " + desc.getValue(IRealizationConstants.HTableTag) + " to " + dstCfg.getMetadataUrlPrefix());
                 hbaseAdmin.disableTable(sepNameList[0]);
@@ -197,7 +198,7 @@ public class CubeMigrationCheckCLI {
         } else {
             logger.info("------ Inconsistent HTables Needed To Be Fixed ------");
             for (String hTable : inconsistentHTables) {
-                String[] sepNameList = hTable.split(",");
+                String[] sepNameList = StringUtil.splitByComma(hTable);
                 logger.info(sepNameList[0] + " belonging to cube " + sepNameList[1]);
             }
             logger.info("----------------------------------------------------");
@@ -207,7 +208,7 @@ public class CubeMigrationCheckCLI {
     public void printIssueExistingHTables() {
         logger.info("------ HTables exist issues in hbase : not existing, metadata broken ------");
         for (String segFullName : issueExistHTables) {
-            String[] sepNameList = segFullName.split(",");
+            String[] sepNameList = StringUtil.splitByComma(segFullName);
             logger.error(sepNameList[0] + " belonging to cube " + sepNameList[1] + " has some issues and cannot be read successfully!!!");
         }
         logger.info("----------------------------------------------------");

@@ -32,6 +32,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OrderedProperties;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.slf4j.Logger;
@@ -106,7 +107,7 @@ public class AdminService extends BasicService {
 
         Collection<String> propertyKeys = Lists.newArrayList();
         if (StringUtils.isNotEmpty(whiteListProperties)) {
-            propertyKeys.addAll(Arrays.asList(whiteListProperties.split(",")));
+            propertyKeys.addAll(Arrays.asList(StringUtil.splitByComma(whiteListProperties)));
         }
 
         return KylinConfig.getInstanceFromEnv().exportToString(propertyKeys);

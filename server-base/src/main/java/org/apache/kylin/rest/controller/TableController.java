@@ -139,7 +139,7 @@ public class TableController extends BasicController {
         Set<String> unLoadFail = Sets.newHashSet();
         Map<String, String[]> result = new HashMap<String, String[]>();
         try {
-            for (String tableName : tables.split(",")) {
+            for (String tableName : StringUtil.splitByComma(tables)) {
                 tableACLService.deleteFromTableACLByTbl(project, tableName);
                 if (tableService.unloadHiveTable(tableName, project)) {
                     unLoadSuccess.add(tableName);
@@ -169,7 +169,7 @@ public class TableController extends BasicController {
     public CardinalityRequest generateCardinality(@PathVariable String tableNames,
             @RequestBody CardinalityRequest request, @PathVariable String project) throws Exception {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
-        String[] tables = tableNames.split(",");
+        String[] tables = StringUtil.splitByComma(tableNames);
         try {
             for (String table : tables) {
                 tableService.calculateCardinality(table.trim().toUpperCase(Locale.ROOT), submitter, project);

@@ -46,6 +46,7 @@ import org.apache.calcite.schema.impl.AbstractTableQueryable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -186,7 +187,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
 
         RelDataType result;
         if (sqlTypeName == SqlTypeName.ARRAY) {
-            String innerTypeName = dataType.getName().split("<|>")[1];
+            String innerTypeName = StringUtil.split(dataType.getName(), "<|>")[1];
             result = typeFactory.createArrayType(createSqlType(typeFactory, DataType.getType(innerTypeName), false),
                     -1);
         } else if (precision >= 0 && scale >= 0)
