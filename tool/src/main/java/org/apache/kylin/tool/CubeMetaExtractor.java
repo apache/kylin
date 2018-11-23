@@ -31,6 +31,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -201,14 +202,14 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             }
         } else if (optionsHelper.hasOption(OPTION_PROJECT)) {
             String projectNames = optionsHelper.getOptionValue(OPTION_PROJECT);
-            for (String projectName : projectNames.split(",")) {
+            for (String projectName : StringUtil.splitByComma(projectNames)) {
                 ProjectInstance projectInstance = projectManager.getProject(projectName);
                 Preconditions.checkNotNull(projectInstance, "Project " + projectName + " does not exist.");
                 requireProject(projectInstance);
             }
         } else if (optionsHelper.hasOption(OPTION_CUBE)) {
             String cubeNames = optionsHelper.getOptionValue(OPTION_CUBE);
-            for (String cubeName : cubeNames.split(",")) {
+            for (String cubeName : StringUtil.splitByComma(cubeNames)) {
                 IRealization realization = cubeManager.getRealization(cubeName);
                 if (realization == null) {
                     throw new IllegalArgumentException("No cube found with name of " + cubeName);
@@ -218,7 +219,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             }
         } else if (optionsHelper.hasOption(OPTION_HYBRID)) {
             String hybridNames = optionsHelper.getOptionValue(OPTION_HYBRID);
-            for (String hybridName : hybridNames.split(",")) {
+            for (String hybridName : StringUtil.splitByComma(hybridNames)) {
                 IRealization realization = hybridManager.getRealization(hybridName);
 
                 if (realization != null) {

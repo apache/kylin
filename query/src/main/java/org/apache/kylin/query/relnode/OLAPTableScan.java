@@ -68,6 +68,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableRef;
@@ -242,7 +243,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
             if (StringUtils.isEmpty(rule)) {
                 continue;
             }
-            String[] split = rule.split("#");
+            String[] split = StringUtil.split(rule, "#");
             if (split.length != 2) {
                 throw new RuntimeException("Customized Rule should be in format <RuleClassName>#<FieldName>");
             }

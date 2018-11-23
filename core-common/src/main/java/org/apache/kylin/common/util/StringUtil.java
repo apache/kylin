@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import java.util.Locale;
+
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -159,14 +162,17 @@ public class StringUtil {
     }
 
     public static String[] splitAndTrim(String str, String splitBy) {
-        String[] split = str.split(splitBy);
-        ArrayList<String> r = new ArrayList<>(split.length);
-        for (String s : split) {
-            s = s.trim();
-            if (!s.isEmpty())
-                r.add(s);
-        }
-        return r.toArray(new String[r.size()]);
+        Splitter splitterWithTrim = Splitter.on(splitBy).trimResults().omitEmptyStrings();
+
+        return Iterables.toArray(splitterWithTrim.split(str), String.class);
+    }
+
+    public static String[] split(String str, String splitBy) {
+        return Iterables.toArray(Splitter.on(splitBy).split(str), String.class);
+    }
+
+    public static String[] splitByComma(String str) {
+        return split(str, ",");
     }
 
     // calculating length in UTF-8 of Java String without actually encoding it

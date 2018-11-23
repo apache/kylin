@@ -75,6 +75,7 @@ import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -315,7 +316,7 @@ public class QueryService extends BasicService {
 
         if (realizationNames.isEmpty()) {
             if (!Strings.isNullOrEmpty(response.getCube())) {
-                realizationNames.addAll(Lists.newArrayList(response.getCube().split(",")));
+                realizationNames.addAll(Lists.newArrayList(StringUtil.splitByComma(response.getCube())));
             }
         }
 

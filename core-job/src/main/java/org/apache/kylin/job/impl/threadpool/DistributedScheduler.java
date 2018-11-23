@@ -36,6 +36,7 @@ import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.SetThreadName;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -150,7 +151,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
 
         @Override
         public void onUnlock(String path, String nodeData) {
-            String[] paths = path.split("/");
+            String[] paths = StringUtil.split(path, "/");
             String jobId = paths[paths.length - 1];
 
             final Output output = executableManager.getOutput(jobId);
