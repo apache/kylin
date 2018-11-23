@@ -87,7 +87,7 @@ public class CubingUtils {
                 Hasher hc = hf.newHasher();
                 final String cell = row.get(flatDesc.getRowKeyColumnIndexes()[i]);
                 if (cell != null) {
-                    row_hashcodes[i] = hc.putUnencodedChars(cell).hash().asBytes();
+                    row_hashcodes[i] = hc.putString(cell).hash().asBytes();
                 } else {
                     row_hashcodes[i] = hc.putInt(0).hash().asBytes();
                 }

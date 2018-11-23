@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteSource;
+import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.druid.java.util.common.IAE;
 import io.druid.java.util.common.RE;
@@ -162,7 +163,8 @@ public class HttpDruidClient<T> implements DruidClient<T> {
                     try {
                         // An empty byte array is put at the end to give the SequenceInputStream.close() as something to close out
                         // after done is set to true, regardless of the rest of the stream's state.
-                        queue.put(ByteSource.empty().openStream());
+                        ByteSource empty = ByteStreams.asByteSource(new byte[]{});
+                        queue.put(empty.openStream());
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw Throwables.propagate(e);

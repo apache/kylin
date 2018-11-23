@@ -167,7 +167,8 @@ public class AggregationCacheMemSizeTest {
         }
     }
 
-    @Test
+    // Ignore because of OOM
+    // @Test
     public void testEstimateMemSize() throws InterruptedException {
         int scale = Integer.parseInt(System.getProperty("scale", "1"));
         scale = Math.max(1, Math.min(10, scale));

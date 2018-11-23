@@ -35,11 +35,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-source-hive</artifactId>
         </dependency>
@@ -227,10 +222,6 @@
                                 <relocation>
                                     <pattern>org.apache.commons.jocl</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.jocl</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.google.guava</pattern>
-                                    <shadedPattern>${shadeBase}.com.google.guava</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
