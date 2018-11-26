@@ -74,7 +74,6 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.enumerator.DictionaryEnumerator;
-import org.apache.kylin.query.optrule.AggregateMultipleExpandRule;
 import org.apache.kylin.query.optrule.AggregateProjectReduceRule;
 import org.apache.kylin.query.optrule.OLAPAggregateRule;
 import org.apache.kylin.query.optrule.OLAPFilterRule;
@@ -164,13 +163,11 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.addRule(OLAPUnionRule.INSTANCE);
         planner.addRule(OLAPWindowRule.INSTANCE);
         planner.addRule(OLAPValuesRule.INSTANCE);
-        
-        // Support translate the grouping aggregate into union of simple aggregates
-        planner.addRule(AggregateMultipleExpandRule.INSTANCE);
+
         planner.addRule(AggregateProjectReduceRule.INSTANCE);
 
         // CalcitePrepareImpl.CONSTANT_REDUCTION_RULES
-        if(kylinConfig.isReduceExpressionsRulesEnabled()) {
+        if (kylinConfig.isReduceExpressionsRulesEnabled()) {
             planner.addRule(ReduceExpressionsRule.PROJECT_INSTANCE);
             planner.addRule(ReduceExpressionsRule.FILTER_INSTANCE);
             planner.addRule(ReduceExpressionsRule.CALC_INSTANCE);
@@ -182,7 +179,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         //        planner.addRule(ValuesReduceRule.PROJECT_INSTANCE);
 
         removeRules(planner, kylinConfig.getCalciteRemoveRule());
-        if(!kylinConfig.isEnumerableRulesEnabled()) {
+        if (!kylinConfig.isEnumerableRulesEnabled()) {
             for (RelOptRule rule : CalcitePrepareImpl.ENUMERABLE_RULES) {
                 planner.removeRule(rule);
             }
