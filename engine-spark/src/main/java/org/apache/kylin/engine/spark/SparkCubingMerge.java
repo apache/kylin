@@ -195,7 +195,7 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
                 JavaPairRDD segRdd = SparkUtil.parseInputPath(path, fs, sc, Text.class, Text.class);
                 CubeSegment sourceSegment = findSourceSegment(path, cubeInstance);
                 // re-encode with new dictionaries
-                JavaPairRDD<Text, Object[]> newEcoddedRdd = segRdd.mapToPair(new ReEncodCuboidFunction(cubeName,
+                JavaPairRDD<Text, Object[]> newEcoddedRdd = segRdd.mapToPair(new ReEncodeCuboidFunction(cubeName,
                         sourceSegment.getUuid(), cubeSegment.getUuid(), metaUrl, sConf));
                 mergingSegs.add(newEcoddedRdd);
             }
@@ -215,7 +215,7 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
                     final String cuboidInputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(path, level);
                     JavaPairRDD<Text, Text> segRdd = sc.sequenceFile(cuboidInputPath, Text.class, Text.class);
                     // re-encode with new dictionaries
-                    JavaPairRDD<Text, Object[]> newEcoddedRdd = segRdd.mapToPair(new ReEncodCuboidFunction(cubeName,
+                    JavaPairRDD<Text, Object[]> newEcoddedRdd = segRdd.mapToPair(new ReEncodeCuboidFunction(cubeName,
                             sourceSegment.getUuid(), cubeSegment.getUuid(), metaUrl, sConf));
                     mergingSegs.add(newEcoddedRdd);
                 }
@@ -235,8 +235,8 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
         //        HadoopUtil.deleteHDFSMeta(metaUrl);
     }
 
-    static class ReEncodCuboidFunction implements PairFunction<Tuple2<Text, Text>, Text, Object[]> {
-        private volatile transient boolean initialized = false;
+    static class ReEncodeCuboidFunction implements PairFunction<Tuple2<Text, Text>, Text, Object[]> {
+        private transient volatile boolean initialized = false;
         private String cubeName;
         private String sourceSegmentId;
         private String mergedSegmentId;
@@ -244,10 +244,9 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
         private SerializableConfiguration conf;
         private transient KylinConfig kylinConfig;
         private transient SegmentReEncoder segmentReEncoder = null;
-        private transient Pair<Text, Object[]> encodedPari = null;
 
-        ReEncodCuboidFunction(String cubeName, String sourceSegmentId, String mergedSegmentId, String metaUrl,
-                SerializableConfiguration conf) {
+        ReEncodeCuboidFunction(String cubeName, String sourceSegmentId, String mergedSegmentId, String metaUrl,
+                               SerializableConfiguration conf) {
             this.cubeName = cubeName;
             this.sourceSegmentId = sourceSegmentId;
             this.mergedSegmentId = mergedSegmentId;
@@ -267,15 +266,15 @@ public class SparkCubingMerge extends AbstractApplication implements Serializabl
         @Override
         public Tuple2<Text, Object[]> call(Tuple2<Text, Text> textTextTuple2) throws Exception {
             if (initialized == false) {
-                synchronized (ReEncodCuboidFunction.class) {
+                synchronized (ReEncodeCuboidFunction.class) {
                     if (initialized == false) {
                         init();
                         initialized = true;
                     }
                 }
             }
-            encodedPari = segmentReEncoder.reEncode2(textTextTuple2._1, textTextTuple2._2);
-            return new Tuple2(encodedPari.getFirst(), encodedPari.getSecond());
+            Pair<Text, Object[]> encodedPair = segmentReEncoder.reEncode2(textTextTuple2._1, textTextTuple2._2);
+            return new Tuple2(encodedPair.getFirst(), encodedPair.getSecond());
         }
     }
 

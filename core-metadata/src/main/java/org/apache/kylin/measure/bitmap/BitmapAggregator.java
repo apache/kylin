@@ -45,8 +45,14 @@ public class BitmapAggregator extends MeasureAggregator<BitmapCounter> {
 
     @Override
     public BitmapCounter aggregate(BitmapCounter value1, BitmapCounter value2) {
-        value1.orWith(value2);
-        return value1;
+        BitmapCounter merged = bitmapFactory.newBitmap();
+        if (value1 != null) {
+            merged.orWith(value1);
+        }
+        if (value2 != null) {
+            merged.orWith(value2);
+        }
+        return merged;
     }
 
     @Override

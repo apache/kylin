@@ -21,6 +21,7 @@ package org.apache.kylin.measure.raw;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.measure.MeasureAggregator;
 
@@ -49,13 +50,14 @@ public class RawAggregator extends MeasureAggregator<List<ByteArray>> {
     @Override
     public List<ByteArray> aggregate(List<ByteArray> value1, List<ByteArray> value2) {
         if (value1 == null) {
-            return value2;
+            return Lists.newArrayList(value2);
         } else if (value2 == null) {
-            return value1;
+            return Lists.newArrayList(value1);
         }
-
-        value1.addAll(value2);
-        return value1;
+        List<ByteArray> result = new ArrayList<>(value1.size() + value2.size());
+        result.addAll(value1);
+        result.addAll(value2);
+        return result;
     }
 
     @Override
