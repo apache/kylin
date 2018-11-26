@@ -93,7 +93,7 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
         int keyLength = in.getInt();
         double[] counters = dds.deserialize(in);
 
-        TopNCounter<ByteArray> counter = new TopNCounter<ByteArray>(capacity);
+        TopNCounter<ByteArray> counter = new TopNCounter<>(capacity);
         ByteArray byteArray;
         byte[] keyArray = new byte[size * keyLength];
         int offset = 0;

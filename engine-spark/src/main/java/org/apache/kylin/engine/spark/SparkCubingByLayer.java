@@ -246,12 +246,10 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                             }
                         }
                         ByteBuffer valueBuf = codec.encode(tuple2._2());
-                        byte[] encodedBytes = new byte[valueBuf.position()];
-                        System.arraycopy(valueBuf.array(), 0, encodedBytes, 0, valueBuf.position());
-                        return new Tuple2<>(new org.apache.hadoop.io.Text(tuple2._1().array()),
-                                new org.apache.hadoop.io.Text(encodedBytes));
+                        org.apache.hadoop.io.Text textResult =  new org.apache.hadoop.io.Text();
+                        textResult.set(valueBuf.array(), 0, valueBuf.position());
+                        return new Tuple2<>(new org.apache.hadoop.io.Text(tuple2._1().array()), textResult);
                     }
-
                 }).saveAsNewAPIHadoopDataset(job.getConfiguration());
         logger.info("Persisting RDD for level " + level + " into " + cuboidOutputPath);
     }

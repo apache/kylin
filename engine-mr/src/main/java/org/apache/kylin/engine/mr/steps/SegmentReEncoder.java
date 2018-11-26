@@ -68,6 +68,7 @@ public class SegmentReEncoder implements Serializable {
     private BufferedMeasureCodec codec;
     private CubeDesc cubeDesc;
     private KylinConfig kylinConfig;
+    private Text textValue = new Text();
 
     public SegmentReEncoder(CubeDesc cubeDesc, CubeSegment mergingSeg, CubeSegment mergedSeg, KylinConfig kylinConfig) {
         this.cubeDesc = cubeDesc;
@@ -136,10 +137,8 @@ public class SegmentReEncoder implements Serializable {
             }
 
             ByteBuffer valueBuf = codec.encode(measureObjs);
-            byte[] resultValue = new byte[valueBuf.position()];
-            System.arraycopy(valueBuf.array(), 0, resultValue, 0, valueBuf.position());
-
-            return Pair.newPair(processKey(key), new Text(resultValue));
+            textValue.set(valueBuf.array(), 0, valueBuf.position());
+            return Pair.newPair(processKey(key), textValue);
         } else {
             return Pair.newPair(processKey(key), value);
         }
@@ -166,10 +165,6 @@ public class SegmentReEncoder implements Serializable {
                 MeasureIngester ingester = pair.getSecond();
                 measureObjs[i] = ingester.reEncodeDictionary(measureObjs[i], measureDescs.get(i), oldDicts, newDicts);
             }
-
-            ByteBuffer valueBuf = codec.encode(measureObjs);
-            byte[] resultValue = new byte[valueBuf.position()];
-            System.arraycopy(valueBuf.array(), 0, resultValue, 0, valueBuf.position());
 
         }
         return Pair.newPair(processKey(key), measureObjs);
