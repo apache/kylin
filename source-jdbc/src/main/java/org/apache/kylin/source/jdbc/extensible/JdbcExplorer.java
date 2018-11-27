@@ -74,55 +74,57 @@ public class JdbcExplorer implements ISourceMetadataExplorer, ISampleDataDeploye
         tableDesc.setProject(prj);
         tableDesc.setSourceType(JdbcSource.SOURCE_ID);
 
-        CachedRowSet tables = dataSource.getTable(database, table);
-        String tableType = null;
-        while (tables.next()) {
-            tableType = tables.getString("TABLE_TYPE");
-        }
-        if (tableType != null) {
-            tableDesc.setTableType(tableType);
-        } else {
-            throw new RuntimeException(String.format(Locale.ROOT, "table %s not found in schema:%s", table, database));
-        }
-
-        CachedRowSet columns = dataSource.listColumns(database, table);
-        List<ColumnDesc> columnDescs = new ArrayList<>();
-
-        while (columns.next()) {
-            String cname = columns.getString("COLUMN_NAME");
-            int type = columns.getInt("DATA_TYPE");
-            int csize = columns.getInt("COLUMN_SIZE");
-            int digits = columns.getInt("DECIMAL_DIGITS");
-            int pos = columns.getInt("ORDINAL_POSITION");
-            String remarks = columns.getString("REMARKS");
-
-            ColumnDesc cdesc = new ColumnDesc();
-            cdesc.setName(cname.toUpperCase(Locale.ROOT));
-
-            String kylinType = dataSource.toKylinTypeName(type);
-            if ("any".equals(kylinType)) {
-                String typeName = columns.getString("TYPE_NAME");
-                int kylinTypeId = dataSource.toKylinTypeId(typeName, type);
-                kylinType = dataSource.toKylinTypeName(kylinTypeId);
+        try (CachedRowSet tables = dataSource.getTable(database, table)) {
+            String tableType = null;
+            while (tables.next()) {
+                tableType = tables.getString("TABLE_TYPE");
             }
-            int precision = (SqlUtil.isPrecisionApplicable(kylinType) && csize > 0) ? csize : -1;
-            int scale = (SqlUtil.isScaleApplicable(kylinType) && digits > 0) ? digits : -1;
-
-            cdesc.setDatatype(new DataType(kylinType, precision, scale).toString());
-            cdesc.setId(String.valueOf(pos));
-            cdesc.setComment(remarks);
-            columnDescs.add(cdesc);
+            if (tableType != null) {
+                tableDesc.setTableType(tableType);
+            } else {
+                throw new RuntimeException(String.format(Locale.ROOT, "table %s not found in schema:%s", table, database));
+            }
         }
 
-        tableDesc.setColumns(columnDescs.toArray(new ColumnDesc[columnDescs.size()]));
+        try (CachedRowSet columns = dataSource.listColumns(database, table)) {
+            List<ColumnDesc> columnDescs = new ArrayList<>();
 
-        TableExtDesc tableExtDesc = new TableExtDesc();
-        tableExtDesc.setIdentity(tableDesc.getIdentity());
-        tableExtDesc.setUuid(UUID.randomUUID().toString());
-        tableExtDesc.setLastModified(0);
-        tableExtDesc.init(prj);
+            while (columns.next()) {
+                String cname = columns.getString("COLUMN_NAME");
+                int type = columns.getInt("DATA_TYPE");
+                int csize = columns.getInt("COLUMN_SIZE");
+                int digits = columns.getInt("DECIMAL_DIGITS");
+                int pos = columns.getInt("ORDINAL_POSITION");
+                String remarks = columns.getString("REMARKS");
 
-        return Pair.newPair(tableDesc, tableExtDesc);
+                ColumnDesc cdesc = new ColumnDesc();
+                cdesc.setName(cname.toUpperCase(Locale.ROOT));
+
+                String kylinType = dataSource.toKylinTypeName(type);
+                if ("any".equals(kylinType)) {
+                    String typeName = columns.getString("TYPE_NAME");
+                    int kylinTypeId = dataSource.toKylinTypeId(typeName, type);
+                    kylinType = dataSource.toKylinTypeName(kylinTypeId);
+                }
+                int precision = (SqlUtil.isPrecisionApplicable(kylinType) && csize > 0) ? csize : -1;
+                int scale = (SqlUtil.isScaleApplicable(kylinType) && digits > 0) ? digits : -1;
+
+                cdesc.setDatatype(new DataType(kylinType, precision, scale).toString());
+                cdesc.setId(String.valueOf(pos));
+                cdesc.setComment(remarks);
+                columnDescs.add(cdesc);
+            }
+
+            tableDesc.setColumns(columnDescs.toArray(new ColumnDesc[columnDescs.size()]));
+
+            TableExtDesc tableExtDesc = new TableExtDesc();
+            tableExtDesc.setIdentity(tableDesc.getIdentity());
+            tableExtDesc.setUuid(UUID.randomUUID().toString());
+            tableExtDesc.setLastModified(0);
+            tableExtDesc.init(prj);
+
+            return Pair.newPair(tableDesc, tableExtDesc);
+        }
     }
 
     @Override

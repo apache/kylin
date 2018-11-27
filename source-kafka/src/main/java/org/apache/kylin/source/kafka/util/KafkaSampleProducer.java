@@ -52,13 +52,13 @@ public class KafkaSampleProducer {
     private static final Option OPTION_BROKER = OptionBuilder.withArgName("broker").hasArg().isRequired(true).withDescription("Kafka broker").create("broker");
     private static final Option OPTION_INTERVAL = OptionBuilder.withArgName("interval").hasArg().isRequired(false).withDescription("Simulated message interval in mili-seconds, default 1000").create("interval");
 
+    protected static final String OTHER = "Other";
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) throws Exception {
         logger.info("args: {}", Arrays.toString(args));
         OptionsHelper optionsHelper = new OptionsHelper();
         Options options = new Options();
-        String topic, broker;
         options.addOption(OPTION_TOPIC);
         options.addOption(OPTION_BROKER);
         options.addOption(OPTION_INTERVAL);
@@ -66,8 +66,8 @@ public class KafkaSampleProducer {
 
         logger.info("options: '{}'", optionsHelper.getOptionsAsString());
 
-        topic = optionsHelper.getOptionValue(OPTION_TOPIC);
-        broker = optionsHelper.getOptionValue(OPTION_BROKER);
+        final String topic = optionsHelper.getOptionValue(OPTION_TOPIC);
+        final String broker = optionsHelper.getOptionValue(OPTION_BROKER);
 
         long interval = 10;
         String intervalString = optionsHelper.getOptionValue(OPTION_INTERVAL);
@@ -83,18 +83,18 @@ public class KafkaSampleProducer {
         countries.add("JAPAN");
         countries.add("KOREA");
         countries.add("US");
-        countries.add("Other");
+        countries.add(OTHER);
         List<String> category = new ArrayList<>();
         category.add("BOOK");
         category.add("TOY");
         category.add("CLOTH");
         category.add("ELECTRONIC");
-        category.add("Other");
+        category.add(OTHER);
         List<String> devices = new ArrayList<>();
         devices.add("iOS");
         devices.add("Windows");
         devices.add("Andriod");
-        devices.add("Other");
+        devices.add(OTHER);
 
         List<String> genders = new ArrayList<>();
         genders.add("Male");

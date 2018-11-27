@@ -22,7 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -246,7 +245,7 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
     }
 
     @Override
-    public String[] buildSqlToCreateTable(String tableIdentity, LinkedHashMap<String, String> columnInfo) {
+    public String[] buildSqlToCreateTable(String tableIdentity, Map<String, String> columnInfo) {
         String dropsql = "DROP TABLE IF EXISTS " + tableIdentity;
         String dropsql2 = "DROP VIEW IF EXISTS " + tableIdentity;
 
