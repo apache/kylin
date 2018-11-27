@@ -23,8 +23,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.rowset.CachedRowSet;
@@ -57,7 +57,7 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
      * @param config Basic configuration of JDBC source, such as driver name, URL, username, password.
      * @throws Exception If datasource cannot be connected.
      */
-    protected AbstractJdbcAdaptor(AdaptorConfig config) throws Exception {
+    protected AbstractJdbcAdaptor(AdaptorConfig config) throws ClassNotFoundException {
         this.config = config;
         this.dataSourceDef = DataSourceDefProvider.getInstance().getById(config.datasourceId);
 
@@ -138,7 +138,7 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
         try {
             closeable.close();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
@@ -151,7 +151,7 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
         try {
             dataSource.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
@@ -367,7 +367,7 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
      * @param columnInfo The column information, in the pair of NAME -> TYPE
      * @return A set of SQL Statements which can be executed in JDBC source.
      */
-    public abstract String[] buildSqlToCreateTable(String identity, LinkedHashMap<String, String> columnInfo);
+    public abstract String[] buildSqlToCreateTable(String identity, Map<String, String> columnInfo);
 
     /**
      * To build a set of sql statements to create view in JDBC source.

@@ -24,7 +24,6 @@ import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,7 +39,7 @@ public class BroadcasterReceiveServlet extends HttpServlet {
         void handle(String type, String name, String event);
     }
 
-    private BroadcasterHandler handler;
+    private final BroadcasterHandler handler;
 
     public BroadcasterReceiveServlet(BroadcasterHandler handler) {
         this.handler = handler;
@@ -50,16 +49,16 @@ public class BroadcasterReceiveServlet extends HttpServlet {
     private static final Pattern PATTERN2 = Pattern.compile("/(.+)/(.+)");
 
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         handle(req, resp);
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         handle(req, resp);
     }
 
-    private void handle(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void handle(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         final String startString = "/kylin/api/cache";
         final String requestURI = req.getRequestURI();
         final String substring = requestURI.substring(requestURI.indexOf(startString) + startString.length());
