@@ -41,7 +41,6 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -152,7 +151,7 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
             JavaRDD<Integer> indexRDD = sc.parallelize(indexs, columnLength + 1);
 
             JavaPairRDD<Text, Text> colToDictPathRDD = indexRDD.mapToPair(new MergeDictAndStatsFunction(cubeName,
-                    metaUrl, segmentId, StringUtil.splitByComma(segmentIds), statOutputPath, tblColRefs, sConf));
+                    metaUrl, segmentId, segmentIds.split(","), statOutputPath, tblColRefs, sConf));
 
             colToDictPathRDD.coalesce(1, false).saveAsNewAPIHadoopFile(dictOutputPath, Text.class, Text.class,
                     SequenceFileOutputFormat.class);

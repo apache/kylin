@@ -39,7 +39,6 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -161,7 +160,7 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
             StringWriter writer = new StringWriter();
             IOUtils.copy(stream, writer, "UTF-8");
             String raw = writer.toString();
-            for (String str : StringUtil.split(raw, "\n")) {
+            for (String str : raw.split("\n")) {
                 results.add(str);
             }
         }

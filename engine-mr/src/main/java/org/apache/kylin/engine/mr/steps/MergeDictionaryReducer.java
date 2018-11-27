@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,7 @@ public class MergeDictionaryReducer extends KylinReducer<IntWritable, Text, Text
             throws IOException, InterruptedException {
         for (Text text : values) {
             String value = text.toString();
-            String[] splited = StringUtil.split(value, "=");
+            String[] splited = value.split("=");
             if (splited != null && splited.length == 2) {
                 logger.info("Dictionary for col {}, save at {}", splited[0], splited[1]);
                 context.write(new Text(splited[0]), new Text(splited[1]));

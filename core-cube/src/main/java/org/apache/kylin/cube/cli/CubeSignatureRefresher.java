@@ -24,7 +24,6 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -62,7 +61,7 @@ public class CubeSignatureRefresher {
         if (ArrayUtils.isEmpty(cubeNames)) {
             cubeDescs = cubeDescManager.listAllDesc();
         } else {
-            String[] names = StringUtil.splitByComma(cubeNames[0]);
+            String[] names = cubeNames[0].split(",");
             if (ArrayUtils.isEmpty(names))
                 return;
             cubeDescs = Lists.newArrayListWithCapacity(names.length);

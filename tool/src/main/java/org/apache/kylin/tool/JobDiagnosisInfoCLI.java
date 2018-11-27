@@ -32,7 +32,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
@@ -228,9 +227,9 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         final String yarnCmd = "yarn application -status " + applicationId;
         final String cmdOutput = kylinConfig.getCliCommandExecutor().execute(yarnCmd).getSecond();
         final Map<String, String> params = Maps.newHashMap();
-        final String[] cmdOutputLines = StringUtil.split(cmdOutput, "\n");
+        final String[] cmdOutputLines = cmdOutput.split("\n");
         for (String cmdOutputLine : cmdOutputLines) {
-            String[] pair = StringUtil.split(cmdOutputLine, ":");
+            String[] pair = cmdOutputLine.split(":");
             if (pair.length >= 2) {
                 params.put(pair[0].trim(), pair[1].trim());
             }
@@ -243,7 +242,11 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
             return true;
         }
 
-        return params.containsKey("Final-State") && params.get("Final-State").equals("SUCCEEDED");
+        if (params.containsKey("Final-State") && params.get("Final-State").equals("SUCCEEDED")) {
+            return true;
+        }
+
+        return false;
     }
 
     private void addRequired(String record) {

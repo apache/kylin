@@ -35,7 +35,6 @@ import org.apache.hadoop.hbase.zookeeper.ZooKeeperWatcher;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -102,7 +101,7 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
 
         if (optionsHelper.hasOption(OPTION_PROJECT)) {
             String projectNames = optionsHelper.getOptionValue(OPTION_PROJECT);
-            for (String projectName : StringUtil.splitByComma(projectNames)) {
+            for (String projectName: projectNames.split(",")) {
                 ProjectInstance projectInstance = projectManager.getProject(projectName);
                 if (projectInstance == null) {
                     throw new IllegalArgumentException("Project " + projectName + " does not exist");
@@ -114,7 +113,7 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
             }
         } else if (optionsHelper.hasOption(OPTION_CUBE)) {
             String cubeNames = optionsHelper.getOptionValue(OPTION_CUBE);
-            for (String cubeName : StringUtil.splitByComma(cubeNames)) {
+            for (String cubeName : cubeNames.split(",")) {
                 IRealization realization = cubeManager.getRealization(cubeName);
                 if (realization != null) {
                     retrieveResourcePath(realization);

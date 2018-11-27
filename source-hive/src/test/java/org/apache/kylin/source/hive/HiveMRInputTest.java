@@ -29,7 +29,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
 import org.apache.kylin.common.util.RandomUtil;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,8 +46,7 @@ public class HiveMRInputTest {
             DefaultChainedExecutable defaultChainedExecutable = mock(DefaultChainedExecutable.class);
             defaultChainedExecutable.setId(RandomUtil.randomUUID().toString());
 
-            String jobWorkingDir = HiveInputBase.getJobWorkingDir(defaultChainedExecutable,
-                    KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
+            String jobWorkingDir = HiveInputBase.getJobWorkingDir(defaultChainedExecutable, KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
             jobWorkDirPath = new Path(jobWorkingDir);
             Assert.assertTrue(fileSystem.exists(jobWorkDirPath));
         } finally {
@@ -66,11 +64,12 @@ public class HiveMRInputTest {
 
         StringBuilder hqls = new StringBuilder();
         for (int i = 0; i < viewSize; i++) {
-            String hql = HiveInputBase.materializeViewHql(mockedViewNames[i], mockedTalbeNames[i], mockedWorkingDir);
+            String hql = HiveInputBase.materializeViewHql(mockedViewNames[i], mockedTalbeNames[i],
+                    mockedWorkingDir);
             hqls.append(hql);
         }
 
-        for (String sub : StringUtil.splitAndTrim(hqls.toString(), "\n")) {
+        for (String sub : hqls.toString().split("\n")) {
             Assert.assertTrue(sub.endsWith(";"));
         }
     }

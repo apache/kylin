@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaFactory;
 import org.apache.calcite.avatica.AvaticaParameter;
@@ -56,7 +54,7 @@ public class KylinConnection extends AvaticaConnection implements KylinConnectio
         String odbcUrl = url;
         odbcUrl = odbcUrl.replaceAll((Driver.CONNECT_STRING_PREFIX + "[[A-Za-z0-9]*=[A-Za-z0-9]*;]*//").toString(), "");
 
-        String[] temps = Iterables.toArray(Splitter.on("/").split(odbcUrl), String.class);
+        String[] temps = odbcUrl.split("/");
         assert temps.length >= 2;
 
         this.project = temps[temps.length - 1];
