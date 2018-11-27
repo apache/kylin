@@ -324,7 +324,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             StringBuilder jarList = new StringBuilder();
             StringBuilder fileList = new StringBuilder();
 
-            for (String fileName : StringUtil.splitByComma(kylinDependency)) {
+            for (String fileName : StringUtil.splitAndTrim(kylinDependency, ",")) {
                 Path p = new Path(fileName);
                 if (p.isAbsolute() == false) {
                     logger.warn("The directory of kylin dependency '" + fileName + "' is not absolute, skip");
