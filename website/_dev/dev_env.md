@@ -27,6 +27,10 @@ With both command successfully run you can go to ambari home page at <http://you
 
 For other hadoop distribution, basically start the hadoop cluster, make sure HDFS, YARN, Hive, HBase are running.
 
+Note:
+
+* You may need to adjust the YARN configuration, allocating 3-4GB memory to YARN resource manager.
+* The JDK in the sandbox VM might be old, please manually upgrade to Java 8 (Kyin 2.5 requires Java 8).
 
 ## Environment on the dev machine
 
@@ -44,7 +48,7 @@ ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
 
 ### Install Spark
 
-Manually install the Spark binary in in a local folder like /usr/local/spark. You need to check what's the right version for your Kylin version, and then get the download link from Apache Spark website. Kylin 2.3 to 2.5 requires Spark 2.1; For example:
+Manually install the Spark binary in in a local folder like /usr/local/spark. You need to check what's the right version for your Kylin version, and then get the download link from Apache Spark website. Kylin 2.3 - 2.4 requires Spark 2.1, Kylin 2.5 requires Spark 2.3.2; For example:
 
 
 {% highlight Groff markup %}
@@ -70,7 +74,7 @@ First clone the Kylin project to your local:
 git clone https://github.com/apache/kylin.git
 {% endhighlight %}
 	
-Install Kylin artifacts to the maven repo
+Install Kylin artifacts to the maven repository.
 
 {% highlight Groff markup %}
 mvn clean install -DskipTests
@@ -100,7 +104,7 @@ mvn test -fae -Dhdp.version=<hdp-version> -P sandbox
 ### Run integration tests
 Before actually running integration tests, need to run some end-to-end cube building jobs for test data population, in the meantime validating cubing process. Then comes with the integration tests.
 
-It might take a while (maybe one hour), please keep patient.
+It might take a while (maybe two hours), please keep patient.
  
 {% highlight Groff markup %}
 mvn verify -fae -Dhdp.version=<hdp-version> -P sandbox
@@ -122,6 +126,12 @@ Download JS for Kylin web GUI. `npm` is part of `Node.js`, please search about h
 cd webapp
 npm install -g bower
 bower --allow-root install
+{% endhighlight %}
+
+If you encounter network problem when run "bower install", you may try:
+
+{% highlight Groff markup %}
+git config --global url."git://".insteadOf https://
 {% endhighlight %}
 
 Note, if on Windows, after install bower, need to add the path of "bower.cmd" to system environment variable 'PATH', and then run:

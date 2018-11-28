@@ -27,6 +27,10 @@ ambari-server start
 
 对于 hadoop 分布式，基本上启动 hadoop 集群，确保 HDFS，YARN，Hive，HBase 运行着即可。
 
+注意：
+
+* 为YARN resource manager 分配 3-4GB 内存.
+* 升级 Sandbox 里的 Java 到 Java 8 (Kyin 2.5 需要 Java 8).
 
 ## 开发机器的环境
 
@@ -44,7 +48,7 @@ ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
 
 ### 安装 Spark
 
-在像 /usr/local/spark 这样的本地文件夹下手动安装 Spark；你需要确认所需要的 Spark 的版本，以及从 Spark 下载页面获取下载链接。 Kylin 2.3 - 2.5 需要 Spark 2.1; 例如：
+在像 /usr/local/spark 这样的本地文件夹下手动安装 Spark；你需要确认所需要的 Spark 的版本，以及从 Spark 下载页面获取下载链接。 Kylin 2.3 - 2.4 需要 Spark 2.1， Kylin 2.5 需要 Spark 2.3; 例如：
 
 {% highlight Groff markup %}
 wget -O /tmp/spark-2.1.2-bin-hadoop2.7.tgz https://archive.apache.org/dist/spark/spark-2.1.2/spark-2.1.2-bin-hadoop2.7.tgz
@@ -99,7 +103,7 @@ mvn test -fae -Dhdp.version=<hdp-version> -P sandbox
 ### 运行集成测试
 在真正运行集成测试前，需要为测试数据的填充运行一些端到端的 cube 构建作业，同时验证 cube 过程。然后是集成测试。
 
-其可能需要一段时间（也许一小时），请保持耐心。
+其可能需要一段时间（也许两个小时），请保持耐心。
  
 {% highlight Groff markup %}
 mvn verify -fae -Dhdp.version=<hdp-version> -P sandbox
@@ -121,6 +125,12 @@ cp -r server/src/main/webapp/WEB-INF webapp/app/WEB-INF
 cd webapp
 npm install -g bower
 bower --allow-root install
+{% endhighlight %}
+
+如果在bower install的过程当中遇到问题，可以尝试命令：
+
+{% highlight Groff markup %}
+git config --global url."git://".insteadOf https://
 {% endhighlight %}
 
 注意，如果是在 Windows 上，安装完 bower，需要将 "bower.cmd" 的路径加入系统环境变量 'PATH' 中，然后运行：
