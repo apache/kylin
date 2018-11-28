@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.NavigableSet;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ContentReader;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
@@ -208,24 +209,24 @@ public class ExecutableDao {
     }
 
     private ExecutablePO readJobResource(String path) throws IOException {
-        return store.getResource(path, ExecutablePO.class, JOB_SERIALIZER);
+        return store.getResource(path, JOB_SERIALIZER);
     }
 
-    private long writeJobResource(String path, ExecutablePO job) throws IOException {
-        return store.putResource(path, job, JOB_SERIALIZER);
+    private void writeJobResource(String path, ExecutablePO job) throws IOException {
+        store.checkAndPutResource(path, job, JOB_SERIALIZER);
     }
 
     private ExecutableOutputPO readJobOutputResource(String path) throws IOException {
-        return store.getResource(path, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+        return store.getResource(path, JOB_OUTPUT_SERIALIZER);
     }
 
-    private long writeJobOutputResource(String path, ExecutableOutputPO output) throws IOException {
-        return store.putResource(path, output, JOB_OUTPUT_SERIALIZER);
+    private void writeJobOutputResource(String path, ExecutableOutputPO output) throws IOException {
+        store.checkAndPutResource(path, output, JOB_OUTPUT_SERIALIZER);
     }
 
     public List<ExecutableOutputPO> getJobOutputs() throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, JOB_OUTPUT_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -234,7 +235,9 @@ public class ExecutableDao {
 
     public List<ExecutableOutputPO> getJobOutputs(long timeStart, long timeEndExclusive) throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, timeStart, timeEndExclusive, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, false,
+                    new ResourceStore.VisitFilter(timeStart, timeEndExclusive),
+                    new ContentReader(JOB_OUTPUT_SERIALIZER));
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -252,7 +255,7 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs() throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, ExecutablePO.class, JOB_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, JOB_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -261,7 +264,8 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs(long timeStart, long timeEndExclusive) throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, timeStart, timeEndExclusive, ExecutablePO.class, JOB_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, false,
+                    new ResourceStore.VisitFilter(timeStart, timeEndExclusive), new ContentReader(JOB_SERIALIZER));
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -322,8 +326,7 @@ public class ExecutableDao {
             if (getJob(job.getUuid()) == null) {
                 throw new IllegalArgumentException("job id:" + job.getUuid() + " does not exist");
             }
-            final long ts = writeJobResource(pathOfJob(job), job);
-            job.setLastModified(ts);
+            writeJobResource(pathOfJob(job), job);
             executableDigestMap.put(job.getId(), job);
             return job;
         } catch (IOException e) {
@@ -371,8 +374,7 @@ public class ExecutableDao {
 
     public void updateJobOutput(ExecutableOutputPO output) throws PersistentException {
         try {
-            final long ts = writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
-            output.setLastModified(ts);
+            writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
             if (!isTaskExecutableOutput(output.getUuid()))
                 executableOutputDigestMap.put(output.getUuid(), output);
         } catch (IOException e) {

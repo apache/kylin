@@ -34,7 +34,7 @@ public class TableACLManagerTest extends MultiNodeManagerTestBase {
     public void testCaseInsensitiveFromDeserializer() throws IOException {
         final TableACLManager manager = new TableACLManager(configA);
         manager.addTableACL(PROJECT, USER, "TABLE1", MetadataConstants.TYPE_USER);
-        TableACL tableACL = Preconditions.checkNotNull(getStore().getResource("/table_acl/" + PROJECT, TableACL.class, new JsonSerializer<>(TableACL.class)));
+        TableACL tableACL = Preconditions.checkNotNull(getStore().getResource("/table_acl/" + PROJECT, new JsonSerializer<>(TableACL.class)));
         Assert.assertEquals(1, tableACL.getNoAccessList("table1", MetadataConstants.TYPE_USER).size());
     }
 

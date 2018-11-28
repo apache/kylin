@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 
@@ -78,24 +79,26 @@ public class ResourceStoreTest {
         List<StringEntity> result;
 
         // reset any leftover garbage
-        ResourceTool.resetR(store, folder);
+        new ResourceTool().resetR(store, folder);
 
-        store.putResource(folder + "/res1", new StringEntity("data1"), 1000, StringEntity.serializer);
-        store.putResource(folder + "/res2", new StringEntity("data2"), 2000, StringEntity.serializer);
-        store.putResource(folder + "/sub/res3", new StringEntity("data3"), 3000, StringEntity.serializer);
-        store.putResource(folder + "/res4", new StringEntity("data4"), 4000, StringEntity.serializer);
+        store.checkAndPutResource(folder + "/res1", new StringEntity("data1"), 1000, StringEntity.serializer);
+        store.checkAndPutResource(folder + "/res2", new StringEntity("data2"), 2000, StringEntity.serializer);
+        store.checkAndPutResource(folder + "/sub/res3", new StringEntity("data3"), 3000, StringEntity.serializer);
+        store.checkAndPutResource(folder + "/res4", new StringEntity("data4"), 4000, StringEntity.serializer);
 
-        result = store.getAllResources(folder, StringEntity.class, StringEntity.serializer);
+        result = store.getAllResources(folder, StringEntity.serializer);
+        Collections.sort(result);
         assertEntity(result.get(0), "data1", 1000);
         assertEntity(result.get(1), "data2", 2000);
         assertEntity(result.get(2), "data4", 4000);
         assertEquals(3, result.size());
 
-        result = store.getAllResources(folder, 2000, 4000, StringEntity.class, StringEntity.serializer);
+        result = store.getAllResources(folder, false, new ResourceStore.VisitFilter(2000, 4000),
+                new ContentReader(StringEntity.serializer));
         assertEntity(result.get(0), "data2", 2000);
         assertEquals(1, result.size());
 
-        ResourceTool.resetR(store, folder);
+        new ResourceTool().resetR(store, folder);
     }
 
     private static void assertEntity(StringEntity entity, String data, int ts) {
@@ -118,24 +121,24 @@ public class ResourceStoreTest {
         StringEntity t;
 
         // put/get
-        store.putResource(path1, content1, StringEntity.serializer);
+        store.checkAndPutResource(path1, content1, StringEntity.serializer);
         assertTrue(store.exists(path1));
-        t = store.getResource(path1, StringEntity.class, StringEntity.serializer);
+        t = store.getResource(path1, StringEntity.serializer);
         assertEquals(content1, t);
 
-        store.putResource(path2, content2, StringEntity.serializer);
+        store.checkAndPutResource(path2, content2, StringEntity.serializer);
         assertTrue(store.exists(path2));
-        t = store.getResource(path2, StringEntity.class, StringEntity.serializer);
+        t = store.getResource(path2, StringEntity.serializer);
         assertEquals(content2, t);
 
         // overwrite
         t.str = "new string";
-        store.putResource(path2, t, StringEntity.serializer);
+        store.checkAndPutResource(path2, t, StringEntity.serializer);
 
         // write conflict
         try {
             t.setLastModified(t.getLastModified() - 1);
-            store.putResource(path2, t, StringEntity.serializer);
+            store.checkAndPutResource(path2, t, StringEntity.serializer);
             fail("write conflict should trigger IllegalStateException");
         } catch (WriteConflictException e) {
             // expected
@@ -192,7 +195,7 @@ public class ResourceStoreTest {
         int step = 0; //avoid compiler optimization
         for (int i = 0; i < TEST_RESOURCE_COUNT; i++) {
             String resourcePath = PERFORMANCE_TEST_ROOT_PATH + "/res_" + i;
-            StringEntity t = store.getResource(resourcePath, StringEntity.class, StringEntity.serializer);
+            StringEntity t = store.getResource(resourcePath, StringEntity.serializer);
             step |= t.toString().length();
         }
         logger.info("step : " + step);

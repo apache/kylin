@@ -71,8 +71,8 @@ public class JobRelatedMetaUtil {
             RawResource res = from.getResource(path);
             if (res == null)
                 throw new IllegalStateException("No resource found at -- " + path);
-            to.putResource(path, res.inputStream, res.timestamp);
-            res.inputStream.close();
+            to.putResource(path, res.content(), res.lastModified());
+            res.content().close();
         }
 
         logger.debug("Dump resources to {} took {} ms", metaDir, System.currentTimeMillis() - startTime);
@@ -99,7 +99,7 @@ public class JobRelatedMetaUtil {
 
             KylinConfig dstConfig = KylinConfig.createKylinConfig(props);
             //upload metadata
-            ResourceTool.copy(KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath()), dstConfig);
+            new ResourceTool().copy(KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath()), dstConfig);
         }
     }
 }

@@ -60,7 +60,7 @@ public class LocalFileResourceStoreTest extends LocalFileMetadataTestCase {
         } finally {
             cp.close();
         }
-        StringEntity str = store.getResource("/res1", StringEntity.class, StringEntity.serializer);
+        StringEntity str = store.getResource("/res1", StringEntity.serializer);
         assertEquals("data1", str.toString());
 
         cp = store.checkpoint();
@@ -73,14 +73,14 @@ public class LocalFileResourceStoreTest extends LocalFileMetadataTestCase {
             store.deleteResource("/res1");
 
             assertEquals(null, store.getResource("/res1"));
-            assertEquals(2000, (raw = store.getResource("/res2")).timestamp);
-            raw.inputStream.close();
+            assertEquals(2000, (raw = store.getResource("/res2")).lastModified());
+            raw.content().close();
             
             cp.rollback();
             
             assertEquals(null, store.getResource("/res2"));
-            assertEquals(1000, (raw = store.getResource("/res1")).timestamp);
-            raw.inputStream.close();
+            assertEquals(1000, (raw = store.getResource("/res1")).lastModified());
+            raw.content().close();
         } finally {
             cp.close();
         }

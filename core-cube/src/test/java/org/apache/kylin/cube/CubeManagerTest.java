@@ -252,7 +252,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         final NavigableSet<String> cubePath = store.listResources(ResourceStore.CUBE_RESOURCE_ROOT);
         assertTrue(cubePath.size() > 1);
 
-        final List<CubeInstance> cubes = store.getAllResources(ResourceStore.CUBE_RESOURCE_ROOT, CubeInstance.class,
+        final List<CubeInstance> cubes = store.getAllResources(ResourceStore.CUBE_RESOURCE_ROOT,
                 CubeManager.CUBE_SERIALIZER);
         assertEquals(cubePath.size(), cubes.size());
     }

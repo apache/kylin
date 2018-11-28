@@ -60,7 +60,7 @@ public class ResourceToolTest extends LocalFileMetadataTestCase {
         //metadata under source path and destination path are not equal before copy
         Assert.assertNotEquals(srcStore.listResources("/"), dstStore.listResources("/"));
 
-        ResourceTool.copy(KylinConfig.getInstanceFromEnv(), dstConfig, "/");
+        new ResourceTool().copy(KylinConfig.getInstanceFromEnv(), dstConfig, "/");
 
         //After copy, two paths have same metadata
         Assert.assertEquals(srcStore.listResources("/"), dstStore.listResources("/"));

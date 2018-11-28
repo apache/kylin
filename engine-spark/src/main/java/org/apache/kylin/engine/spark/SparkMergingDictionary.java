@@ -242,7 +242,7 @@ public class SparkMergingDictionary extends AbstractApplication implements Seria
 
                         File tempFile = File.createTempFile(segmentId, ".seq");
 
-                        try(InputStream is = rs.getResource(filePath).inputStream;
+                        try(InputStream is = rs.getResource(filePath).content();
                             FileOutputStream tempFileStream = new FileOutputStream(tempFile)) {
 
                             org.apache.commons.io.IOUtils.copy(is, tempFileStream);

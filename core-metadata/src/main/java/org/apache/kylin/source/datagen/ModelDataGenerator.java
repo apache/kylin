@@ -274,7 +274,7 @@ public class ModelDataGenerator {
         List<String> r = new ArrayList<>();
 
         BufferedReader in = new BufferedReader(
-                new InputStreamReader(outputStore.getResource(path(pk.getTable())).inputStream, "UTF-8"));
+                new InputStreamReader(outputStore.getResource(path(pk.getTable())).content(), "UTF-8"));
         try {
             String line;
             while ((line = in.readLine()) != null) {
