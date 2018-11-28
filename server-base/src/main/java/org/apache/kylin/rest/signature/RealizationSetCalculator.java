@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
@@ -69,7 +70,7 @@ public class RealizationSetCalculator implements SignatureCalculator {
         if (Strings.isNullOrEmpty(cubes)) {
             return null;
         }
-        String[] realizations = parseNamesFromCanonicalNames(cubes.split(","));
+        String[] realizations = parseNamesFromCanonicalNames(StringUtil.splitByComma(cubes));
         return Sets.newHashSet(realizations);
     }
 
