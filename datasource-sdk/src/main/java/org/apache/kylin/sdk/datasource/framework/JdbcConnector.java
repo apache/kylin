@@ -85,8 +85,8 @@ public class JdbcConnector implements Closeable {
         return sqlConverter.convertSql(orig);
     }
 
-    public String convertColumn(String column) {
-        return sqlConverter.convertColumn(column);
+    public String convertColumn(String column, String originQuote) {
+        return sqlConverter.convertColumn(column, originQuote);
     }
 
     /**
@@ -117,7 +117,7 @@ public class JdbcConnector implements Closeable {
     }
 
     public List<String> listDatabases() throws SQLException {
-        List<String> dbNames = adaptor.listDatabasesWithCache();
+        List<String> dbNames = adaptor.listDatabasesWithCache(true);
         String blackList = jdbcDs.getPropertyValue("schema.database.black-list-pattern");
         if (!StringUtils.isEmpty(blackList)) {
             String[] patterns = blackList.split(",");
@@ -136,7 +136,7 @@ public class JdbcConnector implements Closeable {
     }
 
     public List<String> listTables(String schema) throws SQLException {
-        return adaptor.listTablesWithCache(schema);
+        return adaptor.listTablesWithCache(schema, true);
     }
 
     public CachedRowSet getTable(String database, String table) throws SQLException {

@@ -68,6 +68,10 @@ public class TableRef implements Serializable {
         return table.getIdentity();
     }
 
+    public String getTableIdentityQuoted(String quotation) {
+        return table.getIdentityQuoted(quotation);
+    }
+
     public TblColRef getColumn(String name) {
         return columns.get(name);
     }

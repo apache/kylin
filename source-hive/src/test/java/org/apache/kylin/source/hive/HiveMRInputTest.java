@@ -59,7 +59,7 @@ public class HiveMRInputTest {
     public void testMaterializeViewHql() {
         final int viewSize = 2;
         String[] mockedViewNames = { "mockedView1", "mockedView2" };
-        String[] mockedTalbeNames = { "mockedTable1", "mockedTable2" };
+        String[] mockedTalbeNames = { "`mockedTable1`", "`mockedTable2`" };
         String mockedWorkingDir = "mockedWorkingDir";
 
         StringBuilder hqls = new StringBuilder();
@@ -72,6 +72,16 @@ public class HiveMRInputTest {
         for (String sub : hqls.toString().split("\n")) {
             Assert.assertTrue(sub.endsWith(";"));
         }
+
+        Assert.assertEquals("DROP TABLE IF EXISTS `mockedView1`;\n"
+                + "CREATE TABLE IF NOT EXISTS `mockedView1` LIKE `mockedTable1` LOCATION 'mockedWorkingDir/mockedView1';\n"
+                + "ALTER TABLE `mockedView1` SET TBLPROPERTIES('auto.purge'='true');\n"
+                + "INSERT OVERWRITE TABLE `mockedView1` SELECT * FROM `mockedTable1`;\n"
+                + "DROP TABLE IF EXISTS `mockedView2`;\n"
+                + "CREATE TABLE IF NOT EXISTS `mockedView2` LIKE `mockedTable2` LOCATION 'mockedWorkingDir/mockedView2';\n"
+                + "ALTER TABLE `mockedView2` SET TBLPROPERTIES('auto.purge'='true');\n"
+                + "INSERT OVERWRITE TABLE `mockedView2` SELECT * FROM `mockedTable2`;\n",
+                hqls.toString());
     }
 
 }

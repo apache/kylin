@@ -37,20 +37,29 @@ import org.apache.kylin.sdk.datasource.framework.def.DataSourceDef;
 import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
 
 import com.google.common.cache.Cache;
+import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Extends this Abstract class to create Adaptors for new jdbc data source.
  */
 public abstract class AbstractJdbcAdaptor implements Closeable {
+
+    protected static final Logger logger = LoggerFactory.getLogger(AbstractJdbcAdaptor.class);
     protected final BasicDataSource dataSource;
     protected final AdaptorConfig config;
     protected final DataSourceDef dataSourceDef;
     protected SqlConverter.IConfigurer configurer;
+    protected final Cache<String, List<String>> columnsCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(30).build();
     protected final Cache<String, List<String>> databasesCache = CacheBuilder.newBuilder()
             .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(30).build();
     protected final Cache<String, List<String>> tablesCache = CacheBuilder.newBuilder()
             .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(30).build();
+
+    private static Joiner joiner = Joiner.on("_");
 
     /**
      * Default constructor method.
@@ -267,11 +276,11 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
     public abstract String fixSql(String sql);
 
     /**
-     * fix case sensitive
-     * @param sql
+     * fix case sensitive for identifier
+     * @param identifier
      * @return
      */
-    public abstract String fixCaseSensitiveSql(String sql);
+    public abstract String fixIdentifierCaseSensitve(String identifier);
 
     /**
      * To list all the available database names from JDBC source.
@@ -288,10 +297,20 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
      * @throws SQLException
      */
     public List<String> listDatabasesWithCache() throws SQLException {
+        return listDatabasesWithCache(false);
+    }
+
+    /**
+     * list databases with cache
+     * @param init
+     * @return
+     * @throws SQLException
+     */
+    public List<String> listDatabasesWithCache(boolean init) throws SQLException {
         if (configurer.enableCache()) {
             String cacheKey = config.datasourceId + config.url + "_databases";
-            List<String> cachedDatabases = databasesCache.getIfPresent(cacheKey);
-            if (cachedDatabases == null) {
+            List<String> cachedDatabases;
+            if (init || (cachedDatabases = databasesCache.getIfPresent(cacheKey)) == null) {
                 cachedDatabases = listDatabases();
                 databasesCache.put(cacheKey, cachedDatabases);
             }
@@ -312,20 +331,25 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
     /**
      * list tables with cache
      * @param database
+     * @param init
      * @return
      * @throws SQLException
      */
-    public List<String> listTablesWithCache(String database) throws SQLException{
+    public List<String> listTablesWithCache(String database, boolean init) throws SQLException {
         if (configurer.enableCache()) {
-            String cacheKey = config.datasourceId + config.url + "_tables";
-            List<String> cachedTables = tablesCache.getIfPresent(cacheKey);
-            if (cachedTables == null) {
+            String cacheKey = joiner.join(config.datasourceId, config.url, database, "tables");
+            List<String> cachedTables;
+            if (init || (cachedTables = tablesCache.getIfPresent(cacheKey)) == null) {
                 cachedTables = listTables(database);
                 tablesCache.put(cacheKey, cachedTables);
             }
             return cachedTables;
         }
         return listTables(database);
+    }
+
+    public List<String> listTablesWithCache(String database) throws SQLException {
+        return listTablesWithCache(database, false);
     }
 
     /**
@@ -376,5 +400,49 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
      * @return A set of SQL Statements which can be executed in JDBC source.
      */
     public abstract String[] buildSqlToCreateView(String viewName, String sql);
+
+    /**
+     * To list all the available columns inside a table in database from JDBC source.
+     * Developers can overwrite this method to do some filtering work.
+     * @param database The given database.
+     * @param tableName The given table name
+     * @return The list of all the available columns of a table.
+     * @throws SQLException If metadata fetch failed.
+     */
+    public abstract List<String> listColumns(String database, String tableName) throws SQLException;
+
+    /**
+     * list columns with cache
+     * @param database
+     * @return
+     * @throws SQLException
+     */
+    public List<String> listColumnsWithCache(String database, String tableName) throws SQLException {
+        return listColumnsWithCache(database, tableName, false);
+    }
+
+    /**
+     * list columns with cache
+     * @param database
+     * @return
+     * @throws SQLException
+     */
+    public List<String> listColumnsWithCache(String database, String tableName, boolean init) throws SQLException {
+        if (configurer.enableCache()) {
+            String cacheKey = config.datasourceId + config.url + "_" + tableName + "_columns";
+            List<String> cachedColumns;
+            if (init || (cachedColumns = columnsCache.getIfPresent(cacheKey)) == null) {
+                cachedColumns = listColumns(database, tableName);
+                columnsCache.put(cacheKey, cachedColumns);
+            }
+            return cachedColumns;
+        }
+        return listColumns(database, tableName);
+
+    }
+
+    public boolean isCaseSensitive() {
+        return configurer.isCaseSensitive();
+    }
 }
 

@@ -18,6 +18,7 @@
 package org.apache.kylin.sdk.datasource.framework.conv;
 
 import java.sql.SQLException;
+import java.util.Locale;
 
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.parser.SqlParseException;
@@ -67,7 +68,7 @@ public class SqlConverterTest extends LocalFileMetadataTestCase {
             }
 
             @Override
-            public SqlDialect getSqlDialect() throws SQLException {
+            public SqlDialect getSqlDialect() {
                 return SqlDialect.CALCITE;
             }
 
@@ -100,12 +101,22 @@ public class SqlConverterTest extends LocalFileMetadataTestCase {
             public boolean enableCache() {
                 return true;
             }
+
+            @Override
+            public boolean enableQuote() {
+                return true;
+            }
+
+            @Override
+            public String fixIdentifierCaseSensitve(String orig) {
+                return orig;
+            }
         }, master);
 
         // escape default keywords
-        Assert.assertEquals("SELECT *\nFROM DEFAULT.FACT", converter.convertSql("select * from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT *\nFROM \"Default\".FACT", converter.convertSql("select * from \"Default\".FACT"));
-        Assert.assertEquals("SELECT *\nFROM \"default\".FACT", converter.convertSql("select * from \"default\".FACT"));
+        Assert.assertEquals("SELECT *\nFROM \"DEFAULT\".\"FACT\"", converter.convertSql("select * from \"DEFAULT\".FACT"));
+        Assert.assertEquals("SELECT *\nFROM \"Default\".\"FACT\"", converter.convertSql("select * from \"Default\".FACT"));
+        Assert.assertEquals("SELECT *\nFROM \"default\".\"FACT\"", converter.convertSql("select * from \"default\".FACT"));
     }
 
     @Test
@@ -135,7 +146,7 @@ public class SqlConverterTest extends LocalFileMetadataTestCase {
             }
 
             @Override
-            public SqlDialect getSqlDialect() throws SQLException {
+            public SqlDialect getSqlDialect() {
                 return SqlDialect.CALCITE;
             }
 
@@ -168,11 +179,21 @@ public class SqlConverterTest extends LocalFileMetadataTestCase {
             public boolean enableCache() {
                 return true;
             }
+
+            @Override
+            public boolean enableQuote() {
+                return true;
+            }
+
+            @Override
+            public String fixIdentifierCaseSensitve(String orig) {
+                return orig;
+            }
         }, master);
 
         // normal cases
         Assert.assertEquals("SELECT 1", converter.convertSql("select     1"));
-        Assert.assertEquals("SELECT *\nFROM FACT", converter.convertSql("select * from FACT"));
+        Assert.assertEquals("SELECT *\nFROM \"FACT\"", converter.convertSql("select * from FACT"));
 
         // limit and offset
         Assert.assertEquals("SELECT 1\nFETCH NEXT 1 ROWS ONLY", converter.convertSql("SELECT 1 LIMIT 1"));
@@ -181,56 +202,56 @@ public class SqlConverterTest extends LocalFileMetadataTestCase {
                 converter.convertSql("SELECT 1 LIMIT 1 OFFSET 1"));
 
         // escape default keywords
-        Assert.assertEquals("SELECT *\nFROM \"DEFAULT\".FACT", converter.convertSql("select * from DEFAULT.FACT"));
-        Assert.assertEquals("SELECT *\nFROM \"DEFAULT\".FACT", converter.convertSql("select * from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT *\nFROM \"DEFAULT\".FACT", converter.convertSql("select * from \"Default\".FACT"));
-        Assert.assertEquals("SELECT *\nFROM \"DEFAULT\".FACT", converter.convertSql("select * from \"default\".FACT"));
+        Assert.assertEquals("SELECT *\nFROM \"DEFAULT\".\"FACT\"", converter.convertSql("select * from DEFAULT.FACT"));
+        Assert.assertEquals("SELECT *\nFROM \"DEFAULT\".\"FACT\"", converter.convertSql("select * from \"DEFAULT\".FACT"));
+        Assert.assertEquals("SELECT *\nFROM \"DEFAULT\".\"FACT\"", converter.convertSql("select * from \"Default\".FACT"));
+        Assert.assertEquals("SELECT *\nFROM \"DEFAULT\".\"FACT\"", converter.convertSql("select * from \"default\".FACT"));
 
         // function mapping
-        Assert.assertEquals("SELECT EXTRACT(DOY FROM PART_DT)\nFROM \"DEFAULT\".FACT",
+        Assert.assertEquals("SELECT EXTRACT(DOY FROM \"PART_DT\")\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select DAYOFYEAR(PART_DT) from \"DEFAULT\".FACT"));
         Assert.assertEquals(
-                "SELECT 12 * (EXTRACT(YEAR FROM DT1) - EXTRACT(YEAR FROM DT2)) + EXTRACT(MONTH FROM DT1) - EXTRACT(MONTH FROM DT2) "
-                        + "- CASE WHEN EXTRACT(DAY FROM DT2) > EXTRACT(DAY FROM DT1) THEN 1 ELSE 0 END\n"
-                        + "FROM \"DEFAULT\".FACT",
+                "SELECT 12 * (EXTRACT(YEAR FROM \"DT1\") - EXTRACT(YEAR FROM \"DT2\")) + EXTRACT(MONTH FROM \"DT1\") - EXTRACT(MONTH FROM \"DT2\") - " +
+                        "CASE WHEN EXTRACT(DAY FROM \"DT2\") > EXTRACT(DAY FROM \"DT1\") THEN 1 ELSE 0 END\n" +
+                        "FROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select TIMESTAMPDIFF(month,DT2,      DT1) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT TRUNC(ID)\nFROM \"DEFAULT\".FACT",
+        Assert.assertEquals("SELECT TRUNC(\"ID\")\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(ID as INT) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT 1\nFROM A\nWHERE 1 BETWEEN ASYMMETRIC 0 AND 2",
+        Assert.assertEquals("SELECT 1\nFROM \"A\"\nWHERE 1 BETWEEN ASYMMETRIC 0 AND 2",
                 converter.convertSql("select 1 from a where 1 BETWEEN 0 and 2"));
-        Assert.assertEquals("SELECT CURRENT_DATE, TEST_CURR_TIME()",
+        Assert.assertEquals("SELECT \"CURRENT_DATE\", TEST_CURR_TIME()",
                 converter.convertSql("select CURRENT_DATE, CURRENT_TIME"));
-        Assert.assertEquals("SELECT EXP(AVG(LN(EXTRACT(DOY FROM CAST('2018-03-20' AS DATE)))))\nFROM \"DEFAULT\".FACT",
+        Assert.assertEquals("SELECT EXP(AVG(LN(EXTRACT(DOY FROM CAST('2018-03-20' AS DATE)))))\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql(
                         "select exp(avg(ln(dayofyear(cast('2018-03-20' as date))))) from \"DEFAULT\".FACT"));
 
         // over function
-        Assert.assertEquals("SELECT STDDEVP(C1) OVER (ORDER BY C1)\nFROM TEST_SUITE\nFETCH NEXT 1 ROWS ONLY",
+        Assert.assertEquals("SELECT STDDEVP(\"C1\") OVER (ORDER BY \"C1\")\nFROM \"TEST_SUITE\"\nFETCH NEXT 1 ROWS ONLY",
                 converter.convertSql("select stddev_pop(c1) over(order by c1) from test_suite limit 1"));
 
         // type mapping
-        Assert.assertEquals("SELECT CAST(PRICE AS DOUBLE PRECISION)\nFROM \"DEFAULT\".FACT",
+        Assert.assertEquals("SELECT CAST(\"PRICE\" AS DOUBLE PRECISION)\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(PRICE as DOUBLE) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT CAST(PRICE AS DECIMAL(19, 4))\nFROM \"DEFAULT\".FACT",
+        Assert.assertEquals("SELECT CAST(\"PRICE\" AS DECIMAL(19, 4))\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(PRICE as DECIMAL(19,4)) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT CAST(PRICE AS DECIMAL(19))\nFROM \"DEFAULT\".FACT",
+        Assert.assertEquals("SELECT CAST(\"PRICE\" AS DECIMAL(19))\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(PRICE as DECIMAL(19)) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT CAST(BYTE AS BIT(8))\nFROM \"DEFAULT\".FACT",
+        Assert.assertEquals("SELECT CAST(\"BYTE\" AS BIT(8))\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(BYTE as BYTE) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT CAST(BYTE AS VARCHAR(1024))\nFROM \"DEFAULT\".FACT",
+        Assert.assertEquals("SELECT CAST(\"BYTE\" AS VARCHAR(1024))\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(BYTE as VARCHAR(1024)) from \"DEFAULT\".FACT"));
 
         // cannot find mapping
-        Assert.assertEquals("SELECT CURRENT_DATE_1, CURRENT_TIME_1",
+        Assert.assertEquals("SELECT \"CURRENT_DATE_1\", \"CURRENT_TIME_1\"",
                 converter.convertSql("select CURRENT_DATE_1, CURRENT_TIME_1"));
-        Assert.assertEquals("SELECT CURRENT_DATE_1, TEST_CURR_TIME(), CURRENT_DATE",
+        Assert.assertEquals("SELECT \"CURRENT_DATE_1\", TEST_CURR_TIME(), \"CURRENT_DATE\"",
                 converter.convertSql("select CURRENT_DATE_1, CURRENT_TIME, CURRENT_DATE"));
-        Assert.assertEquals("SELECT CAST(BYTE AS VAR(1024))\nFROM \"DEFAULT\".FACT",
+        Assert.assertEquals("SELECT CAST(\"BYTE\" AS VAR(1024))\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(BYTE as VAR(1024)) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT CAST(PRICE AS DDD)\nFROM \"DEFAULT\".FACT",
+        Assert.assertEquals("SELECT CAST(\"PRICE\" AS DDD)\nFROM \"DEFAULT\".\"FACT\"",
                 converter.convertSql("select cast(PRICE as DDD) from \"DEFAULT\".FACT"));
-        Assert.assertEquals("SELECT A(), B(A), CAST(PRICE AS DDD)\nFROM \"DEFAULT\".FACT",
-                converter.convertSql("select A(), B(A), cast(PRICE as DDD) from \"DEFAULT\".FACT"));
+        Assert.assertEquals("SELECT A(), B(\"A\"), CAST(\"PRICE\" AS DDD)\nFROM \"DEFAULT\".\"FACT\"",
+                converter.convertSql("select A(), B(A), cast(PRICE as DDD) from \"DEFAULT\".\"FACT\""));
         Assert.assertEquals("SELECT ONLY_DEFAULT(1)", converter.convertSql("SELECT ONLY_DEFAULT(1)"));
 
         // invalid case
@@ -268,7 +289,7 @@ public class SqlConverterTest extends LocalFileMetadataTestCase {
             }
 
             @Override
-            public SqlDialect getSqlDialect() throws SQLException {
+            public SqlDialect getSqlDialect() {
                 return SqlDialect.CALCITE;
             }
 
@@ -301,13 +322,23 @@ public class SqlConverterTest extends LocalFileMetadataTestCase {
             public boolean enableCache() {
                 return true;
             }
+
+            @Override
+            public boolean enableQuote() {
+                return true;
+            }
+
+            @Override
+            public String fixIdentifierCaseSensitve(String orig) {
+                return orig;
+            }
         }, master);
 
         Assert.assertEquals("SELECT 1\nORDER BY 2\nOFFSET 0 ROWS\nFETCH NEXT 1 ROWS ONLY",
                 converter.convertSql("SELECT 1 ORDER BY 2 LIMIT 1"));
         Assert.assertEquals("SELECT 1\nORDER BY 1\nOFFSET 0 ROWS\nFETCH NEXT 1 ROWS ONLY",
                 converter.convertSql("SELECT 1 ORDER BY 1 LIMIT 1"));
-        Assert.assertEquals("SELECT 1\nORDER BY COL\nOFFSET 0 ROWS\nFETCH NEXT 1 ROWS ONLY",
+        Assert.assertEquals("SELECT 1\nORDER BY \"COL\"\nOFFSET 0 ROWS\nFETCH NEXT 1 ROWS ONLY",
                 converter.convertSql("SELECT 1 ORDER BY COL LIMIT 1"));
         Assert.assertEquals("SELECT 1\nORDER BY 1\nOFFSET 0 ROWS\nFETCH NEXT 1 ROWS ONLY",
                 converter.convertSql("SELECT 1 ORDER BY 1 LIMIT 0"));
@@ -315,5 +346,166 @@ public class SqlConverterTest extends LocalFileMetadataTestCase {
                 converter.convertSql("SELECT 1 ORDER BY 1 LIMIT 1 OFFSET 1"));
         Assert.assertEquals("SELECT 1\nORDER BY 1\nOFFSET 0 ROWS\nFETCH NEXT 1 ROWS ONLY",
                 converter.convertSql("SELECT 1 LIMIT 1"));
+    }
+    @Test
+    public void testConvertQuotedSqlWithEscape() throws SQLException {
+        DataSourceDefProvider provider = DataSourceDefProvider.getInstance();
+        ConvMaster master = new ConvMaster(provider.getDefault(), provider.getById(TEST_TARGET));
+        SqlConverter converter = new SqlConverter(new SqlConverter.IConfigurer() {
+
+            @Override
+            public boolean skipDefaultConvert() {
+                return false;
+            }
+
+            @Override
+            public boolean skipHandleDefault() {
+                return false;
+            }
+
+            @Override
+            public boolean useUppercaseDefault() {
+                return true;
+            }
+
+            @Override
+            public String fixAfterDefaultConvert(String orig) {
+                return orig;
+            }
+
+            @Override
+            public SqlDialect getSqlDialect() {
+                return SqlDialect.CALCITE;
+            }
+
+            @Override
+            public boolean allowNoOffset() {
+                return true;
+            }
+
+            @Override
+            public boolean allowFetchNoRows() {
+                return true;
+            }
+
+            @Override
+            public boolean allowNoOrderByWithFetch() {
+                return true;
+            }
+
+            @Override
+            public String getPagingType() {
+                return "AUTO";
+            }
+
+            @Override
+            public boolean isCaseSensitive() {
+                return false;
+            }
+
+            @Override
+            public boolean enableCache() {
+                return true;
+            }
+
+            @Override
+            public boolean enableQuote() {
+                return true;
+            }
+
+            @Override
+            public String fixIdentifierCaseSensitve(String orig) {
+                return orig;
+            }
+        }, master);
+
+        Assert.assertEquals("SELECT SUM(\"A\"), COUNT(\"A\") AS \"AB\"\nFROM \"DEFAULT\".\"CUBE\"",
+                converter.convertSql("select sum(A), count(`A`) as AB from DEFAULT.`CUBE`"));
+        Assert.assertEquals("SELECT A(), B(\"A\"), CAST(\"PRICE@@\" AS DDD)\nFROM \"DEFAULT\".\"CUBE\"",
+                converter.convertSql("select A(), B(`A`), cast(`PRICE@@` as `DDD`) from DEFAULT.`CUBE`"));
+        Assert.assertEquals("SELECT A(), B(\"A\"), CAST(\"PRICE@@\" AS DDD)\nFROM \"DEFAULT\".\"CUBE\"",
+                converter.convertSql("select A(), B(\"A\"), cast(\"PRICE@@\" as \"DDD\") from \"DEFAULT\".\"CUBE\""));
+        Assert.assertEquals("SELECT \"kylin_sales\".\"price_@@\", \"kylin_sales\".\"count\"\nFROM \"cube\".\"kylin_sales\"\nWHERE \"kylin_sales\".\"price_@@\" > 1 AND \"kylin_sales\".\"count\" < 50",
+                converter.convertSql("select `kylin_sales`.`price_@@`, `kylin_sales`.`count` from `cube`.`kylin_sales` where `kylin_sales`.`price_@@` > 1 and `kylin_sales`.`count` < 50"));
+        Assert.assertEquals("SELECT COUNT(DISTINCT \"price_#@\")\nFROM \"cube\".\"kylin_sales\"",
+                converter.convertSql("select count(distinct `price_#@`) from `cube`.`kylin_sales`"));
+
+    }
+
+    @Test
+    public void testConvertColumn() throws SQLException, SqlParseException {
+        DataSourceDefProvider provider = DataSourceDefProvider.getInstance();
+        ConvMaster master = new ConvMaster(provider.getDefault(), provider.getById(TEST_TARGET));
+        SqlConverter converter = new SqlConverter(new SqlConverter.IConfigurer() {
+
+            @Override
+            public boolean skipDefaultConvert() {
+                return false;
+            }
+
+            @Override
+            public boolean skipHandleDefault() {
+                return false;
+            }
+
+            @Override
+            public boolean useUppercaseDefault() {
+                return true;
+            }
+
+            @Override
+            public String fixAfterDefaultConvert(String orig) {
+                return orig;
+            }
+
+            @Override
+            public SqlDialect getSqlDialect() {
+                return SqlDialect.CALCITE;
+            }
+
+            @Override
+            public boolean allowNoOffset() {
+                return true;
+            }
+
+            @Override
+            public boolean allowFetchNoRows() {
+                return true;
+            }
+
+            @Override
+            public boolean allowNoOrderByWithFetch() {
+                return true;
+            }
+
+            @Override
+            public String getPagingType() {
+                return "AUTO";
+            }
+
+            @Override
+            public boolean isCaseSensitive() {
+                return true;
+            }
+
+            @Override
+            public boolean enableCache() {
+                return true;
+            }
+
+            @Override
+            public boolean enableQuote() {
+                return true;
+            }
+
+            @Override
+            public String fixIdentifierCaseSensitve(String orig) {
+                return orig.toUpperCase(Locale.ROOT);
+            }
+        }, master);
+
+        Assert.assertEquals("\"TEST\".\"AA\"", converter.convertColumn("`test`.`aa`", "`"));
+        Assert.assertEquals("\"TEST\".\"AA\"", converter.convertColumn("`test`.aa", "`"));
+        Assert.assertEquals("\"TEST\".\"AA\"", converter.convertColumn("test.aa", "`"));
     }
 }
