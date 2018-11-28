@@ -39,7 +39,7 @@ permalink: /cn/community/index.html
 		    	    <a href="mailto:user@kylin.apache.org">发送新邮件</a>
 		    	</span>
 		    	<span>
-		    	    <a href="http://mail-archives.apache.org/mod_mbox/kylin-user/">历史存档</a>
+		    	    <a href="https://lists.apache.org/list.html?user@kylin.apache.org">历史存档</a>
 		    	</span>
 		    </p>
 
@@ -55,7 +55,7 @@ permalink: /cn/community/index.html
 		    	    <a href="mailto:dev@kylin.apache.org">发送新邮件</a>
 		    	</span>
 		    	<span>
-		    	    <a href="http://mail-archives.apache.org/mod_mbox/kylin-dev//">历史存档</a>
+		    	    <a href="https://lists.apache.org/list.html?dev@kylin.apache.org">历史存档</a>
 		    	</span>
 		    </p>
 
@@ -69,7 +69,7 @@ permalink: /cn/community/index.html
 		    	</span>
 		    	<span>N/A</span>
 		    	<span>
-		    	    <a href="http://mail-archives.apache.org/mod_mbox/kylin-issues/">历史存档</a>
+		    	    <a href="https://lists.apache.org/list.html?issues@kylin.apache.org">历史存档</a>
 		    	</span>
 		    </p>
 
@@ -83,7 +83,7 @@ permalink: /cn/community/index.html
 		    	</span>
 		        <span>N/A</span>
 		    	<span>
-		    	    <a href="http://mail-archives.apache.org/mod_mbox/kylin-commits/">历史存档</a>
+		    	    <a href="https://lists.apache.org/list.html?commits@kylin.apache.org">历史存档</a>
 		    	</span>
 		    </p>
 		</div>

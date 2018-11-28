@@ -35,7 +35,7 @@ permalink: /community/index.html
 		    	    <a href="mailto:user@kylin.apache.org">Post</a>
 		    	</span>
 		    	<span>
-		    	    <a href="http://mail-archives.apache.org/mod_mbox/kylin-user/">mail-archives.apache.org</a>
+		    	    <a href="https://lists.apache.org/list.html?user@kylin.apache.org">mail-archives.apache.org</a>
 		    	</span>
 		    </p>
 
@@ -51,7 +51,7 @@ permalink: /community/index.html
 		    	    <a href="mailto:dev@kylin.apache.org">Post</a>
 		    	</span>
 		    	<span>
-		    	    <a href="http://mail-archives.apache.org/mod_mbox/kylin-dev//">mail-archives.apache.org</a>
+		    	    <a href="https://lists.apache.org/list.html?dev@kylin.apache.org">mail-archives.apache.org</a>
 		    	</span>
 		    </p>
 
@@ -65,7 +65,7 @@ permalink: /community/index.html
 		    	</span>
 		    	<span>N/A</span>
 		    	<span>
-		    	    <a href="http://mail-archives.apache.org/mod_mbox/kylin-issues/">mail-archives.apache.org</a>
+		    	    <a href="https://lists.apache.org/list.html?issues@kylin.apache.org">mail-archives.apache.org</a>
 		    	</span>
 		    </p>
 
@@ -79,7 +79,7 @@ permalink: /community/index.html
 		    	</span>
 		        <span>N/A</span>
 		    	<span>
-		    	    <a href="http://mail-archives.apache.org/mod_mbox/kylin-commits/">mail-archives.apache.org</a>
+		    	    <a href="https://lists.apache.org/list.html?issues@kylin.apache.org">mail-archives.apache.org</a>
 		    	</span>
 		    </p>
 		</div>
