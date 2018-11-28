@@ -128,7 +128,7 @@ public class UpdateDictionaryStep extends AbstractExecutable {
             // update statistics
             // put the statistics to metadata store
             String statisticsFileName = newSegment.getStatisticsResourcePath();
-            hbaseRS.putResource(statisticsFileName, hdfsRS.getResource(newSegment.getStatisticsResourcePath()).inputStream, System.currentTimeMillis());
+            hbaseRS.putResource(statisticsFileName, hdfsRS.getResource(newSegment.getStatisticsResourcePath()).content(), System.currentTimeMillis());
 
             CubeUpdate update = new CubeUpdate(cubeCopy);
             update.setToUpdateSegs(newSegCopy);

@@ -238,6 +238,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     private String cachedHdfsWorkingDirectory;
+    private String cachedBigCellDirectory;
 
     public String getHdfsWorkingDirectory() {
         if (cachedHdfsWorkingDirectory != null)
@@ -249,7 +250,6 @@ abstract public class KylinConfigBase implements Serializable {
         if (!path.isAbsolute())
             throw new IllegalArgumentException("kylin.env.hdfs-working-dir must be absolute, but got " + root);
 
-        // make sure path is qualified
         try {
             FileSystem fs = path.getFileSystem(HadoopUtil.getCurrentConfiguration());
             path = fs.makeQualified(path);
@@ -272,6 +272,45 @@ abstract public class KylinConfigBase implements Serializable {
         return cachedHdfsWorkingDirectory;
     }
 
+    public String getMetastoreBigCellHdfsDirectory() {
+
+        if (cachedBigCellDirectory != null)
+            return cachedBigCellDirectory;
+
+        String root = getOptional("kylin.env.hdfs-metastore-bigcell-dir");
+
+        if (root == null) {
+            return getJdbcHdfsWorkingDirectory();
+        }
+
+        Path path = new Path(root);
+        if (!path.isAbsolute())
+            throw new IllegalArgumentException(
+                    "kylin.env.hdfs-metastore-bigcell-dir must be absolute, but got " + root);
+
+        // make sure path is qualified
+        try {
+            FileSystem fs = HadoopUtil.getReadFileSystem();
+            path = fs.makeQualified(path);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        root = new Path(path, StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).toString();
+
+        if (!root.endsWith("/"))
+            root += "/";
+
+        cachedBigCellDirectory = root;
+        if (cachedBigCellDirectory.startsWith("file:")) {
+            cachedBigCellDirectory = cachedBigCellDirectory.replace("file:", "file://");
+        } else if (cachedBigCellDirectory.startsWith("maprfs:")) {
+            cachedBigCellDirectory = cachedBigCellDirectory.replace("maprfs:", "maprfs://");
+        }
+
+        return cachedBigCellDirectory;
+    }
+
     public String getReadHdfsWorkingDirectory() {
         if (StringUtils.isNotEmpty(getHBaseClusterFs())) {
             Path workingDir = new Path(getHdfsWorkingDirectory());
@@ -280,6 +319,19 @@ abstract public class KylinConfigBase implements Serializable {
         }
 
         return getHdfsWorkingDirectory();
+    }
+
+    private String getJdbcHdfsWorkingDirectory() {
+        if (StringUtils.isNotEmpty(getJdbcFileSystem())) {
+            Path workingDir = new Path(getReadHdfsWorkingDirectory());
+            return new Path(getJdbcFileSystem(), Path.getPathWithoutSchemeAndAuthority(workingDir)).toString() + "/";
+        }
+
+        return getReadHdfsWorkingDirectory();
+    }
+
+    private String getJdbcFileSystem() {
+        return getOptional("kylin.storage.columnar.jdbc.file-system", "");
     }
 
     public String getHdfsWorkingDirectory(String project) {
@@ -356,6 +408,26 @@ abstract public class KylinConfigBase implements Serializable {
         r.put("jdbc", "org.apache.kylin.common.persistence.JDBCResourceStore");
         r.putAll(getPropertiesByPrefix("kylin.metadata.resource-store-provider.")); // note the naming convention -- http://kylin.apache.org/development/coding_naming_convention.html
         return r;
+    }
+
+    public boolean isResourceStoreReconnectEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.resourcestore.reconnect-enabled", "false"));
+    }
+
+    public int getResourceStoreReconnectBaseMs() {
+        return Integer.parseInt(getOptional("kylin.resourcestore.reconnect-base-ms", "1000"));
+    }
+
+    public int getResourceStoreReconnectMaxMs() {
+        return Integer.parseInt(getOptional("kylin.resourcestore.reconnect-max-ms", "60000"));
+    }
+
+    public int getResourceStoreReconnectTimeoutMs() {
+        return Integer.parseInt(getOptional("kylin.resourcestore.reconnect-timeout-ms", "3600000"));
+    }
+
+    public String getResourceStoreConnectionExceptions() {
+        return getOptional("kylin.resourcestore.connection-exceptions", "");
     }
 
     public String getDataModelImpl() {

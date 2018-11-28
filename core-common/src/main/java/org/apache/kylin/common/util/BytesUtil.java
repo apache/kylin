@@ -183,6 +183,22 @@ public class BytesUtil {
         return r;
     }
 
+    public static byte[] mergeBytes(byte[] bytes1, byte[] bytes2) {
+        if (bytes1 == null && bytes2 == null) {
+            throw new NullPointerException();
+        }
+        if (bytes1 == null) {
+            return bytes2;
+        }
+        if (bytes2 == null) {
+            return bytes1;
+        }
+        byte[] bytes = new byte[bytes1.length + bytes2.length];
+        System.arraycopy(bytes1, 0, bytes, 0, bytes1.length);
+        System.arraycopy(bytes2, 0, bytes, bytes1.length, bytes2.length);
+        return bytes;
+    }
+
     public static int compareBytes(byte[] src, int srcOffset, byte[] dst, int dstOffset, int length) {
         int r = 0;
         for (int i = 0; i < length; i++) {

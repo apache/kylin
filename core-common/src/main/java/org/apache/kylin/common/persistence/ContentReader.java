@@ -18,39 +18,33 @@
 
 package org.apache.kylin.common.persistence;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.DataInputStream;
+import java.io.IOException;
 
-public class BrokenEntity extends RootPersistentEntity {
+import org.apache.commons.io.IOUtils;
 
-    protected static final byte[] MAGIC = new byte[]{'B', 'R', 'O', 'K', 'E', 'N'};
+public class ContentReader<T extends RootPersistentEntity> {
 
-    @JsonProperty("resPath")
-    private String resPath;
+    final private Serializer<T> serializer;
 
-    @JsonProperty("errorMsg")
-    private String errorMsg;
-
-    public BrokenEntity() {
+    public ContentReader(Serializer<T> serializer) {
+        this.serializer = serializer;
     }
 
-    public BrokenEntity(String resPath, String errorMsg) {
-        this.resPath = resPath;
-        this.errorMsg = errorMsg;
-    }
+    public T readContent(RawResource res) throws IOException {
+        if (res == null)
+            return null;
 
-    public String getResPath() {
-        return resPath;
-    }
-
-    public void setResPath(String resPath) {
-        this.resPath = resPath;
-    }
-
-    public String getErrorMsg() {
-        return errorMsg;
-    }
-
-    public void setErrorMsg(String errorMsg) {
-        this.errorMsg = errorMsg;
+        DataInputStream din = new DataInputStream(res.content());
+        try {
+            T r = serializer.deserialize(din);
+            if (r != null) {
+                r.setLastModified(res.lastModified());
+            }
+            return r;
+        } finally {
+            IOUtils.closeQuietly(din);
+            IOUtils.closeQuietly(res.content());
+        }
     }
 }

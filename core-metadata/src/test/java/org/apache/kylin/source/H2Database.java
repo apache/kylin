@@ -96,7 +96,7 @@ public class H2Database {
             tempFile = File.createTempFile("tmp_h2", ".csv");
             FileOutputStream tempFileStream = new FileOutputStream(tempFile);
             String path = path(tableDesc);
-            InputStream csvStream = metaMgr.getStore().getResource(path).inputStream;
+            InputStream csvStream = metaMgr.getStore().getResource(path).content();
 
             IOUtils.copy(csvStream, tempFileStream);
 

@@ -329,8 +329,8 @@ public class CubeMigrationCLI {
         case COPY_FILE_IN_META: {
             String item = (String) opt.params[0];
             RawResource res = srcStore.getResource(item);
-            dstStore.putResource(item, res.inputStream, res.timestamp);
-            res.inputStream.close();
+            dstStore.putResource(item, res.content(), res.lastModified());
+            res.content().close();
             logger.info("Item " + item + " is copied");
             break;
         }
@@ -357,7 +357,7 @@ public class CubeMigrationCLI {
                     String cubeName = (String) opt.params[1];
                     String cubeResPath = CubeInstance.concatResourcePath(cubeName);
                     Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
-                    CubeInstance cube = dstStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
+                    CubeInstance cube = dstStore.getResource(cubeResPath, cubeSerializer);
                     for (CubeSegment segment : cube.getSegments()) {
                         for (Map.Entry<String, String> entry : segment.getDictionaries().entrySet()) {
                             if (entry.getValue().equalsIgnoreCase(item)) {
@@ -365,7 +365,7 @@ public class CubeMigrationCLI {
                             }
                         }
                     }
-                    dstStore.putResource(cubeResPath, cube, cubeSerializer);
+                    dstStore.checkAndPutResource(cubeResPath, cube, cubeSerializer);
                     logger.info("Item " + item + " is dup, instead " + dictSaved.getResourcePath() + " is reused");
                 }
 
@@ -387,7 +387,7 @@ public class CubeMigrationCLI {
                     String cubeName = (String) opt.params[1];
                     String cubeResPath = CubeInstance.concatResourcePath(cubeName);
                     Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
-                    CubeInstance cube = dstStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
+                    CubeInstance cube = dstStore.getResource(cubeResPath, cubeSerializer);
                     for (CubeSegment segment : cube.getSegments()) {
                         for (Map.Entry<String, String> entry : segment.getSnapshots().entrySet()) {
                             if (entry.getValue().equalsIgnoreCase(item)) {
@@ -395,7 +395,7 @@ public class CubeMigrationCLI {
                             }
                         }
                     }
-                    dstStore.putResource(cubeResPath, cube, cubeSerializer);
+                    dstStore.checkAndPutResource(cubeResPath, cube, cubeSerializer);
                     logger.info("Item " + item + " is dup, instead " + snapSaved.getResourcePath() + " is reused");
 
                 }
@@ -422,13 +422,13 @@ public class CubeMigrationCLI {
 
             String projectResPath = ProjectInstance.concatResourcePath(projectName);
             Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
-            ProjectInstance project = dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
+            ProjectInstance project = dstStore.getResource(projectResPath, projectSerializer);
 
             project.addModel(modelName);
             project.removeRealization(RealizationType.CUBE, cubeName);
             project.addRealizationEntry(RealizationType.CUBE, cubeName);
 
-            dstStore.putResource(projectResPath, project, projectSerializer);
+            dstStore.checkAndPutResource(projectResPath, project, projectSerializer);
             logger.info("Project instance for " + projectName + " is corrected");
             break;
         }
@@ -438,7 +438,7 @@ public class CubeMigrationCLI {
             String projectName = (String) opt.params[2];
             String projectResPath = ProjectInstance.concatResourcePath(projectName);
             Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
-            ProjectInstance project = dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
+            ProjectInstance project = dstStore.getResource(projectResPath, projectSerializer);
             String projUUID = project.getUuid();
             Table srcAclHtable = null;
             Table destAclHtable = null;
@@ -474,10 +474,10 @@ public class CubeMigrationCLI {
             String cubeName = (String) opt.params[0];
             String cubeResPath = CubeInstance.concatResourcePath(cubeName);
             Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
-            CubeInstance cube = srcStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
+            CubeInstance cube = srcStore.getResource(cubeResPath, cubeSerializer);
             cube.getSegments().clear();
             cube.setStatus(RealizationStatusEnum.DISABLED);
-            srcStore.putResource(cubeResPath, cube, cubeSerializer);
+            srcStore.checkAndPutResource(cubeResPath, cube, cubeSerializer);
             logger.info("Cube " + cubeName + " is purged and disabled in " + srcConfig.getMetadataUrl());
 
             break;

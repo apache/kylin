@@ -136,7 +136,7 @@ public class MergeDictionaryMapper extends KylinMapper<IntWritable, NullWritable
 
             for (CubeSegment cubeSegment : mergingSegments) {
                 String filePath = cubeSegment.getStatisticsResourcePath();
-                InputStream is = rs.getResource(filePath).inputStream;
+                InputStream is = rs.getResource(filePath).content();
                 File tempFile;
                 FileOutputStream tempFileStream = null;
 

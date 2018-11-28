@@ -95,7 +95,7 @@ public class ITJDBCResourceStoreTest extends HBaseMetadataTestCase {
                     .format(copyIdentifier, new StringBuffer(), new FieldPosition(0)).toString();
             statement.executeUpdate(sql);
             jdbcConnectable = true;
-            ResourceTool.copy(configBackup, kylinConfig);
+            new ResourceTool().copy(configBackup, kylinConfig);
         } catch (RuntimeException ex) {
             logger.info("Init connection manager failed, skip test cases");
         } finally {
@@ -166,9 +166,9 @@ public class ITJDBCResourceStoreTest extends HBaseMetadataTestCase {
                     ResourceStoreTest.mockUrl("jdbc", kylinConfig));
             store = new JDBCResourceStore(KylinConfig.getInstanceFromEnv());
             store.deleteResource(largePath);
-            store.putResource(largePath, content, StringEntity.serializer);
+            store.checkAndPutResource(largePath, content, StringEntity.serializer);
             assertTrue(store.exists(largePath));
-            StringEntity t = store.getResource(largePath, StringEntity.class, StringEntity.serializer);
+            StringEntity t = store.getResource(largePath, StringEntity.serializer);
             assertEquals(content, t);
             store.deleteResource(LARGE_CELL_PATH);
             ResourceStoreTest.replaceMetadataUrl(kylinConfig, oldUrl);
@@ -199,9 +199,9 @@ public class ITJDBCResourceStoreTest extends HBaseMetadataTestCase {
                     ResourceStoreTest.mockUrl("jdbc", kylinConfig));
             store = new JDBCResourceStore(KylinConfig.getInstanceFromEnv());
             store.deleteResource(LARGE_CELL_PATH);
-            store.putResource(LARGE_CELL_PATH, content, ByteEntity.serializer);
+            store.checkAndPutResource(LARGE_CELL_PATH, content, ByteEntity.serializer);
             assertTrue(store.exists(LARGE_CELL_PATH));
-            ByteEntity t = store.getResource(LARGE_CELL_PATH, ByteEntity.class, ByteEntity.serializer);
+            ByteEntity t = store.getResource(LARGE_CELL_PATH, ByteEntity.serializer);
             assertEquals(content, t);
             store.deleteResource(LARGE_CELL_PATH);
             ResourceStoreTest.replaceMetadataUrl(kylinConfig, oldUrl);
@@ -237,19 +237,19 @@ public class ITJDBCResourceStoreTest extends HBaseMetadataTestCase {
 
             for (int i = 0; i < 200; i++) {
                 String newUuid = UUID.randomUUID().toString();
-                store.putResource(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + newUuid, executeResource.inputStream,
+                store.putResource(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + newUuid, executeResource.content(),
                         System.currentTimeMillis());
 
                 for (String key : executeOutputResourceMap.keySet()) {
                     String step = StringUtils.substringAfterLast(key, uuid);
                     store.putResource(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + newUuid + step,
-                            executeOutputResourceMap.get(key).inputStream, System.currentTimeMillis());
+                            executeOutputResourceMap.get(key).content(), System.currentTimeMillis());
                 }
             }
         }
 
         long queryNumBeforeCopy = store.getQueriedSqlNum();
-        ResourceTool.copy(kylinConfig, tmpConfig);
+        new ResourceTool().copy(kylinConfig, tmpConfig);
         long endTs = System.currentTimeMillis();
         long queryNumAfterCopy = store.getQueriedSqlNum();
         JDBCResourceStore resourceStoreCopy = (JDBCResourceStore) ResourceStore.getStore(tmpConfig);

@@ -135,7 +135,7 @@ public class CubeMetaIngester extends AbstractApplication {
         CubeDescManager srcCubeDescManager = CubeDescManager.getInstance(srcConfig);
 
         checkAndMark(srcMetadataManager, srcModelManager, srcHybridManager, srcCubeManager, srcCubeDescManager);
-        ResourceTool.copy(srcConfig, kylinConfig, Lists.newArrayList(requiredResources));
+        new ResourceTool().copy(srcConfig, kylinConfig, Lists.newArrayList(requiredResources));
 
         // clear the cache
         Broadcaster.getInstance(kylinConfig).notifyClearAll();

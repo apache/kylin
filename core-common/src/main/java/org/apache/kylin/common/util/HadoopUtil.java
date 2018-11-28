@@ -99,7 +99,7 @@ public class HadoopUtil {
         return getFileSystem(new Path(makeURI(path)), conf);
     }
     
-    public static FileSystem getFileSystem(Path path) throws IOException {
+    public static FileSystem getFileSystem(Path path) {
         Configuration conf = getCurrentConfiguration();
         return getFileSystem(path, conf);
     }
