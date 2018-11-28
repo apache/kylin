@@ -28,6 +28,7 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
@@ -156,11 +157,15 @@ public class JdbcHiveMRInput extends HiveMRInput {
             TblColRef splitColRef = determineSplitColumn();
             splitTable = splitColRef.getTableRef().getTableName();
             splitTableAlias = splitColRef.getTableAlias();
-            splitColumn = splitColRef.getExpressionInSourceDB();
+            splitColumn = JoinedFlatTable.getQuotedColExpressionInSourceDB(flatDesc, splitColRef);
             splitDatabase = splitColRef.getColumnDesc().getTable().getDatabase();
 
             //using sqoop to extract data from jdbc source and dump them to hive
             String selectSql = JoinedFlatTable.generateSelectDataStatement(flatDesc, true, new String[] { partCol });
+            selectSql = escapeQuotationInSql(selectSql);
+
+
+
             String hiveTable = flatDesc.getTableName();
             String connectionUrl = config.getJdbcSourceConnectionUrl();
             String driverClass = config.getJdbcSourceDriver();
@@ -178,11 +183,18 @@ public class JdbcHiveMRInput extends HiveMRInput {
                     if (partitionDesc.getPartitionDateColumnRef().getTableAlias().equals(splitTableAlias)
                             && (partitionDesc.getPartitionTimeColumnRef() == null || partitionDesc
                                     .getPartitionTimeColumnRef().getTableAlias().equals(splitTableAlias))) {
-                        bquery += " WHERE " + partitionDesc.getPartitionConditionBuilder()
-                                .buildDateRangeCondition(partitionDesc, flatDesc.getSegment(), segRange);
+                        String quotedPartCond = FlatTableSqlQuoteUtils.quoteIdentifierInSqlExpr(flatDesc,
+                                partitionDesc.getPartitionConditionBuilder().buildDateRangeCondition(partitionDesc,
+                                        flatDesc.getSegment(), segRange),
+                                "`");
+                        bquery += " WHERE " + quotedPartCond;
                     }
                 }
             }
+            bquery = escapeQuotationInSql(bquery);
+
+            // escape ` in cmd
+            splitColumn = escapeQuotationInSql(splitColumn);
 
             String cmd = String.format(Locale.ROOT,
                     "%s/bin/sqoop import" + generateSqoopConfigArgString()
@@ -216,5 +228,11 @@ public class JdbcHiveMRInput extends HiveMRInput {
             }
             return args.toString();
         }
+    }
+
+    protected static String escapeQuotationInSql(String sqlExpr) {
+        sqlExpr = sqlExpr.replaceAll("\"", "\\\\\"");
+        sqlExpr = sqlExpr.replaceAll("`", "\\\\`");
+        return sqlExpr;
     }
 }

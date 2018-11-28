@@ -26,8 +26,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import javax.sql.rowset.CachedRowSet;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
  * A default implementation for <C>AbstractJdbcAdaptor</C>. By default, this adaptor supposed to support most cases.
@@ -35,6 +36,8 @@ import javax.sql.rowset.CachedRowSet;
  */
 public class DefaultAdaptor extends AbstractJdbcAdaptor {
 
+    protected static final String QUOTE_REG_LFT = "[`\"\\[]*";
+    protected static final String QUOTE_REG_RHT = "[`\"\\]]*";
     private final static String [] POSSIBLE_TALBE_END= {",", " ", ")", "\r", "\n", "."};
 
     public DefaultAdaptor(AdaptorConfig config) throws Exception {
@@ -137,36 +140,6 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
         return sql;
     }
 
-    /**
-     * All known defects:
-     * Can not support one database has two toUppercase-same tables (e.g. ACCOUNT and account table can't coexist in one database)
-     * @param sql The SQL statement to be fixed.
-     * @return The changed sql
-     */
-    @Override
-    public String fixCaseSensitiveSql(String sql) {
-        try {
-            String orig = sql.toUpperCase(Locale.ROOT);
-            List<String> databases = listDatabasesWithCache();
-            String category = "";
-            for (String c : databases) {
-                if (orig.contains(c.toUpperCase(Locale.ROOT)+".")||orig.contains(c.toUpperCase(Locale.ROOT)+'"')) {
-                    sql = sql.replaceAll(c.toUpperCase(Locale.ROOT), c);
-                    category = c;
-                }
-            }
-            List<String> tables = listTables(category);
-            for (String table : tables) {
-                if(checkSqlContainstable(orig, table)) {
-                    sql = sql.replaceAll("(?i)" + table, table);// use (?i) to matchIgnoreCase
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return sql;
-    }
-
     private boolean checkSqlContainstable(String orig, String table) {
         // ensure table is single match(e.g match account but not match accountant)
         if (orig.endsWith(table.toUpperCase(Locale.ROOT))) {
@@ -191,8 +164,9 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
         try (Connection con = getConnection(); ResultSet rs = con.getMetaData().getSchemas()) {
             while (rs.next()) {
                 String schema = rs.getString("TABLE_SCHEM");
-                if (schema != null && !schema.isEmpty())
+                if (StringUtils.isNotBlank(schema)) {
                     ret.add(schema);
+                }
             }
         }
         return ret;
@@ -210,8 +184,22 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
         try (Connection conn = getConnection(); ResultSet rs = conn.getMetaData().getTables(null, schema, null, null)) {
             while (rs.next()) {
                 String name = rs.getString("TABLE_NAME");
-                if (name != null && !name.isEmpty())
+                if (StringUtils.isNotBlank(schema)) {
                     ret.add(name);
+                }
+            }
+        }
+        return ret;
+    }
+
+    @Override
+    public List<String> listColumns(String database, String tableName) throws SQLException {
+        List<String> ret = new ArrayList<>();
+        CachedRowSet columnsRs = getTableColumns(database, tableName);
+        while (columnsRs.next()) {
+            String name = columnsRs.getString("COLUMN_NAME");
+            if (StringUtils.isNotBlank(name)) {
+                ret.add(name);
             }
         }
         return ret;
@@ -270,5 +258,38 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
         String createSql = ("CREATE VIEW " + viewName + " AS " + sql);
 
         return new String[] { dropView, dropTable, createSql };
+    }
+
+    /**
+     * defects:
+     * identifier can not tell column or table or database, here follow the order database->table->column, once matched and returns
+     * so once having a database name Test and table name TEst, will always find Test.
+     * @param identifier
+     * @return identifier with case sensitive
+     */
+    public String fixIdentifierCaseSensitve(String identifier) {
+        try {
+            List<String> databases = listDatabasesWithCache();
+            for (String db : databases) {
+                if (db.equalsIgnoreCase(identifier)) {
+                    return db;
+                }
+                List<String> tables = listTablesWithCache(db);
+                for (String table : tables) {
+                    if (table.equalsIgnoreCase(identifier)) {
+                        return table;
+                    }
+                    List<String> cols = listColumnsWithCache(db, table);
+                    for (String col : cols) {
+                        if (col.equalsIgnoreCase(identifier)) {
+                            return col;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return identifier;
     }
 }

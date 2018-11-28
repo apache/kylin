@@ -17,8 +17,6 @@
  */
 package org.apache.kylin.sdk.datasource.framework.conv;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Map;
 
@@ -80,23 +78,18 @@ public class DefaultConfiguer implements SqlConverter.IConfigurer{
         if (this.adaptor == null) {
             return orig;
         }
-        if (isCaseSensitive()) {
-            orig = adaptor.fixCaseSensitiveSql(orig);
-        }
+        // fix problem of case sensitive when generate sql.
+//        if (isCaseSensitive()) {
+//            orig = adaptor.fixCaseSensitiveSql(orig);
+//        }
         return adaptor.fixSql(orig);
     }
 
     @Override
-    public SqlDialect getSqlDialect() throws SQLException {
-        if (adaptor != null) {
-            try (Connection conn = this.adaptor.getConnection()) {
-                return SqlDialect.create(conn.getMetaData());
-            }
-        } else {
-            String dialectName = dsDef.getDialectName() == null ? dsDef.getId() : dsDef.getDialectName();
-            SqlDialect sqlDialect = sqlDialectMap.get(dialectName.toLowerCase(Locale.ROOT));
-            return sqlDialect == null ? sqlDialectMap.get("unkown") : sqlDialect;
-        }
+    public SqlDialect getSqlDialect() {
+        String dialectName = dsDef.getDialectName() == null ? dsDef.getId() : dsDef.getDialectName();
+        SqlDialect sqlDialect = sqlDialectMap.get(dialectName.toLowerCase(Locale.ROOT));
+        return sqlDialect == null ? sqlDialectMap.get("unkown") : sqlDialect;
     }
 
     @Override
@@ -121,11 +114,24 @@ public class DefaultConfiguer implements SqlConverter.IConfigurer{
 
     @Override
     public boolean isCaseSensitive() {
-        return "true".equalsIgnoreCase(dsDef.getPropertyValue("sql.case-sensitive", "false"));
+        return "true".equalsIgnoreCase(dsDef.getPropertyValue("sql.case-sensitive", "true"));
     }
 
     @Override
     public boolean enableCache() {
-        return "true".equalsIgnoreCase(dsDef.getPropertyValue("metadata.enable-cache", "false"));
+        return "true".equalsIgnoreCase(dsDef.getPropertyValue("metadata.enable-cache", "true"));
+    }
+
+    @Override
+    public boolean enableQuote() {
+        return "true".equalsIgnoreCase(dsDef.getPropertyValue("sql.enable-quote-all-identifiers", "true"));
+    }
+
+    @Override
+    public String fixIdentifierCaseSensitve(String orig) {
+        if (this.adaptor == null || !isCaseSensitive()) {
+            return orig;
+        }
+        return adaptor.fixIdentifierCaseSensitve(orig);
     }
 }

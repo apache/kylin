@@ -118,7 +118,7 @@ public class HiveInputBase {
         hiveCmdBuilder.overwriteHiveProps(kylinConfig.getHiveConfigOverride());
         hiveCmdBuilder.addStatement(hiveInitStatements);
         for (TableDesc lookUpTableDesc : lookupViewsTables) {
-            String identity = lookUpTableDesc.getIdentity();
+            String identity = lookUpTableDesc.getIdentityQuoted("`");
             if (lookUpTableDesc.isView()) {
                 String intermediate = lookUpTableDesc.getMaterializedName(uuid);
                 String materializeViewHql = materializeViewHql(intermediate, identity, jobWorkingDir);
@@ -134,11 +134,11 @@ public class HiveInputBase {
     // each append must be a complete hql.
     protected static String materializeViewHql(String viewName, String tableName, String jobWorkingDir) {
         StringBuilder createIntermediateTableHql = new StringBuilder();
-        createIntermediateTableHql.append("DROP TABLE IF EXISTS " + viewName + ";\n");
-        createIntermediateTableHql.append("CREATE TABLE IF NOT EXISTS " + viewName + " LIKE " + tableName
+        createIntermediateTableHql.append("DROP TABLE IF EXISTS `" + viewName + "`;\n");
+        createIntermediateTableHql.append("CREATE TABLE IF NOT EXISTS `" + viewName + "` LIKE " + tableName
                 + " LOCATION '" + jobWorkingDir + "/" + viewName + "';\n");
-        createIntermediateTableHql.append("ALTER TABLE " + viewName + " SET TBLPROPERTIES('auto.purge'='true');\n");
-        createIntermediateTableHql.append("INSERT OVERWRITE TABLE " + viewName + " SELECT * FROM " + tableName + ";\n");
+        createIntermediateTableHql.append("ALTER TABLE `" + viewName + "` SET TBLPROPERTIES('auto.purge'='true');\n");
+        createIntermediateTableHql.append("INSERT OVERWRITE TABLE `" + viewName + "` SELECT * FROM " + tableName + ";\n");
         return createIntermediateTableHql.toString();
     }
 

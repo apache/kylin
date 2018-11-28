@@ -31,26 +31,33 @@ public class GenericSqlConverterTest {
         GenericSqlConverter sqlConverter = new GenericSqlConverter();
         // test function
         List<String> functionTestSqls = new LinkedList<>();
-        functionTestSqls.add("SELECT MIN(C1)\nFROM TEST_SUITE");
-        functionTestSqls.add("SELECT EXP(AVG(LN(EXTRACT(DOY FROM CAST('2018-03-20' AS DATE)))))\nFROM TEST_SUITE");
-        functionTestSqls.add("SELECT CASE WHEN SUM(C1 - C1 + 1) = 1 THEN 0 ELSE (SUM(C1 * C1) - SUM(C1) * SUM(C1) / SUM(C1 - C1 + 1)) / (SUM(C1 - C1 + 1) - 1) END\nFROM TEST_SUITE");
-        functionTestSqls.add("SELECT EXTRACT(DAY FROM CAST('2018-03-20' AS DATE))\nFROM TEST_SUITE");
-        functionTestSqls.add("SELECT FIRST_VALUE(C1) OVER (ORDER BY C1)\nFROM TEST_SUITE");
-        functionTestSqls.add("SELECT SUBSTR('world', 1, CAST(2 AS INTEGER))\nFROM TEST_SUITE");
-        functionTestSqls.add("SELECT 2 - TRUNC(2 / NULLIF(3, 0)) * 3\nFROM TEST_SUITE");
-        functionTestSqls.add("SELECT CASE WHEN SUBSTRING('hello' FROM CAST(LENGTH('llo') - LENGTH('llo') + 1 AS INTEGER) FOR CAST(LENGTH('llo') AS INTEGER)) = 'llo' THEN 1 ELSE 0 END\nFROM TEST_SUITE");
-        functionTestSqls.add("SELECT SUBSTRING('world' FROM CAST(LENGTH('world') - 3 + 1 AS INTEGER) FOR CAST(3 AS INTEGER))\nFROM TEST_SUITE");
+        functionTestSqls.add("SELECT MIN(\"C1\")\nFROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT EXP(AVG(LN(EXTRACT(DOY FROM CAST('2018-03-20' AS DATE)))))\nFROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT CASE WHEN SUM(\"C1\" - \"C1\" + 1) = 1 THEN 0 ELSE (SUM(\"C1\" * \"C1\") - SUM(\"C1\") * SUM(\"C1\") / SUM(\"C1\" - \"C1\" + 1)) / (SUM(\"C1\" - \"C1\" + 1) - 1) END\n" +
+                "FROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT EXTRACT(DAY FROM CAST('2018-03-20' AS DATE))\nFROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT FIRST_VALUE(\"C1\") OVER (ORDER BY \"C1\")\nFROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT SUBSTR('world', 1, CAST(2 AS INTEGER))\nFROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT 2 - TRUNC(2 / NULLIF(3, 0)) * 3\nFROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT CASE WHEN SUBSTRING('hello' FROM CAST(LENGTH('llo') - LENGTH('llo') + 1 AS INTEGER) FOR CAST(LENGTH('llo') AS INTEGER)) = 'llo' THEN 1 ELSE 0 END\n" +
+                "FROM \"TEST_SUITE\"");
+        functionTestSqls.add("SELECT SUBSTRING('world' FROM CAST(LENGTH('world') - 3 + 1 AS INTEGER) FOR CAST(3 AS INTEGER))\n" +
+                "FROM \"TEST_SUITE\"");
 
         for (String originSql : functionTestSqls) {
             testSqlConvert(originSql, "testing", "default", sqlConverter);
         }
         // test datatype
         List<String> typeTestSqls = new LinkedList<>();
-        typeTestSqls.add("SELECT CAST(PRICE AS DOUBLE PRECISION)\nFROM \"default\".FACT");
-        typeTestSqls.add("SELECT CAST(PRICE AS DECIMAL(19, 4))\nFROM \"default\".FACT");
-        typeTestSqls.add("SELECT CAST(PRICE AS DECIMAL(19))\nFROM \"default\".FACT");
+        typeTestSqls.add("SELECT CAST(\"PRICE\" AS DOUBLE PRECISION)\n" +
+                "FROM \"default\".\"FACT\"");
+        typeTestSqls.add("SELECT CAST(\"PRICE\" AS DECIMAL(19, 4))\n" +
+                "FROM \"default\".\"FACT\"");
+        typeTestSqls.add("SELECT CAST(\"PRICE\" AS DECIMAL(19))\n" +
+                "FROM \"default\".\"FACT\"");
         typeTestSqls.add("SELECT CAST(BYTE AS BIT(8))\nFROM \"default\".FACT");
-        typeTestSqls.add("SELECT CAST(BYTE AS VARCHAR(1024))\nFROM \"default\".FACT");
+        typeTestSqls.add("SELECT CAST(\"BYTE\" AS VARCHAR(1024))\n" +
+                "FROM \"default\".\"FACT\"");
         for (String originSql : typeTestSqls) {
             testSqlConvert(originSql, "testing", "default", sqlConverter);
         }

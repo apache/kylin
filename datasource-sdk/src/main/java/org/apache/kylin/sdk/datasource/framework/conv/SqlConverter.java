@@ -41,7 +41,9 @@ public class SqlConverter {
     }
 
     public String convertSql(String orig) {
-        String converted = orig;
+        // for jdbc source, convert quote from backtick to double quote
+        String converted = orig.replaceAll("`", "\"");
+
         if (!configurer.skipHandleDefault()) {
             String escapedDefault = SqlDialect.CALCITE
                     .quoteIdentifier(configurer.useUppercaseDefault() ? "DEFAULT" : "default");
@@ -64,11 +66,18 @@ public class SqlConverter {
         return converted;
     }
 
-    public String convertColumn(String column) {
-        if (configurer.isCaseSensitive()) {
-            return configurer.fixAfterDefaultConvert(column);
+    public String convertColumn(String column, String originQuote) {
+        String converted = column.replace(originQuote, "");
+        try {
+            SqlNode sqlNode = SqlParser.create(converted).parseExpression();
+            sqlNode = sqlNode.accept(sqlNodeConverter);
+            converted = sqlWriter.format(sqlNode);
+        } catch (Throwable e) {
+            logger.error("Failed to default convert Column, will use the input: {}", column, e);
+        } finally {
+            sqlWriter.reset();
         }
-        return column;
+        return converted;
     }
 
     public IConfigurer getConfigurer() {
@@ -76,15 +85,15 @@ public class SqlConverter {
     }
 
     public interface IConfigurer {
-        public boolean skipDefaultConvert();
+        boolean skipDefaultConvert();
 
-        public boolean skipHandleDefault();
+        boolean skipHandleDefault();
 
-        public boolean useUppercaseDefault();
+        boolean useUppercaseDefault();
 
-        public String fixAfterDefaultConvert(String orig);
+        String fixAfterDefaultConvert(String orig);
 
-        public SqlDialect getSqlDialect() throws SQLException;
+        SqlDialect getSqlDialect() throws SQLException;
 
         boolean allowNoOffset();
 
@@ -97,5 +106,9 @@ public class SqlConverter {
         boolean isCaseSensitive();
 
         boolean enableCache();
+
+        boolean enableQuote();
+
+        String fixIdentifierCaseSensitve(String orig);
     }
 }

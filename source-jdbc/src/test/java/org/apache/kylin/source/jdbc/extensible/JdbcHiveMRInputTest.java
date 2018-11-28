@@ -70,10 +70,8 @@ public class JdbcHiveMRInputTest extends TestBase {
         String cmd = executable.getParam("cmd");
         Assert.assertTrue(cmd.contains("org.h2.Driver"));
         Assert.assertTrue(cmd.contains(
-                "--boundary-query \"SELECT MIN(TEST_KYLIN_FACT.LEAF_CATEG_ID), MAX(TEST_KYLIN_FACT.LEAF_CATEG_ID)\n"
-                        + "FROM \\\"DEFAULT\\\".TEST_KYLIN_FACT AS TEST_KYLIN_FACT\n"
-                        + "WHERE TEST_KYLIN_FACT.CAL_DT >="));
-
+                "--boundary-query \"SELECT MIN(\\\"TEST_KYLIN_FACT\\\".\\\"LEAF_CATEG_ID\\\"), MAX(\\\"TEST_KYLIN_FACT\\\".\\\"LEAF_CATEG_ID\\\")\n"
+                        + "FROM \\\"DEFAULT\\\".\\\"TEST_KYLIN_FACT\\\" AS \\\"TEST_KYLIN_FACT\\\""));
         source.close();
     }
 
@@ -97,8 +95,8 @@ public class JdbcHiveMRInputTest extends TestBase {
         String cmd = executable.getParam("cmd");
         Assert.assertTrue(cmd.contains("org.h2.Driver"));
         Assert.assertTrue(
-                cmd.contains("--boundary-query \"SELECT MIN(TEST_KYLIN_FACT.CAL_DT), MAX(TEST_KYLIN_FACT.CAL_DT)\n"
-                        + "FROM \\\"DEFAULT\\\".TEST_KYLIN_FACT AS TEST_KYLIN_FACT\""));
+                cmd.contains("--boundary-query \"SELECT MIN(\\\"TEST_KYLIN_FACT\\\".\\\"CAL_DT\\\"), MAX(\\\"TEST_KYLIN_FACT\\\".\\\"CAL_DT\\\")\n"
+                        + "FROM \\\"DEFAULT\\\".\\\"TEST_KYLIN_FACT\\\" AS \\\"TEST_KYLIN_FACT\\\"\""));
         source.close();
     }
 
@@ -123,8 +121,8 @@ public class JdbcHiveMRInputTest extends TestBase {
         String cmd = executable.getParam("cmd");
         Assert.assertTrue(cmd.contains("org.h2.Driver"));
         Assert.assertTrue(cmd.contains(
-                "--boundary-query \"SELECT MIN(TEST_CATEGORY_GROUPINGS.META_CATEG_NAME), MAX(TEST_CATEGORY_GROUPINGS.META_CATEG_NAME)\n"
-                        + "FROM \\\"DEFAULT\\\".TEST_CATEGORY_GROUPINGS AS TEST_CATEGORY_GROUPINGS\""));
+                "--boundary-query \"SELECT MIN(\\\"TEST_CATEGORY_GROUPINGS\\\".\\\"META_CATEG_NAME\\\"), MAX(\\\"TEST_CATEGORY_GROUPINGS\\\".\\\"META_CATEG_NAME\\\")\n"
+                        + "FROM \\\"DEFAULT\\\".\\\"TEST_CATEGORY_GROUPINGS\\\" AS \\\"TEST_CATEGORY_GROUPINGS\\\"\""));
 
         source.close();
     }

@@ -68,7 +68,8 @@ public class HiveCmdBuilder {
         case CLI:
             buf.append("hive -e \"");
             for (String statement : statements) {
-                buf.append(statement).append("\n");
+                //in bash need escape " and ` by using \
+                buf.append(statement.replaceAll("`", "\\\\`")).append("\n");
             }
             buf.append("\"");
             buf.append(parseProps());
@@ -79,7 +80,7 @@ public class HiveCmdBuilder {
             try {
                 tmpHqlPath = "/tmp/" + UUID.randomUUID().toString() + ".hql";
                 for (String statement : statements) {
-                    hql.append(statement);
+                    hql.append(statement.replaceAll("`", "\\\\`"));
                     hql.append("\n");
                 }
                 String createFileCmd = String.format(Locale.ROOT, CREATE_HQL_TMP_FILE_TEMPLATE, tmpHqlPath, hql);

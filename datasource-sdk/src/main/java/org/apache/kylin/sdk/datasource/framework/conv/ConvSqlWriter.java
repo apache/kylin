@@ -144,12 +144,22 @@ public class ConvSqlWriter extends SqlPrettyWriter {
 
     @Override
     public void identifier(String name) {
-        if (!configurer.skipHandleDefault() && name.trim().equalsIgnoreCase("default")) {
-            String quoted = getDialect().quoteIdentifier(name);
+        String convertName = name;
+        if (configurer.isCaseSensitive()) {
+            convertName = configurer.fixIdentifierCaseSensitve(name);
+        }
+        if (configurer.enableQuote()) {
+            String quoted = getDialect().quoteIdentifier(convertName);
             print(quoted);
             setNeedWhitespace(true);
         } else {
-            super.identifier(name);
+            if (!configurer.skipHandleDefault() && convertName.trim().equalsIgnoreCase("default")) {
+                String quoted = getDialect().quoteIdentifier(convertName);
+                print(quoted);
+                setNeedWhitespace(true);
+            } else {
+                super.identifier(convertName);
+            }
         }
     }
 
@@ -188,6 +198,11 @@ public class ConvSqlWriter extends SqlPrettyWriter {
         return this.frame == null || this.frame.getFrameType() == FrameTypeEnum.ORDER_BY
                 || this.frame.getFrameType() == FrameTypeEnum.WITH || this.frame.getFrameType() == FrameTypeEnum.SETOP
                 || this.frame.getFrameType() == FrameTypeEnum.WITH_ITEM;
+    }
+
+    @Override
+    public boolean isQuoteAllIdentifiers() {
+        return super.isQuoteAllIdentifiers();
     }
 
     @Override

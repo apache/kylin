@@ -61,12 +61,12 @@ public class HiveCmdBuilderTest {
         hivePropsOverwrite.put("hive.execution.engine", "tez");
         HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement("USE default;");
-        hiveCmdBuilder.addStatement("DROP TABLE test;");
+        hiveCmdBuilder.addStatement("DROP TABLE `test`;");
         hiveCmdBuilder.addStatement("SHOW\n TABLES;");
         hiveCmdBuilder.setHiveConfProps(hiveProps);
         hiveCmdBuilder.overwriteHiveProps(hivePropsOverwrite);
         assertEquals(
-                "hive -e \"USE default;\nDROP TABLE test;\nSHOW\n TABLES;\n\" --hiveconf hive.execution.engine=tez",
+                "hive -e \"USE default;\nDROP TABLE \\`test\\`;\nSHOW\n TABLES;\n\" --hiveconf hive.execution.engine=tez",
                 hiveCmdBuilder.build());
     }
 
@@ -80,7 +80,7 @@ public class HiveCmdBuilderTest {
 
         HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement("USE default;");
-        hiveCmdBuilder.addStatement("DROP TABLE test;");
+        hiveCmdBuilder.addStatement("DROP TABLE `test`;");
         hiveCmdBuilder.addStatement("SHOW TABLES;");
 
         String cmd = hiveCmdBuilder.build();
@@ -91,7 +91,7 @@ public class HiveCmdBuilderTest {
         Pair<Integer, String> execute = cliCommandExecutor.execute(createFileCmd);
         String hqlStatement = FileUtils.readFileToString(new File(hqlFile), Charset.defaultCharset());
         assertEquals(
-                "USE default;" + lineSeparator + "DROP TABLE test;" + lineSeparator + "SHOW TABLES;" + lineSeparator,
+                "USE default;" + lineSeparator + "DROP TABLE `test`;" + lineSeparator + "SHOW TABLES;" + lineSeparator,
                 hqlStatement);
         assertBeelineCmd(cmd);
         FileUtils.forceDelete(new File(hqlFile));
@@ -105,7 +105,7 @@ public class HiveCmdBuilderTest {
 
         HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement("USE default;");
-        hiveCmdBuilder.addStatement("DROP TABLE test;");
+        hiveCmdBuilder.addStatement("DROP TABLE `test`;");
         hiveCmdBuilder.addStatement("SHOW TABLES;");
         String cmd = hiveCmdBuilder.build();
         assertBeelineCmd(cmd);

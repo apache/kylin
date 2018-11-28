@@ -22,6 +22,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -74,35 +75,41 @@ public class JdbcHiveMRInput extends org.apache.kylin.source.jdbc.JdbcHiveMRInpu
             String splitDatabase;
             TblColRef splitColRef = determineSplitColumn();
             splitTable = splitColRef.getTableRef().getTableName();
+            splitTable = splitColRef.getTableRef().getTableDesc().getName();
             splitTableAlias = splitColRef.getTableAlias();
-            splitColumn = splitColRef.getExpressionInSourceDB();
             //to solve case sensitive if necessary
-            splitColumn = dataSource.convertColumn(splitColumn);
+            splitColumn = JoinedFlatTable.getQuotedColExpressionInSourceDB(flatDesc, splitColRef);
             splitDatabase = splitColRef.getColumnDesc().getTable().getDatabase().toLowerCase(Locale.ROOT);
 
             //using sqoop to extract data from jdbc source and dump them to hive
             String selectSql = JoinedFlatTable.generateSelectDataStatement(flatDesc, true, new String[] { partCol });
-            selectSql = StringUtils.escapeString(dataSource.convertSql(selectSql), '\\', '"');
+            selectSql = escapeQuotationInSql(dataSource.convertSql(selectSql));
 
             String hiveTable = flatDesc.getTableName();
             String sqoopHome = config.getSqoopHome();
             String filedDelimiter = config.getJdbcSourceFieldDelimiter();
             int mapperNum = config.getSqoopMapperNum();
 
-            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM \"%s\".%s as %s", splitColumn, splitColumn,
+            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM `%s`.%s as `%s`", splitColumn, splitColumn,
                     splitDatabase, splitTable, splitTableAlias);
+            bquery = dataSource.convertSql(bquery);
             if (partitionDesc.isPartitioned()) {
                 SegmentRange segRange = flatDesc.getSegRange();
                 if (segRange != null && !segRange.isInfinite()) {
                     if (partitionDesc.getPartitionDateColumnRef().getTableAlias().equals(splitTableAlias)
                             && (partitionDesc.getPartitionTimeColumnRef() == null || partitionDesc
                             .getPartitionTimeColumnRef().getTableAlias().equals(splitTableAlias))) {
-                        bquery += " WHERE " + partitionDesc.getPartitionConditionBuilder()
-                                .buildDateRangeCondition(partitionDesc, flatDesc.getSegment(), segRange);
+                        String quotedPartCond = FlatTableSqlQuoteUtils.quoteIdentifierInSqlExpr(flatDesc,
+                                partitionDesc.getPartitionConditionBuilder().buildDateRangeCondition(partitionDesc,
+                                        flatDesc.getSegment(), segRange),
+                                "`");
+                        bquery += " WHERE " + quotedPartCond;
                     }
                 }
             }
-            bquery = StringUtils.escapeString(dataSource.convertSql(bquery), '\\', '"');
+            bquery = escapeQuotationInSql(bquery);
+
+            splitColumn = escapeQuotationInSql(dataSource.convertColumn(splitColumn, FlatTableSqlQuoteUtils.QUOTE));
 
             String cmd = StringUtils.format(
                     "--connect \"%s\" --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
