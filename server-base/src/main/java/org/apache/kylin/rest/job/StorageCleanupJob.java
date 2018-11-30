@@ -41,6 +41,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.HiveCmdBuilder;
@@ -49,7 +50,6 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
@@ -57,6 +57,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceManager;
+import org.apache.kylin.storage.path.IStoragePathBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +82,8 @@ public class StorageCleanupJob extends AbstractApplication {
     final protected FileSystem hbaseFs;
     final protected FileSystem defaultFs;
     final protected ExecutableManager executableManager;
-    
+    final protected IStoragePathBuilder pathBuilder;
+
     protected boolean delete = false;
     protected boolean force = false;
     
@@ -100,6 +102,7 @@ public class StorageCleanupJob extends AbstractApplication {
         this.defaultFs = defaultFs;
         this.hbaseFs = hbaseFs;
         this.executableManager = ExecutableManager.getInstance(config);
+        this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(config.getStorageSystemPathBuilderClz());
     }
 
     public void setDelete(boolean delete) {
@@ -248,7 +251,7 @@ public class StorageCleanupJob extends AbstractApplication {
         for (String jobId : allJobs) {
             final ExecutableState state = executableManager.getOutput(jobId).getState();
             if (!state.isFinalState()) {
-                String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobId);
+                String path = pathBuilder.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobId);
                 allHdfsPathsNeedToBeDeleted.remove(path);
                 logger.info("Skip " + path + " from deletion list, as the path belongs to job " + jobId
                         + " with status " + state);
@@ -260,7 +263,7 @@ public class StorageCleanupJob extends AbstractApplication {
             for (CubeSegment seg : cube.getSegments()) {
                 String jobUuid = seg.getLastBuildJobID();
                 if (jobUuid != null && jobUuid.equals("") == false) {
-                    String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobUuid);
+                    String path = pathBuilder.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobUuid);
                     allHdfsPathsNeedToBeDeleted.remove(path);
                     logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg
                             + " of cube " + cube.getName());
@@ -415,7 +418,7 @@ public class StorageCleanupJob extends AbstractApplication {
             String segmentId = uuid.replace("_", "-");
 
             if (segmentId2JobId.containsKey(segmentId)) {
-                String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(),
+                String path = pathBuilder.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(),
                         segmentId2JobId.get(segmentId)) + "/" + tableToDelete;
                 Path externalDataPath = new Path(path);
                 if (defaultFs.exists(externalDataPath)) {

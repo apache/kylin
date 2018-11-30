@@ -67,7 +67,7 @@ public class JdbcHiveMRInput extends HiveMRInput {
         protected void addStepPhase1_DoCreateFlatTable(DefaultChainedExecutable jobFlow) {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
             final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
-            final String jobWorkingDir = getJobWorkingDir(jobFlow, hdfsWorkingDir);
+            final String jobWorkingDir = getJobWorkingDir(jobFlow, hdfsWorkingDir, pathBuilder);
 
             jobFlow.addTask(createSqoopToFlatHiveStep(jobWorkingDir, cubeName));
             jobFlow.addTask(createFlatHiveTableFromFiles(hiveInitStatements, jobWorkingDir));

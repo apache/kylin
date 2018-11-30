@@ -1863,4 +1863,8 @@ abstract public class KylinConfigBase implements Serializable {
     public String getJdbcSourceAdaptor() {
         return getOptional("kylin.source.jdbc.adaptor");
     }
+
+    public String getStorageSystemPathBuilderClz() {
+        return getOptional("storage.path.builder", "org.apache.kylin.storage.path.DefaultStoragePathBuilder");
+    }
 }

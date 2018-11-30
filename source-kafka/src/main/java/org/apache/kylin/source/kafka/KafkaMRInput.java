@@ -32,11 +32,11 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.mr.IMRInput;
-import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -45,6 +45,7 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.storage.path.IStoragePathBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,10 +77,12 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
         private final CubeSegment cubeSegment;
         private final JobEngineConfig conf;
         private String delimiter = BatchConstants.SEQUENCE_FILE_DEFAULT_DELIMITER;
+        private final IStoragePathBuilder pathBuilder;
 
         public KafkaTableInputFormat(CubeSegment cubeSegment, JobEngineConfig conf) {
             this.cubeSegment = cubeSegment;
             this.conf = conf;
+            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(conf.getConfig().getStorageSystemPathBuilderClz());
         }
 
         @Override
@@ -88,7 +91,7 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
             String jobId = job.getConfiguration().get(BatchConstants.ARG_CUBING_JOB_ID);
             IJoinedFlatTableDesc flatHiveTableDesc = new CubeJoinedFlatTableDesc(cubeSegment);
             String inputPath = JoinedFlatTable.getTableDir(flatHiveTableDesc,
-                    JobBuilderSupport.getJobWorkingDir(conf, jobId));
+                    pathBuilder.getJobWorkingDir(conf.getHdfsWorkingDirectory(), jobId));
             try {
                 FileInputFormat.addInputPath(job, new Path(inputPath));
             } catch (IOException e) {
@@ -121,6 +124,7 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
         private List<String> intermediateTables = Lists.newArrayList();
         private List<String> intermediatePaths = Lists.newArrayList();
         private String cubeName;
+        private IStoragePathBuilder pathBuilder;
 
         public BatchCubingInputSide(CubeSegment seg, IJoinedFlatTableDesc flatDesc) {
             this.conf = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
@@ -130,6 +134,7 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
             this.seg = seg;
             this.cubeDesc = seg.getCubeDesc();
             this.cubeName = seg.getCubeInstance().getName();
+            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(config.getStorageSystemPathBuilderClz());
         }
 
         @Override
@@ -153,7 +158,7 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
         }
 
         protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
-            return JobBuilderSupport.getJobWorkingDir(config.getHdfsWorkingDirectory(), jobFlow.getId());
+            return pathBuilder.getJobWorkingDir(config.getHdfsWorkingDirectory(), jobFlow.getId());
         }
 
         @Override

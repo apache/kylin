@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -45,6 +46,7 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.path.IStoragePathBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,10 +56,12 @@ public class HBaseLookupMRSteps {
     protected static final Logger logger = LoggerFactory.getLogger(HBaseLookupMRSteps.class);
     private CubeInstance cube;
     private JobEngineConfig config;
+    private IStoragePathBuilder pathBuilder;
 
     public HBaseLookupMRSteps(CubeInstance cube) {
         this.cube = cube;
         this.config = new JobEngineConfig(cube.getConfig());
+        this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(cube.getConfig().getStorageSystemPathBuilderClz());
     }
 
     public void addMaterializeLookupTablesSteps(LookupMaterializeContext context) {
@@ -158,7 +162,7 @@ public class HBaseLookupMRSteps {
     }
 
     private String getLookupTableHFilePath(String tableName, String jobId) {
-        return HBaseConnection.makeQualifiedPathInHBaseCluster(JobBuilderSupport.getJobWorkingDir(config, jobId) + "/"
+        return HBaseConnection.makeQualifiedPathInHBaseCluster(pathBuilder.getJobWorkingDir(config.getHdfsWorkingDirectory(), jobId) + "/"
                 + tableName + "/hfile/");
     }
 

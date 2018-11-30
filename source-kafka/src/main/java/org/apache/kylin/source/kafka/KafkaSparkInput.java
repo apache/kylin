@@ -21,15 +21,16 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.spark.ISparkInput;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.storage.path.IStoragePathBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,7 @@ public class KafkaSparkInput extends KafkaInputBase implements ISparkInput {
         final private List<String> intermediateTables = Lists.newArrayList();
         final private List<String> intermediatePaths = Lists.newArrayList();
         private String cubeName;
+        private IStoragePathBuilder pathBuilder;
 
         public BatchCubingInputSide(CubeSegment seg, IJoinedFlatTableDesc flatDesc) {
             this.conf = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
@@ -71,6 +73,7 @@ public class KafkaSparkInput extends KafkaInputBase implements ISparkInput {
             this.seg = seg;
             this.cubeDesc = seg.getCubeDesc();
             this.cubeName = seg.getCubeInstance().getName();
+            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(this.config.getStorageSystemPathBuilderClz());
         }
 
         @Override
@@ -94,7 +97,7 @@ public class KafkaSparkInput extends KafkaInputBase implements ISparkInput {
         }
 
         protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
-            return JobBuilderSupport.getJobWorkingDir(config.getHdfsWorkingDirectory(), jobFlow.getId());
+            return pathBuilder.getJobWorkingDir(config.getHdfsWorkingDirectory(), jobFlow.getId());
         }
 
         @Override

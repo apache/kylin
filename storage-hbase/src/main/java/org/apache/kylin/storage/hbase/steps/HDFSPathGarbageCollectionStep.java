@@ -25,14 +25,15 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.path.IStoragePathBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,7 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
     public static final String TO_DELETE_PATHS = "toDeletePaths";
     private StringBuffer output;
     private JobEngineConfig config;
+    private IStoragePathBuilder pathBuilder;
 
     public HDFSPathGarbageCollectionStep() {
         super();
@@ -58,6 +60,7 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         try {
             config = new JobEngineConfig(context.getConfig());
+            pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(context.getConfig().getStorageSystemPathBuilderClz());
             List<String> toDeletePaths = getDeletePaths();
             dropHdfsPathOnCluster(toDeletePaths, HadoopUtil.getWorkingFileSystem());
 
@@ -93,7 +96,7 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
                 // If hbase was deployed on another cluster, the job dir is empty and should be dropped,
                 // because of rowkey_stats and hfile dirs are both dropped.
                 if (fileSystem.listStatus(oldPath.getParent()).length == 0) {
-                    Path emptyJobPath = new Path(JobBuilderSupport.getJobWorkingDir(config, getJobId()));
+                    Path emptyJobPath = new Path(pathBuilder.getJobWorkingDir(config.getHdfsWorkingDirectory(), getJobId()));
                     emptyJobPath = Path.getPathWithoutSchemeAndAuthority(emptyJobPath);
                     if (fileSystem.exists(emptyJobPath)) {
                         fileSystem.delete(emptyJobPath, true);

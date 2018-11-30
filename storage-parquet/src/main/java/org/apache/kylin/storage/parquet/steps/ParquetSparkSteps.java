@@ -46,7 +46,7 @@ public class ParquetSparkSteps extends ParquetJobSteps {
         sparkExecutable.setParam(SparkCubeParquet.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
         sparkExecutable.setParam(SparkCubeParquet.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
         sparkExecutable.setParam(SparkCubeParquet.OPTION_INPUT_PATH.getOpt(), inputPath);
-        sparkExecutable.setParam(SparkCubeParquet.OPTION_OUTPUT_PATH.getOpt(), getParquetOutputPath(jobId));
+        sparkExecutable.setParam(SparkCubeParquet.OPTION_OUTPUT_PATH.getOpt(), getParquetOutputPath());
         sparkExecutable.setParam(SparkCubeParquet.OPTION_META_URL.getOpt(),
                 jobBuilder2.getSegmentMetadataUrl(seg.getConfig(), jobId));
         sparkExecutable.setJobId(jobId);
