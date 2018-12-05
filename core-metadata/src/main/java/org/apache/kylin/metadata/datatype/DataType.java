@@ -152,6 +152,17 @@ public class DataType implements Serializable {
         return cached;
     }
 
+    public static boolean isSupportedType(String typeName) {
+        if (typeName == null) {
+            return false;
+        }
+
+        String formattedTypeName = typeName.trim().toLowerCase(Locale.ROOT);
+        formattedTypeName = replaceLegacy(formattedTypeName);
+
+        return TYPE_PATTERN.matcher(formattedTypeName).matches() || COMPLEX_TYPE_PATTERN.matcher(formattedTypeName).matches();
+    }
+
     public static boolean isNumberFamily(String name) {
         return NUMBER_FAMILY.contains(name);
     }
@@ -237,7 +248,7 @@ public class DataType implements Serializable {
         return getOrder().compare(value1,  value2);
     }
 
-    private String replaceLegacy(String str) {
+    private static String replaceLegacy(String str) {
         String replace = LEGACY_TYPE_MAP.get(str);
         return replace == null ? str : replace;
     }
