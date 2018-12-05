@@ -10,7 +10,7 @@ Welcome to Apache Kylin™
 > Extreme OLAP Engine for Big Data
 
 
-Apache Kylin™ is a leading open source OLAP (On-Line Analytics Processing) engine for Big Data capable for sub-second query latency on trillions of records. Since being created and open sourced by eBay Inc. in 2014, and graduated to Top Level Project of Apache Software Foundation in 2015, Kylin has quickly be adopted by thousands of organizations world widely as their critical analytics application for Big Data. Apache Kylin won InfoWorld Bossie Awards: The Best Open Source Big Data Tool in year 2015 and 2016.
+Apache Kylin™ is a leading open source OLAP (OnLine Analytics Processing) engine for Big Data capable for sub-second query latency on trillions of records. Since being created and open sourced by eBay Inc. in 2014, and graduated to Top Level Project of Apache Software Foundation in 2015, Kylin has quickly be adopted by thousands of organizations world widely as their critical analytics application for Big Data. Apache Kylin won InfoWorld Bossie Awards: The Best Open Source Big Data Tool in year 2015 and 2016.
 
 
 
