@@ -77,7 +77,7 @@
   - howto/howto_use_cli
   - howto/howto_ldap_and_sso
   - howto/howto_use_beeline
-  - howto/howto_upgrade_coprocessor
+  - howto/howto_update_coprocessor
   - howto/howto_install_ranger_kylin_plugin
   - howto/howto_enable_zookeeper_acl
 
