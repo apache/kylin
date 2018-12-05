@@ -31,6 +31,7 @@ import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.TableMetadataManager;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -238,21 +239,27 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
 
         for (int i = 0; i < columnNumber; i++) {
             HiveTableMeta.HiveTableColumnMeta field = hiveTableMeta.allColumns.get(i);
-            ColumnDesc cdesc = new ColumnDesc();
-            cdesc.setName(field.name.toUpperCase(Locale.ROOT));
 
-            // use "double" in kylin for "float"
-            if ("float".equalsIgnoreCase(field.dataType)) {
-                cdesc.setDatatype("double");
+            // skip unsupported fields, e.g. map<string, int>
+            if (DataType.isKylinSupported(field.dataType)) {
+                ColumnDesc cdesc = new ColumnDesc();
+                cdesc.setName(field.name.toUpperCase(Locale.ROOT));
+
+                // use "double" in kylin for "float"
+                if ("float".equalsIgnoreCase(field.dataType)) {
+                    cdesc.setDatatype("double");
+                } else {
+                    cdesc.setDatatype(field.dataType);
+                }
+
+                cdesc.setId(String.valueOf(i + 1));
+                cdesc.setComment(field.comment);
+                columns.add(cdesc);
             } else {
-                cdesc.setDatatype(field.dataType);
+                logger.warn("Unsupported data type {}, excluding the field '{}'.", field.dataType, field.name);
             }
-
-            cdesc.setId(String.valueOf(i + 1));
-            cdesc.setComment(field.comment);
-            columns.add(cdesc);
         }
 
-        return columns.toArray(new ColumnDesc[columnNumber]);
+        return  columns.toArray(new ColumnDesc[0]);
     }
 }
