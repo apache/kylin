@@ -6,7 +6,7 @@ permalink: /docs/howto/howto_upgrade.html
 since: v1.5.1
 ---
 
-Running as a Hadoop client, Apache Kylin's metadata and Cube data are persistent in Hadoop (HBase and HDFS), so the upgrade is relatively easy and user does not need worry about data loss. The upgrade can be performed in the following steps:
+Running as a Hadoop client, Apache Kylin's metadata and Cube data are persisted in Hadoop (HBase and HDFS), so the upgrade is relatively easy and user does not need worry about data loss. The upgrade can be performed in the following steps:
 
 
 
