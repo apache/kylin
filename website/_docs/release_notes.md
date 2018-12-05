@@ -15,6 +15,28 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v2.5.2 - 2018-12-04
+_Tag:_ [kylin-2.5.2](https://github.com/apache/kylin/tree/kylin-2.5.2)
+This is a bugfix release after 2.5.1, with 12 bug fixes and enhancement. 
+
+__Improvement__
+
+* [KYLIN-3669] - Add log to GTStreamAggregateScanner
+* [KYLIN-3676] - Update to custom calcite and remove the "atopcalcite" module
+* [KYLIN-3704] - Upgrade the calcite version to 1.16
+
+__Bug fix__
+
+* [KYLIN-3187] - JDK APIs using the default locale, time zone or character set should be avoided
+* [KYLIN-3636] - Wrong "storage_type" in CubeDesc causing cube building error
+* [KYLIN-3666] - Mege cube step 2: Update dictionary throws IllegalStateException
+* [KYLIN-3672] - Performance is poor when multiple queries occur in short period
+* [KYLIN-3678] - CacheStateChecker may remove a cache file that under building
+* [KYLIN-3683] - package org.apache.commons.lang3 not exists
+* [KYLIN-3689] - When the startTime is equal to the endTime in build request, the segment will build all data.
+* [KYLIN-3693] - TopN, Count distinct incorrect in Spark engine
+* [KYLIN-3705] - Segment Pruner mis-functions when the source data has Chinese characters
+
 ## v2.5.1 - 2018-11-06
 _Tag:_ [kylin-2.5.1](https://github.com/apache/kylin/tree/kylin-2.5.1)
 This is a bugfix release after 2.5.0, with 30 bug fixes and enhancement. Check [How to upgrade](/docs/howto/howto_upgrade.html).
