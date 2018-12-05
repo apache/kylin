@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  Upgrade Kylin From Old Versions
+title:  Upgrade From Old Versions
 categories: howto
 permalink: /docs/howto/howto_upgrade.html
 since: v1.5.1
