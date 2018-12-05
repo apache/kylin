@@ -9,7 +9,7 @@ permalink: /cn/docs/index.html
 ------------  
 > Extreme OLAP Engine for Big Data
 
-Apache Kylin™ 是一个开源 OLAP（On-Line Analytics Processing）分析引擎，针对数据库与亿万级记录提供亚秒级查询响应能力。2014 年由 eBay Inc.开发并贡献至开源社区。2015 年毕业于 Apache 顶级项目并迅速被全球数千家公司与组织应用于数据分析业务，同时也在 2015 与 2016 年赢得 InfoWorld Bossie Awards 年度最佳大数据开源工具。 
+Apache Kylin™ 是一个开源 OLAP（OnLine Analytics Processing）分析引擎，针对数据库与亿万级记录提供亚秒级查询响应能力。2014 年由 eBay Inc.开发并贡献至开源社区。2015 年毕业于 Apache 顶级项目并迅速被全球数千家公司与组织应用于数据分析业务，同时也在 2015 与 2016 年赢得 InfoWorld Bossie Awards 年度最佳大数据开源工具。 
 
 
 
