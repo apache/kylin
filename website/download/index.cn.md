@@ -8,7 +8,7 @@ title: 下载
 
 #### v2.5.1
 - 这是2.5.0 版本后的一个bugfix发布版本，包含了30 个以及各种改进。关于具体内容请查看发布说明. 
-- [发布声明](/cn/docs/releases/kylin_release_notes.html) and [Kylin 升级](/cn/docs/howto/howto_upgrade.html)
+- [发布声明](/docs/releases/kylin_release_notes.html) and [Kylin 升级](/cn/docs/howto/howto_upgrade.html)
 - 源码下载: [apache-kylin-2.5.1-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-source-release.zip.sha256)\]
 - 二进制包下载:
   - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.5.1-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.5.1/apache-kylin-2.5.1-bin-hbase1x.tar.gz.sha256)\]
