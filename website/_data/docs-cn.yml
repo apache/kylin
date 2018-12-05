@@ -57,7 +57,7 @@
 
 - title: 帮助
   docs:  
-  - howto/howto_upgrade_coprocessor
+  - howto/howto_update_coprocessor
   - howto/howto_use_restapi
   - howto/howto_build_cube_with_restapi
   - howto/howto_optimize_cubes
