@@ -465,10 +465,10 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           return 'bigint';
         } else {
          if(colType.indexOf('decimal') != -1) {
-            var returnRegex = new RegExp('(\\w+)(?:\\((\\w+?)(?:\\,(\\w+?))?\\))?')
-            var returnValue = returnRegex.exec(colType)
-            var precision = 19
-            var scale = returnValue[3]
+            var returnRegex = new RegExp('(\\w+)(?:\\((\\w+?)(?:\\,(\\w+?))?\\))?');
+            var returnValue = returnRegex.exec(colType);
+            var precision = 19;
+            var scale = returnValue[3] || 0;
             return 'decimal(' + precision + ',' + scale + ')';
           }else{
             return colType;
