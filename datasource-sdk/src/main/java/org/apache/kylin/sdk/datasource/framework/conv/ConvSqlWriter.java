@@ -37,8 +37,6 @@ import java.sql.SQLException;
 import java.util.Locale;
 
 public class ConvSqlWriter extends SqlPrettyWriter {
-    private static final Logger logger = LoggerFactory.getLogger(ConvSqlWriter.class);
-
     private static final SqlOrderBy DUMMY_ORDER_BY_NODE = new SqlOrderBy(SqlParserPos.ZERO,
             new DummySqlNode(SqlParserPos.ZERO),
             new SqlNodeList(Lists.<SqlNode> newArrayList(SqlLiteral.createExactNumeric("1", SqlParserPos.ZERO)),

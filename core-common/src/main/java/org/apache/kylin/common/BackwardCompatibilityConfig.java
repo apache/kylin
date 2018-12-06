@@ -40,15 +40,16 @@ public class BackwardCompatibilityConfig {
     private static final Logger logger = LoggerFactory.getLogger(BackwardCompatibilityConfig.class);
 
     private static final String KYLIN_BACKWARD_COMPATIBILITY = "kylin-backward-compatibility";
+    private static final String PROPERTIES_SUFFIX = ".properties";
 
     private final Map<String, String> old2new = Maps.newConcurrentMap();
     private final Map<String, String> old2newPrefix = Maps.newConcurrentMap();
 
     public BackwardCompatibilityConfig() {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        init(loader.getResourceAsStream(KYLIN_BACKWARD_COMPATIBILITY + ".properties"));
+        init(loader.getResourceAsStream(KYLIN_BACKWARD_COMPATIBILITY + PROPERTIES_SUFFIX));
         for (int i = 0; i < 10; i++) {
-            init(loader.getResourceAsStream(KYLIN_BACKWARD_COMPATIBILITY + (i) + ".properties"));
+            init(loader.getResourceAsStream(KYLIN_BACKWARD_COMPATIBILITY + (i) + PROPERTIES_SUFFIX));
         }
     }
 
@@ -213,6 +214,6 @@ public class BackwardCompatibilityConfig {
             return false;
         else
             return name.endsWith(".java") || name.endsWith(".js") || name.endsWith(".sh")
-                    || name.endsWith(".properties") || name.endsWith(".xml");
+                    || name.endsWith(PROPERTIES_SUFFIX) || name.endsWith(".xml");
     }
 }

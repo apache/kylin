@@ -73,6 +73,9 @@ public class MemcachedCache {
             - 2; // length of separators
     private static final Logger logger = LoggerFactory.getLogger(MemcachedCache.class);
     private static final int DEFAULT_TTL = 7 * 24 * 3600;
+
+    private static final String UNABLE_TO_QUEUE_CACHE_OPERATION = "Unable to queue cache operation.";
+
     protected final MemcachedCacheConfig config;
     protected final MemcachedClientIF client;
     protected final String memcachedPrefix;
@@ -264,11 +267,11 @@ public class MemcachedCache {
         } catch (IllegalStateException e) {
             // operation did not get queued in time (queue is full)
             errorCount.incrementAndGet();
-            logger.error("Unable to queue cache operation.", e);
+            logger.error(UNABLE_TO_QUEUE_CACHE_OPERATION, e);
             return null;
         } catch (Throwable t) {
             errorCount.incrementAndGet();
-            logger.error("Unable to queue cache operation.", t);
+            logger.error(UNABLE_TO_QUEUE_CACHE_OPERATION, t);
             return null;
         }
 
@@ -304,10 +307,10 @@ public class MemcachedCache {
         } catch (IllegalStateException e) {
             // operation did not get queued in time (queue is full)
             errorCount.incrementAndGet();
-            logger.error("Unable to queue cache operation.", e);
+            logger.error(UNABLE_TO_QUEUE_CACHE_OPERATION, e);
         } catch (Throwable t) {
             errorCount.incrementAndGet();
-            logger.error("Unable to queue cache operation.", t);
+            logger.error(UNABLE_TO_QUEUE_CACHE_OPERATION, t);
         }
     }
 
