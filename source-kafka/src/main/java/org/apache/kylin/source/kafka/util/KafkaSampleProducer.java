@@ -56,7 +56,7 @@ public class KafkaSampleProducer {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) throws Exception {
-        logger.info("args: {}", Arrays.toString(args));
+        if(logger.isInfoEnabled()) logger.info("args: {}", Arrays.toString(args));
         OptionsHelper optionsHelper = new OptionsHelper();
         Options options = new Options();
         options.addOption(OPTION_TOPIC);
@@ -109,12 +109,12 @@ public class KafkaSampleProducer {
         props.put("buffer.memory", 33554432);
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-
+        long startTime = System.currentTimeMillis();
         try (Producer<String, String> producer = new KafkaProducer<>(props)) {
             boolean alive = true;
             Random rnd = new Random();
             Map<String, Object> record = new HashMap<>();
-            while (alive == true) {
+            while (alive) {
                 //add normal record
                 record.put("order_time", (new Date().getTime()));
                 record.put("country", countries.get(rnd.nextInt(countries.size())));
@@ -132,9 +132,12 @@ public class KafkaSampleProducer {
                 record.put("user", user);
                 //send message
                 ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
-                System.out.println("Sending 1 message: " + JsonUtil.writeValueAsString(record));
+                if(logger.isInfoEnabled()) logger.info("Sending 1 message: {}", JsonUtil.writeValueAsString(record));
                 producer.send(data);
                 Thread.sleep(interval);
+                if(System.currentTimeMillis() - startTime <= 7 * 24 * 3600 * 1000){
+                    alive = false;
+                }
             }
         }
     }

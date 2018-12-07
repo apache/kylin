@@ -93,7 +93,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                     splits.add(last);
 
                     last.start();
-                    logger.info("Split #" + splits.size() + " kickoff");
+                    logger.info("Split #{} kickoff", splits.size());
 
                     // Build splits sequentially
                     last.join();
@@ -101,7 +101,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                     checkException(splits);
                 }
 
-                logger.info("Dogged Cube Build splits complete, took " + (System.currentTimeMillis() - start) + " ms");
+                logger.info("Dogged Cube Build splits complete, took {} ms", (System.currentTimeMillis() - start));
 
                 merger.mergeAndOutput(splits, output);
 
@@ -116,7 +116,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             } finally {
                 output.close();
                 closeGirdTables(splits);
-                logger.info("Dogged Cube Build end, totally took " + (System.currentTimeMillis() - start) + " ms");
+                logger.info("Dogged Cube Build end, totally took {} ms", (System.currentTimeMillis() - start));
                 ensureExit(splits);
                 logger.info("Dogged Cube Build return");
             }
@@ -128,7 +128,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                     for (CuboidResult r : split.buildResult.values()) {
                         try {
                             r.table.close();
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                             logger.error("Error closing grid table " + r.table, e);
                         }
                     }
@@ -144,7 +144,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                         abort(splits);
                     }
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 logger.error("Dogged Cube Build error", e);
             }
         }
@@ -173,20 +173,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                 if (split.exception != null)
                     errors.add(split.exception);
             }
-
-            if (errors.isEmpty()) {
-                return;
-            } else if (errors.size() == 1) {
-                Throwable t = errors.get(0);
-                if (t instanceof IOException)
-                    throw (IOException) t;
-                else
-                    throw new IOException(t);
-            } else {
-                for (Throwable t : errors)
-                    logger.error("Exception during in-mem cube build", t);
-                throw new IOException(errors.size() + " exceptions during in-mem cube build, cause set to the first, check log for more", errors.get(0));
-            }
+            InMemCubeBuilder.processErrors(errors);
         }
     }
 

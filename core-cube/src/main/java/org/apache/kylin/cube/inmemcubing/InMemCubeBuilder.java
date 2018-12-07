@@ -111,9 +111,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 new CubeDimEncMap(cubeDesc, dictionaryMap)
         );
 
-        // Below several store implementation are very similar in performance. The ConcurrentDiskStore is the simplest.
-        // MemDiskStore store = new MemDiskStore(info, memBudget == null ? MemoryBudgetController.ZERO_BUDGET : memBudget);
-        // MemDiskStore store = new MemDiskStore(info, MemoryBudgetController.ZERO_BUDGET);
         ConcurrentDiskStore store = new ConcurrentDiskStore(info);
 
         GridTable gridTable = new GridTable(info, store);
@@ -137,15 +134,13 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     public <T> ConcurrentNavigableMap<Long, CuboidResult> build(RecordConsumeBlockingQueueController<T> input)
             throws IOException {
-        final ConcurrentNavigableMap<Long, CuboidResult> result = new ConcurrentSkipListMap<Long, CuboidResult>();
-        build(input, new ICuboidCollector() {
-            @Override
-            public void collect(CuboidResult cuboidResult) {
-                logger.info("collecting CuboidResult cuboid id:" + cuboidResult.cuboidId);
+        final ConcurrentNavigableMap<Long, CuboidResult> result = new ConcurrentSkipListMap<>();
+        build(input, cuboidResult -> {
+                logger.info("collecting CuboidResult cuboid id:{}", cuboidResult.cuboidId);
                 result.put(cuboidResult.cuboidId, cuboidResult);
             }
-        });
-        logger.info("total CuboidResult count:" + result.size());
+        );
+        logger.info("total CuboidResult count:{}", result.size());
         return result;
     }
 
@@ -156,13 +151,13 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private <T> void build(RecordConsumeBlockingQueueController<T> input, ICuboidCollector collector)
             throws IOException {
         long startTime = System.currentTimeMillis();
-        logger.info("In Mem Cube Build start, " + cubeDesc.getName());
+        logger.info("In Mem Cube Build start, {}", cubeDesc.getName());
 
         baseCuboidMemTracker = new MemoryWaterLevel();
         baseCuboidMemTracker.markLow();
 
         // multiple threads to compute cuboid in parallel
-        taskPending = new TreeSet<CuboidTask>();
+        taskPending = new TreeSet<>();
         taskCuboidCompleted.set(0);
         taskThreads = prepareTaskThreads();
         taskThreadExceptions = new Throwable[taskThreadCount];
@@ -186,7 +181,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         join(taskThreads);
 
         long endTime = System.currentTimeMillis();
-        logger.info("In Mem Cube Build end, " + cubeDesc.getName() + ", takes " + (endTime - startTime) + " ms");
+        logger.info("In Mem Cube Build end, {}, takes {} ms", cubeDesc.getName(), (endTime - startTime));
 
         throwExceptionIfAny();
     }
@@ -216,15 +211,17 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private void throwExceptionIfAny() throws IOException {
-        ArrayList<Throwable> errors = new ArrayList<Throwable>();
+        ArrayList<Throwable> errors = new ArrayList<>();
         for (int i = 0; i < taskThreadCount; i++) {
             Throwable t = taskThreadExceptions[i];
             if (t != null)
                 errors.add(t);
         }
-        if (errors.isEmpty()) {
-            return;
-        } else if (errors.size() == 1) {
+        processErrors(errors);
+    }
+
+    public static void processErrors(List<Throwable> errors) throws IOException{
+        if (errors.size() == 1) {
             Throwable t = errors.get(0);
             if (t instanceof IOException)
                 throw (IOException) t;
@@ -283,7 +280,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                         }
                     }
                 }
-            } catch (Throwable ex) {
+            } catch (Exception ex) {
                 if (!isAllCuboidDone()) {
                     logger.error("task thread exception", ex);
                     taskThreadExceptions[id] = ex;
@@ -313,26 +310,26 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private void makeMemoryBudget() {
         baseResult.aggrCacheMB = Math.max(baseCuboidMemTracker.getEstimateMB(), 10); // 10 MB at minimal
-        logger.debug("Base cuboid aggr cache is " + baseResult.aggrCacheMB + " MB");
+        logger.debug("Base cuboid aggr cache is {} MB", baseResult.aggrCacheMB);
         int systemAvailMB = MemoryBudgetController.gcAndGetSystemAvailMB();
-        logger.debug("System avail " + systemAvailMB + " MB");
+        logger.debug("System avail {} MB", systemAvailMB);
         int reserve = reserveMemoryMB;
-        logger.debug("Reserve " + reserve + " MB for system basics");
+        logger.debug("Reserve {} MB for system basics", reserve);
 
         int budget = systemAvailMB - reserve;
         if (budget < baseResult.aggrCacheMB) {
             // make sure we have base aggr cache as minimal
             budget = baseResult.aggrCacheMB;
-            logger.warn("System avail memory (" + systemAvailMB + " MB) is less than base aggr cache (" + baseResult.aggrCacheMB + " MB) + minimal reservation (" + reserve + " MB), consider increase JVM heap -Xmx");
+            logger.warn("System avail memory ({} MB) is less than base aggr cache ({} MB) + minimal reservation ({} MB), consider increase JVM heap -Xmx", systemAvailMB, baseResult.aggrCacheMB, reserve);
         }
 
-        logger.debug("Memory Budget is " + budget + " MB");
+        logger.debug("Memory Budget is {} MB", budget);
         memBudget = new MemoryBudgetController(budget);
     }
 
     private <T> CuboidResult createBaseCuboid(RecordConsumeBlockingQueueController<T> input) throws IOException {
         long startTime = System.currentTimeMillis();
-        logger.info("Calculating base cuboid " + baseCuboidId);
+        logger.info("Calculating base cuboid {}", baseCuboidId);
 
         GridTable baseCuboid = newGridTableByCuboidID(baseCuboidId);
         GTBuilder baseBuilder = baseCuboid.rebuild();
@@ -358,10 +355,10 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         }
 
         long timeSpent = System.currentTimeMillis() - startTime;
-        logger.info("Cuboid " + baseCuboidId + " has " + count + " rows, build takes " + timeSpent + "ms");
+        logger.info("Cuboid {} has {} rows, build takes {}ms", baseCuboidId, count, timeSpent);
 
         int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache() / MemoryBudgetController.ONE_MB);
-        logger.info("Wild estimate of base aggr cache is " + mbEstimateBaseAggrCache + " MB");
+        logger.info("Wild estimate of base aggr cache is {} MB", mbEstimateBaseAggrCache);
 
         return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, 0, input.inputConverterUnit.ifChange());
     }
@@ -427,7 +424,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 aggrMask[i] = !measureDescs[i].getFunction().getMeasureType().onlyAggrInBaseCuboid();
 
                 if (!aggrMask[i]) {
-                    logger.info(measureDescs[i].toString() + " doesn't need aggregation.");
+                    logger.info("{} doesn't need aggregation.", measureDescs[i]);
                 }
             }
             scanner.setAggrMask(aggrMask);
@@ -438,7 +435,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private CuboidResult scanAndAggregateGridTable(GridTable gridTable, long parentId, long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
         long startTime = System.currentTimeMillis();
-        logger.info("Calculating cuboid " + cuboidId);
+        logger.info("Calculating cuboid {}", cuboidId);
 
         GTAggregateScanner scanner = prepareGTAggregationScanner(gridTable, parentId, cuboidId, aggregationColumns, measureColumns);
         GridTable newGridTable = newGridTableByCuboidID(cuboidId);
@@ -458,16 +455,13 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 builder.write(newRecord);
             }
 
-            //long t = System.currentTimeMillis();
-            //sanityCheck(parentId, cuboidId, scanner.getTotalSumForSanityCheck());
-            //logger.info("sanity check for Cuboid " + cuboidId + " cost " + (System.currentTimeMillis() - t) + "ms");
         } finally {
             scanner.close();
             builder.close();
         }
 
         long timeSpent = System.currentTimeMillis() - startTime;
-        logger.info("Cuboid " + cuboidId + " has " + count + " rows, build takes " + timeSpent + "ms");
+        logger.info("Cuboid {} has {} rows, build takes {}ms", cuboidId, count, timeSpent);
 
         return updateCuboidResult(cuboidId, newGridTable, count, timeSpent, 0);
     }
@@ -498,9 +492,11 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             return;
         }
         if (Arrays.equals(totalSumForSanityCheck, totalSum) == false) {
-            logger.info("sanityCheck failed when calculate " + cuboidId + " from parent " + parentId);
-            logger.info("Expected: " + Arrays.toString(totalSumForSanityCheck));
-            logger.info("Actually: " + Arrays.toString(totalSum));
+            logger.info("sanityCheck failed when calculate{} from parent {}", cuboidId, parentId);
+            if(logger.isInfoEnabled()){
+                logger.info("Expected: {}", Arrays.toString(totalSumForSanityCheck));
+                logger.info("Actually: {}", Arrays.toString(totalSum));
+            }
             throw new IllegalStateException();
         }
     }
@@ -519,7 +515,13 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         @Override
         public int compareTo(CuboidTask o) {
             long comp = this.childCuboidId - o.childCuboidId;
-            return comp < 0 ? -1 : (comp > 0 ? 1 : 0);
+            if(comp < 0){
+                return -1;
+            }else if(comp > 0){
+                return 1;
+            }else {
+                return 0;
+            }
         }
 
         @Override

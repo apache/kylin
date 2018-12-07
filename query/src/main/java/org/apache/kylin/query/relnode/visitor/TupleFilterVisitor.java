@@ -52,7 +52,6 @@ import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.relnode.ColumnRowType;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -130,10 +129,10 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
                 // is a trivial expr
                 return f;
             }
-            //else go to default
-        default:
             filter = new UnsupportedTupleFilter(TupleFilter.FilterOperatorEnum.UNSUPPORTED);
             break;
+        default:
+            filter = new UnsupportedTupleFilter(TupleFilter.FilterOperatorEnum.UNSUPPORTED);
         }
 
         for (RexNode operand : call.operands) {
@@ -145,12 +144,12 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
             }
         }
 
-        if (op.getKind() == SqlKind.OR) {
+        if (op.getKind() == SqlKind.OR && filter != null) {
             CompareTupleFilter inFilter = mergeToInClause(filter);
             if (inFilter != null) {
                 filter = inFilter;
             }
-        } else if (op.getKind() == SqlKind.NOT) {
+        } else if (op.getKind() == SqlKind.NOT && filter != null) {
             assert (filter.getChildren().size() == 1);
             filter = filter.getChildren().get(0).reverse();
         }
@@ -183,8 +182,9 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
             }
         }
 
-        Preconditions.checkNotNull(left);
-        Preconditions.checkNotNull(right);
+        if(left == null || right == null){
+            throw new NullPointerException();
+        }
 
         switch (call.op.getKind()) {
         case PLUS:
@@ -281,7 +281,6 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
             strValue = ((NlsString) literalValue).getValue();
         } else if (literalValue instanceof GregorianCalendar) {
             GregorianCalendar g = (GregorianCalendar) literalValue;
-            //strValue = "" + g.get(Calendar.YEAR) + "-" + normToTwoDigits(g.get(Calendar.MONTH) + 1) + "-" + normToTwoDigits(g.get(Calendar.DAY_OF_MONTH));
             strValue = Long.toString(g.getTimeInMillis());
         } else if (literalValue instanceof TimeUnitRange) {
             // Extract(x from y) in where clause

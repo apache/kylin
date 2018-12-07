@@ -126,7 +126,7 @@ public class QueryUtil {
                 IQueryTransformer t = (IQueryTransformer) ClassUtil.newInstance(clz);
                 transformers.add(t);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to init query transformer", e);
+                throw new IllegalStateException("Failed to init query transformer", e);
             }
         }
 
@@ -178,8 +178,9 @@ public class QueryUtil {
         String sql1 = sql.toLowerCase(Locale.ROOT);
         sql1 = removeCommentInSql(sql1);
         sql1 = sql1.trim();
-        return sql1.startsWith("select") || (sql1.startsWith("with") && sql1.contains("select"))
-                || (sql1.startsWith("explain") && sql1.contains("select"));
+        String select = "select";
+        return sql1.startsWith(select) || (sql1.startsWith("with") && sql1.contains(select))
+                || (sql1.startsWith("explain") && sql1.contains(select));
     }
 
     public static String removeCommentInSql(String sql1) {
