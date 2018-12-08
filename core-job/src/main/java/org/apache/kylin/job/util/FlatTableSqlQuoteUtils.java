@@ -42,7 +42,7 @@ public class FlatTableSqlQuoteUtils {
      * @param identifier
      * @return
      */
-    public static String quote(String identifier){
+    public static String quoteIdentifier(String identifier){
         return QUOTE + identifier + QUOTE;
     }
 

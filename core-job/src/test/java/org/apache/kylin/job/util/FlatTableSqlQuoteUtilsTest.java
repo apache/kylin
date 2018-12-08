@@ -129,4 +129,9 @@ public class FlatTableSqlQuoteUtilsTest {
         Assert.assertFalse(FlatTableSqlQuoteUtils.isIdentifierNeedToQuote("KYLIN_SALES_PRICE * KYLIN_SALES_COUNT",
                 "kylin_sales", tablePatterns));
     }
+
+    @Test
+    public void testQuoteWithIdentifier() {
+        Assert.assertEquals("`abc`", FlatTableSqlQuoteUtils.quoteIdentifier("abc"));
+    }
 }

@@ -30,15 +30,11 @@ import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.pretty.SqlPrettyWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.Locale;
 
 public class ConvSqlWriter extends SqlPrettyWriter {
-    private static final Logger logger = LoggerFactory.getLogger(ConvSqlWriter.class);
-
     private static final SqlOrderBy DUMMY_ORDER_BY_NODE = new SqlOrderBy(SqlParserPos.ZERO,
             new DummySqlNode(SqlParserPos.ZERO),
             new SqlNodeList(Lists.<SqlNode> newArrayList(SqlLiteral.createExactNumeric("1", SqlParserPos.ZERO)),
