@@ -31,6 +31,8 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
@@ -164,8 +166,29 @@ public class ExecutableDao {
         Broadcaster.getInstance(config).registerListener(new JobOutputSyncListener(), "execute_output");
     }
 
+    /**
+     * Length of java.util.UUID's string representation is always 36.
+     */
+    private static final int UUID_STRING_REPRESENTATION_LENGTH = 36;
+
+    /**
+     * <pre>
+     *    Backgroud :
+     * 1. Each Executable has id, and id should be unique, we use java.util.UUID to create id of Executable.
+     * 2. 36(UUID_STRING_REPRESENTATION_LENGTH) is a magic number, and it is the length of string of java.util.UUID.toString(). It can verified this simply by `System.out.println(UUID.randomUUID().toString().length());`
+     * 3. All subtask of a ChainedExecutable is also a Executable, its id is a string which length is 39 (36 + 3). See DefaultChainedExecutable#addTask.
+     * 4. Any other Executable's id is a String created by UUID.toString(), so its length is 36.
+     * 5. This method may be a bit fragile/confusing because it depend on specific implementation of subclass of Executable.
+     * </pre>
+     *
+     * @see DefaultChainedExecutable#addTask(AbstractExecutable)
+     * @see AbstractExecutable#AbstractExecutable()
+     *
+     * @param id id of a Executable (mostly it is a UUID)
+     * @return true if the job is a subtask of a ChainedExecutable; else return false
+     */
     private boolean isTaskExecutableOutput(String id) {
-        return id.length() > 36;
+        return id.length() > UUID_STRING_REPRESENTATION_LENGTH;
     }
 
     private class JobSyncListener extends Broadcaster.Listener {
