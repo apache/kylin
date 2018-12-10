@@ -154,11 +154,13 @@ public class CubeManager implements IRealizationProvider {
 
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
-            for (IRealization real : ProjectManager.getInstance(config).listAllRealizations(project)) {
+            ProjectManager projectManager = ProjectManager.getInstance(config);
+            for (IRealization real : projectManager.listAllRealizations(project)) {
                 if (real instanceof CubeInstance) {
                     reloadCubeQuietly(real.getName());
                 }
             }
+            projectManager.reloadProjectL2Cache(project);
         }
 
         @Override
