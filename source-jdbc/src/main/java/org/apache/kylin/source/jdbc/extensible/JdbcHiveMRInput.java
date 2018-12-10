@@ -17,25 +17,15 @@
  */
 package org.apache.kylin.source.jdbc.extensible;
 
-import org.apache.hadoop.util.StringUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.JoinedFlatTable;
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
+import org.apache.kylin.engine.mr.IMRInput;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.PartitionDesc;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.sdk.datasource.framework.JdbcConnector;
-import org.apache.kylin.source.jdbc.sqoop.SqoopCmdStep;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.kylin.source.hive.HiveMRInput;
 
-import java.util.Locale;
-
-public class JdbcHiveMRInput extends org.apache.kylin.source.jdbc.JdbcHiveMRInput {
-    private static final Logger logger = LoggerFactory.getLogger(JdbcHiveMRInput.class);
+public class JdbcHiveMRInput extends JdbcHiveInputBase implements IMRInput {
 
     private final JdbcConnector dataSource;
 
@@ -44,86 +34,34 @@ public class JdbcHiveMRInput extends org.apache.kylin.source.jdbc.JdbcHiveMRInpu
     }
 
     public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-        return new BatchCubingInputSide(flatDesc, dataSource);
+        return new JdbcMRBatchCubingInputSide(flatDesc, dataSource);
     }
 
-    public static class BatchCubingInputSide extends org.apache.kylin.source.jdbc.JdbcHiveMRInput.BatchCubingInputSide {
-        private final JdbcConnector dataSource;
+    @Override
+    public IBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
+        return new IMRBatchMergeInputSide() {
+            @Override
+            public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
+                // doing nothing
+            }
+        };
+    }
 
-        public BatchCubingInputSide(IJoinedFlatTableDesc flatDesc, JdbcConnector dataSource) {
-            super(flatDesc);
-            this.dataSource = dataSource;
-        }
+    @Override
+    public IMRTableInputFormat getTableInputFormat(TableDesc table, String uuid) {
+        return new HiveMRInput.HiveTableInputFormat(getTableNameForHCat(table, uuid));
+    }
 
-        protected JdbcConnector getDataSource() {
-            return dataSource;
+    public static class JdbcMRBatchCubingInputSide extends JDBCBaseBatchCubingInputSide implements IMRInput.IMRBatchCubingInputSide {
+
+        public JdbcMRBatchCubingInputSide(IJoinedFlatTableDesc flatDesc, JdbcConnector dataSource) {
+            super(flatDesc, dataSource);
         }
 
         @Override
-        protected AbstractExecutable createSqoopToFlatHiveStep(String jobWorkingDir, String cubeName) {
-            KylinConfig config = flatDesc.getDataModel().getConfig();
-            PartitionDesc partitionDesc = flatDesc.getDataModel().getPartitionDesc();
-            String partCol = null;
-
-            if (partitionDesc.isPartitioned()) {
-                partCol = partitionDesc.getPartitionDateColumn(); //tablename.colname
-            }
-
-            String splitTable;
-            String splitTableAlias;
-            String splitColumn;
-            String splitDatabase;
-            TblColRef splitColRef = determineSplitColumn();
-            splitTable = splitColRef.getTableRef().getTableName();
-            splitTable = splitColRef.getTableRef().getTableDesc().getName();
-            splitTableAlias = splitColRef.getTableAlias();
-            //to solve case sensitive if necessary
-            splitColumn = JoinedFlatTable.getQuotedColExpressionInSourceDB(flatDesc, splitColRef);
-            splitDatabase = splitColRef.getColumnDesc().getTable().getDatabase().toLowerCase(Locale.ROOT);
-
-            //using sqoop to extract data from jdbc source and dump them to hive
-            String selectSql = JoinedFlatTable.generateSelectDataStatement(flatDesc, true, new String[] { partCol });
-            selectSql = escapeQuotationInSql(dataSource.convertSql(selectSql));
-
-            String hiveTable = flatDesc.getTableName();
-            String sqoopHome = config.getSqoopHome();
-            String filedDelimiter = config.getJdbcSourceFieldDelimiter();
-            int mapperNum = config.getSqoopMapperNum();
-
-            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM `%s`.%s as `%s`", splitColumn, splitColumn,
-                    splitDatabase, splitTable, splitTableAlias);
-            bquery = dataSource.convertSql(bquery);
-            if (partitionDesc.isPartitioned()) {
-                SegmentRange segRange = flatDesc.getSegRange();
-                if (segRange != null && !segRange.isInfinite()) {
-                    if (partitionDesc.getPartitionDateColumnRef().getTableAlias().equals(splitTableAlias)
-                            && (partitionDesc.getPartitionTimeColumnRef() == null || partitionDesc
-                            .getPartitionTimeColumnRef().getTableAlias().equals(splitTableAlias))) {
-                        String quotedPartCond = FlatTableSqlQuoteUtils.quoteIdentifierInSqlExpr(flatDesc,
-                                partitionDesc.getPartitionConditionBuilder().buildDateRangeCondition(partitionDesc,
-                                        flatDesc.getSegment(), segRange),
-                                "`");
-                        bquery += " WHERE " + quotedPartCond;
-                    }
-                }
-            }
-            bquery = escapeQuotationInSql(bquery);
-
-            splitColumn = escapeQuotationInSql(dataSource.convertColumn(splitColumn, FlatTableSqlQuoteUtils.QUOTE));
-
-            String cmd = StringUtils.format(
-                    "--connect \"%s\" --driver %s --username %s --password %s --query \"%s AND \\$CONDITIONS\" "
-                            + "--target-dir %s/%s --split-by %s --boundary-query \"%s\" --null-string '' "
-                            + "--fields-terminated-by '%s' --num-mappers %d",
-                    dataSource.getJdbcUrl(), dataSource.getJdbcDriver(), dataSource.getJdbcUser(),
-                    dataSource.getJdbcPassword(), selectSql, jobWorkingDir, hiveTable, splitColumn, bquery,
-                    filedDelimiter, mapperNum);
-            logger.debug("sqoop cmd: {}", cmd);
-
-            SqoopCmdStep step = new SqoopCmdStep();
-            step.setCmd(cmd);
-            step.setName(ExecutableConstants.STEP_NAME_SQOOP_TO_FLAT_HIVE_TABLE);
-            return step;
+        public IMRInput.IMRTableInputFormat getFlatTableInputFormat() {
+            return new HiveMRInput.HiveTableInputFormat(getIntermediateTableIdentity());
         }
     }
+
 }

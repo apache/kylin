@@ -15,24 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
-package org.apache.kylin.source.hive;
+package org.apache.kylin.source.jdbc;
 
 import org.apache.kylin.engine.spark.ISparkInput;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class HiveSparkInput extends HiveInputBase implements ISparkInput {
-
-    @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(HiveSparkInput.class);
+public class JdbcHiveSparkInput extends JdbcHiveInputBase implements ISparkInput {
 
     @Override
     public IBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-        return new SparkBatchCubingInputSide(flatDesc);
+        return new JdbcSparkBatchCubingInputSide(flatDesc);
     }
 
     @Override
@@ -45,9 +39,9 @@ public class HiveSparkInput extends HiveInputBase implements ISparkInput {
         };
     }
 
-    public static class SparkBatchCubingInputSide extends BaseBatchCubingInputSide implements ISparkBatchCubingInputSide {
+    public static class JdbcSparkBatchCubingInputSide extends JdbcBaseBatchCubingInputSide implements ISparkBatchCubingInputSide {
 
-        public SparkBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+        public JdbcSparkBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
             super(flatDesc);
         }
     }

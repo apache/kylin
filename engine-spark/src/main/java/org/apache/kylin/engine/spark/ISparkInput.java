@@ -18,20 +18,12 @@
 
 package org.apache.kylin.engine.spark;
 
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.engine.mr.IInput;
 
 /**
  * Any ISource that wishes to serve as input of MapReduce build engine must adapt to this interface.
  */
-public interface ISparkInput {
-
-    /** Return a helper to participate in batch cubing job flow. */
-    public ISparkBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc);
-
-    /** Return a helper to participate in batch cubing merge job flow. */
-    public ISparkBatchMergeInputSide getBatchMergeInputSide(ISegment seg);
+public interface ISparkInput extends IInput {
 
     /**
      * Participate the batch cubing flow as the input side. Responsible for creating
@@ -42,19 +34,11 @@ public interface ISparkInput {
      * - Phase 3: Build Cube (with FlatTableInputFormat)
      * - Phase 4: Update Metadata & Cleanup
      */
-    public interface ISparkBatchCubingInputSide {
+    public interface ISparkBatchCubingInputSide extends IBatchCubingInputSide {
 
-        /** Add step that creates an intermediate flat table as defined by CubeJoinedFlatTableDesc */
-        public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow);
-
-        /** Add step that does necessary clean up, like delete the intermediate flat table */
-        public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
     }
 
-    public interface ISparkBatchMergeInputSide {
-
-        /** Add step that executes before merge dictionary and before merge cube. */
-        public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow);
+    public interface ISparkBatchMergeInputSide extends IBatchMergeInputSide {
 
     }
 }
