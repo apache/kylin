@@ -60,7 +60,7 @@ public class JdbcHiveMRInputTest extends TestBase {
         CubeSegment seg = cubeManager.appendSegment(cubeManager.getCube(cubeDesc.getName()),
                 new SegmentRange.TSRange(System.currentTimeMillis() - 100L, System.currentTimeMillis() + 100L));
         CubeJoinedFlatTableDesc flatDesc = new CubeJoinedFlatTableDesc(seg);
-        JdbcHiveMRInput.BatchCubingInputSide inputSide = (JdbcHiveMRInput.BatchCubingInputSide) input
+        JdbcHiveMRInput.JdbcMRBatchCubingInputSide inputSide = (JdbcHiveMRInput.JdbcMRBatchCubingInputSide) input
                 .getBatchCubingInputSide(flatDesc);
 
         AbstractExecutable executable = new MockInputSide(flatDesc, inputSide).createSqoopToFlatHiveStep("/tmp",
@@ -86,7 +86,7 @@ public class JdbcHiveMRInputTest extends TestBase {
         CubeSegment seg = cubeManager.appendSegment(cubeManager.getCube(cubeDesc.getName()),
                 new SegmentRange.TSRange(0L, Long.MAX_VALUE));
         CubeJoinedFlatTableDesc flatDesc = new CubeJoinedFlatTableDesc(seg);
-        JdbcHiveMRInput.BatchCubingInputSide inputSide = (JdbcHiveMRInput.BatchCubingInputSide) input
+        JdbcHiveMRInput.JdbcMRBatchCubingInputSide inputSide = (JdbcHiveMRInput.JdbcMRBatchCubingInputSide) input
                 .getBatchCubingInputSide(flatDesc);
 
         AbstractExecutable executable = new MockInputSide(flatDesc, inputSide).createSqoopToFlatHiveStep("/tmp",
@@ -111,7 +111,7 @@ public class JdbcHiveMRInputTest extends TestBase {
         CubeSegment seg = cubeManager.appendSegment(cubeManager.getCube(cubeDesc.getName()),
                 new SegmentRange.TSRange(System.currentTimeMillis() - 100L, System.currentTimeMillis() + 100L));
         CubeJoinedFlatTableDesc flatDesc = new CubeJoinedFlatTableDesc(seg);
-        JdbcHiveMRInput.BatchCubingInputSide inputSide = (JdbcHiveMRInput.BatchCubingInputSide) input
+        JdbcHiveMRInput.JdbcMRBatchCubingInputSide inputSide = (JdbcHiveMRInput.JdbcMRBatchCubingInputSide) input
                 .getBatchCubingInputSide(flatDesc);
 
         AbstractExecutable executable = new MockInputSide(flatDesc, inputSide).createSqoopToFlatHiveStep("/tmp",
@@ -127,10 +127,10 @@ public class JdbcHiveMRInputTest extends TestBase {
         source.close();
     }
 
-    private static class MockInputSide extends JdbcHiveMRInput.BatchCubingInputSide {
-        JdbcHiveMRInput.BatchCubingInputSide input;
+    private static class MockInputSide extends JdbcHiveMRInput.JdbcMRBatchCubingInputSide {
+        JdbcHiveMRInput.JdbcMRBatchCubingInputSide input;
 
-        public MockInputSide(IJoinedFlatTableDesc flatDesc, JdbcHiveMRInput.BatchCubingInputSide input) {
+        public MockInputSide(IJoinedFlatTableDesc flatDesc, JdbcHiveMRInput.JdbcMRBatchCubingInputSide input) {
             super(flatDesc, input.getDataSource());
             this.input = input;
         }

@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.IMRInput;
+import org.apache.kylin.engine.spark.ISparkInput;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.IReadableTable;
@@ -44,6 +45,8 @@ public class JdbcSource implements ISource {
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
         if (engineInterface == IMRInput.class) {
             return (I) new JdbcHiveMRInput();
+        } else if (engineInterface == ISparkInput.class) {
+            return (I) new JdbcHiveSparkInput();
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }
