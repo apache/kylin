@@ -65,4 +65,12 @@ public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
         return 8 * capacity / 4;
     }
 
+    public TopNAggregator copy() {
+        TopNAggregator result = new TopNAggregator();
+        result.capacity = this.capacity;
+        TopNCounter<ByteArray> cpCounter = sum.copy();
+        result.sum = cpCounter;
+        return result;
+    }
+
 }

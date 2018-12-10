@@ -31,9 +31,9 @@ public class TimeUtil {
     }
 
     private static TimeZone gmt = TimeZone.getTimeZone("GMT");
-    private static long ONE_MINUTE_TS = 60 * 1000L;
-    private static long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;
-    private static long ONE_DAY_TS = 24 * ONE_HOUR_TS;
+    public static long ONE_MINUTE_TS = 60 * 1000L;
+    public static long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;
+    public static long ONE_DAY_TS = 24 * ONE_HOUR_TS;
 
     public static long getMinuteStart(long ts) {
         return ts / ONE_MINUTE_TS * ONE_MINUTE_TS;
@@ -80,6 +80,36 @@ public class TimeUtil {
         int year = calendar.get(Calendar.YEAR);
         calendar.clear();
         calendar.set(year, 0, 1);
+        return calendar.getTimeInMillis();
+    }
+
+    public static long getWeekEnd(long ts) {
+        Calendar calendar = Calendar.getInstance(gmt, Locale.ROOT);
+        calendar.setTimeInMillis(getWeekStart(ts));
+        calendar.add(Calendar.DAY_OF_WEEK, 7);
+        return calendar.getTimeInMillis();
+    }
+
+    public static long getMonthEnd(long ts) {
+        Calendar calendar = Calendar.getInstance(gmt, Locale.ROOT);
+        calendar.setTimeInMillis(ts);
+        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONDAY), calendar.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+        calendar.set(Calendar.HOUR_OF_DAY, 24);
+        return calendar.getTimeInMillis();
+    }
+
+    public static long getQuarterEnd(long ts) {
+        Calendar calendar = Calendar.getInstance(gmt, Locale.ROOT);
+        calendar.setTimeInMillis(getQuarterStart(ts));
+        calendar.add(Calendar.MONTH, 3);
+        return calendar.getTimeInMillis();
+    }
+
+    public static long getYearEnd(long ts) {
+        Calendar calendar = Calendar.getInstance(gmt, Locale.ROOT);
+        calendar.setTimeInMillis(getYearStart(ts));
+        calendar.add(Calendar.YEAR, 1);
         return calendar.getTimeInMillis();
     }
 

@@ -130,6 +130,13 @@ public class ProjectManager {
         }
     }
 
+    public void reloadAll() throws IOException {
+        try (AutoLock lock = prjMapLock.lockForWrite()) {
+            crud.reloadAll();
+            clearL2Cache(null);
+        }
+    }
+
     public List<ProjectInstance> listAllProjects() {
         try (AutoLock lock = prjMapLock.lockForRead()) {
             return new ArrayList<ProjectInstance>(projectMap.values());

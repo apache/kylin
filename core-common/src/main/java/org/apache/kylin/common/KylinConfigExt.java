@@ -55,7 +55,7 @@ public class KylinConfigExt extends KylinConfig {
         this.overrides = BCC.check(overrides);
     }
 
-    protected String getOptional(String prop, String dft) {
+    public String getOptional(String prop, String dft) {
         String value = overrides.get(prop);
         if (value != null)
             return   StrSubstitutor.replace(value, System.getenv());

@@ -223,6 +223,12 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
         return counters;
     }
 
+    public TopNCounter<T> copy() {
+        TopNCounter result = new TopNCounter(capacity);
+        result.counterMap = Maps.newHashMap(counterMap);
+        return result;
+    }
+
     @Override
     public Iterator<Counter<T>> iterator() {
         if (this.descending == true) {
