@@ -44,6 +44,9 @@
         <li class="{{cube.visiblePage=='planner'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask)) && isShowCubeplanner">
             <a href="" ng-click="cube.visiblePage='planner';getCubePlanner(cube);">Planner</a>
         </li>
+        <li class="{{cube.visiblePage=='streaming'? 'active':''}}" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask)) && cube.detail.streamingV2">
+            <a href="" ng-click="cube.visiblePage='streaming';getStreamingInfo(cube)">Streaming</a>
+       </li>
     </ul>
 
     <div class="cube-detail" ng-if="!cube.visiblePage || cube.visiblePage=='metadata'">
@@ -172,5 +175,118 @@
             </div>
         </div>
     </div>
+
+    <div class="cube-detail" ng-if="cube.visiblePage=='streaming'">
+        <div style="padding: 15px; color: #212121;">
+            <div class="row" ng-repeat="(rsId, replicaSet) in replicaSets" style="padding-left: 10px; padding-right: 10px;">
+                <div class="col-sm-1" style="text-align: center; background-color: #f5f5f5; border: 1px solid #ffffff; height: 100px; padding-top: 30px; padding-bottom: 30px; color: #455A64;">
+                    <span>Replica Set ID: {{rsId}}</span>
+                </div>
+
+                <div class="col-sm-11" style="padding-left: 0px; padding-right: 0px;">
+                    <div class="cube-receiver-stats" ng-class="receiverStats.style" ng-repeat="(node, receiverStats) in replicaSet" ng-click="nodeStatsDetail(node, receiverStats)">
+                        <div class="col-sm-12 node-info" ng-class="{'text-red':receiverStats.receiver_state != 'HEALTHY'}">
+                            {{node}}
+                        </div>
+                        <div class="col-sm-12 rate-metric" ng-if="receiverStats.partition_consume_stats">
+                            {{receiverStats.consumer_info.one_min_rate | number:0}} <span class="unit">msg/s</span>
+                        </div>
+                        <div class="col-sm-12 rate-metric" ng-if="!receiverStats.partition_consume_stats">
+                            N/A
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-2 col-sm-offset-1 detail-metric">
+                                5'
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                15'
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                avg
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                consume
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                ingest
+                            </div>
+                        </div>
+                        <div class="row" ng-if="receiverStats.partition_consume_stats">
+                            <div class="col-sm-2 col-sm-offset-1 detail-metric">
+                                {{receiverStats.consumer_info.five_min_rate | number:0}}<span>msg/s</span>
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                {{receiverStats.consumer_info.fifteen_min_rate | number:0}}<span>msg/s</span>
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                {{receiverStats.consumer_info.avg_rate | number:0}}<span>msg/s</span>
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                {{receiverStats.consumer_info.total_consume}}
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                {{receiverStats.total_ingest}}
+                            </div>
+                        </div>
+                        <div class="row" ng-if="!receiverStats.partition_consume_stats">
+                            <div class="col-sm-2 col-sm-offset-1 detail-metric">
+                                N/A
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                N/A
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                N/A
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                N/A
+                            </div>
+                            <div class="col-sm-2 detail-metric">
+                                {{receiverStats.total_ingest || 'N/A'}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 </div>
 
+<script type="text/ng-template" id="nodeStatsDetail.html">
+    <div class="modal-header">
+        <div class="box-header">
+            <h3 class="box-title">{{node}}</h3>
+            <div class="box-tools pull-right">
+                <button type="button" class="btn btn-box-tool" ng-click="cancel()"><i class="fa fa-times"></i></button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-md-offset-1 col-md-3 text-right">Latest Event Time</div>
+            <div class="col-md-7">{{receiverStats.latest_event_time ?  (receiverStats.latest_event_time | reverseToGMT0) : ''}}</div>
+        </div>
+        <div class="row">
+            <div class="col-md-offset-1 col-md-3 text-right">Latest Event Ingest Time</div>
+            <div class="col-md-7">{{receiverStats.latest_event_ingest_time ? (receiverStats.latest_event_ingest_time | reverseToGMT0) : ''}}</div>
+        </div>
+        <div class="row">
+            <div class="col-md-offset-1 col-md-3 text-right">Segments</div>
+            <div class="col-md-7">
+                <!-- TODO add color for segment & partition-->
+                <a href="javascript:void(0);" ng-repeat="(segmentName, segmentInfo) in receiverStats.segment_stats" kylinpopover placement="top" class="segment" title="Segment Info" trigger="focus" content="segment name: {{segmentName}}</br>segment state: {{segmentInfo.segment_state}}</br>fragment number: {{segmentInfo.store_stats.num_fragments}}</br>row number in memory: {{segmentInfo.store_stats.num_rows_in_mem}}</br>latest event latency: {{segmentInfo.latest_event_latency}}ms</br>latest event time: {{!!segmentInfo.latest_event_time ? (segmentInfo.latest_event_time | reverseToGMT0) : ''}}</br>segement create time: {{segmentInfo.segment_create_time | reverseToGMT0}}</br>last update time: {{segmentInfo.segment_last_update_time | reverseToGMT0}}">
+                    <i class="fa fa-database" style="font-size: 1.5em; color: #86bad8; margin-right: 5px;" ng-class="{'active': segmentInfo.segment_state === 'ACTIVE'}"></i>
+                </a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-offset-1 col-md-3 text-right">Partitions</div>
+            <div class="col-md-7" ng-if="receiverStats.partition_consume_stats">
+                <a href="javascript:void(0);" ng-repeat="partitionInfo in receiverStats.partition_consume_stats" kylinpopover placement="top" title="Partition Info" trigger="focus" content="Partition Id: {{partitionInfo.partition_id}}</br>Offset Info: {{partitionInfo.offset_info}}</br>1 Minute Rate: {{partitionInfo.one_min_rate | number:0}} msg/s</br>5 Minute Rate: {{partitionInfo.five_min_rate | number:0}} msg/s</br>15 Minute Rate: {{partitionInfo.fifteen_min_rate | number:0}} msg/s</br>AVG Rate: {{partitionInfo.avg_rate | number:0}} msg/s</br>Total Consume: {{partitionInfo.total_consume}}">
+                    <i class="fa fa-list-ul" style="font-size:1.5em; color:#3c8dbc; margin-right: 5px;"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</script>

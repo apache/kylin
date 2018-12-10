@@ -32,6 +32,9 @@
         <li>
           <a data-toggle="tab" ng-if="tableModel.selectedSrcTable.source_type==1" href="#streaming">Streaming Cluster</a>
         </li>
+         <li>
+          <a data-toggle="tab" ng-if="values(tableConfig.streamingSourceType).indexOf(tableModel.selectedSrcTable.source_type) > -1" href="#streamingV2">Streaming Cluster</a>
+        </li>
         <li>
           <a data-toggle="tab"  href="#access">Access</a>
         </li>
@@ -172,6 +175,32 @@
 
           <div  ng-include="'partials/cubeDesigner/streamingConfig.html'" ng-init="state.mode='view'"></div>
         </div>
+
+        <!--streamingV2-->
+        <div id="streamingV2" ng-if="values(tableConfig.streamingSourceType).indexOf(tableModel.selectedSrcTable.source_type) > -1" class="tab-pane" ng-controller="StreamConfigDisplayCtrl">
+          <div class="table-responsive">
+            <table class="table">
+              <tbody>
+                <tr>
+                  <th style="width:20%">Type</th>
+                  <td ng-if="tableModel.selectedSrcTable.source_type === tableConfig.streamingSourceType.kafka">Kafka</td>
+                  <td ng-if="tableModel.selectedSrcTable.source_type === tableConfig.streamingSourceType.kafka_hive">Kafka Hive Lambda</td>
+                </tr>
+                <tr>
+                  <th>Topic</th>
+                  <td>{{currentStreamingConfig.properties.topic}}</td>
+                </tr>
+                <tr ng-if="tableModel.selectedSrcTable.source_type === tableConfig.streamingSourceType.kafka || tableModel.selectedSrcTable.source_type === tableConfig.streamingSourceType.kafka_hive">
+                  <th>
+                    Bootstrap Servers
+                  </th>
+                  <td>{{currentStreamingConfig.properties['bootstrap.servers']}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
        <!--access-->
         <div id="access" class="tab-pane">
 

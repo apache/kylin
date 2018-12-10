@@ -1,0 +1,79 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+<form class="form-horizontal" name="kafka_config_from" novalidate ng-if="tableConfig.streamingSourceType.kafka === tableData.source_type">
+  <div class="modal-header">
+    <div class="box-header">
+      <h3 class="box-title">Kafka Config</h3>
+      <div class="box-tools pull-right">
+        <button type="button" class="btn btn-box-tool" ng-click="cancel()"><i class="fa fa-times"></i></button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-body streaming-source">
+    <div class="form-group required row">
+      <label for="topic" class="col-sm-3 control-label font-color-default">Topic</label>
+      <div class="col-sm-6">
+        <input type="text" class="form-control" id="topic" ng-model="streamingConfig.properties.topic" name="topic" placeholder="Input Kafka Topic" required autofocus>
+        <small class="help-block" ng-show="kafka_config_from.topic.$error.required && kafka_config_from.topic.$dirty">
+          Topic is empty
+        </small>
+      </div>
+    </div>
+    <div class="form-group required row">
+      <label class="col-sm-3 control-label font-color-default">Bootstrap Servers</label>
+      <div class="col-sm-9">
+        <div class="row">
+          <div class="col-sm-5 font-color-default text-center" style="font-weight:bolder;">Host</div>
+          <div class="col-sm-3 font-color-default text-center" style="font-weight:bolder;">Port</div>
+          <div class="col-sm-2 font-color-default text-center" style="font-weight:bolder;">Action</div>
+        </div>
+        <div ng-repeat="bootstrapServer in streamingConfig.properties.bootstrapServers track by $index" class="row"  style="margin-top:5px;">
+          <div class="col-sm-5">
+            <input type="text" class="form-control" ng-model="bootstrapServer.host" name="host" placeholder="Enter Bootstrap Server Host" required autofocus>
+            <small class="help-block" ng-show="kafka_config_from.host.$error.required && kafka_config_from.host.$dirty">
+              Host is empty
+            </small>
+          </div>
+          <div class="col-sm-3">
+            <input type="number" class="form-control" ng-model="bootstrapServer.port" name="port" placeholder="Enter Bootstrap Server Port" required>
+            <small class="help-block" ng-show="kafka_config_from.port.$error.required && kafka_config_from.port.$dirty">
+              Port is empty
+            </small>
+          </div>
+          <div class="col-sm-2 text-center">
+            <i class="fa fa-minus" style="margin-top:10px;cursor:pointer;" ng-click="removeBootstrapServer($index)"></i>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-offset-8 col-sm-2 text-center">
+            <i class="fa fa-plus" style="margin-top:10px;cursor:pointer;" ng-click="addBootstrapServer()"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <div class="row">
+      <div class="col-sm-4 col-sm-offset-8">
+        <button id="nextButton" class="btn btn-success btn-next"  ng-click="nextStep()"  ng-disabled="kafka_config_from.topic.$error.required || bootstrapServerValidation(streamingConfig.properties.bootstrapServers)">
+          Next <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
