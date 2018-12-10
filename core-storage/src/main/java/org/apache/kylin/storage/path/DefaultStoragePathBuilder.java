@@ -34,7 +34,6 @@ public class DefaultStoragePathBuilder implements IStoragePathBuilder {
     @Override
     public String getJobRealizationRootPath(CubeSegment cubeSegment, String jobId) {
         String jobWorkingDir = getJobWorkingDir(cubeSegment.getConfig().getHdfsWorkingDirectory(), jobId);
-
         return jobWorkingDir + SLASH + cubeSegment.getRealization().getName();
     }
 

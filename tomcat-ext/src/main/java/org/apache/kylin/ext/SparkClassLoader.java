@@ -159,11 +159,11 @@ public class SparkClassLoader extends URLClassLoader {
             // Check whether the class has already been loaded:
             Class<?> clasz = findLoadedClass(name);
             if (clasz != null) {
-                logger.debug("Class " + name + " already loaded");
+                logger.trace("Class " + name + " already loaded");
             } else {
                 try {
                     // Try to find this class using the URLs passed to this ClassLoader
-                    logger.debug("Finding class: " + name);
+                    logger.trace("Finding class: " + name);
                     clasz = super.findClass(name);
                     if (clasz == null) {
                         logger.debug("cannot find class" + name);

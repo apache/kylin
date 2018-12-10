@@ -21,7 +21,6 @@ package org.apache.kylin.storage.parquet.spark;
 import org.apache.kylin.ext.ClassLoaderUtils;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
-import org.apache.kylin.storage.parquet.spark.gtscanner.ParquetRecordGTScanner;
 import org.apache.kylin.storage.parquet.spark.gtscanner.ParquetRecordGTScanner4Cube;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +29,9 @@ public class SparkSubmitter {
     public static final Logger logger = LoggerFactory.getLogger(SparkSubmitter.class);
 
     public static IGTScanner submitParquetTask(GTScanRequest scanRequest, ParquetPayload payload) {
-
         Thread.currentThread().setContextClassLoader(ClassLoaderUtils.getSparkClassLoader());
         ParquetTask parquetTask = new ParquetTask(payload);
-
-        ParquetRecordGTScanner scanner = new ParquetRecordGTScanner4Cube(scanRequest.getInfo(), parquetTask.executeTask(), scanRequest,
-                payload.getMaxScanBytes());
-
-        return scanner;
+        return new ParquetRecordGTScanner4Cube(scanRequest.getInfo(),
+                parquetTask.executeTask(), scanRequest, payload.getMaxScanBytes());
     }
 }

@@ -186,8 +186,8 @@ public class CubeMigrationCLI {
     }
 
     private static void renameFoldersInHdfs(CubeInstance cube) {
-        IStoragePathBuilder srcPathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(srcConfig.getStorageSystemPathBuilderClz());
-        IStoragePathBuilder dstPathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(dstConfig.getStorageSystemPathBuilderClz());
+        IStoragePathBuilder srcPathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(srcConfig.getStoragePathBuilder());
+        IStoragePathBuilder dstPathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(dstConfig.getStoragePathBuilder());
         for (CubeSegment segment : cube.getSegments()) {
 
             String jobUuid = segment.getLastBuildJobID();

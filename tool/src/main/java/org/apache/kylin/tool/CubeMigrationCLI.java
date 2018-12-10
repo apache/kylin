@@ -230,8 +230,8 @@ public class CubeMigrationCLI extends AbstractApplication {
     }
 
     protected void renameFoldersInHdfs(CubeInstance cube) throws IOException {
-        IStoragePathBuilder srcPathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(srcConfig.getStorageSystemPathBuilderClz());
-        IStoragePathBuilder dstPathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(dstConfig.getStorageSystemPathBuilderClz());
+        IStoragePathBuilder srcPathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(srcConfig.getStoragePathBuilder());
+        IStoragePathBuilder dstPathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(dstConfig.getStoragePathBuilder());
 
         for (CubeSegment segment : cube.getSegments()) {
 

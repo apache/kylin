@@ -32,19 +32,13 @@ import org.apache.kylin.engine.mr.steps.HiveToBaseCuboidMapper;
 import org.apache.kylin.engine.mr.steps.InMemCuboidMapper;
 import org.apache.kylin.engine.mr.steps.NDCuboidMapper;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
-
 /**
- * Created by Yichen on 10/16/18.
  */
 public class ParquetMROutput implements IMROutput2 {
-
-    private static final Logger logger = LoggerFactory.getLogger(ParquetMROutput.class);
 
     @Override
     public IMRBatchCubingOutputSide2 getBatchCubingOutputSide(CubeSegment seg) {

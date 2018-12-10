@@ -115,10 +115,10 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
 
     public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
 
-        final protected IJoinedFlatTableDesc flatDesc;
-        final protected String flatTableDatabase;
-        final protected String hdfsWorkingDir;
-        final protected IStoragePathBuilder pathBuilder;
+        protected final IJoinedFlatTableDesc flatDesc;
+        protected final String flatTableDatabase;
+        protected final String hdfsWorkingDir;
+        protected final IStoragePathBuilder pathBuilder;
 
         List<String> hiveViewIntermediateTables = Lists.newArrayList();
 
@@ -127,7 +127,7 @@ public class HiveMRInput extends HiveInputBase implements IMRInput {
             this.flatDesc = flatDesc;
             this.flatTableDatabase = config.getHiveDatabaseForIntermediateTable();
             this.hdfsWorkingDir = config.getHdfsWorkingDirectory();
-            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(config.getStorageSystemPathBuilderClz());
+            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(config.getStoragePathBuilder());
         }
 
         @Override

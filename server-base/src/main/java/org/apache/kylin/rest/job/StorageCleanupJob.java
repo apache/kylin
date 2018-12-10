@@ -102,7 +102,7 @@ public class StorageCleanupJob extends AbstractApplication {
         this.defaultFs = defaultFs;
         this.hbaseFs = hbaseFs;
         this.executableManager = ExecutableManager.getInstance(config);
-        this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(config.getStorageSystemPathBuilderClz());
+        this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(config.getStoragePathBuilder());
     }
 
     public void setDelete(boolean delete) {

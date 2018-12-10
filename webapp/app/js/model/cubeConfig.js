@@ -29,7 +29,7 @@ KylinApp.constant('cubeConfig', {
   ],
   storageTypes: [
     {name: 'HBase', value: 2},
-    {name: 'Parquet', value: 4}
+    {name: 'Parquet (alpha)', value: 4}
   ],
   joinTypes: [
     {name: 'Left', value: 'left'},

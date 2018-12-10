@@ -111,7 +111,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         this.havingFilter = havingFilter;
 
         if (convertedFilter != null) {
-            this.filterPushDownSQL = convertedFilter.toSparkSqlFilter();
+            this.filterPushDownSQL = convertedFilter.toSQL();
             logger.info("--filterPushDownSQL--: {}", this.filterPushDownSQL);
         }
 

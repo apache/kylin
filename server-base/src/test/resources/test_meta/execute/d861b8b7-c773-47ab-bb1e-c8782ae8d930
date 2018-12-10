@@ -21,7 +21,7 @@
     "version" : "2.3.0.20500",
     "name" : "Redistribute Flat Hive Table",
     "tasks" : null,
-    "type" : "org.apache.kylin.source.hive.HiveMRInput$RedistributeFlatHiveTableStep",
+    "type" : "zorg.apache.kylin.source.hive.HiveMRInput$RedistributeFlatHiveTableStep",
     "params" : {
       "HiveInit" : "USE default;\n",
       "HiveRedistributeData" : "INSERT OVERWRITE TABLE kylin_intermediate_ss_a110ac52_9a91_49fe_944a_346d61e54115 SELECT * FROM kylin_intermediate_ss_a110ac52_9a91_49fe_944a_346d61e54115 DISTRIBUTE BY RAND();\n",

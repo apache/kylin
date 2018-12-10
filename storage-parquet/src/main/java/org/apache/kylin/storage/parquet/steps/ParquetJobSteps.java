@@ -22,7 +22,6 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.job.execution.AbstractExecutable;
 
-
 /**
  * Common steps for building cube into Parquet
  */
@@ -33,8 +32,7 @@ public abstract class ParquetJobSteps extends JobBuilderSupport {
     }
 
     public static String getCuboidOutputFileName(long cuboid, int partNum) {
-        String fileName = "cuboid_" + cuboid + "_part" + partNum;
-        return fileName;
+        return "cuboid_" + cuboid + "_part" + partNum;
     }
-    abstract public AbstractExecutable convertToParquetStep(String jobId);
+    public abstract AbstractExecutable convertToParquetStep(String jobId);
 }

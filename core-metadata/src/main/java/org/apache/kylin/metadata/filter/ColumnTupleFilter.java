@@ -163,7 +163,7 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public String toSparkSqlFilter() {
+    public String toSQL() {
         return this.columnRef.getTableAlias() + "_" + this.columnRef.getName();
     }
 }

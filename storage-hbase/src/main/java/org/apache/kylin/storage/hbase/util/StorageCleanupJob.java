@@ -187,7 +187,7 @@ public class StorageCleanupJob extends AbstractApplication {
     private void cleanUnusedHdfsFiles(Configuration conf) throws IOException {
         JobEngineConfig engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        IStoragePathBuilder pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(engineConfig.getConfig().getStorageSystemPathBuilderClz());
+        IStoragePathBuilder pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(engineConfig.getConfig().getStoragePathBuilder());
 
         FileSystem fs = HadoopUtil.getWorkingFileSystem(conf);
         List<String> allHdfsPathsNeedToBeDeleted = new ArrayList<String>();

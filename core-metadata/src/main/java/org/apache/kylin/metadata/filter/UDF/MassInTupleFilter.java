@@ -154,7 +154,7 @@ public class MassInTupleFilter extends FunctionTupleFilter {
     }
 
     @Override
-    public String toSparkSqlFilter() {
+    public String toSQL() {
         return "1=1";
     }
 

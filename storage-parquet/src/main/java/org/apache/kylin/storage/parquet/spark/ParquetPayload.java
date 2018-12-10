@@ -119,7 +119,7 @@ public class ParquetPayload {
         return storageType;
     }
 
-    static public class ParquetPayloadBuilder {
+    public static class ParquetPayloadBuilder {
         private byte[] gtScanRequest;
         private String gtScanRequestId;
         private String kylinProperties;
@@ -135,9 +135,6 @@ public class ParquetPayload {
         private long maxScanBytes;
         private long startTime;
         private int storageType;
-
-        public ParquetPayloadBuilder() {
-        }
 
         public ParquetPayloadBuilder setGtScanRequest(byte[] gtScanRequest) {
             this.gtScanRequest = gtScanRequest;

@@ -63,8 +63,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
-
-public class SparkCubeParquet extends AbstractApplication implements Serializable{
+public class SparkCubeParquet extends AbstractApplication implements Serializable {
 
     protected static final Logger logger = LoggerFactory.getLogger(SparkCubeParquet.class);
 
@@ -78,12 +77,12 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
             .isRequired(true).withDescription("Paqruet output path").create(BatchConstants.ARG_OUTPUT);
     public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
             .isRequired(true).withDescription("Cuboid files PATH").create(BatchConstants.ARG_INPUT);
-    public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUPUT).hasArg()
-            .isRequired(true).withDescription("Counter output path").create(BatchConstants.ARG_COUNTER_OUPUT);
+    public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUPUT)
+            .hasArg().isRequired(true).withDescription("Counter output path").create(BatchConstants.ARG_COUNTER_OUPUT);
 
     private Options options;
 
-    public SparkCubeParquet(){
+    public SparkCubeParquet() {
         options = new Options();
         options.addOption(OPTION_INPUT_PATH);
         options.addOption(OPTION_CUBE_NAME);
@@ -107,17 +106,18 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
         final String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
         final String counterPath = optionsHelper.getOptionValue(OPTION_COUNTER_PATH);
 
-        Class[] kryoClassArray = new Class[] { Class.forName("scala.reflect.ClassTag$$anon$1"), Text.class, Group.class};
+        Class[] kryoClassArray = new Class[] { Class.forName("scala.reflect.ClassTag$$anon$1"), Text.class,
+                Group.class };
 
-        SparkConf conf = new SparkConf().setAppName("Converting Parquet File for: " + cubeName + " segment " + segmentId);
+        SparkConf conf = new SparkConf()
+                .setAppName("Converting Parquet File for: " + cubeName + " segment " + segmentId);
         //serialization conf
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
         conf.set("spark.kryo.registrator", "org.apache.kylin.engine.spark.KylinKryoRegistrator");
         conf.set("spark.kryo.registrationRequired", "true").registerKryoClasses(kryoClassArray);
 
-
         KylinSparkJobListener jobListener = new KylinSparkJobListener();
-        try (JavaSparkContext sc = new JavaSparkContext(conf)){
+        try (JavaSparkContext sc = new JavaSparkContext(conf)) {
             sc.sc().addSparkListener(jobListener);
 
             HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(outputPath));
@@ -147,10 +147,10 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
             ParquetConvertor.generateTypeMap(baseCuboid, dimEncMap, cubeSegment.getCubeDesc(), colTypeMap, meaTypeMap);
             GroupWriteSupport.setSchema(schema, job.getConfiguration());
 
-            GenerateGroupRDDFunction groupPairFunction = new GenerateGroupRDDFunction(cubeName, cubeSegment.getUuid(), metaUrl, new SerializableConfiguration(job.getConfiguration()), colTypeMap, meaTypeMap);
+            GenerateGroupRDDFunction groupPairFunction = new GenerateGroupRDDFunction(cubeName, cubeSegment.getUuid(),
+                    metaUrl, new SerializableConfiguration(job.getConfiguration()), colTypeMap, meaTypeMap);
 
-
-            logger.info("Schema: {}", schema.toString());
+            logger.info("Schema: {}", schema);
 
             // Read from cuboid and save to parquet
             for (int level = 0; level <= totalLevels; level++) {
@@ -162,7 +162,8 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
             logger.info("HDFS: Number of bytes written={}", jobListener.metrics.getBytesWritten());
 
             Map<String, String> counterMap = Maps.newHashMap();
-            counterMap.put(ExecutableConstants.HDFS_BYTES_WRITTEN, String.valueOf(jobListener.metrics.getBytesWritten()));
+            counterMap.put(ExecutableConstants.HDFS_BYTES_WRITTEN,
+                    String.valueOf(jobListener.metrics.getBytesWritten()));
 
             // save counter to hdfs
             HadoopUtil.writeToSequenceFile(sc.hadoopConfiguration(), counterPath, counterMap);
@@ -170,10 +171,12 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
 
     }
 
-    protected void saveToParquet(JavaPairRDD<Text, Text> rdd, GenerateGroupRDDFunction groupRDDFunction, CubeSegment cubeSeg, String parquetOutput, int level, Job job, KylinConfig kylinConfig) throws IOException {
-        final CuboidToPartitionMapping cuboidToPartitionMapping = new CuboidToPartitionMapping(cubeSeg, kylinConfig, level);
+    protected void saveToParquet(JavaPairRDD<Text, Text> rdd, GenerateGroupRDDFunction groupRDDFunction,
+            CubeSegment cubeSeg, String parquetOutput, int level, Job job, KylinConfig kylinConfig) throws IOException {
+        final CuboidToPartitionMapping cuboidToPartitionMapping = new CuboidToPartitionMapping(cubeSeg, kylinConfig,
+                level);
 
-        logger.info("CuboidToPartitionMapping: {}", cuboidToPartitionMapping.toString());
+        logger.info("CuboidToPartitionMapping: {}", cuboidToPartitionMapping);
 
         String output = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(parquetOutput, level);
 
@@ -182,7 +185,8 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
         CustomParquetOutputFormat.setWriteSupportClass(job, GroupWriteSupport.class);
         CustomParquetOutputFormat.setCuboidToPartitionMapping(job, cuboidToPartitionMapping);
 
-        JavaPairRDD<Void, Group> groupRDD = rdd.partitionBy(new CuboidPartitioner(cuboidToPartitionMapping)).mapToPair(groupRDDFunction);
+        JavaPairRDD<Void, Group> groupRDD = rdd.partitionBy(new CuboidPartitioner(cuboidToPartitionMapping))
+                .mapToPair(groupRDDFunction);
 
         groupRDD.saveAsNewAPIHadoopDataset(job.getConfiguration());
     }
@@ -201,7 +205,7 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
 
         @Override
         public int getPartition(Object key) {
-            Text textKey = (Text)key;
+            Text textKey = (Text) key;
             return mapping.getPartitionByKey(textKey.getBytes());
         }
     }
@@ -210,16 +214,19 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
 
         @Override
         public Path getDefaultWorkFile(TaskAttemptContext context, String extension) throws IOException {
-            FileOutputCommitter committer = (FileOutputCommitter)this.getOutputCommitter(context);
+            FileOutputCommitter committer = (FileOutputCommitter) this.getOutputCommitter(context);
             TaskID taskId = context.getTaskAttemptID().getTaskID();
             int partition = taskId.getId();
 
-            CuboidToPartitionMapping mapping = CuboidToPartitionMapping.deserialize(context.getConfiguration().get(BatchConstants.ARG_CUBOID_TO_PARTITION_MAPPING));
+            CuboidToPartitionMapping mapping = CuboidToPartitionMapping
+                    .deserialize(context.getConfiguration().get(BatchConstants.ARG_CUBOID_TO_PARTITION_MAPPING));
 
-            return new Path(committer.getWorkPath(), getUniqueFile(context, mapping.getPartitionFilePrefix(partition)+ "-" + getOutputName(context), extension));
+            return new Path(committer.getWorkPath(), getUniqueFile(context,
+                    mapping.getPartitionFilePrefix(partition) + "-" + getOutputName(context), extension));
         }
 
-        public static void setCuboidToPartitionMapping(Job job, CuboidToPartitionMapping cuboidToPartitionMapping) throws IOException {
+        public static void setCuboidToPartitionMapping(Job job, CuboidToPartitionMapping cuboidToPartitionMapping)
+                throws IOException {
             String jsonStr = cuboidToPartitionMapping.serialize();
 
             job.getConfiguration().set(BatchConstants.ARG_CUBOID_TO_PARTITION_MAPPING, jsonStr);
@@ -227,7 +234,7 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
     }
 
     static class GenerateGroupRDDFunction implements PairFunction<Tuple2<Text, Text>, Void, Group> {
-        private volatile transient boolean initialized = false;
+        private transient volatile boolean initialized = false;
         private String cubeName;
         private String segmentId;
         private String metaUrl;
@@ -237,7 +244,9 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
 
         private transient ParquetConvertor convertor;
 
-        public GenerateGroupRDDFunction(String cubeName, String segmentId, String metaurl, SerializableConfiguration conf, Map<TblColRef, String> colTypeMap, Map<MeasureDesc, String> meaTypeMap) {
+        public GenerateGroupRDDFunction(String cubeName, String segmentId, String metaurl,
+                SerializableConfiguration conf, Map<TblColRef, String> colTypeMap,
+                Map<MeasureDesc, String> meaTypeMap) {
             this.cubeName = cubeName;
             this.segmentId = segmentId;
             this.metaUrl = metaurl;
@@ -253,9 +262,9 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
 
         @Override
         public Tuple2<Void, Group> call(Tuple2<Text, Text> tuple) throws Exception {
-            if (initialized == false) {
+            if (!initialized) {
                 synchronized (SparkCubeParquet.class) {
-                    if (initialized == false) {
+                    if (!initialized) {
                         init();
                         initialized = true;
                     }

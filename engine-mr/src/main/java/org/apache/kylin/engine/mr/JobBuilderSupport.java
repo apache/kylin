@@ -77,8 +77,8 @@ public class JobBuilderSupport {
         this.config = new JobEngineConfig(seg.getConfig());
         this.seg = seg;
         this.submitter = submitter;
-        String pathBuilderClz = seg.getConfig().getStorageSystemPathBuilderClz();
-        this.storagePathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(pathBuilderClz);
+        String pathBuilder = seg.getConfig().getStoragePathBuilder();
+        this.storagePathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(pathBuilder);
     }
 
     public MapReduceExecutable createFactDistinctColumnsStep(String jobId) {

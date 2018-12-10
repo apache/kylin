@@ -21,11 +21,11 @@ package org.apache.kylin.storage.path;
 import org.apache.kylin.cube.CubeSegment;
 
 public interface IStoragePathBuilder {
-    public static final String SLASH = "/";
+    String SLASH = "/";
 
-    public String getJobWorkingDir(String workingDir, String jobId);
+    String getJobWorkingDir(String workingDir, String jobId);
 
-    public String getJobRealizationRootPath(CubeSegment cubeSegment, String jobId);
+    String getJobRealizationRootPath(CubeSegment cubeSegment, String jobId);
 
-    public String getRealizationFinalDataPath(CubeSegment cubeSegment);
+    String getRealizationFinalDataPath(CubeSegment cubeSegment);
 }

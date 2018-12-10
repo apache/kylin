@@ -60,7 +60,7 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         try {
             config = new JobEngineConfig(context.getConfig());
-            pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(context.getConfig().getStorageSystemPathBuilderClz());
+            pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(context.getConfig().getStoragePathBuilder());
             List<String> toDeletePaths = getDeletePaths();
             dropHdfsPathOnCluster(toDeletePaths, HadoopUtil.getWorkingFileSystem());
 

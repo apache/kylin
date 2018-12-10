@@ -64,7 +64,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Yichen on 11/9/18.
  */
 public class ParquetConvertor {
     private static final Logger logger = LoggerFactory.getLogger(ParquetConvertor.class);
@@ -121,7 +120,7 @@ public class ParquetConvertor {
         int valueOffset = 0;
         for (int i = 0; i < valueLengths.length; ++i) {
             MeasureDesc measureDesc = measureDescs.get(i);
-            parseMeaValue(group, measureDesc, rawValue.getBytes(), valueOffset, valueLengths[i]);
+            parseMeasureValue(group, measureDesc, rawValue.getBytes(), valueOffset, valueLengths[i]);
             valueOffset += valueLengths[i];
         }
 
@@ -146,7 +145,7 @@ public class ParquetConvertor {
         }
     }
 
-    private void parseMeaValue(final Group group, final MeasureDesc measureDesc, final byte[] value, final int offset, final int length) throws IOException {
+    private void parseMeasureValue(final Group group, final MeasureDesc measureDesc, final byte[] value, final int offset, final int length) {
         if (value==null) {
             logger.error("value is null");
             return;
@@ -161,10 +160,10 @@ public class ParquetConvertor {
             case DATATYPE_DECIMAL:
                 BigDecimal decimal = serializer.deserialize(ByteBuffer.wrap(value, offset, length));
                 decimal = decimal.setScale(4);
-                group.append(measureDesc.getName(), Binary.fromByteArray(decimal.unscaledValue().toByteArray()));
+                group.append(measureDesc.getName(), Binary.fromReusedByteArray(decimal.unscaledValue().toByteArray()));
                 break;
             default:
-                group.append(measureDesc.getName(), Binary.fromByteArray(value, offset, length));
+                group.append(measureDesc.getName(), Binary.fromReusedByteArray(value, offset, length));
                 break;
         }
     }

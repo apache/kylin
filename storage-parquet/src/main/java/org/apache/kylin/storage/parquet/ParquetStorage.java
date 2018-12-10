@@ -47,7 +47,7 @@ public class ParquetStorage implements IStorage {
         } else if (engineInterface == IMROutput2.class) {
             return (I) new ParquetMROutput();
         } else{
-            throw new RuntimeException("Cannot adapt to " + engineInterface);
+            throw new UnsupportedOperationException("Cannot adapt to " + engineInterface);
         }
     }
 }

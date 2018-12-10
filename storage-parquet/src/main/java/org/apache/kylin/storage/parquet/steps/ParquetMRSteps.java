@@ -25,7 +25,6 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
 
 /**
- * Created by Yichen on 11/8/18.
  */
 public class ParquetMRSteps extends ParquetJobSteps{
     public ParquetMRSteps(CubeSegment seg) {

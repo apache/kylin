@@ -48,13 +48,12 @@ import java.io.IOException;
 
 
 /**
- * Created by Yichen on 11/9/18.
  */
 public class MRCubeParquetJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(MRCubeParquetJob.class);
 
-    final static String BY_LAYER_OUTPUT = "ByLayer";
+    public static final String BY_LAYER_OUTPUT = "ByLayer";
     private Options options;
 
     public MRCubeParquetJob(){
@@ -73,7 +72,7 @@ public class MRCubeParquetJob extends AbstractHadoopJob {
         final Path inputPath = new Path(getOptionValue(OPTION_INPUT_PATH));
         final Path outputPath = new Path(getOptionValue(OPTION_OUTPUT_PATH));
         final String cubeName = getOptionValue(OPTION_CUBE_NAME);
-        logger.info("CubeName: ", cubeName);
+        logger.info("CubeName: {}", cubeName);
         final String segmentId = optionsHelper.getOptionValue(OPTION_SEGMENT_ID);
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
@@ -94,13 +93,10 @@ public class MRCubeParquetJob extends AbstractHadoopJob {
         Cuboid baseCuboid = Cuboid.getBaseCuboid(cubeSegment.getCubeDesc());
 
         MessageType schema = ParquetConvertor.cuboidToMessageType(baseCuboid, dimEncMap, cubeSegment.getCubeDesc());
-        logger.info("Schema: {}", schema.toString());
+        logger.info("Schema: {}", schema);
 
         try {
-
             job.getConfiguration().set(BatchConstants.ARG_CUBOID_TO_PARTITION_MAPPING, jsonStr);
-
-
             addInputDirs(inputPath.toString(), job);
             FileOutputFormat.setOutputPath(job, outputPath);
 
@@ -145,7 +141,7 @@ public class MRCubeParquetJob extends AbstractHadoopJob {
             try {
                 mapping = CuboidToPartitionMapping.deserialize(conf.get(BatchConstants.ARG_CUBOID_TO_PARTITION_MAPPING));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new IllegalArgumentException(e);
             }
         }
 

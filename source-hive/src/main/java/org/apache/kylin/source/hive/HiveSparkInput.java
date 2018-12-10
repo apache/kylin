@@ -73,7 +73,7 @@ public class HiveSparkInput extends HiveInputBase implements ISparkInput {
             this.flatDesc = flatDesc;
             this.flatTableDatabase = config.getHiveDatabaseForIntermediateTable();
             this.hdfsWorkingDir = config.getHdfsWorkingDirectory();
-            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(config.getStorageSystemPathBuilderClz());
+            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(config.getStoragePathBuilder());
         }
 
         @Override

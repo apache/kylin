@@ -123,7 +123,7 @@ public class ExtractTupleFilter extends TupleFilter {
     }
 
     @Override
-    public String toSparkSqlFilter() {
+    public String toSQL() {
         return "1=1";
     }
 

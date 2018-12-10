@@ -31,7 +31,12 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
+import org.apache.kylin.measure.percentile.PercentileMeasureType;
+import org.apache.kylin.measure.raw.RawMeasureType;
+import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.spark.api.java.JavaRDD;
@@ -94,7 +99,7 @@ public class ParquetTask implements Serializable {
             String dataFolderName = request.getDataFolderName();
 
             String baseFolder = dataFolderName.substring(0, dataFolderName.lastIndexOf('/'));
-            String cuboidId = dataFolderName.substring(dataFolderName.lastIndexOf("/") + 1);
+            String cuboidId = dataFolderName.substring(dataFolderName.lastIndexOf('/') + 1);
             String prefix = "cuboid_" + cuboidId + "_";
 
             CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(request.getRealizationId());
@@ -117,11 +122,11 @@ public class ParquetTask implements Serializable {
                 pathBuilder.append(p.toString()).append(";");
             }
 
-            logger.info("Columnar path is " + pathBuilder.toString());
-            logger.info("Required Measures: " + StringUtils.join(request.getParquetColumns(), ","));
-            logger.info("Max GT length: " + request.getMaxRecordLength());
+            logger.info("Columnar path is {}", pathBuilder);
+            logger.info("Required Measures: {}", StringUtils.join(request.getParquetColumns(), ","));
+            logger.info("Max GT length: {}", request.getMaxRecordLength());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
@@ -138,14 +143,14 @@ public class ParquetTask implements Serializable {
             map.clear();
 
         } catch (IllegalAccessException | NoSuchFieldException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
     public Iterator<Object[]> executeTask() {
-        logger.info("Start to visit cube data with Spark SQL <<<<<<");
+        logger.debug("Start to visit cube data with Spark <<<<<<");
 
-        SQLContext sqlContext = new SQLContext(SparderEnv.getSparkSession().sparkContext());
+        SQLContext sqlContext = SparderEnv.getSparkSession().sqlContext();
 
         Dataset<Row> dataset = sqlContext.read().parquet(parquetPaths);
         ImmutableBitSet dimensions = scanRequest.getDimensions();
@@ -175,21 +180,17 @@ public class ParquetTask implements Serializable {
         // sort
         dataset = dataset.sort(getSortColumn(groupBy, mapping));
 
-        JavaRDD<Row> rowRDD = dataset.javaRDD();
-
-        JavaRDD<Object[]> objRDD = rowRDD.map(new Function<Row, Object[]>() {
-            @Override
-            public Object[] call(Row row) throws Exception {
-                Object[] objects = new Object[row.length()];
-                for (int i = 0; i < row.length(); i++) {
-                    objects[i] = row.get(i);
-                }
-                return objects;
+        JavaRDD<Object[]> objRDD = dataset.javaRDD().map((Function<Row, Object[]>) row -> {
+            Object[] objects = new Object[row.length()];
+            for (int i = 0; i < row.length(); i++) {
+                objects[i] = row.get(i);
             }
+            return objects;
         });
 
-        logger.info("partitions: {}", objRDD.getNumPartitions());
+        logger.debug("partitions: {}", objRDD.getNumPartitions());
 
+        // TODO: optimize the way to collect data.
         List<Object[]> result = objRDD.collect();
         return result.iterator();
     }
@@ -216,23 +217,23 @@ public class ParquetTask implements Serializable {
     private Column getAggColumn(String metName, String func, DataType dataType) {
         Column column;
         switch (func) {
-            case "SUM":
+            case FunctionDesc.FUNC_SUM:
                 column = sum(metName);
                 break;
-            case "MIN":
+            case FunctionDesc.FUNC_MIN:
                 column = min(metName);
                 break;
-            case "MAX":
+            case FunctionDesc.FUNC_MAX:
                 column = max(metName);
                 break;
-            case "COUNT":
+            case FunctionDesc.FUNC_COUNT:
                 column = sum(metName);
                 break;
-            case "TOP_N":
-            case "COUNT_DISTINCT":
-            case "EXTENDED_COLUMN":
-            case "PERCENTILE_APPROX":
-            case "RAW":
+            case TopNMeasureType.FUNC_TOP_N:
+            case FunctionDesc.FUNC_COUNT_DISTINCT:
+            case ExtendedColumnMeasureType.FUNC_EXTENDED_COLUMN:
+            case PercentileMeasureType.FUNC_PERCENTILE_APPROX:
+            case RawMeasureType.FUNC_RAW:
                 String udf = UdfManager.register(dataType, func);
                 column = callUDF(udf, col(metName));
                 break;

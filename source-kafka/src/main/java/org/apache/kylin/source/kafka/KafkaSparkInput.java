@@ -73,7 +73,7 @@ public class KafkaSparkInput extends KafkaInputBase implements ISparkInput {
             this.seg = seg;
             this.cubeDesc = seg.getCubeDesc();
             this.cubeName = seg.getCubeInstance().getName();
-            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(this.config.getStorageSystemPathBuilderClz());
+            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(this.config.getStoragePathBuilder());
         }
 
         @Override

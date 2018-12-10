@@ -46,11 +46,11 @@ public class HiveMRInputTest {
         try (SetAndUnsetThreadLocalConfig autoUnset = KylinConfig.setAndUnsetThreadLocalConfig(kylinConfig)) {
             when(kylinConfig.getHiveTableDirCreateFirst()).thenReturn(true);
             when(kylinConfig.getHdfsWorkingDirectory()).thenReturn("/tmp/kylin/");
-            when(kylinConfig.getStorageSystemPathBuilderClz()).thenReturn("org.apache.kylin.storage.path.DefaultStoragePathBuilder");
+            when(kylinConfig.getStoragePathBuilder()).thenReturn("org.apache.kylin.storage.path.DefaultStoragePathBuilder");
             DefaultChainedExecutable defaultChainedExecutable = mock(DefaultChainedExecutable.class);
             defaultChainedExecutable.setId(RandomUtil.randomUUID().toString());
 
-            String jobWorkingDir = HiveInputBase.getJobWorkingDir(defaultChainedExecutable, KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory(), (IStoragePathBuilder) ClassUtil.newInstance(KylinConfig.getInstanceFromEnv().getStorageSystemPathBuilderClz()));
+            String jobWorkingDir = HiveInputBase.getJobWorkingDir(defaultChainedExecutable, KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory(), (IStoragePathBuilder) ClassUtil.newInstance(KylinConfig.getInstanceFromEnv().getStoragePathBuilder()));
             jobWorkDirPath = new Path(jobWorkingDir);
             Assert.assertTrue(fileSystem.exists(jobWorkDirPath));
         } finally {

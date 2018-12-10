@@ -155,7 +155,7 @@ public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupl
     }
 
     @Override
-    public String toSparkSqlFilter() {
+    public String toSQL() {
         StringBuilder result = new StringBuilder("");
         switch (this.getOperator()) {
             case AND:
@@ -164,7 +164,7 @@ public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupl
                 String op = toSparkOpMap.get(this.getOperator());
                 int index = 0;
                 for (TupleFilter filter : this.getChildren()) {
-                    result.append(filter.toSparkSqlFilter());
+                    result.append(filter.toSQL());
                     if (index < this.getChildren().size() - 1) {
                         result.append(op);
                     }

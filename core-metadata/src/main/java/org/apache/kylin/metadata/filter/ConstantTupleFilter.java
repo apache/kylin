@@ -114,7 +114,7 @@ public class ConstantTupleFilter extends TupleFilter {
     }
 
     @Override
-    public String toSparkSqlFilter() {
+    public String toSQL() {
         if (this.equals(TRUE)) {
             return "true";
         } else if (this.equals(FALSE)) {

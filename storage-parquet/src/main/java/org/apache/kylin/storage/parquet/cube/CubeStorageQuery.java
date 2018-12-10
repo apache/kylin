@@ -20,21 +20,12 @@ package org.apache.kylin.storage.parquet.cube;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.metadata.tuple.TupleInfo;
-import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryBase;
 
 public class CubeStorageQuery extends GTCubeStorageQueryBase {
 
     public CubeStorageQuery(CubeInstance cube) {
         super(cube);
-    }
-
-    @Override
-    public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
-        return super.search(context, sqlDigest, returnTupleInfo);
     }
 
     @Override

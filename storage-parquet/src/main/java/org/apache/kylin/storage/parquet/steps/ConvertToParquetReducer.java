@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Created by Yichen on 11/14/18.
  */
 public class ConvertToParquetReducer extends KylinReducer<Text, Text, NullWritable, Group> {
     private ParquetConvertor convertor;
@@ -51,7 +50,7 @@ public class ConvertToParquetReducer extends KylinReducer<Text, Text, NullWritab
     private CubeSegment cubeSegment;
 
     @Override
-    protected void doSetup(Context context) throws IOException, InterruptedException {
+    protected void doSetup(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         super.bindCurrentConfiguration(conf);
         mos = new MultipleOutputs(context);
@@ -68,9 +67,9 @@ public class ConvertToParquetReducer extends KylinReducer<Text, Text, NullWritab
         SerializableConfiguration sConf = new SerializableConfiguration(conf);
 
         Map<TblColRef, String> colTypeMap = Maps.newHashMap();
-        Map<MeasureDesc, String> meaTypeMap = Maps.newHashMap();
-        ParquetConvertor.generateTypeMap(baseCuboid, dimEncMap, cube.getDescriptor(), colTypeMap, meaTypeMap);
-        convertor = new ParquetConvertor(cubeName, segmentId, kylinConfig, sConf, colTypeMap, meaTypeMap);
+        Map<MeasureDesc, String> measureTypeMap = Maps.newHashMap();
+        ParquetConvertor.generateTypeMap(baseCuboid, dimEncMap, cube.getDescriptor(), colTypeMap, measureTypeMap);
+        convertor = new ParquetConvertor(cubeName, segmentId, kylinConfig, sConf, colTypeMap, measureTypeMap);
     }
 
     @Override
@@ -80,14 +79,10 @@ public class ConvertToParquetReducer extends KylinReducer<Text, Text, NullWritab
         int partitionId = context.getTaskAttemptID().getTaskID().getId();
 
         for (Text value : values) {
-            try {
-                Group group = convertor.parseValueToGroup(key, value);
-                String output = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel("", layerNumber)
-                        + "/" + ParquetJobSteps.getCuboidOutputFileName(cuboidId, partitionId);
-                mos.write(MRCubeParquetJob.BY_LAYER_OUTPUT, null, group, output);
-            } catch (IOException e){
-                throw new IOException(e);
-            }
+            Group group = convertor.parseValueToGroup(key, value);
+            String output = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel("", layerNumber) + "/"
+                    + ParquetJobSteps.getCuboidOutputFileName(cuboidId, partitionId);
+            mos.write(MRCubeParquetJob.BY_LAYER_OUTPUT, null, group, output);
         }
     }
 

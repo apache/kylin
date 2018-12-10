@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by Yichen on 11/12/18.
  */
 public class CuboidToPartitionMapping implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(CuboidToPartitionMapping.class);
@@ -58,31 +57,26 @@ public class CuboidToPartitionMapping implements Serializable {
 
     public CuboidToPartitionMapping(CubeSegment cubeSeg, KylinConfig kylinConfig) throws IOException {
         cuboidPartitions = Maps.newHashMap();
-
         Set<Long> allCuboidIds = cubeSeg.getCuboidScheduler().getAllCuboidIds();
-
-        CalculatePartitionId(cubeSeg, kylinConfig, allCuboidIds);
+        calculatePartitionId(cubeSeg, kylinConfig, allCuboidIds);
     }
 
     public CuboidToPartitionMapping(CubeSegment cubeSeg, KylinConfig kylinConfig, int level) throws IOException {
         cuboidPartitions = Maps.newHashMap();
-
         List<Long> layeredCuboids = cubeSeg.getCuboidScheduler().getCuboidsByLayer().get(level);
-
-        CalculatePartitionId(cubeSeg, kylinConfig, layeredCuboids);
+        calculatePartitionId(cubeSeg, kylinConfig, layeredCuboids);
     }
 
-    private void CalculatePartitionId(CubeSegment cubeSeg, KylinConfig kylinConfig, Collection<Long> cuboidIds) throws IOException {
+    private void calculatePartitionId(CubeSegment cubeSeg, KylinConfig kylinConfig, Collection<Long> cuboidIds)
+            throws IOException {
         int position = 0;
         CubeStatsReader cubeStatsReader = new CubeStatsReader(cubeSeg, kylinConfig);
         for (Long cuboidId : cuboidIds) {
             int partition = estimateCuboidPartitionNum(cuboidId, cubeStatsReader, kylinConfig);
             List<Integer> positions = Lists.newArrayListWithCapacity(partition);
-
             for (int i = position; i < position + partition; i++) {
                 positions.add(i);
             }
-
             cuboidPartitions.put(cuboidId, positions);
             position = position + partition;
         }
@@ -95,7 +89,9 @@ public class CuboidToPartitionMapping implements Serializable {
     }
 
     public static CuboidToPartitionMapping deserialize(String jsonMapping) throws IOException {
-        Map<Long, List<Integer>> cuboidPartitions = JsonUtil.readValue(jsonMapping, new TypeReference<Map<Long, List<Integer>>>() {});
+        Map<Long, List<Integer>> cuboidPartitions = JsonUtil.readValue(jsonMapping,
+                new TypeReference<Map<Long, List<Integer>>>() {
+                });
         return new CuboidToPartitionMapping(cuboidPartitions);
     }
 
@@ -137,9 +133,7 @@ public class CuboidToPartitionMapping implements Serializable {
     public String getPartitionFilePrefix(int partition) {
         long cuboid = getCuboidIdByPartition(partition);
         int partNum = partition % getPartitionNumForCuboidId(cuboid);
-        String prefix = ParquetJobSteps.getCuboidOutputFileName(cuboid, partNum);
-
-        return prefix;
+        return ParquetJobSteps.getCuboidOutputFileName(cuboid, partNum);
     }
 
     private int estimateCuboidPartitionNum(long cuboidId, CubeStatsReader cubeStatsReader, KylinConfig kylinConfig) {
@@ -157,7 +151,8 @@ public class CuboidToPartitionMapping implements Serializable {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<Long, List<Integer>> entry : cuboidPartitions.entrySet()) {
-            sb.append("cuboidId:").append(entry.getKey()).append(" [").append(StringUtils.join(entry.getValue(), ",")).append("]\n");
+            sb.append("cuboidId:").append(entry.getKey()).append(" [").append(StringUtils.join(entry.getValue(), ","))
+                    .append("]\n");
         }
 
         return sb.toString();

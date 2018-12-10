@@ -421,6 +421,6 @@ public abstract class TupleFilter {
         }
     }
 
-    public abstract String toSparkSqlFilter();
+    public abstract String toSQL();
 
 }

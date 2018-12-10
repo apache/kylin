@@ -19,18 +19,30 @@
 package org.apache.kylin.storage.parquet.spark.gtscanner;
 
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
-import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTUtil;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.measure.bitmap.BitmapSerializer;
+import org.apache.kylin.measure.dim.DimCountDistincSerializer;
+import org.apache.kylin.measure.extendedcolumn.ExtendedColumnSerializer;
+import org.apache.kylin.measure.hllc.HLLCSerializer;
+import org.apache.kylin.measure.percentile.PercentileSerializer;
+import org.apache.kylin.measure.raw.RawSerializer;
+import org.apache.kylin.measure.topn.TopNCounterSerializer;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * this class tracks resource 
@@ -43,20 +55,16 @@ public abstract class ParquetRecordGTScanner implements IGTScanner {
     private ImmutableBitSet columns;
 
     private long maxScannedBytes;
-
     private long scannedRows;
     private long scannedBytes;
 
-    private ImmutableBitSet[] columnBlocks;
-
     public ParquetRecordGTScanner(GTInfo info, Iterator<Object[]> iterator, GTScanRequest scanRequest,
-                                  long maxScannedBytes) {
+            long maxScannedBytes) {
         this.iterator = iterator;
         this.info = info;
         this.gtrecord = new GTRecord(info);
         this.columns = scanRequest.getColumns();
         this.maxScannedBytes = maxScannedBytes;
-        this.columnBlocks = getParquetCoveredColumnBlocks(scanRequest);
     }
 
     @Override
@@ -79,12 +87,40 @@ public abstract class ParquetRecordGTScanner implements IGTScanner {
     @Override
     public Iterator<GTRecord> iterator() {
         return Iterators.transform(iterator, new com.google.common.base.Function<Object[], GTRecord>() {
+            private int maxColumnLength = -1;
+            private ByteBuffer byteBuf = null;
+            private final Map<Integer, Integer> dictCols = Maps.newHashMap();
+            private final Map<Integer, Integer> binaryCols = Maps.newHashMap();
+            private final Map<Integer, Integer> otherCols = Maps.newHashMap();
             @Nullable
             @Override
+            @SuppressWarnings("checkstyle:BooleanExpressionComplexity")
             public GTRecord apply(@Nullable Object[] input) {
-                gtrecord.setValuesParquet(ParquetRecordGTScanner.this.columns, new ByteArray(info.getMaxColumnLength(ParquetRecordGTScanner.this.columns)), input);
+                if (maxColumnLength <= 0) {
+                    maxColumnLength = info.getMaxColumnLength(ParquetRecordGTScanner.this.columns);
+                    for (int i = 0; i < ParquetRecordGTScanner.this.columns.trueBitCount(); i++) {
+                        int c = ParquetRecordGTScanner.this.columns.trueBitAt(i);
+                        DataTypeSerializer serializer = info.getCodeSystem().getSerializer(c);
+                        if (serializer instanceof DictionaryDimEnc.DictionarySerializer) {
+                            dictCols.put(i, c);
+                        } else if (serializer instanceof TopNCounterSerializer || serializer instanceof HLLCSerializer
+                                || serializer instanceof BitmapSerializer
+                                || serializer instanceof ExtendedColumnSerializer
+                                || serializer instanceof PercentileSerializer
+                                || serializer instanceof DimCountDistincSerializer
+                                || serializer instanceof RawSerializer) {
+                            binaryCols.put(i, c);
+                        } else {
+                            otherCols.put(i, c);
+                        }
+                    }
 
-                scannedBytes += info.getMaxColumnLength(ParquetRecordGTScanner.this.columns);
+                    byteBuf = ByteBuffer.allocate(maxColumnLength);
+                }
+                byteBuf.clear();
+                GTUtil.setValuesParquet(gtrecord, byteBuf, dictCols, binaryCols, otherCols, input);
+
+                scannedBytes += maxColumnLength;
                 if ((++scannedRows % GTScanRequest.terminateCheckInterval == 1) && Thread.interrupted()) {
                     throw new KylinTimeoutException("Query timeout");
                 }
@@ -98,8 +134,6 @@ public abstract class ParquetRecordGTScanner implements IGTScanner {
         });
     }
 
-    abstract protected ImmutableBitSet getParquetCoveredColumns(GTScanRequest scanRequest);
 
-    abstract protected ImmutableBitSet[] getParquetCoveredColumnBlocks(GTScanRequest scanRequest);
 
 }

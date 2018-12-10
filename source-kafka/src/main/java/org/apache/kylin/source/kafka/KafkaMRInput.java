@@ -82,7 +82,7 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
         public KafkaTableInputFormat(CubeSegment cubeSegment, JobEngineConfig conf) {
             this.cubeSegment = cubeSegment;
             this.conf = conf;
-            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(conf.getConfig().getStorageSystemPathBuilderClz());
+            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(conf.getConfig().getStoragePathBuilder());
         }
 
         @Override
@@ -134,7 +134,7 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
             this.seg = seg;
             this.cubeDesc = seg.getCubeDesc();
             this.cubeName = seg.getCubeInstance().getName();
-            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(config.getStorageSystemPathBuilderClz());
+            this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(config.getStoragePathBuilder());
         }
 
         @Override

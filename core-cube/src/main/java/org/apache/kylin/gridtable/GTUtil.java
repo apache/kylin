@@ -456,4 +456,40 @@ public class GTUtil {
             }
         }
     }
+
+    /** set record to the codes of specified values, reuse given space to hold the codes */
+    public static GTRecord setValuesParquet(GTRecord record, ByteBuffer buf, Map<Integer, Integer> dictCols,
+            Map<Integer, Integer> binaryCols, Map<Integer, Integer> otherCols, Object[] values) {
+
+        int pos = buf.position();
+        int i, c;
+        for (Map.Entry<Integer, Integer> entry : dictCols.entrySet()) {
+            i = entry.getKey();
+            c = entry.getValue();
+            DictionaryDimEnc.DictionarySerializer serializer = (DictionaryDimEnc.DictionarySerializer) record.info.codeSystem
+                    .getSerializer(c);
+            int len = serializer.peekLength(buf);
+            BytesUtil.writeUnsigned((Integer) values[i], len, buf);
+            int newPos = buf.position();
+            record.cols[c].reset(buf.array(), buf.arrayOffset() + pos, newPos - pos);
+            pos = newPos;
+        }
+
+        for (Map.Entry<Integer, Integer> entry : binaryCols.entrySet()) {
+            i = entry.getKey();
+            c = entry.getValue();
+            record.cols[c].reset((byte[]) values[i], 0, ((byte[]) values[i]).length);
+        }
+
+        for (Map.Entry<Integer, Integer> entry : otherCols.entrySet()) {
+            i = entry.getKey();
+            c = entry.getValue();
+            record.info.codeSystem.encodeColumnValue(c, values[i], buf);
+            int newPos = buf.position();
+            record.cols[c].reset(buf.array(), buf.arrayOffset() + pos, newPos - pos);
+            pos = newPos;
+        }
+
+        return record;
+    }
 }

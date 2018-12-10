@@ -113,7 +113,7 @@ public class DebugTomcatClassLoader extends ParallelWebappClassLoader {
             return sparkClassLoader.loadClass(name);
         }
         if (isParentCLPrecedent(name)) {
-            logger.debug("Skipping exempt class " + name + " - delegating directly to parent");
+            logger.trace("Skipping exempt class " + name + " - delegating directly to parent");
             return parent.loadClass(name);
         }
         return super.loadClass(name, resolve);

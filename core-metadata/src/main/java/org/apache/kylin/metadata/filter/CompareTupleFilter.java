@@ -280,7 +280,7 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
     }
 
     @Override
-    public String toSparkSqlFilter() {
+    public String toSQL() {
         List<? extends TupleFilter> childFilter = this.getChildren();
         switch (this.getOperator()) {
             case EQ:
@@ -290,15 +290,15 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
             case GTE:
             case LTE:
                 assert childFilter.size() == 2;
-                return childFilter.get(0).toSparkSqlFilter() + toSparkOpMap.get(this.getOperator()) + childFilter.get(1).toSparkSqlFilter();
+                return childFilter.get(0).toSQL() + toSparkOpMap.get(this.getOperator()) + childFilter.get(1).toSQL();
             case IN:
             case NOTIN:
                 assert childFilter.size() == 2;
-                return childFilter.get(0).toSparkSqlFilter() + toSparkOpMap.get(this.getOperator()) + "(" + childFilter.get(1).toSparkSqlFilter() + ")";
+                return childFilter.get(0).toSQL() + toSparkOpMap.get(this.getOperator()) + "(" + childFilter.get(1).toSQL() + ")";
             case ISNULL:
             case ISNOTNULL:
                 assert childFilter.size() == 1;
-                return childFilter.get(0).toSparkSqlFilter() + toSparkOpMap.get(this.getOperator());
+                return childFilter.get(0).toSQL() + toSparkOpMap.get(this.getOperator());
             default:
                 throw new IllegalStateException("operator " + this.getOperator() + " not supported: ");
         }

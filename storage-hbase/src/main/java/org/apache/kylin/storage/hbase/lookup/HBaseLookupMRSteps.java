@@ -61,7 +61,7 @@ public class HBaseLookupMRSteps {
     public HBaseLookupMRSteps(CubeInstance cube) {
         this.cube = cube;
         this.config = new JobEngineConfig(cube.getConfig());
-        this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(cube.getConfig().getStorageSystemPathBuilderClz());
+        this.pathBuilder = (IStoragePathBuilder)ClassUtil.newInstance(cube.getConfig().getStoragePathBuilder());
     }
 
     public void addMaterializeLookupTablesSteps(LookupMaterializeContext context) {
