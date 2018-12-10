@@ -50,6 +50,7 @@ import com.google.common.base.Preconditions;
 public class KylinConfig extends KylinConfigBase {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
+    private static final String METADATA_URI_PREFIX = "Metadata uri : ";
 
     /**
      * Kylin properties file name
@@ -192,20 +193,20 @@ public class KylinConfig extends KylinConfigBase {
                         return UriType.PROPERTIES_FILE;
                     } else {
                         throw new IllegalStateException(
-                                "Metadata uri : " + metaUri + " is a local file but not kylin.properties");
+                                METADATA_URI_PREFIX + metaUri + " is a local file but not kylin.properties");
                     }
                 } else {
                     throw new IllegalStateException(
-                            "Metadata uri : " + metaUri + " looks like a file but it's neither a file nor a directory");
+                            METADATA_URI_PREFIX + metaUri + " looks like a file but it's neither a file nor a directory");
                 }
             } else {
                 if (RestClient.matchFullRestPattern(metaUri))
                     return UriType.REST_ADDR;
                 else
-                    throw new IllegalStateException("Metadata uri : " + metaUri + " is not a valid REST URI address");
+                    throw new IllegalStateException(METADATA_URI_PREFIX + metaUri + " is not a valid REST URI address");
             }
         } catch (Exception e) {
-            throw new IllegalStateException("Metadata uri : " + metaUri + " is not recognized", e);
+            throw new IllegalStateException(METADATA_URI_PREFIX + metaUri + " is not recognized", e);
         }
     }
 
@@ -393,9 +394,8 @@ public class KylinConfig extends KylinConfigBase {
      */
     private static void loadPropertiesFromInputStream(InputStream inputStream, OrderedProperties properties) {
         Preconditions.checkNotNull(properties);
-        BufferedReader confReader = null;
-        try {
-            confReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+
+        try (BufferedReader confReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"))) {
             OrderedProperties temp = new OrderedProperties();
             temp.load(confReader);
             temp = BCC.check(temp);
@@ -403,8 +403,6 @@ public class KylinConfig extends KylinConfigBase {
             properties.putAll(temp);
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(confReader);
         }
     }
 
@@ -521,12 +519,8 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public void exportToFile(File file) throws IOException {
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(file);
+        try (FileOutputStream fos = new FileOutputStream(file)) {
             getAllProperties().store(fos, file.getAbsolutePath());
-        } finally {
-            IOUtils.closeQuietly(fos);
         }
     }
 
