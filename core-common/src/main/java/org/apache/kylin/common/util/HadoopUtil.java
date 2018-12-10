@@ -236,4 +236,28 @@ public class HadoopUtil {
         return readFromSequenceFile(getCurrentConfiguration(), inputPath);
     }
 
+    public static boolean isSequenceFile(Configuration conf, Path filePath) {
+        try (SequenceFile.Reader reader = new SequenceFile.Reader(getWorkingFileSystem(conf), filePath, conf)) {
+            return true;
+        } catch (Exception e) {
+            logger.warn("Read sequence file {} failed.", filePath.getName(), e);
+            return false;
+        }
+    }
+
+    public static boolean isSequenceDir(Configuration conf, Path fileDir) throws IOException {
+        FileSystem fs = getWorkingFileSystem(conf);
+        FileStatus[] fileStatuses = fs.listStatus(fileDir, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return !"_SUCCESS".equals(path.getName());
+            }
+        });
+
+        if (fileStatuses != null && fileStatuses.length > 0) {
+            return isSequenceFile(conf, fileStatuses[0].getPath());
+        }
+
+        return false;
+    }
 }
