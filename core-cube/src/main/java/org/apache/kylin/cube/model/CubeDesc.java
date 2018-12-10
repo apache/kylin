@@ -1431,6 +1431,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return result;
     }
 
+    public boolean isStreamingCube() {
+        return getModel().getRootFactTable().getTableDesc().isStreamingTable();
+    }
+
     /** Get a column which can be used to cluster the source table.
      * To reduce memory footprint in base cuboid for global dict */
     // TODO handle more than one ultra high cardinality columns use global dict in one cube

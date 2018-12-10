@@ -193,6 +193,115 @@ then
     else
         quit "Kylin is not running"
     fi
+
+# streaming command
+elif [ "$1" == "streaming" ]
+then
+    if [ $# -lt 2 ]
+    then
+        echo "invalid input args $@"
+        exit -1
+    fi
+    if [ "$2" == "start" ]
+    then
+        if [ -f "${KYLIN_HOME}/streaming_receiver_pid" ]
+        then
+            PID=`cat $KYLIN_HOME/streaming_receiver_pid`
+            if ps -p $PID > /dev/null
+            then
+              echo "Kylin is running, stop it first"
+            exit 1
+            fi
+        fi
+        #retrive $hbase_dependency
+        source ${dir}/find-hbase-dependency.sh
+        #retrive $KYLIN_EXTRA_START_OPTS
+        if [ -f "${KYLIN_HOME}/conf/setenv.sh" ]
+            then source ${KYLIN_HOME}/conf/setenv.sh
+        fi
+
+        mkdir -p ${KYLIN_HOME}/ext
+        HBASE_CLASSPATH=`hbase classpath`
+        #echo "hbase class path:"$HBASE_CLASSPATH
+        STREAM_CLASSPATH=${KYLIN_HOME}/lib/streaming/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
+
+        # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
+        ${JAVA_HOME}/bin/java -cp $STREAM_CLASSPATH ${KYLIN_EXTRA_START_OPTS} \
+        -Dlog4j.configuration=stream-receiver-log4j.properties\
+        -DKYLIN_HOME=${KYLIN_HOME}\
+        -Dkylin.hbase.dependency=${hbase_dependency} \
+        org.apache.kylin.stream.server.StreamingReceiver $@ > ${KYLIN_HOME}/logs/streaming_receiver.out 2>&1 & echo $! > ${KYLIN_HOME}/streaming_receiver_pid &
+        exit 0
+    elif [ "$2" == "stop" ]
+    then
+        if [ ! -f "${KYLIN_HOME}/streaming_receiver_pid" ]
+        then
+            echo "streaming is not running, please check"
+            exit 1
+        fi
+        PID=`cat ${KYLIN_HOME}/streaming_receiver_pid`
+        if [ "$PID" = "" ]
+        then
+            echo "streaming is not running, please check"
+            exit 1
+        else
+            echo "stopping streaming:$PID"
+            WAIT_TIME=2
+            LOOP_COUNTER=20
+            if ps -p $PID > /dev/null
+            then
+                echo "Stopping Kylin: $PID"
+                kill $PID
+
+                for ((i=0; i<$LOOP_COUNTER; i++))
+                do
+                    # wait to process stopped
+                    sleep $WAIT_TIME
+                    if ps -p $PID > /dev/null ; then
+                        echo "Stopping in progress. Will check after $WAIT_TIME secs again..."
+                        continue;
+                    else
+                        break;
+                    fi
+                done
+
+                # if process is still around, use kill -9
+                if ps -p $PID > /dev/null
+                then
+                    echo "Initial kill failed, getting serious now..."
+                    kill -9 $PID
+                    sleep 1 #give kill -9  sometime to "kill"
+                    if ps -p $PID > /dev/null
+                    then
+                       quit "Warning, even kill -9 failed, giving up! Sorry..."
+                    fi
+                fi
+
+                # process is killed , remove pid file
+                rm -rf ${KYLIN_HOME}/streaming_receiver_pid
+                echo "Kylin with pid ${PID} has been stopped."
+                exit 0
+            else
+               quit "Kylin with pid ${PID} is not running"
+            fi
+        fi
+    elif [[ "$2" = org.apache.kylin.* ]]
+    then
+        source ${KYLIN_HOME}/conf/setenv.sh
+        HBASE_CLASSPATH=`hbase classpath`
+        #echo "hbase class path:"$HBASE_CLASSPATH
+        STREAM_CLASSPATH=${KYLIN_HOME}/lib/streaming/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
+
+        shift
+        # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
+        ${JAVA_HOME}/bin/java -cp $STREAM_CLASSPATH ${KYLIN_EXTRA_START_OPTS} \
+        -Dlog4j.configuration=stream-receiver-log4j.properties\
+        -DKYLIN_HOME=${KYLIN_HOME}\
+        -Dkylin.hbase.dependency=${hbase_dependency} \
+        "$@"
+        exit 0
+    fi
+
 elif [ "$1" = "version" ]
 then
     retrieveDependency

@@ -849,6 +849,8 @@ public abstract class KylinConfigBase implements Serializable {
         r.put(1, "org.apache.kylin.source.kafka.KafkaSource");
         r.put(8, "org.apache.kylin.source.jdbc.JdbcSource");
         r.put(16, "org.apache.kylin.source.jdbc.extensible.JdbcSource");
+        r.put(20, "org.apache.kylin.stream.source.kafka.KafkaBatchSourceAdaptor");
+        r.put(21, "org.apache.kylin.stream.source.kafka.KafkaBatchSourceAdaptor");
         r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.source.provider.")));
         return r;
     }
@@ -1040,6 +1042,7 @@ public abstract class KylinConfigBase implements Serializable {
         r.put(0, "org.apache.kylin.storage.hbase.HBaseStorage");
         r.put(1, "org.apache.kylin.storage.hybrid.HybridStorage");
         r.put(2, "org.apache.kylin.storage.hbase.HBaseStorage");
+        r.put(3, "org.apache.kylin.storage.stream.StreamStorage");
         r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.storage.provider.")));
         return r;
     }
@@ -1372,7 +1375,7 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isSparkSanityCheckEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark.sanity-check-enabled", FALSE));
     }
-    
+
     // ============================================================================
     // ENGINE.LIVY
     // ============================================================================
@@ -1396,7 +1399,7 @@ public abstract class KylinConfigBase implements Serializable {
     public Map<String, String> getLivyMap() {
         return getPropertiesByPrefix("kylin.engine.livy-conf.livy-map.");
     }
-    
+
     // ============================================================================
     // QUERY
     // ============================================================================
@@ -1981,5 +1984,136 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isLimitPushDownEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.storage.limit-push-down-enabled", TRUE));
+    }
+
+    // ============================================================================
+    // streaming
+    // ============================================================================
+    public String getStreamingStoreClass() {
+        return getOptional("kylin.stream.store.class", "org.apache.kylin.stream.core.storage.columnar.ColumnarSegmentStore");
+    }
+
+    public String getStreamingBasicCuboidJobDFSBlockSize() {
+        return getOptional("kylin.stream.job.dfs.block.size", String.valueOf(16 * 1024 * 1024));
+    }
+
+    public String getStreamingIndexPath() {
+        return getOptional("kylin.stream.index.path", "stream_index");
+    }
+
+    public int getStreamingCubeConsumerTasksNum() {
+        return Integer.parseInt(getOptional("kylin.stream.cube-num-of-consumer-tasks", "3"));
+    }
+
+    public int getStreamingCubeWindowInSecs() {
+        return Integer.parseInt(getOptional("kylin.stream.cube.window", "3600"));
+    }
+
+    public int getStreamingCubeDurationInSecs() {
+        return Integer.parseInt(getOptional("kylin.stream.cube.duration", "7200"));
+    }
+
+    public int getStreamingCubeMaxDurationInSecs() {
+        return Integer.parseInt(getOptional("kylin.stream.cube.duration.max", "43200"));
+    }
+
+    public int getStreamingCheckPointFileMaxNum() {
+        return Integer.parseInt(getOptional("kylin.stream.checkpoint.file.max.num", "5"));
+    }
+
+    public int getStreamingCheckPointIntervalsInSecs() {
+        return Integer.parseInt(getOptional("kylin.stream.index.checkpoint.intervals", "300"));
+    }
+
+    public int getStreamingIndexMaxRows() {
+        return Integer.parseInt(getOptional("kylin.stream.index.maxrows", "50000"));
+    }
+
+    public int getStreamingMaxImmutableSegments() {
+        return Integer.parseInt(getOptional("kylin.stream.immutable.segments.max.num", "100"));
+    }
+
+    public boolean isStreamingConsumeFromLatestOffsets() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.consume.offsets.latest", "true"));
+    }
+
+    public String getStreamingNode() {
+        return getOptional("kylin.stream.node", null);
+    }
+
+    public Map<String, String> getStreamingNodeProperties() {
+        return getPropertiesByPrefix("kylin.stream.node");
+    }
+
+    public String getStreamingMetadataStoreType() {
+        return getOptional("kylin.stream.metadata.store.type", "zk");
+    }
+
+    public String getStreamingCoordinateZK() {
+        return getOptional("kylin.stream.zookeeper", null);
+    }
+
+    public String getStreamingSegmentRetentionPolicy() {
+        return getOptional("kylin.stream.segment.retention.policy", "fullBuild");
+    }
+
+    public int getStreamingReceiverHttpMaxThreads() {
+        return Integer.parseInt(getOptional("kylin.stream.receiver.http.max.threads", "200"));
+    }
+
+    public int getStreamingReceiverHttpMinThreads() {
+        return Integer.parseInt(getOptional("kylin.stream.receiver.http.min.threads", "10"));
+    }
+
+    public int getStreamingReceiverQueryCoreThreads() {
+        return Integer.parseInt(getOptional("kylin.stream.receiver.query-core-threads", "50"));
+    }
+
+    public int getStreamingReceiverQueryMaxThreads() {
+        return Integer.parseInt(getOptional("kylin.stream.receiver.query-max-threads", "200"));
+    }
+
+    public int getStreamingReceiverUseThreadsPerQuery() {
+        return Integer.parseInt(getOptional("kylin.stream.receiver.use-threads-per-query", "8"));
+    }
+
+    public int getStreamingRPCHttpConnTimeout() {
+        return Integer.parseInt(getOptional("kylin.stream.rpc.http.connect.timeout", "10000"));
+    }
+
+    public int getStreamingRPCHttpReadTimeout() {
+        return Integer.parseInt(getOptional("kylin.stream.rpc.http.read.timeout", "60000"));
+    }
+
+    public boolean isStreamingBuildAdditionalCuboids() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.build.additional.cuboids", "false"));
+    }
+
+    public Map<String, String> getStreamingSegmentRetentionPolicyProperties(String policyName) {
+        return getPropertiesByPrefix("kylin.stream.segment.retention.policy." + policyName + ".");
+    }
+
+    public int getStreamingMaxFragmentsInSegment() {
+        return Integer.parseInt(getOptional("kylin.stream.segment-max-fragments", "50"));
+    }
+
+    public int getStreamingMinFragmentsInSegment() {
+        return Integer.parseInt(getOptional("kylin.stream.segment-min-fragments", "15"));
+    }
+
+    public int getStreamingMaxFragmentSizeInMb() {
+        return Integer.parseInt(getOptional("kylin.stream.max-fragment-size-mb", "300"));
+    }
+
+    public boolean isStreamingFragmentsAutoMergeEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.fragments-auto-merge-enable", "true"));
+    }
+
+    public boolean isStreamingConcurrentScanEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.stream.segment.concurrent.scan", "false"));
+    }
+
+    public String getLocalStorageImpl() {
+        return getOptional("kylin.stream.settled.storage", null);
     }
 }

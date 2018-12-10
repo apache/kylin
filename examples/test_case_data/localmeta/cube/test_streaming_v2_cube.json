@@ -1,0 +1,17 @@
+{
+  "uuid" : "3f81bc32-fa35-465e-92b0-a43195fa6de6",
+  "version" : "1.5.2",
+  "name" : "test_streaming_v2_cube",
+  "owner" : "ADMIN",
+  "cost" : 50,
+  "status" : "READY",
+  "segments" : [],
+  "cuboidBytes" : null,
+  "last_modified" : 1490005832153,
+  "descriptor" : "test_streaming_v2_cube",
+  "create_time_utc" : 1477870504616,
+  "cuboid_bytes_recommend" : null,
+  "input_records_size" : 242725,
+  "size_kb" : 9385,
+  "input_records_count" : 6588
+}

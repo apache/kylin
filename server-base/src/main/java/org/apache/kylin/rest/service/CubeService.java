@@ -82,6 +82,9 @@ import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ValidateUtil;
 import org.apache.kylin.storage.hybrid.HybridInstance;
+import org.apache.kylin.stream.coordinator.StreamMetadataStoreFactory;
+import org.apache.kylin.stream.coordinator.client.CoordinatorClient;
+import org.apache.kylin.stream.coordinator.client.CoordinatorClientFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -402,7 +405,26 @@ public class CubeService extends BasicService implements InitializingBean {
                     String.format(Locale.ROOT, msg.getDISABLE_NOT_READY_CUBE(), cubeName, ostatus));
         }
 
-        return getCubeManager().updateCubeStatus(cube, RealizationStatusEnum.DISABLED);
+        boolean isStreamingCube = cube.getDescriptor().isStreamingCube();
+
+        boolean cubeStatusUpdated = false;
+        try {
+            CubeInstance cubeInstance = getCubeManager().updateCubeStatus(cube, RealizationStatusEnum.DISABLED);
+            cubeStatusUpdated = true;
+            // for streaming cube.
+            if (isStreamingCube) {
+                getStreamingCoordinator().unAssignCube(cubeName);
+            }
+            return cubeInstance;
+        } catch (Exception e) {
+            cube.setStatus(ostatus);
+            // roll back if cube status updated
+            if (cubeStatusUpdated) {
+                logger.info("roll back cube status to:{}", ostatus);
+                getCubeManager().updateCubeStatus(cube, ostatus);
+            }
+            throw e;
+        }
     }
 
     public void checkEnableCubeCondition(CubeInstance cube) {
@@ -417,7 +439,7 @@ public class CubeService extends BasicService implements InitializingBean {
                     String.format(Locale.ROOT, msg.getENABLE_NOT_DISABLED_CUBE(), cubeName, ostatus));
         }
 
-        if (cube.getSegments(SegmentStatusEnum.READY).size() == 0) {
+        if (cube.getSegments(SegmentStatusEnum.READY).size() == 0 && !cube.getDescriptor().isStreamingCube()) {
             throw new BadRequestException(String.format(Locale.ROOT, msg.getNO_READY_SEGMENT(), cubeName));
         }
 
@@ -434,7 +456,29 @@ public class CubeService extends BasicService implements InitializingBean {
      * @throws IOException
      */
     public CubeInstance enableCube(CubeInstance cube) throws IOException {
-        return getCubeManager().updateCubeStatus(cube, RealizationStatusEnum.READY);
+        boolean cubeStatusUpdated = false;
+        RealizationStatusEnum ostatus = cube.getStatus();
+        try {
+            CubeInstance cubeInstance = getCubeManager().updateCubeStatus(cube, RealizationStatusEnum.READY);
+            cubeStatusUpdated = true;
+            // for streaming cube.
+            if (cube.getDescriptor().isStreamingCube()) {
+                getStreamingCoordinator().assignCube(cube.getName());
+            }
+            return cubeInstance;
+        } catch (Exception e) {
+            cube.setStatus(ostatus);
+            // roll back if cube status updated
+            if (cubeStatusUpdated) {
+                logger.info("roll back cube status to:{}", ostatus);
+                getCubeManager().updateCubeStatus(cube, ostatus);
+            }
+            throw e;
+        }
+    }
+
+    private CoordinatorClient getStreamingCoordinator() {
+        return CoordinatorClientFactory.createCoordinatorClient(StreamMetadataStoreFactory.getStreamMetaDataStore());
     }
 
     public MetricsResponse calculateMetrics(MetricsRequest request) {
@@ -478,8 +522,7 @@ public class CubeService extends BasicService implements InitializingBean {
 
         hr = new HBaseResponse();
         CubeInstance cube = CubeManager.getInstance(getConfig()).getCube(cubeName);
-        if (cube.getStorageType() == IStorageAware.ID_HBASE
-                || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
+        if (cube.getStorageType() == IStorageAware.ID_HBASE || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE || cube.getStorageType() == IStorageAware.ID_REALTIME_AND_HBASE) {
             try {
                 logger.debug("Loading HTable info " + cubeName + ", " + tableName);
 

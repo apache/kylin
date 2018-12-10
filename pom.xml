@@ -377,6 +377,28 @@
         <version>${project.version}</version>
         <type>test-jar</type>
       </dependency>
+
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-stream-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-stream-coordinator</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-stream-source-kafka</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-storage-stream</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-datasource-sdk</artifactId>
@@ -696,7 +718,6 @@
         <groupId>org.apache.kafka</groupId>
         <artifactId>kafka_2.11</artifactId>
         <version>${kafka.version}</version>
-        <scope>provided</scope>
       </dependency>
 
       <!-- Other dependencies -->
@@ -924,7 +945,11 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-server</artifactId>
         <version>${jetty.version}</version>
-        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <version>${jetty.version}</version>
       </dependency>
       <dependency>
         <groupId>org.eclipse.jetty</groupId>
@@ -1306,6 +1331,11 @@
     <module>metrics-reporter-kafka</module>
     <module>cache</module>
     <module>datasource-sdk</module>
+    <module>storage-stream</module>
+    <module>stream-receiver</module>
+    <module>stream-coordinator</module>
+    <module>stream-core</module>
+    <module>stream-source-kafka</module>
   </modules>
 
   <reporting>
