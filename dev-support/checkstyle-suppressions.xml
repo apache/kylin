@@ -61,4 +61,6 @@
     <suppress checks="OneStatementPerLine"
               files="UHCDictionaryReducer.java"/>
 
+    <suppress checks="IllegalImport" files="FragmentData.java"/>
+
 </suppressions>

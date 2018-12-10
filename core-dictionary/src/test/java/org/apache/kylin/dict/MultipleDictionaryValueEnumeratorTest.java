@@ -29,6 +29,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
@@ -36,6 +38,8 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import javax.annotation.Nullable;
 
 /**
  * Created by sunyerui on 16/8/2.
@@ -58,7 +62,14 @@ public class MultipleDictionaryValueEnumeratorTest {
     }
 
     private String[] enumerateDictInfoList(List<DictionaryInfo> dictionaryInfoList, String dataType) throws IOException {
-        enumerator = new MultipleDictionaryValueEnumerator(DataType.getType(dataType), dictionaryInfoList);
+        List<Dictionary<String>> dictList = Lists.transform(dictionaryInfoList, new Function<DictionaryInfo, Dictionary<String>>() {
+            @Nullable
+            @Override
+            public Dictionary<String> apply(@Nullable DictionaryInfo input) {
+                return input.dictionaryObject;
+            }
+        });
+        enumerator = new MultipleDictionaryValueEnumerator(DataType.getType(dataType), dictList);
         List<String> values = new ArrayList<>();
         while (enumerator.moveNext()) {
             values.add(enumerator.current());

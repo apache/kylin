@@ -36,13 +36,12 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
     private List<Dictionary<String>> dictionaryList;
     private DataType dataType;
 
-    public MultipleDictionaryValueEnumerator(DataType dataType, List<DictionaryInfo> dictionaryInfoList) {
+    public MultipleDictionaryValueEnumerator(DataType dataType, List<Dictionary<String>> dictionaryInfoList) {
         this.dataType = dataType;
         dictionaryList = Lists.newArrayListWithCapacity(dictionaryInfoList.size());
-        for (DictionaryInfo dictInfo : dictionaryInfoList) {
-            Dictionary<String> dictionary = (Dictionary<String>) dictInfo.getDictionaryObject();
-            dictionaryList.add((Dictionary<String>) dictInfo.getDictionaryObject());
-            curKeys.add(dictionary.getMinId());
+        for (Dictionary<String> dict : dictionaryInfoList) {
+            dictionaryList.add(dict);
+            curKeys.add(dict.getMinId());
         }
     }
 
