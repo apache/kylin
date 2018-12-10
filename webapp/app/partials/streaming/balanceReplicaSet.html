@@ -1,0 +1,72 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+<!-- TODO: pagination -->
+<div class="container" style="margin-top:15px;">
+  <div class="row">
+    <button type="button" class="btn btn-primary pull-right" style="margin-bottom: 10px;" ng-click="rebalance()">Rebalance</button>
+  </div>
+  <div class="row">
+    <div class="box box-primary" ng-repeat="replicaSet in replicaSets | orderBy:'rs_id'">
+      <div class="box-header with-border">
+        <h3 class="box-title">{{replicaSet.rs_id}}</h3>
+        <div class="box-tools pull-right">
+          <button type="button" class="btn btn-box-tool" ng-click="editReplicaSet(replicaSet, $index)">
+            <i class="fa fa-pencil-square-o"></i>
+          </button>
+        </div>
+      </div>
+      <div class="box-body">
+        <div ng-repeat="cubeInfo in replicaSet.cubeInfos" style="padding-bottom: 10px;">
+          <h4>{{cubeInfo.cubeName}}:</h4>
+          <div>
+            <span class="label label-primary" style="margin-right:5px;" ng-repeat="partition in cubeInfo.partitions | orderBy: 'partitionId' ">{{partition.partitionId}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/ng-template" id="editReplicaSet.html">
+  <div class="modal-header">
+    <h4>Edit Replica Set [{{replicaSet.rs_id}}]</h4>
+  </div>
+  <div class="modal-body">
+    <div ng-repeat="cubeInfo in replicaSet.cubeInfos" class="row">
+      <div class="col-sm-3" style="margin-top:5px;">
+        <input type="text" class="form-control" ng-model="cubeInfo.cubeName" placeholder="Enter cube name">
+      </div>
+      <div class="col-sm-8">
+        <tags-input class="bootstrap" ng-model="cubeInfo.partitions" display-property="partitionId" placeholder="Add PartitionId" min-length="1" max-length="10" allowed-tags-pattern="^[0-9]+$"></tags-input>
+      </div>
+      <div class="col-sm-1">
+        <i class="fa fa-minus" style="margin-top:15px;cursor:pointer;" ng-click="removeCubeInfo($index)"></i>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-offset-11 col-sm-1">
+        <i class="fa fa-plus" style="margin-top:10px;cursor:pointer;" ng-click="addCubeInfo()"></i>
+        <!-- <button type="button" class="btn btn-primary pull-right" ng-click="addCubeInfo()">Add Cube</button> -->
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+    <button class="btn btn-primary" ng-click="saveReplicaSet()">Save</button>
+  </div>
+</script>

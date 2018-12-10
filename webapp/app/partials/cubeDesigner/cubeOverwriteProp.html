@@ -19,6 +19,9 @@
 <div class="row" ng-controller="CubeOverWriteCtrl" style="padding-left:40px;">
     <div class="col-xs-8">
         <ng-form name="forms.cube_overwrite_prop_form" novalidate>
+            <div class="row" style="border-top: 1px solid #dddddd; border-bottom: 1px solid #dddddd; margin-bottom: 15px;" ng-show="state.mode=='edit' || convertedProperties">
+              <h4>Kylin Properties</h4>
+            </div>
             <!--Project-->
             <div ng-repeat=" prop in convertedProperties track by $index " class="form-group">
                 <div class="row">
@@ -39,7 +42,7 @@
 
                 </div>
             </div>
-        </ng-form>
+
         <!--Add Measures Property-->
         <div class="form-group">
           <button class="btn btn-sm btn-info" ng-click="addNewProperty();" ng-show="state.mode=='edit'">
@@ -47,6 +50,83 @@
           </button>
         </div>
 
+        <!-- Stream Properties-->
+        <div ng-if="isStreamingCube" class="row" style="border-top: 1px solid #dddddd; border-bottom: 1px solid #dddddd; margin-bottom: 15px;">
+          <h4>Streaming Properties</h4>
+        </div>
+        <div ng-if="isStreamingCube" class="row form-group">
+          <label class="col-xs-12 col-sm-6 control-label no-padding-right" style="word-wrap: break-word;">
+            <b>kylin.cube.algorithm</b>
+          </label>
+          <div class="col-xs-12 col-sm-5 btn-group" ng-if="state.mode=='edit'">
+            <button type="button" class="btn btn-primary" ng-model="cubeMetaFrame.override_kylin_properties['kylin.cube.algorithm']" btn-radio="'INMEM'">INMEM</button>
+            <!--<button type="button" class="btn btn-primary" ng-model="cubeMetaFrame.override_kylin_properties['kylin.cube.algorithm']" btn-radio="'LAYER'">LAYER</button>-->
+          </div>
+          <div ng-if="state.mode=='view'" class="col-xs-12 col-sm-5">
+            <div style="padding-top: 7px;">{{cubeMetaFrame.override_kylin_properties['kylin.cube.algorithm']}}</div>
+          </div>
+        </div>
+        <div ng-if="isStreamingCube" class="row form-group">
+          <label class="col-xs-12 col-sm-6 control-label no-padding-right" style="word-wrap: break-word;">
+            <b>kylin.stream.cube.window</b>
+          </label>
+          <div ng-if="state.mode=='edit'" class="col-xs-12 col-sm-5" ng-class="{'has-error':cubeMetaFrame.override_kylin_properties['kylin.stream.cube.window']==''}">
+            <input ng-model="cubeMetaFrame.override_kylin_properties['kylin.stream.cube.window']" placeholder="Seconds" class="form-control" />
+            <small class="help-block" ng-show="cubeMetaFrame.override_kylin_properties['kylin.stream.cube.window']==''">Property value is required.</small>
+          </div>
+          <div ng-if="state.mode=='view'" class="col-xs-12 col-sm-5">
+            <div style="padding-top: 7px;">{{cubeMetaFrame.override_kylin_properties['kylin.stream.cube.window']}}</div>
+          </div>
+        </div>
+        <div ng-if="isStreamingCube" class="row form-group">
+          <label class="col-xs-12 col-sm-6 control-label no-padding-right" style="word-wrap: break-word;">
+            <b>kylin.stream.cube.duration</b>
+          </label>
+          <div ng-if="state.mode=='edit'" class="col-xs-12 col-sm-5" ng-class="{'has-error':cubeMetaFrame.override_kylin_properties['kylin.stream.cube.duration']==''}">
+            <input ng-model="cubeMetaFrame.override_kylin_properties['kylin.stream.cube.duration']" placeholder="Seconds" class="form-control"/>
+            <small class="help-block" ng-show="cubeMetaFrame.override_kylin_properties['kylin.stream.cube.duration']==''">Property value is required.</small>
+          </div>
+          <div ng-if="state.mode=='view'" class="col-xs-12 col-sm-5">
+            <div style="padding-top: 7px;">{{cubeMetaFrame.override_kylin_properties['kylin.stream.cube.duration']}}</div>
+          </div>
+        </div>
+        <div ng-if="isStreamingCube" class="row form-group">
+          <label class="col-xs-12 col-sm-6 control-label no-padding-right" style="word-wrap: break-word;">
+            <b>kylin.stream.index.checkpoint.intervals</b>
+          </label>
+          <div ng-if="state.mode=='edit'" class="col-xs-12 col-sm-5" ng-class="{'has-error':cubeMetaFrame.override_kylin_properties['kylin.stream.index.checkpoint.intervals']==''}">
+            <input ng-model="cubeMetaFrame.override_kylin_properties['kylin.stream.index.checkpoint.intervals']" placeholder="Seconds" class="form-control"/>
+            <small class="help-block" ng-show="cubeMetaFrame.override_kylin_properties['kylin.stream.index.checkpoint.intervals']==''">Property value is required.</small>
+          </div>
+          <div ng-if="state.mode=='view'" class="col-xs-12 col-sm-5">
+            <div style="padding-top: 7px;">{{cubeMetaFrame.override_kylin_properties['kylin.stream.index.checkpoint.intervals']}}</div>
+          </div>
+        </div>
+        <div ng-if="isStreamingCube" class="row form-group">
+          <label class="col-xs-12 col-sm-6 control-label no-padding-right" style="word-wrap: break-word;">
+            <b>kylin.stream.segment.retention.policy</b>
+          </label>
+          <div ng-if="state.mode=='edit'" class="col-xs-12 col-sm-5 btn-group" >
+            <button type="button" class="btn btn-primary" ng-model="cubeMetaFrame.override_kylin_properties['kylin.stream.segment.retention.policy']" btn-radio="'fullBuild'" ng-click="changeStreamingRetentionPolicy('fullBuild')">fullBuild</button>
+            <button type="button" class="btn btn-primary" ng-model="cubeMetaFrame.override_kylin_properties['kylin.stream.segment.retention.policy']" btn-radio="'purge'" ng-click="changeStreamingRetentionPolicy('purge')">purge</button>
+          </div>
+          <div ng-if="state.mode=='view'" class="col-xs-12 col-sm-5 btn-group">
+            <div style="padding-top: 7px;">{{cubeMetaFrame.override_kylin_properties['kylin.stream.segment.retention.policy']}}</div>
+          </div>
+        </div>
+        <div ng-if="isStreamingCube && cubeMetaFrame.override_kylin_properties['kylin.stream.segment.retention.policy'] === 'purge'" class="row form-group">
+          <label class="col-xs-12 col-sm-6 control-label no-padding-right" style="word-wrap: break-word;">
+            <b>kylin.stream.segment.retention.policy.purge.retentionTimeInSec</b>
+          </label>
+          <div ng-if="state.mode=='edit'" class="col-xs-12 col-sm-5" ng-class="{'has-error':cubeMetaFrame.override_kylin_properties['kylin.stream.segment.retention.policy.purge.retentionTimeInSec']==''}">
+            <input ng-model="cubeMetaFrame.override_kylin_properties['kylin.stream.segment.retention.policy.purge.retentionTimeInSec']" placeholder="Seconds" class="form-control" />
+            <small class="help-block" ng-show="cubeMetaFrame.override_kylin_properties['kylin.stream.segment.retention.policy.purge.retentionTimeInSec']==''">Property value is required.</small>
+          </div>
+          <div ng-if="state.mode=='view'" class="col-xs-12 col-sm-5">
+            <div style="padding-top: 7px;">{{cubeMetaFrame.override_kylin_properties['kylin.stream.segment.retention.policy.purge.retentionTimeInSec']}}</div>
+          </div>
+        </div>
+      </ng-form>
     </div>
 
   <!--Tips-->

@@ -133,7 +133,7 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log,Encodi
                 angular.forEach(tables,function(_table){
 
                         var table_icon="fa fa-table";
-                        if(_table.source_type==1){
+                        if(_.values(tableConfig.streamingSourceType).indexOf(_table.source_type) > -1 || _table.source_type==1){
                           table_icon="fa fa-th"
                         }
 

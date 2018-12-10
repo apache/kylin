@@ -923,6 +923,435 @@ KylinApp
 
     };
 
+     //streaming resource onboard v2
+    $scope.openStreamingSourceModalV2 = function() {
+      if(!$scope.projectModel.selectedProject){
+        SweetAlert.swal('Oops...', "Please select a project.", 'info');
+        return;
+      }
+      $modal.open({
+        templateUrl: 'addStreamingSourceV2.html',
+        controller: StreamingSourceCtrlV2,
+        backdrop : 'static',
+        resolve: {
+          projectName: function () {
+            return $scope.projectModel.selectedProject;
+          },
+          scope: function () {
+            return $scope;
+          }
+        }
+      });
+    };
+
+    var StreamingSourceCtrlV2 = function($scope, $modalInstance, $filter, MessageService, projectName, scope, cubeConfig, tableConfig, StreamingModel, StreamingServiceV2) {
+      $scope.tableConfig = tableConfig;
+      // common
+      $scope.steps = {
+        curStep:1
+      };
+
+      $scope.previewStep = function() {
+        $scope.steps.curStep--;
+      }
+
+      $scope.nextStep = function() {
+        // clean data
+        if ($scope.steps.curStep === 1) {
+          $scope.streaming = {
+            template: '',
+            dataTypeArr: tableConfig.dataTypes,
+            TSColumnArr: [],
+            TSColumnSelected: '',
+            errMsg: ''
+          };
+          $scope.tableData = {
+            source_type: $scope.tableData.source_type
+          };
+        }
+        $scope.steps.curStep++;
+      };
+
+      $scope.cancel = function () {
+        $modalInstance.dismiss('cancel');
+      };
+
+      // streaming config
+      $scope.streamingConfig = {
+        name: '',
+        properties: {},
+        parser_info: {}
+      };
+
+      $scope.tableData = {
+        source_type: tableConfig.streamingSourceType.kafka
+      };
+
+      $scope.removeBootstrapServer = function(index) {
+        $scope.streamingConfig.properties.bootstrapServers.splice(index, 1);
+      };
+
+      $scope.addBootstrapServer = function() {
+        if (!$scope.streamingConfig.properties.bootstrapServers) {
+          $scope.streamingConfig.properties.bootstrapServers = [];
+        }
+        $scope.streamingConfig.properties.bootstrapServers.push({host: '', port: '9092'});
+      }
+
+      $scope.bootstrapServerValidation = function(bootstrapServers) {
+        var flag = false;
+        if (bootstrapServers && bootstrapServers.length > 0) {
+          angular.forEach(bootstrapServers, function(bootstrapServer, ind) {
+            if (!bootstrapServer.host || !bootstrapServer.port || bootstrapServer.host.length === 0 || bootstrapServer.port.length === 0) {
+              flag = true;
+            }
+          });
+        } else {
+          flag = true;
+        }
+        return flag;
+      };
+
+      // streaming table
+      $scope.streaming = {
+        template: '',
+        dataTypeArr: tableConfig.dataTypes,
+        TSColumnArr: [],
+        TSColumnSelected: '',
+        errMsg: '',
+        lambda: false
+      };
+
+      $scope.additionalColumn = {};
+
+      $scope.getTemplate = function() {
+        var transformStreamingConfig = $scope._transformStreamingObj({project: projectName,
+              tableData: $scope.tableData,
+              streamingConfig: $scope.streamingConfig});
+        StreamingServiceV2.getParserTemplate({streamingConfig: transformStreamingConfig.streamingConfig, sourceType: $scope.tableData.source_type}, function(template){
+          if (tableConfig.streamingSourceType.kafka === $scope.tableData.source_type) {
+            $scope.streaming.template = $filter('json')(template, 4);
+          }
+        }, function(e) {
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            var msg = !!(message) ? message : 'Failed to get template.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          } else {
+            SweetAlert.swal('Oops...', "Failed to get template.", 'error');
+          }
+        });
+      };
+
+      $scope.getTableData = function() {
+
+        $scope.tableData.name = '';
+        $scope.tableData.columns = [];
+
+        $scope.streaming.errMsg = '';
+
+        $scope.streaming.TSColumnArr = [];
+
+        // Check template is not empty
+        if (!$scope.streaming.template) {
+          $scope.tableData = undefined;
+          $scope.streaming.errMsg = 'Please input Streaming source record to generate schema.';
+          return;
+        }
+
+        // Check template is json format
+        try {
+          var templateObj = JSON.parse($scope.streaming.template);
+        } catch (error) {
+          $scope.tableData = undefined;
+          $scope.streaming.errMsg = 'Source json invalid, Please correct your schema and generate again.';
+          return;
+        }
+
+        var columnsByTemplate = [];
+
+        // kafka parser
+        if (tableConfig.streamingSourceType.kafka === $scope.tableData.source_type) {
+          // TODO kafka need to support json not just first layer
+          for (var key in templateObj) {
+
+            var contentType = 'varchar(256)';
+            var content = templateObj[key];
+
+            // TODO optimize the type parse
+            if (typeof content !== 'string') {
+              if (typeof content === 'boolean') {
+                contentType = 'boolean';
+              } else if (typeof content === 'number'){
+                if (content <= 2147483647) { //631152000
+                  if (content.toString().indexOf('.') != -1){
+                    contentType = 'decimal';
+                  } else {
+                    contentType = 'int';
+                  }
+                } else {
+                  contentType = 'timestamp';
+                  $scope.streaming.TSColumnArr.push(key);
+                }
+              }
+            }
+
+            columnsByTemplate.push({
+              name: key,
+              datatype: contentType
+            });
+
+          }
+        }
+
+        var columnsByAuto = [];
+
+        // TODO change the streamingAutoGenerateMeasure format
+        angular.forEach(cubeConfig.streamingAutoGenerateMeasure, function(measure, index) {
+          columnsByAuto.push({
+            name: measure.name,
+            datatype: measure.type
+          });
+        });
+
+        $scope.tableData.columns = columnsByTemplate.concat(columnsByAuto);
+      };
+
+      $scope.getColumns = function(field, parentName, columnArr) {
+        var columns = columnArr;
+        if (typeof field.type === 'string') {
+          if (!field.fields) {
+            columns.push($scope.getColumnInfo(field, ''));
+          } else {
+            angular.forEach(field.fields, function(subField, ind) {
+              var subColumn = $scope.getColumnInfo(subField, parentName);
+              if (!$scope.isDerived(subColumn)) {
+                columns.push(subColumn);
+              }
+            });
+          }
+        } else if (Array.isArray(field.type)) {
+          columns.push($scope.getColumnInfo(field, ''));
+        } else {
+          $scope.getColumns(field.type, parentName, columns);
+        }
+        return columns;
+      };
+
+      $scope.getColumnInfo = function(field, parentName) {
+        var fieldName = field.name;
+        var contentType = 'varchar(256)';
+        var typeArr = field.type;
+        var _type = field.type;
+        if (typeof typeArr !== 'string') {
+          var contentTypeArr = [];
+          angular.forEach(typeArr, function(type) {
+            if ('null' !== type) {
+              contentTypeArr.push(type);
+            }
+          });
+          if (contentTypeArr.length === 1) {
+            _type = contentTypeArr[0];
+            if (typeof _type === 'object') {
+              if (_type.type) {
+                _type = _type.type;
+              }
+            }
+          }
+        }
+
+        if ('string' !== _type) {
+          if (tableConfig.dataTypes.indexOf(_type) > -1) {
+            contentType = _type;
+          } else if ('long' === _type) {
+            contentType = 'bigint';
+          }
+        }
+
+        var _column = {
+          name: fieldName,
+          datatype: contentType,
+          comment: field.doc || '',
+          field_mapping: parentName ? parentName + '.' + field.name : field.name
+        };
+
+        return _column;
+      };
+
+      $scope.removeColumn = function(index) {
+        $scope.tableData.columns.splice(index, 1);
+      };
+
+      $scope.addColumn = function() {
+        if ($scope.additionalColumn.name && $scope.additionalColumn.datatype && $scope.additionalColumn.field_mapping) {
+          $scope.additionalColumn.error = undefined;
+          if (!$scope.tableData.columns) {
+            $scope.tableData.columns = [];
+          }
+          $scope.tableData.columns.push($scope.additionalColumn);
+          if ($scope.additionalColumn.datatype == 'timestamp') {
+            if (!$scope.streaming.TSColumnArr) {
+              $scope.streaming.TSColumnArr = [];
+            }
+            $scope.streaming.TSColumnArr.push($scope.additionalColumn.name);
+          }
+          $scope.additionalColumn = {};
+        } else {
+          $scope.additionalColumn.error = 'Additional column field can not be empty!';
+        }
+      };
+
+      $scope.initFieldMapping = function() {
+          $scope.additionalColumn.field_mapping = $scope.additionalColumn.name;
+      };
+
+      $scope.isDerived = function(column) {
+        var derived = false;
+        angular.forEach(cubeConfig.streamingAutoGenerateMeasure, function(measure, index) {
+          if (measure.name === column.name) {
+            derived = true;
+          }
+        });
+        return derived;
+      };
+
+      $scope.updateTSColumnOption = function(column) {
+        if (column.datatype === 'timestamp') {
+          if (!$scope.streaming.TSColumnArr.includes(column.name)) {
+            $scope.streaming.TSColumnArr.push(column.name);
+          }
+        } else {
+          if ($scope.streaming.TSColumnArr.includes(column.name)) {
+            $scope.streaming.TSColumnArr.splice($scope.streaming.TSColumnArr.findIndex(function(opt) {return opt === column.name}), 1);
+            if (column.name === $scope.streaming.TSColumnSelected) {
+              $scope.streaming.TSColumnSelected = '';
+            }
+          }
+        }
+      };
+
+      $scope.saveStreamingSource = function() {
+        $scope.streaming.errMsg = '';
+
+        if (!$scope.validateTableName()) {
+          $scope.streaming.errMsg = 'Table name is invalid, please typing correct table name.';
+          return;
+        }
+
+        // table column validation
+        if ($scope.tableData.columns.length === 0) {
+          $scope.streaming.errMsg = 'Table columns is empty, please add template to create it.';
+          return;
+        }
+
+        var allColumnsAreDerived = true;
+        angular.forEach($scope.tableData.columns, function(column) {
+          if (!$scope.isDerived(column)) {
+            allColumnsAreDerived = false;
+          }
+        });
+
+        if (allColumnsAreDerived) {
+          $scope.streaming.errMsg = 'All columns are derived, please add template to create it again.';
+          return;
+        }
+
+
+        var streamingSourceConfigStr = '';
+
+        // kafka config validation
+        if (!$scope.streaming.TSColumnSelected) {
+          $scope.streaming.errMsg = 'TSColumn is empty, please choose \'timestamp\' type column for TSColumn.';
+          return;
+        }
+        // Set ts column
+        $scope.streamingConfig.parser_info.ts_col_name = $scope.streaming.TSColumnSelected;
+
+        SweetAlert.swal({
+          title: '',
+          text: 'Are you sure to save the streaming table?',
+          showCancelButton: true,
+          confirmButtonColor: '#DD6B55',
+          confirmButtonText: "Yes",
+          closeOnConfirm: true
+        }, function (isConfirm) {
+          if (isConfirm) {
+
+            $scope.streamingConfig.name = $scope.tableData.name;
+
+            // add column id
+            var colInd = 0;
+            angular.forEach($scope.tableData.columns, function(column) {
+              column.id = colInd;
+              colInd++;
+            });
+            var transformStreamingConfig = angular.toJson($scope._transformStreamingObj({project: projectName,
+              tableData: $scope.tableData,
+              streamingConfig: $scope.streamingConfig}));
+            StreamingServiceV2.save({},
+              transformStreamingConfig
+            , function (request) {
+              if (request.successful) {
+                SweetAlert.swal('', 'Created the streaming successfully.', 'success');
+                $scope.cancel();
+                scope.aceSrcTbLoaded(true);
+              } else {
+                var message = request.message;
+                var msg = !!(message) ? message : 'Failed to create streaming source.';
+                $scope.streaming.errMsg = msg;
+              }
+              loadingRequest.hide();
+            }, function (e) {
+              if (e.data && e.data.exception) {
+                var message = e.data.exception;
+                var msg = !!(message) ? message : 'Failed to create streaming source.';
+                $scope.streaming.errMsg = msg;
+              } else {
+                $scope.streaming.errMsg = 'Failed to create streaming source.';
+              }
+              //end loading
+              loadingRequest.hide();
+            });
+          }
+        });
+
+      };
+
+      $scope.validateTableName = function() {
+        var tableName = $scope.tableData.name;
+        if (tableName && tableName.length > 0) {
+          if (tableName.split('.').length < 3 && tableName.indexOf('.') !== 0) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+        return false;
+      };
+
+      $scope._transformStreamingObj = function(streamingObject) {
+        var streamingRequest = {};
+        streamingRequest.project = streamingObject.project;
+        var streamingConfig = angular.copy(streamingObject.streamingConfig);
+        streamingRequest.tableData = angular.copy(streamingObject.tableData);
+        if (tableConfig.streamingSourceType.kafka === streamingRequest.tableData.source_type) {
+            // Set bootstrap servers
+            var bootstrapServersStr = '';
+            angular.forEach(streamingObject.streamingConfig.properties.bootstrapServers, function(bootstrapServer, index) {
+              bootstrapServersStr += ',' + bootstrapServer.host + ':' + bootstrapServer.port;
+            });
+            streamingConfig.properties['bootstrap.servers'] = bootstrapServersStr.substring(1);
+            delete streamingConfig.properties.bootstrapServers;
+        }
+        if ($scope.streaming.lambda) {
+          streamingRequest.tableData.source_type = streamingRequest.tableData.source_type + 1;
+        }
+        streamingRequest.tableData = angular.toJson(streamingRequest.tableData);
+        streamingRequest.streamingConfig = angular.toJson(streamingConfig);
+        return streamingRequest;
+      };
+
+    };
   });
 
 /*snapshot controller*/
@@ -952,4 +1381,21 @@ KylinApp
       }
       $scope.initSnapshots();
     });
-  }); 
+  });
+
+/*Avoid watch method call twice*/
+KylinApp
+  .controller('StreamConfigDisplayCtrl', function ($scope, StreamingServiceV2, tableConfig) {
+    $scope.$watch('tableModel.selectedSrcTable', function (newValue, oldValue) {
+      if (!newValue) {
+        return;
+      }
+      if (_.values(tableConfig.streamingSourceType).indexOf($scope.tableModel.selectedSrcTable.source_type) > -1) {
+        var table = $scope.tableModel.selectedSrcTable;
+        var streamingName = table.database+"."+table.name;
+        StreamingServiceV2.getConfig({table:streamingName}, function (configs) {
+          $scope.currentStreamingConfig = configs[0];
+        });
+      }
+    });
+  });

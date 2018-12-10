@@ -72,6 +72,12 @@
     </div>
   </script>
 
+
+<script type="text/ng-template" id="addStreamingSourceV2.html">
+  <div ng-show="steps.curStep==1" ng-include="'partials/tables/loadStreamingSourceConfig.html'"></div>
+  <div ng-show="steps.curStep==2" ng-include="'partials/tables/loadStreamingTableConfig.html'"></div>
+</script>
+
 <script type="text/ng-template" id="editStreamingSource.html">
 
   <div class="modal-header">

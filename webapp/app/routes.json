@@ -134,5 +134,13 @@
       "templateUrl": "partials/cubes/hybrid_edit.html",
       "tab": "models"
     }
+  },
+  {
+    "url": "/streaming/receiver/:receiverId",
+    "params": {
+      "templateUrl": "partials/admin/streamingReceiver.html",
+      "tab": "admin",
+      "controller": "StreamingReceiverCtrl"
+    }
   }
 ]
