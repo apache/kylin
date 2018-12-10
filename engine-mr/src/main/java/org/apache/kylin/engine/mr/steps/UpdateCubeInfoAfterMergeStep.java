@@ -68,8 +68,12 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         long sourceSize = 0L;
         boolean isOffsetCube = mergedSegment.isOffsetCube();
         Long tsStartMin = Long.MAX_VALUE, tsEndMax = 0L;
+        CubeSegment lastMergedSegment = null;
         for (String id : mergingSegmentIds) {
             CubeSegment segment = cube.getSegmentById(id);
+            if (lastMergedSegment == null || lastMergedSegment.getTSRange().end.v < segment.getTSRange().end.v) {
+                lastMergedSegment = segment;
+            }
             sourceCount += segment.getInputRecords();
             sourceSize += segment.getInputRecordsSize();
             tsStartMin = Math.min(tsStartMin, segment.getTSRange().start.v);
@@ -95,6 +99,8 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         mergedSegment.setLastBuildJobID(CubingExecutableUtil.getCubingJobId(this.getParams()));
         mergedSegment.setLastBuildTime(System.currentTimeMillis());
         mergedSegment.setDimensionRangeInfoMap(mergedSegDimRangeMap);
+        mergedSegment.setStreamSourceCheckpoint(lastMergedSegment != null ? lastMergedSegment.getStreamSourceCheckpoint() : null);
+
         if (isOffsetCube) {
             SegmentRange.TSRange tsRange = new SegmentRange.TSRange(tsStartMin, tsEndMax);
             mergedSegment.setTSRange(tsRange);
