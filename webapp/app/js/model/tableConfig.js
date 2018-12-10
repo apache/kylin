@@ -129,7 +129,11 @@ KylinApp.constant('tableConfig', {
     {attr: 'sourceTableLastModifyTime', name: 'Source Table Last Modify Time'},
     {attr: 'sourceTableSize', name: 'Size'},
     {attr: 'usageInfo', name: 'Useage Info'}
-  ]
+  ],
+ streamingSourceType: {
+   kafka: 20,
+   kafka_hive: 21
+ }
 
 
 });
