@@ -163,7 +163,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
         // exactAggregation mean: needn't aggregation at storage and query engine both.
         boolean exactAggregation = isExactAggregation(context, cuboid, groups, otherDimsD, singleValuesD,
-                derivedPostAggregation, sqlDigest.aggregations, sqlDigest.aggrSqlCalls);
+                derivedPostAggregation, sqlDigest.aggregations, sqlDigest.aggrSqlCalls, sqlDigest.groupByExpression);
         context.setExactAggregation(exactAggregation);
 
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
@@ -557,7 +557,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     private boolean isExactAggregation(StorageContext context, Cuboid cuboid, Collection<TblColRef> groups,
             Set<TblColRef> othersD, Set<TblColRef> singleValuesD, Set<TblColRef> derivedPostAggregation,
-            Collection<FunctionDesc> functionDescs, List<SQLDigest.SQLCall> aggrSQLCalls) {
+            Collection<FunctionDesc> functionDescs, List<SQLDigest.SQLCall> aggrSQLCalls, boolean groupByExpression) {
         if (context.isNeedStorageAggregation()) {
             logger.info("exactAggregation is false because need storage aggregation");
             return false;
@@ -603,6 +603,12 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 logger.info("exactAggregation is false because cube is partitioned and %s is not on group by", col);
                 return false;
             }
+        }
+
+        // for group by expression like: group by seller_id/100. seller_id_1(200) get 2, seller_id_2(201) also get 2, so can't aggregate exactly
+        if (groupByExpression) {
+            logger.info("exactAggregation is false because group by expression");
+            return false;
         }
 
         logger.info("exactAggregation is true, cuboid id is {0}", String.valueOf(cuboid.getId()));
