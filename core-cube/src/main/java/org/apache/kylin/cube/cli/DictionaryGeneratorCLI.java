@@ -19,6 +19,7 @@
 package org.apache.kylin.cube.cli;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.hadoop.io.IOUtils;
@@ -42,6 +43,8 @@ import com.google.common.collect.Sets;
 
 public class DictionaryGeneratorCLI {
 
+    private DictionaryGeneratorCLI(){}
+
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGeneratorCLI.class);
 
     public static void processSegment(KylinConfig config, String cubeName, String segmentID, String uuid,
@@ -58,7 +61,7 @@ public class DictionaryGeneratorCLI {
 
         // dictionary
         for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionaryBuilt()) {
-            logger.info("Building dictionary for " + col);
+            logger.info("Building dictionary for {}", col);
             IReadableTable inpTable = factTableValueProvider.getDistinctValuesFor(col);
 
             Dictionary<String> preBuiltDict = null;
@@ -67,10 +70,10 @@ public class DictionaryGeneratorCLI {
             }
 
             if (preBuiltDict != null) {
-                logger.debug("Dict for '" + col.getName() + "' has already been built, save it");
+                logger.debug("Dict for '{}' has already been built, save it", col.getName());
                 cubeMgr.saveDictionary(cubeSeg, col, inpTable, preBuiltDict);
             } else {
-                logger.debug("Dict for '" + col.getName() + "' not pre-built, build it from " + inpTable.toString());
+                logger.debug("Dict for '{}' not pre-built, build it from {}", col.getName(), inpTable);
                 cubeMgr.buildDictionary(cubeSeg, col, inpTable);
             }
         }
@@ -90,14 +93,14 @@ public class DictionaryGeneratorCLI {
         }
 
         for (String tableIdentity : toSnapshot) {
-            logger.info("Building snapshot of " + tableIdentity);
+            logger.info("Building snapshot of {}", tableIdentity);
             cubeMgr.buildSnapshotTable(cubeSeg, tableIdentity, uuid);
         }
 
         CubeInstance updatedCube = cubeMgr.getCube(cubeSeg.getCubeInstance().getName());
         cubeSeg = updatedCube.getSegmentById(cubeSeg.getUuid());
         for (TableRef lookup : toCheckLookup) {
-            logger.info("Checking snapshot of " + lookup);
+            logger.info("Checking snapshot of {}", lookup);
             try {
                 JoinDesc join = cubeSeg.getModel().getJoinsTree().getJoinByPKSide(lookup);
                 ILookupTable table = cubeMgr.getLookupTable(cubeSeg, join);
@@ -105,7 +108,7 @@ public class DictionaryGeneratorCLI {
                     IOUtils.closeStream(table);
                 }
             } catch (Throwable th) {
-                throw new RuntimeException("Checking snapshot of " + lookup + " failed.", th);
+                throw new RuntimeException(String.format(Locale.ROOT, "Checking snapshot of %s failed.", lookup), th);
             }
         }
     }
