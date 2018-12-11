@@ -130,10 +130,10 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
                 // is a trivial expr
                 return f;
             }
-            //else go to default
-        default:
             filter = new UnsupportedTupleFilter(TupleFilter.FilterOperatorEnum.UNSUPPORTED);
             break;
+        default:
+            filter = new UnsupportedTupleFilter(TupleFilter.FilterOperatorEnum.UNSUPPORTED);
         }
 
         for (RexNode operand : call.operands) {
@@ -281,7 +281,6 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
             strValue = ((NlsString) literalValue).getValue();
         } else if (literalValue instanceof GregorianCalendar) {
             GregorianCalendar g = (GregorianCalendar) literalValue;
-            //strValue = "" + g.get(Calendar.YEAR) + "-" + normToTwoDigits(g.get(Calendar.MONTH) + 1) + "-" + normToTwoDigits(g.get(Calendar.DAY_OF_MONTH));
             strValue = Long.toString(g.getTimeInMillis());
         } else if (literalValue instanceof TimeUnitRange) {
             // Extract(x from y) in where clause

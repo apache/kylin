@@ -48,6 +48,10 @@ public class QueryUtil {
         String transform(String sql, String project, String defaultSchema);
     }
 
+    static final String KEYWORD_SELECT = "select";
+    static final String KEYWORD_WITH = "with";
+    static final String KEYWORD_EXPLAIN = "explain";
+
     /**
      * @deprecated Deprecated because of KYLIN-3594
      */
@@ -126,7 +130,7 @@ public class QueryUtil {
                 IQueryTransformer t = (IQueryTransformer) ClassUtil.newInstance(clz);
                 transformers.add(t);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to init query transformer", e);
+                throw new IllegalStateException("Failed to init query transformer", e);
             }
         }
 
@@ -178,8 +182,9 @@ public class QueryUtil {
         String sql1 = sql.toLowerCase(Locale.ROOT);
         sql1 = removeCommentInSql(sql1);
         sql1 = sql1.trim();
-        return sql1.startsWith("select") || (sql1.startsWith("with") && sql1.contains("select"))
-                || (sql1.startsWith("explain") && sql1.contains("select"));
+
+        return sql1.startsWith(KEYWORD_SELECT) || (sql1.startsWith(KEYWORD_WITH) && sql1.contains(KEYWORD_SELECT))
+                || (sql1.startsWith(KEYWORD_EXPLAIN) && sql1.contains(KEYWORD_SELECT));
     }
 
     public static String removeCommentInSql(String sql1) {

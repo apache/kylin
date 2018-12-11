@@ -59,9 +59,10 @@ public class RowCounterCLI {
         } else {
             logger.info("startkey lenght: {}", startKey.length);
         }
-
-        logger.info("start key in binary: {}", Bytes.toStringBinary(startKey));
-        logger.info("end key in binary: {}", Bytes.toStringBinary(endKey));
+        if(logger.isInfoEnabled()){
+            logger.info("start key in binary: {}", Bytes.toStringBinary(startKey));
+            logger.info("end key in binary: {}", Bytes.toStringBinary(endKey));
+        }
 
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
 
