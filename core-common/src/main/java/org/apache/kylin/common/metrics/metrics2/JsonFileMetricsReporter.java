@@ -98,20 +98,14 @@ public class JsonFileMetricsReporter implements CodahaleReporter {
                         return;
                     }
 
-                    BufferedWriter bw = null;
-                    try {
+                    try (BufferedWriter bw = new BufferedWriter(
+                            new OutputStreamWriter(fs.create(tmpPath, true), StandardCharsets.UTF_8))) {
                         fs.delete(tmpPath, true);
-                        bw = new BufferedWriter(
-                                new OutputStreamWriter(fs.create(tmpPath, true), StandardCharsets.UTF_8));
                         bw.write(json);
                         fs.setPermission(tmpPath, FsPermission.createImmutable((short) 0644));
                     } catch (IOException e) {
                         LOGGER.error("Unable to write to temp file " + tmpPath, e);
                         return;
-                    } finally {
-                        if (bw != null) {
-                            bw.close();
-                        }
                     }
 
                     try {
