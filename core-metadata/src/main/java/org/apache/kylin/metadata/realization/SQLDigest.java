@@ -60,6 +60,7 @@ public class SQLDigest {
     public Set<TblColRef> subqueryJoinParticipants;
 
     public Map<TblColRef, TupleExpression> dynGroupbyColumns;
+    public boolean groupByExpression;
 
     // aggregation
     public Set<TblColRef> metricColumns;
@@ -85,7 +86,7 @@ public class SQLDigest {
 
     public SQLDigest(String factTable, Set<TblColRef> allColumns, List<JoinDesc> joinDescs, // model
             List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants,
-            Map<TblColRef, TupleExpression> dynGroupByColumns, // group by
+            Map<TblColRef, TupleExpression> dynGroupByColumns, boolean groupByExpression, // group by
             Set<TblColRef> metricColumns, List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, // aggregation
             List<DynamicFunctionDesc> dynAggregations, //
             Set<TblColRef> rtDimensionColumns, Set<TblColRef> rtMetricColumns, // dynamic col related columns
@@ -101,6 +102,7 @@ public class SQLDigest {
         this.subqueryJoinParticipants = subqueryJoinParticipants;
 
         this.dynGroupbyColumns = dynGroupByColumns;
+        this.groupByExpression = groupByExpression;
 
         this.metricColumns = metricColumns;
         this.aggregations = aggregations;
