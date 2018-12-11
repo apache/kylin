@@ -40,6 +40,9 @@ import com.google.common.collect.Maps;
 public class QueryContext {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryContext.class);
+    private static final String CSSR_SHOULD_BE_INIT_FOR_CONTEXT = "CubeSegmentStatisticsResult should be initialized for context {}";
+    private static final String CSSM_SHOULD_BE_INIT_FOR_CSSR = "cubeSegmentStatisticsMap should be initialized for CubeSegmentStatisticsResult with query type {}";
+    private static final String INPUT = " input ";
 
     public interface QueryStopListener {
         void stop(QueryContext query);
@@ -208,13 +211,12 @@ public class QueryContext {
     public CubeSegmentStatistics getCubeSegmentStatistics(int ctxId, String cubeName, String segmentName) {
         CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
         if (cubeSegmentStatisticsResult == null) {
-            logger.warn("CubeSegmentStatisticsResult should be initialized for context {}", ctxId);
+            logger.warn(CSSR_SHOULD_BE_INIT_FOR_CONTEXT, ctxId);
             return null;
         }
         ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = cubeSegmentStatisticsResult.cubeSegmentStatisticsMap;
         if (cubeSegmentStatisticsMap == null) {
-            logger.warn(
-                    "cubeSegmentStatisticsMap should be initialized for CubeSegmentStatisticsResult with query type {}", cubeSegmentStatisticsResult.queryType);
+            logger.warn(CSSM_SHOULD_BE_INIT_FOR_CSSR, cubeSegmentStatisticsResult.queryType);
             return null;
         }
         ConcurrentMap<String, CubeSegmentStatistics> segmentStatisticsMap = cubeSegmentStatisticsMap.get(cubeName);
@@ -235,13 +237,12 @@ public class QueryContext {
     public void addCubeSegmentStatistics(int ctxId, CubeSegmentStatistics cubeSegmentStatistics) {
         CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
         if (cubeSegmentStatisticsResult == null) {
-            logger.warn("CubeSegmentStatisticsResult should be initialized for context {}", ctxId);
+            logger.warn(CSSR_SHOULD_BE_INIT_FOR_CONTEXT, ctxId);
             return;
         }
         ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = cubeSegmentStatisticsResult.cubeSegmentStatisticsMap;
         if (cubeSegmentStatisticsMap == null) {
-            logger.warn(
-                    "cubeSegmentStatisticsMap should be initialized for CubeSegmentStatisticsResult with query type {}", cubeSegmentStatisticsResult.queryType);
+            logger.warn(CSSM_SHOULD_BE_INIT_FOR_CSSR, cubeSegmentStatisticsResult.queryType);
             return;
         }
         String cubeName = cubeSegmentStatistics.cubeName;
@@ -262,14 +263,12 @@ public class QueryContext {
 
         CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
         if (cubeSegmentStatisticsResult == null) {
-            logger.warn("CubeSegmentStatisticsResult should be initialized for context {}", ctxId);
+            logger.warn(CSSR_SHOULD_BE_INIT_FOR_CONTEXT, ctxId);
             return;
         }
         ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = cubeSegmentStatisticsResult.cubeSegmentStatisticsMap;
         if (cubeSegmentStatisticsMap == null) {
-            logger.warn(
-                    "cubeSegmentStatisticsMap should be initialized for CubeSegmentStatisticsResult with query type {}",
-                    cubeSegmentStatisticsResult.queryType);
+            logger.warn(CSSM_SHOULD_BE_INIT_FOR_CSSR, cubeSegmentStatisticsResult.queryType);
             return;
         }
         cubeSegmentStatisticsMap.putIfAbsent(cubeName, Maps.<String, CubeSegmentStatistics> newConcurrentMap());
@@ -285,14 +284,14 @@ public class QueryContext {
             StringBuilder inconsistency = new StringBuilder();
             if (segmentStatistics.sourceCuboidId != sourceCuboidId) {
                 inconsistency.append(
-                        "sourceCuboidId exist " + segmentStatistics.sourceCuboidId + " input " + sourceCuboidId);
+                        "sourceCuboidId exist " + segmentStatistics.sourceCuboidId + INPUT + sourceCuboidId);
             }
             if (segmentStatistics.targetCuboidId != targetCuboidId) {
                 inconsistency.append(
-                        "targetCuboidId exist " + segmentStatistics.targetCuboidId + " input " + targetCuboidId);
+                        "targetCuboidId exist " + segmentStatistics.targetCuboidId + INPUT + targetCuboidId);
             }
             if (segmentStatistics.filterMask != filterMask) {
-                inconsistency.append("filterMask exist " + segmentStatistics.filterMask + " input " + filterMask);
+                inconsistency.append("filterMask exist " + segmentStatistics.filterMask + INPUT + filterMask);
             }
             logger.error("cube segment statistics wrapper is not consistent due to " + inconsistency.toString());
             return;
