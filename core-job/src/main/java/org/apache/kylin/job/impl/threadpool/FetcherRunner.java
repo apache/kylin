@@ -35,15 +35,12 @@ public abstract class FetcherRunner implements Runnable {
 
     protected JobEngineConfig jobEngineConfig;
     protected DefaultContext context;
-    protected ExecutableManager executableManager;
     protected JobExecutor jobExecutor;
     protected volatile boolean fetchFailed = false;
 
-    public FetcherRunner(JobEngineConfig jobEngineConfig, DefaultContext context, ExecutableManager executableManager,
-            JobExecutor jobExecutor) {
+    public FetcherRunner(JobEngineConfig jobEngineConfig, DefaultContext context, JobExecutor jobExecutor) {
         this.jobEngineConfig = jobEngineConfig;
         this.context = context;
-        this.executableManager = executableManager;
         this.jobExecutor = jobExecutor;
     }
 
@@ -73,5 +70,9 @@ public abstract class FetcherRunner implements Runnable {
     @VisibleForTesting
     void setFetchFailed(boolean fetchFailed) {
         this.fetchFailed = fetchFailed;
+    }
+
+    ExecutableManager getExecutableManger() {
+        return ExecutableManager.getInstance(jobEngineConfig.getConfig());
     }
 }
