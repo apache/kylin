@@ -209,8 +209,6 @@ public class HBaseResourceStore extends PushdownResourceStore {
     }
 
     private void tuneScanParameters(Scan scan) {
-        // divide by 10 as some resource like dictionary or snapshot can be very large
-        // scan.setCaching(kylinConfig.getHBaseScanCacheRows() / 10);
         scan.setCaching(kylinConfig.getHBaseScanCacheRows());
 
         scan.setMaxResultSize(kylinConfig.getHBaseScanMaxResultSize());
@@ -221,8 +219,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
         void visit(String childPath, String fullPath, Result hbaseResult) throws IOException;
     }
 
-    private RawResource rawResource(String path, Result hbaseResult, boolean loadContent)
-            throws IOException {
+    private RawResource rawResource(String path, Result hbaseResult, boolean loadContent) {
         long lastModified = getTimestamp(hbaseResult);
         if (loadContent) {
             try {
@@ -304,7 +301,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
 
             table.put(put);
 
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             if (pushdown != null)
                 pushdown.rollback();
             throw ex;
@@ -334,8 +331,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
             put.addColumn(B_FAMILY, B_COLUMN_TS, Bytes.toBytes(newTS));
 
             boolean ok = table.checkAndPut(row, B_FAMILY, B_COLUMN_TS, bOldTS, put);
-            logger.trace("Update row " + resPath + " from oldTs: " + oldTS + ", to newTs: " + newTS
-                    + ", operation result: " + ok);
+            logger.trace("Update row {} from oldTs: {}, to newTs: {}, operation result: {}", resPath, oldTS, newTS, ok);
             if (!ok) {
                 long real = getResourceTimestampImpl(resPath);
                 throw new WriteConflictException(
@@ -344,7 +340,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
 
             return newTS;
 
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             if (pushdown != null)
                 pushdown.rollback();
             throw ex;

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.job.dao;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +35,7 @@ import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
@@ -47,7 +49,8 @@ import com.google.common.collect.Lists;
 public class ExecutableDao {
 
     private static final Serializer<ExecutablePO> JOB_SERIALIZER = new JsonSerializer<ExecutablePO>(ExecutablePO.class);
-    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(ExecutableOutputPO.class);
+    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(
+            ExecutableOutputPO.class);
     private static final Logger logger = LoggerFactory.getLogger(ExecutableDao.class);
 
     public static ExecutableDao getInstance(KylinConfig config) {
@@ -60,7 +63,7 @@ public class ExecutableDao {
     }
 
     // ============================================================================
-    
+
     private ResourceStore store;
 
     private CaseInsensitiveStringCache<ExecutablePO> executableDigestMap;
@@ -76,7 +79,7 @@ public class ExecutableDao {
     private AutoReadWriteLock executableOutputDigestMapLock = new AutoReadWriteLock();
 
     private ExecutableDao(KylinConfig config) throws IOException {
-        logger.info("Using metadata url: " + config);
+        logger.info("Using metadata url: {}", config);
         this.store = ResourceStore.getStore(config);
         this.executableDigestMap = new CaseInsensitiveStringCache<>(config, "execute");
         this.executableDigestCrud = new CachedCrudAssist<ExecutablePO>(store, ResourceStore.EXECUTE_RESOURCE_ROOT, "",
@@ -86,7 +89,7 @@ public class ExecutableDao {
                 try {
                     ExecutablePO executablePO = readJobResource(path);
                     if (executablePO == null) {
-                        logger.warn("No job found at " + path + ", returning null");
+                        logger.warn("No job found at {}, returning null", path);
                         executableDigestMap.removeLocal(resourceName(path));
                         return null;
                     }
@@ -114,8 +117,9 @@ public class ExecutableDao {
         this.executableDigestCrud.reloadAll();
 
         this.executableOutputDigestMap = new CaseInsensitiveStringCache<>(config, "execute_output");
-        this.executableOutputDigestCrud = new CachedCrudAssist<ExecutableOutputPO>(store, ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT,
-                "", ExecutableOutputPO.class, executableOutputDigestMap, false) {
+        this.executableOutputDigestCrud = new CachedCrudAssist<ExecutableOutputPO>(store,
+                ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, "", ExecutableOutputPO.class, executableOutputDigestMap,
+                false) {
             @Override
             public void reloadAll() throws IOException {
                 logger.debug("Reloading execute_output from " + ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
@@ -129,8 +133,8 @@ public class ExecutableDao {
                             reloadAt(path);
                     }
 
-                    logger.debug("Loaded " + executableOutputDigestMap.size() + " execute_output digest(s) out of " + paths.size()
-                            + " resource");
+                    logger.debug("Loaded {} execute_output digest(s) out of {} resource",
+                            executableOutputDigestMap.size(), paths.size());
                 }
             }
 
@@ -139,7 +143,7 @@ public class ExecutableDao {
                 try {
                     ExecutableOutputPO executableOutputPO = readJobOutputResource(path);
                     if (executableOutputPO == null) {
-                        logger.warn("No job output found at " + path + ", returning null");
+                        logger.warn("No job output found at {}, returning null", path);
                         executableOutputDigestMap.removeLocal(resourceName(path));
                         return null;
                     }
@@ -383,8 +387,9 @@ public class ExecutableDao {
     }
 
     public ExecutableOutputPO getJobOutput(String uuid) throws PersistentException {
+        ExecutableOutputPO result = null;
         try {
-            ExecutableOutputPO result = readJobOutputResource(pathOfJobOutput(uuid));
+            result = readJobOutputResource(pathOfJobOutput(uuid));
             if (result == null) {
                 result = new ExecutableOutputPO();
                 result.setUuid(uuid);
@@ -393,7 +398,14 @@ public class ExecutableDao {
             return result;
         } catch (IOException e) {
             logger.error("error get job output id:" + uuid, e);
-            throw new PersistentException(e);
+            if (e.getCause() instanceof FileNotFoundException) {
+                result = new ExecutableOutputPO();
+                result.setUuid(uuid);
+                result.setStatus(ExecutableState.SUCCEED.name());
+                return result;
+            } else {
+                throw new PersistentException(e);
+            }
         }
     }
 
