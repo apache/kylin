@@ -92,6 +92,11 @@ public class JoinedFlatTable {
             ddl.append(colName(col, flatDesc.useAlias()) + " " + getHiveDataType(col.getDatatype()) + "\n");
         }
         ddl.append(")" + "\n");
+
+        if (!("TEXTFILE".equals(storageFormat.toUpperCase(Locale.ROOT)) || "SEQUENCEFILE".equals(storageFormat.toUpperCase(Locale.ROOT)))) {
+            throw new RuntimeException("Invalid storage format of flat table: " + storageFormat.toUpperCase(Locale.ROOT));
+        }
+
         if (TEXTFILE.equals(storageFormat)) {
             ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '" + fieldDelimiter + "'\n");
         }
