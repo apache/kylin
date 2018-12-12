@@ -188,8 +188,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             }
         };
         fetcher = jobEngineConfig.getJobPriorityConsidered()
-                ? new PriorityFetcherRunner(jobEngineConfig, context, executableManager, jobExecutor)
-                : new DefaultFetcherRunner(jobEngineConfig, context, executableManager, jobExecutor);
+                ? new PriorityFetcherRunner(jobEngineConfig, context, jobExecutor)
+                : new DefaultFetcherRunner(jobEngineConfig, context, jobExecutor);
         logger.info("Creating fetcher pool instance:" + System.identityHashCode(fetcher));
         fetcherPool.scheduleAtFixedRate(fetcher, pollSecond / 10, pollSecond, TimeUnit.SECONDS);
         hasStarted = true;

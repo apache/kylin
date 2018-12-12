@@ -24,7 +24,6 @@ import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
-import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.slf4j.Logger;
@@ -34,9 +33,8 @@ public class DefaultFetcherRunner extends FetcherRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultFetcherRunner.class);
 
-    public DefaultFetcherRunner(JobEngineConfig jobEngineConfig, DefaultContext context,
-            ExecutableManager executableManager, JobExecutor jobExecutor) {
-        super(jobEngineConfig, context, executableManager, jobExecutor);
+    public DefaultFetcherRunner(JobEngineConfig jobEngineConfig, DefaultContext context, JobExecutor jobExecutor) {
+        super(jobEngineConfig, context, jobExecutor);
     }
 
     @Override
@@ -50,7 +48,7 @@ public class DefaultFetcherRunner extends FetcherRunner {
             }
 
             int nRunning = 0, nReady = 0, nStopped = 0, nOthers = 0, nError = 0, nDiscarded = 0, nSUCCEED = 0;
-            for (final String id : executableManager.getAllJobIdsInCache()) {
+            for (final String id : getExecutableManger().getAllJobIdsInCache()) {
                 if (isJobPoolFull()) {
                     return;
                 }
@@ -60,7 +58,7 @@ public class DefaultFetcherRunner extends FetcherRunner {
                     continue;
                 }
 
-                final Output outputDigest = executableManager.getOutputDigest(id);
+                final Output outputDigest = getExecutableManger().getOutputDigest(id);
                 if ((outputDigest.getState() != ExecutableState.READY)) {
                     // logger.debug("Job id:" + id + " not runnable");
                     if (outputDigest.getState() == ExecutableState.SUCCEED) {
@@ -73,7 +71,7 @@ public class DefaultFetcherRunner extends FetcherRunner {
                         nStopped++;
                     } else {
                         if (fetchFailed) {
-                            executableManager.forceKillJob(id);
+                            getExecutableManger().forceKillJob(id);
                             nError++;
                         } else {
                             nOthers++;
@@ -82,7 +80,7 @@ public class DefaultFetcherRunner extends FetcherRunner {
                     continue;
                 }
 
-                final AbstractExecutable executable = executableManager.getJob(id);
+                final AbstractExecutable executable = getExecutableManger().getJob(id);
                 if (!executable.isReady()) {
                     nOthers++;
                     continue;
