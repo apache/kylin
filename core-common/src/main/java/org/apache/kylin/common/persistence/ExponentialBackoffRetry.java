@@ -83,7 +83,8 @@ public class ExponentialBackoffRetry {
             }
 
             long waitMs = getSleepTimeMs();
-            logger.info("Will try to re-connect after " + waitMs / 1000 + " seconds.");
+            long seconds = waitMs / 1000;
+            logger.info("Will try to re-connect after {} seconds.", seconds);
             try {
                 Thread.sleep(waitMs);
             } catch (InterruptedException e) {

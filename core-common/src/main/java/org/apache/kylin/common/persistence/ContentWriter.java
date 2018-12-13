@@ -71,17 +71,11 @@ abstract public class ContentWriter {
     }
 
     public byte[] extractAllBytes() throws IOException {
-        DataOutputStream dout = null;
-        ByteArrayOutputStream bout = null;
-        try {
-            bout = new ByteArrayOutputStream();
-            dout = new DataOutputStream(bout);
+        try (ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                DataOutputStream dout = new DataOutputStream(bout)) {
             write(dout);
             dout.flush();
             return bout.toByteArray();
-        } finally {
-            IOUtils.closeQuietly(dout);
-            IOUtils.closeQuietly(bout);
         }
     }
 }

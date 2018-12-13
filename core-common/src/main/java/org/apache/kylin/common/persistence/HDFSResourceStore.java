@@ -60,18 +60,18 @@ public class HDFSResourceStore extends ResourceStore {
         if (path == null) {
             // missing path is not expected, but don't fail it
             path = kylinConfig.getHdfsWorkingDirectory(null) + "tmp_metadata";
-            logger.warn("Missing path, fall back to " + path);
+            logger.warn("Missing path, fall back to {}. ", path);
         }
 
         fs = HadoopUtil.getFileSystem(path);
         Path metadataPath = new Path(path);
         if (fs.exists(metadataPath) == false) {
-            logger.warn("Path not exist in HDFS, create it: " + path);
+            logger.warn("Path not exist in HDFS, create it: {}. ", path);
             createMetaFolder(metadataPath);
         }
 
         hdfsMetaPath = metadataPath;
-        logger.info("hdfs meta path : " + hdfsMetaPath.toString());
+        logger.info("hdfs meta path : {}", hdfsMetaPath);
 
     }
 
@@ -81,7 +81,7 @@ public class HDFSResourceStore extends ResourceStore {
             fs.mkdirs(metaDirName);
         }
 
-        logger.info("hdfs meta path created: " + metaDirName.toString());
+        logger.info("hdfs meta path created: {}", metaDirName);
     }
 
     @Override
@@ -185,7 +185,7 @@ public class HDFSResourceStore extends ResourceStore {
         if (fs.exists(p) && fs.isFile(p)) {
             FileStatus fileStatus = fs.getFileStatus(p);
             if (fileStatus.getLen() == 0) {
-                logger.warn("Zero length file: " + p.toString());
+                logger.warn("Zero length file: {}. ", p);
             }
             FSDataInputStream in = fs.open(p);
             long ts = fileStatus.getModificationTime();
@@ -211,9 +211,9 @@ public class HDFSResourceStore extends ResourceStore {
 
     @Override
     protected void putResourceImpl(String resPath, ContentWriter content, long ts) throws IOException {
-        logger.trace("res path : " + resPath);
+        logger.trace("res path : {}. ", resPath);
         Path p = getRealHDFSPath(resPath);
-        logger.trace("put resource : " + p.toUri());
+        logger.trace("put resource : {}. ", p.toUri());
         FSDataOutputStream out = null;
         try {
             out = fs.create(p, true);

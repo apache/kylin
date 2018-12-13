@@ -62,6 +62,8 @@ abstract public class KylinConfigBase implements Serializable {
     private static final String DEFAULT = "default";
     private static final String KYLIN_ENGINE_MR_JOB_JAR = "kylin.engine.mr.job-jar";
     private static final String KYLIN_STORAGE_HBASE_COPROCESSOR_LOCAL_JAR = "kylin.storage.hbase.coprocessor-local-jar";
+    private static final String FILE_SCHEME = "file:";
+    private static final String MAPRFS_SCHEME = "maprfs:";
 
     /*
      * DON'T DEFINE CONSTANTS FOR PROPERTY KEYS!
@@ -264,10 +266,10 @@ abstract public class KylinConfigBase implements Serializable {
             root += "/";
 
         cachedHdfsWorkingDirectory = root;
-        if (cachedHdfsWorkingDirectory.startsWith("file:")) {
-            cachedHdfsWorkingDirectory = cachedHdfsWorkingDirectory.replace("file:", "file://");
-        } else if (cachedHdfsWorkingDirectory.startsWith("maprfs:")) {
-            cachedHdfsWorkingDirectory = cachedHdfsWorkingDirectory.replace("maprfs:", "maprfs://");
+        if (cachedHdfsWorkingDirectory.startsWith(FILE_SCHEME)) {
+            cachedHdfsWorkingDirectory = cachedHdfsWorkingDirectory.replace(FILE_SCHEME, "file://");
+        } else if (cachedHdfsWorkingDirectory.startsWith(MAPRFS_SCHEME)) {
+            cachedHdfsWorkingDirectory = cachedHdfsWorkingDirectory.replace(MAPRFS_SCHEME, "maprfs://");
         }
         return cachedHdfsWorkingDirectory;
     }
@@ -302,10 +304,10 @@ abstract public class KylinConfigBase implements Serializable {
             root += "/";
 
         cachedBigCellDirectory = root;
-        if (cachedBigCellDirectory.startsWith("file:")) {
-            cachedBigCellDirectory = cachedBigCellDirectory.replace("file:", "file://");
-        } else if (cachedBigCellDirectory.startsWith("maprfs:")) {
-            cachedBigCellDirectory = cachedBigCellDirectory.replace("maprfs:", "maprfs://");
+        if (cachedBigCellDirectory.startsWith(FILE_SCHEME)) {
+            cachedBigCellDirectory = cachedBigCellDirectory.replace(FILE_SCHEME, "file://");
+        } else if (cachedBigCellDirectory.startsWith(MAPRFS_SCHEME)) {
+            cachedBigCellDirectory = cachedBigCellDirectory.replace(MAPRFS_SCHEME, "maprfs://");
         }
 
         return cachedBigCellDirectory;
@@ -411,7 +413,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isResourceStoreReconnectEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.resourcestore.reconnect-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.resourcestore.reconnect-enabled", FALSE));
     }
 
     public int getResourceStoreReconnectBaseMs() {
@@ -1445,7 +1447,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isLazyQueryEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.lazy-query-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.query.lazy-query-enabled", FALSE));
     }
 
     public long getLazyQueryWaitingTimeoutMilliSeconds() {
@@ -1543,7 +1545,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isQuerySegmentCacheEnabled() {
-        return Boolean.parseBoolean(getOptional("kylin.query.segment-cache-enabled", "false"));
+        return Boolean.parseBoolean(getOptional("kylin.query.segment-cache-enabled", FALSE));
     }
 
     public int getQuerySegmentCacheTimeout() {
@@ -1665,7 +1667,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isQueryCacheSignatureEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.cache-signature-enabled", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.cache-signature-enabled", FALSE));
     }
 
     // ============================================================================
