@@ -117,14 +117,14 @@ public class JDBCResourceStore extends PushdownResourceStore {
                 }
 
                 String createIfNeededSql = sqls.getCreateIfNeededSql(tableName);
-                logger.info("Creating table: " + createIfNeededSql);
+                logger.info("Creating table: {}", createIfNeededSql);
                 pstat = connection.prepareStatement(createIfNeededSql);
                 pstat.executeUpdate();
 
                 try {
                     String indexName = "IDX_" + META_TABLE_TS;
                     String createIndexSql = sqls.getCreateIndexSql(indexName, tableName, META_TABLE_TS);
-                    logger.info("Creating index: " + createIndexSql);
+                    logger.info("Creating index: {}", createIndexSql);
                     pstat = connection.prepareStatement(createIndexSql);
                     pstat.executeUpdate();
                 } catch (SQLException ex) {
@@ -587,7 +587,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
             t = t.getCause();
         }
 
-        logger.trace("Not an unreachable exception with causes " + exceptionList.toString());
+        logger.trace("Not an unreachable exception with causes {}", exceptionList);
         return false;
     }
 

@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +105,7 @@ public class FileResourceStore extends ResourceStore {
         File f = file(resPath);
         if (f.exists() && f.isFile()) {
             if (f.length() == 0) {
-                logger.warn("Zero length file: " + f.getAbsolutePath());
+                logger.warn("Zero length file: {}. ", f.getAbsolutePath());
             }
 
             return new RawResource(resPath, f.lastModified(), new FileInputStream(f));
@@ -133,14 +132,10 @@ public class FileResourceStore extends ResourceStore {
 
         File tmp = File.createTempFile("kylin-fileresource-", ".tmp");
         try {
-            FileOutputStream out = new FileOutputStream(tmp);
-            DataOutputStream dout = new DataOutputStream(out);
-            try {
+
+            try (FileOutputStream out = new FileOutputStream(tmp); DataOutputStream dout = new DataOutputStream(out)) {
                 content.write(dout);
                 dout.flush();
-            } finally {
-                IOUtils.closeQuietly(dout);
-                IOUtils.closeQuietly(out);
             }
 
             File f = file(resPath);
