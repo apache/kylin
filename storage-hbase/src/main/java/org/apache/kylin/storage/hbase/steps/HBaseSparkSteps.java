@@ -66,6 +66,11 @@ public class HBaseSparkSteps extends HBaseJobSteps {
         StringUtil.appendWithSeparator(jars, ClassUtil.findContainingJar("org.apache.htrace.Trace", null)); // htrace-core.jar
         StringUtil.appendWithSeparator(jars,
                 ClassUtil.findContainingJar("com.yammer.metrics.core.MetricsRegistry", null)); // metrics-core.jar
+        //KYLIN-3607
+        StringUtil.appendWithSeparator(jars,
+                ClassUtil.findContainingJar("org.apache.hadoop.hbase.regionserver.MetricsRegionServerSourceFactory", null));//hbase-hadoop-compat-1.1.1.jar
+        StringUtil.appendWithSeparator(jars,
+                ClassUtil.findContainingJar("org.apache.hadoop.hbase.regionserver.MetricsRegionServerSourceFactoryImpl", null));//hbase-hadoop2-compat-1.1.1.jar
 
         StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
         sparkExecutable.setJars(jars.toString());
