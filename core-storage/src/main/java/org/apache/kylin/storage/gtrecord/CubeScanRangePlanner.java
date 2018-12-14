@@ -167,7 +167,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
     public GTScanRequest planScanRequest() {
         GTScanRequest scanRequest;
         List<GTScanRange> scanRanges = this.planScanRanges();
-        if (scanRanges != null && scanRanges.size() != 0) {
+        if (scanRanges != null && !scanRanges.isEmpty()) {
             scanRequest = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(scanRanges).setDimensions(gtDimensions)
                     .setAggrGroupBy(gtAggrGroups).setAggrMetrics(gtAggrMetrics).setAggrMetricsFuncs(gtAggrFuncs)
                     .setFilterPushDown(gtFilter)//
@@ -260,10 +260,6 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet, maxFuzzyKeys);
         for (Map<Integer, ByteArray> fuzzyValue : fuzzyValueCombinations) {
 
-            //            BitSet bitSet = new BitSet(gtInfo.getColumnCount());
-            //            for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
-            //                bitSet.set(entry.getKey());
-            //            }
             GTRecord fuzzy = new GTRecord(gtInfo);
             for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 fuzzy.set(entry.getKey(), entry.getValue());
@@ -374,7 +370,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
                     result.add(new GTScanRange(range.pkStart, range.pkEnd, subFuzzyKeys));
                     startIndex = endIndex;
                 }
-                logger.debug("large FuzzyKeys split size : " + result.size());
+                logger.debug("large FuzzyKeys split size : {0}", result.size());
             } else {
                 result.add(range);
             }

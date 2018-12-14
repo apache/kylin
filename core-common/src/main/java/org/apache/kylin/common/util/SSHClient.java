@@ -42,6 +42,7 @@ import com.jcraft.jsch.Session;
 
 public class SSHClient {
     protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(SSHClient.class);
+    private static final String ERROR_IN_CHECK_ACK = "Error in checkAck()";
 
     private String hostname;
     private int port;
@@ -97,7 +98,7 @@ public class SSHClient {
                 out.write(command.getBytes(StandardCharsets.UTF_8));
                 out.flush();
                 if (checkAck(in) != 0) {
-                    throw new Exception("Error in checkAck()");
+                    throw new Exception(ERROR_IN_CHECK_ACK);
                 }
             }
 
@@ -115,7 +116,7 @@ public class SSHClient {
             out.write(command.getBytes(StandardCharsets.UTF_8));
             out.flush();
             if (checkAck(in) != 0) {
-                throw new Exception("Error in checkAck()");
+                throw new Exception(ERROR_IN_CHECK_ACK);
             }
 
             // send a content of lfile
@@ -134,7 +135,7 @@ public class SSHClient {
             out.write(buf, 0, 1);
             out.flush();
             if (checkAck(in) != 0) {
-                throw new Exception("Error in checkAck()");
+                throw new Exception(ERROR_IN_CHECK_ACK);
             }
             out.close();
 

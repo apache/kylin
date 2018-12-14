@@ -20,6 +20,7 @@ package org.apache.kylin.cube.cuboid.algorithm;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -97,20 +98,20 @@ public class CuboidRecommender {
                                     true);
 
                             if (recommendCuboid != null) {
-                                logger.info("Add recommend cuboids for " + key + " to cache");
+                                logger.info(String.format(Locale.ROOT, "Add recommend cuboids for %s to cache", key));
                                 cuboidRecommendCache.put(key, recommendCuboid);
                             }
 
                             return recommendCuboid;
                         } catch (Exception e) {
                             cuboidRecommendCache.invalidate(key);
-                            logger.error("Failed to get recommend cuboids for " + key + " in cache", e);
+                            logger.error(String.format(Locale.ROOT, "Failed to get recommend cuboids for %s in cache", key), e);
                             throw e;
                         }
                     }
                 });
             } catch (ExecutionException e) {
-                logger.error("Failed to get recommend cuboids for " + key);
+                logger.error(String.format(Locale.ROOT, "Failed to get recommend cuboids for %s", key));
             }
         }
         return results;
@@ -121,9 +122,9 @@ public class CuboidRecommender {
      */
     public Map<Long, Long> getRecommendCuboidList(CuboidStats cuboidStats, KylinConfig kylinConf,
             boolean ifForceRecommend) {
-        long Threshold1 = 1L << kylinConf.getCubePlannerAgreedyAlgorithmAutoThreshold();
-        long Threshold2 = 1L << kylinConf.getCubePlannerGeneticAlgorithmAutoThreshold();
-        if (Threshold1 >= Threshold2) {
+        long threshold1 = 1L << kylinConf.getCubePlannerAgreedyAlgorithmAutoThreshold();
+        long threshold2 = 1L << kylinConf.getCubePlannerGeneticAlgorithmAutoThreshold();
+        if (threshold1 >= threshold2) {
             logger.error("Invalid Cube Planner Algorithm configuration");
             return null;
         }
@@ -134,7 +135,7 @@ public class CuboidRecommender {
         BenefitPolicy benefitPolicy = new PBPUSCalculator(cuboidStats);
         CuboidRecommendAlgorithm algorithm = null;
 
-        if (allCuboidCount <= Threshold2) {
+        if (allCuboidCount <= threshold2) {
             algorithm = new GreedyAlgorithm(-1, benefitPolicy, cuboidStats);
         } else {
             algorithm = new GeneticAlgorithm(-1, benefitPolicy, cuboidStats);
@@ -161,7 +162,7 @@ public class CuboidRecommender {
             }
         }
 
-        if (!ifForceRecommend && allCuboidCount <= Threshold1) {
+        if (!ifForceRecommend && allCuboidCount <= threshold1) {
             return null;
         }
         return recommendCuboidsWithStats;
