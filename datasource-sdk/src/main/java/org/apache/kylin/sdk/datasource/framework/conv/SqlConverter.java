@@ -110,5 +110,11 @@ public class SqlConverter {
         boolean enableQuote();
 
         String fixIdentifierCaseSensitve(String orig);
+
+        /**
+         * Only support following 3 types
+         * TRANSACTION_READ_COMMITTED，TRANSACTION_READ_UNCOMMITTED，TRANSACTION_READ_COMMITTED
+         */
+        String getTransactionIsolationLevel();
     }
 }
