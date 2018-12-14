@@ -37,7 +37,6 @@ import org.apache.kylin.sdk.datasource.framework.def.DataSourceDefProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 public class JdbcConnector implements Closeable {
@@ -175,8 +174,7 @@ public class JdbcConnector implements Closeable {
         return jdbcDs.getPropertyValue(key);
     }
 
-    @VisibleForTesting
-    SqlConverter getSqlConverter() {
+    public SqlConverter getSqlConverter() {
         return sqlConverter;
     }
 

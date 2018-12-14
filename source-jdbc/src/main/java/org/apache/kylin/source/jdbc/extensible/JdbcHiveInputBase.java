@@ -29,6 +29,7 @@ import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.sdk.datasource.framework.JdbcConnector;
+import org.apache.kylin.sdk.datasource.framework.conv.SqlConverter;
 import org.apache.kylin.source.jdbc.sqoop.SqoopCmdStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,15 +83,15 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
             String filedDelimiter = config.getJdbcSourceFieldDelimiter();
             int mapperNum = config.getSqoopMapperNum();
 
-            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM `%s`.%s as `%s`", splitColumn, splitColumn,
-                    splitDatabase, splitTable, splitTableAlias);
+            String bquery = String.format(Locale.ROOT, "SELECT min(%s), max(%s) FROM `%s`.%s as `%s`", splitColumn,
+                    splitColumn, splitDatabase, splitTable, splitTableAlias);
             bquery = dataSource.convertSql(bquery);
             if (partitionDesc.isPartitioned()) {
                 SegmentRange segRange = flatDesc.getSegRange();
                 if (segRange != null && !segRange.isInfinite()) {
                     if (partitionDesc.getPartitionDateColumnRef().getTableAlias().equals(splitTableAlias)
                             && (partitionDesc.getPartitionTimeColumnRef() == null || partitionDesc
-                            .getPartitionTimeColumnRef().getTableAlias().equals(splitTableAlias))) {
+                                    .getPartitionTimeColumnRef().getTableAlias().equals(splitTableAlias))) {
                         String quotedPartCond = FlatTableSqlQuoteUtils.quoteIdentifierInSqlExpr(flatDesc,
                                 partitionDesc.getPartitionConditionBuilder().buildDateRangeCondition(partitionDesc,
                                         flatDesc.getSegment(), segRange),
@@ -110,6 +111,11 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
                     dataSource.getJdbcUrl(), dataSource.getJdbcDriver(), dataSource.getJdbcUser(),
                     dataSource.getJdbcPassword(), selectSql, jobWorkingDir, hiveTable, splitColumn, bquery,
                     filedDelimiter, mapperNum);
+            SqlConverter.IConfigurer configurer = dataSource.getSqlConverter().getConfigurer();
+            if (configurer.getTransactionIsolationLevel() != null) {
+                cmd = cmd + " --relaxed-isolation --metadata-transaction-isolation-level "
+                        + configurer.getTransactionIsolationLevel();
+            }
             logger.debug("sqoop cmd: {}", cmd);
 
             SqoopCmdStep step = new SqoopCmdStep();

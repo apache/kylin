@@ -78,10 +78,6 @@ public class DefaultConfiguer implements SqlConverter.IConfigurer{
         if (this.adaptor == null) {
             return orig;
         }
-        // fix problem of case sensitive when generate sql.
-//        if (isCaseSensitive()) {
-//            orig = adaptor.fixCaseSensitiveSql(orig);
-//        }
         return adaptor.fixSql(orig);
     }
 
@@ -133,5 +129,10 @@ public class DefaultConfiguer implements SqlConverter.IConfigurer{
             return orig;
         }
         return adaptor.fixIdentifierCaseSensitve(orig);
+    }
+
+    @Override
+    public String getTransactionIsolationLevel() {
+        return dsDef.getPropertyValue("transaction.isolation-level");
     }
 }
