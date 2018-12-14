@@ -149,6 +149,9 @@ public class HiveInputBase {
         step.setCreateTableStatement(dropTableHql + createTableHql + insertDataHqls);
         CubingExecutableUtil.setCubeName(cubeName, step.getParams());
         step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
+        step.setWorkingDir(jobWorkingDir);
+        step.setFlatTableStorageFormat(flatDesc.getDataModel().getConfig().getFlatTableStorageFormat());
+        step.setFlatTableName(flatDesc.getTableName());
         return step;
     }
 

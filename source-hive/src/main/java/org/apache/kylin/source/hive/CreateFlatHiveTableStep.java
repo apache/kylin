@@ -18,15 +18,21 @@
 package org.apache.kylin.source.hive;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -97,12 +103,64 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
         KylinConfig config = getCubeSpecificConfig();
         try {
             createFlatHiveTable(config);
+            checkAndAppendFlatTableFile();
             return new ExecuteResult(ExecuteResult.State.SUCCEED, stepLogger.getBufferedLog());
 
         } catch (Exception e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
             return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog(), e);
         }
+    }
+
+    public void checkAndAppendFlatTableFile() throws IOException {
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        if (getFlatTableName() == null || getFlatTableStorageFormat() == null) {
+            return;
+        }
+
+        Path path = new Path(getWorkingDir(), getFlatTableName());
+
+        logger.debug("Checking flat table files in " + path);
+        FileStatus[] fileStatus = fs.listStatus(path);
+        if (fileStatus.length > 0)
+            return;
+
+        logger.debug("Append empty flat table file in " + path);
+        String flatTableStorageFormat = getFlatTableStorageFormat().toUpperCase(Locale.ROOT);
+        if ("TEXTFILE".equals(flatTableStorageFormat)) {
+            fs.create(new Path(path, "part-m-00000")).close();
+        } else if ("SEQUENCEFILE".equals(flatTableStorageFormat)) {
+            SequenceFile.createWriter(HadoopUtil.getCurrentConfiguration(),
+                    SequenceFile.Writer.file(new Path(path, "000000_0")),
+                    SequenceFile.Writer.keyClass(BytesWritable.class), SequenceFile.Writer.valueClass(Text.class))
+                    .close();
+        } else {
+            throw new RuntimeException("Invalid storage format of flat table: " + flatTableStorageFormat);
+        }
+    }
+
+    public void setFlatTableName(String storageFormat) {
+        setParam("FlatTableName", storageFormat);
+    }
+
+    public String getFlatTableName() {
+        return getParam("FlatTableName");
+    }
+
+    public void setFlatTableStorageFormat(String storageFormat) {
+        setParam("FlatTableStorageFormat", storageFormat);
+    }
+
+    public String getFlatTableStorageFormat() {
+        return getParam("FlatTableStorageFormat");
+    }
+
+    public void setWorkingDir(String workingDir) {
+        setParam("WorkingDir", workingDir);
+    }
+
+    public String getWorkingDir() {
+        return getParam("WorkingDir");
     }
 
     public void setInitStatement(String sql) {
