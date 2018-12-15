@@ -18,18 +18,24 @@
 
 package org.apache.kylin.job.dao;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
+import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ContentReader;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.AutoReadWriteLock;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.CachedCrudAssist;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
@@ -43,7 +49,8 @@ import com.google.common.collect.Lists;
 public class ExecutableDao {
 
     private static final Serializer<ExecutablePO> JOB_SERIALIZER = new JsonSerializer<ExecutablePO>(ExecutablePO.class);
-    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(ExecutableOutputPO.class);
+    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(
+            ExecutableOutputPO.class);
     private static final Logger logger = LoggerFactory.getLogger(ExecutableDao.class);
 
     public static ExecutableDao getInstance(KylinConfig config) {
@@ -56,7 +63,7 @@ public class ExecutableDao {
     }
 
     // ============================================================================
-    
+
     private ResourceStore store;
 
     private CaseInsensitiveStringCache<ExecutablePO> executableDigestMap;
@@ -72,7 +79,7 @@ public class ExecutableDao {
     private AutoReadWriteLock executableOutputDigestMapLock = new AutoReadWriteLock();
 
     private ExecutableDao(KylinConfig config) throws IOException {
-        logger.info("Using metadata url: " + config);
+        logger.info("Using metadata url: {}", config);
         this.store = ResourceStore.getStore(config);
         this.executableDigestMap = new CaseInsensitiveStringCache<>(config, "execute");
         this.executableDigestCrud = new CachedCrudAssist<ExecutablePO>(store, ResourceStore.EXECUTE_RESOURCE_ROOT, "",
@@ -82,7 +89,7 @@ public class ExecutableDao {
                 try {
                     ExecutablePO executablePO = readJobResource(path);
                     if (executablePO == null) {
-                        logger.warn("No job found at " + path + ", returning null");
+                        logger.warn("No job found at {}, returning null", path);
                         executableDigestMap.removeLocal(resourceName(path));
                         return null;
                     }
@@ -110,8 +117,9 @@ public class ExecutableDao {
         this.executableDigestCrud.reloadAll();
 
         this.executableOutputDigestMap = new CaseInsensitiveStringCache<>(config, "execute_output");
-        this.executableOutputDigestCrud = new CachedCrudAssist<ExecutableOutputPO>(store, ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT,
-                "", ExecutableOutputPO.class, executableOutputDigestMap, false) {
+        this.executableOutputDigestCrud = new CachedCrudAssist<ExecutableOutputPO>(store,
+                ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, "", ExecutableOutputPO.class, executableOutputDigestMap,
+                false) {
             @Override
             public void reloadAll() throws IOException {
                 logger.debug("Reloading execute_output from " + ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
@@ -125,8 +133,8 @@ public class ExecutableDao {
                             reloadAt(path);
                     }
 
-                    logger.debug("Loaded " + executableOutputDigestMap.size() + " execute_output digest(s) out of " + paths.size()
-                            + " resource");
+                    logger.debug("Loaded {} execute_output digest(s) out of {} resource",
+                            executableOutputDigestMap.size(), paths.size());
                 }
             }
 
@@ -135,7 +143,7 @@ public class ExecutableDao {
                 try {
                     ExecutableOutputPO executableOutputPO = readJobOutputResource(path);
                     if (executableOutputPO == null) {
-                        logger.warn("No job output found at " + path + ", returning null");
+                        logger.warn("No job output found at {}, returning null", path);
                         executableOutputDigestMap.removeLocal(resourceName(path));
                         return null;
                     }
@@ -163,8 +171,29 @@ public class ExecutableDao {
         Broadcaster.getInstance(config).registerListener(new JobOutputSyncListener(), "execute_output");
     }
 
+    /**
+     * Length of java.util.UUID's string representation is always 36.
+     */
+    private static final int UUID_STRING_REPRESENTATION_LENGTH = 36;
+
+    /**
+     * <pre>
+     *    Backgroud :
+     * 1. Each Executable has id, and id should be unique, we use java.util.UUID to create id of Executable.
+     * 2. 36(UUID_STRING_REPRESENTATION_LENGTH) is a magic number, and it is the length of string of java.util.UUID.toString(). It can verified this simply by `System.out.println(UUID.randomUUID().toString().length());`
+     * 3. All subtask of a ChainedExecutable is also a Executable, its id is a string which length is 39 (36 + 3). See DefaultChainedExecutable#addTask.
+     * 4. Any other Executable's id is a String created by UUID.toString(), so its length is 36.
+     * 5. This method may be a bit fragile/confusing because it depend on specific implementation of subclass of Executable.
+     * </pre>
+     *
+     * @see DefaultChainedExecutable#addTask(AbstractExecutable)
+     * @see AbstractExecutable#AbstractExecutable()
+     *
+     * @param id id of a Executable (mostly it is a UUID)
+     * @return true if the job is a subtask of a ChainedExecutable; else return false
+     */
     private boolean isTaskExecutableOutput(String id) {
-        return id.length() > 36;
+        return id.length() > UUID_STRING_REPRESENTATION_LENGTH;
     }
 
     private class JobSyncListener extends Broadcaster.Listener {
@@ -208,24 +237,24 @@ public class ExecutableDao {
     }
 
     private ExecutablePO readJobResource(String path) throws IOException {
-        return store.getResource(path, ExecutablePO.class, JOB_SERIALIZER);
+        return store.getResource(path, JOB_SERIALIZER);
     }
 
-    private long writeJobResource(String path, ExecutablePO job) throws IOException {
-        return store.putResource(path, job, JOB_SERIALIZER);
+    private void writeJobResource(String path, ExecutablePO job) throws IOException {
+        store.checkAndPutResource(path, job, JOB_SERIALIZER);
     }
 
     private ExecutableOutputPO readJobOutputResource(String path) throws IOException {
-        return store.getResource(path, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+        return store.getResource(path, JOB_OUTPUT_SERIALIZER);
     }
 
-    private long writeJobOutputResource(String path, ExecutableOutputPO output) throws IOException {
-        return store.putResource(path, output, JOB_OUTPUT_SERIALIZER);
+    private void writeJobOutputResource(String path, ExecutableOutputPO output) throws IOException {
+        store.checkAndPutResource(path, output, JOB_OUTPUT_SERIALIZER);
     }
 
     public List<ExecutableOutputPO> getJobOutputs() throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, JOB_OUTPUT_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -234,11 +263,17 @@ public class ExecutableDao {
 
     public List<ExecutableOutputPO> getJobOutputs(long timeStart, long timeEndExclusive) throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, timeStart, timeEndExclusive, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, false,
+                    new ResourceStore.VisitFilter(timeStart, timeEndExclusive),
+                    new ContentReader(JOB_OUTPUT_SERIALIZER));
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
         }
+    }
+
+    public ExecutableOutputPO getJobOutputDigest(String uuid) {
+        return executableOutputDigestMap.get(uuid);
     }
 
     public List<ExecutableOutputPO> getJobOutputDigests(long timeStart, long timeEndExclusive) {
@@ -252,7 +287,7 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs() throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, ExecutablePO.class, JOB_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, JOB_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -261,11 +296,16 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs(long timeStart, long timeEndExclusive) throws PersistentException {
         try {
-            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, timeStart, timeEndExclusive, ExecutablePO.class, JOB_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, false,
+                    new ResourceStore.VisitFilter(timeStart, timeEndExclusive), new ContentReader(JOB_SERIALIZER));
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
         }
+    }
+
+    public ExecutablePO getJobDigest(String uuid) {
+        return executableDigestMap.get(uuid);
     }
 
     public List<ExecutablePO> getJobDigests(long timeStart, long timeEndExclusive) {
@@ -275,6 +315,11 @@ public class ExecutableDao {
                 jobDigests.add(po);
         }
         return jobDigests;
+    }
+
+    public List<String> getJobIdsInCache() {
+        Set<String> idSet = executableDigestMap.keySet();
+        return Lists.newArrayList(idSet);
     }
 
     public List<String> getJobIds() throws PersistentException {
@@ -322,8 +367,7 @@ public class ExecutableDao {
             if (getJob(job.getUuid()) == null) {
                 throw new IllegalArgumentException("job id:" + job.getUuid() + " does not exist");
             }
-            final long ts = writeJobResource(pathOfJob(job), job);
-            job.setLastModified(ts);
+            writeJobResource(pathOfJob(job), job);
             executableDigestMap.put(job.getId(), job);
             return job;
         } catch (IOException e) {
@@ -343,8 +387,9 @@ public class ExecutableDao {
     }
 
     public ExecutableOutputPO getJobOutput(String uuid) throws PersistentException {
+        ExecutableOutputPO result = null;
         try {
-            ExecutableOutputPO result = readJobOutputResource(pathOfJobOutput(uuid));
+            result = readJobOutputResource(pathOfJobOutput(uuid));
             if (result == null) {
                 result = new ExecutableOutputPO();
                 result.setUuid(uuid);
@@ -353,7 +398,14 @@ public class ExecutableDao {
             return result;
         } catch (IOException e) {
             logger.error("error get job output id:" + uuid, e);
-            throw new PersistentException(e);
+            if (e.getCause() instanceof FileNotFoundException) {
+                result = new ExecutableOutputPO();
+                result.setUuid(uuid);
+                result.setStatus(ExecutableState.SUCCEED.name());
+                return result;
+            } else {
+                throw new PersistentException(e);
+            }
         }
     }
 
@@ -371,8 +423,7 @@ public class ExecutableDao {
 
     public void updateJobOutput(ExecutableOutputPO output) throws PersistentException {
         try {
-            final long ts = writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
-            output.setLastModified(ts);
+            writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
             if (!isTaskExecutableOutput(output.getUuid()))
                 executableOutputDigestMap.put(output.getUuid(), output);
         } catch (IOException e) {
@@ -389,6 +440,35 @@ public class ExecutableDao {
         } catch (IOException e) {
             logger.error("error delete job:" + uuid, e);
             throw new PersistentException(e);
+        }
+    }
+
+    public void reloadAll() throws IOException {
+        try (AutoReadWriteLock.AutoLock lock = executableDigestMapLock.lockForWrite()) {
+            executableDigestCrud.reloadAll();
+        }
+        try (AutoReadWriteLock.AutoLock lock = executableOutputDigestMapLock.lockForWrite()) {
+            executableOutputDigestCrud.reloadAll();
+        }
+    }
+
+    public void syncDigestsOfJob(String uuid) throws PersistentException {
+        ExecutablePO job = getJob(uuid);
+        ExecutablePO jobDigest = getJobDigest(uuid);
+
+        if (job == null && jobDigest != null) {
+            executableDigestMap.remove(uuid);
+        } else if (job != null && jobDigest == null) {
+            executableDigestMap.put(uuid, job);
+        }
+
+        ExecutableOutputPO jobOutput = getJobOutput(uuid);
+        ExecutableOutputPO jobOutputDigest = getJobOutputDigest(uuid);
+
+        if (jobOutput == null && jobOutputDigest != null) {
+            executableOutputDigestMap.remove(uuid);
+        } else if (jobOutput != null && jobOutputDigest == null) {
+            executableOutputDigestMap.put(uuid, jobOutput);
         }
     }
 }

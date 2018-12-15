@@ -169,10 +169,10 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
     public void testRemoveCommentInSql() {
 
         String originSql = "select count(*) from test_kylin_fact where price > 10.0";
+        String originSql2 = "select count(*) from test_kylin_fact where TEST_COLUMN != 'not--a comment'";
 
         {
             String sqlWithComment = "-- comment \n" + originSql;
-
             Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
         }
 
@@ -223,9 +223,57 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
         }
 
         {
-            String sqlWithComment = "/* comment1 * \ncomment2 */ -- comment 3\n" + originSql + "-- comment 5";
+            String sqlWithComment = "/* comment1 * \ncomment2 */ -- comment 3\n" + originSql + "-- comment 5\n";
             Assert.assertEquals(originSql, QueryUtil.removeCommentInSql(sqlWithComment));
         }
+
+        {
+            String sqlWithComment2 = "/* comment1 * \ncomment2 */ -- comment 5\n" + originSql2 + "/* comment3 / comment4 */";
+            Assert.assertEquals(originSql2, QueryUtil.removeCommentInSql(sqlWithComment2));
+        }
+
+        {
+            String sqlWithComment2 = "/* comment1 * comment2 */ /* comment3 / comment4 */ -- comment 5\n" + originSql2;
+            Assert.assertEquals(originSql2, QueryUtil.removeCommentInSql(sqlWithComment2));
+        }
+
+        {
+            String sqlWithComment2 = "/* comment1 * comment2 */ " + originSql2;
+            Assert.assertEquals(originSql2, QueryUtil.removeCommentInSql(sqlWithComment2));
+        }
+
+        {
+            String sqlWithComment2 = "/* comment1/comment2 */ " + originSql2;
+            Assert.assertEquals(originSql2, QueryUtil.removeCommentInSql(sqlWithComment2));
+        }
+
+        {
+            String sqlWithComment2 = "-- \n -- comment \n" + originSql2;
+            Assert.assertEquals(originSql2, QueryUtil.removeCommentInSql(sqlWithComment2));
+        }
+
+        {
+            String sqlWithComment2 = "-- comment \n" + originSql2;
+            Assert.assertEquals(originSql2, QueryUtil.removeCommentInSql(sqlWithComment2));
+        }
+
+        {
+            String sqlWithComment2 = "-- comment \n -- comment\n" + originSql2;
+            Assert.assertEquals(originSql2, QueryUtil.removeCommentInSql(sqlWithComment2));
+        }
+
+        String content = "        --  One-line comment and /**range\n" +
+                "/*\n" +
+                "Multi-line comment\r\n" +
+                "--  Multi-line comment*/\n" +
+                "select price as " +
+                "/*\n" +
+                "Multi-line comment\r\n" +
+                "--  Multi-line comment*/\n" +
+                "revenue from /*One-line comment-- One-line comment*/ v_lineitem;";
+        String expectedContent = "select price as revenue from  v_lineitem;";
+        String trimmedContent = QueryUtil.removeCommentInSql(content).replaceAll("\n", "").trim();
+        Assert.assertEquals(trimmedContent, expectedContent);
     }
 
     @Test

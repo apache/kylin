@@ -88,7 +88,7 @@ public class CacheControllerTest extends ServiceTestBase {
 
         //directly update metadata in store to simulate cube migration
         Serializer<CubeDesc> cubeDescSerializer = new JsonSerializer<CubeDesc>(CubeDesc.class);
-        getStore().putResource(cubeDesc.getResourcePath(), cubeDesc, cubeDescSerializer);
+        getStore().checkAndPutResource(cubeDesc.getResourcePath(), cubeDesc, cubeDescSerializer);
 
         CubeMigrationRequest request = new CubeMigrationRequest();
         request.setCube(cubeDesc.getName());

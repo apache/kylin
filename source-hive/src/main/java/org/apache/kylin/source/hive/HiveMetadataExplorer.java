@@ -27,9 +27,11 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.metadata.TableMetadataManager;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
@@ -219,27 +221,45 @@ public class HiveMetadataExplorer implements ISourceMetadataExplorer, ISampleDat
         }
     }
 
+    @Override
+    public void validateSQL(String query) throws Exception {
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement(query);
+
+        Pair<Integer, String> response = KylinConfig.getInstanceFromEnv().getCliCommandExecutor()
+                .execute(hiveCmdBuilder.toString());
+        if (response.getFirst() != 0) {
+            throw new IllegalArgumentException(response.getSecond());
+        }
+    }
+
     private ColumnDesc[] extractColumnFromMeta(HiveTableMeta hiveTableMeta) {
         int columnNumber = hiveTableMeta.allColumns.size();
         List<ColumnDesc> columns = new ArrayList<ColumnDesc>(columnNumber);
 
         for (int i = 0; i < columnNumber; i++) {
             HiveTableMeta.HiveTableColumnMeta field = hiveTableMeta.allColumns.get(i);
-            ColumnDesc cdesc = new ColumnDesc();
-            cdesc.setName(field.name.toUpperCase(Locale.ROOT));
 
-            // use "double" in kylin for "float"
-            if ("float".equalsIgnoreCase(field.dataType)) {
-                cdesc.setDatatype("double");
+            // skip unsupported fields, e.g. map<string, int>
+            if (DataType.isKylinSupported(field.dataType)) {
+                ColumnDesc cdesc = new ColumnDesc();
+                cdesc.setName(field.name.toUpperCase(Locale.ROOT));
+
+                // use "double" in kylin for "float"
+                if ("float".equalsIgnoreCase(field.dataType)) {
+                    cdesc.setDatatype("double");
+                } else {
+                    cdesc.setDatatype(field.dataType);
+                }
+
+                cdesc.setId(String.valueOf(i + 1));
+                cdesc.setComment(field.comment);
+                columns.add(cdesc);
             } else {
-                cdesc.setDatatype(field.dataType);
+                logger.warn("Unsupported data type {}, excluding the field '{}'.", field.dataType, field.name);
             }
-
-            cdesc.setId(String.valueOf(i + 1));
-            cdesc.setComment(field.comment);
-            columns.add(cdesc);
         }
 
-        return columns.toArray(new ColumnDesc[columnNumber]);
+        return  columns.toArray(new ColumnDesc[0]);
     }
 }

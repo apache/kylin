@@ -96,7 +96,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     protected Connection getConnection() throws Exception {
 
-        Driver driver = (Driver) Class.forName("org.apache.kylin.jdbc.Driver").newInstance();
+        Driver driver = (Driver) Class.forName("org.apache.kylin.jdbc.Driver").getDeclaredConstructor().newInstance();
         Properties info = new Properties();
         info.put("user", "ADMIN");
         info.put("password", "KYLIN");

@@ -37,8 +37,11 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.inmemcubing2.DoggedCubeBuilder2;
+import org.apache.kylin.cube.inmemcubing2.InMemCubeBuilder2;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -47,6 +50,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Maps;
 
 /**
  */
@@ -89,21 +94,9 @@ public class ITDoggedCubeBuilderTest extends LocalFileMetadataTestCase {
         long randSeed = System.currentTimeMillis();
 
         IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
-        DoggedCubeBuilder doggedBuilder = new DoggedCubeBuilder(cube.getCuboidScheduler(), flatDesc, dictionaryMap);
-        doggedBuilder.setConcurrentThreads(THREADS);
-        FileRecordWriter doggedResult = new FileRecordWriter();
-
-        {
-            Future<?> future = executorService.submit(doggedBuilder.buildAsRunnable(queue, doggedResult));
-            ITInMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed, SPLIT_ROWS);
-            future.get();
-            doggedResult.close();
-        }
-
         InMemCubeBuilder inmemBuilder = new InMemCubeBuilder(cube.getCuboidScheduler(), flatDesc, dictionaryMap);
         inmemBuilder.setConcurrentThreads(THREADS);
         FileRecordWriter inmemResult = new FileRecordWriter();
-
         {
             Future<?> future = executorService.submit(inmemBuilder.buildAsRunnable(queue, inmemResult));
             ITInMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
@@ -111,9 +104,44 @@ public class ITDoggedCubeBuilderTest extends LocalFileMetadataTestCase {
             inmemResult.close();
         }
 
+        DoggedCubeBuilder doggedBuilder = new DoggedCubeBuilder(cube.getCuboidScheduler(), flatDesc, dictionaryMap);
+        doggedBuilder.setConcurrentThreads(THREADS);
+        FileRecordWriter doggedResult = new FileRecordWriter();
+        {
+            Future<?> future = executorService.submit(doggedBuilder.buildAsRunnable(queue, doggedResult));
+            ITInMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed, SPLIT_ROWS);
+            future.get();
+            doggedResult.close();
+        }
+
+        InMemCubeBuilder2 inmemBuilder2 = new InMemCubeBuilder2(cube.getCuboidScheduler(), flatDesc, dictionaryMap);
+        inmemBuilder2.setConcurrentThreads(THREADS);
+        FileRecordWriter inmemResult2 = new FileRecordWriter();
+        {
+            Future<?> future = executorService.submit(inmemBuilder2.buildAsRunnable(queue, inmemResult2));
+            ITInMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
+            future.get();
+            inmemResult2.close();
+        }
+
+        DoggedCubeBuilder2 doggedBuilder2 = new DoggedCubeBuilder2(cube.getCuboidScheduler(), flatDesc, dictionaryMap);
+        doggedBuilder2.setConcurrentThreads(THREADS);
+        FileRecordWriter doggedResult2 = new FileRecordWriter();
+        {
+            Future<?> future = executorService.submit(doggedBuilder2.buildAsRunnable(queue, doggedResult2));
+            ITInMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed, SPLIT_ROWS);
+            future.get();
+            doggedResult2.close();
+        }
+
+        fileCompare(inmemResult.file, inmemResult2.file);
         fileCompare(inmemResult.file, doggedResult.file);
-        doggedResult.file.delete();
+        fileCompare2(inmemResult.file, doggedResult2.file);
+
         inmemResult.file.delete();
+        inmemResult2.file.delete();
+        doggedResult.file.delete();
+        doggedResult2.file.delete();
     }
 
     private void fileCompare(File file, File file2) throws IOException {
@@ -133,6 +161,27 @@ public class ITDoggedCubeBuilderTest extends LocalFileMetadataTestCase {
         r2.close();
     }
 
+    private void fileCompare2(File file, File file2) throws IOException {
+        Map<String, Integer> content1 = readContents(file);
+        Map<String, Integer> content2 = readContents(file2);
+        assertEquals(content1, content2);
+    }
+
+    private Map<String, Integer> readContents(File file) throws IOException {
+        BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+        Map<String, Integer> content = Maps.newHashMap();
+        String line;
+        while ((line = r.readLine()) != null) {
+            Integer cnt = content.get(line);
+            if (cnt == null) {
+                cnt = 0;
+            }
+            content.put(line, cnt + 1);
+        }
+        r.close();
+        return content;
+    }
+
     class FileRecordWriter implements ICuboidWriter {
 
         File file;
@@ -148,6 +197,14 @@ public class ITDoggedCubeBuilderTest extends LocalFileMetadataTestCase {
             writer.print(cuboidId);
             writer.print(", ");
             writer.print(record.toString());
+            writer.println();
+        }
+
+        @Override
+        public void write(long cuboidId, GridTable table) throws IOException {
+            writer.print(cuboidId);
+            writer.print(", ");
+            writer.print(table.toString());
             writer.println();
         }
 

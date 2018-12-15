@@ -34,8 +34,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 public class KylinVersion implements Comparable {
-    private static final String COMMIT_SHA1_v15 = "commit_SHA1";
-    private static final String COMMIT_SHA1_v13 = "commit.sha1";
+    private static final String COMMIT_SHA1_V15 = "commit_SHA1";
+    private static final String COMMIT_SHA1_V13 = "commit.sha1";
 
     public final int major;
     public final int minor;
@@ -194,9 +194,9 @@ public class KylinVersion implements Comparable {
 
     public static String getGitCommitInfo() {
         try {
-            File commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_v15);
+            File commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_V15);
             if (!commitFile.exists()) {
-                commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_v13);
+                commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_V13);
             }
             List<String> lines = FileUtils.readLines(commitFile, Charset.defaultCharset());
             StringBuilder sb = new StringBuilder();

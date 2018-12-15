@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
-import com.google.common.base.Preconditions;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.rest.service.UserGrantedAuthority;
 import org.springframework.security.core.GrantedAuthority;
@@ -41,6 +41,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 @SuppressWarnings("serial")
@@ -231,28 +232,22 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((username == null) ? 0 : username.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        ManagedUser that = (ManagedUser) o;
+        return disabled == that.disabled && defaultPassword == that.defaultPassword && locked == that.locked
+                && lockedTime == that.lockedTime && wrongTime == that.wrongTime
+                && Objects.equals(username, that.username) && Objects.equals(password, that.password)
+                && Objects.equals(authorities, that.authorities);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ManagedUser other = (ManagedUser) obj;
-        if (username == null) {
-            if (other.username != null)
-                return false;
-        } else if (!username.equals(other.username))
-            return false;
-        return true;
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), username, password, authorities, disabled, defaultPassword, locked,
+                lockedTime, wrongTime);
     }
 
     @Override

@@ -133,6 +133,8 @@ public class OLAPContext {
     public boolean afterJoin = false;
     public boolean hasJoin = false;
     public boolean hasWindow = false;
+    public boolean groupByExpression = false; // checkout if group by column has operator
+    public boolean afterOuterAggregate = false;
 
     // cube metadata
     public IRealization realization;
@@ -190,7 +192,7 @@ public class OLAPContext {
                 }
             }
             sqlDigest = new SQLDigest(firstTableScan.getTableName(), allColumns, joins, // model
-                    groupByColumns, subqueryJoinParticipants, dynGroupBy, // group by
+                    groupByColumns, subqueryJoinParticipants, dynGroupBy, groupByExpression, // group by
                     metricsColumns, aggregations, aggrSqlCalls, dynFuncs, // aggregation
                     rtDimColumns, rtMetricColumns, // runtime related columns
                     filterColumns, filter, havingFilter, // filter

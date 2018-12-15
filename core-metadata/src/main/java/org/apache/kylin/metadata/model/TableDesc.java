@@ -219,6 +219,18 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return identity;
     }
 
+    public String getIdentityQuoted(String quot) {
+        String dbName = quot + this.getDatabase() + quot;
+        String tableName = quot + this.getName() + quot;
+        return String.format(Locale.ROOT, "%s.%s", dbName, tableName).toUpperCase(Locale.ROOT);
+    }
+
+    public String getFactTableQuoted(String quot) {
+        String database = quot + config.getHiveDatabaseForIntermediateTable() + quot;
+        String table = quot + this.getName() + "_fact" + quot;
+        return database + "." + table;
+    }
+
     public boolean isView() {
         return TABLE_TYPE_VIRTUAL_VIEW.equals(tableType);
     }
@@ -308,7 +320,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
             setDatabase(getDatabase().toUpperCase(Locale.ROOT));
 
         if (columns != null) {
-            Arrays.sort(columns, new Comparator<ColumnDesc>() {
+            Arrays.parallelSort(columns, new Comparator<ColumnDesc>() {
                 @Override
                 public int compare(ColumnDesc col1, ColumnDesc col2) {
                     Integer id1 = Integer.parseInt(col1.getId());

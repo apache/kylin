@@ -72,7 +72,7 @@
     <!-- <reflections.version>0.9.10</reflections.version> -->
 
     <!-- Calcite Version -->
-    <calcite.version>1.13.0-kylin-r4</calcite.version>
+    <calcite.version>1.16.0-kylin-r2</calcite.version>
     <avatica.version>1.10.0</avatica.version>
 
     <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
@@ -115,12 +115,13 @@
     <xerces.version>2.11.0</xerces.version>
     <xalan.version>2.7.2</xalan.version>
     <ehcache.version>2.10.2.2.21</ehcache.version>
+    <memcached.verion>2.12.3</memcached.verion>
     <apache-httpclient.version>4.2.5</apache-httpclient.version>
     <roaring.version>0.6.18</roaring.version>
     <cglib.version>3.2.4</cglib.version>
     <supercsv.version>2.4.0</supercsv.version>
     <cors.version>2.5</cors.version>
-    <tomcat.version>7.0.90</tomcat.version>
+    <tomcat.version>7.0.91</tomcat.version>
     <t-digest.version>3.1</t-digest.version>
     <freemarker.version>2.3.23</freemarker.version>
     <rocksdb.version>5.9.2</rocksdb.version>
@@ -261,6 +262,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-cache</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-engine-mr</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -272,6 +278,11 @@
       <dependency>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-source-hive</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-source-jdbc</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -332,6 +343,12 @@
       </dependency>
       <dependency>
         <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-core-metadata</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-core-storage</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
@@ -359,6 +376,17 @@
         <artifactId>kylin-core-cube</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-datasource-sdk</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-datasource-sdk</artifactId>
+        <version>${project.version}</version>
+        <classifier>framework</classifier>
       </dependency>
       <dependency>
         <groupId>org.apache.kylin</groupId>
@@ -635,6 +663,11 @@
         <artifactId>jackson-annotations</artifactId>
         <version>${jackson.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-xml</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
 
       <!-- Spark dependency -->
       <dependency>
@@ -731,6 +764,11 @@
         <artifactId>metrics-core</artifactId>
         <version>${dropwizard.version}</version>
       </dependency>
+      <dependency>
+        <groupId>io.dropwizard.metrics</groupId>
+        <artifactId>metrics-jvm</artifactId>
+        <version>${dropwizard.version}</version>
+      </dependency>
 
       <!-- Test -->
       <dependency>
@@ -815,6 +853,11 @@
         <groupId>net.sf.ehcache</groupId>
         <artifactId>ehcache</artifactId>
         <version>${ehcache.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.spy</groupId>
+        <artifactId>spymemcached</artifactId>
+        <version>${memcached.verion}</version>
       </dependency>
       <dependency>
         <groupId>org.opensaml</groupId>
@@ -1222,7 +1265,6 @@
   </build>
 
   <modules>
-    <module>atopcalcite</module>
     <module>core-common</module>
     <module>core-metadata</module>
     <module>core-dictionary</module>
@@ -1232,6 +1274,7 @@
     <module>engine-mr</module>
     <module>engine-spark</module>
     <module>source-hive</module>
+    <module>source-jdbc</module>
     <module>source-kafka</module>
     <module>storage-hbase</module>
     <module>query</module>
@@ -1246,6 +1289,8 @@
     <module>core-metrics</module>
     <module>metrics-reporter-hive</module>
     <module>metrics-reporter-kafka</module>
+    <module>cache</module>
+    <module>datasource-sdk</module>
   </modules>
 
   <reporting>

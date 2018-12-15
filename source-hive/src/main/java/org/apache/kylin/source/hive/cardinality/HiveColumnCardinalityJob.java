@@ -6,15 +6,15 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.source.hive.cardinality;
 
@@ -53,68 +53,67 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true)
             .withDescription("The hive table name").create("table");
 
-    public HiveColumnCardinalityJob() {
-    }
-
     @Override
     public int run(String[] args) throws Exception {
+        try {
+            Options options = new Options();
 
-        Options options = new Options();
+            options.addOption(OPTION_PROJECT);
+            options.addOption(OPTION_TABLE);
+            options.addOption(OPTION_OUTPUT_PATH);
 
-        options.addOption(OPTION_PROJECT);
-        options.addOption(OPTION_TABLE);
-        options.addOption(OPTION_OUTPUT_PATH);
+            parseOptions(options, args);
 
-        parseOptions(options, args);
+            // start job
+            String jobName = JOB_TITLE + getOptionsAsString();
+            logger.info("Starting: {}", jobName);
+            Configuration conf = getConf();
 
-        // start job
-        String jobName = JOB_TITLE + getOptionsAsString();
-        logger.info("Starting: " + jobName);
-        Configuration conf = getConf();
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            JobEngineConfig jobEngineConfig = new JobEngineConfig(kylinConfig);
+            conf.addResource(new Path(jobEngineConfig.getHadoopJobConfFilePath(null)));
 
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        JobEngineConfig jobEngineConfig = new JobEngineConfig(kylinConfig);
-        conf.addResource(new Path(jobEngineConfig.getHadoopJobConfFilePath(null)));
+            job = Job.getInstance(conf, jobName);
 
-        job = Job.getInstance(conf, jobName);
+            setJobClasspath(job, kylinConfig);
 
-        setJobClasspath(job, kylinConfig);
+            String project = getOptionValue(OPTION_PROJECT);
+            String table = getOptionValue(OPTION_TABLE);
+            job.getConfiguration().set(BatchConstants.CFG_PROJECT_NAME, project);
+            job.getConfiguration().set(BatchConstants.CFG_TABLE_NAME, table);
 
-        String project = getOptionValue(OPTION_PROJECT);
-        String table = getOptionValue(OPTION_TABLE);
-        job.getConfiguration().set(BatchConstants.CFG_PROJECT_NAME, project);
-        job.getConfiguration().set(BatchConstants.CFG_TABLE_NAME, table);
+            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+            FileOutputFormat.setOutputPath(job, output);
+            job.getConfiguration().set("dfs.blocksize", "67108864");
+            job.getConfiguration().set("mapreduce.output.fileoutputformat.compress", "false");
 
-        Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
-        FileOutputFormat.setOutputPath(job, output);
-        job.getConfiguration().set("dfs.blocksize", "67108864");
-        job.getConfiguration().set("mapreduce.output.fileoutputformat.compress", "false");
+            // Mapper
+            IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table, project,
+                    getOptionValue(OPTION_CUBING_JOB_ID));
+            tableInputFormat.configureJob(job);
 
-        // Mapper
-        IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table, project,
-                getOptionValue(OPTION_CUBING_JOB_ID));
-        tableInputFormat.configureJob(job);
+            job.setMapperClass(ColumnCardinalityMapper.class);
+            job.setMapOutputKeyClass(IntWritable.class);
+            job.setMapOutputValueClass(BytesWritable.class);
 
-        job.setMapperClass(ColumnCardinalityMapper.class);
-        job.setMapOutputKeyClass(IntWritable.class);
-        job.setMapOutputValueClass(BytesWritable.class);
+            // Reducer - only one
+            job.setReducerClass(ColumnCardinalityReducer.class);
+            job.setOutputFormatClass(TextOutputFormat.class);
+            job.setOutputKeyClass(IntWritable.class);
+            job.setOutputValueClass(LongWritable.class);
+            job.setNumReduceTasks(1);
 
-        // Reducer - only one
-        job.setReducerClass(ColumnCardinalityReducer.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
-        job.setOutputKeyClass(IntWritable.class);
-        job.setOutputValueClass(LongWritable.class);
-        job.setNumReduceTasks(1);
+            this.deletePath(job.getConfiguration(), output);
 
-        this.deletePath(job.getConfiguration(), output);
+            logger.info("Going to submit HiveColumnCardinalityJob for table '{}'", table);
 
-        logger.info("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
-
-        TableDesc tableDesc = TableMetadataManager.getInstance(kylinConfig).getTableDesc(table, project);
-        attachTableMetadata(tableDesc, job.getConfiguration());
-        int result = waitForCompletion(job);
-
-        return result;
+            TableDesc tableDesc = TableMetadataManager.getInstance(kylinConfig).getTableDesc(table, project);
+            attachTableMetadata(tableDesc, job.getConfiguration());
+            return waitForCompletion(job);
+        } finally {
+            if (job != null)
+                cleanupTempConfFile(job.getConfiguration());
+        }
     }
 
 }

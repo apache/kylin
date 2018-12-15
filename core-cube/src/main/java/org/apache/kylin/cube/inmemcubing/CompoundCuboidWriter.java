@@ -21,6 +21,7 @@ package org.apache.kylin.cube.inmemcubing;
 import java.io.IOException;
 
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GridTable;
 
 /**
  */
@@ -37,6 +38,13 @@ public class CompoundCuboidWriter implements ICuboidWriter {
     public void write(long cuboidId, GTRecord record) throws IOException {
         for (ICuboidWriter writer : cuboidWriters) {
             writer.write(cuboidId, record);
+        }
+    }
+    
+    @Override
+    public void write(long cuboidId, GridTable table) throws IOException {
+        for (ICuboidWriter writer : cuboidWriters) {
+            writer.write(cuboidId, table);
         }
     }
 

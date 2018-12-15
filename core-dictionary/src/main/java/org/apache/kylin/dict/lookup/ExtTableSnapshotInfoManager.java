@@ -126,7 +126,7 @@ public class ExtTableSnapshotInfoManager {
     public List<ExtTableSnapshotInfo> getSnapshots(String tableName) throws IOException {
         String tableSnapshotsPath = ExtTableSnapshotInfo.getResourceDir(tableName);
         ResourceStore store = TableMetadataManager.getInstance(this.config).getStore();
-        return store.getAllResources(tableSnapshotsPath, ExtTableSnapshotInfo.class, SNAPSHOT_SERIALIZER);
+        return store.getAllResources(tableSnapshotsPath, SNAPSHOT_SERIALIZER);
     }
 
     public Set<String> getAllExtSnapshotResPaths() throws IOException {
@@ -199,7 +199,7 @@ public class ExtTableSnapshotInfoManager {
 
     private ExtTableSnapshotInfo load(String resourcePath) throws IOException {
         ResourceStore store = TableMetadataManager.getInstance(this.config).getStore();
-        ExtTableSnapshotInfo snapshot = store.getResource(resourcePath, ExtTableSnapshotInfo.class, SNAPSHOT_SERIALIZER);
+        ExtTableSnapshotInfo snapshot = store.getResource(resourcePath, SNAPSHOT_SERIALIZER);
 
         return snapshot;
     }
@@ -207,7 +207,7 @@ public class ExtTableSnapshotInfoManager {
     public void save(ExtTableSnapshotInfo snapshot) throws IOException {
         ResourceStore store = TableMetadataManager.getInstance(this.config).getStore();
         String path = snapshot.getResourcePath();
-        store.putResource(path, snapshot, SNAPSHOT_SERIALIZER);
+        store.checkAndPutResource(path, snapshot, SNAPSHOT_SERIALIZER);
     }
 
 }

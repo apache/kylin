@@ -101,10 +101,10 @@ public class SnapshotManager {
         List<SnapshotTable> result = Lists.newArrayList();
         String tableSnapshotsPath = SnapshotTable.getResourceDir(tableName);
         ResourceStore store = TableMetadataManager.getInstance(this.config).getStore();
-        result.addAll(store.getAllResources(tableSnapshotsPath, SnapshotTable.class, SnapshotTableSerializer.INFO_SERIALIZER));
+        result.addAll(store.getAllResources(tableSnapshotsPath, SnapshotTableSerializer.INFO_SERIALIZER));
         if (sourceTableSignature != null) {
             String oldTableSnapshotsPath = SnapshotTable.getOldResourceDir(sourceTableSignature);
-            result.addAll(store.getAllResources(oldTableSnapshotsPath, SnapshotTable.class, SnapshotTableSerializer.INFO_SERIALIZER));
+            result.addAll(store.getAllResources(oldTableSnapshotsPath, SnapshotTableSerializer.INFO_SERIALIZER));
         }
         return result;
     }
@@ -201,14 +201,14 @@ public class SnapshotManager {
     private void save(SnapshotTable snapshot) throws IOException {
         ResourceStore store = getStore();
         String path = snapshot.getResourcePath();
-        store.putResource(path, snapshot, SnapshotTableSerializer.FULL_SERIALIZER);
+        store.putBigResource(path, snapshot, System.currentTimeMillis(), SnapshotTableSerializer.FULL_SERIALIZER);
     }
 
     private SnapshotTable load(String resourcePath, boolean loadData) throws IOException {
         logger.info("Loading snapshotTable from " + resourcePath + ", with loadData: " + loadData);
         ResourceStore store = getStore();
 
-        SnapshotTable table = store.getResource(resourcePath, SnapshotTable.class, loadData ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
+        SnapshotTable table = store.getResource(resourcePath, loadData ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
 
         if (loadData)
             logger.debug("Loaded snapshot at " + resourcePath);

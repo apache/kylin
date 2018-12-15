@@ -19,6 +19,7 @@
 package org.apache.kylin.query;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -38,9 +39,9 @@ public class QueryConnection {
             try {
                 Class<?> aClass = Thread.currentThread().getContextClassLoader()
                         .loadClass("org.apache.calcite.jdbc.Driver");
-                Driver o = (Driver) aClass.newInstance();
+                Driver o = (Driver) aClass.getDeclaredConstructor().newInstance();
                 DriverManager.registerDriver(o);
-            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                 e.printStackTrace();
             }
             isRegister = true;

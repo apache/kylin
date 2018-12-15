@@ -68,12 +68,12 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.enumerator.DictionaryEnumerator;
-import org.apache.kylin.query.optrule.AggregateMultipleExpandRule;
 import org.apache.kylin.query.optrule.AggregateProjectReduceRule;
 import org.apache.kylin.query.optrule.OLAPAggregateRule;
 import org.apache.kylin.query.optrule.OLAPFilterRule;
@@ -163,13 +163,11 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.addRule(OLAPUnionRule.INSTANCE);
         planner.addRule(OLAPWindowRule.INSTANCE);
         planner.addRule(OLAPValuesRule.INSTANCE);
-        
-        // Support translate the grouping aggregate into union of simple aggregates
-        planner.addRule(AggregateMultipleExpandRule.INSTANCE);
+
         planner.addRule(AggregateProjectReduceRule.INSTANCE);
 
         // CalcitePrepareImpl.CONSTANT_REDUCTION_RULES
-        if(kylinConfig.isReduceExpressionsRulesEnabled()) {
+        if (kylinConfig.isReduceExpressionsRulesEnabled()) {
             planner.addRule(ReduceExpressionsRule.PROJECT_INSTANCE);
             planner.addRule(ReduceExpressionsRule.FILTER_INSTANCE);
             planner.addRule(ReduceExpressionsRule.CALC_INSTANCE);
@@ -181,7 +179,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         //        planner.addRule(ValuesReduceRule.PROJECT_INSTANCE);
 
         removeRules(planner, kylinConfig.getCalciteRemoveRule());
-        if(!kylinConfig.isEnumerableRulesEnabled()) {
+        if (!kylinConfig.isEnumerableRulesEnabled()) {
             for (RelOptRule rule : CalcitePrepareImpl.ENUMERABLE_RULES) {
                 planner.removeRule(rule);
             }
@@ -242,7 +240,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
             if (StringUtils.isEmpty(rule)) {
                 continue;
             }
-            String[] split = rule.split("#");
+            String[] split = StringUtil.split(rule, "#");
             if (split.length != 2) {
                 throw new RuntimeException("Customized Rule should be in format <RuleClassName>#<FieldName>");
             }

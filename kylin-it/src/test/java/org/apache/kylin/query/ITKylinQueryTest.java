@@ -245,6 +245,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testUnionallQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_unionall", null, true);
+    }
+
+    @Test
     public void testTimeStampAdd() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_timestamp", null, true);
     }
@@ -261,22 +266,24 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testDistinctCountQuery() throws Exception {
-        if ("left".equalsIgnoreCase(joinType)) {
-            batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct");
-        }
+        batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct");
     }
 
     @Test
     public void testTopNQuery() throws Exception {
-        if ("left".equalsIgnoreCase(joinType)) {
-            this.execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_topn", null, true);
-        }
+        this.execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_topn", null, true);
     }
 
     @Test
     public void testPreciselyDistinctCountQuery() throws Exception {
-        if ("left".equalsIgnoreCase(joinType)) {
-            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_precisely", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_precisely", null, true);
+    }
+
+    @Test
+    public void testPreciselyDistinctCountRollupQuery() throws Exception {
+        // the "inner" test cube uses "SegmentAppendTrieDictBuilder" which doesn't support rollup.
+        if("left".equalsIgnoreCase(joinType)) {
+            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_precisely_rollup", null, true);
         }
     }
 

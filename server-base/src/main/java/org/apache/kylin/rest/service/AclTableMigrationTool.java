@@ -135,7 +135,7 @@ public class AclTableMigrationTool {
                         record.setOwnerInfo(getOwnerSidInfo(result));
                         record.setEntriesInheriting(getInheriting(result));
                         record.setAllAceInfo(getAllAceInfo(result));
-                        store.putResourceWithoutCheck(AclService.resourceKey(object.getId()), record,
+                        store.putResource(AclService.resourceKey(object.getId()), record,
                                 System.currentTimeMillis(), AclService.SERIALIZER);
                         result = rs.next();
                     }
@@ -153,7 +153,7 @@ public class AclTableMigrationTool {
                     Result result = rs.next();
                     while (result != null) {
                         ManagedUser user = hbaseRowToUser(result);
-                        store.putResourceWithoutCheck(KylinUserService.getId(user.getUsername()), user,
+                        store.putResource(KylinUserService.getId(user.getUsername()), user,
                                 System.currentTimeMillis(), KylinUserService.SERIALIZER);
                         result = rs.next();
                     }
@@ -188,7 +188,7 @@ public class AclTableMigrationTool {
             table = HBaseConnection.get(kylinConfig.getStorageUrl()).getTable(TableName.valueOf(tableName));
             rs = table.getScanner(scan);
             converter.convertResult(rs, store);
-            store.putResource(MIGRATE_OK_PREFIX + tableName, new StringEntity(tableName + " migrated"),
+            store.checkAndPutResource(MIGRATE_OK_PREFIX + tableName, new StringEntity(tableName + " migrated"),
                     StringEntity.serializer);
         } finally {
             IOUtils.closeQuietly(rs);

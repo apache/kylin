@@ -36,9 +36,6 @@ import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.NavigableSet;
@@ -72,7 +69,8 @@ public class DictionaryManager {
                 .removalListener(new RemovalListener<String, DictionaryInfo>() {
                     @Override
                     public void onRemoval(RemovalNotification<String, DictionaryInfo> notification) {
-                        DictionaryManager.logger.info("Dict with resource path " + notification.getKey() + " is removed due to " + notification.getCause());
+                        DictionaryManager.logger.info("Dict with resource path " + notification.getKey()
+                                + " is removed due to " + notification.getCause());
                     }
                 })//
                 .maximumSize(config.getCachedDictMaxEntrySize())//
@@ -333,7 +331,7 @@ public class DictionaryManager {
 
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {
         final ResourceStore store = getStore();
-        final List<DictionaryInfo> allResources = store.getAllResources(dictInfo.getResourceDir(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
+        final List<DictionaryInfo> allResources = store.getAllResources(dictInfo.getResourceDir(), DictionaryInfoSerializer.INFO_SERIALIZER);
 
         TableSignature input = dictInfo.getInput();
 
@@ -347,7 +345,7 @@ public class DictionaryManager {
 
     private DictionaryInfo findLargestDictInfo(DictionaryInfo dictInfo) throws IOException {
         final ResourceStore store = getStore();
-        final List<DictionaryInfo> allResources = store.getAllResources(dictInfo.getResourceDir(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
+        final List<DictionaryInfo> allResources = store.getAllResources(dictInfo.getResourceDir(), DictionaryInfoSerializer.INFO_SERIALIZER);
 
         DictionaryInfo largestDict = null;
         for (DictionaryInfo dictionaryInfo : allResources) {
@@ -389,22 +387,14 @@ public class DictionaryManager {
         String path = dict.getResourcePath();
         logger.info("Saving dictionary at " + path);
 
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        DataOutputStream dout = new DataOutputStream(buf);
-        DictionaryInfoSerializer.FULL_SERIALIZER.serialize(dict, dout);
-        dout.close();
-        buf.close();
-
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(buf.toByteArray());
-        store.putResource(path, inputStream, System.currentTimeMillis());
-        inputStream.close();
+        store.putBigResource(path, dict, System.currentTimeMillis(), DictionaryInfoSerializer.FULL_SERIALIZER);
     }
 
     DictionaryInfo load(String resourcePath, boolean loadDictObj) throws IOException {
         ResourceStore store = getStore();
 
         logger.info("DictionaryManager(" + System.identityHashCode(this) + ") loading DictionaryInfo(loadDictObj:" + loadDictObj + ") at " + resourcePath);
-        DictionaryInfo info = store.getResource(resourcePath, DictionaryInfo.class, loadDictObj ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);
+        DictionaryInfo info = store.getResource(resourcePath, loadDictObj ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);
         return info;
     }
 

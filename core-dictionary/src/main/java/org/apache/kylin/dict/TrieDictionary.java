@@ -126,7 +126,7 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
     }
 
     protected void setConverterByName(String converterName) throws Exception {
-        this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+        this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).getDeclaredConstructor().newInstance();
     }
 
     @Override

@@ -57,8 +57,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static File localMetaDir;
     static String backup;
 
-    static final String jobId1 = "job1" + RandomUtil.randomUUID();
-    static final String jobId2 = "job2" + RandomUtil.randomUUID();
+    static final String jobId1 = RandomUtil.randomUUID().toString();
+    static final String jobId2 = RandomUtil.randomUUID().toString();
     static final String serverName1 = "serverName1";
     static final String serverName2 = "serverName2";
     static final String confDstPath1 = "target/kylin_metadata_dist_lock_test1/kylin.properties";
@@ -69,7 +69,6 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     @BeforeClass
     public static void setup() throws Exception {
         staticCreateTestMetadata();
-        System.setProperty("kylin.job.lock", "org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock");
 
         new File(confDstPath1).getParentFile().mkdirs();
         new File(confDstPath2).getParentFile().mkdirs();
@@ -128,7 +127,6 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         }
 
         FileUtils.deleteDirectory(localMetaDir);
-        System.clearProperty("kylin.job.lock");
         System.clearProperty("kylin.metadata.url");
         staticCleanupTestMetadata();
     }

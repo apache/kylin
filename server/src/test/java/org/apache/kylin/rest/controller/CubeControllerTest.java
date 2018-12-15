@@ -27,6 +27,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CubeRequest;
@@ -226,6 +227,17 @@ public class CubeControllerTest extends ServiceTestBase {
                 }
             }
         }
+    }
+
+    @Test
+    public void tesDeleteDescBrokenCube() throws Exception {
+        final String cubeName = "ci_left_join_cube";
+        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
+        CubeDesc cubeDesc = cubeInstance.getDescriptor();
+        cubeDesc.setModel(null);
+        cubeInstance.setStatus(RealizationStatusEnum.DESCBROKEN);
+        cubeController.deleteCube(cubeName);
+        Assert.assertNull(cubeService.getCubeManager().getCube(cubeName));
     }
 
 }

@@ -43,6 +43,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -67,7 +68,7 @@ public class UpdateDictionaryStep extends AbstractExecutable {
         final String metadataUrl = this.getParams().get(BatchConstants.ARG_META_URL);
 
         final KylinConfig kylinConfHbase = cube.getConfig();
-        final KylinConfig kylinConfHdfs = KylinConfig.createInstanceFromUri(metadataUrl);
+        final KylinConfig kylinConfHdfs = AbstractHadoopJob.loadKylinConfigFromHdfs(metadataUrl);
 
         Collections.sort(mergingSegments);
 
@@ -127,7 +128,7 @@ public class UpdateDictionaryStep extends AbstractExecutable {
             // update statistics
             // put the statistics to metadata store
             String statisticsFileName = newSegment.getStatisticsResourcePath();
-            hbaseRS.putResource(statisticsFileName, hdfsRS.getResource(newSegment.getStatisticsResourcePath()).inputStream, System.currentTimeMillis());
+            hbaseRS.putResource(statisticsFileName, hdfsRS.getResource(newSegment.getStatisticsResourcePath()).content(), System.currentTimeMillis());
 
             CubeUpdate update = new CubeUpdate(cubeCopy);
             update.setToUpdateSegs(newSegCopy);

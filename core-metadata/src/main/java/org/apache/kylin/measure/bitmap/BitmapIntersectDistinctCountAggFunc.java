@@ -50,10 +50,8 @@ public class BitmapIntersectDistinctCountAggFunc implements ParamAsMeasureCount 
                 this.keyList = keyList;
             }
             if (this.keyList != null && this.keyList.contains(key)) {
-                BitmapCounter counter = map.get(key);
-                if (counter == null) {
-                    map.put(key, counter = factory.newBitmap());
-                }
+                BitmapCounter counter = map.computeIfAbsent(key, o -> factory.newBitmap());
+
                 counter.orWith((BitmapCounter) value);
             }
         }
@@ -78,7 +76,7 @@ public class BitmapIntersectDistinctCountAggFunc implements ParamAsMeasureCount 
                     counter.andWith(c);
                 }
             }
-            return counter.getCount();
+            return counter != null ? counter.getCount() : 0;
         }
     }
 

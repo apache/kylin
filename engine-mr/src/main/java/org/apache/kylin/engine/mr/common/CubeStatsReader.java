@@ -102,7 +102,7 @@ public class CubeStatsReader {
         if (resource == null)
             throw new IllegalStateException("Missing resource at " + statsKey);
 
-        File tmpSeqFile = writeTmpSeqFile(resource.inputStream);
+        File tmpSeqFile = writeTmpSeqFile(resource.content());
         Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
 
         CubeStatsResult cubeStatsResult = new CubeStatsResult(path, kylinConfig.getCubeStatsHLLPrecision());

@@ -31,4 +31,11 @@ public class DataTypeTest {
         Assert.assertTrue(DataType.isComplexType(arrayInt));
         Assert.assertTrue(DataType.isComplexType(arrayString));
     }
+
+    @Test
+    public void testIsSupportedType() {
+        Assert.assertFalse(DataType.isKylinSupported("array<int>"));
+        Assert.assertFalse(DataType.isKylinSupported("map<string, int>"));
+        Assert.assertFalse(DataType.isKylinSupported(null));
+    }
 }

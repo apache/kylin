@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);
     public static final String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
-    public static final String DEFAUL_JOB_CONF_SUFFIX = "";
+    public static final String DEFAULT_JOB_CONF_SUFFIX = "";
     public static final String IN_MEM_JOB_CONF_SUFFIX = "inmem";
 
     private static File getJobConfig(String fileName) {

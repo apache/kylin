@@ -57,6 +57,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String INTERRUPT_TIME = "interruptTime";
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
+    public static final String NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY = "no need to send email, user list is empty";
     protected int retry = 0;
 
     private KylinConfig config;
@@ -99,12 +100,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 onExecuteFinished(result, executableContext);
             } catch (Exception e) {
                 logger.error(nRetry + "th retries for onExecuteFinished fails due to {}", e);
-                if (isMetaDataPersistException(e)) {
+                if (isMetaDataPersistException(e, 5)) {
                     exception = e;
                     try {
                         Thread.sleep(1000L * (long) Math.pow(4, nRetry));
-                    } catch (InterruptedException exp) {
-                        throw new RuntimeException(exp);
+                    } catch (InterruptedException e1) {
+                        throw new IllegalStateException(e1);
                     }
                 } else {
                     throw e;
@@ -145,7 +146,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     @Override
     public final ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException {
 
-        logger.info("Executing AbstractExecutable (" + this.getName() + ")");
+        logger.info("Executing AbstractExecutable ({})", this.getName());
 
         Preconditions.checkArgument(executableContext instanceof DefaultContext);
         ExecuteResult result = null;
@@ -156,14 +157,14 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
             Throwable realException;
             do {
                 if (retry > 0) {
-                    logger.info("Retry " + retry);
+                    logger.info("Retry {}", retry);
                 }
                 catchedException = null;
                 result = null;
                 try {
                     result = doWork(executableContext);
                 } catch (Throwable e) {
-                    logger.error("error running Executable: " + this.toString());
+                    logger.error("error running Executable: {}", this.toString());
                     catchedException = e;
                 }
                 retry++;
@@ -191,7 +192,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected void handleMetadataPersistException(ExecutableContext context, Throwable exception) {
         final String[] adminDls = context.getConfig().getAdminDls();
         if (adminDls == null || adminDls.length < 1) {
-            logger.warn("no need to send email, user list is empty");
+            logger.warn(NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY);
             return;
         }
         List<String> users = Lists.newArrayList(adminDls);
@@ -199,7 +200,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         Map<String, Object> dataMap = Maps.newHashMap();
         dataMap.put("job_name", getName());
         dataMap.put("env_name", context.getConfig().getDeployEnv());
-        dataMap.put("submitter", StringUtil.noBlank(getSubmitter(), "missing submitter"));
+        dataMap.put(SUBMITTER, StringUtil.noBlank(getSubmitter(), "missing submitter"));
         dataMap.put("job_engine", MailNotificationUtil.getLocalHostName());
         dataMap.put("error_log",
                 Matcher.quoteReplacement(StringUtil.noBlank(exception.getMessage(), "no error message")));
@@ -211,14 +212,21 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         new MailService(context.getConfig()).sendMail(users, title, content);
     }
 
-    private boolean isMetaDataPersistException(Exception e) {
+    protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException, PersistentException;
+
+    @Override
+    public void cleanup() throws ExecuteException {
+
+    }
+
+    public static boolean isMetaDataPersistException(Exception e, final int maxDepth) {
         if (e instanceof PersistentException) {
             return true;
         }
 
         Throwable t = e.getCause();
         int depth = 0;
-        while (t != null && depth < 5) {
+        while (t != null && depth < maxDepth) {
             depth++;
             if (t instanceof PersistentException) {
                 return true;
@@ -226,13 +234,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
             t = t.getCause();
         }
         return false;
-    }
-
-    protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException;
-
-    @Override
-    public void cleanup() throws ExecuteException {
-
     }
 
     @Override
@@ -314,7 +315,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         try {
             List<String> users = getAllNofifyUsers(config);
             if (users.isEmpty()) {
-                logger.debug("no need to send email, user list is empty");
+                logger.debug(NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY);
                 return;
             }
             final Pair<String, String> email = formatNotifications(context, state);
@@ -341,10 +342,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
             logger.warn("no need to send email, content is null");
             return;
         }
-        logger.info("prepare to send email to:" + users);
-        logger.info("job name:" + getName());
-        logger.info("submitter:" + getSubmitter());
-        logger.info("notify list:" + users);
+        logger.info("prepare to send email to:{}", users);
+        logger.info("job name:{}", getName());
+        logger.info("submitter:{}", getSubmitter());
+        logger.info("notify list:{}", users);
         new MailService(kylinConfig).sendMail(users, email.getFirst(), email.getSecond());
     }
 
@@ -352,7 +353,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         try {
             List<String> users = getAllNofifyUsers(config);
             if (users.isEmpty()) {
-                logger.debug("no need to send email, user list is empty");
+                logger.debug(NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY);
                 return;
             }
             doSendMail(config, users, email);

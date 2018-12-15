@@ -42,6 +42,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -82,7 +83,7 @@ public class MergeDictionaryMapper extends KylinMapper<IntWritable, NullWritable
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
         final CubeDesc cubeDesc = CubeDescManager.getInstance(kylinConfig).getCubeDesc(cubeInstance.getDescName());
 
-        mergingSegments = getMergingSegments(cubeInstance, segmentIds.split(","));
+        mergingSegments = getMergingSegments(cubeInstance, StringUtil.splitByComma(segmentIds));
         tblColRefs = cubeDesc.getAllColumnsNeedDictionaryBuilt().toArray(new TblColRef[0]);
         dictMgr = DictionaryManager.getInstance(kylinConfig);
     }
@@ -114,11 +115,14 @@ public class MergeDictionaryMapper extends KylinMapper<IntWritable, NullWritable
 
         } else {
             // merge statistics
-            KylinConfig kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(new SerializableConfiguration(context.getConfiguration()), context.getConfiguration().get(BatchConstants.ARG_META_URL));
+            KylinConfig kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(
+                    new SerializableConfiguration(context.getConfiguration()),
+                    context.getConfiguration().get(BatchConstants.ARG_META_URL));
 
             final String cubeName = context.getConfiguration().get(BatchConstants.ARG_CUBE_NAME);
             final String segmentId = context.getConfiguration().get(BatchConstants.ARG_SEGMENT_ID);
-            final String statOutputPath = context.getConfiguration().get(MergeDictionaryJob.OPTION_OUTPUT_PATH_STAT.getOpt());
+            final String statOutputPath = context.getConfiguration()
+                    .get(MergeDictionaryJob.OPTION_OUTPUT_PATH_STAT.getOpt());
             CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
 
             logger.info("Statistics output path: {}", statOutputPath);
@@ -132,7 +136,7 @@ public class MergeDictionaryMapper extends KylinMapper<IntWritable, NullWritable
 
             for (CubeSegment cubeSegment : mergingSegments) {
                 String filePath = cubeSegment.getStatisticsResourcePath();
-                InputStream is = rs.getResource(filePath).inputStream;
+                InputStream is = rs.getResource(filePath).content();
                 File tempFile;
                 FileOutputStream tempFileStream = null;
 
@@ -179,8 +183,10 @@ public class MergeDictionaryMapper extends KylinMapper<IntWritable, NullWritable
             }
 
             averageSamplingPercentage = averageSamplingPercentage / mergingSegments.size();
-            CubeStatsWriter.writeCuboidStatistics(conf, new Path(statOutputPath), cuboidHLLMap, averageSamplingPercentage);
-            Path statisticsFilePath = new Path(statOutputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+            CubeStatsWriter.writeCuboidStatistics(conf, new Path(statOutputPath), cuboidHLLMap,
+                    averageSamplingPercentage);
+            Path statisticsFilePath = new Path(statOutputPath,
+                    BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
 
             FileSystem fs = HadoopUtil.getFileSystem(statisticsFilePath, conf);
             FSDataInputStream fis = fs.open(statisticsFilePath);

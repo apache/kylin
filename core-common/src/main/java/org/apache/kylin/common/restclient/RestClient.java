@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -60,6 +59,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class RestClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RestClient.class);
+    private static final String UTF_8 = "UTF-8";
+    private static final String APPLICATION_JSON = "application/json";
+    private static final String INVALID_RESPONSE = "Invalid response ";
+    private static final String CUBES = "/cubes/";
+    private static final String WITH_URL = " with url ";
 
     protected static Pattern fullRestPattern = Pattern.compile("(?:([^:]+)[:]([^@]+)[@])?([^:]+)(?:[:](\\d+))?");
 
@@ -156,7 +160,7 @@ public class RestClient {
         if (cacheKey.contains("/")) {
             url = baseUrl + "/cache/" + entity + "/" + event;
             request = new HttpPut(url);
-            request.setEntity(new StringEntity(cacheKey, ContentType.create("application/json", "UTF-8")));
+            request.setEntity(new StringEntity(cacheKey, ContentType.create(APPLICATION_JSON, UTF_8)));
         } else {
             url = baseUrl + "/cache/" + entity + "/" + cacheKey + "/" + event;
             request = new HttpPut(url);
@@ -168,7 +172,7 @@ public class RestClient {
 
             if (response.getStatusLine().getStatusCode() != 200) {
                 String msg = EntityUtils.toString(response.getEntity());
-                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode()
+                throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode()
                         + " with cache wipe url " + url + "\n" + msg);
             }
         } finally {
@@ -187,7 +191,7 @@ public class RestClient {
             msg = map.get("config");
 
             if (response.getStatusLine().getStatusCode() != 200)
-                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode()
+                throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode()
                         + " with cache wipe url " + url + "\n" + msg);
             return msg;
         } finally {
@@ -204,7 +208,7 @@ public class RestClient {
     }
 
     public boolean buildCube(String cubeName, long startTime, long endTime, String buildType) throws Exception {
-        String url = baseUrl + "/cubes/" + cubeName + "/build";
+        String url = baseUrl + CUBES + cubeName + "/build";
         HttpPut put = newPut(url);
         HttpResponse response = null;
         try {
@@ -213,11 +217,11 @@ public class RestClient {
             paraMap.put("endTime", endTime + "");
             paraMap.put("buildType", buildType);
             String jsonMsg = new ObjectMapper().writeValueAsString(paraMap);
-            put.setEntity(new StringEntity(jsonMsg, "UTF-8"));
+            put.setEntity(new StringEntity(jsonMsg, UTF_8));
             response = client.execute(put);
             getContent(response);
             if (response.getStatusLine().getStatusCode() != 200) {
-                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode()
+                throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode()
                         + " with build cube url " + url + "\n" + jsonMsg);
             } else {
                 return true;
@@ -228,19 +232,19 @@ public class RestClient {
     }
 
     public boolean disableCube(String cubeName) throws Exception {
-        return changeCubeStatus(baseUrl + "/cubes/" + cubeName + "/disable");
+        return changeCubeStatus(baseUrl + CUBES + cubeName + "/disable");
     }
 
     public boolean enableCube(String cubeName) throws Exception {
-        return changeCubeStatus(baseUrl + "/cubes/" + cubeName + "/enable");
+        return changeCubeStatus(baseUrl + CUBES + cubeName + "/enable");
     }
 
     public boolean purgeCube(String cubeName) throws Exception {
-        return changeCubeStatus(baseUrl + "/cubes/" + cubeName + "/purge");
+        return changeCubeStatus(baseUrl + CUBES + cubeName + "/purge");
     }
 
     public HashMap getCube(String cubeName) throws Exception {
-        String url = baseUrl + "/cubes/" + cubeName;
+        String url = baseUrl + CUBES + cubeName;
         HttpGet get = newGet(url);
         HttpResponse response = null;
         try {
@@ -258,12 +262,12 @@ public class RestClient {
         try {
             HashMap<String, String> paraMap = new HashMap<String, String>();
             String jsonMsg = new ObjectMapper().writeValueAsString(paraMap);
-            put.setEntity(new StringEntity(jsonMsg, "UTF-8"));
+            put.setEntity(new StringEntity(jsonMsg, UTF_8));
             response = client.execute(put);
             getContent(response);
             if (response.getStatusLine().getStatusCode() != 200) {
-                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with url "
-                        + url + "\n" + jsonMsg);
+                throw new IOException(
+                        INVALID_RESPONSE + response.getStatusLine().getStatusCode() + WITH_URL + url + "\n" + jsonMsg);
             } else {
                 return true;
             }
@@ -279,7 +283,7 @@ public class RestClient {
         paraMap.put("sql", sql);
         paraMap.put("project", project);
         String jsonMsg = new ObjectMapper().writeValueAsString(paraMap);
-        post.setEntity(new StringEntity(jsonMsg, "UTF-8"));
+        post.setEntity(new StringEntity(jsonMsg, UTF_8));
         HttpResponse response = client.execute(post);
         return response;
     }
@@ -290,7 +294,7 @@ public class RestClient {
         HttpPost post = new HttpPost(url);
 
         post.addHeader("Accept", "application/json, text/plain, */*");
-        post.addHeader("Content-Type", "application/json");
+        post.addHeader("Content-Type", APPLICATION_JSON);
 
         HashMap<String, Object> paraMap = new HashMap<String, Object>();
         paraMap.put("cube", cube);
@@ -298,10 +302,10 @@ public class RestClient {
         paraMap.put("model", model);
         paraMap.put("tableToProjects", tableToProjects);
         String jsonMsg = JsonUtil.writeValueAsString(paraMap);
-        post.setEntity(new StringEntity(jsonMsg, "UTF-8"));
+        post.setEntity(new StringEntity(jsonMsg, UTF_8));
         HttpResponse response = client.execute(post);
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode());
+            throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode());
         }
     }
 
@@ -311,8 +315,7 @@ public class RestClient {
         HttpResponse response = client.execute(put);
         getContent(response);
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException(
-                    "Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url + "\n");
+            throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode() + WITH_URL + url + "\n");
         }
     }
 
@@ -322,15 +325,14 @@ public class RestClient {
         HttpResponse response = client.execute(get);
         String content = getContent(response);
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException(
-                    "Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url + "\n");
+            throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode() + WITH_URL + url + "\n");
         }
         return content;
     }
 
     private HashMap dealResponse(HttpResponse response) throws IOException {
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode());
+            throw new IOException(INVALID_RESPONSE + response.getStatusLine().getStatusCode());
         }
         String result = getContent(response);
         HashMap resultMap = new ObjectMapper().readValue(result, HashMap.class);
@@ -339,7 +341,7 @@ public class RestClient {
 
     private void addHttpHeaders(HttpRequestBase method) {
         method.addHeader("Accept", "application/json, text/plain, */*");
-        method.addHeader("Content-Type", "application/json");
+        method.addHeader("Content-Type", APPLICATION_JSON);
         String basicAuth = DatatypeConverter
                 .printBase64Binary((this.userName + ":" + this.password).getBytes(StandardCharsets.UTF_8));
         method.addHeader("Authorization", "Basic " + basicAuth);
@@ -371,7 +373,7 @@ public class RestClient {
             HashMap<String, String> paraMap = new HashMap<String, String>();
             paraMap.put("key", "kylin.query.cache-enabled");
             paraMap.put("value", flag + "");
-            put.setEntity(new StringEntity(new ObjectMapper().writeValueAsString(paraMap), "UTF-8"));
+            put.setEntity(new StringEntity(new ObjectMapper().writeValueAsString(paraMap), UTF_8));
             response = client.execute(put);
             EntityUtils.consume(response.getEntity());
             if (response.getStatusLine().getStatusCode() != 200) {
@@ -385,20 +387,15 @@ public class RestClient {
     }
 
     private String getContent(HttpResponse response) throws IOException {
-        InputStreamReader reader = null;
-        BufferedReader rd = null;
         StringBuffer result = new StringBuffer();
-        try {
-            reader = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8);
-            rd = new BufferedReader(reader);
-            String line = null;
+        try (BufferedReader rd = new BufferedReader(
+                new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8))) {
+            String line;
             while ((line = rd.readLine()) != null) {
                 result.append(line);
             }
-        } finally {
-            IOUtils.closeQuietly(reader);
-            IOUtils.closeQuietly(rd);
         }
+
         return result.toString();
     }
 

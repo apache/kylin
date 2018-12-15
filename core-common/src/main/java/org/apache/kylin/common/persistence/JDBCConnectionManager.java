@@ -39,6 +39,7 @@ import java.util.Properties;
 public class JDBCConnectionManager {
 
     private static final Logger logger = LoggerFactory.getLogger(JDBCConnectionManager.class);
+    private static final String PASSWORD = "password";
 
     private static JDBCConnectionManager INSTANCE = null;
 
@@ -74,7 +75,7 @@ public class JDBCConnectionManager {
         JDBCResourceStore.checkScheme(metadataUrl);
 
         LinkedHashMap<String, String> ret = new LinkedHashMap<>(metadataUrl.getAllParameters());
-        List<String> mandatoryItems = Arrays.asList("url", "username", "password");
+        List<String> mandatoryItems = Arrays.asList("url", "username", PASSWORD);
 
         for (String item : mandatoryItems) {
             Preconditions.checkNotNull(ret.get(item),

@@ -130,12 +130,12 @@ public class ByteArrayWritable implements WritableComparable<ByteArrayWritable> 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals(Object right_obj) {
-        if (right_obj instanceof byte[]) {
-            return compareTo((byte[]) right_obj) == 0;
+    public boolean equals(Object other) {
+        if (other instanceof byte[]) {
+            return compareTo((byte[]) other) == 0;
         }
-        if (right_obj instanceof ByteArrayWritable) {
-            return compareTo((ByteArrayWritable) right_obj) == 0;
+        if (other instanceof ByteArrayWritable) {
+            return compareTo((ByteArrayWritable) other) == 0;
         }
         return false;
     }
@@ -162,7 +162,7 @@ public class ByteArrayWritable implements WritableComparable<ByteArrayWritable> 
     /** A Comparator optimized for ByteArrayWritable.
      */
     public static class Comparator extends WritableComparator {
-        private BytesWritable.Comparator comparator = new BytesWritable.Comparator();
+        private BytesWritable.Comparator instance = new BytesWritable.Comparator();
 
         /** constructor */
         public Comparator() {
@@ -174,7 +174,7 @@ public class ByteArrayWritable implements WritableComparable<ByteArrayWritable> 
          */
         @Override
         public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-            return comparator.compare(b1, s1, l1, b2, s2, l2);
+            return instance.compare(b1, s1, l1, b2, s2, l2);
         }
     }
 

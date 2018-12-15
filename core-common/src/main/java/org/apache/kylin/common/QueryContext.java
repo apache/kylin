@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -39,6 +40,9 @@ import com.google.common.collect.Maps;
 public class QueryContext {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryContext.class);
+    private static final String CSSR_SHOULD_BE_INIT_FOR_CONTEXT = "CubeSegmentStatisticsResult should be initialized for context {}";
+    private static final String CSSM_SHOULD_BE_INIT_FOR_CSSR = "cubeSegmentStatisticsMap should be initialized for CubeSegmentStatisticsResult with query type {}";
+    private static final String INPUT = " input ";
 
     public interface QueryStopListener {
         void stop(QueryContext query);
@@ -179,7 +183,7 @@ public class QueryContext {
     }
 
     public void addContext(int ctxId, String type, boolean ifCube) {
-        Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = null;
+        ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = null;
         if (ifCube) {
             cubeSegmentStatisticsMap = Maps.newConcurrentMap();
         }
@@ -204,6 +208,50 @@ public class QueryContext {
         return Lists.newArrayList(cubeSegmentStatisticsResultMap.values());
     }
 
+    public CubeSegmentStatistics getCubeSegmentStatistics(int ctxId, String cubeName, String segmentName) {
+        CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
+        if (cubeSegmentStatisticsResult == null) {
+            logger.warn(CSSR_SHOULD_BE_INIT_FOR_CONTEXT, ctxId);
+            return null;
+        }
+        ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = cubeSegmentStatisticsResult.cubeSegmentStatisticsMap;
+        if (cubeSegmentStatisticsMap == null) {
+            logger.warn(CSSM_SHOULD_BE_INIT_FOR_CSSR, cubeSegmentStatisticsResult.queryType);
+            return null;
+        }
+        ConcurrentMap<String, CubeSegmentStatistics> segmentStatisticsMap = cubeSegmentStatisticsMap.get(cubeName);
+        if (segmentStatisticsMap == null) {
+            logger.warn(
+                    "cubeSegmentStatistic should be initialized for cube {}", cubeName);
+            return null;
+        }
+        CubeSegmentStatistics segmentStatistics = segmentStatisticsMap.get(segmentName);
+        if (segmentStatistics == null) {
+            logger.warn(
+                    "segmentStatistics should be initialized for cube {} with segment{}", cubeName, segmentName);
+            return null;
+        }
+        return segmentStatistics;
+    }
+
+    public void addCubeSegmentStatistics(int ctxId, CubeSegmentStatistics cubeSegmentStatistics) {
+        CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
+        if (cubeSegmentStatisticsResult == null) {
+            logger.warn(CSSR_SHOULD_BE_INIT_FOR_CONTEXT, ctxId);
+            return;
+        }
+        ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = cubeSegmentStatisticsResult.cubeSegmentStatisticsMap;
+        if (cubeSegmentStatisticsMap == null) {
+            logger.warn(CSSM_SHOULD_BE_INIT_FOR_CSSR, cubeSegmentStatisticsResult.queryType);
+            return;
+        }
+        String cubeName = cubeSegmentStatistics.cubeName;
+        cubeSegmentStatisticsMap.putIfAbsent(cubeName, Maps.<String, CubeSegmentStatistics> newConcurrentMap());
+        ConcurrentMap<String, CubeSegmentStatistics> segmentStatisticsMap = cubeSegmentStatisticsMap.get(cubeName);
+
+        segmentStatisticsMap.put(cubeSegmentStatistics.getSegmentName(), cubeSegmentStatistics);
+    }
+
     public void addRPCStatistics(int ctxId, String rpcServer, String cubeName, String segmentName, long sourceCuboidId,
             long targetCuboidId, long filterMask, Exception e, long rpcCallTimeMs, long skippedRows, long scannedRows,
             long returnedRows, long aggregatedRows, long scannedBytes) {
@@ -215,40 +263,35 @@ public class QueryContext {
 
         CubeSegmentStatisticsResult cubeSegmentStatisticsResult = cubeSegmentStatisticsResultMap.get(ctxId);
         if (cubeSegmentStatisticsResult == null) {
-            logger.warn("CubeSegmentStatisticsResult should be initialized for context " + ctxId);
+            logger.warn(CSSR_SHOULD_BE_INIT_FOR_CONTEXT, ctxId);
             return;
         }
-        Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = cubeSegmentStatisticsResult.cubeSegmentStatisticsMap;
+        ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap = cubeSegmentStatisticsResult.cubeSegmentStatisticsMap;
         if (cubeSegmentStatisticsMap == null) {
-            logger.warn(
-                    "cubeSegmentStatisticsMap should be initialized for CubeSegmentStatisticsResult with query type "
-                            + cubeSegmentStatisticsResult.queryType);
+            logger.warn(CSSM_SHOULD_BE_INIT_FOR_CSSR, cubeSegmentStatisticsResult.queryType);
             return;
         }
-        Map<String, CubeSegmentStatistics> segmentStatisticsMap = cubeSegmentStatisticsMap.get(cubeName);
-        if (segmentStatisticsMap == null) {
-            segmentStatisticsMap = Maps.newConcurrentMap();
-            cubeSegmentStatisticsMap.put(cubeName, segmentStatisticsMap);
-        }
+        cubeSegmentStatisticsMap.putIfAbsent(cubeName, Maps.<String, CubeSegmentStatistics> newConcurrentMap());
+        ConcurrentMap<String, CubeSegmentStatistics> segmentStatisticsMap = cubeSegmentStatisticsMap.get(cubeName);
+
+        CubeSegmentStatistics old = segmentStatisticsMap.putIfAbsent(segmentName, new CubeSegmentStatistics());
         CubeSegmentStatistics segmentStatistics = segmentStatisticsMap.get(segmentName);
-        if (segmentStatistics == null) {
-            segmentStatistics = new CubeSegmentStatistics();
-            segmentStatisticsMap.put(segmentName, segmentStatistics);
+        if (old == null) {
             segmentStatistics.setWrapper(cubeName, segmentName, sourceCuboidId, targetCuboidId, filterMask);
-        }
-        if (segmentStatistics.sourceCuboidId != sourceCuboidId || segmentStatistics.targetCuboidId != targetCuboidId
+        } else if (segmentStatistics.sourceCuboidId != sourceCuboidId
+                || segmentStatistics.targetCuboidId != targetCuboidId
                 || segmentStatistics.filterMask != filterMask) {
             StringBuilder inconsistency = new StringBuilder();
             if (segmentStatistics.sourceCuboidId != sourceCuboidId) {
                 inconsistency.append(
-                        "sourceCuboidId exist " + segmentStatistics.sourceCuboidId + " input " + sourceCuboidId);
+                        "sourceCuboidId exist " + segmentStatistics.sourceCuboidId + INPUT + sourceCuboidId);
             }
             if (segmentStatistics.targetCuboidId != targetCuboidId) {
                 inconsistency.append(
-                        "targetCuboidId exist " + segmentStatistics.targetCuboidId + " input " + targetCuboidId);
+                        "targetCuboidId exist " + segmentStatistics.targetCuboidId + INPUT + targetCuboidId);
             }
             if (segmentStatistics.filterMask != filterMask) {
-                inconsistency.append("filterMask exist " + segmentStatistics.filterMask + " input " + filterMask);
+                inconsistency.append("filterMask exist " + segmentStatistics.filterMask + INPUT + filterMask);
             }
             logger.error("cube segment statistics wrapper is not consistent due to " + inconsistency.toString());
             return;
@@ -397,8 +440,8 @@ public class QueryContext {
             this.filterMask = filterMask;
         }
 
-        public void addRPCStats(long callTimeMs, long skipCount, long scanCount, long returnCount, long aggrCount,
-                long scanBytes, boolean ifSuccess) {
+        public synchronized void addRPCStats(long callTimeMs, long skipCount, long scanCount, long returnCount,
+                long aggrCount, long scanBytes, boolean ifSuccess) {
             this.callCount++;
             this.callTimeSum += callTimeMs;
             if (this.callTimeMax < callTimeMs) {
@@ -536,7 +579,7 @@ public class QueryContext {
         protected static final long serialVersionUID = 1L;
 
         private String queryType;
-        private Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap;
+        private ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap;
         private String realization;
         private int realizationType;
 
@@ -544,7 +587,7 @@ public class QueryContext {
         }
 
         public CubeSegmentStatisticsResult(String queryType,
-                Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap) {
+                ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap) {
             this.queryType = queryType;
             this.cubeSegmentStatisticsMap = cubeSegmentStatisticsMap;
         }
@@ -570,7 +613,7 @@ public class QueryContext {
         }
 
         public void setCubeSegmentStatisticsMap(
-                Map<String, Map<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap) {
+                ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> cubeSegmentStatisticsMap) {
             this.cubeSegmentStatisticsMap = cubeSegmentStatisticsMap;
         }
 
@@ -579,7 +622,7 @@ public class QueryContext {
 
         }
 
-        public Map<String, Map<String, CubeSegmentStatistics>> getCubeSegmentStatisticsMap() {
+        public ConcurrentMap<String, ConcurrentMap<String, CubeSegmentStatistics>> getCubeSegmentStatisticsMap() {
             return cubeSegmentStatisticsMap;
         }
 

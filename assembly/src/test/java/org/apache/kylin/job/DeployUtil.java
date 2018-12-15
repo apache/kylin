@@ -70,8 +70,8 @@ public class DeployUtil {
 
     public static void deployMetadata(String localMetaData) throws IOException {
         // install metadata to hbase
-        ResourceTool.reset(config());
-        ResourceTool.copy(KylinConfig.createInstanceFromUri(localMetaData), config());
+        new ResourceTool().reset(config());
+        new ResourceTool().copy(KylinConfig.createInstanceFromUri(localMetaData), config());
 
         // update cube desc signature.
         for (CubeInstance cube : CubeManager.getInstance(config()).listAllCubes()) {
@@ -177,7 +177,7 @@ public class DeployUtil {
         InputStream tempIn = null;
         try {
             if (store.exists(factTablePath)) {
-                InputStream oldContent = store.getResource(factTablePath).inputStream;
+                InputStream oldContent = store.getResource(factTablePath).content();
                 IOUtils.copy(oldContent, out);
             }
             IOUtils.copy(in, out);
@@ -226,7 +226,7 @@ public class DeployUtil {
             localBufferFile.createNewFile();
 
             logger.info(String.format(Locale.ROOT, "get resource from hbase:/data/%s.csv", tablename));
-            InputStream hbaseDataStream = metaMgr.getStore().getResource("/data/" + tablename + ".csv").inputStream;
+            InputStream hbaseDataStream = metaMgr.getStore().getResource("/data/" + tablename + ".csv").content();
             FileOutputStream localFileStream = new FileOutputStream(localBufferFile);
             IOUtils.copy(hbaseDataStream, localFileStream);
 

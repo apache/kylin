@@ -85,6 +85,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import static org.apache.kylin.metadata.expression.TupleExpression.ExpressionOperatorEnum.COLUMN;
 /**
  */
 public class OLAPAggregateRel extends Aggregate implements OLAPRel {
@@ -99,6 +100,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         AGGR_FUNC_MAP.put("COUNT_DISTINCT", "COUNT_DISTINCT");
         AGGR_FUNC_MAP.put("MAX", "MAX");
         AGGR_FUNC_MAP.put("MIN", "MIN");
+        AGGR_FUNC_MAP.put("GROUPING", "GROUPING");
 
         Map<String, MeasureTypeFactory> udafFactories = MeasureTypeFactory.getUDAFFactories();
         for (Map.Entry<String, MeasureTypeFactory> entry : udafFactories.entrySet()) {
@@ -109,7 +111,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         for (String func : udafs.keySet()) {
             try {
                 AGGR_FUNC_PARAM_AS_MEASURE_MAP.put(func,
-                        ((ParamAsMeasureCount) (udafs.get(func).newInstance())).getParamAsMeasureCount());
+                        ((ParamAsMeasureCount) (udafs.get(func).getDeclaredConstructor().newInstance())).getParamAsMeasureCount());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -199,6 +201,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 this.context.limitPrecedesAggr = true;
             }
         } else {
+            this.context.afterOuterAggregate = true;
             for (AggregateCall aggCall : aggCalls) {
                 // check if supported by kylin
                 if (aggCall.isDistinct()) {
@@ -266,6 +269,12 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         this.groups = Lists.newArrayList();
         for (int i = getGroupSet().nextSetBit(0); i >= 0; i = getGroupSet().nextSetBit(i + 1)) {
             TupleExpression tupleExpression = inputColumnRowType.getSourceColumnsByIndex(i);
+
+            // group by column with operator
+            if (this.context.groupByExpression == false && !(COLUMN.equals(tupleExpression.getOperator()) && tupleExpression.getChildren().isEmpty())) {
+                this.context.groupByExpression = true;
+            }
+
             TblColRef groupOutCol = inputColumnRowType.getColumnByIndex(i);
             if (tupleExpression instanceof ColumnTupleExpression) {
                 this.groups.add(((ColumnTupleExpression) tupleExpression).getColumn());
@@ -410,6 +419,11 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             for (int i = 0; i < this.aggCalls.size(); i++) {
                 AggregateCall aggCall = this.hackAggCalls.get(i) != null ? this.hackAggCalls.get(i)
                         : this.aggCalls.get(i);
+                if (SqlStdOperatorTable.GROUPING == aggCall.getAggregation()) {
+                    this.rewriteAggCalls.add(aggCall);
+                    continue;
+                }
+
                 FunctionDesc cubeFunc = this.context.aggregations.get(i);
                 // filter needn,t rewrite aggfunc
                 // if it's not a cube, then the "needRewriteField func" should not resort to any rewrite fields,
@@ -593,7 +607,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             typeFamilies.add(Util.first(type.getSqlTypeName().getFamily(), SqlTypeFamily.ANY));
         }
         return new SqlUserDefinedAggFunction(sqlIdentifier, ReturnTypes.explicit(returnType),
-                InferTypes.explicit(argTypes), OperandTypes.family(typeFamilies), aggFunction, false, false);
+                InferTypes.explicit(argTypes), OperandTypes.family(typeFamilies), aggFunction, false, false,
+                typeFactory);
     }
 
     @Override

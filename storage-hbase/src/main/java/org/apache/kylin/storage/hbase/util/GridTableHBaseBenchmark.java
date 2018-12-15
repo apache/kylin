@@ -56,6 +56,7 @@ public class GridTableHBaseBenchmark {
     private static final double DFT_HIT_RATIO = 0.3;
     private static final double DFT_INDEX_RATIO = 0.1;
     private static final int ROUND = 3;
+    private static final Random rand = new Random();
     protected static final Logger logger = LoggerFactory.getLogger(GridTableHBaseBenchmark.class);
 
     public static void main(String[] args) throws IOException {
@@ -77,7 +78,7 @@ public class GridTableHBaseBenchmark {
     }
 
     public static void testGridTable(double hitRatio, double indexRatio) throws IOException {
-        logger.info("Testing grid table scanning, hit ratio " + hitRatio + ", index ratio " + indexRatio);
+        logger.info("Testing grid table scanning, hit ratio {}, index ratio {}", hitRatio, indexRatio);
         StorageURL hbaseUrl = StorageURL.valueOf("default@hbase"); // use hbase-site.xml on classpath
 
         Connection conn = HBaseConnection.get(hbaseUrl);
@@ -87,8 +88,7 @@ public class GridTableHBaseBenchmark {
         Hits hits = new Hits(N_ROWS, hitRatio, indexRatio);
 
         for (int i = 0; i < ROUND; i++) {
-            logger.info("==================================== ROUND " + (i + 1)
-                    + " ========================================");
+            logger.info("==================================== ROUND {} ========================================",  (i + 1));
             testRowScanWithIndex(conn, hits.getHitsForRowScanWithIndex());
             testRowScanNoIndexFullScan(conn, hits.getHitsForRowScanNoIndex());
             testRowScanNoIndexSkipScan(conn, hits.getHitsForRowScanNoIndex());
@@ -173,18 +173,18 @@ public class GridTableHBaseBenchmark {
 
             int i = 0;
             while (i < N_ROWS) {
-                int start, end;
-                for (start = i; start < N_ROWS; start++) {
-                    if (hits[start])
-                        break;
-                }
-                for (end = start + 1; end < N_ROWS; end++) {
-                    boolean isEnd = true;
-                    for (int j = 0; j < jumpThreshold && end + j < N_ROWS; j++)
-                        if (hits[end + j])
-                            isEnd = false;
-                    if (isEnd)
-                        break;
+                // find the first hit
+                int start = i;
+                while (start + 1 < N_ROWS && !hits[start]) start++;
+
+                // find the last hit within jumpThreshold
+                int end = start + 1;
+                int jump = end + 1;
+                while (jump < N_ROWS && (end + jumpThreshold > jump)) {
+                    if (hits[jump]) {
+                        end = jump;
+                    }
+                    jump++;
                 }
 
                 if (start < N_ROWS) {
@@ -225,25 +225,25 @@ public class GridTableHBaseBenchmark {
             }
 
             if (nRows > 0) {
-                logger.info(nRows + " existing rows");
+                logger.info("{} existing rows", nRows);
                 if (nRows != N_ROWS)
                     throw new IOException("Expect " + N_ROWS + " rows but it is not");
                 return;
             }
 
             // insert rows into empty table
-            logger.info("Writing " + N_ROWS + " rows to " + TEST_TABLE);
+            logger.info("Writing {} rows to {}", N_ROWS, TEST_TABLE);
             long nBytes = 0;
             for (int i = 0; i < N_ROWS; i++) {
                 byte[] rowkey = Bytes.toBytes(i);
                 Put put = new Put(rowkey);
                 byte[] cell = randomBytes();
-                put.add(CF, QN, cell);
+                put.addColumn(CF, QN, cell);
                 table.put(put);
                 nBytes += cell.length;
                 dot(i, N_ROWS);
             }
-            logger.info("Written " + N_ROWS + " rows, " + nBytes + " bytes");
+            logger.info("Written {} rows, {} bytes", N_ROWS, nBytes);
 
         } finally {
             IOUtils.closeQuietly(table);
@@ -253,12 +253,11 @@ public class GridTableHBaseBenchmark {
 
     private static void dot(int i, int nRows) {
         if (i % (nRows / 100) == 0)
-            System.out.print(".");
+            logger.info(".");
     }
 
     private static byte[] randomBytes() {
         byte[] bytes = new byte[CELL_SIZE];
-        Random rand = new Random();
         rand.nextBytes(bytes);
         return bytes;
     }
@@ -276,11 +275,11 @@ public class GridTableHBaseBenchmark {
             }
 
             if (tableExist) {
-                logger.info("HTable '" + tableName + "' already exists");
+                logger.info("HTable '{}' already exists", tableName);
                 return;
             }
 
-            logger.info("Creating HTable '" + tableName + "'");
+            logger.info("Creating HTable '{}'", tableName);
 
             HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));
 
@@ -289,7 +288,7 @@ public class GridTableHBaseBenchmark {
             desc.addFamily(fd);
             hbase.createTable(desc);
 
-            logger.info("HTable '" + tableName + "' created");
+            logger.info("HTable '{}' created", tableName);
         } finally {
             hbase.close();
         }
@@ -383,14 +382,13 @@ public class GridTableHBaseBenchmark {
         }
 
         public void markStart() {
-            logger.info(name + " starts");
+            logger.info("{} starts", name);
             startTime = System.currentTimeMillis();
         }
 
         public void markEnd() {
             endTime = System.currentTimeMillis();
-            logger.info(name + " ends, " + (endTime - startTime) + " ms, " + rowsRead + " rows read, "
-                    + bytesRead + " bytes read");
+            logger.info("{} ends, {} ms, {} rows read, {} bytes read", name, (endTime - startTime), rowsRead, bytesRead);
         }
     }
 

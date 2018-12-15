@@ -188,7 +188,7 @@ public class ExtendCubeToHybridCLI {
         // clear segments for old cube
         cubeInstance.setSegments(new Segments());
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
-        store.putResource(cubeInstance.getResourcePath(), cubeInstance, CubeManager.CUBE_SERIALIZER);
+        store.checkAndPutResource(cubeInstance.getResourcePath(), cubeInstance, CubeManager.CUBE_SERIALIZER);
         logger.info("CubeInstance was saved at: " + cubeInstance.getResourcePath());
 
         // create hybrid model for these two cubes
@@ -196,7 +196,7 @@ public class ExtendCubeToHybridCLI {
         realizationEntries.add(RealizationEntry.create(RealizationType.CUBE, cubeInstance.getName()));
         realizationEntries.add(RealizationEntry.create(RealizationType.CUBE, newCubeInstance.getName()));
         HybridInstance hybridInstance = HybridInstance.create(kylinConfig, renameHybrid(cubeInstance.getName()), realizationEntries);
-        store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
+        store.checkAndPutResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
         ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);
         logger.info("HybridInstance was saved at: " + hybridInstance.getResourcePath());
 
@@ -225,7 +225,7 @@ public class ExtendCubeToHybridCLI {
     private void copyAcl(String origCubeId, String newCubeId, String projectName) throws Exception {
         String projectResPath = ProjectInstance.concatResourcePath(projectName);
         Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
-        ProjectInstance project = store.getResource(projectResPath, ProjectInstance.class, projectSerializer);
+        ProjectInstance project = store.getResource(projectResPath, projectSerializer);
         String projUUID = project.getUuid();
         Table aclHtable = null;
         try {

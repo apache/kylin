@@ -383,7 +383,7 @@ public class TableMetadataManager {
             // what is this doing??
             String path = TableExtDesc.concatResourcePath(tableExt.getIdentity(), prj);
             ResourceStore store = getStore();
-            TableExtDesc t = store.getResource(path, TableExtDesc.class, TABLE_EXT_SERIALIZER);
+            TableExtDesc t = store.getResource(path, TABLE_EXT_SERIALIZER);
             if (t != null && t.getIdentity() == null)
                 store.deleteResource(path);
 
@@ -410,7 +410,7 @@ public class TableMetadataManager {
             RawResource res = store.getResource(
                     ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + resourceName + MetadataConstants.FILE_SURFIX);
 
-            InputStream is = res.inputStream;
+            InputStream is = res.content();
             try {
                 attrs.putAll(JsonUtil.readValue(is, HashMap.class));
             } finally {

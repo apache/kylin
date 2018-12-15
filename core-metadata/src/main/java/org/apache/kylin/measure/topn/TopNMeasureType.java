@@ -67,7 +67,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
         @Override
         public MeasureType<TopNCounter<ByteArray>> createMeasureType(String funcName, DataType dataType) {
-            return new TopNMeasureType(funcName, dataType);
+            return new TopNMeasureType(dataType);
         }
 
         @Override
@@ -90,7 +90,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     private final DataType dataType;
 
-    public TopNMeasureType(String funcName, DataType dataType) {
+    public TopNMeasureType(DataType dataType) {
         // note at query parsing phase, the data type may be null, because only function and parameters are known
         this.dataType = dataType;
     }
@@ -163,29 +163,21 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             }
 
             @Override
+            public void reset() {
+
+            }
+
+            @Override
             public TopNCounter<ByteArray> reEncodeDictionary(TopNCounter<ByteArray> value, MeasureDesc measureDesc,
                     Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
                 TopNCounter<ByteArray> topNCounter = value;
 
                 if (newDimensionEncodings == null) {
-                    literalCols = getTopNLiteralColumn(measureDesc.getFunction());
-                    dimensionEncodings = getDimensionEncodings(measureDesc.getFunction(), literalCols, oldDicts);
-                    keyLength = 0;
-                    boolean hasDictEncoding = false;
-                    for (DimensionEncoding encoding : dimensionEncodings) {
-                        keyLength += encoding.getLengthOfEncoding();
-                        if (encoding instanceof DictionaryDimEnc) {
-                            hasDictEncoding = true;
+                    synchronized (MeasureIngester.class) {
+                        if (newDimensionEncodings == null) {
+                            initialize(measureDesc, oldDicts, newDicts);
                         }
                     }
-
-                    newDimensionEncodings = getDimensionEncodings(measureDesc.getFunction(), literalCols, newDicts);
-                    newKeyLength = 0;
-                    for (DimensionEncoding encoding : newDimensionEncodings) {
-                        newKeyLength += encoding.getLengthOfEncoding();
-                    }
-
-                    needReEncode = hasDictEncoding;
                 }
 
                 if (needReEncode == false) {
@@ -212,6 +204,28 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     bufOffset += newKeyLength;
                 }
                 return topNCounter;
+            }
+
+            private void initialize(MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts,
+                    Map<TblColRef, Dictionary<String>> newDicts) {
+                literalCols = getTopNLiteralColumn(measureDesc.getFunction());
+                dimensionEncodings = getDimensionEncodings(measureDesc.getFunction(), literalCols, oldDicts);
+                keyLength = 0;
+                boolean hasDictEncoding = false;
+                for (DimensionEncoding encoding : dimensionEncodings) {
+                    keyLength += encoding.getLengthOfEncoding();
+                    if (encoding instanceof DictionaryDimEnc) {
+                        hasDictEncoding = true;
+                    }
+                }
+
+                newDimensionEncodings = getDimensionEncodings(measureDesc.getFunction(), literalCols, newDicts);
+                newKeyLength = 0;
+                for (DimensionEncoding encoding : newDimensionEncodings) {
+                    newKeyLength += encoding.getLengthOfEncoding();
+                }
+
+                needReEncode = hasDictEncoding;
             }
         };
     }

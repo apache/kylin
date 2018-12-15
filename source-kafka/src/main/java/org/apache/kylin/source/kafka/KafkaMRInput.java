@@ -20,8 +20,6 @@ package org.apache.kylin.source.kafka;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -30,46 +28,36 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 public class KafkaMRInput extends KafkaInputBase implements IMRInput {
 
-    private static final Logger logger = LoggerFactory.getLogger(KafkaMRInput.class);
     private CubeSegment cubeSegment;
 
     @Override
-    public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+    public IBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
         this.cubeSegment = (CubeSegment) flatDesc.getSegment();
-        return new BatchCubingInputSide(cubeSegment, flatDesc);
+        return new KafkaMRBatchCubingInputSide(cubeSegment, flatDesc);
+    }
+
+    @Override
+    public IBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
+        return new KafkaMRBatchMergeInputSide((CubeSegment)seg);
     }
 
     @Override
     public IMRTableInputFormat getTableInputFormat(TableDesc table, String uuid) {
-
         return new KafkaTableInputFormat(cubeSegment, null);
-    }
-
-    @Override
-    public IMRBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
-        return new KafkaMRBatchMergeInputSide((CubeSegment) seg);
     }
 
     public static class KafkaTableInputFormat implements IMRTableInputFormat {
@@ -110,56 +98,10 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
         }
     }
 
-    public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
+    public static class KafkaMRBatchCubingInputSide extends BaseBatchCubingInputSide implements IMRBatchCubingInputSide {
 
-        final JobEngineConfig conf;
-        final CubeSegment seg;
-        private CubeDesc cubeDesc;
-        private KylinConfig config;
-        protected IJoinedFlatTableDesc flatDesc;
-        protected String hiveTableDatabase;
-        private List<String> intermediateTables = Lists.newArrayList();
-        private List<String> intermediatePaths = Lists.newArrayList();
-        private String cubeName;
-
-        public BatchCubingInputSide(CubeSegment seg, IJoinedFlatTableDesc flatDesc) {
-            this.conf = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
-            this.config = seg.getConfig();
-            this.flatDesc = flatDesc;
-            this.hiveTableDatabase = config.getHiveDatabaseForIntermediateTable();
-            this.seg = seg;
-            this.cubeDesc = seg.getCubeDesc();
-            this.cubeName = seg.getCubeInstance().getName();
-        }
-
-        @Override
-        public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
-
-            boolean onlyOneTable = cubeDesc.getModel().getLookupTables().size() == 0;
-            final String baseLocation = getJobWorkingDir(jobFlow);
-            if (onlyOneTable) {
-                // directly use flat table location
-                final String intermediateFactTable = flatDesc.getTableName();
-                final String tableLocation = baseLocation + "/" + intermediateFactTable;
-                jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId(), tableLocation, seg));
-                intermediatePaths.add(tableLocation);
-            } else {
-                final String mockFactTableName = MetadataConstants.KYLIN_INTERMEDIATE_PREFIX
-                        + cubeName.toLowerCase(Locale.ROOT) + "_" + seg.getUuid().replaceAll("-", "_") + "_fact";
-                jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId(), baseLocation + "/" + mockFactTableName, seg));
-                jobFlow.addTask(createFlatTable(hiveTableDatabase, mockFactTableName, baseLocation, cubeName, cubeDesc,
-                        flatDesc, intermediateTables, intermediatePaths));
-            }
-        }
-
-        protected String getJobWorkingDir(DefaultChainedExecutable jobFlow) {
-            return JobBuilderSupport.getJobWorkingDir(config.getHdfsWorkingDirectory(), jobFlow.getId());
-        }
-
-        @Override
-        public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-            jobFlow.addTask(createGCStep(intermediateTables, intermediatePaths));
-
+        public KafkaMRBatchCubingInputSide(CubeSegment seg, IJoinedFlatTableDesc flatDesc) {
+            super(seg, flatDesc);
         }
 
         @Override
@@ -168,18 +110,10 @@ public class KafkaMRInput extends KafkaInputBase implements IMRInput {
         }
     }
 
-    class KafkaMRBatchMergeInputSide implements IMRBatchMergeInputSide {
-
-        private CubeSegment cubeSegment;
+    public static class KafkaMRBatchMergeInputSide extends BaseBatchMergeInputSide implements IMRBatchMergeInputSide {
 
         KafkaMRBatchMergeInputSide(CubeSegment cubeSegment) {
-            this.cubeSegment = cubeSegment;
-        }
-
-        @Override
-        public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
-            jobFlow.addTask(createMergeOffsetStep(jobFlow.getId(), cubeSegment));
+            super(cubeSegment);
         }
     }
-
 }

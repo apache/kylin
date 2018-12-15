@@ -41,7 +41,6 @@ import java.util.Locale;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import sun.misc.Unsafe;
 
 /**
@@ -116,6 +115,7 @@ public class Bytes {
     // JHat says BU is 56 bytes.
     // SizeOf which uses java.lang.instrument says 24 bytes. (3 longs?)
     public static final int ESTIMATED_HEAP_TAX = 16;
+    public static final String LENGTH_MUST_BE_GREATER_THAN_0 = "length must be greater than 0";
 
     /**
      * Returns length of the byte array, returning 0 if the array is null.
@@ -491,7 +491,7 @@ public class Bytes {
      * @return incremented offset
      */
     public static int putLongUnsafe(byte[] bytes, int offset, long val) {
-        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
+        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.LITTLEENDIAN) {
             val = Long.reverseBytes(val);
         }
         org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.putLong(bytes,
@@ -652,7 +652,7 @@ public class Bytes {
      * @return the int value
      */
     public static int toIntUnsafe(byte[] bytes, int offset) {
-        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
+        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.LITTLEENDIAN) {
             return Integer.reverseBytes(
                     org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe
                             .getInt(bytes, (long) offset
@@ -672,7 +672,7 @@ public class Bytes {
      * @return the short value
      */
     public static short toShortUnsafe(byte[] bytes, int offset) {
-        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
+        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.LITTLEENDIAN) {
             return Short.reverseBytes(
                     org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe
                             .getShort(bytes, (long) offset
@@ -692,7 +692,7 @@ public class Bytes {
      * @return the long value
      */
     public static long toLongUnsafe(byte[] bytes, int offset) {
-        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
+        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.LITTLEENDIAN) {
             return Long.reverseBytes(
                     org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe
                             .getLong(bytes, (long) offset
@@ -763,7 +763,7 @@ public class Bytes {
      * @return incremented offset
      */
     public static int putIntUnsafe(byte[] bytes, int offset, int val) {
-        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
+        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.LITTLEENDIAN) {
             val = Integer.reverseBytes(val);
         }
         org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.putInt(bytes,
@@ -880,7 +880,7 @@ public class Bytes {
      * @return incremented offset
      */
     public static int putShortUnsafe(byte[] bytes, int offset, short val) {
-        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
+        if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.LITTLEENDIAN) {
             val = Short.reverseBytes(val);
         }
         org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.putShort(bytes,
@@ -1097,7 +1097,7 @@ public class Bytes {
                 }
             }
 
-            static final boolean littleEndian = ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN);
+            static final boolean LITTLEENDIAN = ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN);
 
             /**
              * Returns true if x1 is less than x2, when both values are treated as
@@ -1164,7 +1164,7 @@ public class Bytes {
                     long lw = theUnsafe.getLong(buffer1, offset1Adj + (long) i);
                     long rw = theUnsafe.getLong(buffer2, offset2Adj + (long) i);
                     long diff = lw ^ rw;
-                    if (littleEndian) {
+                    if (LITTLEENDIAN) {
                         lw = Long.reverseBytes(lw);
                         rw = Long.reverseBytes(rw);
                     }
@@ -1177,7 +1177,7 @@ public class Bytes {
                 if (minLength - offset >= SIZEOF_INT) {
                     int il = theUnsafe.getInt(buffer1, offset1Adj + offset);
                     int ir = theUnsafe.getInt(buffer2, offset2Adj + offset);
-                    if (littleEndian) {
+                    if (LITTLEENDIAN) {
                         il = Integer.reverseBytes(il);
                         ir = Integer.reverseBytes(ir);
                     }
@@ -1189,7 +1189,7 @@ public class Bytes {
                 if (minLength - offset >= SIZEOF_SHORT) {
                     short sl = theUnsafe.getShort(buffer1, offset1Adj + offset);
                     short sr = theUnsafe.getShort(buffer2, offset2Adj + offset);
-                    if (littleEndian) {
+                    if (LITTLEENDIAN) {
                         sl = Short.reverseBytes(sl);
                         sr = Short.reverseBytes(sr);
                     }
@@ -1316,10 +1316,7 @@ public class Bytes {
 
     /** Compute hash for binary data. */
     public static int hashBytes(byte[] bytes, int offset, int length) {
-        int hash = 1;
-        for (int i = offset; i < offset + length; i++)
-            hash = (31 * hash) + (int) bytes[i];
-        return hash;
+        return hashCode(bytes, offset, length);
     }
 
     /**
@@ -1537,12 +1534,7 @@ public class Bytes {
 
         };
 
-        return new Iterable<byte[]>() {
-            @Override
-            public Iterator<byte[]> iterator() {
-                return iterator;
-            }
-        };
+        return () -> iterator;
     }
 
     /**
@@ -1792,10 +1784,7 @@ public class Bytes {
 
     public static boolean equals(List<byte[]> a, List<byte[]> b) {
         if (a == null) {
-            if (b == null) {
-                return true;
-            }
-            return false;
+            return b == null;
         }
         if (b == null) {
             return false;
@@ -1894,7 +1883,7 @@ public class Bytes {
      */
     public static void zero(byte[] b, int offset, int length) {
         checkPositionIndex(offset, b.length, "offset");
-        checkArgument(length > 0, "length must be greater than 0");
+        checkArgument(length > 0, LENGTH_MUST_BE_GREATER_THAN_0);
         checkPositionIndex(offset + length, b.length, "offset + length");
         Arrays.fill(b, offset, offset + length, (byte) 0);
     }
@@ -1919,7 +1908,7 @@ public class Bytes {
      */
     public static void random(byte[] b, int offset, int length) {
         checkPositionIndex(offset, b.length, "offset");
-        checkArgument(length > 0, "length must be greater than 0");
+        checkArgument(length > 0, LENGTH_MUST_BE_GREATER_THAN_0);
         checkPositionIndex(offset + length, b.length, "offset + length");
         byte[] buf = new byte[length];
         RNG.nextBytes(buf);
@@ -1964,7 +1953,7 @@ public class Bytes {
      * @param b
      */
     public static String toHex(byte[] b) {
-        checkArgument(b.length > 0, "length must be greater than 0");
+        checkArgument(b.length > 0, LENGTH_MUST_BE_GREATER_THAN_0);
         return String.format(Locale.ROOT, "%x", new BigInteger(1, b));
     }
 
@@ -1975,7 +1964,7 @@ public class Bytes {
      * @param hex
      */
     public static byte[] fromHex(String hex) {
-        checkArgument(hex.length() > 0, "length must be greater than 0");
+        checkArgument(hex.length() > 0, LENGTH_MUST_BE_GREATER_THAN_0);
         checkArgument(hex.length() % 2 == 0, "length must be a multiple of 2");
         // Make sure letters are upper case
         hex = hex.toUpperCase(Locale.ROOT);

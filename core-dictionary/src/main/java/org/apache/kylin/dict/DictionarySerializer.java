@@ -41,7 +41,7 @@ public final class DictionarySerializer {
         try {
             final DataInputStream dataInputStream = new DataInputStream(inputStream);
             final String type = dataInputStream.readUTF();
-            final Dictionary<?> dictionary = ClassUtil.forName(type, Dictionary.class).newInstance();
+            final Dictionary<?> dictionary = ClassUtil.forName(type, Dictionary.class).getDeclaredConstructor().newInstance();
             dictionary.readFields(dataInputStream);
             return dictionary;
         } catch (Exception e) {

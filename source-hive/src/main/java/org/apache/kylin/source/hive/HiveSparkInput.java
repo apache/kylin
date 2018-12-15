@@ -18,25 +18,12 @@
 
 package org.apache.kylin.source.hive;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.spark.ISparkInput;
-import org.apache.kylin.job.JoinedFlatTable;
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 public class HiveSparkInput extends HiveInputBase implements ISparkInput {
 
@@ -44,13 +31,13 @@ public class HiveSparkInput extends HiveInputBase implements ISparkInput {
     private static final Logger logger = LoggerFactory.getLogger(HiveSparkInput.class);
 
     @Override
-    public ISparkInput.ISparkBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-        return new BatchCubingInputSide(flatDesc);
+    public IBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+        return new SparkBatchCubingInputSide(flatDesc);
     }
 
     @Override
-    public ISparkInput.ISparkBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
-        return new ISparkInput.ISparkBatchMergeInputSide() {
+    public IBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
+        return new ISparkBatchMergeInputSide() {
             @Override
             public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
                 // doing nothing
@@ -58,67 +45,10 @@ public class HiveSparkInput extends HiveInputBase implements ISparkInput {
         };
     }
 
-    public class BatchCubingInputSide implements ISparkBatchCubingInputSide {
+    public static class SparkBatchCubingInputSide extends BaseBatchCubingInputSide implements ISparkBatchCubingInputSide {
 
-        final protected IJoinedFlatTableDesc flatDesc;
-        final protected String flatTableDatabase;
-        final protected String hdfsWorkingDir;
-
-        List<String> hiveViewIntermediateTables = Lists.newArrayList();
-
-        public BatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            this.flatDesc = flatDesc;
-            this.flatTableDatabase = config.getHiveDatabaseForIntermediateTable();
-            this.hdfsWorkingDir = config.getHdfsWorkingDirectory();
-        }
-
-        @Override
-        public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
-            final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
-            CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-            final KylinConfig cubeConfig = cubeInstance.getConfig();
-            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
-
-            // create flat table first
-            addStepPhase1_DoCreateFlatTable(jobFlow, hdfsWorkingDir, flatDesc, flatTableDatabase);
-
-            // then count and redistribute
-            if (cubeConfig.isHiveRedistributeEnabled()) {
-                jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc,
-                        cubeInstance.getDescriptor()));
-            }
-
-            // special for hive
-            addStepPhase1_DoMaterializeLookupTable(jobFlow);
-        }
-
-        protected void addStepPhase1_DoMaterializeLookupTable(DefaultChainedExecutable jobFlow) {
-            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
-            final String jobWorkingDir = getJobWorkingDir(jobFlow, hdfsWorkingDir);
-
-            AbstractExecutable task = createLookupHiveViewMaterializationStep(hiveInitStatements, jobWorkingDir,
-                    flatDesc, hiveViewIntermediateTables, jobFlow.getId());
-            if (task != null) {
-                jobFlow.addTask(task);
-            }
-        }
-
-        @Override
-        public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-            final String jobWorkingDir = getJobWorkingDir(jobFlow, hdfsWorkingDir);
-
-            GarbageCollectionStep step = new GarbageCollectionStep();
-            step.setName(ExecutableConstants.STEP_NAME_HIVE_CLEANUP);
-            step.setIntermediateTables(Collections.singletonList(getIntermediateTableIdentity()));
-            step.setExternalDataPaths(Collections.singletonList(JoinedFlatTable.getTableDir(flatDesc, jobWorkingDir)));
-            step.setHiveViewIntermediateTableIdentities(StringUtil.join(hiveViewIntermediateTables, ","));
-            jobFlow.addTask(step);
-        }
-
-        private String getIntermediateTableIdentity() {
-            return flatTableDatabase + "." + flatDesc.getTableName();
+        public SparkBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+            super(flatDesc);
         }
     }
-
 }

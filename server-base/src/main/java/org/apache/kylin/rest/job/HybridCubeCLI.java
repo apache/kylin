@@ -182,7 +182,7 @@ public class HybridCubeCLI extends AbstractApplication {
     private HybridInstance create(String hybridName, List<RealizationEntry> realizationEntries, String projectName, String owner) throws IOException {
         checkSegmentOffset(realizationEntries);
         HybridInstance hybridInstance = HybridInstance.create(kylinConfig, hybridName, realizationEntries);
-        store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
+        store.checkAndPutResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
         ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);
         hybridManager.reloadHybridInstance(hybridName);
         logger.info("HybridInstance was created at: " + hybridInstance.getResourcePath());
@@ -193,7 +193,7 @@ public class HybridCubeCLI extends AbstractApplication {
         if (checkCubeSize)
             checkSegmentOffset(realizationEntries);
         hybridInstance.setRealizationEntries(realizationEntries);
-        store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
+        store.checkAndPutResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
         ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);
         hybridManager.reloadHybridInstance(hybridInstance.getName());
         logger.info("HybridInstance was updated at: " + hybridInstance.getResourcePath());

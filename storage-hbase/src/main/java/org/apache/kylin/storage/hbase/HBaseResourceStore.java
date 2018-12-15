@@ -6,30 +6,28 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
-import java.util.TreeSet;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -41,16 +39,16 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.RetriesExhaustedException;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.client.RetriesExhaustedException;
 import org.apache.hadoop.hbase.filter.CompareFilter;
-import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.persistence.ContentWriter;
+import org.apache.kylin.common.persistence.PushdownResourceStore;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.StringEntity;
@@ -58,15 +56,14 @@ import org.apache.kylin.common.persistence.WriteConflictException;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
 
-public class HBaseResourceStore extends ResourceStore {
+public class HBaseResourceStore extends PushdownResourceStore {
 
-    private static final Logger logger = LoggerFactory.getLogger(HBaseResourceStore.class);
+    private static Logger logger = LoggerFactory.getLogger(HBaseResourceStore.class);
 
     private static final String FAMILY = "f";
 
@@ -82,16 +79,20 @@ public class HBaseResourceStore extends ResourceStore {
 
     final String tableName;
     final StorageURL metadataUrl;
-
-    Connection getConnection() throws IOException {
-        return HBaseConnection.get(metadataUrl);
-    }
+    final int kvSizeLimit;
 
     public HBaseResourceStore(KylinConfig kylinConfig) throws IOException {
         super(kylinConfig);
         metadataUrl = buildMetadataUrl(kylinConfig);
         tableName = metadataUrl.getIdentifier();
         createHTableIfNeeded(tableName);
+
+        kvSizeLimit = Integer
+                .parseInt(getConnection().getConfiguration().get("hbase.client.keyvalue.maxsize", "10485760"));
+    }
+
+    Connection getConnection() throws IOException {
+        return HBaseConnection.get(metadataUrl);
     }
 
     private StorageURL buildMetadataUrl(KylinConfig kylinConfig) throws IOException {
@@ -119,28 +120,6 @@ public class HBaseResourceStore extends ResourceStore {
         return r != null;
     }
 
-    @Override
-    protected NavigableSet<String> listResourcesImpl(String folderPath, boolean recursive) throws IOException {
-        final TreeSet<String> result = new TreeSet<>();
-        if (recursive) {
-            visitFolder(folderPath, new KeyOnlyFilter(), new FolderVisitor() {
-                @Override
-                public void visit(String childPath, String fullPath, Result hbaseResult) {
-                    result.add(fullPath);
-                }
-            });
-        } else {
-            visitFolder(folderPath, new KeyOnlyFilter(), new FolderVisitor() {
-                @Override
-                public void visit(String childPath, String fullPath, Result hbaseResult) {
-                    result.add(childPath);
-                }
-            });
-        }
-        // return null to indicate not a folder
-        return result.isEmpty() ? null : result;
-    }
-
     /* override get meta store uuid method for backward compatibility */
     @Override
     protected String createMetaStoreUUID() throws IOException {
@@ -150,7 +129,7 @@ public class HBaseResourceStore extends ResourceStore {
             String uuid = desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
             if (uuid != null)
                 return uuid;
-            return RandomUtil.randomUUID().toString();
+            return UUID.randomUUID().toString();
         } catch (Exception e) {
             return null;
         }
@@ -159,29 +138,58 @@ public class HBaseResourceStore extends ResourceStore {
     @Override
     public String getMetaStoreUUID() throws IOException {
         if (!exists(ResourceStore.METASTORE_UUID_TAG)) {
-            putResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(createMetaStoreUUID()), 0,
+            checkAndPutResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(createMetaStoreUUID()), 0,
                     StringEntity.serializer);
         }
-        StringEntity entity = getResource(ResourceStore.METASTORE_UUID_TAG, StringEntity.class,
-                StringEntity.serializer);
+        StringEntity entity = getResource(ResourceStore.METASTORE_UUID_TAG, StringEntity.serializer);
         return entity.toString();
     }
 
-    private void visitFolder(String folderPath, Filter filter, FolderVisitor visitor) throws IOException {
+    @Override
+    protected void visitFolderImpl(String folderPath, final boolean recursive, VisitFilter filter,
+                                   final boolean loadContent, final Visitor visitor) throws IOException {
+
+        visitFolder(folderPath, filter, loadContent, new FolderVisitor() {
+            @Override
+            public void visit(String childPath, String fullPath, Result hbaseResult) throws IOException {
+                // is a direct child (not grand child)?
+                boolean isDirectChild = childPath.equals(fullPath);
+
+                if (isDirectChild || recursive) {
+                    RawResource resource = rawResource(fullPath, hbaseResult, loadContent);
+                    try {
+                        visitor.visit(resource);
+                    } finally {
+                        resource.close();
+                    }
+                }
+            }
+        });
+    }
+
+    private void visitFolder(String folderPath, VisitFilter filter, boolean loadContent, FolderVisitor visitor) throws IOException {
         assert folderPath.startsWith("/");
-        String lookForPrefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
+
+        String folderPrefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
+        String lookForPrefix = folderPrefix;
+        if (filter.hasPathPrefixFilter()) {
+            Preconditions.checkArgument(filter.pathPrefix.startsWith(folderPrefix));
+            lookForPrefix = filter.pathPrefix;
+        }
+
         byte[] startRow = Bytes.toBytes(lookForPrefix);
         byte[] endRow = Bytes.toBytes(lookForPrefix);
         endRow[endRow.length - 1]++;
 
         Table table = getConnection().getTable(TableName.valueOf(tableName));
         Scan scan = new Scan(startRow, endRow);
-        if ((filter != null && filter instanceof KeyOnlyFilter) == false) {
-            scan.addColumn(B_FAMILY, B_COLUMN_TS);
+        scan.addColumn(B_FAMILY, B_COLUMN_TS);
+        if (loadContent) {
             scan.addColumn(B_FAMILY, B_COLUMN);
         }
-        if (filter != null) {
-            scan.setFilter(filter);
+        FilterList timeFilter = generateTimeFilterList(filter);
+        if (timeFilter != null) {
+            scan.setFilter(timeFilter);
         }
 
         tuneScanParameters(scan);
@@ -191,9 +199,9 @@ public class HBaseResourceStore extends ResourceStore {
             for (Result r : scanner) {
                 String path = Bytes.toString(r.getRow());
                 assert path.startsWith(lookForPrefix);
-                int cut = path.indexOf('/', lookForPrefix.length());
-                String child = cut < 0 ? path : path.substring(0, cut);
-                visitor.visit(child, path, r);
+                int cut = path.indexOf('/', folderPrefix.length());
+                String directChild = cut < 0 ? path : path.substring(0, cut);
+                visitor.visit(directChild, path, r);
             }
         } finally {
             IOUtils.closeQuietly(table);
@@ -201,8 +209,6 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     private void tuneScanParameters(Scan scan) {
-        // divide by 10 as some resource like dictionary or snapshot can be very large
-        // scan.setCaching(kylinConfig.getHBaseScanCacheRows() / 10);
         scan.setCaching(kylinConfig.getHBaseScanCacheRows());
 
         scan.setMaxResultSize(kylinConfig.getHBaseScanMaxResultSize());
@@ -213,39 +219,29 @@ public class HBaseResourceStore extends ResourceStore {
         void visit(String childPath, String fullPath, Result hbaseResult) throws IOException;
     }
 
-    @Override
-    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive)
-            throws IOException {
-        FilterList filter = generateTimeFilterList(timeStart, timeEndExclusive);
-        final List<RawResource> result = Lists.newArrayList();
-        try {
-            visitFolder(folderPath, filter, new FolderVisitor() {
-                @Override
-                public void visit(String childPath, String fullPath, Result hbaseResult) throws IOException {
-                    // is a direct child (not grand child)?
-                    if (childPath.equals(fullPath))
-                        result.add(new RawResource(getInputStream(childPath, hbaseResult), getTimestamp(hbaseResult)));
-                }
-            });
-        } catch (IOException e) {
-            for (RawResource rawResource : result) {
-                IOUtils.closeQuietly(rawResource.inputStream);
+    private RawResource rawResource(String path, Result hbaseResult, boolean loadContent) {
+        long lastModified = getTimestamp(hbaseResult);
+        if (loadContent) {
+            try {
+                return new RawResource(path, lastModified, getInputStream(path, hbaseResult));
+            } catch (IOException ex) {
+                return new RawResource(path, lastModified, ex); // let the caller handle broken content
             }
-            throw e;
+        } else {
+            return new RawResource(path, lastModified);
         }
-        return result;
     }
 
-    private FilterList generateTimeFilterList(long timeStart, long timeEndExclusive) {
+    private FilterList generateTimeFilterList(VisitFilter visitFilter) {
         FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-        if (timeStart != Long.MIN_VALUE) {
+        if (visitFilter.lastModStart >= 0) { // NOTE: Negative value does not work in its binary form
             SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS,
-                    CompareFilter.CompareOp.GREATER_OR_EQUAL, Bytes.toBytes(timeStart));
+                    CompareFilter.CompareOp.GREATER_OR_EQUAL, Bytes.toBytes(visitFilter.lastModStart));
             filterList.addFilter(timeStartFilter);
         }
-        if (timeEndExclusive != Long.MAX_VALUE) {
+        if (visitFilter.lastModEndExclusive != Long.MAX_VALUE) {
             SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS,
-                    CompareFilter.CompareOp.LESS, Bytes.toBytes(timeEndExclusive));
+                    CompareFilter.CompareOp.LESS, Bytes.toBytes(visitFilter.lastModEndExclusive));
             filterList.addFilter(timeEndFilter);
         }
         return filterList.getFilters().size() == 0 ? null : filterList;
@@ -257,14 +253,7 @@ public class HBaseResourceStore extends ResourceStore {
         }
         byte[] value = r.getValue(B_FAMILY, B_COLUMN);
         if (value.length == 0) {
-            Path redirectPath = bigCellHDFSPath(resPath);
-            FileSystem fileSystem = HadoopUtil.getFileSystem(redirectPath, HBaseConnection.getCurrentHBaseConfiguration());
-
-            try {
-                return fileSystem.open(redirectPath);
-            } catch (IOException ex) {
-                throw new IOException("Failed to read resource at " + resPath, ex);
-            }
+            return openPushdown(resPath);
         } else {
             return new ByteArrayInputStream(value);
         }
@@ -283,8 +272,9 @@ public class HBaseResourceStore extends ResourceStore {
         Result r = getFromHTable(resPath, true, true);
         if (r == null)
             return null;
-        else
-            return new RawResource(getInputStream(resPath, r), getTimestamp(r));
+        else {
+            return rawResource(resPath, r, true);
+        }
     }
 
     @Override
@@ -293,18 +283,31 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     @Override
-    protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        IOUtils.copy(content, bout);
-        bout.close();
+    protected void putSmallResource(String resPath, ContentWriter content, long ts) throws IOException {
+        byte[] row = Bytes.toBytes(resPath);
+        byte[] bytes = content.extractAllBytes();
 
         Table table = getConnection().getTable(TableName.valueOf(tableName));
+        RollbackablePushdown pushdown = null;
         try {
-            byte[] row = Bytes.toBytes(resPath);
-            Put put = buildPut(resPath, ts, row, bout.toByteArray(), table);
+            if (bytes.length > kvSizeLimit) {
+                pushdown = writePushdown(resPath, ContentWriter.create(bytes));
+                bytes = BytesUtil.EMPTY_BYTE_ARRAY;
+            }
+
+            Put put = new Put(row);
+            put.addColumn(B_FAMILY, B_COLUMN, bytes);
+            put.addColumn(B_FAMILY, B_COLUMN_TS, Bytes.toBytes(ts));
 
             table.put(put);
+
+        } catch (Exception ex) {
+            if (pushdown != null)
+                pushdown.rollback();
+            throw ex;
         } finally {
+            if (pushdown != null)
+                pushdown.close();
             IOUtils.closeQuietly(table);
         }
     }
@@ -313,29 +316,37 @@ public class HBaseResourceStore extends ResourceStore {
     protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
             throws IOException, IllegalStateException {
         Table table = getConnection().getTable(TableName.valueOf(tableName));
+        RollbackablePushdown pushdown = null;
         try {
             byte[] row = Bytes.toBytes(resPath);
             byte[] bOldTS = oldTS == 0 ? null : Bytes.toBytes(oldTS);
-            Put put = buildPut(resPath, newTS, row, content, table);
 
-            try {
-                boolean ok = table.checkAndPut(row, B_FAMILY, B_COLUMN_TS, bOldTS, put);
-                logger.trace("Update row " + resPath + " from oldTs: " + oldTS + ", to newTs: " + newTS + ", operation result: " + ok);
-                if (!ok) {
-                    long real = getResourceTimestampImpl(resPath);
-                    throw new WriteConflictException(
-                            "Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but it is " + real);
-                }
-            } catch (RetriesExhaustedException e){
+            if (content.length > kvSizeLimit) {
+                pushdown = writePushdown(resPath, ContentWriter.create(content));
+                content = BytesUtil.EMPTY_BYTE_ARRAY;
+            }
+
+            Put put = new Put(row);
+            put.addColumn(B_FAMILY, B_COLUMN, content);
+            put.addColumn(B_FAMILY, B_COLUMN_TS, Bytes.toBytes(newTS));
+
+            boolean ok = table.checkAndPut(row, B_FAMILY, B_COLUMN_TS, bOldTS, put);
+            logger.trace("Update row {} from oldTs: {}, to newTs: {}, operation result: {}", resPath, oldTS, newTS, ok);
+            if (!ok) {
                 long real = getResourceTimestampImpl(resPath);
-                // rpc timeout but resource has been already updated
-                if(newTS != real){
-                    throw e;
-                }
+                throw new WriteConflictException(
+                        "Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but it is " + real);
             }
 
             return newTS;
+
+        } catch (Exception ex) {
+            if (pushdown != null)
+                pushdown.rollback();
+            throw ex;
         } finally {
+            if (pushdown != null)
+                pushdown.close();
             IOUtils.closeQuietly(table);
         }
     }
@@ -357,12 +368,7 @@ public class HBaseResourceStore extends ResourceStore {
             table.delete(del);
 
             if (hdfsResourceExist) { // remove hdfs cell value
-                Path redirectPath = bigCellHDFSPath(resPath);
-                FileSystem fileSystem = HadoopUtil.getFileSystem(redirectPath, HBaseConnection.getCurrentHBaseConfiguration());
-
-                if (fileSystem.exists(redirectPath)) {
-                    fileSystem.delete(redirectPath, true);
-                }
+                deletePushdown(resPath);
             }
         } finally {
             IOUtils.closeQuietly(table);
@@ -404,45 +410,29 @@ public class HBaseResourceStore extends ResourceStore {
         return exists ? result : null;
     }
 
-    private Path writeLargeCellToHdfs(String resPath, byte[] largeColumn, Table table) throws IOException {
-        Path redirectPath = bigCellHDFSPath(resPath);
-        FileSystem fileSystem = HadoopUtil.getFileSystem(redirectPath, HBaseConnection.getCurrentHBaseConfiguration());
-
-        if (fileSystem.exists(redirectPath)) {
-            fileSystem.delete(redirectPath, true);
-        }
-
-        FSDataOutputStream out = fileSystem.create(redirectPath);
-
-        try {
-            out.write(largeColumn);
-        } finally {
-            IOUtils.closeQuietly(out);
-        }
-
-        return redirectPath;
+    @Override
+    protected String pushdownRootPath() {
+        String hdfsWorkingDirectory = this.kylinConfig.getHdfsWorkingDirectory(null);
+        if (hdfsWorkingDirectory.endsWith("/"))
+            return hdfsWorkingDirectory + "resources";
+        else
+            return hdfsWorkingDirectory + "/" + "resources";
     }
 
-    public Path bigCellHDFSPath(String resPath) {
-        String hdfsWorkingDirectory = this.kylinConfig.getHdfsWorkingDirectory();
-        Path redirectPath = new Path(hdfsWorkingDirectory, "resources" + resPath);
-        redirectPath =  Path.getPathWithoutSchemeAndAuthority(redirectPath);
-        return redirectPath;
+    @Override
+    protected FileSystem pushdownFS() {
+        return HadoopUtil.getFileSystem(new Path("/"), HBaseConnection.getCurrentHBaseConfiguration());
     }
 
-    private Put buildPut(String resPath, long ts, byte[] row, byte[] content, Table table) throws IOException {
-        int kvSizeLimit = Integer
-                .parseInt(getConnection().getConfiguration().get("hbase.client.keyvalue.maxsize", "10485760"));
-        if (content.length > kvSizeLimit) {
-            writeLargeCellToHdfs(resPath, content, table);
-            content = BytesUtil.EMPTY_BYTE_ARRAY;
-        }
+    // visible for test
+    Path bigCellHDFSPath(String resPath) {
+        return super.pushdownPath(resPath);
+    }
 
-        Put put = new Put(row);
-        put.addColumn(B_FAMILY, B_COLUMN, content);
-        put.addColumn(B_FAMILY, B_COLUMN_TS, Bytes.toBytes(ts));
-
-        return put;
+    @Override
+    protected boolean isUnreachableException(Throwable ex) {
+        return (super.isUnreachableException(ex) || ex instanceof SocketTimeoutException
+                || ex instanceof ConnectException || ex instanceof RetriesExhaustedException);
     }
 
     @Override

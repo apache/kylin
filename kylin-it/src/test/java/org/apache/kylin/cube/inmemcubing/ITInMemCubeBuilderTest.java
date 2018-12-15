@@ -35,6 +35,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -44,6 +45,7 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
@@ -172,7 +174,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         // get distinct values on each column
         List<String> lines = FileUtils.readLines(new File(flatTable), "UTF-8");
         for (String line : lines) {
-            String[] row = line.trim().split(",");
+            String[] row = StringUtil.splitByComma(line.trim());
             assert row.length == nColumns;
             for (int i = 0; i < nColumns; i++)
                 distinctSets[i].add(row[i]);
@@ -253,7 +255,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         List<String> result = Lists.newArrayList();
         List<String> lines = FileUtils.readLines(new File(flatTable), "UTF-8");
         for (String line : lines) {
-            String[] row = line.trim().split(",");
+            String[] row = StringUtil.splitByComma(line.trim());
             if (row.length != nColumns) {
                 throw new IllegalStateException();
             }
@@ -272,6 +274,12 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         public void write(long cuboidId, GTRecord record) throws IOException {
             if (verbose)
                 System.out.println(record.toString());
+        }
+
+        @Override
+        public void write(long cuboidId, GridTable table) throws IOException {
+            if (verbose)
+                System.out.println(table.toString());
         }
 
         @Override

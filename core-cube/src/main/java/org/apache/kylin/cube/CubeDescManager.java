@@ -21,6 +21,7 @@ package org.apache.kylin.cube;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -60,11 +61,14 @@ public class CubeDescManager {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeDescManager.class);
 
-    public static final Serializer<CubeDesc> CUBE_DESC_SERIALIZER = new JsonSerializer<CubeDesc>(CubeDesc.class);
+    public static final Serializer<CubeDesc> CUBE_DESC_SERIALIZER = new JsonSerializer<>(CubeDesc.class);
     
     public static CubeDescManager getInstance(KylinConfig config) {
         return config.getManager(CubeDescManager.class);
     }
+
+    static final String BROKEN_CUBE_MSG = "Broken cube desc %s";
+    static final String CUBE_SHOULD_NOT_BE_DRAFT_MSG = "CubeDesc '%s' must not be a draft";
 
     // called by reflection
     static CubeDescManager newInstance(KylinConfig config) throws IOException {
@@ -84,20 +88,20 @@ public class CubeDescManager {
     private AutoReadWriteLock descMapLock = new AutoReadWriteLock();
 
     private CubeDescManager(KylinConfig cfg) throws IOException {
-        logger.info("Initializing CubeDescManager with config " + cfg);
+        logger.info("Initializing CubeDescManager with config {}", cfg);
         this.config = cfg;
-        this.cubeDescMap = new CaseInsensitiveStringCache<CubeDesc>(config, "cube_desc");
+        this.cubeDescMap = new CaseInsensitiveStringCache<>(config, "cube_desc");
         this.crud = new CachedCrudAssist<CubeDesc>(getStore(), ResourceStore.CUBE_DESC_RESOURCE_ROOT, CubeDesc.class,
                 cubeDescMap) {
             @Override
             protected CubeDesc initEntityAfterReload(CubeDesc cubeDesc, String resourceName) {
                 if (cubeDesc.isDraft())
-                    throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' must not be a draft");
+                    throw new IllegalArgumentException(String.format(Locale.ROOT, CUBE_SHOULD_NOT_BE_DRAFT_MSG, cubeDesc.getName()));
 
                 try {
                     cubeDesc.init(config);
                 } catch (Exception e) {
-                    logger.warn("Broken cube desc " + cubeDesc.resourceName(), e);
+                    logger.warn(String.format(Locale.ROOT, BROKEN_CUBE_MSG, cubeDesc.resourceName()), e);
                     cubeDesc.addError(e.toString());
                 }
                 return cubeDesc;
@@ -175,10 +179,6 @@ public class CubeDescManager {
 
     /**
      * Create a new CubeDesc
-     * 
-     * @param cubeDesc
-     * @return
-     * @throws IOException
      */
     public CubeDesc createCubeDesc(CubeDesc cubeDesc) throws IOException {
         try (AutoLock lock = descMapLock.lockForWrite()) {
@@ -187,7 +187,7 @@ public class CubeDescManager {
             if (cubeDescMap.containsKey(cubeDesc.getName()))
                 throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' already exists");
             if (cubeDesc.isDraft())
-                throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' must not be a draft");
+                throw new IllegalArgumentException(String.format(Locale.ROOT, CUBE_SHOULD_NOT_BE_DRAFT_MSG, cubeDesc.getName()));
 
             try {
                 cubeDesc.init(config);
@@ -219,10 +219,6 @@ public class CubeDescManager {
 
     /**
      * Update CubeDesc with the input. Broadcast the event into cluster
-     * 
-     * @param desc
-     * @return
-     * @throws IOException
      */
     public CubeDesc updateCubeDesc(CubeDesc desc) throws IOException {
         try (AutoLock lock = descMapLock.lockForWrite()) {
@@ -233,7 +229,7 @@ public class CubeDescManager {
             if (!cubeDescMap.containsKey(name))
                 throw new IllegalArgumentException("CubeDesc '" + name + "' does not exist.");
             if (desc.isDraft())
-                throw new IllegalArgumentException("CubeDesc '" + desc.getName() + "' must not be a draft");
+                throw new IllegalArgumentException(String.format(Locale.ROOT, CUBE_SHOULD_NOT_BE_DRAFT_MSG, desc.getName()));
 
             try {
                 desc.init(config);

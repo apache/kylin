@@ -60,6 +60,7 @@ public class FunctionDesc implements Serializable {
     public static final String FUNC_MAX = "MAX";
     public static final String FUNC_COUNT = "COUNT";
     public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
+    public static final String FUNC_GROUPING = "GROUPING";
     public static final String FUNC_PERCENTILE = "PERCENTILE_APPROX";
     public static final Set<String> BUILT_IN_AGGREGATIONS = Sets.newHashSet();
 

@@ -153,7 +153,15 @@ public class RocksDBLookupTableCacheTest extends LocalFileMetadataTestCase {
         ExtTableSnapshotInfoManager.getInstance(kylinConfig).removeSnapshot(snapshotInfo.getTableName(), snapshotInfo.getId());
         cache.checkCacheState();
         String cacheLocalPath = cache.getSnapshotCachePath(snapshotInfo.getTableName(), snapshotInfo.getId());
+        // won't cleanup because it is newly created in last 1 hour
+        assertTrue(new File(cacheLocalPath).exists());
+
+        // change the volatile value
+        kylinConfig.setProperty("kylin.snapshot.ext.local.cache.check.volatile", "0");
+        cache.checkCacheState();
+        // this time it should be removed.
         assertFalse(new File(cacheLocalPath).exists());
+
         cachedLookupTable = cache.getCachedLookupTable(tableDesc, snapshotInfo, false);
         assertNull(cachedLookupTable);
     }

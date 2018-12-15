@@ -147,7 +147,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
 
     public T reloadAt(String path) {
         try {
-            T entity = store.getResource(path, entityType, serializer);
+            T entity = store.getResource(path, serializer);
             if (entity == null) {
                 logger.warn("No " + entityType.getSimpleName() + " found at " + path + ", returning null");
                 cache.removeLocal(resourceName(path));
@@ -189,7 +189,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         String path = resourcePath(resName);
         logger.debug("Saving {} at {}", entityType.getSimpleName(), path);
 
-        store.putResource(path, entity, serializer);
+        store.checkAndPutResource(path, entity, serializer);
         
         // just to trigger the event broadcast, the entity won't stay in cache
         cache.put(resName, entity);
