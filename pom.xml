@@ -71,7 +71,7 @@
 
     <!-- <reflections.version>0.9.10</reflections.version> -->
 
-    <!-- Calcite Version -->
+    <!-- Calcite Version, the kylin fork is: https://github.com/Kyligence/calcite -->
     <calcite.version>1.16.0-kylin-r2</calcite.version>
     <avatica.version>1.10.0</avatica.version>
 
