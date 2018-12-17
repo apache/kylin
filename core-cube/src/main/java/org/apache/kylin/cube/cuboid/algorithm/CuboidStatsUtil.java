@@ -55,23 +55,24 @@ public class CuboidStatsUtil {
 
         for (Map.Entry<Long, Long> hitFrequency : hitFrequencyMap.entrySet()) {
             long cuboid = hitFrequency.getKey();
-            if (statistics.get(cuboid) != null) {
-                continue;
-            }
-            if (rollingUpCountSourceMap.get(cuboid) == null || rollingUpCountSourceMap.get(cuboid).isEmpty()) {
-                continue;
-            }
-            long totalEstScanCount = 0L;
-            for (long estScanCount : rollingUpCountSourceMap.get(cuboid).values()) {
-                totalEstScanCount += estScanCount;
-            }
-            totalEstScanCount /= rollingUpCountSourceMap.get(cuboid).size();
-            if ((hitFrequency.getValue() * 1.0 / totalHitFrequency)
-                    * totalEstScanCount >= rollUpThresholdForMandatory) {
-                mandatoryCuboidSet.add(cuboid);
+
+            if (isCuboidMandatory(cuboid, statistics, rollingUpCountSourceMap)) {
+                long totalEstScanCount = 0L;
+                for (long estScanCount : rollingUpCountSourceMap.get(cuboid).values()) {
+                    totalEstScanCount += estScanCount;
+                }
+                totalEstScanCount /= rollingUpCountSourceMap.get(cuboid).size();
+                if ((hitFrequency.getValue() * 1.0 / totalHitFrequency)
+                        * totalEstScanCount >= rollUpThresholdForMandatory) {
+                    mandatoryCuboidSet.add(cuboid);
+                }
             }
         }
         return mandatoryCuboidSet;
+    }
+
+    private static boolean isCuboidMandatory(Long cuboid, Map<Long, Long> statistics, Map<Long, Map<Long, Long>> rollingUpCountSourceMap) {
+        return !statistics.containsKey(cuboid) && rollingUpCountSourceMap.containsKey(cuboid) && !rollingUpCountSourceMap.get(cuboid).isEmpty();
     }
 
     /**
@@ -81,7 +82,7 @@ public class CuboidStatsUtil {
     public static void complementRowCountForMandatoryCuboids(Map<Long, Long> statistics, long baseCuboid,
             Set<Long> mandatoryCuboidSet) {
         // Sort entries order by row count asc
-        SortedSet<Map.Entry<Long, Long>> sortedStatsSet = new TreeSet<Map.Entry<Long, Long>>(
+        SortedSet<Map.Entry<Long, Long>> sortedStatsSet = new TreeSet<>(
                 new Comparator<Map.Entry<Long, Long>>() {
                     public int compare(Map.Entry<Long, Long> o1, Map.Entry<Long, Long> o2) {
                         return o1.getValue().compareTo(o2.getValue());
