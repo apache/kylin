@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -370,7 +371,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
                     result.add(new GTScanRange(range.pkStart, range.pkEnd, subFuzzyKeys));
                     startIndex = endIndex;
                 }
-                logger.debug("large FuzzyKeys split size : {0}", result.size());
+                logger.debug(String.format(Locale.ROOT, "large FuzzyKeys split size : %d", result.size()));
             } else {
                 result.add(range);
             }

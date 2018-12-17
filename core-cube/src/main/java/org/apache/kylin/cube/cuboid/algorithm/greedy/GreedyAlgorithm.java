@@ -110,12 +110,12 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
 
         List<Long> excluded = Lists.newArrayList(remaining);
         remaining.retainAll(selected);
-        Preconditions.checkArgument(remaining.size() == 0,
+        Preconditions.checkArgument(remaining.isEmpty(),
                 "There should be no intersection between excluded list and selected list.");
         logger.info("Greedy Algorithm finished.");
 
         if (logger.isTraceEnabled()) {
-            logger.trace("Excluded cuboidId size:" + excluded.size());
+            logger.trace(String.format(Locale.ROOT, "Excluded cuboidId size:%d", excluded.size()));
             logger.trace("Excluded cuboidId detail:");
             for (Long cuboid : excluded) {
                 logger.trace(String.format(Locale.ROOT, "cuboidId %d and Cost: %d and Space: %f", cuboid,
