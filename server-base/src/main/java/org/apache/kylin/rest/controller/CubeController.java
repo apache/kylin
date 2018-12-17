@@ -41,6 +41,8 @@ import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.engine.mr.common.CuboidStatsReaderUtil;
@@ -49,6 +51,7 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -589,6 +592,8 @@ public class CubeController extends BasicController {
             throw new BadRequestException("Invalid Cube name, only letters, numbers and underscore supported.");
         }
 
+        validateColumnFamily(desc);
+
         try {
             desc.setUuid(RandomUtil.randomUUID().toString());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME
@@ -606,6 +611,27 @@ public class CubeController extends BasicController {
         cubeRequest.setUuid(desc.getUuid());
         cubeRequest.setSuccessful(true);
         return cubeRequest;
+    }
+
+    //column family metrics may not match the real metrics when editing cube by json,see MTHDP-5091
+    private void validateColumnFamily(CubeDesc cubeDesc) {
+        Set<String> columnFamilyMetricsSet = Sets.newHashSet();
+        for (HBaseColumnFamilyDesc hBaseColumnFamilyDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
+            for (HBaseColumnDesc hBaseColumnDesc : hBaseColumnFamilyDesc.getColumns()) {
+                for (String columnName : hBaseColumnDesc.getMeasureRefs()) {
+                    columnFamilyMetricsSet.add(columnName);
+                }
+            }
+        }
+        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+            if (!columnFamilyMetricsSet.contains(measureDesc.getName())) {
+                throw new BadRequestException("column family lack measure:" + measureDesc.getName());
+            }
+        }
+        if (cubeDesc.getMeasures().size() != columnFamilyMetricsSet.size()) {
+            throw new BadRequestException(
+                    "the number of input measure and the number of measure defined in cubedesc are not consistent");
+        }
     }
 
     /**
@@ -634,6 +660,8 @@ public class CubeController extends BasicController {
                 updateRequest(cubeRequest, false, error);
                 return cubeRequest;
             }
+
+            validateColumnFamily(desc);
 
             //cube renaming is not allowed
             if (!cube.getDescriptor().getName().equalsIgnoreCase(desc.getName())) {
