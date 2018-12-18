@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.util.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -44,6 +45,9 @@ public class CuboidStatsUtilTest {
      *              /      |     /
      *         00000100  00000010
      * */
+
+    private final static long baseCuboidId = 255L;
+
     private Set<Long> generateCuboidSet() {
         return Sets.newHashSet(255L, 159L, 239L, 50L, 199L, 6L, 4L, 2L);
     }
@@ -53,11 +57,11 @@ public class CuboidStatsUtilTest {
 
         countMap.put(255L, 10000L);
         countMap.put(159L, 10000L);
-        countMap.put(50L, 10000L);
-        countMap.put(199L, 10000L);
-        countMap.put(6L, 10000L);
-        countMap.put(4L, 10000L);
-        countMap.put(2L, 10000L);
+        countMap.put(50L, 800L);
+        countMap.put(199L, 200L);
+        countMap.put(6L, 60L);
+        countMap.put(4L, 40L);
+        countMap.put(2L, 20L);
 
         return countMap;
     }
@@ -67,26 +71,46 @@ public class CuboidStatsUtilTest {
 
         long totalHitFrequency = 10000L;
 
-        hitFrequencyMap.put(239L, (long) (totalHitFrequency * 0.5));
+        hitFrequencyMap.put(239L, (long) (totalHitFrequency * 0.2));
         hitFrequencyMap.put(50L, (long) (totalHitFrequency * 0.2));
-        hitFrequencyMap.put(2L, (long) (totalHitFrequency * 0.25));
+        hitFrequencyMap.put(2L, (long) (totalHitFrequency * 0.24));
         hitFrequencyMap.put(178L, (long) (totalHitFrequency * 0.05));
+        hitFrequencyMap.put(187L, (long) (totalHitFrequency * 0.3));
+        hitFrequencyMap.put(0L, (long) (totalHitFrequency * 0.01));
 
         return hitFrequencyMap;
     }
 
-    private Map<Long, Map<Long, Long>> simulateRollingUpCount() {
-        Map<Long, Map<Long, Long>> rollingUpCountMap = Maps.newLinkedHashMap();
+    private Map<Long, Double> simulateHitProbability(long nCuboids) {
+        Map<Long, Long> hitFrequencyMap = simulateHitFrequency();
+        return CuboidStatsUtil.calculateCuboidHitProbability(hitFrequencyMap.keySet(), hitFrequencyMap, nCuboids,
+                CuboidStats.WEIGHT_FOR_UN_QUERY);
+    }
 
-        rollingUpCountMap.put(239L, new HashMap<Long, Long>() {
+    private Map<Long, Map<Long, Pair<Long, Long>>> simulateRollingUpCount() {
+        Map<Long, Map<Long, Pair<Long, Long>>> rollingUpCountMap = Maps.newLinkedHashMap();
+
+        rollingUpCountMap.put(239L, new HashMap<Long, Pair<Long, Long>>() {
             {
-                put(255L, 4000L);
+                put(255L, new Pair<>(990L, 10L));
             }
         });
 
-        rollingUpCountMap.put(178L, new HashMap<Long, Long>() {
+        rollingUpCountMap.put(178L, new HashMap<Long, Pair<Long, Long>>() {
             {
-                put(255L, 5000L);
+                put(255L, new Pair<>(4999L, 1L));
+            }
+        });
+
+        rollingUpCountMap.put(187L, new HashMap<Long, Pair<Long, Long>>() {
+            {
+                put(251L, new Pair<>(3000L, 1000L));
+            }
+        });
+
+        rollingUpCountMap.put(0L, new HashMap<Long, Pair<Long, Long>>() {
+            {
+                put(2L, new Pair<>(19L, 1L));
             }
         });
 
@@ -101,25 +125,113 @@ public class CuboidStatsUtilTest {
 
     @Test
     public void generateMandatoryCuboidSetTest() {
-        Set<Long> mandatoryCuboidSet = CuboidStatsUtil.generateMandatoryCuboidSet(simulateCount(),
-                simulateHitFrequency(), simulateRollingUpCount(), 1000L);
-        Assert.assertTrue(mandatoryCuboidSet.contains(239L));
-        Assert.assertTrue(!mandatoryCuboidSet.contains(178L));
+        Map<Long, Long> srcCuboidSet = CuboidStatsUtil.generateSourceCuboidStats(simulateCount(),
+                simulateHitProbability(baseCuboidId), simulateRollingUpCount());
+
+        Assert.assertTrue(srcCuboidSet.get(239L) == 200L);
+        Assert.assertTrue(srcCuboidSet.get(187L) == 1000L);
+        Assert.assertTrue(srcCuboidSet.get(178L) == 800L);
+
+        Assert.assertTrue(!srcCuboidSet.containsKey(0L));
     }
 
     @Test
     public void complementRowCountForMandatoryCuboidsTest() {
         Map<Long, Long> countMap = simulateCount();
-        Set<Long> mandatoryCuboidSet = CuboidStatsUtil.generateMandatoryCuboidSet(countMap, simulateHitFrequency(),
-                simulateRollingUpCount(), 1000L);
-        for (long mandatoryCuboid : mandatoryCuboidSet) {
+        Map<Long, Long> srcCuboidsStats = CuboidStatsUtil.generateSourceCuboidStats(countMap,
+                simulateHitProbability(baseCuboidId), simulateRollingUpCount());
+        for (long mandatoryCuboid : srcCuboidsStats.keySet()) {
             Assert.assertNull(countMap.get(mandatoryCuboid));
         }
-        CuboidStatsUtil.complementRowCountForMandatoryCuboids(countMap, 255L, mandatoryCuboidSet);
-        for (long mandatoryCuboid : mandatoryCuboidSet) {
-            Assert.assertNotNull(countMap.get(mandatoryCuboid));
-        }
-        Assert.assertTrue(countMap.get(239L) == 10000L);
+        Assert.assertTrue(srcCuboidsStats.get(239L) == 200L);
+
+        Map<Long, Long> mandatoryCuboidsWithStats2 = Maps.newHashMap();
+        mandatoryCuboidsWithStats2.put(215L, countMap.get(255L));
+        mandatoryCuboidsWithStats2.put(34L, countMap.get(50L));
+        Assert.assertEquals(mandatoryCuboidsWithStats2,
+                CuboidStatsUtil.complementRowCountForCuboids(countMap, mandatoryCuboidsWithStats2.keySet()));
+    }
+
+    @Test
+    public void testAdjustMandatoryCuboidStats() {
+        Map<Long, Long> statistics = Maps.newHashMap();
+        statistics.put(60160L, 1212L);
+
+        Map<Long, Long> cuboidsWithStats = Maps.newHashMap();
+        cuboidsWithStats.put(65280L, 1423L);
+        cuboidsWithStats.put(63232L, 2584421L);
+        cuboidsWithStats.put(61184L, 132L);
+        cuboidsWithStats.put(57088L, 499L);
+        cuboidsWithStats.put(55040L, 708L);
+        cuboidsWithStats.put(38656L, 36507L);
+
+        Map<Long, Double> cuboidHitProbabilityMap = Maps.newHashMap();
+        cuboidHitProbabilityMap.put(65280L, 0.2);
+        cuboidHitProbabilityMap.put(63232L, 0.16);
+        cuboidHitProbabilityMap.put(61184L, 0.16);
+        cuboidHitProbabilityMap.put(57088L, 0.16);
+        cuboidHitProbabilityMap.put(55040L, 0.16);
+        cuboidHitProbabilityMap.put(38656L, 0.16);
+
+        Map<Long, Long> cuboidsWithStatsExpected = Maps.newHashMap(cuboidsWithStats);
+        cuboidsWithStatsExpected.put(65280L, 2584421L);
+        cuboidsWithStatsExpected.put(57088L, 36507L);
+        cuboidsWithStatsExpected.put(55040L, 36507L);
+        cuboidsWithStatsExpected.put(61184L, 1212L);
+
+        CuboidStatsUtil.adjustCuboidStats(cuboidsWithStats, statistics);
+        Assert.assertEquals(cuboidsWithStatsExpected, cuboidsWithStats);
+    }
+
+    /**
+     *                   1111(70)                                           1111(90)
+     *                 /         \                                        /         \
+     *             1011(90)       \                                    1111(90)      \
+     *               |             \                                     |            \
+     *             0011(40)     1110(50)          ==========>          0011(80)     1110(80)
+     *            /       \   /        \                              /       \   /        \
+     *        0001(20)    0010(80)    0100(60)                    0001(20)    0010(80)    0100(60)
+     *
+     *
+     *                                                                         +
+     *
+     *
+     *                                                                     /      \
+     *                                                                    /        \
+     *                                                                   /        1001(85)
+     *                                                                  /           \
+     *                                                                0111(70)     1000(100)
+     * */
+    @Test
+    public void testAdjustCuboidStats() {
+        Map<Long, Long> statistics = Maps.newHashMap();
+        statistics.put(1L, 20L);
+        statistics.put(2L, 80L);
+        statistics.put(4L, 60L);
+        statistics.put(3L, 40L);
+        statistics.put(11L, 90L);
+        statistics.put(14L, 50L);
+        statistics.put(15L, 70L);
+
+        Map<Long, Long> cuboidsWithStatsExpected = Maps.newHashMap(statistics);
+        cuboidsWithStatsExpected.put(3L, 80L);
+        cuboidsWithStatsExpected.put(14L, 80L);
+        cuboidsWithStatsExpected.put(15L, 90L);
+
+        statistics = CuboidStatsUtil.adjustCuboidStats(statistics);
+        Assert.assertEquals(cuboidsWithStatsExpected, statistics);
+
+        Map<Long, Long> mandatoryCuboidsWithStats = Maps.newHashMap();
+        mandatoryCuboidsWithStats.put(7L, 70L);
+        mandatoryCuboidsWithStats.put(8L, 100L);
+        mandatoryCuboidsWithStats.put(9L, 85L);
+        CuboidStatsUtil.adjustCuboidStats(mandatoryCuboidsWithStats, statistics);
+
+        Map<Long, Long> mandatoryCuboidsWithStatsExpected = Maps.newHashMap();
+        mandatoryCuboidsWithStatsExpected.put(7L, 80L);
+        mandatoryCuboidsWithStatsExpected.put(8L, 80L);
+        mandatoryCuboidsWithStatsExpected.put(9L, 85L);
+        Assert.assertEquals(mandatoryCuboidsWithStatsExpected, mandatoryCuboidsWithStats);
     }
 
     @Test

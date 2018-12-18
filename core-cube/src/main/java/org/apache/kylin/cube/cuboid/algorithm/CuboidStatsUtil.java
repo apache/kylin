@@ -27,81 +27,208 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.kylin.common.util.Pair;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class CuboidStatsUtil {
 
     /**
-     * For generating mandatory cuboids,
-     * a cuboid is mandatory if the expectation of rolling up count exceeds a threshold
+     * According to the cuboid hit frequencies and query uncertainty ratio
+     * calculate each cuboid hit probability
+     * @param selectionCuboidSet subset of cuboid domain which needs probability
+     * @param nTotalCuboids number of cuboids needs to be considered, mainly for each cuboid's uncertainty weight
      * */
-    public static Set<Long> generateMandatoryCuboidSet(Map<Long, Long> statistics, Map<Long, Long> hitFrequencyMap,
-            Map<Long, Map<Long, Long>> rollingUpCountSourceMap, final long rollUpThresholdForMandatory) {
-        Set<Long> mandatoryCuboidSet = Sets.newHashSet();
-        if (hitFrequencyMap == null || hitFrequencyMap.isEmpty() || rollingUpCountSourceMap == null
-                || rollingUpCountSourceMap.isEmpty()) {
-            return mandatoryCuboidSet;
-        }
-        long totalHitFrequency = 0L;
-        for (long hitFrequency : hitFrequencyMap.values()) {
-            totalHitFrequency += hitFrequency;
-        }
+    public static Map<Long, Double> calculateCuboidHitProbability(Set<Long> selectionCuboidSet,
+            Map<Long, Long> hitFrequencyMap, long nTotalCuboids, double queryUncertaintyRatio) {
+        Map<Long, Double> cuboidHitProbabilityMap = Maps.newHashMapWithExpectedSize(selectionCuboidSet.size());
+        if (hitFrequencyMap == null || hitFrequencyMap.isEmpty()) {
+            for (Long cuboid : selectionCuboidSet) {
+                cuboidHitProbabilityMap.put(cuboid, 1.0 / nTotalCuboids);
+            }
+        } else {
+            long totalHitFrequency = 0L;
+            for (Map.Entry<Long, Long> hitFrequency : hitFrequencyMap.entrySet()) {
+                totalHitFrequency += hitFrequency.getValue();
+            }
 
-        if (totalHitFrequency == 0) {
-            return mandatoryCuboidSet;
-        }
-
-        for (Map.Entry<Long, Long> hitFrequency : hitFrequencyMap.entrySet()) {
-            long cuboid = hitFrequency.getKey();
-
-            if (isCuboidMandatory(cuboid, statistics, rollingUpCountSourceMap)) {
-                long totalEstScanCount = 0L;
-                for (long estScanCount : rollingUpCountSourceMap.get(cuboid).values()) {
-                    totalEstScanCount += estScanCount;
-                }
-                totalEstScanCount /= rollingUpCountSourceMap.get(cuboid).size();
-                if ((hitFrequency.getValue() * 1.0 / totalHitFrequency)
-                        * totalEstScanCount >= rollUpThresholdForMandatory) {
-                    mandatoryCuboidSet.add(cuboid);
+            final double unitUncertainProb = queryUncertaintyRatio / nTotalCuboids;
+            for (Long cuboid : selectionCuboidSet) {
+                //Calculate hit probability for each cuboid
+                if (hitFrequencyMap.get(cuboid) != null) {
+                    cuboidHitProbabilityMap.put(cuboid, unitUncertainProb
+                            + (1 - queryUncertaintyRatio) * hitFrequencyMap.get(cuboid) / totalHitFrequency);
+                } else {
+                    cuboidHitProbabilityMap.put(cuboid, unitUncertainProb);
                 }
             }
         }
-        return mandatoryCuboidSet;
+
+        return cuboidHitProbabilityMap;
     }
 
-    private static boolean isCuboidMandatory(Long cuboid, Map<Long, Long> statistics, Map<Long, Map<Long, Long>> rollingUpCountSourceMap) {
-        return !statistics.containsKey(cuboid) && rollingUpCountSourceMap.containsKey(cuboid) && !rollingUpCountSourceMap.get(cuboid).isEmpty();
+    /**
+     * @param statistics for cuboid row count
+     * @param rollingUpSourceMap the key of the outer map is source cuboid,
+     *                           the key of the inner map is target cuboid,
+     *                                  if cube is optimized multiple times, target cuboid may change
+     *                           the first element of the pair is the rollup row count
+     *                           the second element of the pair is the return row count
+     * @return source cuboids with estimated row count
+     */
+    public static Map<Long, Long> generateSourceCuboidStats(Map<Long, Long> statistics,
+            Map<Long, Double> cuboidHitProbabilityMap, Map<Long, Map<Long, Pair<Long, Long>>> rollingUpSourceMap) {
+        Map<Long, Long> srcCuboidsStats = Maps.newHashMap();
+        if (cuboidHitProbabilityMap == null || cuboidHitProbabilityMap.isEmpty() || rollingUpSourceMap == null
+                || rollingUpSourceMap.isEmpty()) {
+            return srcCuboidsStats;
+        }
+
+        for (Long cuboid : cuboidHitProbabilityMap.keySet()) {
+            if (statistics.get(cuboid) != null) {
+                continue;
+            }
+            Map<Long, Pair<Long, Long>> innerRollingUpTargetMap = rollingUpSourceMap.get(cuboid);
+            if (innerRollingUpTargetMap == null || innerRollingUpTargetMap.isEmpty()) {
+                continue;
+            }
+
+            long totalEstRowCount = 0L;
+            int nEffective = 0;
+            boolean ifHasStats = false;
+            // if ifHasStats equals true, then source cuboid row count = (1 - rollup ratio) * target cuboid row count
+            //                            else source cuboid row count = returned row count collected directly
+            for (Long tgtCuboid : innerRollingUpTargetMap.keySet()) {
+                Pair<Long, Long> rollingupStats = innerRollingUpTargetMap.get(tgtCuboid);
+                if (statistics.get(tgtCuboid) != null) {
+                    if (!ifHasStats) {
+                        totalEstRowCount = 0L;
+                        nEffective = 0;
+                        ifHasStats = true;
+                    }
+                    double rollupRatio = calculateRollupRatio(rollingupStats);
+                    totalEstRowCount += (1 - rollupRatio) * statistics.get(tgtCuboid);
+                    nEffective++;
+                } else {
+                    if (ifHasStats) {
+                        continue;
+                    }
+                    totalEstRowCount += rollingupStats.getSecond();
+                    nEffective++;
+                }
+            }
+
+            srcCuboidsStats.put(cuboid, totalEstRowCount / nEffective);
+        }
+        srcCuboidsStats.remove(0L);
+        adjustCuboidStats(srcCuboidsStats, statistics);
+        return srcCuboidsStats;
     }
 
     /**
      * Complement row count for mandatory cuboids
      * with its best parent's row count
      * */
-    public static void complementRowCountForMandatoryCuboids(Map<Long, Long> statistics, long baseCuboid,
-            Set<Long> mandatoryCuboidSet) {
+    public static Map<Long, Long> complementRowCountForCuboids(final Map<Long, Long> statistics, Set<Long> cuboids) {
+        Map<Long, Long> result = Maps.newHashMapWithExpectedSize(cuboids.size());
+
         // Sort entries order by row count asc
-        SortedSet<Map.Entry<Long, Long>> sortedStatsSet = new TreeSet<>(
-                new Comparator<Map.Entry<Long, Long>>() {
-                    public int compare(Map.Entry<Long, Long> o1, Map.Entry<Long, Long> o2) {
-                        return o1.getValue().compareTo(o2.getValue());
-                    }
-                });
-        //sortedStatsSet.addAll(statistics.entrySet()); KYLIN-3580
-        for(Map.Entry<Long, Long> entry : statistics.entrySet()){
-            sortedStatsSet.add(entry);
-        }
-        for (Long cuboid : mandatoryCuboidSet) {
+        SortedSet<Map.Entry<Long, Long>> sortedStatsSet = new TreeSet<>(new Comparator<Map.Entry<Long, Long>>() {
+            public int compare(Map.Entry<Long, Long> o1, Map.Entry<Long, Long> o2) {
+                int ret = o1.getValue().compareTo(o2.getValue());
+                return ret == 0 ? o1.getKey().compareTo(o2.getKey()) : ret;
+            }
+        });
+        sortedStatsSet.addAll(statistics.entrySet());
+        for (Long cuboid : cuboids) {
             if (statistics.get(cuboid) == null) {
                 // Get estimate row count for mandatory cuboid
-                long tmpRowCount = -1;
                 for (Map.Entry<Long, Long> entry : sortedStatsSet) {
                     if (isDescendant(cuboid, entry.getKey())) {
-                        tmpRowCount = entry.getValue();
+                        result.put(cuboid, entry.getValue());
+                        break;
                     }
                 }
-                statistics.put(cuboid, tmpRowCount < 0 ? statistics.get(baseCuboid) : tmpRowCount);
+            } else {
+                result.put(cuboid, statistics.get(cuboid));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * adjust cuboid row count, make sure parent not less than child
+     */
+    public static Map<Long, Long> adjustCuboidStats(Map<Long, Long> statistics) {
+        Map<Long, Long> ret = Maps.newHashMapWithExpectedSize(statistics.size());
+
+        List<Long> cuboids = Lists.newArrayList(statistics.keySet());
+        Collections.sort(cuboids);
+
+        for (Long cuboid : cuboids) {
+            Long rowCount = statistics.get(cuboid);
+            for (Long childCuboid : ret.keySet()) {
+                if (isDescendant(childCuboid, cuboid)) {
+                    Long childRowCount = ret.get(childCuboid);
+                    if (rowCount < childRowCount) {
+                        rowCount = childRowCount;
+                    }
+                }
+            }
+            ret.put(cuboid, rowCount);
+        }
+
+        return ret;
+    }
+
+    public static void adjustCuboidStats(Map<Long, Long> mandatoryCuboidsWithStats, Map<Long, Long> statistics) {
+        List<Long> mandatoryCuboids = Lists.newArrayList(mandatoryCuboidsWithStats.keySet());
+        Collections.sort(mandatoryCuboids);
+
+        List<Long> selectedCuboids = Lists.newArrayList(statistics.keySet());
+        Collections.sort(selectedCuboids);
+
+        for (int i = 0; i < mandatoryCuboids.size(); i++) {
+            Long mCuboid = mandatoryCuboids.get(i);
+            if (statistics.get(mCuboid) != null) {
+                mandatoryCuboidsWithStats.put(mCuboid, statistics.get(mCuboid));
+                continue;
+            }
+            int k = 0;
+            // Make sure mCuboid's row count larger than its children's row count in statistics
+            for (; k < selectedCuboids.size(); k++) {
+                Long sCuboid = selectedCuboids.get(k);
+                if (sCuboid > mCuboid) {
+                    break;
+                }
+                if (isDescendant(sCuboid, mCuboid)) {
+                    Long childRowCount = statistics.get(sCuboid);
+                    if (childRowCount > mandatoryCuboidsWithStats.get(mCuboid)) {
+                        mandatoryCuboidsWithStats.put(mCuboid, childRowCount);
+                    }
+                }
+            }
+            // Make sure mCuboid's row count larger than its children's row count in mandatoryCuboids
+            for (int j = 0; j < i; j++) {
+                Long cCuboid = mandatoryCuboids.get(j);
+                if (isDescendant(cCuboid, mCuboid)) {
+                    Long childRowCount = mandatoryCuboidsWithStats.get(cCuboid);
+                    if (childRowCount > mandatoryCuboidsWithStats.get(mCuboid)) {
+                        mandatoryCuboidsWithStats.put(mCuboid, childRowCount);
+                    }
+                }
+            }
+            // Make sure mCuboid's row count lower than its parents' row count in statistics
+            for (; k < selectedCuboids.size(); k++) {
+                Long sCuboid = selectedCuboids.get(k);
+                if (isDescendant(mCuboid, sCuboid)) {
+                    Long parentRowCount = statistics.get(sCuboid);
+                    if (parentRowCount < mandatoryCuboidsWithStats.get(mCuboid)) {
+                        mandatoryCuboidsWithStats.put(mCuboid, parentRowCount);
+                    }
+                }
             }
         }
     }
@@ -206,5 +333,10 @@ public class CuboidStatsUtil {
 
     public static boolean isDescendant(long cuboidToCheck, long parentCuboid) {
         return (cuboidToCheck & parentCuboid) == cuboidToCheck;
+    }
+
+    private static double calculateRollupRatio(Pair<Long, Long> rollupStats) {
+        double rollupInputCount = rollupStats.getFirst() + rollupStats.getSecond();
+        return rollupInputCount == 0 ? 0 : 1.0 * rollupStats.getFirst() / rollupInputCount;
     }
 }
