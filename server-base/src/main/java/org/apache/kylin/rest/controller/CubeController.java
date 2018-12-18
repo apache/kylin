@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -901,7 +902,8 @@ public class CubeController extends BasicController {
     private Map<Long, Long> getRecommendCuboidList(CubeInstance cube) throws IOException {
         // Get cuboid source info
         Map<Long, Long> optimizeHitFrequencyMap = getSourceCuboidHitFrequency(cube.getName());
-        Map<Long, Map<Long, Long>> rollingUpCountSourceMap = cubeService.getCuboidRollingUpStats(cube.getName());
+        Map<Long, Map<Long, Pair<Long, Long>>> rollingUpCountSourceMap = cubeService
+                .getCuboidRollingUpStats(cube.getName());
         return cubeService.getRecommendCuboidStatistics(cube, optimizeHitFrequencyMap, rollingUpCountSourceMap);
     }
 

@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.cuboid.algorithm.CuboidRecommender;
 import org.apache.kylin.cube.cuboid.algorithm.CuboidStats;
 import org.slf4j.Logger;
@@ -65,23 +67,45 @@ public class CuboidRecommenderUtil {
 
     /** Trigger cube planner phase two for optimization */
     public static Map<Long, Long> getRecommendCuboidList(CubeInstance cube, Map<Long, Long> hitFrequencyMap,
-            Map<Long, Map<Long, Long>> rollingUpCountSourceMap) throws IOException {
+            Map<Long, Map<Long, Pair<Long, Long>>> rollingUpCountSourceMap) throws IOException {
 
+        CuboidScheduler cuboidScheduler = cube.getCuboidScheduler();
+        Set<Long> currentCuboids = cuboidScheduler.getAllCuboidIds();
         Pair<Map<Long, Long>, Map<Long, Double>> statsPair = CuboidStatsReaderUtil
-                .readCuboidStatsAndSizeFromCube(cube.getCuboidScheduler().getAllCuboidIds(), cube);
+                .readCuboidStatsAndSizeFromCube(currentCuboids, cube);
+        long baseCuboid = cuboidScheduler.getBaseCuboidId();
+        if (statsPair.getFirst().get(baseCuboid) == null || statsPair.getFirst().get(baseCuboid) == 0L) {
+            logger.info("Base cuboid count in cuboid statistics is 0.");
+            return null;
+        }
 
+        KylinConfig config = cube.getConfig();
         String key = cube.getName();
-        long baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
-        CuboidStats cuboidStats = new CuboidStats.Builder(key, baseCuboid, statsPair.getFirst(), statsPair.getSecond())
-                .setHitFrequencyMap(hitFrequencyMap).setRollingUpCountSourceMap(rollingUpCountSourceMap,
-                        cube.getConfig().getCubePlannerMandatoryRollUpThreshold())
+        double queryUncertaintyRatio = config.getCubePlannerQueryUncertaintyRatio();
+        double bpusMinBenefitRatio = config.getCubePlannerBPUSMinBenefitRatio();
+        CuboidStats cuboidStats = new CuboidStats.Builder(key, baseCuboid, statsPair.getFirst(),
+                statsPair.getSecond()) {
+            @Override
+            public Map<Long, Double> estimateCuboidsSize(Map<Long, Long> statistics) {
+                try {
+                    return CuboidStatsReaderUtil.readCuboidSizeFromCube(statistics, cube);
+                } catch (IOException e) {
+                    logger.warn("Fail to get cuboid size from cube due to ", e);
+                    return null;
+                }
+            }
+        }.setQueryUncertaintyRatio(queryUncertaintyRatio) //
+                .setBPUSMinBenefitRatio(bpusMinBenefitRatio) //
+                .setHitFrequencyMap(hitFrequencyMap) //
+                .setRollingUpCountSourceMap(rollingUpCountSourceMap) //
                 .build();
-        return CuboidRecommender.getInstance().getRecommendCuboidList(cuboidStats, cube.getConfig());
+        return CuboidRecommender.getInstance().getRecommendCuboidList(cuboidStats, config);
     }
 
     /** For future segment level recommend */
     public static Map<Long, Long> getRecommendCuboidList(CubeSegment segment, Map<Long, Long> hitFrequencyMap,
-            Map<Long, Map<Long, Long>> rollingUpCountSourceMap, boolean ifForceRecommend) throws IOException {
+            Map<Long, Map<Long, Pair<Long, Long>>> rollingUpCountSourceMap, boolean ifForceRecommend)
+            throws IOException {
         if (segment == null) {
             return null;
         }
@@ -103,9 +127,7 @@ public class CuboidRecommenderUtil {
         String key = cube.getName() + "-" + segment.getName();
         CuboidStats cuboidStats = new CuboidStats.Builder(key, baseCuboid, cubeStatsReader.getCuboidRowEstimatesHLL(),
                 cubeStatsReader.getCuboidSizeMap()).setHitFrequencyMap(hitFrequencyMap)
-                        .setRollingUpCountSourceMap(rollingUpCountSourceMap,
-                                segment.getConfig().getCubePlannerMandatoryRollUpThreshold())
-                        .build();
+                        .setRollingUpCountSourceMap(rollingUpCountSourceMap).build();
         return CuboidRecommender.getInstance().getRecommendCuboidList(cuboidStats, segment.getConfig(),
                 ifForceRecommend);
     }

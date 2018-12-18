@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -893,7 +894,7 @@ public class CubeService extends BasicService implements InitializingBean {
 
     /** cube planner services */
     public Map<Long, Long> getRecommendCuboidStatistics(CubeInstance cube, Map<Long, Long> hitFrequencyMap,
-            Map<Long, Map<Long, Long>> rollingUpCountSourceMap) throws IOException {
+            Map<Long, Map<Long, Pair<Long, Long>>> rollingUpCountSourceMap) throws IOException {
         aclEvaluate.checkProjectAdminPermission(cube.getProject());
         return CuboidRecommenderUtil.getRecommendCuboidList(cube, hitFrequencyMap, rollingUpCountSourceMap);
     }
@@ -906,12 +907,16 @@ public class CubeService extends BasicService implements InitializingBean {
         return formattedQueryCount;
     }
 
-    public Map<Long, Map<Long, Long>> formatRollingUpStats(List<List<String>> orgRollingUpCount) {
-        Map<Long, Map<Long, Long>> formattedRollingUpStats = Maps.newLinkedHashMap();
+    public Map<Long, Map<Long, Pair<Long, Long>>> formatRollingUpStats(List<List<String>> orgRollingUpCount) {
+        Map<Long, Map<Long, Pair<Long, Long>>> formattedRollingUpStats = Maps.newLinkedHashMap();
         for (List<String> rollingUp : orgRollingUpCount) {
-            Map<Long, Long> childMap = Maps.newLinkedHashMap();
-            childMap.put(Long.parseLong(rollingUp.get(1)), (long) Double.parseDouble(rollingUp.get(2)));
-            formattedRollingUpStats.put(Long.parseLong(rollingUp.get(0)), childMap);
+            Map<Long, Pair<Long, Long>> childMap = Maps.newLinkedHashMap();
+            Long srcCuboid = Long.parseLong(rollingUp.get(0));
+            Long tgtCuboid = Long.parseLong(rollingUp.get(1));
+            Long rollupCount = (long) Double.parseDouble(rollingUp.get(2));
+            Long returnCount = (long) Double.parseDouble(rollingUp.get(3));
+            childMap.put(tgtCuboid, new Pair<>(rollupCount, returnCount));
+            formattedRollingUpStats.put(srcCuboid, childMap);
         }
         return formattedRollingUpStats;
     }
@@ -929,15 +934,16 @@ public class CubeService extends BasicService implements InitializingBean {
         return formatQueryCount(orgHitFrequency);
     }
 
-    public Map<Long, Map<Long, Long>> getCuboidRollingUpStats(String cubeName) {
+    public Map<Long, Map<Long, Pair<Long, Long>>> getCuboidRollingUpStats(String cubeName) {
         String cuboidSource = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
-        String cuboidTarget = QueryCubePropertyEnum.CUBOID_TARGET.toString();
+        String cuboidTgt = QueryCubePropertyEnum.CUBOID_TARGET.toString();
         String aggCount = QueryCubePropertyEnum.AGGR_COUNT.toString();
+        String returnCount = QueryCubePropertyEnum.RETURN_COUNT.toString();
         String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQueryCube());
-        String sql = "select " + cuboidSource + ", " + cuboidTarget + ", avg(" + aggCount + ")" //
+        String sql = "select " + cuboidSource + ", " + cuboidTgt + ", avg(" + aggCount + "), avg(" + returnCount + ")"//
                 + " from " + table //
                 + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' " //
-                + " group by " + cuboidSource + ", " + cuboidTarget;
+                + " group by " + cuboidSource + ", " + cuboidTgt;
         List<List<String>> orgRollingUpCount = queryService.querySystemCube(sql).getResults();
         return formatRollingUpStats(orgRollingUpCount);
     }

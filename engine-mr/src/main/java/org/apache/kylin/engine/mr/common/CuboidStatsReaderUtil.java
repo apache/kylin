@@ -68,6 +68,29 @@ public class CuboidStatsReaderUtil {
         return statisticsMerged.isEmpty() ? null : statisticsMerged;
     }
 
+    public static Map<Long, Double> readCuboidSizeFromCube(Map<Long, Long> statistics, CubeInstance cube)
+            throws IOException {
+        List<CubeSegment> segmentList = cube.getSegments(SegmentStatusEnum.READY);
+        Map<Long, Double> sizeMerged = Maps.newHashMapWithExpectedSize(statistics.size());
+        for (CubeSegment pSegment : segmentList) {
+            CubeStatsReader pReader = new CubeStatsReader(pSegment, null, pSegment.getConfig());
+            Map<Long, Double> pSizeMap = CubeStatsReader.getCuboidSizeMapFromRowCount(pSegment, statistics,
+                    pReader.sourceRowCount);
+            for (Long pCuboid : statistics.keySet()) {
+                Double pSize = sizeMerged.get(pCuboid);
+                sizeMerged.put(pCuboid, pSize == null ? pSizeMap.get(pCuboid) : pSize + pSizeMap.get(pCuboid));
+            }
+        }
+        int nSegment = segmentList.size();
+        if (nSegment <= 1) {
+            return sizeMerged;
+        }
+        for (Long pCuboid : statistics.keySet()) {
+            sizeMerged.put(pCuboid, sizeMerged.get(pCuboid) / nSegment);
+        }
+        return sizeMerged;
+    }
+
     private static void readCuboidStatsFromSegments(Set<Long> cuboidSet, List<CubeSegment> segmentList,
             final Map<Long, Long> statisticsMerged, final Map<Long, Double> sizeMerged) throws IOException {
         if (segmentList == null || segmentList.isEmpty()) {

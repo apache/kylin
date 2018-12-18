@@ -154,12 +154,11 @@ public class CuboidRecommender {
 
         Map<Long, Long> recommendCuboidsWithStats = Maps.newLinkedHashMap();
         for (Long cuboid : recommendCuboidList) {
-            if (cuboid.equals(cuboidStats.getBaseCuboid())) {
-                recommendCuboidsWithStats.put(cuboid, cuboidStats.getCuboidCount(cuboid));
-            } else if (cuboidStats.getAllCuboidsForSelection().contains(cuboid)) {
-                recommendCuboidsWithStats.put(cuboid, cuboidStats.getCuboidCount(cuboid));
+            if (cuboid == 0L) {
+                // for zero cuboid, just simply recommend the cheapest cuboid.
+                handleCuboidZeroRecommend(cuboidStats, recommendCuboidsWithStats);
             } else {
-                recommendCuboidsWithStats.put(cuboid, -1L);
+                recommendCuboidsWithStats.put(cuboid, cuboidStats.getCuboidCount(cuboid));
             }
         }
 
@@ -167,5 +166,21 @@ public class CuboidRecommender {
             return null;
         }
         return recommendCuboidsWithStats;
+    }
+
+    private void handleCuboidZeroRecommend(CuboidStats cuboidStats, Map<Long, Long> recommendCuboidsWithStats) {
+        Map<Long, Long> statistics = cuboidStats.getStatistics();
+        Long cheapestCuboid = null;
+        Long cheapestCuboidCount = Long.MAX_VALUE;
+        for (Map.Entry<Long, Long> cuboidStatsEntry : statistics.entrySet()) {
+            if (cuboidStatsEntry.getValue() < cheapestCuboidCount) {
+                cheapestCuboid = cuboidStatsEntry.getKey();
+                cheapestCuboidCount = cuboidStatsEntry.getValue();
+            }
+        }
+        if (cheapestCuboid != null) {
+            logger.info("recommend cuboid:{} instead of cuboid zero", cheapestCuboid);
+            recommendCuboidsWithStats.put(cheapestCuboid, cheapestCuboidCount);
+        }
     }
 }

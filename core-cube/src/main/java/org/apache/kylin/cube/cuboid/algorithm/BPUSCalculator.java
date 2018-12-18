@@ -142,7 +142,7 @@ public class BPUSCalculator implements BenefitPolicy {
     }
 
     public double getMinBenefitRatio() {
-        return 0.01;
+        return cuboidStats.getBpusMinBenefitRatio();
     }
 
     @Override
