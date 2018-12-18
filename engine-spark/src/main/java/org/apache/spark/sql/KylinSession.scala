@@ -30,7 +30,7 @@ import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd}
 import org.apache.spark.sql.SparkSession.Builder
 import org.apache.spark.sql.internal.{SessionState, SharedState}
 import org.apache.spark.sql.manager.UdfManager
-import org.apache.spark.util.{KylinReflectUtils, XmlUtils}
+import org.apache.spark.util.{KylinReflectUtils, Utils, XmlUtils}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConverters._
@@ -133,7 +133,8 @@ object KylinSession extends Logging {
 
     def initSparkConf(): SparkConf = {
       val sparkConf = new SparkConf()
-
+      logInfo("Try to load spark properties from spark-defaults.conf")
+      Utils.loadDefaultSparkProperties(sparkConf)
       kylinConfig.getSparkConf.asScala.foreach {
         case (k, v) =>
           sparkConf.set(k, v)
