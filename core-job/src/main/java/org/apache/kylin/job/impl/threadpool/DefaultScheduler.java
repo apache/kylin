@@ -26,9 +26,6 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -45,7 +42,7 @@ import com.google.common.collect.Maps;
 
 /**
  */
-public class DefaultScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
+public class DefaultScheduler implements Scheduler<AbstractExecutable> {
 
     private static DefaultScheduler INSTANCE;
 
@@ -120,7 +117,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             } catch (Exception e) {
                 if (AbstractExecutable.isMetaDataPersistException(e, 5)) {
                     // Job fail due to PersistException
-                    ExecutableManager.getInstance(jobEngineConfig.getConfig()).forceKillJobWithRetry(executable.getId());
+                    ExecutableManager.getInstance(jobEngineConfig.getConfig())
+                            .forceKillJobWithRetry(executable.getId());
                 }
                 logger.error("unknown error execute job:" + executable.getId(), e);
             } finally {
@@ -129,17 +127,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
             // trigger the next step asap
             fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
-        }
-    }
-
-    @Override
-    public void stateChanged(CuratorFramework client, ConnectionState newState) {
-        if ((newState == ConnectionState.SUSPENDED) || (newState == ConnectionState.LOST)) {
-            try {
-                shutdown();
-            } catch (SchedulerException e) {
-                throw new RuntimeException("failed to shutdown scheduler", e);
-            }
         }
     }
 
