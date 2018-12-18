@@ -256,8 +256,8 @@ public class HadoopUtil {
 
         if (fileStatuses != null && fileStatuses.length > 0) {
             return isSequenceFile(conf, fileStatuses[0].getPath());
+        } else {
+            return true;
         }
-
-        return false;
     }
 }

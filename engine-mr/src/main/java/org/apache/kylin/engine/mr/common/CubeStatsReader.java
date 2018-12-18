@@ -299,7 +299,7 @@ public class CubeStatsReader {
         Map<Long, Double> cuboidSizeMap = getCuboidSizeMap();
         double ret = 0;
         for (Long cuboidId : layeredCuboids.get(level)) {
-            ret += cuboidSizeMap.get(cuboidId);
+            ret += cuboidSizeMap.get(cuboidId) == null ? 0.0 : cuboidSizeMap.get(cuboidId);
         }
 
         logger.info("Estimating size for layer {}, all cuboids are {}, total size is {}", level,
