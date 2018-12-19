@@ -123,19 +123,7 @@ public class JobService extends BasicService implements InitializingBean {
         final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory
                 .scheduler(kylinConfig.getSchedulerType());
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
-                    if (!scheduler.hasStarted()) {
-                        logger.info("scheduler has not been started");
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }).start();
+        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override

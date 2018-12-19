@@ -30,9 +30,6 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.SetThreadName;
@@ -61,7 +58,7 @@ import com.google.common.collect.Maps;
  *  1. kylin.job.scheduler.default=2
  *  2. add all the job servers and query servers to the kylin.server.cluster-servers
  */
-public class DistributedScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
+public class DistributedScheduler implements Scheduler<AbstractExecutable> {
     private static final Logger logger = LoggerFactory.getLogger(DistributedScheduler.class);
 
     public static final String ZOOKEEPER_LOCK_PATH = "/job_engine/lock"; // note ZookeeperDistributedLock will ensure zk path prefix: /${kylin.env.zookeeper-base-path}/metadata
@@ -181,17 +178,6 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
 
         @Override
         public void onLock(String lockPath, String client) {
-        }
-    }
-
-    @Override
-    public void stateChanged(CuratorFramework client, ConnectionState newState) {
-        if ((newState == ConnectionState.SUSPENDED) || (newState == ConnectionState.LOST)) {
-            try {
-                shutdown();
-            } catch (SchedulerException e) {
-                throw new RuntimeException("failed to shutdown scheduler", e);
-            }
         }
     }
 
