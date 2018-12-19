@@ -203,7 +203,7 @@ public class JoinedFlatTable {
     }
 
     private static void appendClusterStatement(StringBuilder sql, TblColRef clusterCol) {
-        sql.append(" CLUSTER BY ").append(colName(clusterCol)).append(";\n");
+        sql.append(" CLUSTER BY CAST(").append(colName(clusterCol)).append(" AS STRING);\n");
     }
 
     private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql) {
