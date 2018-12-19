@@ -16,15 +16,12 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.rest.controller;
 
 import java.util.List;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metrics.MetricsManager;
-import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.CubeService;
@@ -57,62 +54,69 @@ public class DashboardController extends BasicController {
 
     @RequestMapping(value = "/metric/cube", method = { RequestMethod.GET })
     @ResponseBody
-    public MetricsResponse getCubeMetrics(@RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "cubeName", required = false) String cubeName) {
+    public MetricsResponse getCubeMetrics(@RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "cubeName", required = false) String cubeName) {
         checkAuthorization(projectName);
         return dashboardService.getCubeMetrics(projectName, cubeName);
     }
 
     @RequestMapping(value = "/metric/query", method = RequestMethod.GET)
     @ResponseBody
-    public MetricsResponse getQueryMetrics(@RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
+    public MetricsResponse getQueryMetrics(@RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "cubeName", required = false) String cubeName,
+            @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
         checkAuthorization(projectName);
         MetricsResponse queryMetrics = new MetricsResponse();
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
         String sql = dashboardService.getQueryMetricsSQL(startTime, endTime, projectName, cubeName);
-        sqlRequest.setSql(sql);
-        SQLResponse sqlResponse = queryService.doQueryWithCache(sqlRequest);
-        if(!sqlResponse.getIsException()){
-            queryMetrics.increase("queryCount", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(0)));
-            queryMetrics.increase("avgQueryLatency", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(1)));
-            queryMetrics.increase("maxQueryLatency", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(2)));
-            queryMetrics.increase("minQueryLatency", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(3)));
+        SQLResponse sqlResponse = queryService.querySystemCube(sql);
+        if (!sqlResponse.getIsException()) {
+            queryMetrics.increase("queryCount",
+                    dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(0)));
+            queryMetrics.increase("avgQueryLatency",
+                    dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(1)));
+            queryMetrics.increase("maxQueryLatency",
+                    dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(2)));
+            queryMetrics.increase("minQueryLatency",
+                    dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(3)));
         }
         return queryMetrics;
     }
 
     @RequestMapping(value = "/metric/job", method = RequestMethod.GET)
     @ResponseBody
-    public MetricsResponse getJobMetrics(@RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
+    public MetricsResponse getJobMetrics(@RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "cubeName", required = false) String cubeName,
+            @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
         checkAuthorization(projectName);
         MetricsResponse jobMetrics = new MetricsResponse();
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
         String sql = dashboardService.getJobMetricsSQL(startTime, endTime, projectName, cubeName);
-        sqlRequest.setSql(sql);
-        SQLResponse sqlResponse = queryService.doQueryWithCache(sqlRequest);
-        if(!sqlResponse.getIsException()){
+        SQLResponse sqlResponse = queryService.querySystemCube(sql);
+        if (!sqlResponse.getIsException()) {
             jobMetrics.increase("jobCount", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(0)));
-            jobMetrics.increase("avgJobBuildTime", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(1)));
-            jobMetrics.increase("maxJobBuildTime", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(2)));
-            jobMetrics.increase("minJobBuildTime", dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(3)));
+            jobMetrics.increase("avgJobBuildTime",
+                    dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(1)));
+            jobMetrics.increase("maxJobBuildTime",
+                    dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(2)));
+            jobMetrics.increase("minJobBuildTime",
+                    dashboardService.getMetricValue(sqlResponse.getResults().get(0).get(3)));
         }
         return jobMetrics;
     }
 
     @RequestMapping(value = "/chart/{category}/{metric}/{dimension}", method = RequestMethod.GET)
     @ResponseBody
-    public MetricsResponse getChartData(@PathVariable String dimension, @PathVariable String metric, @PathVariable String category, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
+    public MetricsResponse getChartData(@PathVariable String dimension, @PathVariable String metric,
+            @PathVariable String category, @RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "cubeName", required = false) String cubeName,
+            @RequestParam(value = "startTime") String startTime, @RequestParam(value = "endTime") String endTime) {
         checkAuthorization(projectName);
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
-        String sql = dashboardService.getChartSQL(startTime, endTime, projectName, cubeName, dimension, metric, category);
-        sqlRequest.setSql(sql);
-        return dashboardService.transformChartData(queryService.doQueryWithCache(sqlRequest));
+        String sql = dashboardService.getChartSQL(startTime, endTime, projectName, cubeName, dimension, metric,
+                category);
+        return dashboardService.transformChartData(queryService.querySystemCube(sql));
     }
 
-    private void checkAuthorization(String projectName){
-        if (projectName!=null && !projectName.isEmpty()) {
+    private void checkAuthorization(String projectName) {
+        if (projectName != null && !projectName.isEmpty()) {
             ProjectInstance project = dashboardService.getProjectManager().getProject(projectName);
             try {
                 dashboardService.checkAuthorization(project);

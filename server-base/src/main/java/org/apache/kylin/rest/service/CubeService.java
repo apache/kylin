@@ -65,7 +65,6 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.metrics.MetricsManager;
 import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -74,7 +73,6 @@ import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
-import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.response.CuboidTreeResponse;
 import org.apache.kylin.rest.response.CuboidTreeResponse.NodeInfo;
@@ -919,42 +917,32 @@ public class CubeService extends BasicService implements InitializingBean {
     }
 
     public Map<Long, Long> getCuboidHitFrequency(String cubeName, boolean isCuboidSource) {
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
-        String cuboidColumn = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
-        if (!isCuboidSource) {
-            cuboidColumn = QueryCubePropertyEnum.CUBOID_TARGET.toString();
-        }
+        String cuboidColumn = isCuboidSource ? QueryCubePropertyEnum.CUBOID_SOURCE.toString()
+                : QueryCubePropertyEnum.CUBOID_TARGET.toString();
         String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
         String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQueryCube());
         String sql = "select " + cuboidColumn + ", sum(" + hitMeasure + ")" //
                 + " from " + table//
-                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' " //
+                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "'" //
                 + " group by " + cuboidColumn;
-        sqlRequest.setSql(sql);
-        List<List<String>> orgHitFrequency = queryService.doQueryWithCache(sqlRequest).getResults();
+        List<List<String>> orgHitFrequency = queryService.querySystemCube(sql).getResults();
         return formatQueryCount(orgHitFrequency);
     }
 
     public Map<Long, Map<Long, Long>> getCuboidRollingUpStats(String cubeName) {
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
         String cuboidSource = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
         String cuboidTarget = QueryCubePropertyEnum.CUBOID_TARGET.toString();
         String aggCount = QueryCubePropertyEnum.AGGR_COUNT.toString();
         String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQueryCube());
-        String sql = "select " + cuboidSource + ", " + cuboidTarget + ", sum(" + aggCount + ")/count(*)" //
+        String sql = "select " + cuboidSource + ", " + cuboidTarget + ", avg(" + aggCount + ")" //
                 + " from " + table //
                 + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' " //
                 + " group by " + cuboidSource + ", " + cuboidTarget;
-        sqlRequest.setSql(sql);
-        List<List<String>> orgRollingUpCount = queryService.doQueryWithCache(sqlRequest).getResults();
+        List<List<String>> orgRollingUpCount = queryService.querySystemCube(sql).getResults();
         return formatRollingUpStats(orgRollingUpCount);
     }
 
     public Map<Long, Long> getCuboidQueryMatchCount(String cubeName) {
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
         String cuboidSource = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
         String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
         String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQueryCube());
@@ -963,8 +951,7 @@ public class CubeService extends BasicService implements InitializingBean {
                 + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "'" //
                 + " and " + QueryCubePropertyEnum.IF_MATCH.toString() + " = true" //
                 + " group by " + cuboidSource;
-        sqlRequest.setSql(sql);
-        List<List<String>> orgMatchHitFrequency = queryService.doQueryWithCache(sqlRequest).getResults();
+        List<List<String>> orgMatchHitFrequency = queryService.querySystemCube(sql).getResults();
         return formatQueryCount(orgMatchHitFrequency);
     }
 
