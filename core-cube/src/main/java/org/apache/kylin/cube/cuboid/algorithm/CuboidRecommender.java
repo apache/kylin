@@ -46,7 +46,7 @@ public class CuboidRecommender {
             .removalListener(new RemovalListener<String, Map<Long, Long>>() {
                 @Override
                 public void onRemoval(RemovalNotification<String, Map<Long, Long>> notification) {
-                    logger.info("Dict with resource path " + notification.getKey() + " is removed due to "
+                    logger.info("Recommended cuboids for cube " + notification.getKey() + " is removed due to "
                             + notification.getCause());
                 }
             }).maximumSize(KylinConfig.getInstanceFromEnv().getCubePlannerRecommendCuboidCacheMaxSize())
@@ -66,8 +66,8 @@ public class CuboidRecommender {
     }
 
     public CuboidRecommender() {
-        Broadcaster.getInstance(KylinConfig.getInstanceFromEnv()).registerListener(new CuboidRecommenderSyncListener(),
-                "cube");
+        Broadcaster.getInstance(KylinConfig.getInstanceFromEnv())
+                .registerStaticListener(new CuboidRecommenderSyncListener(), "cube", "cube_desc");
     }
 
     private static CuboidRecommender instance = new CuboidRecommender();
@@ -94,8 +94,7 @@ public class CuboidRecommender {
                         Map<Long, Long> emptyMap = Maps.newHashMap();
                         cuboidRecommendCache.put(key, emptyMap);
                         try {
-                            Map<Long, Long> recommendCuboid = getRecommendCuboidList(cuboidStats, kylinConfig,
-                                    true);
+                            Map<Long, Long> recommendCuboid = getRecommendCuboidList(cuboidStats, kylinConfig, true);
 
                             if (recommendCuboid != null) {
                                 logger.info(String.format(Locale.ROOT, "Add recommend cuboids for %s to cache", key));
@@ -105,7 +104,9 @@ public class CuboidRecommender {
                             return recommendCuboid;
                         } catch (Exception e) {
                             cuboidRecommendCache.invalidate(key);
-                            logger.error(String.format(Locale.ROOT, "Failed to get recommend cuboids for %s in cache", key), e);
+                            logger.error(
+                                    String.format(Locale.ROOT, "Failed to get recommend cuboids for %s in cache", key),
+                                    e);
                             throw e;
                         }
                     }
