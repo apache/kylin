@@ -427,7 +427,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         }
     }
 
-    private ByteString serializeGTScanReq(GTScanRequest scanRequest) {
+    public static ByteString serializeGTScanReq(GTScanRequest scanRequest) {
         ByteString scanRequestByteString;
         int scanRequestBufferSize = BytesSerializer.SERIALIZE_BUFFER_SIZE;
         while (true) {
@@ -445,7 +445,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         return scanRequestByteString;
     }
 
-    private ByteString serializeRawScans(List<RawScan> rawScans) {
+    public static ByteString serializeRawScans(List<RawScan> rawScans) {
         ByteString rawScanByteString;
         int rawScanBufferSize = BytesSerializer.SERIALIZE_BUFFER_SIZE;
         while (true) {
