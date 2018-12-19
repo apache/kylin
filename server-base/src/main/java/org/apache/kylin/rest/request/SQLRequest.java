@@ -105,7 +105,7 @@ public class SQLRequest implements Serializable {
             return cacheKey;
 
         cacheKey = Lists.newArrayList(sql.replaceAll("[ ]", " ") //
-                , project //
+                , getNormProject() //
                 , offset //
                 , limit //
                 , acceptPartial //
@@ -127,7 +127,7 @@ public class SQLRequest implements Serializable {
             return false;
         if (sql != null ? !sql.equals(that.sql) : that.sql != null)
             return false;
-        if (project != null ? !project.equals(that.project) : that.project != null)
+        if (getNormProject() != null ? !getNormProject().equals(that.getNormProject()) : that.getNormProject() != null)
             return false;
         if (offset != null ? !offset.equals(that.offset) : that.offset != null)
             return false;
@@ -140,11 +140,15 @@ public class SQLRequest implements Serializable {
     @Override
     public int hashCode() {
         int result = sql != null ? sql.hashCode() : 0;
-        result = 31 * result + (project != null ? project.hashCode() : 0);
+        result = 31 * result + (getNormProject() != null ? getNormProject().hashCode() : 0);
         result = 31 * result + (offset != null ? offset.hashCode() : 0);
         result = 31 * result + (limit != null ? limit.hashCode() : 0);
         result = 31 * result + (acceptPartial ? 1 : 0);
         result = 31 * result + (backdoorToggles != null ? backdoorToggles.hashCode() : 0);
         return result;
+    }
+
+    private String getNormProject() {
+        return project == null ? null : project.toUpperCase();
     }
 }
