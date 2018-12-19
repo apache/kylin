@@ -237,8 +237,8 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
             }
         };
         fetcher = jobEngineConfig.getJobPriorityConsidered()
-                ? new PriorityFetcherRunner(jobEngineConfig, context, jobExecutor)
-                : new DefaultFetcherRunner(jobEngineConfig, context, jobExecutor);
+                ? new PriorityFetcherRunner(jobEngineConfig, context, executableManager, jobExecutor)
+                : new DefaultFetcherRunner(jobEngineConfig, context, executableManager, jobExecutor);
         fetcherPool.scheduleAtFixedRate(fetcher, pollSecond / 10, pollSecond, TimeUnit.SECONDS);
         hasStarted = true;
 
