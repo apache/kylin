@@ -58,9 +58,12 @@ public class DashboardService extends BasicService {
     }
 
     private enum QueryDimensionEnum {
-        PROJECT(QueryPropertyEnum.PROJECT.toString()), CUBE(QueryPropertyEnum.REALIZATION.toString()), DAY(
-                TimePropertyEnum.DAY_DATE.toString()), WEEK(
-                        TimePropertyEnum.WEEK_BEGIN_DATE.toString()), MONTH(TimePropertyEnum.MONTH.toString());
+        PROJECT(QueryPropertyEnum.PROJECT.toString()), //
+        CUBE(QueryPropertyEnum.REALIZATION.toString()), //
+        DAY(TimePropertyEnum.DAY_DATE.toString()), //
+        WEEK(TimePropertyEnum.WEEK_BEGIN_DATE.toString()), // 
+        MONTH(TimePropertyEnum.MONTH.toString());
+
         private final String sql;
 
         QueryDimensionEnum(String sql) {
@@ -73,9 +76,12 @@ public class DashboardService extends BasicService {
     };
 
     private enum JobDimensionEnum {
-        PROJECT(JobPropertyEnum.PROJECT.toString()), CUBE(JobPropertyEnum.CUBE.toString()), DAY(
-                TimePropertyEnum.DAY_DATE.toString()), WEEK(
-                        TimePropertyEnum.WEEK_BEGIN_DATE.toString()), MONTH(TimePropertyEnum.MONTH.toString());
+        PROJECT(JobPropertyEnum.PROJECT.toString()), //
+        CUBE(JobPropertyEnum.CUBE.toString()), //
+        DAY(TimePropertyEnum.DAY_DATE.toString()), //
+        WEEK(TimePropertyEnum.WEEK_BEGIN_DATE.toString()), //
+        MONTH(TimePropertyEnum.MONTH.toString());
+
         private final String sql;
 
         JobDimensionEnum(String sql) {
@@ -88,10 +94,10 @@ public class DashboardService extends BasicService {
     };
 
     private enum QueryMetricEnum {
-        QUERY_COUNT("count(*)"), AVG_QUERY_LATENCY("sum(" + QueryPropertyEnum.TIME_COST.toString() + ")/(count("
-                + QueryPropertyEnum.TIME_COST.toString() + "))"), MAX_QUERY_LATENCY(
-                        "max(" + QueryPropertyEnum.TIME_COST.toString() + ")"), MIN_QUERY_LATENCY(
-                                "min(" + QueryPropertyEnum.TIME_COST.toString() + ")");
+        QUERY_COUNT("count(*)"), //
+        AVG_QUERY_LATENCY("avg(" + QueryPropertyEnum.TIME_COST.toString() + ")"), //
+        MAX_QUERY_LATENCY("max(" + QueryPropertyEnum.TIME_COST.toString() + ")"), //
+        MIN_QUERY_LATENCY("min(" + QueryPropertyEnum.TIME_COST.toString() + ")");
 
         private final String sql;
 
@@ -105,10 +111,10 @@ public class DashboardService extends BasicService {
     }
 
     private enum JobMetricEnum {
-        JOB_COUNT("count(*)"), AVG_JOB_BUILD_TIME("sum(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")/count("
-                + JobPropertyEnum.PER_BYTES_TIME_COST + ")"), MAX_JOB_BUILD_TIME(
-                        "max(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")"), MIN_JOB_BUILD_TIME(
-                                "min(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")");
+        JOB_COUNT("count(*)"), //
+        AVG_JOB_BUILD_TIME("avg(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")"), //
+        MAX_JOB_BUILD_TIME("max(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")"), //
+        MIN_JOB_BUILD_TIME("min(" + JobPropertyEnum.PER_BYTES_TIME_COST.toString() + ")");
 
         private final String sql;
 

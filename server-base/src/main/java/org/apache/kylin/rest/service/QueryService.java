@@ -93,6 +93,7 @@ import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metrics.MetricsManager;
 import org.apache.kylin.query.QueryConnection;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.PushDownUtil;
@@ -352,6 +353,13 @@ public class QueryService extends BasicService {
         logger.info(stringBuilder.toString());
     }
 
+    public SQLResponse querySystemCube(String sql) {
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
+        sqlRequest.setSql(sql);
+        return doQueryWithCache(sqlRequest, false);
+    }
+
     public SQLResponse doQueryWithCache(SQLRequest sqlRequest) {
         long t = System.currentTimeMillis();
         aclEvaluate.checkProjectReadPermission(sqlRequest.getProject());
@@ -375,7 +383,8 @@ public class QueryService extends BasicService {
         // project not found
         ProjectManager mgr = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
         if (mgr.getProject(sqlRequest.getProject()) == null) {
-            throw new BadRequestException(String.format(Locale.ROOT, msg.getPROJECT_NOT_FOUND(), sqlRequest.getProject()));
+            throw new BadRequestException(
+                    String.format(Locale.ROOT, msg.getPROJECT_NOT_FOUND(), sqlRequest.getProject()));
         }
         if (StringUtils.isBlank(sqlRequest.getSql())) {
             throw new BadRequestException(msg.getNULL_EMPTY_SQL());
@@ -1020,8 +1029,7 @@ public class QueryService extends BasicService {
     }
 
     private SQLResponse getPrepareOnlySqlResponse(String projectName, String correctedSql, Connection conn,
-            Boolean isPushDown,
-            List<List<String>> results, List<SelectedColumnMeta> columnMetas) throws SQLException {
+            Boolean isPushDown, List<List<String>> results, List<SelectedColumnMeta> columnMetas) throws SQLException {
 
         CalcitePrepareImpl.KYLIN_ONLY_PREPARE.set(true);
 
