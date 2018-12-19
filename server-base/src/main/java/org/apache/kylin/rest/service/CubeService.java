@@ -53,13 +53,13 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.measure.percentile.PercentileMeasureType;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.draft.Draft;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -95,7 +95,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * Stateless & lightweight service facade of cube management functions.
@@ -580,12 +579,7 @@ public class CubeService extends BasicService implements InitializingBean {
     private void releaseAllSegments(CubeInstance cube) throws IOException {
         releaseAllJobs(cube);
 
-        CubeUpdate update = new CubeUpdate(cube.latestCopyForWrite());
-        update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
-        update.setCuboids(Maps.<Long, Long> newHashMap());
-        update.setCuboidsRecommend(Sets.<Long> newHashSet());
-        update.setUpdateTableSnapshotPath(Maps.<String, String> newHashMap());
-        CubeManager.getInstance(getConfig()).updateCube(update);
+        getCubeManager().clearSegments(cube);
     }
 
     public void updateOnNewSegmentReady(String cubeName) {
