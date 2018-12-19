@@ -65,6 +65,8 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.metrics.MetricsManager;
+import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
@@ -72,6 +74,7 @@ import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
+import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.response.CuboidTreeResponse;
 import org.apache.kylin.rest.response.CuboidTreeResponse.NodeInfo;
@@ -119,6 +122,10 @@ public class CubeService extends BasicService implements InitializingBean {
     @Autowired
     @Qualifier("modelMgmtService")
     private ModelService modelService;
+
+    @Autowired
+    @Qualifier("queryService")
+    private QueryService queryService;
 
     @Autowired
     private AclEvaluate aclEvaluate;
@@ -472,7 +479,8 @@ public class CubeService extends BasicService implements InitializingBean {
 
         hr = new HBaseResponse();
         CubeInstance cube = CubeManager.getInstance(getConfig()).getCube(cubeName);
-        if (cube.getStorageType() == IStorageAware.ID_HBASE || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
+        if (cube.getStorageType() == IStorageAware.ID_HBASE
+                || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
             try {
                 logger.debug("Loading HTable info " + cubeName + ", " + tableName);
 
@@ -547,9 +555,9 @@ public class CubeService extends BasicService implements InitializingBean {
     }
 
     public boolean isOrphonSegment(CubeInstance cube, String segId) {
-        List<JobInstance> jobInstances = jobService.searchJobsByCubeName(cube.getName(),
-                cube.getProject(), Lists.newArrayList(JobStatusEnum.NEW, JobStatusEnum.PENDING, JobStatusEnum.RUNNING,
-                        JobStatusEnum.ERROR, JobStatusEnum.STOPPED),
+        List<JobInstance> jobInstances = jobService.searchJobsByCubeName(
+                cube.getName(), cube.getProject(), Lists.newArrayList(JobStatusEnum.NEW, JobStatusEnum.PENDING,
+                        JobStatusEnum.RUNNING, JobStatusEnum.ERROR, JobStatusEnum.STOPPED),
                 JobTimeFilterEnum.ALL, JobService.JobSearchMode.CUBING_ONLY);
         for (JobInstance jobInstance : jobInstances) {
             // if there are segment related jobs, can not delete this segment.
@@ -886,6 +894,12 @@ public class CubeService extends BasicService implements InitializingBean {
     }
 
     /** cube planner services */
+    public Map<Long, Long> getRecommendCuboidStatistics(CubeInstance cube, Map<Long, Long> hitFrequencyMap,
+            Map<Long, Map<Long, Long>> rollingUpCountSourceMap) throws IOException {
+        aclEvaluate.checkProjectAdminPermission(cube.getProject());
+        return CuboidRecommenderUtil.getRecommendCuboidList(cube, hitFrequencyMap, rollingUpCountSourceMap);
+    }
+
     public Map<Long, Long> formatQueryCount(List<List<String>> orgQueryCount) {
         Map<Long, Long> formattedQueryCount = Maps.newLinkedHashMap();
         for (List<String> hit : orgQueryCount) {
@@ -894,20 +908,64 @@ public class CubeService extends BasicService implements InitializingBean {
         return formattedQueryCount;
     }
 
-    public Map<Long, Map<Long, Long>> formatRollingUpCount(List<List<String>> orgRollingUpCount) {
-        Map<Long, Map<Long, Long>> formattedRollingUpCount = Maps.newLinkedHashMap();
+    public Map<Long, Map<Long, Long>> formatRollingUpStats(List<List<String>> orgRollingUpCount) {
+        Map<Long, Map<Long, Long>> formattedRollingUpStats = Maps.newLinkedHashMap();
         for (List<String> rollingUp : orgRollingUpCount) {
             Map<Long, Long> childMap = Maps.newLinkedHashMap();
             childMap.put(Long.parseLong(rollingUp.get(1)), (long) Double.parseDouble(rollingUp.get(2)));
-            formattedRollingUpCount.put(Long.parseLong(rollingUp.get(0)), childMap);
+            formattedRollingUpStats.put(Long.parseLong(rollingUp.get(0)), childMap);
         }
-        return formattedRollingUpCount;
+        return formattedRollingUpStats;
     }
 
-    public Map<Long, Long> getRecommendCuboidStatistics(CubeInstance cube, Map<Long, Long> hitFrequencyMap,
-            Map<Long, Map<Long, Long>> rollingUpCountSourceMap) throws IOException {
-        aclEvaluate.checkProjectAdminPermission(cube.getProject());
-        return CuboidRecommenderUtil.getRecommendCuboidList(cube, hitFrequencyMap, rollingUpCountSourceMap);
+    public Map<Long, Long> getCuboidHitFrequency(String cubeName, boolean isCuboidSource) {
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
+        String cuboidColumn = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
+        if (!isCuboidSource) {
+            cuboidColumn = QueryCubePropertyEnum.CUBOID_TARGET.toString();
+        }
+        String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
+        String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQueryCube());
+        String sql = "select " + cuboidColumn + ", sum(" + hitMeasure + ")" //
+                + " from " + table//
+                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' " //
+                + " group by " + cuboidColumn;
+        sqlRequest.setSql(sql);
+        List<List<String>> orgHitFrequency = queryService.doQueryWithCache(sqlRequest).getResults();
+        return formatQueryCount(orgHitFrequency);
+    }
+
+    public Map<Long, Map<Long, Long>> getCuboidRollingUpStats(String cubeName) {
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
+        String cuboidSource = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
+        String cuboidTarget = QueryCubePropertyEnum.CUBOID_TARGET.toString();
+        String aggCount = QueryCubePropertyEnum.AGGR_COUNT.toString();
+        String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQueryCube());
+        String sql = "select " + cuboidSource + ", " + cuboidTarget + ", sum(" + aggCount + ")/count(*)" //
+                + " from " + table //
+                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' " //
+                + " group by " + cuboidSource + ", " + cuboidTarget;
+        sqlRequest.setSql(sql);
+        List<List<String>> orgRollingUpCount = queryService.doQueryWithCache(sqlRequest).getResults();
+        return formatRollingUpStats(orgRollingUpCount);
+    }
+
+    public Map<Long, Long> getCuboidQueryMatchCount(String cubeName) {
+        SQLRequest sqlRequest = new SQLRequest();
+        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
+        String cuboidSource = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
+        String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
+        String table = getMetricsManager().getSystemTableFromSubject(getConfig().getKylinMetricsSubjectQueryCube());
+        String sql = "select " + cuboidSource + ", sum(" + hitMeasure + ")" //
+                + " from " + table //
+                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "'" //
+                + " and " + QueryCubePropertyEnum.IF_MATCH.toString() + " = true" //
+                + " group by " + cuboidSource;
+        sqlRequest.setSql(sql);
+        List<List<String>> orgMatchHitFrequency = queryService.doQueryWithCache(sqlRequest).getResults();
+        return formatQueryCount(orgMatchHitFrequency);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
