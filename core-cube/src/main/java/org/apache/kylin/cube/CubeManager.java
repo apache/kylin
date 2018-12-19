@@ -256,6 +256,23 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    /**
+     * when clear all segments, it's supposed to reinitialize the CubeInstance
+     */
+    public CubeInstance clearSegments(CubeInstance cube) throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            cube = cube.latestCopyForWrite(); // get a latest copy
+            CubeUpdate update = new CubeUpdate(cube);
+            update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
+            update.setCuboids(Maps.<Long, Long> newHashMap());
+            update.setCuboidsRecommend(Sets.<Long> newHashSet());
+            update.setUpdateTableSnapshotPath(Maps.<String, String> newHashMap());
+            update.setCreateTimeUTC(System.currentTimeMillis());
+            update.setCuboidLastOptimized(0L);
+            return updateCube(update);
+        }
+    }
+
     // try minimize the use of this method, use udpateCubeXXX() instead
     public CubeInstance updateCube(CubeUpdate update) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
@@ -393,6 +410,14 @@ public class CubeManager implements IRealizationProvider {
             for(Map.Entry<String, String> lookupSnapshotPathEntry : update.getUpdateTableSnapshotPath().entrySet()) {
                 cube.putSnapshotResPath(lookupSnapshotPathEntry.getKey(), lookupSnapshotPathEntry.getValue());
             }
+        }
+
+        if (update.getCreateTimeUTC() >= 0) {
+            cube.setCreateTimeUTC(update.getCreateTimeUTC());
+        }
+
+        if (update.getCuboidLastOptimized() >= 0) {
+            cube.setCuboidLastOptimized(update.getCuboidLastOptimized());
         }
     }
 
