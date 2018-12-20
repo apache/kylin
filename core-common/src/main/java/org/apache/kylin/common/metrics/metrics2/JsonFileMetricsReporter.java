@@ -98,9 +98,10 @@ public class JsonFileMetricsReporter implements CodahaleReporter {
                         return;
                     }
 
+                    fs.delete(tmpPath, true);
+
                     try (BufferedWriter bw = new BufferedWriter(
                             new OutputStreamWriter(fs.create(tmpPath, true), StandardCharsets.UTF_8))) {
-                        fs.delete(tmpPath, true);
                         bw.write(json);
                         fs.setPermission(tmpPath, FsPermission.createImmutable((short) 0644));
                     } catch (IOException e) {
