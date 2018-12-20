@@ -19,6 +19,8 @@
 package org.apache.kylin.storage.hbase.util;
 
 import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -297,7 +299,13 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             n = path.length();
             path = path.replace("//", "/");
         }
-        return path;
+
+        try {
+            return new File(path).getCanonicalPath();
+        } catch (IOException e) {
+            logger.error("get canonical path failed, use original path", e);
+            return path;
+        }
     }
 
     // ============================================================================

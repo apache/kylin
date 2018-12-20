@@ -102,6 +102,7 @@
     <jamm.version>0.3.1</jamm.version>
     <mockito.version>2.7.14</mockito.version>
     <powermock.version>1.7.0</powermock.version>
+    <curator.version>2.7.1</curator.version>
 
     <!-- Commons -->
     <commons-lang3.version>3.4</commons-lang3.version>
@@ -864,7 +865,12 @@
         <artifactId>opensaml</artifactId>
         <version>${opensaml.version}</version>
       </dependency>
-
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-test</artifactId>
+        <version>${curator.version}</version>
+        <scope>test</scope>
+      </dependency>
 
       <!-- Spring Core -->
       <dependency>

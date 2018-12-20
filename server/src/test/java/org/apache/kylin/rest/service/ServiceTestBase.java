@@ -18,8 +18,10 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.curator.test.TestingServer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
@@ -50,6 +52,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ActiveProfiles("testing")
 public class ServiceTestBase extends LocalFileMetadataTestCase {
 
+    private static TestingServer server;
+
     @Autowired
     @Qualifier("userService")
     UserService userService;
@@ -59,10 +63,14 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
         staticCreateTestMetadata();
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        server = new TestingServer(12181, true);
+        server.start();
     }
 
     @AfterClass
-    public static void tearDownResource() {
+    public static void tearDownResource() throws IOException {
+        server.stop();
     }
 
     @Before
