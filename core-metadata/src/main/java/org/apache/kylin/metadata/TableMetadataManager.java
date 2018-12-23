@@ -154,7 +154,7 @@ public class TableMetadataManager {
 
     public void reloadSourceTableQuietly(String table, String project) {
         try (AutoLock lock = srcTableMapLock.lockForWrite()) {
-            srcTableCrud.reloadQuietly(TableDesc.concatResourcePath(table, project));
+            srcTableCrud.reloadQuietly(TableDesc.makeResourceName(table, project));
         }
     }
 
