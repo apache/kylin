@@ -58,7 +58,6 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     $scope.nextParameters = [];
     $scope.measureParamValueColumn=$scope.getCommonMetricColumns();
     $scope.newMeasure = (!!measure)? jQuery.extend(true, {},measure):CubeDescModel.createMeasure();
-    $scope.newMeasure.function.returntype=$scope.newMeasure.function.returntype.replace(/\,\d+/,'');
     if(!!measure && measure.function.parameter.next_parameter){
       $scope.nextPara.value = measure.function.parameter.next_parameter.value;
     }
