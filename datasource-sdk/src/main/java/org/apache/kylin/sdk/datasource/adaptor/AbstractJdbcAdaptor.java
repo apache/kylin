@@ -53,11 +53,11 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
     protected final DataSourceDef dataSourceDef;
     protected SqlConverter.IConfigurer configurer;
     protected final Cache<String, List<String>> columnsCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(30).build();
+            .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(4096).build();
     protected final Cache<String, List<String>> databasesCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(30).build();
+            .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(4096).build();
     protected final Cache<String, List<String>> tablesCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(30).build();
+            .expireAfterWrite(1, TimeUnit.DAYS).maximumSize(4096).build();
 
     private static Joiner joiner = Joiner.on("_");
 
@@ -308,7 +308,7 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
      */
     public List<String> listDatabasesWithCache(boolean init) throws SQLException {
         if (configurer.enableCache()) {
-            String cacheKey = config.datasourceId + config.url + "_databases";
+            String cacheKey = joiner.join(config.datasourceId, config.url, "databases");
             List<String> cachedDatabases;
             if (init || (cachedDatabases = databasesCache.getIfPresent(cacheKey)) == null) {
                 cachedDatabases = listDatabases();
@@ -429,7 +429,7 @@ public abstract class AbstractJdbcAdaptor implements Closeable {
      */
     public List<String> listColumnsWithCache(String database, String tableName, boolean init) throws SQLException {
         if (configurer.enableCache()) {
-            String cacheKey = config.datasourceId + config.url + "_" + tableName + "_columns";
+            String cacheKey = joiner.join(config.datasourceId, config.url, database, tableName, "columns");
             List<String> cachedColumns;
             if (init || (cachedColumns = columnsCache.getIfPresent(cacheKey)) == null) {
                 cachedColumns = listColumns(database, tableName);

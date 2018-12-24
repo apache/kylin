@@ -23,15 +23,8 @@
     <PROPERTY NAME="sql.allow-no-orderby-with-fetch" VALUE="true"/>
     <PROPERTY NAME="sql.keyword-default-escape" VALUE="true"/>
     <PROPERTY NAME="sql.keyword-default-uppercase" VALUE="true"/>
-    <PROPERTY NAME="table-sampling.template.max-or-min-value-default"
-              VALUE="SELECT MAX({0}), MIN({0}) FROM {1} WHERE {0} IS NOT NULL"/>
-    <PROPERTY NAME="table-sampling.template.max-or-min-len-value-default"
-              VALUE="SELECT {0} FROM {1}  WHERE {0} IS NOT NULL ORDER BY CHAR_LENGTH({0}){2} LIMIT 1"/>
-    <PROPERTY NAME="table-sampling.template.exceed-precision-count-default"
-              VALUE="SELECT COUNT({0}) FROM {1} WHERE CHAR_LENGTH({0}) > {2}"/>
-    <PROPERTY NAME="table-sampling.template.exceed-precision-max-length-value-default"
-              VALUE="SELECT MAX(CHAR_LENGTH({0})) FROM {1} WHERE CHAR_LENGTH({0}) > {2}"/>
     <PROPERTY NAME="sql.case-sensitive" VALUE="true"/>
+    <PROPERTY NAME="metadata.enable-cache" VALUE="true"/>
     <PROPERTY NAME="sql.paging-type" VALUE="LIMIT_OFFSET"/>
 
 
