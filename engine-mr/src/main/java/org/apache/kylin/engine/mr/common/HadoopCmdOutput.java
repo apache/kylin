@@ -18,6 +18,7 @@
 
 package org.apache.kylin.engine.mr.common;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.FileSystemCounter;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobStatus;
+import org.apache.hadoop.mapreduce.TaskCompletionEvent;
 import org.apache.hadoop.mapreduce.TaskCounter;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsMapper.RawDataCounter;
@@ -92,29 +95,66 @@ public class HadoopCmdOutput {
                 String errorMsg = "no counters for job " + getMrJobId();
                 logger.warn(errorMsg);
                 output.append(errorMsg);
-                return;
+            } else {
+                this.output.append(counters.toString()).append("\n");
+                logger.debug(counters.toString());
+
+                mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
+                rawInputBytesRead = String.valueOf(counters.findCounter(RawDataCounter.BYTES).getValue());
+
+                String outputFolder = job.getConfiguration().get("mapreduce.output.fileoutputformat.outputdir",
+                        KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
+                logger.debug("outputFolder is " + outputFolder);
+                Path outputPath = new Path(outputFolder);
+                String fsScheme = outputPath.getFileSystem(job.getConfiguration()).getScheme();
+                long bytesWritten = counters.findCounter(fsScheme, FileSystemCounter.BYTES_WRITTEN).getValue();
+                if (bytesWritten == 0) {
+                    logger.debug("Seems no counter found for " + fsScheme);
+                    bytesWritten = counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue();
+                }
+                hdfsBytesWritten = String.valueOf(bytesWritten);
             }
-            this.output.append(counters.toString()).append("\n");
-            logger.debug(counters.toString());
-
-            mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
-            rawInputBytesRead = String.valueOf(counters.findCounter(RawDataCounter.BYTES).getValue());
-
-            String outputFolder = job.getConfiguration().get("mapreduce.output.fileoutputformat.outputdir", KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
-            logger.debug("outputFolder is " + outputFolder);
-            Path outputPath = new Path(outputFolder);
-            String fsScheme = outputPath.getFileSystem(job.getConfiguration()).getScheme();
-            long bytesWritten = counters.findCounter(fsScheme, FileSystemCounter.BYTES_WRITTEN).getValue();
-            if (bytesWritten == 0) {
-                logger.debug("Seems no counter found for " + fsScheme);
-                bytesWritten = counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue();
+            JobStatus jobStatus = job.getStatus();
+            if (jobStatus.getState() == JobStatus.State.FAILED) {
+                logger.warn("Job Diagnostics:" + jobStatus.getFailureInfo());
+                output.append("Job Diagnostics:").append(jobStatus.getFailureInfo()).append("\n");
+                TaskCompletionEvent taskEvent = getOneTaskFailure(job);
+                if (taskEvent != null) {
+                    String[] fails = job.getTaskDiagnostics(taskEvent.getTaskAttemptId());
+                    logger.warn("Failure task Diagnostics:");
+                    output.append("Failure task Diagnostics:").append("\n");
+                    for (String failure : fails) {
+                        logger.warn(failure);
+                        output.append(failure).append("\n");
+                    }
+                }
             }
-            hdfsBytesWritten = String.valueOf(bytesWritten);
-
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             output.append(e.getLocalizedMessage());
         }
     }
 
+    private TaskCompletionEvent getOneTaskFailure(Job job) throws IOException, InterruptedException {
+        TaskCompletionEvent lastEvent = null;
+        int index = 0;
+        int failCount = 0;
+        TaskCompletionEvent[] events = job.getTaskCompletionEvents(index);
+        //This returns either nothing (if no task executions or no exceptions at all) or the last failure event within a subset of the exceptions from the first
+        //index at which exceptions are found in the task completion events
+        if (events == null) {
+            return lastEvent;
+        }
+        while (events.length > 0 && failCount == 0) {
+            for (TaskCompletionEvent event : events) {
+                if (event.getStatus().equals(TaskCompletionEvent.Status.FAILED)) {
+                    failCount++;
+                    lastEvent = event;
+                }
+            }
+            index += 10;
+            events = job.getTaskCompletionEvents(index);
+        }
+        return lastEvent;
+    }
 }
