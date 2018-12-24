@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import javax.sql.rowset.CachedRowSet;
 
+import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -36,9 +37,7 @@ import org.apache.commons.lang.StringUtils;
  */
 public class DefaultAdaptor extends AbstractJdbcAdaptor {
 
-    protected static final String QUOTE_REG_LFT = "[`\"\\[]*";
-    protected static final String QUOTE_REG_RHT = "[`\"\\]]*";
-    private final static String [] POSSIBLE_TALBE_END= {",", " ", ")", "\r", "\n", "."};
+    private static Joiner joiner = Joiner.on('_');
 
     public DefaultAdaptor(AdaptorConfig config) throws Exception {
         super(config);
@@ -138,19 +137,6 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
     @Override
     public String fixSql(String sql) {
         return sql;
-    }
-
-    private boolean checkSqlContainstable(String orig, String table) {
-        // ensure table is single match(e.g match account but not match accountant)
-        if (orig.endsWith(table.toUpperCase(Locale.ROOT))) {
-            return true;
-        }
-        for (String end:POSSIBLE_TALBE_END) {
-            if (orig.contains(table.toUpperCase(Locale.ROOT) + end)){
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -270,26 +256,100 @@ public class DefaultAdaptor extends AbstractJdbcAdaptor {
     public String fixIdentifierCaseSensitve(String identifier) {
         try {
             List<String> databases = listDatabasesWithCache();
-            for (String db : databases) {
-                if (db.equalsIgnoreCase(identifier)) {
-                    return db;
+            for (String database : databases) {
+                if (identifier.equalsIgnoreCase(database)) {
+                    return database;
                 }
-                List<String> tables = listTablesWithCache(db);
-                for (String table : tables) {
-                    if (table.equalsIgnoreCase(identifier)) {
-                        return table;
-                    }
-                    List<String> cols = listColumnsWithCache(db, table);
-                    for (String col : cols) {
-                        if (col.equalsIgnoreCase(identifier)) {
-                            return col;
-                        }
-                    }
+            }
+            List<String> tables = listTables();
+            for (String table : tables) {
+                if (identifier.equalsIgnoreCase(table)) {
+                    return table;
+                }
+            }
+            List<String> columns = listColumns();
+            for (String column : columns) {
+                if (identifier.equalsIgnoreCase(column)) {
+                    return column;
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
         return identifier;
+    }
+
+    /**
+     * Get All tables for sql case sensitive
+     * @return
+     * @throws SQLException
+     */
+    public List<String> listTables() throws SQLException {
+        List<String> ret = new ArrayList<>();
+        if (tablesCache == null || tablesCache.size() == 0) {
+            try (Connection conn = getConnection();
+                    ResultSet rs = conn.getMetaData().getTables(null, null, null, null)) {
+                while (rs.next()) {
+                    String name = rs.getString("TABLE_NAME");
+                    String database = rs.getString("TABLE_SCHEM") != null ? rs.getString("TABLE_SCHEM")
+                            : rs.getString("TABLE_CAT");
+                    String cacheKey = joiner.join(config.datasourceId, config.url, database, "tables");
+                    List<String> cachedTables = tablesCache.getIfPresent(cacheKey);
+                    if (cachedTables == null) {
+                        cachedTables = new ArrayList<>();
+                        tablesCache.put(cacheKey, cachedTables);
+                        logger.debug("Add table cache for database {}", database);
+                    }
+                    if (!cachedTables.contains(name)) {
+                        cachedTables.add(name);
+                    }
+                    ret.add(name);
+                }
+            }
+        } else {
+            for (Map.Entry<String, List<String>> entry : tablesCache.asMap().entrySet()) {
+                ret.addAll(entry.getValue());
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Get All columns for sql case sensitive
+     * @return
+     * @throws SQLException
+     */
+    public List<String> listColumns() throws SQLException {
+        List<String> ret = new ArrayList<>();
+        if (columnsCache == null || columnsCache.size() == 0) {
+            CachedRowSet columnsRs = null;
+            try (Connection conn = getConnection();
+                    ResultSet rs = conn.getMetaData().getColumns(null, null, null, null)) {
+                columnsRs = cacheResultSet(rs);
+            }
+            while (columnsRs.next()) {
+                String database = columnsRs.getString("TABLE_SCHEM") != null ? columnsRs.getString("TABLE_SCHEM")
+                        : columnsRs.getString("TABLE_CAT");
+                String table = columnsRs.getString("TABLE_NAME");
+                String column = columnsRs.getString("COLUMN_NAME");
+                String cacheKey = joiner.join(config.datasourceId, config.url, database, table, "columns");
+                List<String> cachedColumns = columnsCache.getIfPresent(cacheKey);
+                if (cachedColumns == null) {
+                    cachedColumns = new ArrayList<>();
+                    columnsCache.put(cacheKey, cachedColumns);
+                    logger.debug("Add column cache for table {}.{}", database, table);
+                }
+                if (!cachedColumns.contains(column)) {
+                    cachedColumns.add(column);
+                }
+                ret.add(column);
+            }
+        } else {
+            for (Map.Entry<String, List<String>> entry : columnsCache.asMap().entrySet()) {
+                ret.addAll(entry.getValue());
+            }
+        }
+        return ret;
     }
 }
