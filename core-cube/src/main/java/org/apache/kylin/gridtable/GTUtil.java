@@ -245,6 +245,10 @@ public class GTUtil {
                 return oldCompareFilter;
             }
 
+            if (externalCol.isInnerColumn()) {
+                return ConstantTupleFilter.TRUE;
+            }
+
             Collection constValues = oldCompareFilter.getValues();
             if (constValues == null || constValues.isEmpty()) {
                 return oldCompareFilter;
