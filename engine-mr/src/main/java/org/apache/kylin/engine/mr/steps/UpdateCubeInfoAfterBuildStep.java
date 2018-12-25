@@ -126,6 +126,9 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         final TblColRef partitionCol = segment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
 
         for (TblColRef dimColRef : segment.getCubeDesc().listDimensionColumnsExcludingDerived(true)) {
+            if (!dimColRef.getType().needCompare())
+                continue;
+
             final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
             Path colDir = new Path(factColumnsInputPath, dimColRef.getIdentity());
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
