@@ -160,7 +160,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             String value = Bytes.toString(key.getBytes(), 1, key.getLength() - 1);
             logAFewRows(value);
             // if dimension col, compute max/min value
-            if (cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col)) {
+            if (cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col) && col.getType().needCompare()) {
                 if (minValue == null || col.getType().compare(minValue, value) > 0) {
                     minValue = value;
                 }

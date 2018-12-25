@@ -75,6 +75,10 @@ public class SegmentPruner {
         Map<String, DimensionRangeInfo> segDimRangInfoMap = seg.getDimensionRangeInfoMap();
         for (CompareTupleFilter comp : mustTrueCompares) {
             TblColRef col = comp.getColumn();
+
+            if (!col.getType().needCompare()) {
+                continue;
+            }
             
             DimensionRangeInfo dimRangeInfo = segDimRangInfoMap.get(col.getIdentity());
             if (dimRangeInfo == null)
