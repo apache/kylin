@@ -29,7 +29,6 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceParallelCopier.Stats;
 import org.apache.kylin.common.util.StringUtil;
@@ -176,20 +175,17 @@ public class ResourceTool {
 
     public String cat(KylinConfig config, String path) throws IOException {
         ResourceStore store = ResourceStore.getStore(config);
-        InputStream is = store.getResource(path).content();
-        BufferedReader br = null;
         StringBuffer sb = new StringBuffer();
         String line;
-        try {
-            br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+
+        try (InputStream is = store.getResource(path).content();
+                BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
                 sb.append(line).append('\n');
             }
-        } finally {
-            IOUtils.closeQuietly(is);
-            IOUtils.closeQuietly(br);
         }
+
         return sb.toString();
     }
 
