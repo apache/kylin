@@ -103,8 +103,8 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
         final ResponseResultSchema schema = new ResponseResultSchema(cubeDesc, dimensions, metrics);
         final StreamingTupleConverter tupleConverter = new StreamingTupleConverter(schema, tupleInfo);
         final RecordsSerializer recordsSerializer = new RecordsSerializer(schema);
-        final DataRequest dataRequest = createDataRequest(query.getQueryId(), cube.getName(), minSegmentTime,
-                tupleInfo, tupleFilter, dimensions, groups, metrics, storagePushDownLimit, allowStorageAggregation);
+        final DataRequest dataRequest = createDataRequest(query.getQueryId(), cube.getName(), minSegmentTime, tupleInfo,
+                tupleFilter, dimensions, groups, metrics, storagePushDownLimit, allowStorageAggregation);
 
         logger.info("Query-{}:send request to stream receivers", query.getQueryId());
         for (final ReplicaSet rs : replicaSetsOfCube) {
@@ -173,9 +173,8 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
         return receivers.get((receiverNo + 1) % receiversSize);
     }
 
-    public Iterator<ITuple> doSearch(DataRequest dataRequest, CubeInstance cube,
-            StreamingTupleConverter tupleConverter, RecordsSerializer recordsSerializer, Node receiver,
-            TupleInfo tupleInfo) throws Exception {
+    public Iterator<ITuple> doSearch(DataRequest dataRequest, CubeInstance cube, StreamingTupleConverter tupleConverter,
+            RecordsSerializer recordsSerializer, Node receiver, TupleInfo tupleInfo) throws Exception {
         String queryId = dataRequest.getQueryId();
         logger.info("send query to receiver " + receiver + " with query id:" + queryId);
         String url = "http://" + receiver.getHost() + ":" + receiver.getPort() + "/kylin/api/data/query";
@@ -235,7 +234,7 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
         }
         request.setGroups(groupSet);
 
-        request.setMetrics(metrics);
+        request.setMetrics(Lists.newArrayList(metrics));
 
         return request;
     }
