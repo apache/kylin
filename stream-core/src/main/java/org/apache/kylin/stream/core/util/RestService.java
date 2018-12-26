@@ -109,6 +109,16 @@ public class RestService {
             HttpResponse response = httpClient.execute(request);
             String msg = EntityUtils.toString(response.getEntity());
             int code = response.getStatusLine().getStatusCode();
+            if (logger.isTraceEnabled()) {
+                String displayMessage;
+                if (msg.length() > 500) {
+                    displayMessage = msg.substring(0, 500);
+                } else {
+                    displayMessage = msg;
+                }
+                logger.trace("Send request: {}. And receive response[{}] which lenght is {}, and content is {}.", code,
+                        request.getRequestLine().toString(), msg.length(), displayMessage);
+            }
             if (code != 200)
                 throw new IOException("Invalid http response " + code + " when send request: "
                         + request.getURI().toString() + "\n" + msg);

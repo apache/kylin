@@ -100,9 +100,14 @@ import com.google.common.collect.Sets;
 import javax.annotation.Nullable;
 
 /**
- * 
- * Each Kylin Streaming cluster has a coordinator to handle generic assignment, membership and streaming cube state management.
+ * <pre>
+ * Each Kylin streaming cluster has at least one coordinator processes/server, coordinator
+ * server works as the master node of streaming cluster and handle generic assignment,
+ * membership and streaming cube state management.
  *
+ * When cluster have several coordinator processes, only the leader try to answer coordinator client's
+ * request, others process will become standby/candidate, so single point of failure will be eliminated.
+ * </pre>
  */
 public class Coordinator implements CoordinatorClient {
     private static final Logger logger = LoggerFactory.getLogger(Coordinator.class);
