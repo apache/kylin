@@ -85,7 +85,7 @@ import org.apache.kylin.stream.core.storage.columnar.ColumnarStoreCache;
 import org.apache.kylin.stream.core.util.HDFSUtil;
 import org.apache.kylin.stream.core.util.NamedThreadFactory;
 import org.apache.kylin.stream.core.util.NodeUtil;
-import org.apache.kylin.stream.server.retention.PolicyInfo;
+import org.apache.kylin.stream.server.retention.RetentionPolicyInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,6 +109,9 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
     private StreamMetadataStore streamMetadataStore;
     private Node currentNode;
     private int replicaSetID = -1;
+    /**
+     * indicate whether current receiver is the leader of whole replica set
+     */
     private volatile boolean isLeader = false;
 
     private ScheduledExecutorService segmentStateCheckerExecutor;
@@ -155,21 +158,21 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
                     CubeInstance cubeInstance = segmentManager.getCubeInstance();
                     String cubeName = cubeInstance.getName();
                     try {
-                        PolicyInfo policyInfo = new PolicyInfo();
+                        RetentionPolicyInfo retentionPolicyInfo = new RetentionPolicyInfo();
                         String policyName = cubeInstance.getConfig().getStreamingSegmentRetentionPolicy();
                         Map<String, String> policyProps = cubeInstance.getConfig()
                                 .getStreamingSegmentRetentionPolicyProperties(policyName);
-                        policyInfo.setName(policyName);
-                        policyInfo.setProperties(policyProps);
+                        retentionPolicyInfo.setName(policyName);
+                        retentionPolicyInfo.setProperties(policyProps);
                         //The returned segments that require remote persisted are already sorted in ascending order by the segment start time
                         Collection<StreamingCubeSegment> segments = segmentManager.getRequireRemotePersistSegments();
                         if (!segments.isEmpty()) {
                             logger.info("found cube {} segments:{} are immutable, retention policy is: {}", cubeName,
-                                    segments, policyInfo.getName());
+                                    segments, retentionPolicyInfo.getName());
                         } else {
                             continue;
                         }
-                        handleImmutableCubeSegments(cubeName, segmentManager, segments, policyInfo);
+                        handleImmutableCubeSegments(cubeName, segmentManager, segments, retentionPolicyInfo);
                     } catch (Exception e) {
                         logger.error("error when handle cube:" + cubeName, e);
                     }
@@ -178,14 +181,21 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         }, 60, 60, TimeUnit.SECONDS);
     }
 
+    /**
+     * <pre>
+     * When segment status was changed to immutable, the leader of replica will
+     * try to upload local segment cache to remote, while the follower will remove
+     * local segment cache.
+     * </pre>
+     */
     private void handleImmutableCubeSegments(String cubeName, StreamingSegmentManager segmentManager,
-            Collection<StreamingCubeSegment> segments, PolicyInfo policyInfo) throws Exception {
-        if (PolicyInfo.FULL_BUILD_POLICY.equalsIgnoreCase(policyInfo.getName())) {
+            Collection<StreamingCubeSegment> segments, RetentionPolicyInfo retentionPolicyInfo) throws Exception {
+        if (RetentionPolicyInfo.FULL_BUILD_POLICY.equalsIgnoreCase(retentionPolicyInfo.getName())) {
             if (isLeader) {
                 sendSegmentsToFullBuild(cubeName, segmentManager, segments);
             }
         } else {
-            purgeSegments(cubeName, segments, policyInfo.getProperties());
+            purgeSegments(cubeName, segments, retentionPolicyInfo.getProperties());
         }
     }
 

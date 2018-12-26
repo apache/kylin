@@ -18,6 +18,7 @@
 
 package org.apache.kylin.stream.server.rest.controller;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
@@ -140,7 +141,7 @@ public class DataController extends BasicController {
         }
     }
 
-    private Set<FunctionDesc> convertMetrics(CubeDesc cubeDesc, Set<FunctionDesc> metrics) {
+    private Set<FunctionDesc> convertMetrics(CubeDesc cubeDesc, List<FunctionDesc> metrics) {
         Set<FunctionDesc> result = Sets.newHashSet();
         for (FunctionDesc metric : metrics) {
             result.add(findAggrFuncFromCubeDesc(cubeDesc, metric));

@@ -100,21 +100,24 @@ public class StreamingCoordinatorController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/cubes/{cubeName}/assign", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/cubes/{cubeName}/assign", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
     @ResponseBody
     public CoordinatorResponse assignStreamingCube(@PathVariable String cubeName) {
         streamingCoordinartorService.assignCube(cubeName);
         return new CoordinatorResponse();
     }
 
-    @RequestMapping(value = "/cubes/{cubeName}/unAssign", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/cubes/{cubeName}/unAssign", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
     @ResponseBody
     public CoordinatorResponse unAssignStreamingCube(@PathVariable String cubeName) {
         streamingCoordinartorService.unAssignCube(cubeName);
         return new CoordinatorResponse();
     }
 
-    @RequestMapping(value = "/cubes/{cubeName}/reAssign", method = { RequestMethod.POST })
+    @RequestMapping(value = "/cubes/{cubeName}/reAssign", method = { RequestMethod.POST }, produces = {
+            "application/json" })
     @ResponseBody
     public CoordinatorResponse reAssignStreamingCube(@PathVariable String cubeName,
             @RequestBody CubeAssignment newAssignments) {
@@ -122,49 +125,55 @@ public class StreamingCoordinatorController extends BasicController {
         return new CoordinatorResponse();
     }
 
-    @RequestMapping(value = "/replicaSet", method = { RequestMethod.POST })
+    @RequestMapping(value = "/replicaSet", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
     public CoordinatorResponse createReplicaSet(@RequestBody ReplicaSet rs) {
         streamingCoordinartorService.createReplicaSet(rs);
         return new CoordinatorResponse();
     }
 
-    @RequestMapping(value = "/replicaSet/{replicaSetID}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/replicaSet/{replicaSetID}", method = { RequestMethod.DELETE }, produces = {
+            "application/json" })
     @ResponseBody
     public CoordinatorResponse deleteReplicaSet(@PathVariable Integer replicaSetID) {
         streamingCoordinartorService.removeReplicaSet(replicaSetID);
         return new CoordinatorResponse();
     }
 
-    @RequestMapping(value = "/replicaSet/{replicaSetID}/{nodeID:.+}", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/replicaSet/{replicaSetID}/{nodeID:.+}", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
     @ResponseBody
     public CoordinatorResponse addNodeToReplicaSet(@PathVariable Integer replicaSetID, @PathVariable String nodeID) {
         streamingCoordinartorService.addNodeToReplicaSet(replicaSetID, nodeID);
         return new CoordinatorResponse();
     }
 
-    @RequestMapping(value = "/replicaSet/{replicaSetID}/{nodeID:.+}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/replicaSet/{replicaSetID}/{nodeID:.+}", method = { RequestMethod.DELETE }, produces = {
+            "application/json" })
     @ResponseBody
-    public CoordinatorResponse removeNodeFromReplicaSet(@PathVariable Integer replicaSetID, @PathVariable String nodeID) {
+    public CoordinatorResponse removeNodeFromReplicaSet(@PathVariable Integer replicaSetID,
+            @PathVariable String nodeID) {
         streamingCoordinartorService.removeNodeFromReplicaSet(replicaSetID, nodeID);
         return new CoordinatorResponse();
     }
 
-    @RequestMapping(value = "/cubes/{cubeName}/pauseConsume", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/cubes/{cubeName}/pauseConsume", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
     @ResponseBody
     public CoordinatorResponse pauseCubeConsume(@PathVariable String cubeName) {
         streamingCoordinartorService.pauseConsumers(cubeName);
         return new CoordinatorResponse();
     }
 
-    @RequestMapping(value = "/cubes/{cubeName}/resumeConsume", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/cubes/{cubeName}/resumeConsume", method = { RequestMethod.PUT }, produces = {
+            "application/json" })
     @ResponseBody
     public CoordinatorResponse resumeCubeConsume(@PathVariable String cubeName) {
         streamingCoordinartorService.resumeConsumers(cubeName);
         return new CoordinatorResponse();
     }
 
-    @RequestMapping(value = "/remoteStoreComplete", method = { RequestMethod.POST })
+    @RequestMapping(value = "/remoteStoreComplete", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
     public CoordinatorResponse segmentRemoteStoreComplete(@RequestBody RemoteStoreCompleteRequest request) {
         Pair<Long, Long> segmentRange = new Pair<>(request.getSegmentStart(), request.getSegmentEnd());
@@ -176,7 +185,8 @@ public class StreamingCoordinatorController extends BasicController {
         return new CoordinatorResponse();
     }
 
-    @RequestMapping(value = "/replicaSetLeaderChange", method = { RequestMethod.POST })
+    @RequestMapping(value = "/replicaSetLeaderChange", method = { RequestMethod.POST }, produces = {
+            "application/json" })
     @ResponseBody
     public CoordinatorResponse replicaSetLeaderChange(@RequestBody ReplicaSetLeaderChangeRequest request) {
         logger.info("receive replicaSet leader change:" + request);

@@ -149,6 +149,8 @@ public class StreamingSegmentManager implements Closeable {
                 }
 
                 activeSegments.put(segmentStart, segment);
+                // when current active segments exceed tolerance, some unpredictable accident may happend,
+                // but is should be configurable or computed on the fly
                 if (activeSegments.size() > 12) {
                     logger.warn("Two many active segments, segments size = " + activeSegments.keySet());
                 }
