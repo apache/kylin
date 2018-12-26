@@ -22,8 +22,17 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-public class PolicyInfo {
+/**
+ * Retention policy for local segment cache
+ */
+public class RetentionPolicyInfo {
+    /**
+     * outdated data will be dropped
+     */
     public static final String PURGE_POLICY = "purge";
+    /**
+     * when data become immutable, it will be presisted remotely
+     */
     public static final String FULL_BUILD_POLICY = "fullBuild";
 
     private String name;

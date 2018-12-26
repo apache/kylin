@@ -18,6 +18,7 @@
 
 package org.apache.kylin.stream.core.model;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -30,7 +31,7 @@ public class DataRequest {
     private String havingFilter;
     private Set<String> dimensions; // what contains in Pair is <tableName, columnName>
     private Set<String> groups;
-    private Set<FunctionDesc> metrics;
+    private List<FunctionDesc> metrics;
     private int storagePushDownLimit = Integer.MAX_VALUE;
     private boolean allowStorageAggregation;
 
@@ -78,11 +79,11 @@ public class DataRequest {
         this.groups = groups;
     }
 
-    public Set<FunctionDesc> getMetrics() {
+    public List<FunctionDesc> getMetrics() {
         return metrics;
     }
 
-    public void setMetrics(Set<FunctionDesc> metrics) {
+    public void setMetrics(List<FunctionDesc> metrics) {
         this.metrics = metrics;
     }
 
