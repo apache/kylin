@@ -47,6 +47,7 @@ permalink: /docs/install/configuration.html
     - [Fuzzy Query](#fuzzy)
 	- [Query Cache](#cache-config)
 	- [Query Limits](#query-limit)
+	- [Bad Query](#bad-query)
 	- [Query Pushdown](#query-pushdown)
 	- [Query rewriting](#convert-sql)
 	- [Collect Query Metrics to JMX](#jmx-metrics)
@@ -573,12 +574,22 @@ This section introduces Kylin query related configuration.
 
 ### Query Limits {#query-limit}
 
-- `kylin.query.timeout-seconds`: specifies the query timeout in seconds. The default value is 0, that is, no timeout limit on query. If the value is less than 60, it will set to seconds.
+- `kylin.query.timeout-seconds`: specifies the query timeout in seconds. The default value is 0, that is, no timeout limit on query. If the value is less than 60, it will set to 60 seconds.
 - `kylin.query.timeout-seconds-coefficient`: specifies the coefficient of the query timeout seconds. The default value is 0.5.
 - `kylin.query.max-scan-bytes`: specifies the maximum bytes scanned by the query. The default value is 0, that is, there is no limit.
 - `kylin.storage.partition.max-scan-bytes`: specifies the maximum number of bytes for the query scan. The default value is 3221225472 (bytes), which is 3GB.
 - `kylin.query.max-return-rows`: specifies the maximum number of rows returned by the query. The default value is 5000000.
 
+
+
+### Bad Query {#bad-query}
+
+The value of `kylin.query.timeout-seconds` is greater than 60 or equals 0, the max value of `kylin.query.timeout-seconds-coefficient` is the upper limit of double. The result of multiplying two properties is the interval time of detecting bad query, if it equals 0, it will be set to 60 seconds, the max value of it is the upper limit of int.
+
+- `kylin.query.badquery-stacktrace-depth`: specifies the depth of stack trace. The default value is 10.
+- `kylin.query.badquery-history-number`: specifies the showing number of bad query history. The default value is 50.
+- `kylin.query.badquery-alerting-seconds`: The default value is 90, if the time of running is greater than the value of this property, it will print the log of query firstly, including (duration, project, thread, user, query id). Whether to save the recent query, it depends on another property. Secondly, record the stack log, the depth of log depend on another property, so as to the analysis later
+- `kylin.query.badquery-persistent-enabled`: The default value is true, it will save the recent bad query, and cannot override in Cube-level
 
 
 ### Query Pushdown		{#query-pushdown}
