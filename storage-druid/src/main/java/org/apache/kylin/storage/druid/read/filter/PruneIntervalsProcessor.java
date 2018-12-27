@@ -110,7 +110,7 @@ public class PruneIntervalsProcessor implements Function<FilterCondition, Filter
         // prune segments via extracted time ranges
         RangeSet<Long> segmentRanges = TreeRangeSet.create();
         for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
-            Range<Long> segmentRange = Range.closedOpen(segment.getTSRange().start.v, segment.getTSRange().start.v);
+            Range<Long> segmentRange = Range.closedOpen(segment.getTSRange().start.v, segment.getTSRange().end.v);
             boolean containQueryRange = !result.timeRanges.subRangeSet(segmentRange).isEmpty();
             if (segment.getInputRecords() > 0 && containQueryRange) {
                 segmentRanges.add(segmentRange);
