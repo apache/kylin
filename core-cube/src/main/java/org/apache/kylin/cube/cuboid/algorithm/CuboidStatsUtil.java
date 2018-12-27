@@ -34,6 +34,10 @@ import com.google.common.collect.Maps;
 
 public class CuboidStatsUtil {
 
+    private CuboidStatsUtil() {
+        throw new IllegalStateException("Class CuboidStatsUtil is an utility class !");
+    }
+
     /**
      * According to the cuboid hit frequencies and query uncertainty ratio
      * calculate each cuboid hit probability
@@ -57,8 +61,11 @@ public class CuboidStatsUtil {
             for (Long cuboid : selectionCuboidSet) {
                 //Calculate hit probability for each cuboid
                 if (hitFrequencyMap.get(cuboid) != null) {
-                    cuboidHitProbabilityMap.put(cuboid, unitUncertainProb
-                            + (1 - queryUncertaintyRatio) * hitFrequencyMap.get(cuboid) / totalHitFrequency);
+                    if (totalHitFrequency != 0)
+                        cuboidHitProbabilityMap.put(cuboid, unitUncertainProb
+                                + (1 - queryUncertaintyRatio) * hitFrequencyMap.get(cuboid) / totalHitFrequency);
+                    else
+                        throw new ArithmeticException("/ by zero");
                 } else {
                     cuboidHitProbabilityMap.put(cuboid, unitUncertainProb);
                 }
@@ -118,8 +125,11 @@ public class CuboidStatsUtil {
                     nEffective++;
                 }
             }
-
-            srcCuboidsStats.put(cuboid, totalEstRowCount / nEffective);
+            
+            if (nEffective != 0)
+                srcCuboidsStats.put(cuboid, totalEstRowCount / nEffective);
+            else
+                throw new ArithmeticException("/ by zero");
         }
         srcCuboidsStats.remove(0L);
         adjustCuboidStats(srcCuboidsStats, statistics);
