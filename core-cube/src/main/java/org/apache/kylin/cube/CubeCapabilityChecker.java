@@ -77,8 +77,10 @@ public class CubeCapabilityChecker {
                         cube.getDescriptor().listDimensionColumnsIncludingDerived());
             }
         } else {
-            //for non query-on-facttable 
-            if (cube.getSegments().get(0).getSnapshots().containsKey(digest.factTable) || cube.getSnapshots().containsKey(digest.factTable)) {
+            //for non query-on-facttable
+            CubeSegment latestReadySeg = cube.getLatestReadySegment();
+            if ((latestReadySeg != null && latestReadySeg.getSnapshots().containsKey(digest.factTable))
+                    || cube.getSnapshots().containsKey(digest.factTable)) {
 
                 Set<TblColRef> dimCols = Sets.newHashSet(cube.getModel().findFirstTable(digest.factTable).getColumns());
 
@@ -121,19 +123,22 @@ public class CubeCapabilityChecker {
                 && MassInTupleFilter.containsMassInTupleFilter(digest.filter)) {
             logger.info(
                     "Exclude cube " + cube.getName() + " because only v2 storage + v2 query engine supports massin");
-            result.incapableCause = CapabilityResult.IncapableCause.create(CapabilityResult.IncapableType.UNSUPPORT_MASSIN);
+            result.incapableCause = CapabilityResult.IncapableCause
+                    .create(CapabilityResult.IncapableType.UNSUPPORT_MASSIN);
             return result;
         }
 
         if (digest.limitPrecedesAggr) {
             logger.info("Exclude cube " + cube.getName() + " because there's limit preceding aggregation");
-            result.incapableCause = CapabilityResult.IncapableCause.create(CapabilityResult.IncapableType.LIMIT_PRECEDE_AGGR);
+            result.incapableCause = CapabilityResult.IncapableCause
+                    .create(CapabilityResult.IncapableType.LIMIT_PRECEDE_AGGR);
             return result;
         }
 
         if (digest.isRawQuery && rootFactTable.equals(digest.factTable)) {
             if (cube.getConfig().isDisableCubeNoAggSQL()) {
-                result.incapableCause = CapabilityResult.IncapableCause.create(CapabilityResult.IncapableType.UNSUPPORT_RAWQUERY);
+                result.incapableCause = CapabilityResult.IncapableCause
+                        .create(CapabilityResult.IncapableType.UNSUPPORT_RAWQUERY);
                 return result;
             } else {
                 result.influences.add(new CapabilityInfluence() {
@@ -213,7 +218,7 @@ public class CubeCapabilityChecker {
     }
 
     private static void tryDimensionAsMeasures(Collection<FunctionDesc> unmatchedAggregations, CapabilityResult result,
-                                               Set<TblColRef> dimCols) {
+            Set<TblColRef> dimCols) {
 
         Iterator<FunctionDesc> it = unmatchedAggregations.iterator();
         while (it.hasNext()) {
@@ -242,8 +247,8 @@ public class CubeCapabilityChecker {
 
     // custom measure types can cover unmatched dimensions or measures
     private static void tryCustomMeasureTypes(Collection<TblColRef> unmatchedDimensions,
-                                              Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube,
-                                              CapabilityResult result) {
+            Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube,
+            CapabilityResult result) {
         CubeDesc cubeDesc = cube.getDescriptor();
         List<String> influencingMeasures = Lists.newArrayList();
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
