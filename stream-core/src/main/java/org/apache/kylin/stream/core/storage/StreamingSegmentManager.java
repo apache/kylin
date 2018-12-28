@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
@@ -80,8 +81,8 @@ public class StreamingSegmentManager implements Closeable {
 
     private final IConsumerProvider consumerProvider;
 
-    private final Map<Long, StreamingCubeSegment> activeSegments = Maps.newConcurrentMap();
-    private final Map<Long, StreamingCubeSegment> immutableSegments = Maps.newConcurrentMap();
+    private final Map<Long, StreamingCubeSegment> activeSegments = new ConcurrentSkipListMap<>();
+    private final Map<Long, StreamingCubeSegment> immutableSegments = new ConcurrentSkipListMap<>();
     private Map<Long, ISourcePosition> segmentSourceStartPositions = Maps.newConcurrentMap();
 
     private final ISourcePositionHandler sourcePositionHandler;
