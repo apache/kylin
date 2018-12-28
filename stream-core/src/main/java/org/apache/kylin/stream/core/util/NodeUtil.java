@@ -45,14 +45,14 @@ public class NodeUtil {
     }
 
     private static String getLocalhostName() {
-        String ip;
+        String host;
         try {
             InetAddress addr = InetAddress.getLocalHost();
-            ip = addr.getHostAddress();
+            host = addr.getCanonicalHostName();
         } catch (UnknownHostException e) {
             logger.error("Fail to get local ip address", e);
-            ip = "UNKNOWN";
+            host = "UNKNOWN";
         }
-        return ip;
+        return host;
     }
 }
