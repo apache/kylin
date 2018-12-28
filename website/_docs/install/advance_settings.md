@@ -152,3 +152,17 @@ java -classpath kylin-server-base-\<version\>.jar:kylin-core-common-\<version\>.
 * Start Kylin
 
 **Note: The feature is in beta now.**
+
+## Use Memcached as Kylin cache
+From v2.6.0, Kylin can use Memcached as cache. To enable this feature, you need to do the following steps:
+* `Prepare a Memcached cluster`
+* `Download code from the master branch, then modify applicationContext.xml content as the pictures shown below，finally package it:`
+![](/images/install/memcachedsettings.png)
+* `Add the following parameters to conf/kylin.properties:`
+{% highlight Groff markup %}
+kylin.security.profile=testing
+kylin.query.cache-enabled=true
+kylin.query.segment-cache-enabled=true
+kylin.query.lazy-query-enabled=true
+kylin.cache.memcached.hosts=memcached1:11211,memcached2:11211,memcached3:11211
+{% endhighlight %}

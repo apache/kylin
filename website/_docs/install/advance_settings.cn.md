@@ -155,3 +155,17 @@ java -classpath kylin-server-base-\<version\>.jar:kylin-core-common-\<version\>.
 *启动 Kylin
 
 *注意：该功能还在测试中，建议您谨慎使用*
+
+## 使用 Memcached 作为 Kylin 的缓存
+从2.6.0版本开始，Kylin支持使用Memcached作为缓存。若要使用该功能，您需要做以下几个步骤：
+* `准备一个 Memcached 集群`
+* `下载master分支上的源码，并将applicationContext.xml中的内容修改如下，最后打包：`
+![](/images/install/memcachedsettings.png)
+* `在配置文件中添加以下几个配置项：`
+{% highlight Groff markup %}
+kylin.security.profile=testing
+kylin.query.cache-enabled=true
+kylin.query.segment-cache-enabled=true
+kylin.query.lazy-query-enabled=true
+kylin.cache.memcached.hosts=memcached1:11211,memcached2:11211,memcached3:11211
+{% endhighlight %}
