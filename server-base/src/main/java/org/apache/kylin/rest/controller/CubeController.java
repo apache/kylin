@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -56,8 +57,6 @@ import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metrics.MetricsManager;
-import org.apache.kylin.metrics.property.QueryCubePropertyEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -70,7 +69,6 @@ import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.request.JobBuildRequest2;
 import org.apache.kylin.rest.request.JobOptimizeRequest;
 import org.apache.kylin.rest.request.LookupSnapshotBuildRequest;
-import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
 import org.apache.kylin.rest.response.CuboidTreeResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
@@ -80,7 +78,6 @@ import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ProjectService;
-import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.ValidateUtil;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
@@ -123,10 +120,6 @@ public class CubeController extends BasicController {
     @Autowired
     @Qualifier("projectService")
     private ProjectService projectService;
-
-    @Autowired
-    @Qualifier("queryService")
-    private QueryService queryService;
 
     @RequestMapping(value = "/validate/{cubeName}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
@@ -873,7 +866,7 @@ public class CubeController extends BasicController {
         Map<Long, Long> queryMatchMap = null;
         try {
             hitFrequencyMap = getTargetCuboidHitFrequency(cubeName);
-            queryMatchMap = getCuboidQueryMatchCount(cubeName);
+            queryMatchMap = cubeService.getCuboidQueryMatchCount(cubeName);
         } catch (Exception e) {
             logger.warn("Fail to query on system cube due to " + e);
         }
@@ -899,7 +892,7 @@ public class CubeController extends BasicController {
         // Get cuboid target info for displaying heat map of cuboid hit
         Map<Long, Long> displayHitFrequencyMap = getTargetCuboidHitFrequency(cubeName);
         // Get exactly matched cuboid query count
-        Map<Long, Long> queryMatchMap = getCuboidQueryMatchCount(cubeName);
+        Map<Long, Long> queryMatchMap = cubeService.getCuboidQueryMatchCount(cubeName);
 
         Set<Long> currentCuboidSet = cube.getCuboidScheduler().getAllCuboidIds();
         return cubeService.getCuboidTreeResponse(cuboidScheduler, recommendCuboidStatsMap, displayHitFrequencyMap,
@@ -909,69 +902,17 @@ public class CubeController extends BasicController {
     private Map<Long, Long> getRecommendCuboidList(CubeInstance cube) throws IOException {
         // Get cuboid source info
         Map<Long, Long> optimizeHitFrequencyMap = getSourceCuboidHitFrequency(cube.getName());
-        Map<Long, Map<Long, Long>> rollingUpCountSourceMap = getCuboidRollingUpCount(cube.getName());
+        Map<Long, Map<Long, Pair<Long, Long>>> rollingUpCountSourceMap = cubeService
+                .getCuboidRollingUpStats(cube.getName());
         return cubeService.getRecommendCuboidStatistics(cube, optimizeHitFrequencyMap, rollingUpCountSourceMap);
     }
 
     private Map<Long, Long> getSourceCuboidHitFrequency(String cubeName) {
-        return getCuboidHitFrequency(cubeName, true);
+        return cubeService.getCuboidHitFrequency(cubeName, true);
     }
 
     private Map<Long, Long> getTargetCuboidHitFrequency(String cubeName) {
-        return getCuboidHitFrequency(cubeName, false);
-    }
-
-    private Map<Long, Long> getCuboidHitFrequency(String cubeName, boolean isCuboidSource) {
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
-        String cuboidColumn = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
-        if (!isCuboidSource) {
-            cuboidColumn = QueryCubePropertyEnum.CUBOID_TARGET.toString();
-        }
-        String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
-        String table = cubeService.getMetricsManager()
-                .getSystemTableFromSubject(cubeService.getConfig().getKylinMetricsSubjectQueryCube());
-        String sql = "select " + cuboidColumn + ", sum(" + hitMeasure + ") " //
-                + "from " + table//
-                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' " //
-                + "group by " + cuboidColumn;
-        sqlRequest.setSql(sql);
-        List<List<String>> orgHitFrequency = queryService.doQueryWithCache(sqlRequest).getResults();
-        return cubeService.formatQueryCount(orgHitFrequency);
-    }
-
-    private Map<Long, Map<Long, Long>> getCuboidRollingUpCount(String cubeName) {
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
-        String cuboidSource = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
-        String cuboidTarget = QueryCubePropertyEnum.CUBOID_TARGET.toString();
-        String aggCount = QueryCubePropertyEnum.AGGR_COUNT.toString();
-        String table = cubeService.getMetricsManager()
-                .getSystemTableFromSubject(cubeService.getConfig().getKylinMetricsSubjectQueryCube());
-        String sql = "select " + cuboidSource + ", " + cuboidTarget + ", sum(" + aggCount + ")/count(*) " //
-                + "from " + table //
-                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' " //
-                + "group by " + cuboidSource + ", " + cuboidTarget;
-        sqlRequest.setSql(sql);
-        List<List<String>> orgRollingUpCount = queryService.doQueryWithCache(sqlRequest).getResults();
-        return cubeService.formatRollingUpCount(orgRollingUpCount);
-    }
-
-    private Map<Long, Long> getCuboidQueryMatchCount(String cubeName) {
-        SQLRequest sqlRequest = new SQLRequest();
-        sqlRequest.setProject(MetricsManager.SYSTEM_PROJECT);
-        String cuboidSource = QueryCubePropertyEnum.CUBOID_SOURCE.toString();
-        String hitMeasure = QueryCubePropertyEnum.WEIGHT_PER_HIT.toString();
-        String table = cubeService.getMetricsManager()
-                .getSystemTableFromSubject(cubeService.getConfig().getKylinMetricsSubjectQueryCube());
-        String sql = "select " + cuboidSource + ", sum(" + hitMeasure + ") " //
-                + "from " + table //
-                + " where " + QueryCubePropertyEnum.CUBE.toString() + " = '" + cubeName + "' and "
-                + QueryCubePropertyEnum.IF_MATCH.toString() + " = true " //
-                + "group by " + cuboidSource;
-        sqlRequest.setSql(sql);
-        List<List<String>> orgMatchHitFrequency = queryService.doQueryWithCache(sqlRequest).getResults();
-        return cubeService.formatQueryCount(orgMatchHitFrequency);
+        return cubeService.getCuboidHitFrequency(cubeName, false);
     }
 
     /**

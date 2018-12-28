@@ -316,8 +316,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getReadHdfsWorkingDirectory() {
         if (StringUtils.isNotEmpty(getHBaseClusterFs())) {
             Path workingDir = new Path(getHdfsWorkingDirectory());
-            return new Path(getHBaseClusterFs(), Path.getPathWithoutSchemeAndAuthority(workingDir)).toString()
-                    + "/";
+            return new Path(getHBaseClusterFs(), Path.getPathWithoutSchemeAndAuthority(workingDir)).toString() + "/";
         }
 
         return getHdfsWorkingDirectory();
@@ -644,8 +643,12 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cube.cubeplanner.recommend-cache-max-size", "200"));
     }
 
-    public long getCubePlannerMandatoryRollUpThreshold() {
-        return Long.parseLong(getOptional("kylin.cube.cubeplanner.mandatory-rollup-threshold", "1000"));
+    public double getCubePlannerQueryUncertaintyRatio() {
+        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.query-uncertainty-ratio", "0.1"));
+    }
+
+    public double getCubePlannerBPUSMinBenefitRatio() {
+        return Double.parseDouble(getOptional("kylin.cube.cubeplanner.bpus-min-benefit-ratio", "0.01"));
     }
 
     public int getCubePlannerAgreedyAlgorithmAutoThreshold() {
@@ -1910,12 +1913,13 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getSmallCellMetadataWarningThreshold() {
-        return Integer.parseInt(getOptional("kylin.metadata.jdbc.small-cell-meta-size-warning-threshold",
-                String.valueOf(100 << 20))); //100mb
+        return Integer.parseInt(
+                getOptional("kylin.metadata.jdbc.small-cell-meta-size-warning-threshold", String.valueOf(100 << 20))); //100mb
     }
 
     public int getSmallCellMetadataErrorThreshold() {
-        return Integer.parseInt(getOptional("kylin.metadata.jdbc.small-cell-meta-size-error-threshold", String.valueOf(1 << 30))); // 1gb
+        return Integer.parseInt(
+                getOptional("kylin.metadata.jdbc.small-cell-meta-size-error-threshold", String.valueOf(1 << 30))); // 1gb
     }
 
     public int getJdbcResourceStoreMaxCellSize() {

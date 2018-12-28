@@ -378,9 +378,9 @@ public class JDBCResourceStore extends PushdownResourceStore {
                             int result = pstat.executeUpdate();
                             if (result != 1)
                                 throw new SQLException();
-                        } catch (Throwable ex) {
+                        } catch (Exception e) {
                             pushdown.rollback();
-                            throw ex;
+                            throw e;
                         } finally {
                             pushdown.close();
                         }
@@ -400,9 +400,8 @@ public class JDBCResourceStore extends PushdownResourceStore {
 
             if (content.length > smallCellMetadataWarningThreshold) {
                 logger.warn(
-                        "A JSON metadata entry's size is not supposed to exceed kap.metadata.jdbc.small-cell-meta-size-warning-threshold("
-                                + smallCellMetadataWarningThreshold + "), resPath: " + resPath + ", actual size: "
-                                + content.length);
+                        "A JSON metadata entry's size is not supposed to exceed kap.metadata.jdbc.small-cell-meta-size-warning-threshold({}), resPath: {}, actual size: {}",
+                        smallCellMetadataWarningThreshold, resPath, content.length);
             }
             if (content.length > smallCellMetadataErrorThreshold) {
                 throw new SQLException(new IllegalArgumentException(
@@ -457,7 +456,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
                                 int result = pstat.executeUpdate();
                                 if (result != 1)
                                     throw new SQLException();
-                            } catch (Throwable e) {
+                            } catch (Exception e) {
                                 pushdown.rollback();
                                 throw e;
                             } finally {
@@ -496,7 +495,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
                                     int result2 = pstat2.executeUpdate();
                                     if (result2 != 1)
                                         throw new SQLException();
-                                } catch (Throwable e) {
+                                } catch (Exception e) {
                                     pushdown.rollback();
                                     throw e;
                                 } finally {
@@ -535,7 +534,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
             if (!skipHdfs) {
                 try {
                     deletePushdown(resPath);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     throw new SQLException(e);
                 }
             }

@@ -248,6 +248,13 @@ public class DataType implements Serializable {
         return getOrder().compare(value1,  value2);
     }
 
+    public boolean needCompare() {
+        if (isComplexType(this) || isBoolean()) {
+            return false;
+        }
+        return true;
+    }
+
     private static String replaceLegacy(String str) {
         String replace = LEGACY_TYPE_MAP.get(str);
         return replace == null ? str : replace;

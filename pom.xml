@@ -1620,9 +1620,11 @@
                   <tarLongFileMode>posix</tarLongFileMode>
                   <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
                   <appendAssemblyId>true</appendAssemblyId>
-                  <descriptor>
+                  <descriptors>
+                    <descriptor>
                     assembly/src/main/config/assemblies/source-assembly.xml
-                  </descriptor>
+                    </descriptor>
+                  </descriptors>
                   <finalName>apache-kylin-${project.version}</finalName>
                 </configuration>
               </execution>
