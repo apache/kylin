@@ -270,3 +270,10 @@ For HadoopMetrics2Reporter:
 ==============================================================================
 HadoopMetrics2Reporter is licensed under Apache 2.0 License.
 https://github.com/joshelser/dropwizard-hadoop-metrics2
+
+
+==============================================================================
+For couchbase/spymemcached:
+==============================================================================
+couchbase/spymemcached is licensed under MIT License.
+https://github.com/couchbase/spymemcached/blob/master/LICENSE.txt
