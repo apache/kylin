@@ -72,4 +72,11 @@ public class DataSourceDefTest extends LocalFileMetadataTestCase {
         Assert.assertEquals(Types.DOUBLE, (int) testingDsDef.getDataTypeValue("DOUBLE PRECISION"));
         Assert.assertEquals(Types.DOUBLE, (int) testingDsDef.getDataTypeValue("double precision"));
     }
+
+    @Test
+    public void testOverrideXml() {
+        DataSourceDefProvider provider = DataSourceDefProvider.getInstance();
+        DataSourceDef defaultDef = provider.getDefault();
+        Assert.assertEquals("true", defaultDef.getPropertyValue("metadata.enable-cache", null)); //in default.xml is false,but in default.xml.override is true
+    }
 }
