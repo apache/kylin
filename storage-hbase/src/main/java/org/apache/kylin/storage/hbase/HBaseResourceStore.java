@@ -34,6 +34,7 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Consistency;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
@@ -183,6 +184,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
 
         Table table = getConnection().getTable(TableName.valueOf(tableName));
         Scan scan = new Scan(startRow, endRow);
+        scan.setConsistency(Consistency.TIMELINE);
         scan.addColumn(B_FAMILY, B_COLUMN_TS);
         if (loadContent) {
             scan.addColumn(B_FAMILY, B_COLUMN);
@@ -199,6 +201,9 @@ public class HBaseResourceStore extends PushdownResourceStore {
             for (Result r : scanner) {
                 String path = Bytes.toString(r.getRow());
                 assert path.startsWith(lookForPrefix);
+                if (r.isStale()) {
+                    logger.warn("Kylin reads stale data at: {}", path);
+                }
                 int cut = path.indexOf('/', folderPrefix.length());
                 String directChild = cut < 0 ? path : path.substring(0, cut);
                 visitor.visit(directChild, path, r);
@@ -395,6 +400,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
         byte[] rowkey = Bytes.toBytes(path);
 
         Get get = new Get(rowkey);
+        get.setConsistency(Consistency.TIMELINE);
 
         if (!fetchContent && !fetchTimestamp) {
             get.setCheckExistenceOnly(true);
@@ -406,6 +412,9 @@ public class HBaseResourceStore extends PushdownResourceStore {
         }
 
         Result result = table.get(get);
+        if (result.isStale()) {
+            logger.warn("Kylin reads stale data at: {}", path);
+        }
         boolean exists = result != null && (!result.isEmpty() || (result.getExists() != null && result.getExists()));
         return exists ? result : null;
     }

@@ -300,11 +300,12 @@ public class HBaseConnection {
         TableName tableName = TableName.valueOf(table);
         DistributedLock lock = null;
         String lockPath = getLockPath(table);
-        
+        int replication = KylinConfig.getInstanceFromEnv().getHBaseResourceStoreReplication();
         try {
             if (tableExists(conn, table)) {
                 logger.debug("HTable '" + table + "' already exists");
-                Set<String> existingFamilies = getFamilyNames(admin.getTableDescriptor(tableName));
+                HTableDescriptor hTableDescriptor = admin.getTableDescriptor(tableName);
+                Set<String> existingFamilies = getFamilyNames(hTableDescriptor);
                 boolean wait = false;
                 for (String family : families) {
                     if (existingFamilies.contains(family) == false) {
@@ -320,6 +321,14 @@ public class HBaseConnection {
                     } catch (InterruptedException e) {
                         logger.warn("", e);
                     }
+                }
+
+                if (hTableDescriptor.getRegionReplication() != replication) {
+                    logger.debug("Update HTable '" + table + "' replication to {}", replication);
+                    hTableDescriptor.setRegionReplication(replication);
+                    admin.disableTable(tableName);
+                    admin.modifyTable(tableName, hTableDescriptor);
+                    admin.enableTable(tableName);
                 }
                 return;
             }
@@ -344,6 +353,7 @@ public class HBaseConnection {
                 }
             }
 
+            desc.setRegionReplication(replication);
             admin.createTable(desc);
 
             logger.debug("HTable '" + table + "' created");

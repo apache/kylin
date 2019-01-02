@@ -1929,4 +1929,13 @@ abstract public class KylinConfigBase implements Serializable {
     public String getJdbcSourceAdaptor() {
         return getOptional("kylin.source.jdbc.adaptor");
     }
+
+    public int getHBaseResourceStoreReplication() {
+        try {
+            return Integer.parseInt(getOptional("kylin.metadata.hbase-replication", "1"));
+        } catch (NumberFormatException e) {
+            logger.error("Invalid number of 'kylin.metadata.hbase-replication'", e);
+            return 1;
+        }
+    }
 }
