@@ -91,14 +91,17 @@ public class Broadcaster {
         this.config = config;
         this.syncErrorHandler = getSyncErrorHandler(config);
         this.announceMainLoop = Executors.newSingleThreadExecutor(new DaemonThreadFactory());
-        this.announceThreadPool = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<Runnable>(), new DaemonThreadFactory());
-
+        
         final String[] nodes = config.getRestServers();
         if (nodes == null || nodes.length < 1) {
             logger.warn("There is no available rest server; check the 'kylin.server.cluster-servers' config");
         }
         logger.debug("{} nodes in the cluster: {}", (nodes == null ? 0 : nodes.length), Arrays.toString(nodes));
+        
+        int corePoolSize = (nodes == null || nodes.length < 1)? 1 : nodes.length;
+        int maximumPoolSize = (nodes == null || nodes.length < 1)? 10 : nodes.length * 2;
+        this.announceThreadPool = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 60L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<Runnable>(), new DaemonThreadFactory());
 
         announceMainLoop.execute(new Runnable() {
             @Override
