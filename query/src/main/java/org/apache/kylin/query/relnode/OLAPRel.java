@@ -106,6 +106,10 @@ public interface OLAPRel extends RelNode {
 
         public void allocateContext() {
             OLAPContext context = new OLAPContext(ctxSeq++);
+            if (!ctxStack.isEmpty()) {
+                ctxStack.peek().disableLimitPushdown = true;
+                context.disableLimitPushdown = true;
+            }
             ctxStack.push(context);
             OLAPContext.registerContext(context);
             setNewOLAPContextRequired(false);
@@ -224,8 +228,9 @@ public interface OLAPRel extends RelNode {
         }
 
         @Override
-        public EnumerableRel.Result visitChild(EnumerableRel parent, int ordinal, EnumerableRel child, EnumerableRel.Prefer prefer) {
-            
+        public EnumerableRel.Result visitChild(EnumerableRel parent, int ordinal, EnumerableRel child,
+                EnumerableRel.Prefer prefer) {
+
             if (calciteDebug) {
                 OLAPContext context;
                 if (child instanceof OLAPRel)

@@ -1929,4 +1929,8 @@ abstract public class KylinConfigBase implements Serializable {
     public String getJdbcSourceAdaptor() {
         return getOptional("kylin.source.jdbc.adaptor");
     }
+
+    public boolean isLimitPushDownEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.storage.limit-push-down-enable", TRUE));
+    }
 }
