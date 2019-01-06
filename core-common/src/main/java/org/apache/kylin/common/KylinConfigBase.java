@@ -1795,4 +1795,8 @@ abstract public class KylinConfigBase implements Serializable {
     public int getJdbcResourceStoreMaxCellSize() {
         return Integer.parseInt(getOptional("kylin.metadata.jdbc.max-cell-size", "1048576")); // 1mb
     }
+
+    public boolean isLimitPushDownEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.storage.limit-push-down-enabled", "true"));
+    }
 }

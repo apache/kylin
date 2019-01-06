@@ -135,6 +135,7 @@ public class OLAPContext {
     public boolean hasWindow = false;
     public boolean groupByExpression = false; // checkout if group by column has operator
     public boolean afterOuterAggregate = false;
+    public boolean disableLimitPushdown = !KylinConfig.getInstanceFromEnv().isLimitPushDownEnabled();
 
     // cube metadata
     public IRealization realization;
@@ -293,6 +294,7 @@ public class OLAPContext {
         }
         fixedModel = false;
     }
+
     public void bindVariable(DataContext dataContext) {
         bindVariable(this.filter, dataContext);
     }
