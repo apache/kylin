@@ -314,8 +314,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getReadHdfsWorkingDirectory() {
         if (StringUtils.isNotEmpty(getHBaseClusterFs())) {
             Path workingDir = new Path(getHdfsWorkingDirectory());
-            return new Path(getHBaseClusterFs(), Path.getPathWithoutSchemeAndAuthority(workingDir)).toString()
-                    + "/";
+            return new Path(getHBaseClusterFs(), Path.getPathWithoutSchemeAndAuthority(workingDir)).toString() + "/";
         }
 
         return getHdfsWorkingDirectory();
@@ -1908,12 +1907,13 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getSmallCellMetadataWarningThreshold() {
-        return Integer.parseInt(getOptional("kylin.metadata.jdbc.small-cell-meta-size-warning-threshold",
-                String.valueOf(100 << 20))); //100mb
+        return Integer.parseInt(
+                getOptional("kylin.metadata.jdbc.small-cell-meta-size-warning-threshold", String.valueOf(100 << 20))); //100mb
     }
 
     public int getSmallCellMetadataErrorThreshold() {
-        return Integer.parseInt(getOptional("kylin.metadata.jdbc.small-cell-meta-size-error-threshold", String.valueOf(1 << 30))); // 1gb
+        return Integer.parseInt(
+                getOptional("kylin.metadata.jdbc.small-cell-meta-size-error-threshold", String.valueOf(1 << 30))); // 1gb
     }
 
     public int getJdbcResourceStoreMaxCellSize() {
@@ -1922,5 +1922,9 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getJdbcSourceAdaptor() {
         return getOptional("kylin.source.jdbc.adaptor");
+    }
+
+    public boolean isLimitPushDownEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.storage.limit-push-down-enable", TRUE));
     }
 }
