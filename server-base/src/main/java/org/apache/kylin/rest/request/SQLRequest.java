@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.request;
 
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
@@ -149,6 +150,6 @@ public class SQLRequest implements Serializable {
     }
 
     private String getNormProject() {
-        return project == null ? null : project.toUpperCase();
+        return project == null ? null : project.toUpperCase(Locale.ROOT);
     }
 }
