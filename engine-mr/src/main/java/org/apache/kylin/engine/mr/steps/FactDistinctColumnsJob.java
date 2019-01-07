@@ -78,6 +78,19 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             // add metadata to distributed cache
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
+            CubeSegment segment = cube.getSegmentById(segmentID);
+            if (segment == null) {
+                logger.warn("Failed to find segment {} in cube {}", segmentID, cube);
+                cube = cubeMgr.reloadCubeQuietly(cubeName);
+                segment = cube.getSegmentById(segmentID);
+            }
+            if (segment == null) {
+                logger.error("Failed to find {} in cube {}", segmentID, cube);
+                for (CubeSegment s : cube.getSegments()) {
+                    logger.error(s.getName() + " with status " + s.getStatus());
+                }
+                throw new IllegalStateException();
+            }
 
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
@@ -87,15 +100,6 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             logger.info("Starting: " + job.getJobName());
 
             setJobClasspath(job, cube.getConfig());
-
-            CubeSegment segment = cube.getSegmentById(segmentID);
-            if (segment == null) {
-                logger.error("Failed to find {} in cube {}", segmentID, cube);
-                for (CubeSegment s : cube.getSegments()) {
-                    logger.error(s.getName() + " with status " + s.getStatus());
-                }
-                throw new IllegalStateException();
-            }
 
             setupMapper(segment);
             setupReducer(output, segment);
