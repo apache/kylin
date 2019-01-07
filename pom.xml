@@ -1262,6 +1262,13 @@
         </executions>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <excludePackageNames>org.apache.kylin.*</excludePackageNames>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
         <!-- uncomment this on release -->
@@ -1380,13 +1387,6 @@
                 </configuration>
               </execution>
             </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <configuration>
-              <excludePackageNames>org.apache.kylin.*</excludePackageNames>
-            </configuration>
           </plugin>
           <plugin>
             <groupId>de.thetaphi</groupId>
