@@ -148,7 +148,7 @@ __准备__
 ssh -T git@github.com
 {% endhighlight %}
 
-基于要当前的开发分支，创建一个以 release 版本号命名的发布分支，例如，v2.5.0-release，并将其推到服务器端。  
+基于要当前的开发分支，创建一个以 release 版本号命名的发布分支，例如，v2.5.0-release (注意分支名字不能与tag名字相同)，并将其推到服务器端。  
 {% highlight bash %}
 $ git checkout -b vX.Y.Z-release
 $ git push -u origin vX.Y.Z-release
@@ -183,6 +183,7 @@ __查看 dry run 输出:__
 __运行真实的 release:__
 现在真正开始 release  
 {% highlight bash %}
+# 如果之前做了dry run，在真正开始release之前需要做清理
 # Prepare sets the version numbers, creates a tag, and pushes it to git.
 $ mvn -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:prepare
 
@@ -317,7 +318,7 @@ https://people.apache.org/keys/committer/lukehan.asc
 Please vote on releasing this package as Apache Kylin X.Y.Z.
 
 The vote is open for the next 72 hours and passes if a majority of
-at least three +1 PPMC votes are cast.
+at least three +1 PMC votes are cast.
 
 [ ] +1 Release this package as Apache Kylin X.Y.Z
 [ ]  0 I don't feel strongly about it, but I'm okay with the release
@@ -432,9 +433,11 @@ svn commit -m 'Remove old release'
 
 
 ## 更新源码
-发布后，您需要手动更新一些源代码：
+发布后，您需要更新一些源代码：
 
-* 更新 `KylinVersion` 类，将 `CURRENT_KYLIN_VERSION` 的值更改为当前开发版本。
+* 把分布分支，如v2.5.0-release，合并到开发分支中，如2.5.x，以便开始下个版本的开发。
+
+* 手动更新 `KylinVersion` 类，将 `CURRENT_KYLIN_VERSION` 的值更改为当前开发版本。
 
 ## 发布网站  
 更多细节参考[如何写文档](howto_docs.html)。

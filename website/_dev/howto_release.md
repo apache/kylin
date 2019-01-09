@@ -149,7 +149,7 @@ Make sure your can ssh connection to github:
 ssh -T git@github.com
 {% endhighlight %}
 
-Create a branch for release work from your current development branch, named with this release version, e.g. v2.5.0-release, and then push it to Apache.  
+Create a branch for release work from your current development branch, named with this release version, e.g. v2.5.0-release (should not be the same name with the tag name), and then push it to Apache.  
 {% highlight bash %}
 $ git checkout -b vX.Y.Z-release
 $ git push -u origin vX.Y.Z-release
@@ -185,6 +185,7 @@ __Check the dry run output:__
 __Run real release:__
 Now, run the release for real.  
 {% highlight bash %}
+# Note that if a dry run is done previously, need to do the cleanup first before run the release for real
 # Prepare sets the version numbers, creates a tag, and pushes it to git.
 $ mvn -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:prepare
 
@@ -307,7 +308,7 @@ Its hash is xxx.
 The artifacts to be voted on are located here:
 https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-X.Y.Z-rcN/
 
-The hashe of the artifact is as follows:
+The hash of the artifact is as follows:
 apache-kylin-X.Y.Z-source-release.zip.sha256 xxx
 
 A staged Maven repository is available for review at:
@@ -319,7 +320,7 @@ https://people.apache.org/keys/committer/lukehan.asc
 Please vote on releasing this package as Apache Kylin X.Y.Z.
 
 The vote is open for the next 72 hours and passes if a majority of
-at least three +1 PPMC votes are cast.
+at least three +1 PMC votes are cast.
 
 [ ] +1 Release this package as Apache Kylin X.Y.Z
 [ ]  0 I don't feel strongly about it, but I'm okay with the release
@@ -437,9 +438,11 @@ After publish the release, you need generate the binary packages and then put th
 
 
 ## Update source code
-After publish the release, you need to manually update some source code:
+After publish the release, you need to do update some source code:
 
-* Update `KylinVersion` class, change value of `CURRENT_KYLIN_VERSION` to current development version. 
+* Merge the release branch, e.g. v2.5.0-release, to the current development branch, e.g. 2.5.x, for preparing the next development iteration.
+
+* Manually update `KylinVersion` class, change value of `CURRENT_KYLIN_VERSION` to current development version. 
 
 ## Publishing the web site  
 Refer to [How to document](howto_docs.html) for more detail.
