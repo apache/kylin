@@ -158,6 +158,24 @@ $KYLIN_HOME/spark/sbin/start-history-server.sh hdfs://sandbox.hortonworks.com:80
 
 点击一个具体的 job，运行时的具体信息将会展示，该信息对疑难解答和性能调整有极大的帮助。
 
+在某些 Hadoop 版本上, 在 "Convert Cuboid Data to HFile" 这一步可能会遇到下面这个错误:
+
+{% highlight Groff markup %}
+Caused by: java.lang.RuntimeException: Could not create  interface org.apache.hadoop.hbase.regionserver.MetricsRegionServerSourceFactory Is the hadoop compatibility jar on the classpath?
+	at org.apache.hadoop.hbase.CompatibilitySingletonFactory.getInstance(CompatibilitySingletonFactory.java:73)
+	at org.apache.hadoop.hbase.io.MetricsIO.<init>(MetricsIO.java:31)
+	at org.apache.hadoop.hbase.io.hfile.HFile.<clinit>(HFile.java:192)
+	... 15 more
+Caused by: java.util.NoSuchElementException
+	at java.util.ServiceLoader$LazyIterator.nextService(ServiceLoader.java:365)
+	at java.util.ServiceLoader$LazyIterator.next(ServiceLoader.java:404)
+	at java.util.ServiceLoader$1.next(ServiceLoader.java:480)
+	at org.apache.hadoop.hbase.CompatibilitySingletonFactory.getInstance(CompatibilitySingletonFactory.java:59)
+	... 17 more
+{% endhighlight %}
+
+解决办法是: 将 `hbase-hadoop2-compat-*.jar` 和 `hbase-hadoop-compat-*.jar` 拷贝到 `$KYLIN_HOME/spark/jars` 目录下 (这两个 jar 文件可以从 HBase 的 lib 目录找到); 如果你已经生成了 Spark assembly jar 并上传到了 HDFS, 那么你需要重新打包上传。在这之后，重试失败的 cube 任务，应该就可以成功了。相关的 JIRA issue 是 KYLIN-3607，会在未来版本修复.
+
 ## 进一步
 
 如果您是 Kylin 的管理员但是对于 Spark 是新手，建议您浏览 [Spark 文档](https://spark.apache.org/docs/2.1.2/)，别忘记相应地去更新配置。您可以开启 Spark 的 [Dynamic Resource Allocation](https://spark.apache.org/docs/2.1.2/job-scheduling.html#dynamic-resource-allocation) ，以便其对于不同的工作负载能自动伸缩。Spark 性能依赖于集群的内存和 CPU 资源，当有复杂数据模型和巨大的数据集一次构建时 Kylin 的 Cube 构建将会是一项繁重的任务。如果您的集群资源不能够执行，Spark executors 就会抛出如 "OutOfMemorry" 这样的错误，因此请合理的使用。对于有 UHC dimension，过多组合 (例如，一个 cube 超过 12 dimensions)，或耗尽内存的度量 (Count Distinct，Top-N) 的 Cube，建议您使用 MapReduce engine。如果您的 Cube 模型较为简单，所有度量都是 SUM/MIN/MAX/COUNT，源数据规模小至中等，Spark engine 将会是个好的选择。

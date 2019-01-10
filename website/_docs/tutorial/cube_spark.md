@@ -29,7 +29,7 @@ To run Spark on Yarn, need specify **HADOOP_CONF_DIR** environment variable, whi
 
 ## Check Spark configuration
 
-Kylin embeds a Spark binary (v2.1.0) in $KYLIN_HOME/spark, all the Spark configurations can be managed in $KYLIN_HOME/conf/kylin.properties with prefix *"kylin.engine.spark-conf."*. These properties will be extracted and applied when runs submit Spark job; E.g, if you configure "kylin.engine.spark-conf.spark.executor.memory=4G", Kylin will use "--conf spark.executor.memory=4G" as parameter when execute "spark-submit".
+Kylin embeds a Spark binary (Spark v2.1 for Kylin 2.4 and 2.5) in $KYLIN_HOME/spark, all the Spark configurations can be managed in $KYLIN_HOME/conf/kylin.properties with prefix *"kylin.engine.spark-conf."*. These properties will be extracted and applied when runs submit Spark job; E.g, if you configure "kylin.engine.spark-conf.spark.executor.memory=4G", Kylin will use "--conf spark.executor.memory=4G" as parameter when execute "spark-submit".
 
 Before you run Spark cubing, suggest take a look on these configurations and do customization according to your cluster. Below is the recommended configurations:
 
@@ -151,6 +151,24 @@ In web browser, access "http://sandbox:18080" it shows the job history:
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/9_spark_history.png)
 
 Click a specific job, there you will see the detail runtime information, that is very helpful for trouble shooting and performance tuning.
+
+On some Hadoop release, you may encounter the following error in the "Convert Cuboid Data to HFile" step:
+
+{% highlight Groff markup %}
+Caused by: java.lang.RuntimeException: Could not create  interface org.apache.hadoop.hbase.regionserver.MetricsRegionServerSourceFactory Is the hadoop compatibility jar on the classpath?
+	at org.apache.hadoop.hbase.CompatibilitySingletonFactory.getInstance(CompatibilitySingletonFactory.java:73)
+	at org.apache.hadoop.hbase.io.MetricsIO.<init>(MetricsIO.java:31)
+	at org.apache.hadoop.hbase.io.hfile.HFile.<clinit>(HFile.java:192)
+	... 15 more
+Caused by: java.util.NoSuchElementException
+	at java.util.ServiceLoader$LazyIterator.nextService(ServiceLoader.java:365)
+	at java.util.ServiceLoader$LazyIterator.next(ServiceLoader.java:404)
+	at java.util.ServiceLoader$1.next(ServiceLoader.java:480)
+	at org.apache.hadoop.hbase.CompatibilitySingletonFactory.getInstance(CompatibilitySingletonFactory.java:59)
+	... 17 more
+{% endhighlight %}
+
+The workaround is: add `hbase-hadoop2-compat-*.jar` and `hbase-hadoop-compat-*.jar` into `$KYLIN_HOME/spark/jars` (the two jar files can be found in HBase's lib folder); If you already make the Spark assembly jar and uploaded to HDFS, you may need to re-package that and re-upload to HDFS. After that, resume the failed job, the job should be succesful. The related issue is KYLIN-3607 which will be fixed in later version.
 
 ## Go further
 
