@@ -470,6 +470,7 @@ public class JobService extends BasicService implements InitializingBean {
         CubingJob cubeJob = (CubingJob) job;
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        Output output = cubeJob.getOutput();
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         if (cube != null) {
@@ -487,6 +488,7 @@ public class JobService extends BasicService implements InitializingBean {
         result.setType(CubeBuildTypeEnum.BUILD);
         result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
         result.setMrWaiting(cubeJob.getMapReduceWaitTime() / 1000);
+        result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
         result.setDuration(cubeJob.getDuration() / 1000);
         for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
             AbstractExecutable task = cubeJob.getTasks().get(i);
@@ -499,7 +501,7 @@ public class JobService extends BasicService implements InitializingBean {
         if (job == null) {
             return null;
         }
-
+        Output output = job.getOutput();
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
@@ -509,6 +511,7 @@ public class JobService extends BasicService implements InitializingBean {
         result.setUuid(job.getId());
         result.setType(CubeBuildTypeEnum.BUILD);
         result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
+        result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
         result.setDuration(job.getDuration() / 1000);
         for (int i = 0; i < job.getTasks().size(); ++i) {
             AbstractExecutable task = job.getTasks().get(i);
@@ -528,6 +531,7 @@ public class JobService extends BasicService implements InitializingBean {
         }
 
         CheckpointExecutable checkpointExecutable = (CheckpointExecutable) job;
+        Output output = checkpointExecutable.getOutput();
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
@@ -537,6 +541,7 @@ public class JobService extends BasicService implements InitializingBean {
         result.setUuid(job.getId());
         result.setType(CubeBuildTypeEnum.CHECKPOINT);
         result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
+        result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
         result.setDuration(job.getDuration() / 1000);
         for (int i = 0; i < checkpointExecutable.getTasks().size(); ++i) {
             AbstractExecutable task = checkpointExecutable.getTasks().get(i);
