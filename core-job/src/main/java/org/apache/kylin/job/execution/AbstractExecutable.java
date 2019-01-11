@@ -55,6 +55,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String START_TIME = "startTime";
     protected static final String END_TIME = "endTime";
     protected static final String INTERRUPT_TIME = "interruptTime";
+    protected static final String BUILD_INSTANCE = "buildInstance";
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
     public static final String NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY = "no need to send email, user list is empty";
@@ -373,6 +374,14 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     protected long getExtraInfoAsLong(String key, long defaultValue) {
         return getExtraInfoAsLong(getOutput(), key, defaultValue);
+    }
+
+    public static String getBuildInstance(Output output) {
+        final String str = output.getExtra().get(BUILD_INSTANCE);
+        if (str != null) {
+            return str;
+        }
+        return "unknown";
     }
 
     public static long getStartTime(Output output) {

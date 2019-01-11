@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.job.exception.ExecuteException;
 
 import com.google.common.collect.Lists;
@@ -76,10 +77,11 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     @Override
     protected void onExecuteStart(ExecutableContext executableContext) {
         final long startTime = getStartTime();
+        Map<String, String> info = Maps.newHashMap();
+        info.put(BUILD_INSTANCE, DistributedLockFactory.processAndHost());
         if (startTime > 0) {
-            getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+            getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
         } else {
-            Map<String, String> info = Maps.newHashMap();
             info.put(START_TIME, Long.toString(System.currentTimeMillis()));
             getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
         }
