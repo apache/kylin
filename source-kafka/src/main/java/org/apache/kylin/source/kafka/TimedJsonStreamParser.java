@@ -43,6 +43,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.SimpleType;
 import com.google.common.collect.Lists;
+import com.google.common.base.Charsets;
 
 /**
  * An utility class which parses a JSON streaming message to a list of strings (represent a row in table).
@@ -128,6 +129,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
             messageRowList.add(streamingMessageRow);
             return messageRowList;
         } catch (IOException e) {
+            logger.error("malformed data: {}", new String(buffer.array(), Charsets.UTF_8));
             logger.error("error", e);
             throw new RuntimeException(e);
         }
