@@ -5,6 +5,13 @@ title: 下载
 
 您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](https://www.apache.org/dist/kylin/KEYS)来验证下载文件的有效性.
 
+#### v2.6.0
+- 这是2.5 版本后的一个主要发布版本，包含了94个问题的修复以及各种改进。关于具体内容请查看发布说明.
+- [发布说明](/docs/release_notes.html) and [升级指南](/docs/howto/howto_upgrade.html)
+- 源码下载: [apache-kylin-2.6.0-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.6.0/apache-kylin-2.6.0-source-release.zip) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.6.0/apache-kylin-2.6.0-source-release.zip.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.6.0/apache-kylin-2.6.0-source-release.zip.sha256)\]
+- 二进制包下载:
+  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-2.6.0-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.6.0/apache-kylin-2.6.0-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.6.0/apache-kylin-2.6.0-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.6.0/apache-kylin-2.6.0-bin-hbase1x.tar.gz.sha256)\]
+  - for CDH 5.7+ - [apache-kylin-2.6.0-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.6.0/apache-kylin-2.6.0-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-2.6.0/apache-kylin-2.6.0-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-2.6.0/apache-kylin-2.6.0-bin-cdh57.tar.gz.sha256)\]
 
 #### v2.5.2
 - 这是2.5.1 版本后的一个bugfix发布版本，包含了12 个以及各种改进。关于具体内容请查看发布说明. 
