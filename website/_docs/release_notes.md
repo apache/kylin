@@ -15,6 +15,122 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v2.6.0 - 2019-01-12
+_Tag:_ [kylin-2.6.0](https://github.com/apache/kylin/tree/kylin-2.6.0)
+This is a major release after 2.5, with more than 90 bug fixes and enhancements.
+
+__New Feature__
+
+* [KYLIN-3552] - Data Source SDK to ingest data from different JDBC sources
+
+__Improvement__
+
+* [KYLIN-1111] - Ignore unsupported hive column types when sync hive table
+* [KYLIN-2861] - For dictionary building of lookup table columns, reduce the table scan chance
+* [KYLIN-2895] - Refine query cache
+* [KYLIN-2932] - Simplify the thread model for in-memory cubing
+* [KYLIN-2972] - CacheKey from SQLRequest should ignore the case of project name
+* [KYLIN-3005] - getAllDictColumnsOnFact in CubeManager may include fact table's foreign key
+* [KYLIN-3021] - Check MapReduce job failed reason and include the diagnostics into email notification
+* [KYLIN-3272] - Upgrade Spark dependency to 2.3.2
+* [KYLIN-3326] - Better way to update migration target cluster's metadata after cube migration
+* [KYLIN-3430] - Global Dictionary Cleanup
+* [KYLIN-3445] - Upgrade checkstyle version to 8.6
+* [KYLIN-3496] - Make calcite extras props available in JDBC Driver
+* [KYLIN-3497] - Make JDBC Module more testable
+* [KYLIN-3499] - Double check timestamp in HBase when got "RetriesExhaustedException"
+* [KYLIN-3540] - Improve Mandatory Cuboid Recommendation Algorithm
+* [KYLIN-3544] - Refine guava cache for the recommended cuboids of cube planner
+* [KYLIN-3570] - Scripts to automatically build system cube
+* [KYLIN-3592] - Synchronized should be placed after static in declaration
+* [KYLIN-3597] - Fix sonar reported static code issues phase 1
+* [KYLIN-3600] - Utility classes should not have public constructors
+* [KYLIN-3602] - Enable more checkstyle rules
+* [KYLIN-3611] - Upgrade Tomcat to 7.0.91, 8.5.34 or later
+* [KYLIN-3617] - Reduce number of visiting metastore for job scheduler
+* [KYLIN-3628] - Query with lookup table always use latest snapshot
+* [KYLIN-3630] - Remove unused fields in the implementations of MeasureType
+* [KYLIN-3631] - Utilize Arrays#parallelSort for better performance
+* [KYLIN-3640] - Cube with desc broken should be able to delete
+* [KYLIN-3655] - Reinitialize CubeInstance when clear segments
+* [KYLIN-3656] - Improve HLLCounter performance
+* [KYLIN-3670] - Misspelled constant DEFAUL_JOB_CONF_SUFFIX
+* [KYLIN-3671] - Improve ResourceTool and JDBCResourceStore's performance
+* [KYLIN-3700] - Quote sql identities when creating flat table
+* [KYLIN-3707] - Add configuration for setting isolation-level for sqoop
+* [KYLIN-3720] - Add column family check when save/update cube desc
+* [KYLIN-3729] - CLUSTER BY CAST(field AS STRING) will accelerate base cuboid build with UHC global dict
+* [KYLIN-3737] - Refactor cache part for RDBMS
+* [KYLIN-3749] - Add configuration to override xml for RDBMS
+
+__Bug Fix__
+
+* [KYLIN-1819] - Exception swallowed when start DefaultScheduler fail
+* [KYLIN-2841] - LIMIT pushdown should be applied to subquery
+* [KYLIN-2973] - Potential issue of not atomically update cube instance map
+* [KYLIN-3291] - 在构建好的cube上提交逻辑相同的sql查询结果不同
+* [KYLIN-3406] - When the /execute_output/ metadata file sinking to HDFS is deleted, the monitoring page does not display any tasks.
+* [KYLIN-3416] - Kylin bitmap null pointer exception when "group by" is an expression
+* [KYLIN-3439] - configuration "kylin.web.timezone" is Inconsistent between kylin-defaults.properties and KylinConfigBase.java
+* [KYLIN-3515] - Cubing jobs may interfere with each other if use same hive view
+* [KYLIN-3574] - Unclosed lookup table in DictionaryGeneratorCLI#processSegment
+* [KYLIN-3575] - Unclosed Connection in DriverTest
+* [KYLIN-3576] - IllegalArgumentException: No enum constant org.apache.kylin.rest.service.JobService.JobSearchMode.
+* [KYLIN-3578] - Do not synchronize on the intrinsic locks of high-level concurrency objects
+* [KYLIN-3579] - entrySet iterator should be used in BPUSCalculator
+* [KYLIN-3580] - CuboidStatsUtil#complementRowCountForMandatoryCuboids uses entrySet to add elements
+* [KYLIN-3581] - compareTo method should be paired with equals method
+* [KYLIN-3586] - Boxing/unboxing to parse a primitive is suboptimal
+* [KYLIN-3588] - Potentially duplicate put to RemoveBlackoutRealizationsRule#filters map
+* [KYLIN-3589] - Different type is used to check presence in Collection in AclPermissionUtil
+* [KYLIN-3590] - Missing argument to exception message String in ModelController
+* [KYLIN-3594] - Select with Catalog fails
+* [KYLIN-3603] - HBase connection isn't closed in UpdateHTableHostCLI
+* [KYLIN-3607] - can't build cube with spark in v2.5.0
+* [KYLIN-3619] - Some job won't clean up temp directory after finished
+* [KYLIN-3620] - "--" should not be a comment marker use between single quotes in SQL
+* [KYLIN-3643] - Derived column from windowSpec not working in where
+* [KYLIN-3653] - After kylin configured with hive data source with beeline, build failed if two jobs for creating flat table submitted at same time
+* [KYLIN-3662] - exception message "Cannot find project '%s'." should be formated
+* [KYLIN-3663] - Failed to delete project when project has more than one table
+* [KYLIN-3665] - Partition time column may never be added
+* [KYLIN-3680] - Spark cubing failed with JDBC resource
+* [KYLIN-3684] - [Script] find-hive-dependency.sh HIVE_LIB is not set or not resolved correctly
+* [KYLIN-3695] - Error while creating hive table through Kylin build cube with mysql imported tables
+* [KYLIN-3697] - check port availability when starts kylin instance
+* [KYLIN-3699] - SparkCubingByLayer. Root cause: null
+* [KYLIN-3710] - JDBC data source not support Spark cubing
+* [KYLIN-3715] - ProjectL2Cache don't be invalidated when adding override config in cube level
+* [KYLIN-3718] - Segments in volatile range is more than designated value
+* [KYLIN-3721] - Failed to get source table when write the wrong password at the first time
+* [KYLIN-3722] - Error Limit Push Down in Join Related Query
+* [KYLIN-3724] - Kylin IT test sql is unreasonable
+* [KYLIN-3731] - java.lang.IllegalArgumentException: Unsupported data type array<string> at
+* [KYLIN-3734] - UT Failed:Invalid path string "/kylin/../examples/test_metadata/job_engine/global_job_engine_lock"
+* [KYLIN-3740] - system_cube构建出现bug
+* [KYLIN-3748] - No realization found exception thrown when a ready cube is building
+* [KYLIN-3752] - NullPointerException in the first cubing step：org.apache.kylin.source.hive.CreateFlatHiveTableStep.getCubeSpecificConfig(CreateFlatHiveTableStep.java:92)
+
+__Task__
+
+* [KYLIN-3232] - Need document for ops tools
+* [KYLIN-3290] - Avoid calling Class#newInstance
+* [KYLIN-3559] - Use Splitter for splitting String
+* [KYLIN-3560] - Should not depend on personal repository
+* [KYLIN-3642] - Exclude conflict jar
+
+__Sub-task__
+
+* [KYLIN-2894] - Change the query cache expiration strategy by signature checking
+* [KYLIN-2896] - Refine query exception cache
+* [KYLIN-2897] - Improve the query execution for a set of duplicate queries in a short period
+* [KYLIN-2898] - Introduce memcached as a distributed cache for queries
+* [KYLIN-2899] - Introduce segment level query cache
+
+__Test__
+
+* [KYLIN-3365] - Add unit test for the coprocessor code, CubeVisitService
+
 ## v2.5.2 - 2018-12-04
 _Tag:_ [kylin-2.5.2](https://github.com/apache/kylin/tree/kylin-2.5.2)
 This is a bugfix release after 2.5.1, with 12 bug fixes and enhancement. 
