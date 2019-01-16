@@ -119,6 +119,18 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         // compress to zip package
         if (shouldCompress) {
             File tempZipFile = File.createTempFile(packageType + "_", ".zip");
+            File tempZipDir = new File(exportDest + packageName + "/");
+            FileUtils.forceMkdir(tempZipDir);
+            for (File file : exportDir.listFiles()) {
+                if (file.getAbsolutePath().equals(tempZipDir.getAbsolutePath())) {
+                    continue;
+                }
+                if (file.isDirectory()) {
+                    FileUtils.moveDirectoryToDirectory(file, tempZipDir, false);
+                } else {
+                    FileUtils.moveFileToDirectory(file, tempZipDir, false);
+                }
+            }
             ZipFileUtils.compressZipFile(exportDir.getAbsolutePath(), tempZipFile.getAbsolutePath());
             FileUtils.cleanDirectory(exportDir);
 
