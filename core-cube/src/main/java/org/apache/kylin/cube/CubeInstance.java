@@ -23,6 +23,7 @@ import static org.apache.kylin.cube.cuboid.CuboidModeEnum.CURRENT;
 import static org.apache.kylin.cube.cuboid.CuboidModeEnum.RECOMMEND;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -253,7 +254,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (getClass() != obj.getClass())
+        if (obj == null || getClass() != obj.getClass())
             return false;
         CubeInstance other = (CubeInstance) obj;
         if (name == null) {
@@ -451,7 +452,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         byte[] uncompressed;
         try {
             uncompressed = CompressionUtils.decompress(cuboidBytes);
-            String str = new String(uncompressed, "UTF-8");
+            String str = new String(uncompressed, StandardCharsets.UTF_8);
             TypeReference<Map<Long, Long>> typeRef = new TypeReference<Map<Long, Long>>() {
             };
             Map<Long, Long> cuboids = JsonUtil.readValue(str, typeRef);
@@ -471,7 +472,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         try {
             String str = JsonUtil.writeValueAsString(cuboids);
-            byte[] compressed = CompressionUtils.compress(str.getBytes("UTF-8"));
+            byte[] compressed = CompressionUtils.compress(str.getBytes(StandardCharsets.UTF_8));
             cuboidBytes = compressed;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -484,7 +485,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         byte[] uncompressed;
         try {
             uncompressed = CompressionUtils.decompress(cuboidBytesRecommend);
-            String str = new String(uncompressed, "UTF-8");
+            String str = new String(uncompressed, StandardCharsets.UTF_8);
             TypeReference<Set<Long>> typeRef = new TypeReference<Set<Long>>() {
             };
             Set<Long> cuboids = JsonUtil.readValue(str, typeRef);
@@ -503,7 +504,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
         try {
             String str = JsonUtil.writeValueAsString(cuboids);
-            byte[] compressed = CompressionUtils.compress(str.getBytes("UTF-8"));
+            byte[] compressed = CompressionUtils.compress(str.getBytes(StandardCharsets.UTF_8));
             cuboidBytesRecommend = compressed;
         } catch (IOException e) {
             throw new RuntimeException(e);
