@@ -19,7 +19,6 @@
 package org.apache.kylin.cube.cuboid.algorithm.greedy;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -94,7 +93,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
                     benefitPolicy.propagateAggregationCost(best.getCuboidId(), selected);
                     round++;
                     if (logger.isTraceEnabled()) {
-                        logger.trace(String.format(Locale.ROOT, "Recommend in round %d : %s", round, best.toString()));
+                        logger.trace("Recommend in round {} : {}", round, best.toString());
                     }
                 } else {
                     doesRemainSpace = false;
@@ -113,14 +112,14 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
         logger.info("Greedy Algorithm finished.");
 
         if (logger.isTraceEnabled()) {
-            logger.trace(String.format(Locale.ROOT, "Excluded cuboidId size:%d", excluded.size()));
+            logger.trace("Excluded cuboidId size: {}", excluded.size());
             logger.trace("Excluded cuboidId detail:");
             for (Long cuboid : excluded) {
-                logger.trace(String.format(Locale.ROOT, "cuboidId %d and Cost: %d and Space: %f", cuboid,
-                        cuboidStats.getCuboidQueryCost(cuboid), cuboidStats.getCuboidSize(cuboid)));
+                logger.trace("cuboidId {} and Cost: {} and Space: {}", cuboid,
+                        cuboidStats.getCuboidQueryCost(cuboid), cuboidStats.getCuboidSize(cuboid));
             }
-            logger.trace(String.format(Locale.ROOT, "Total Space:%f", spaceLimit - remainingSpace));
-            logger.trace(String.format(Locale.ROOT, "Space Expansion Rate:%f", (spaceLimit - remainingSpace) / cuboidStats.getBaseCuboidSize()));
+            logger.trace("Total Space: {}", spaceLimit - remainingSpace);
+            logger.trace("Space Expansion Rate: {}", (spaceLimit - remainingSpace) / cuboidStats.getBaseCuboidSize());
         }
         return Lists.newArrayList(selected);
     }
