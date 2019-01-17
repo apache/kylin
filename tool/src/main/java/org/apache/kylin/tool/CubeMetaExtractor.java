@@ -356,6 +356,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             addStreamingConfig(cube);
             // add cube
             addRequired(CubeDesc.concatResourcePath(cubeDesc.getName()));
+            // add project
+            addRequired(ProjectInstance.concatResourcePath(cube.getProject()));
             //add Segments and Jobs
             addSegAndJob(cube);
 
