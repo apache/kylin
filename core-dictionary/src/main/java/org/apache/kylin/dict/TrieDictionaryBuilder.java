@@ -444,8 +444,8 @@ public class TrieDictionaryBuilder<T> {
             headOut.write(sizeNoValuesBeneath);
             positiveShortPreCheck(baseId, "baseId");
             headOut.writeShort(baseId);
-            positiveShortPreCheck(stats.maxValueLength, "stats.maxValueLength");
-            headOut.writeShort(stats.maxValueLength);
+            positiveIntPreCheck(stats.maxValueLength, "stats.maxValueLength");
+            headOut.writeInt(stats.maxValueLength);
             headOut.writeUTF(bytesConverter == null ? "" : bytesConverter.getClass().getName());
             headOut.close();
             head = byteBuf.toByteArray();
@@ -487,6 +487,11 @@ public class TrieDictionaryBuilder<T> {
 
     private void positiveShortPreCheck(int i, String fieldName) {
         if (!BytesUtil.isPositiveShort(i)) {
+            throw new IllegalStateException(fieldName + " is not positive short, usually caused by too long dict value.");
+        }
+    }
+    private void positiveIntPreCheck(int i, String fieldName) {
+        if (i >= Integer.MAX_VALUE) {
             throw new IllegalStateException(fieldName + " is not positive short, usually caused by too long dict value.");
         }
     }
