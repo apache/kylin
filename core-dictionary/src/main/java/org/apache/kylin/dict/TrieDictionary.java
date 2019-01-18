@@ -94,7 +94,7 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
             this.maxValueLength = headIn.readInt();
             if (maxValueLength < 0) {
                 throw new IllegalStateException("maxValueLength is negative (" + maxValueLength
-                        + "). Dict value is too long, whose length is larger than " + Short.MAX_VALUE);
+                        + "). Dict value is too long, whose length is larger than " + Integer.MAX_VALUE);
             }
             String converterName = headIn.readUTF();
 
