@@ -145,13 +145,11 @@ public class SparkUtil {
 
     public static JavaRDD<String[]> hiveRecordInputRDD(boolean isSequenceFile, JavaSparkContext sc, String inputPath, String hiveTable) throws IOException {
         JavaRDD<String[]> recordRDD;
-
-        if (isSequenceFile && HadoopUtil.isSequenceDir(sc.hadoopConfiguration(), new Path(inputPath))) {
+        if (hiveTable == null && isSequenceFile && HadoopUtil.isSequenceDir(sc.hadoopConfiguration(), new Path(inputPath))) {
             recordRDD = getSequenceFormatHiveInput(sc, inputPath);
         } else {
-            recordRDD = getOtherFormatHiveInput(sc, hiveTable);
+            recordRDD = getHiveInput(sc, hiveTable);
         }
-
         return recordRDD;
     }
 
@@ -166,7 +164,7 @@ public class SparkUtil {
                 });
     }
 
-    private static JavaRDD<String[]> getOtherFormatHiveInput(JavaSparkContext sc, String hiveTable) {
+    private static JavaRDD<String[]> getHiveInput(JavaSparkContext sc, String hiveTable) {
         SparkSession sparkSession = SparkSession.builder().config(sc.getConf()).enableHiveSupport().getOrCreate();
         final Dataset intermediateTable = sparkSession.table(hiveTable);
         return intermediateTable.javaRDD().map(new Function<Row, String[]>() {
