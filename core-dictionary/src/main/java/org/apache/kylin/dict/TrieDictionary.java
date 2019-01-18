@@ -89,6 +89,35 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
         init(trieBytes);
     }
 
+    private String readConverterName(DataInputStream headIn) throws Exception{
+        try {
+            this.maxValueLength = headIn.readInt();
+            if (maxValueLength < 0) {
+                throw new IllegalStateException("maxValueLength is negative (" + maxValueLength
+                        + "). Dict value is too long, whose length is larger than " + Short.MAX_VALUE);
+            }
+            String converterName = headIn.readUTF();
+
+            return converterName;
+        } catch (Exception e) {
+            headIn.reset();
+
+            this.headSize = headIn.readShort();
+            this.bodyLen = headIn.readInt();
+            this.sizeChildOffset = headIn.read();
+            this.sizeNoValuesBeneath = headIn.read();
+            this.baseId = headIn.readShort();
+            this.maxValueLength = headIn.readShort();
+            if (maxValueLength < 0) {
+                throw new IllegalStateException("maxValueLength is negative (" + maxValueLength
+                        + "). Dict value is too long, whose length is larger than " + Short.MAX_VALUE);
+            }
+            String converterName = headIn.readUTF();
+
+            return converterName;
+        }
+    }
+    
     private void init(byte[] trieBytes) {
         this.trieBytes = trieBytes;
         if (BytesUtil.compareBytes(MAGIC, 0, trieBytes, 0, MAGIC.length) != 0)
@@ -102,13 +131,9 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
             this.sizeChildOffset = headIn.read();
             this.sizeNoValuesBeneath = headIn.read();
             this.baseId = headIn.readShort();
-            this.maxValueLength = headIn.readShort();
-            if (maxValueLength < 0) {
-                throw new IllegalStateException("maxValueLength is negative (" + maxValueLength
-                        + "). Dict value is too long, whose length is larger than " + Short.MAX_VALUE);
-            }
-
-            String converterName = headIn.readUTF();
+            
+            String converterName = readConverterName(headIn);
+            
             if (converterName.isEmpty() == false)
                 setConverterByName(converterName);
 
