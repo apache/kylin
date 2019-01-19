@@ -23,6 +23,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,7 @@ public class QueryContextFacade {
     private static final Logger logger = LoggerFactory.getLogger(QueryContextFacade.class);
 
     private static final ConcurrentMap<String, QueryContext> RUNNING_CTX_MAP = Maps.newConcurrentMap();
-    private static final ThreadLocal<QueryContext> CURRENT_CTX = new ThreadLocal<QueryContext>() {
+    private static final InternalThreadLocal<QueryContext> CURRENT_CTX = new InternalThreadLocal<QueryContext>() {
         @Override
         protected QueryContext initialValue() {
             QueryContext queryContext = new QueryContext();

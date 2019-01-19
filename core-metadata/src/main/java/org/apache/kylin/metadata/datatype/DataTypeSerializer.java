@@ -23,6 +23,7 @@ import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.BytesSerializer;
 
 import com.google.common.collect.Maps;
@@ -34,7 +35,7 @@ import com.google.common.collect.Maps;
 abstract public class DataTypeSerializer<T> implements BytesSerializer<T>, java.io.Serializable {
 
     final static Map<String, Class<?>> implementations = Maps.newHashMap();
-    protected transient ThreadLocal current = new ThreadLocal();
+    protected transient InternalThreadLocal current = new InternalThreadLocal();
     static {
         implementations.put("char", StringSerializer.class);
         implementations.put("varchar", StringSerializer.class);
@@ -118,6 +119,6 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T>, java.
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        current = new ThreadLocal();
+        current = new InternalThreadLocal();
     }
 }

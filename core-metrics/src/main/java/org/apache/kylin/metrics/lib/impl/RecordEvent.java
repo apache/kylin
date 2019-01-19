@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metrics.lib.Record;
 
@@ -35,7 +36,7 @@ import com.google.common.collect.Maps;
 
 public class RecordEvent implements Record, Map<String, Object>, Serializable {
 
-    private static final ThreadLocal<ByteArrayOutputStream> _localBaos = new ThreadLocal<ByteArrayOutputStream>();
+    private static final InternalThreadLocal<ByteArrayOutputStream> _localBaos = new InternalThreadLocal<ByteArrayOutputStream>();
 
     static String localHostname;
     static {

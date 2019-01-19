@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.slf4j.Logger;
@@ -67,7 +68,7 @@ public class KylinConfig extends KylinConfigBase {
     private static OrderedProperties defaultOrderedProperties = new OrderedProperties();
 
     // thread-local instances, will override SYS_ENV_INSTANCE
-    private static transient ThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new ThreadLocal<>();
+    private static transient InternalThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new InternalThreadLocal<>();
 
     static {
         /*
@@ -151,7 +152,7 @@ public class KylinConfig extends KylinConfigBase {
             logger.info("Destroy KylinConfig");
             dumpStackTrace();
             SYS_ENV_INSTANCE = null;
-            THREAD_ENV_INSTANCE = new ThreadLocal<>();
+            THREAD_ENV_INSTANCE = new InternalThreadLocal<>();
         }
     }
 
