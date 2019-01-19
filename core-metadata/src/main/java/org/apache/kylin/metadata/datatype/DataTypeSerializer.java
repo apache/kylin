@@ -23,6 +23,7 @@ import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.apache.kylin.common.util.BytesSerializer;
 
 import com.google.common.collect.Maps;

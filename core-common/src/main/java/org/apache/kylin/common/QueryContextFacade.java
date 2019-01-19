@@ -23,6 +23,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -37,6 +37,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

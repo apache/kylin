@@ -20,6 +20,7 @@ package org.apache.kylin.measure.percentile;
 
 import java.nio.ByteBuffer;
 
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 

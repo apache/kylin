@@ -20,6 +20,7 @@ package org.apache.kylin.util;
 
 import java.util.BitSet;
 
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import com.esotericsoftware.kryo.Kryo;

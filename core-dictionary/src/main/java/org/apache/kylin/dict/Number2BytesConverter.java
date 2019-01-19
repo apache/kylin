@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.apache.kylin.common.util.Bytes;
 
 import com.google.common.collect.Maps;

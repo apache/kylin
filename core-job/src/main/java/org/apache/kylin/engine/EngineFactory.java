@@ -19,6 +19,7 @@
 package org.apache.kylin.engine;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.msg;
 
+import org.apache.kylin.common.threadlocal.ThreadLocal;
+
 /**
  * Created by luwei on 17-4-12.
  */

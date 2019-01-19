@@ -26,6 +26,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.apache.kylin.common.util.Pair;
 
 import com.google.common.collect.Maps;

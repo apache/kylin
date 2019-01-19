@@ -20,6 +20,7 @@ package org.apache.kylin.common.metrics.perflog;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

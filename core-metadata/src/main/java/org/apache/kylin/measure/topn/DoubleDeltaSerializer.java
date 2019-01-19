@@ -17,6 +17,8 @@
  */
 package org.apache.kylin.measure.topn;
 
+import org.apache.kylin.common.threadlocal.ThreadLocal;
+
 import java.nio.ByteBuffer;
 
 /**

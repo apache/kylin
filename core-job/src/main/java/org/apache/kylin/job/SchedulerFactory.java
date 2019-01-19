@@ -18,6 +18,7 @@
 package org.apache.kylin.job;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.apache.kylin.common.util.ImplementationSwitch;
 
 public class SchedulerFactory {

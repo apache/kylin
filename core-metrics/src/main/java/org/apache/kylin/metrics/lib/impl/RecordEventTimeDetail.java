@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 
 public class RecordEventTimeDetail {
     private static final TimeZone timeZone;

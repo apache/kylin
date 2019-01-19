@@ -39,6 +39,7 @@ import org.apache.kylin.common.metrics.common.Metrics;
 import org.apache.kylin.common.metrics.common.MetricsConstant;
 import org.apache.kylin.common.metrics.common.MetricsScope;
 import org.apache.kylin.common.metrics.common.MetricsVariable;
+import org.apache.kylin.common.threadlocal.ThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
