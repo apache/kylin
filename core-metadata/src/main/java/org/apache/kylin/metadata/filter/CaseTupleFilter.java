@@ -149,6 +149,11 @@ public class CaseTupleFilter extends TupleFilter implements IOptimizeableTupleFi
     }
 
     @Override
+    public boolean canPushDown() {
+        return true;
+    }
+
+    @Override
     public TupleFilter acceptOptimizeTransformer(FilterOptimizeTransformer transformer) {
         List<TupleFilter> newChildren = Lists.newArrayList();
         for (TupleFilter child : this.getChildren()) {
@@ -165,4 +170,7 @@ public class CaseTupleFilter extends TupleFilter implements IOptimizeableTupleFi
         return transformer.visit(this);
     }
 
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitCase(this);
+    }
 }

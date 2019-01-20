@@ -18,18 +18,8 @@
 
 package org.apache.kylin.storage.parquet.cube;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryBase;
+import org.apache.kylin.metadata.tuple.Tuple;
 
-public class CubeStorageQuery extends GTCubeStorageQueryBase {
-
-    public CubeStorageQuery(CubeInstance cube) {
-        super(cube);
-    }
-
-    @Override
-    protected String getGTStorage() {
-        return KylinConfig.getInstanceFromEnv().getSparkCubeGTStorage();
-    }
+public interface ColumnFiller {
+    void fill(Object[] row, Tuple tuple);
 }

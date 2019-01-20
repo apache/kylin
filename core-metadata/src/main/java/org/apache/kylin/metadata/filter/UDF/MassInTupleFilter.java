@@ -158,6 +158,11 @@ public class MassInTupleFilter extends FunctionTupleFilter {
         return "1=1";
     }
 
+    @Override
+    public boolean canPushDown() {
+        return false;
+    }
+
     public static boolean containsMassInTupleFilter(TupleFilter filter) {
         if (filter == null)
             return false;

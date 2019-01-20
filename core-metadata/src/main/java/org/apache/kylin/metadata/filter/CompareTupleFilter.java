@@ -109,6 +109,10 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
         return operator == FilterOperatorEnum.LT || operator == FilterOperatorEnum.GT || operator == FilterOperatorEnum.LTE || operator == FilterOperatorEnum.GTE;
     }
 
+    public boolean columnMatchSingleValue() {
+        return column != null && operator == FilterOperatorEnum.EQ && conditionValues.size() == 1;
+    }
+
     @Override
     public Set<?> getValues() {
         return conditionValues;
@@ -120,6 +124,10 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
 
     public TblColRef getColumn() {
         return column;
+    }
+
+    public TblColRef getSecondColumn() {
+        return secondColumn;
     }
 
     public FunctionTupleFilter getFunction() {
@@ -305,6 +313,13 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
     }
 
     @Override
+    public boolean canPushDown() {
+        return ((column != null || (function != null && function.canPushDown()))
+                && (!conditionValues.isEmpty() || !dynamicVariables.isEmpty() || operator == FilterOperatorEnum.ISNOTNULL || operator == FilterOperatorEnum.ISNULL)
+                && (secondColumn == null || !secondColumn.isInnerColumn()));
+    }
+
+    @Override
     public TupleFilter acceptOptimizeTransformer(FilterOptimizeTransformer transformer) {
         return transformer.visit(this);
     }
@@ -345,5 +360,10 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
         result = 31 * result + (firstCondValue != null ? firstCondValue.hashCode() : 0);
         result = 31 * result + (dynamicVariables != null ? dynamicVariables.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitCompare(this);
     }
 }

@@ -105,5 +105,10 @@ public class KylinQueryTimeoutTest extends LocalFileMetadataTestCase {
             }
             return null;
         }
+
+        @Override
+        public boolean keepRuntimeFilter() {
+            return true;
+        }
     }
 }

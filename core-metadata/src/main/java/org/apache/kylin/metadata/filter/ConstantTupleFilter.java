@@ -145,6 +145,11 @@ public class ConstantTupleFilter extends TupleFilter {
         return result;
     }
 
+    @Override
+    public boolean canPushDown() {
+        return true;
+    }
+
     @Override public boolean equals(Object o) {
         if (this == o)
             return true;
@@ -158,5 +163,10 @@ public class ConstantTupleFilter extends TupleFilter {
 
     @Override public int hashCode() {
         return constantValues.hashCode();
+    }
+
+    @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitConstant(this);
     }
 }

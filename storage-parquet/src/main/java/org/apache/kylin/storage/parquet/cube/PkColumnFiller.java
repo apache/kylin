@@ -16,17 +16,22 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.storage.parquet.spark.gtscanner;
+package org.apache.kylin.storage.parquet.cube;
 
-import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.metadata.tuple.Tuple;
 
-import java.util.Iterator;
+import java.util.Objects;
 
-public class ParquetRecordGTScanner4Cube extends ParquetRecordGTScanner {
-    public ParquetRecordGTScanner4Cube(GTInfo info, Iterator<Object[]> iterator, GTScanRequest scanRequest,
-            long maxScannedBytes) {
-        super(info, iterator, scanRequest, maxScannedBytes);
+public class PkColumnFiller implements ColumnFiller {
+    private final DerivedIndexMapping mapping;
+
+    PkColumnFiller(DerivedIndexMapping mapping) {
+        this.mapping = mapping;
     }
 
+    @Override
+    public void fill(Object[] row, Tuple tuple) {
+        Object value = row[mapping.getHostIndex(0)];
+        tuple.setDimensionValue(mapping.getTupleIndex(0), Objects.toString(value, null));
+    }
 }

@@ -61,4 +61,14 @@ public class UnsupportedTupleFilter extends TupleFilter {
     public String toSQL() {
         return "1=1";
     }
+
+    @Override
+    public boolean canPushDown() {
+        return false;
+    }
+
+    @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitUnsupported(this);
+    }
 }

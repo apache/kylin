@@ -201,11 +201,17 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
         if (getInput() instanceof OLAPFilterRel) {
-            // merge project & filter
             OLAPFilterRel filter = (OLAPFilterRel) getInput();
-            RelNode inputOfFilter = inputs.get(0).getInput(0);
+            RexNode condition = null;
+            RelNode inputOfFilter = inputs.get(0);
+
+            if (filter.hasRuntimeFilter()) { // merge project & filter
+                condition = filter.getCondition();
+                inputOfFilter = inputOfFilter.getInput(0);
+            }
+
             RexProgram program = RexProgram.create(inputOfFilter.getRowType(), this.rewriteProjects,
-                    filter.getCondition(), this.rowType, getCluster().getRexBuilder());
+                    condition, this.rowType, getCluster().getRexBuilder());
             return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
                     inputOfFilter, program);
         } else {

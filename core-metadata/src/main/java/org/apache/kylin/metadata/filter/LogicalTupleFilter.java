@@ -180,6 +180,11 @@ public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupl
     }
 
     @Override
+    public boolean canPushDown() {
+        return true;
+    }
+
+    @Override
     public TupleFilter acceptOptimizeTransformer(FilterOptimizeTransformer transformer) {
         List<TupleFilter> newChildren = Lists.newArrayList();
         for (TupleFilter child : this.getChildren()) {
@@ -220,5 +225,10 @@ public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupl
     @Override
     public int hashCode() {
         return (operator == null ? 0 : operator.hashCode()) + 31 * this.children.hashCode();
+    }
+
+    @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitLogical(this);
     }
 }

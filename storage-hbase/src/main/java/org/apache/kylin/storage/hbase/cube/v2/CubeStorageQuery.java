@@ -42,4 +42,9 @@ public class CubeStorageQuery extends GTCubeStorageQueryBase {
             return KylinConfig.getInstanceFromEnv().getDefaultIGTStorage();
         }
     }
+
+    @Override
+    public boolean keepRuntimeFilter() {
+        return true;
+    }
 }

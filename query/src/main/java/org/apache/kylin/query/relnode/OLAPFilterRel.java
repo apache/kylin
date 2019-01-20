@@ -47,6 +47,8 @@ import org.apache.kylin.query.relnode.visitor.TupleFilterVisitor;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import org.apache.kylin.storage.IStorageQuery;
+import org.apache.kylin.storage.StorageFactory;
 
 /**
  */
@@ -54,6 +56,8 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
 
     ColumnRowType columnRowType;
     OLAPContext context;
+    private boolean afterAggregate;
+    private boolean hasRuntimeFilter = true;
 
     public OLAPFilterRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
         super(cluster, traits, child, condition);
@@ -79,7 +83,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
 
         this.columnRowType = buildColumnRowType();
         this.context = implementor.getContext();
-
+        this.afterAggregate = context.afterAggregate;
         // only translate where clause and don't translate having clause
         if (!context.afterAggregate) {
             translateFilter(context);
@@ -146,6 +150,17 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
 
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
+        EnumerableRel input = sole(inputs);
+        final boolean canPushDown = TupleFilter.canPushDownRecursively(context.filter);
+        final boolean overCube = !afterAggregate && context.realization != null && context.realization.getModel().isFactTable(context.firstTableScan.getTableName()) && canPushDown;
+        if (overCube) {
+            IStorageQuery storageQuery = StorageFactory.createQuery(context.realization);
+            if (!storageQuery.keepRuntimeFilter()) {
+                hasRuntimeFilter = false;
+                return input;
+            }
+        }
+
         // keep it for having clause
         RexBuilder rexBuilder = getCluster().getRexBuilder();
         RelDataType inputRowType = getInput().getRowType();
@@ -193,5 +208,9 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw).item("ctx",
                 context == null ? "" : String.valueOf(context.id) + "@" + context.realization);
+    }
+
+    public boolean hasRuntimeFilter() {
+        return hasRuntimeFilter;
     }
 }

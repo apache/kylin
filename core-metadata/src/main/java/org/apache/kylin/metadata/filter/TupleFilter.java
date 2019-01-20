@@ -393,6 +393,8 @@ public abstract class TupleFilter {
 
     public abstract void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer);
 
+    public abstract <R> R accept(TupleFilterVisitor<R> visitor);
+
     public static boolean isEvaluableRecursively(TupleFilter filter) {
         if (filter == null)
             return true;
@@ -423,4 +425,19 @@ public abstract class TupleFilter {
 
     public abstract String toSQL();
 
+    public abstract boolean canPushDown();
+
+    public static boolean canPushDownRecursively(TupleFilter filter) {
+        if (filter == null)
+            return true;
+
+        if (!filter.canPushDown())
+            return false;
+
+        for (TupleFilter child : filter.getChildren()) {
+            if (!canPushDownRecursively(child))
+                return false;
+        }
+        return true;
+    }
 }

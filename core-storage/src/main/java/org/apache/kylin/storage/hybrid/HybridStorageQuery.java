@@ -58,4 +58,9 @@ public class HybridStorageQuery implements IStorageQuery {
         return new CompoundTupleIterator(tupleIterators);
     }
 
+    @Override
+    public boolean keepRuntimeFilter() {
+        return true;
+    }
+
 }

@@ -76,6 +76,14 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
         return name;
     }
 
+    public int getColPosition() {
+        return colPosition;
+    }
+
+    public int getConstantPosition() {
+        return constantPosition;
+    }
+
     public ConstantTupleFilter getConstantTupleFilter() {
         return constantTupleFilter;
     }
@@ -174,6 +182,11 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
         this.name = BytesUtil.readUTFString(buffer);
         this.isReversed = buffer.get() != 0;
         this.initMethod();
+    }
+
+    @Override
+    public boolean canPushDown() {
+        return true;
     }
 
     @Override

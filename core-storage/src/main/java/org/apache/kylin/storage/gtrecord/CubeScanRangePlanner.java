@@ -103,18 +103,8 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         //replace the constant values in filter to dictionary codes
         Set<TblColRef> groupByPushDown = Sets.newHashSet(groupByDims);
         groupByPushDown.addAll(dynGroupsDims);
-
         this.gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, gtInfo, mapping.getDim2gt(), groupByPushDown);
-
-        TupleFilter convertedFilter = GTUtil.convertFilterColumnsAndConstants(filter, gtInfo, mapping.getDim2gt(), groupByPushDown, true);
-
         this.havingFilter = havingFilter;
-
-        if (convertedFilter != null) {
-            this.filterPushDownSQL = convertedFilter.toSQL();
-            logger.info("--filterPushDownSQL--: {}", this.filterPushDownSQL);
-        }
-
         this.gtDimensions = mapping.makeGridTableColumns(dimensions);
         this.gtAggrGroups = mapping.makeGridTableColumns(replaceDerivedColumns(groupByPushDown, cubeSegment.getCubeDesc()));
         this.gtAggrMetrics = mapping.makeGridTableColumns(metrics);

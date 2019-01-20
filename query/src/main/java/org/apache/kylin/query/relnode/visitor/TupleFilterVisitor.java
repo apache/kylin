@@ -119,6 +119,7 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
             break;
         case LIKE:
         case OTHER_FUNCTION:
+        case EXTRACT:
             filter = Functions.getFunctionTupleFilter(op.getName());
             break;
         case PLUS:

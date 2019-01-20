@@ -1415,7 +1415,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getDerivedInThreshold() {
-        return Integer.parseInt(getOptional("kylin.query.derived-filter-translation-threshold", "20"));
+        return Integer.parseInt(getOptional("kylin.query.derived-filter-translation-threshold", "200"));
+    }
+
+    public int getParquetDerivedInThreshold() {
+        return Integer.parseInt(getOptional("kylin.query.derived-filter-parquet-translation-threshold", "2000"));
     }
 
     public int getBadQueryStackTraceDepth() {

@@ -123,8 +123,18 @@ public class ExtractTupleFilter extends TupleFilter {
     }
 
     @Override
+    public <R> R accept(TupleFilterVisitor<R> visitor) {
+        return visitor.visitExtract(this);
+    }
+
+    @Override
     public String toSQL() {
         return "1=1";
+    }
+
+    @Override
+    public boolean canPushDown() {
+        return true;
     }
 
 }
