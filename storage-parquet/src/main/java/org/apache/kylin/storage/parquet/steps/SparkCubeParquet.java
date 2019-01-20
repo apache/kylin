@@ -17,7 +17,10 @@
  */
 package org.apache.kylin.storage.parquet.steps;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Map;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -36,7 +39,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.dimension.IDimensionEncodingMap;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.BatchCubingJobBuilder2;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -44,8 +47,8 @@ import org.apache.kylin.engine.mr.common.SerializableConfiguration;
 import org.apache.kylin.engine.spark.KylinSparkJobListener;
 import org.apache.kylin.engine.spark.SparkUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.parquet.NameMappingFactory;
+import org.apache.kylin.storage.parquet.ParquetSchema;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.hadoop.ParquetOutputFormat;
 import org.apache.parquet.hadoop.example.GroupWriteSupport;
@@ -57,11 +60,10 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Tuple2;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Map;
+import com.google.common.collect.Maps;
+
+import scala.Tuple2;
 
 public class SparkCubeParquet extends AbstractApplication implements Serializable {
 
@@ -127,28 +129,27 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
 
             final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
             final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+            final CubeDesc cubeDesc = cubeInstance.getDescriptor();
+
+            final ParquetSchema parquetSchema = new ParquetSchema(NameMappingFactory.getDefault(cubeDesc), Cuboid.getBaseCuboid(cubeDesc).getColumns(), cubeDesc.getMeasures());
 
             final FileSystem fs = new Path(inputPath).getFileSystem(sc.hadoopConfiguration());
 
             final int totalLevels = cubeSegment.getCuboidScheduler().getBuildLevel();
-            JavaPairRDD<Text, Text>[] allRDDs = new JavaPairRDD[totalLevels + 1];
 
             final Job job = Job.getInstance(sConf.get());
+
+            JavaPairRDD<Text, Text>[] allRDDs = new JavaPairRDD[totalLevels + 1];
+
             logger.info("Input path: {}", inputPath);
             logger.info("Output path: {}", outputPath);
 
-            final Map<TblColRef, String> colTypeMap = Maps.newHashMap();
-            final Map<MeasureDesc, String> meaTypeMap = Maps.newHashMap();
+            MessageType schema = parquetSchema.buildMessageType(cubeSegment.getUuid());
 
-            final IDimensionEncodingMap dimEncMap = cubeSegment.getDimensionEncodingMap();
-
-            Cuboid baseCuboid = Cuboid.getBaseCuboid(cubeSegment.getCubeDesc());
-            MessageType schema = ParquetConvertor.cuboidToMessageType(baseCuboid, dimEncMap, cubeSegment.getCubeDesc());
-            ParquetConvertor.generateTypeMap(baseCuboid, dimEncMap, cubeSegment.getCubeDesc(), colTypeMap, meaTypeMap);
             GroupWriteSupport.setSchema(schema, job.getConfiguration());
 
             GenerateGroupRDDFunction groupPairFunction = new GenerateGroupRDDFunction(cubeName, cubeSegment.getUuid(),
-                    metaUrl, new SerializableConfiguration(job.getConfiguration()), colTypeMap, meaTypeMap);
+                    metaUrl, new SerializableConfiguration(job.getConfiguration()));
 
             logger.info("Schema: {}", schema);
 
@@ -239,25 +240,19 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
         private String segmentId;
         private String metaUrl;
         private SerializableConfiguration conf;
-        private Map<TblColRef, String> colTypeMap;
-        private Map<MeasureDesc, String> meaTypeMap;
-
         private transient ParquetConvertor convertor;
 
         public GenerateGroupRDDFunction(String cubeName, String segmentId, String metaurl,
-                SerializableConfiguration conf, Map<TblColRef, String> colTypeMap,
-                Map<MeasureDesc, String> meaTypeMap) {
+                SerializableConfiguration conf) {
             this.cubeName = cubeName;
             this.segmentId = segmentId;
             this.metaUrl = metaurl;
             this.conf = conf;
-            this.colTypeMap = colTypeMap;
-            this.meaTypeMap = meaTypeMap;
         }
 
         private void init() {
             KylinConfig kylinConfig = AbstractHadoopJob.loadKylinConfigFromHdfs(conf, metaUrl);
-            convertor = new ParquetConvertor(cubeName, segmentId, kylinConfig, conf, colTypeMap, meaTypeMap);
+            convertor = new ParquetConvertor(cubeName, segmentId, kylinConfig, conf);
         }
 
         @Override
@@ -270,6 +265,7 @@ public class SparkCubeParquet extends AbstractApplication implements Serializabl
                     }
                 }
             }
+
             Group group = convertor.parseValueToGroup(tuple._1(), tuple._2());
 
             return new Tuple2<>(null, group);

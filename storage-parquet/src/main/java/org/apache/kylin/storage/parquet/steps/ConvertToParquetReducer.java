@@ -17,7 +17,8 @@
 */
 package org.apache.kylin.storage.parquet.steps;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -27,20 +28,13 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.engine.mr.BatchCubingJobBuilder2;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.SerializableConfiguration;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.parquet.example.data.Group;
-
-import java.io.IOException;
-import java.util.Map;
 
 /**
  */
@@ -48,6 +42,7 @@ public class ConvertToParquetReducer extends KylinReducer<Text, Text, NullWritab
     private ParquetConvertor convertor;
     private MultipleOutputs<NullWritable, Group> mos;
     private CubeSegment cubeSegment;
+    private CuboidToPartitionMapping mapping;
 
     @Override
     protected void doSetup(Context context) throws IOException {
@@ -62,14 +57,9 @@ public class ConvertToParquetReducer extends KylinReducer<Text, Text, NullWritab
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
         CubeInstance cube = cubeManager.getCube(cubeName);
         cubeSegment = cube.getSegmentById(segmentId);
-        Cuboid baseCuboid = Cuboid.getBaseCuboid(cubeSegment.getCubeDesc());
-        final IDimensionEncodingMap dimEncMap = cubeSegment.getDimensionEncodingMap();
         SerializableConfiguration sConf = new SerializableConfiguration(conf);
-
-        Map<TblColRef, String> colTypeMap = Maps.newHashMap();
-        Map<MeasureDesc, String> measureTypeMap = Maps.newHashMap();
-        ParquetConvertor.generateTypeMap(baseCuboid, dimEncMap, cube.getDescriptor(), colTypeMap, measureTypeMap);
-        convertor = new ParquetConvertor(cubeName, segmentId, kylinConfig, sConf, colTypeMap, measureTypeMap);
+        mapping = new CuboidToPartitionMapping(cubeSegment, kylinConfig);
+        convertor = new ParquetConvertor(cubeName, segmentId, kylinConfig, sConf);
     }
 
     @Override
@@ -81,7 +71,7 @@ public class ConvertToParquetReducer extends KylinReducer<Text, Text, NullWritab
         for (Text value : values) {
             Group group = convertor.parseValueToGroup(key, value);
             String output = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel("", layerNumber) + "/"
-                    + ParquetJobSteps.getCuboidOutputFileName(cuboidId, partitionId);
+                    + ParquetJobSteps.getCuboidOutputFileName(cuboidId, partitionId % mapping.getPartitionNumForCuboidId(cuboidId));
             mos.write(MRCubeParquetJob.BY_LAYER_OUTPUT, null, group, output);
         }
     }

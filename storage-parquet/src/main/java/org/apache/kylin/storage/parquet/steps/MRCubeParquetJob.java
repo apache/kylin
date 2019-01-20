@@ -17,6 +17,8 @@
 */
 package org.apache.kylin.storage.parquet.steps;
 
+import java.io.IOException;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -35,16 +37,16 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.dimension.IDimensionEncodingMap;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.storage.parquet.NameMappingFactory;
+import org.apache.kylin.storage.parquet.ParquetSchema;
 import org.apache.parquet.example.data.Group;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.parquet.hadoop.example.ExampleOutputFormat;
 import org.apache.parquet.schema.MessageType;
-
-import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -77,8 +79,9 @@ public class MRCubeParquetJob extends AbstractHadoopJob {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
         CubeInstance cube = cubeManager.getCube(cubeName);
-
         CubeSegment cubeSegment = cube.getSegmentById(segmentId);
+        CubeDesc cubeDesc = cube.getDescriptor();
+
         logger.info("Input path: {}", inputPath);
         logger.info("Output path: {}", outputPath);
 
@@ -88,11 +91,9 @@ public class MRCubeParquetJob extends AbstractHadoopJob {
         String jsonStr = cuboidToPartitionMapping.serialize();
         logger.info("Total Partition: {}", cuboidToPartitionMapping.getNumPartitions());
 
-        final IDimensionEncodingMap dimEncMap = cubeSegment.getDimensionEncodingMap();
+        ParquetSchema parquetSchema = new ParquetSchema(NameMappingFactory.getDefault(cubeDesc), Cuboid.getBaseCuboid(cubeDesc).getColumns(), cubeDesc.getMeasures());
+        MessageType schema = parquetSchema.buildMessageType(cubeSegment.getUuid());
 
-        Cuboid baseCuboid = Cuboid.getBaseCuboid(cubeSegment.getCubeDesc());
-
-        MessageType schema = ParquetConvertor.cuboidToMessageType(baseCuboid, dimEncMap, cubeSegment.getCubeDesc());
         logger.info("Schema: {}", schema);
 
         try {
