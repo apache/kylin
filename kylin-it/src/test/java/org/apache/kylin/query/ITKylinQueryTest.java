@@ -379,7 +379,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testLimitCorrectness() throws Exception {
-        this.execLimitAndValidate(getQueryFolderPrefix() + "src/test/resources/query/sql");
+        this.execLimitAndValidate(getQueryFolderPrefix() + "src/test/resources/query/sql", null);
     }
 
     @Test

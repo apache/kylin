@@ -499,13 +499,17 @@ public class KylinTestBase {
         }
     }
 
-    protected void execLimitAndValidate(String queryFolder) throws Exception {
+    protected void execLimitAndValidate(String queryFolder, String[] exclusiveQuerys) throws Exception {
         logger.info("---------- test folder: " + new File(queryFolder).getAbsolutePath());
+        Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
         int appendLimitQueries = 0;
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
         for (File sqlFile : sqlFiles) {
             String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
+            if (exclusiveSet.contains(queryName))
+                continue;
+
             String sql = getTextFromFile(sqlFile);
 
             String sqlWithLimit;
