@@ -152,3 +152,39 @@ java -classpath kylin-server-base-\<version\>.jar:kylin-core-common-\<version\>.
 * Start Kylin
 
 **Note: The feature is in beta now.**
+
+## Use SparkSql to create intermediate flat Hive table 
+
+**Note: There will be an issue when connecting thriftserver again, detail info, please check [https://issues.apache.org/jira/browse/SPARK-21067](https://issues.apache.org/jira/browse/SPARK-21067)**
+
+Kylin can use SparkSql to create intermediate flat Hive table; Before enable this: 
+
+- Make sure the following parameters exist in hive-site.xml:
+
+{% highlight Groff markup %}
+
+<property>
+  <name>hive.security.authorization.sqlstd.confwhitelist</name>
+  <value>mapred.*|hive.*|mapreduce.*|spark.*</value>
+</property>
+
+<property>
+  <name>hive.security.authorization.sqlstd.confwhitelist.append</name>
+  <value>mapred.*|hive.*|mapreduce.*|spark.*</value>
+</property>
+    
+{% endhighlight %}
+- Change `hive.execution.engine` to mr (Optional), if you want to use tez, please make sure the dependency of tez has been added
+- Copy the hive-site.xml to $SPARK_HOME/conf
+- Make sure the environmental variable HADOOP_CONF_DIR has been set
+- Use `sbin/start-thriftserver.sh --master spark://sparkmasterip:sparkmasterport` to start the thriftserver, usually port is 7077
+- Edit `conf/kylin.properties`, set the following parameters:
+{% highlight Groff markup %}
+kylin.source.hive.enable-sparksql-for-table-ops=true
+kylin.source.hive.sparksql-beeline-shell=/path/to/spark-client/bin/beeline
+kylin.source.hive.sparksql-beeline-params=-n root -u 'jdbc:hive2://thriftserverip:thriftserverport'
+{% endhighlight %}
+
+Restart Kylin server to take effective. To disable, set `kylin.source.hive.enable-sparksql-for-table-ops` back to `false`.
+
+

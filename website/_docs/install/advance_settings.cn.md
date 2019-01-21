@@ -155,3 +155,38 @@ java -classpath kylin-server-base-\<version\>.jar:kylin-core-common-\<version\>.
 *启动 Kylin
 
 *注意：该功能还在测试中，建议您谨慎使用*
+
+## 使用 SparkSql 创建 Hive 中间表
+
+**注意：当第二次连接 thriftserver 进行构建时将会出现问题，详细信息请查看 [https://issues.apache.org/jira/browse/SPARK-21067](https://issues.apache.org/jira/browse/SPARK-21067)**
+
+Kylin 能够使用 SparkSql 创建 Hive 中间表；使其生效之前： 
+
+- 确保以下参数存在于 hive-site.xml：
+
+{% highlight Groff markup %}
+
+<property>
+  <name>hive.security.authorization.sqlstd.confwhitelist</name>
+  <value>mapred.*|hive.*|mapreduce.*|spark.*</value>
+</property>
+
+<property>
+  <name>hive.security.authorization.sqlstd.confwhitelist.append</name>
+  <value>mapred.*|hive.*|mapreduce.*|spark.*</value>
+</property>
+    
+{% endhighlight %}
+- 将 `hive.execution.engine` 改为 mr（可选），如果您想要使用 tez，请确保 tez 相关依赖已导入
+- 将 hive-site.xml 拷贝到 $SPARK_HOME/conf
+- 确保设置了 HADOOP_CONF_DIR 环境变量
+- 使用 `sbin/start-thriftserver.sh --master spark://sparkmasterip:sparkmasterport` 命令启动 thriftserver，通常端口为 7077
+- 编辑 `conf/kylin.properties`，设置如下参数：
+{% highlight Groff markup %}
+kylin.source.hive.enable-sparksql-for-table-ops=true
+kylin.source.hive.sparksql-beeline-shell=/path/to/spark-client/bin/beeline
+kylin.source.hive.sparksql-beeline-params=-n root -u 'jdbc:hive2://thriftserverip:thriftserverport'
+{% endhighlight %}
+
+重启 Kylin 令其生效。通过将 `kylin.source.hive.enable-sparksql-for-table-ops` 设置为 `false` 来令其失效
+
