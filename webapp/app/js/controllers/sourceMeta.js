@@ -268,7 +268,7 @@ KylinApp
       $scope.loadHive = function () {
         if($scope.hiveLoaded)
           return;
-        TableService.showHiveDatabases({}, function (databases) {
+        TableService.showHiveDatabases({project: $scope.projectName}, function (databases) {
           $scope.dbNum = databases.length;
           if (databases.length > 0) {
             $scope.hiveMap = {};
@@ -393,7 +393,7 @@ KylinApp
 
       $scope.showToggle = function(node) {
         if(node.expanded == false){
-          TableService.showHiveTables({"database": node.label},function (hive_tables){
+          TableService.showHiveTables({"database": node.label, project: $scope.projectName},function (hive_tables){
             var tables = [];
             for (var i = 0; i < hive_tables.length; i++) {
               tables.push(hive_tables[i]);
