@@ -9,6 +9,18 @@ Send a quick description of your organization and usage to the [mailing list](ma
 
 __Companies & Organizations__
 
+* [Telecoming](https://www.telecoming.com/), 2019-01-21
+    * Telecoming has adopted Apache Kylin, since it's an extremely useful business intelligence tool. It has encouraged lower consultation time, it has improved report generation and above all it contributes to improving business decisions.
+
+* [Cisco Systems, Inc.](https://www.cisco.com/), 2019-01-17
+    * Cisco is the worldwide leader in IT, networking, and cybersecurity solutions. Apache Kylin is adopted in its reporting system and delivers a good query performance in high concurrency scenarios. Read more at [this blog](http://kylin.apache.org/blog/2019/01/17/cisco-throughput-5x/).
+
+* [Xiaomi](https://www.mi.com/global), 2018-12-3
+    * Xiaomi is a major smartphone player in China. Apache Kylin plays a pivotal role in its core big data project, UnionSQL, and has begun to be widely promoted within the company. Read more at [this blog](https://www.infoq.cn/article/bNLypvSJVpSHv-dLogsu).
+
+* [Ctrip](http://www.ctrip.com), 2018-11-20
+    * Ctrip is the No.1 online travel agency in China and offers huge variety of travel package as well as one-stop hotel and flight booking service. Ctrip uses Kylin in the middle tier of its big data platform to carry out interactive queries for ad-hoc and reporting systems.
+
 * [Hobsons, Inc.](https://www.hobsons.com/), 2018-08-11
     * Hobsons solutions enable educators to improve college and career planning, admissions and enrollment management, student success and advising. Apache Kylin is used at Hobsons to gain valuable insight for educators on school performance and student success metrics.
 
