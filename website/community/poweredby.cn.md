@@ -9,6 +9,18 @@ __如何贡献案例__
 
 __公司 & 组织__
 
+* [Telecoming](https://www.telecoming.com/), 2019-01-21
+    * Telecoming 采用了 Apache Kylin，因为它是一个非常有用的商业智能工具。Kylin 缩短了查询时间，改进了报表生成，最重要的是它有助于业务决策。
+
+* [Cisco Systems, Inc. 思科](https://www.cisco.com/), 2019-01-17
+    * 思科是 IT、网络和网络安全解决方案领域的全球领导者。思科将 Apache Kylin 应用于报表系统，以在高并发场景中获取良好的查询性能。想要了解更多请阅读[此博客](http://kylin.apache.org/blog/2019/01/17/cisco-throughput-5x/)。
+
+* [Xiaomi 小米](https://www.mi.com/global), 2018-12-3
+    * 小米是中国主要的智能手机厂商。Apache Kylin 在其核心大数据项目 UnionSQL 中扮演着关键角色，并已开始在公司内部进行大规模推广。想要了解更多请阅读[此博客](https://www.infoq.cn/article/bNLypvSJVpSHv-dLogsu)。
+
+* [Ctrip 携程](http://www.ctrip.com), 2018-11-20
+    * 作为中国最大的在线旅游服务商，携程提供各类旅游套餐以及一站式酒店和机票预订服务。携程在其大数据平台中间层中使用 Kylin 进行交互式查询，用于 Ad-hoc 以及报表系统。
+
 * [Hobsons, Inc.](https://www.hobsons.com/), 2018-08-11
     * Hobsons 解决方案使教育工作者能够改善大学和职业规划，招生和入学管理，学生成功和建议。Hobsons 使用 Apache Kylin 为教育者提供有关学校表现和学生成功指标的宝贵见解。
 
