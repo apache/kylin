@@ -267,6 +267,10 @@ public class JoinedFlatTable {
             hiveDataType = "int";
         } else if (originDataType.startsWith("bigint")) {
             hiveDataType = "bigint";
+        } else if (originDataType.startsWith("double")) {
+            hiveDataType = "double";
+        } else if (originDataType.startsWith("float")) {
+            hiveDataType = "float";
         } else {
             hiveDataType = originDataType;
         }
