@@ -27,65 +27,36 @@ permalink: /cn/community/index.html
 			例如，如果您要订阅 user@kylin.apache.org，那么先发一个空邮件到 user-subscribe@kylin.apache.org，稍后您会收到一封确认邮件，对它进行回复即可完成订阅。在订阅成功后，请再发送您的问题到 user@kylin.apache.org，那么所有订阅该邮件组的其它用户将会收到您的邮件，并做出分享。</p>
 
 
-		    <p>  
-		    	<span>用户(user)邮件列表</span>
-		    	<span>
-		    		<a href="mailto:user-subscribe@kylin.apache.org">订阅</a>
-		    	</span>
-		    	<span>
-		    		<a href="mailto:user-unsubscribe@kylin.apache.org">退订</a>
-		    	</span>
-		    	<span>
-		    	    <a href="mailto:user@kylin.apache.org">发送新邮件</a>
-		    	</span>
-		    	<span>
-		    	    <a href="https://lists.apache.org/list.html?user@kylin.apache.org">历史存档</a>
-		    	</span>
-		    </p>
-
-		    <p>  
-		    	<span>开发者(dev)邮件列表</span>
-		    	<span>
-		    		<a href="mailto:dev-subscribe@kylin.apache.org">订阅</a>
-		    	</span>
-		    	<span>
-		    		<a href="mailto:dev-unsubscribe@kylin.apache.org">退订</a>
-		    	</span>
-		    	<span>
-		    	    <a href="mailto:dev@kylin.apache.org">发送新邮件</a>
-		    	</span>
-		    	<span>
-		    	    <a href="https://lists.apache.org/list.html?dev@kylin.apache.org">历史存档</a>
-		    	</span>
-		    </p>
-
-		    <p>  
-		    	<span>Issues 邮件列表</span>
-		    	<span>
-		    		<a href="mailto:issues-subscribe@kylin.apache.org">订阅</a>
-		    	</span>
-		    	<span>
-		    		<a href="mailto:issues-unsubscribe@kylin.apache.org">退订</a>
-		    	</span>
-		    	<span>N/A</span>
-		    	<span>
-		    	    <a href="https://lists.apache.org/list.html?issues@kylin.apache.org">历史存档</a>
-		    	</span>
-		    </p>
-
-		    <p>  
-		    	<span>Commits 邮件列表</span>
-		    	<span>
-		    		<a href="mailto:commits-subscribe@kylin.apache.org">订阅</a>
-		    	</span>
-		    	<span>
-		    		<a href="mailto:commits-unsubscribe@kylin.apache.org">退订</a>
-		    	</span>
-		        <span>N/A</span>
-		    	<span>
-		    	    <a href="https://lists.apache.org/list.html?commits@kylin.apache.org">历史存档</a>
-		    	</span>
-		    </p>
+            <table>
+                <tr height="50px">
+                    <td width="155px" align="left">用户(user)邮件列表</td>
+                    <td width="50px"><a href="mailto:user-subscribe@kylin.apache.org">订阅</a></td>
+                    <td width="50px"><a href="mailto:user-unsubscribe@kylin.apache.org">退订</a></td>
+                    <td width="90px"><a href="mailto:user@kylin.apache.org">发送新邮件</a></td>
+                    <td width="95px"><a href="https://lists.apache.org/list.html?user@kylin.apache.org">历史存档</a></td>
+                </tr>
+                <tr height="50px">
+                    <td width="155px" align="left">开发者(dev)邮件列表</td>
+                    <td width="50px"><a href="mailto:dev-subscribe@kylin.apache.org">订阅</a></td>
+                    <td width="50px"><a href="mailto:dev-unsubscribe@kylin.apache.org">退订</a></td>
+                    <td width="90px"><a href="mailto:dev@kylin.apache.org">发送新邮件</a></td>
+                    <td width="95px"><a href="https://lists.apache.org/list.html?dev@kylin.apache.org">历史存档</a></td>
+                </tr>
+                <tr height="50px">
+                    <td width="155px" align="left">Issues 邮件列表</td>
+                    <td width="50px"><a href="mailto:issues-subscribe@kylin.apache.org">订阅</a></td>
+                    <td width="50px"><a href="mailto:issues-unsubscribe@kylin.apache.org">退订</a></td>
+                    <td width="90px">N/A</td>
+                    <td width="95px"><a href="https://lists.apache.org/list.html?issues@kylin.apache.org">历史存档</a></td>
+                </tr>
+                <tr height="50px">
+                    <td width="155px" align="left">Commits 邮件列表</td>
+                    <td width="50px"><a href="mailto:commits-subscribe@kylin.apache.org">订阅</a></td>
+                    <td width="50px"><a href="mailto:commits-unsubscribe@kylin.apache.org">退订</a></td>
+                    <td width="90px">N/A</td>
+                    <td width="95px"><a href="https://lists.apache.org/list.html?commits@kylin.apache.org">历史存档</a></td>
+                </tr>           
+            </table>
 		</div>
 
 		<div class="col-sm-6 col-md-6">

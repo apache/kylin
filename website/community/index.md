@@ -22,66 +22,37 @@ permalink: /community/index.html
 
 		    <p>These are the mailing lists that have been established for this project. For each list, there is a subscribe, unsubscribe, and an archive link.</p>
 
+		    <table>
+		        <tr height="50px">
+		            <td width="165px" align="left">User Mailing List</td>
+		            <td width="73px"><a href="mailto:user-subscribe@kylin.apache.org">Subscribe</a></td>
+		            <td width="88px"><a href="mailto:user-unsubscribe@kylin.apache.org">Unsubscribe</a></td>
+		            <td width="40px"><a href="mailto:user@kylin.apache.org">Post</a></td>
+		            <td width="165px"><a href="https://lists.apache.org/list.html?user@kylin.apache.org">mail-archives.apache.org</a></td>
+		        </tr>
+		        <tr height="50px">
+                    <td width="165px" align="left">Developers Mailing List</td>
+                    <td width="73px"><a href="mailto:dev-subscribe@kylin.apache.org">Subscribe</a></td>
+                    <td width="88px"><a href="mailto:dev-unsubscribe@kylin.apache.org">Unsubscribe</a></td>
+                    <td width="40px"><a href="mailto:dev@kylin.apache.org">Post</a></td>
+                    <td width="165px"><a href="https://lists.apache.org/list.html?dev@kylin.apache.org">mail-archives.apache.org</a></td>
+                </tr>
+                <tr height="50px">
+                    <td width="165px" align="left">Issues Mailing List</td>
+                    <td width="73px"><a href="mailto:issues-subscribe@kylin.apache.org">Subscribe</a></td>
+                    <td width="88px"><a href="mailto:issues-unsubscribe@kylin.apache.org">Unsubscribe</a></td>
+                    <td width="40px">N/A</td>
+                    <td width="165px"><a href="https://lists.apache.org/list.html?issues@kylin.apache.org">mail-archives.apache.org</a></td>
+                </tr>
+                <tr height="50px">
+                    <td width="165px" align="left">Commits Mailing List</td>
+                    <td width="73px"><a href="mailto:commits-subscribe@kylin.apache.org">Subscribe</a></td>
+                    <td width="88px"><a href="mailto:commits-unsubscribe@kylin.apache.org">Unsubscribe</a></td>
+                    <td width="40px">N/A</td>
+                    <td width="165px"><a href="https://lists.apache.org/list.html?commits@kylin.apache.org">mail-archives.apache.org</a></td>
+                </tr>           
+		    </table>
 
-		    <p>  
-		    	<span>User Mailing List</span>
-		    	<span>
-		    		<a href="mailto:user-subscribe@kylin.apache.org">Subscribe</a>
-		    	</span>
-		    	<span>
-		    		<a href="mailto:user-unsubscribe@kylin.apache.org">Unsubscribe</a>
-		    	</span>
-		    	<span>
-		    	    <a href="mailto:user@kylin.apache.org">Post</a>
-		    	</span>
-		    	<span>
-		    	    <a href="https://lists.apache.org/list.html?user@kylin.apache.org">mail-archives.apache.org</a>
-		    	</span>
-		    </p>
-
-		    <p>  
-		    	<span>Developers Mailing List</span>
-		    	<span>
-		    		<a href="mailto:dev-subscribe@kylin.apache.org">Subscribe</a>
-		    	</span>
-		    	<span>
-		    		<a href="mailto:dev-unsubscribe@kylin.apache.org">Unsubscribe</a>
-		    	</span>
-		    	<span>
-		    	    <a href="mailto:dev@kylin.apache.org">Post</a>
-		    	</span>
-		    	<span>
-		    	    <a href="https://lists.apache.org/list.html?dev@kylin.apache.org">mail-archives.apache.org</a>
-		    	</span>
-		    </p>
-
-		    <p>  
-		    	<span>Issues Mailing List</span>
-		    	<span>
-		    		<a href="mailto:issues-subscribe@kylin.apache.org">Subscribe</a>
-		    	</span>
-		    	<span>
-		    		<a href="mailto:issues-unsubscribe@kylin.apache.org">Unsubscribe</a>
-		    	</span>
-		    	<span>N/A</span>
-		    	<span>
-		    	    <a href="https://lists.apache.org/list.html?issues@kylin.apache.org">mail-archives.apache.org</a>
-		    	</span>
-		    </p>
-
-		    <p>  
-		    	<span>Commits Mailing List</span>
-		    	<span>
-		    		<a href="mailto:commits-subscribe@kylin.apache.org">Subscribe</a>
-		    	</span>
-		    	<span>
-		    		<a href="mailto:commits-unsubscribe@kylin.apache.org">Unsubscribe</a>
-		    	</span>
-		        <span>N/A</span>
-		    	<span>
-		    	    <a href="https://lists.apache.org/list.html?issues@kylin.apache.org">mail-archives.apache.org</a>
-		    	</span>
-		    </p>
 		</div>
 
 		<div class="col-sm-6 col-md-6">
