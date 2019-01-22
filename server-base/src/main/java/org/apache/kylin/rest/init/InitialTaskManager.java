@@ -21,6 +21,7 @@ package org.apache.kylin.rest.init;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.ZKBasedServerDiscovery;
 import org.apache.kylin.rest.metrics.QueryMetrics2Facade;
 import org.apache.kylin.rest.metrics.QueryMetricsFacade;
 import org.slf4j.Logger;
@@ -48,6 +49,29 @@ public class InitialTaskManager implements InitializingBean {
         QueryMetrics2Facade.init();
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+
+        if (kylinConfig.getServerDiscoveryMode().equals("zookeeper")) {
+            try {
+                final ServerDiscovery serverDiscovery = ZKBasedServerDiscovery.createInstance();
+                serverDiscovery.registerService();
+
+                Runtime.getRuntime().addShutdownHook(new Thread() {
+                    public void run() {
+                        logger.info("Closing zookeeper based serverDiscovery");
+                        try {
+                            serverDiscovery.unregisterService();
+                            serverDiscovery.close();
+                        } catch (Exception e) {
+                            logger.error("error during shutdown zookeeper based serverDiscovery", e);
+                        }
+                        logger.info("Closed zookeeper based serverDiscovery");
+                    }
+                });
+            } catch (Exception e) {
+                logger.error("Failed register kylin service", e);
+            }
+        }
+
         String initTasks = kylinConfig.getInitTasks();
         if (!StringUtils.isEmpty(initTasks)) {
             String[] taskClasses = StringUtil.splitByComma(initTasks);

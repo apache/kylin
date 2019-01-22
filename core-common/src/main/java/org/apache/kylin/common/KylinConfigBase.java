@@ -40,6 +40,7 @@ import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.ZKBasedServerDiscovery;
 import org.apache.kylin.common.util.ZooKeeperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1685,8 +1686,25 @@ abstract public class KylinConfigBase implements Serializable {
         return this.getOptional("kylin.server.mode", "all");
     }
 
+    public String getServerDiscoveryMode() {
+        return this.getOptional("kylin.server.discovery.mode", "default");
+    }
+
     public String[] getRestServers() {
-        return getOptionalStringArray("kylin.server.cluster-servers", new String[0]);
+        if (getServerDiscoveryMode().equals("zookeeper")) {
+            try {
+                return ZKBasedServerDiscovery.getInstance().getServers().toArray(new String[0]);
+            } catch (Exception e) {
+                logger.error("Failed to get servers from ZKBasedServerDiscovery", e);
+                return getOptionalStringArray("kylin.server.cluster-servers", new String[0]);
+            }
+        } else {
+            return getOptionalStringArray("kylin.server.cluster-servers", new String[0]);
+        }
+    }
+
+    public int getServerPort() {
+        return Integer.parseInt(getOptional("kylin.server.port", "7070"));
     }
 
     public String getClusterName() {
