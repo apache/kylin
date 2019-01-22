@@ -74,7 +74,6 @@ import org.apache.kylin.engine.mr.common.StatisticsDecisionUtil;
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsMapper.DictColDeduper;
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsReducerMapping;
 import org.apache.kylin.engine.mr.steps.SelfDefineSortableKey;
-import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HLLCounter;
