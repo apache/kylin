@@ -120,8 +120,6 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
             .withDescription("Statistics sampling percent").create(BatchConstants.ARG_STATS_SAMPLING_PERCENT);
     public static final Option OPTION_INPUT_TABLE = OptionBuilder.withArgName("hiveTable").hasArg().isRequired(true)
             .withDescription("Hive Intermediate Table").create("hiveTable");
-    public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
-            .isRequired(true).withDescription("Hive Intermediate Table PATH").create(BatchConstants.ARG_INPUT);
     public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUPUT)
             .hasArg().isRequired(true).withDescription("counter output path").create(BatchConstants.ARG_COUNTER_OUPUT);
 
@@ -133,7 +131,6 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         options.addOption(OPTION_META_URL);
         options.addOption(OPTION_OUTPUT_PATH);
         options.addOption(OPTION_INPUT_TABLE);
-        options.addOption(OPTION_INPUT_PATH);
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_STATS_SAMPLING_PERCENT);
         options.addOption(OPTION_COUNTER_PATH);
@@ -150,7 +147,6 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
         String metaUrl = optionsHelper.getOptionValue(OPTION_META_URL);
         String segmentId = optionsHelper.getOptionValue(OPTION_SEGMENT_ID);
         String hiveTable = optionsHelper.getOptionValue(OPTION_INPUT_TABLE);
-        String inputPath = optionsHelper.getOptionValue(OPTION_INPUT_PATH);
         String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
         String counterPath = optionsHelper.getOptionValue(OPTION_COUNTER_PATH);
         int samplingPercent = Integer.parseInt(optionsHelper.getOptionValue(OPTION_STATS_SAMPLING_PERCENT));
@@ -184,13 +180,10 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
             logger.info("getCuboidRowCounterReducerNum: {}", reducerMapping.getCuboidRowCounterReducerNum());
             logger.info("counter path {}", counterPath);
 
-            boolean isSequenceFile = JoinedFlatTable.SEQUENCEFILE
-                    .equalsIgnoreCase(envConfig.getFlatTableStorageFormat());
-
             // calculate source record bytes size
             final LongAccumulator bytesWritten = sc.sc().longAccumulator();
 
-            final JavaRDD<String[]> recordRDD = SparkUtil.hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable);
+            final JavaRDD<String[]> recordRDD = SparkUtil.getHiveInput(sc, hiveTable);
 
             JavaPairRDD<SelfDefineSortableKey, Text> flatOutputRDD = recordRDD.mapPartitionsToPair(
                     new FlatOutputFucntion(cubeName, segmentId, metaUrl, sConf, samplingPercent, bytesWritten));

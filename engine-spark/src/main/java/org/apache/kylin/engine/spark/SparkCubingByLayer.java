@@ -89,15 +89,12 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             .isRequired(true).withDescription("Cube output path").create(BatchConstants.ARG_OUTPUT);
     public static final Option OPTION_INPUT_TABLE = OptionBuilder.withArgName("hiveTable").hasArg().isRequired(true)
             .withDescription("Hive Intermediate Table").create("hiveTable");
-    public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
-            .isRequired(true).withDescription("Hive Intermediate Table PATH").create(BatchConstants.ARG_INPUT);
 
     private Options options;
 
     public SparkCubingByLayer() {
         options = new Options();
         options.addOption(OPTION_INPUT_TABLE);
-        options.addOption(OPTION_INPUT_PATH);
         options.addOption(OPTION_CUBE_NAME);
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_META_URL);
@@ -113,7 +110,6 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         String metaUrl = optionsHelper.getOptionValue(OPTION_META_URL);
         String hiveTable = optionsHelper.getOptionValue(OPTION_INPUT_TABLE);
-        String inputPath = optionsHelper.getOptionValue(OPTION_INPUT_PATH);
         String cubeName = optionsHelper.getOptionValue(OPTION_CUBE_NAME);
         String segmentId = optionsHelper.getOptionValue(OPTION_SEGMENT_ID);
         String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
@@ -138,7 +134,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
         final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
 
-        logger.info("RDD input path: {}", inputPath);
+        logger.info("RDD input hive table: {}", hiveTable);
         logger.info("RDD Output path: {}", outputPath);
 
         final Job job = Job.getInstance(sConf.get());
@@ -162,10 +158,8 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         logger.info("All measure are normal (agg on all cuboids) ? : " + allNormalMeasure);
         StorageLevel storageLevel = StorageLevel.fromString(envConfig.getSparkStorageLevel());
 
-        boolean isSequenceFile = JoinedFlatTable.SEQUENCEFILE.equalsIgnoreCase(envConfig.getFlatTableStorageFormat());
-
         final JavaPairRDD<ByteArray, Object[]> encodedBaseRDD = SparkUtil
-                .hiveRecordInputRDD(isSequenceFile, sc, inputPath, hiveTable)
+                .getHiveInput(sc, hiveTable)
                 .mapToPair(new EncodeBaseCuboid(cubeName, segmentId, metaUrl, sConf));
 
         Long totalCount = 0L;

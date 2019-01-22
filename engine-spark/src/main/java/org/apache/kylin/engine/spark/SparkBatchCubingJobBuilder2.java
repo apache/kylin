@@ -90,13 +90,11 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
     public SparkExecutable createFactDistinctColumnsSparkStep(String jobId) {
         final SparkExecutable sparkExecutable = new SparkExecutable();
         final IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(seg);
-        final String tablePath = JoinedFlatTable.getTableDir(flatTableDesc, getJobWorkingDir(jobId));
 
         sparkExecutable.setClassName(SparkFactDistinct.class.getName());
         sparkExecutable.setParam(SparkFactDistinct.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
         sparkExecutable.setParam(SparkFactDistinct.OPTION_META_URL.getOpt(), getSegmentMetadataUrl(seg.getConfig(), jobId));
         sparkExecutable.setParam(SparkFactDistinct.OPTION_INPUT_TABLE.getOpt(), seg.getConfig().getHiveDatabaseForIntermediateTable() + "." + flatTableDesc.getTableName());
-        sparkExecutable.setParam(SparkFactDistinct.OPTION_INPUT_PATH.getOpt(), tablePath);
         sparkExecutable.setParam(SparkFactDistinct.OPTION_OUTPUT_PATH.getOpt(), getFactDistinctColumnsPath(jobId));
         sparkExecutable.setParam(SparkFactDistinct.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
         sparkExecutable.setParam(SparkFactDistinct.OPTION_STATS_SAMPLING_PERCENT.getOpt(), String.valueOf(config.getConfig().getCubingInMemSamplingPercent()));
@@ -130,8 +128,6 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_INPUT_TABLE.getOpt(),
                 seg.getConfig().getHiveDatabaseForIntermediateTable() + "." + flatTableDesc.getTableName());
-        sparkExecutable.setParam(SparkCubingByLayer.OPTION_INPUT_PATH.getOpt(),
-                tablePath);
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_META_URL.getOpt(),
                 getSegmentMetadataUrl(seg.getConfig(), jobId));
         sparkExecutable.setParam(SparkCubingByLayer.OPTION_OUTPUT_PATH.getOpt(), cuboidRootPath);
