@@ -35,20 +35,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Maps;
 
 public class CuboidRecommender {
     private static final Logger logger = LoggerFactory.getLogger(CuboidRecommender.class);
 
     private static Cache<String, Map<Long, Long>> cuboidRecommendCache = CacheBuilder.newBuilder()
-            .removalListener(new RemovalListener<String, Map<Long, Long>>() {
-                @Override
-                public void onRemoval(RemovalNotification<String, Map<Long, Long>> notification) {
-                    logger.info("Recommended cuboids for cube " + notification.getKey() + " is removed due to "
-                            + notification.getCause());
-                }
+            .removalListener((notification) -> {
+                logger.info("Recommended cuboids for cube " + notification.getKey() + " is removed due to "
+                        + notification.getCause());
             }).maximumSize(KylinConfig.getInstanceFromEnv().getCubePlannerRecommendCuboidCacheMaxSize())
             .expireAfterWrite(1, TimeUnit.DAYS).build();
 
@@ -143,13 +138,13 @@ public class CuboidRecommender {
         }
 
         long startTime = System.currentTimeMillis();
-        logger.info("Cube Planner Algorithm started at " + startTime);
+        logger.info("Cube Planner Algorithm started at {}", startTime);
         List<Long> recommendCuboidList = algorithm.recommend(kylinConf.getCubePlannerExpansionRateThreshold());
-        logger.info("Cube Planner Algorithm ended at " + (System.currentTimeMillis() - startTime));
+        logger.info("Cube Planner Algorithm ended at {}", System.currentTimeMillis() - startTime);
 
         if (recommendCuboidList.size() < allCuboidCount) {
-            logger.info("Cube Planner Algorithm chooses " + recommendCuboidList.size()
-                    + " most effective cuboids to build among of all " + allCuboidCount + " cuboids.");
+            logger.info("Cube Planner Algorithm chooses {} most effective cuboids to build among of all {} cuboids.",
+                    recommendCuboidList.size(), allCuboidCount);
         }
 
         Map<Long, Long> recommendCuboidsWithStats = Maps.newLinkedHashMap();
