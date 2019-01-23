@@ -37,7 +37,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 
 public class ZKUtils {
-    public static final String ZK_ROOT = "/kylin/stream/" + KylinConfig.getInstanceFromEnv().getDeployEnv();
+    public static final String ZK_ROOT = KylinConfig.getInstanceFromEnv().getZookeeperBasePath() + "/stream/" + KylinConfig.getInstanceFromEnv().getDeployEnv();
     public static final String COORDINATOR_LEAD = ZK_ROOT + "/coordinator";
     public static final String REPLICASETS_LEADER_ELECT = ZK_ROOT + "/replica_sets_lead";
     private static final Logger logger = LoggerFactory.getLogger(ZKUtils.class);
