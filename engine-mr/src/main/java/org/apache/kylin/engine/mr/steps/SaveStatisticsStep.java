@@ -129,14 +129,14 @@ public class SaveStatisticsStep extends AbstractExecutable {
                     mapperNumber, mapperOverlapRatio, sourceRecordCount);
 
             Path statisticsFile = new Path(statisticsDir, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
-            logger.info(newSegment + " stats saved to hdfs " + statisticsFile);
+            logger.info("{} stats saved to hdfs {}", newSegment, statisticsFile);
 
             FSDataInputStream is = fs.open(statisticsFile);
             try {
                 // put the statistics to metadata store
                 String resPath = newSegment.getStatisticsResourcePath();
                 rs.putResource(resPath, is, System.currentTimeMillis());
-                logger.info(newSegment + " stats saved to resource " + resPath);
+                logger.info("{} stats saved to resource {}", newSegment, resPath);
 
                 StatisticsDecisionUtil.decideCubingAlgorithm(cubingJob, newSegment);
                 StatisticsDecisionUtil.optimizeCubingPlan(newSegment);
@@ -152,7 +152,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
     }
 
     private void logMapperAndCuboidStatistics(Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage,
-            int mapperNumber, long grantTotal, long totalRowsBeforeMerge) throws IOException {
+            int mapperNumber, long grantTotal, long totalRowsBeforeMerge) {
         logger.debug("Total cuboid number: \t" + cuboidHLLMap.size());
         logger.debug("Sampling percentage: \t" + samplingPercentage);
         logger.debug("The following statistics are collected based on sampling data.");
