@@ -51,11 +51,6 @@
             <artifactId>kylin-stream-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-		<dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-stream-coordinator</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-source-hive</artifactId>
