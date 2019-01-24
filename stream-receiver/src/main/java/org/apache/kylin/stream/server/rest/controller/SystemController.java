@@ -21,11 +21,12 @@ package org.apache.kylin.stream.server.rest.controller;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.kylin.stream.server.StreamingServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,8 @@ public class SystemController extends BasicController {
         streamingServer = StreamingServer.getInstance();
     }
 
-    @RequestMapping(value = "/logLevel/{loggerName}/{logLevel}", method = RequestMethod.PUT, produces = { "application/json" })
+    @RequestMapping(value = "/logLevel/{loggerName}/{logLevel}", method = RequestMethod.PUT, produces = {
+            "application/json" })
     @ResponseBody
     public void setLogLevel(@PathVariable(value = "loggerName") String loggerName,
             @PathVariable(value = "logLevel") String logLevel) {
@@ -74,14 +76,60 @@ public class SystemController extends BasicController {
     @ResponseBody
     public void threadDump(HttpServletResponse response) {
         response.setContentType("text/plain;charset=utf-8");
-        OutputStream outputStream = null;
-        try {
-            outputStream = response.getOutputStream();
-            ReflectionUtils.printThreadInfo(new PrintStream(outputStream, false, "UTF-8"), "Thread Dump");
+        try (OutputStream outputStream = response.getOutputStream()) {
+            printThreadInfo(new PrintStream(outputStream, false, "UTF-8"), "Thread Dump");
         } catch (IOException e) {
             logger.error("exception when get stack trace", e);
-            IOUtils.closeQuietly(outputStream);
         }
     }
 
+    private static String getTaskName(long id, String name) {
+        if (name == null) {
+            return Long.toString(id);
+        }
+        return id + " (" + name + ")";
+    }
+
+    private static ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
+
+    /**
+     * Print all of the thread's information and stack traces.
+     *
+     * @param stream the stream to
+     * @param title a string title for the stack trace
+     */
+    public synchronized static void printThreadInfo(PrintStream stream, String title) {
+        final int stackDepth = 20;
+        boolean contention = threadBean.isThreadContentionMonitoringEnabled();
+        long[] threadIds = threadBean.getAllThreadIds();
+        stream.println("Process Thread Dump: " + title);
+        stream.println(threadIds.length + " active threads");
+        for (long tid : threadIds) {
+            ThreadInfo info = threadBean.getThreadInfo(tid, stackDepth);
+            if (info == null) {
+                stream.println("  Inactive");
+                continue;
+            }
+            stream.println("Thread " + getTaskName(info.getThreadId(), info.getThreadName()) + ":");
+            Thread.State state = info.getThreadState();
+            stream.println("  State: " + state);
+            stream.println("  Blocked count: " + info.getBlockedCount());
+            stream.println("  Waited count: " + info.getWaitedCount());
+            if (contention) {
+                stream.println("  Blocked time: " + info.getBlockedTime());
+                stream.println("  Waited time: " + info.getWaitedTime());
+            }
+            if (state == Thread.State.WAITING) {
+                stream.println("  Waiting on " + info.getLockName());
+            } else if (state == Thread.State.BLOCKED) {
+                stream.println("  Blocked on " + info.getLockName());
+                stream.println("  Blocked by " + getTaskName(info.getLockOwnerId(), info.getLockOwnerName()));
+            }
+            stream.println("  Stack:");
+            for (StackTraceElement frame : info.getStackTrace()) {
+                stream.println("    " + frame.toString());
+            }
+        }
+        stream.flush();
+    }
 }
