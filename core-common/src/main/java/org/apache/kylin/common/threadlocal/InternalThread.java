@@ -15,43 +15,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.kylin.common.threadlocal;
 
 /**
- * Thread
+ * InternalThread
  */
-public class Thread extends java.lang.Thread {
+public class InternalThread extends Thread {
 
-    private ThreadLocalMap threadLocalMap;
+    private InternalThreadLocalMap threadLocalMap;
 
-    public Thread() {
+    public InternalThread() {
     }
 
-    public Thread(Runnable target) {
+    public InternalThread(Runnable target) {
         super(target);
     }
 
-    public Thread(ThreadGroup group, Runnable target) {
+    public InternalThread(ThreadGroup group, Runnable target) {
         super(group, target);
     }
 
-    public Thread(String name) {
+    public InternalThread(String name) {
         super(name);
     }
 
-    public Thread(ThreadGroup group, String name) {
+    public InternalThread(ThreadGroup group, String name) {
         super(group, name);
     }
 
-    public Thread(Runnable target, String name) {
+    public InternalThread(Runnable target, String name) {
         super(target, name);
     }
 
-    public Thread(ThreadGroup group, Runnable target, String name) {
+    public InternalThread(ThreadGroup group, Runnable target, String name) {
         super(group, target, name);
     }
 
-    public Thread(ThreadGroup group, Runnable target, String name, long stackSize) {
+    public InternalThread(ThreadGroup group, Runnable target, String name, long stackSize) {
         super(group, target, name, stackSize);
     }
 
@@ -59,7 +60,7 @@ public class Thread extends java.lang.Thread {
      * Returns the internal data structure that keeps the threadLocal variables bound to this thread.
      * Note that this method is for internal use only, and thus is subject to change at any time.
      */
-    public final ThreadLocalMap threadLocalMap() {
+    public final InternalThreadLocalMap threadLocalMap() {
         return threadLocalMap;
     }
 
@@ -67,7 +68,7 @@ public class Thread extends java.lang.Thread {
      * Sets the internal data structure that keeps the threadLocal variables bound to this thread.
      * Note that this method is for internal use only, and thus is subject to change at any time.
      */
-    public final void setThreadLocalMap(ThreadLocalMap threadLocalMap) {
+    public final void setThreadLocalMap(InternalThreadLocalMap threadLocalMap) {
         this.threadLocalMap = threadLocalMap;
     }
 }

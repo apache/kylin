@@ -31,7 +31,7 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.threadlocal.ThreadLocal;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.expression.ExpressionColCollector;
@@ -66,9 +66,9 @@ public class OLAPContext {
     public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
     public static final String PRM_USER_AUTHEN_INFO = "UserAuthenInfo";
 
-    static final ThreadLocal<Map<String, String>> _localPrarameters = new ThreadLocal<Map<String, String>>();
+    static final InternalThreadLocal<Map<String, String>> _localPrarameters = new InternalThreadLocal<Map<String, String>>();
 
-    static final ThreadLocal<Map<Integer, OLAPContext>> _localContexts = new ThreadLocal<Map<Integer, OLAPContext>>();
+    static final InternalThreadLocal<Map<Integer, OLAPContext>> _localContexts = new InternalThreadLocal<Map<Integer, OLAPContext>>();
 
     public static void setParameters(Map<String, String> parameters) {
         _localPrarameters.set(parameters);

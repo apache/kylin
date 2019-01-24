@@ -19,7 +19,7 @@
 package org.apache.kylin.engine;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.threadlocal.ThreadLocal;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 public class EngineFactory {
 
     // Use thread-local because KylinConfig can be thread-local and implementation might be different among multiple threads.
-    private static ThreadLocal<ImplementationSwitch<IBatchCubingEngine>> engines = new ThreadLocal<>();
+    private static InternalThreadLocal<ImplementationSwitch<IBatchCubingEngine>> engines = new InternalThreadLocal<>();
 
     public static IBatchCubingEngine batchEngine(IEngineAware aware) {
         ImplementationSwitch<IBatchCubingEngine> current = engines.get();

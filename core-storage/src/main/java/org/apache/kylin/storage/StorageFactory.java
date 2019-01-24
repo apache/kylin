@@ -19,7 +19,7 @@
 package org.apache.kylin.storage;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.threadlocal.ThreadLocal;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -29,7 +29,7 @@ import org.apache.kylin.metadata.realization.IRealization;
 public class StorageFactory {
 
     // Use thread-local because KylinConfig can be thread-local and implementation might be different among multiple threads.
-    private static ThreadLocal<ImplementationSwitch<IStorage>> storages = new ThreadLocal<>();
+    private static InternalThreadLocal<ImplementationSwitch<IStorage>> storages = new InternalThreadLocal<>();
 
     public static IStorage storage(IStorageAware aware) {
         ImplementationSwitch<IStorage> current = storages.get();

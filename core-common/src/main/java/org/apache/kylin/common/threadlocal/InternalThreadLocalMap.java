@@ -15,46 +15,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.kylin.common.threadlocal;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * The internal data structure that stores the threadLocal variables for Netty and all {@link Thread}s.
- * Note that this class is for internal use only. Use {@link Thread}
+ * The internal data structure that stores the threadLocal variables for Netty and all {@link InternalThread}s.
+ * Note that this class is for internal use only. Use {@link InternalThread}
  * unless you know what you are doing.
  */
-public final class ThreadLocalMap {
+public final class InternalThreadLocalMap {
 
     private Object[] indexedVariables;
 
-    private static ThreadLocal<ThreadLocalMap> slowThreadLocalMap = new ThreadLocal<ThreadLocalMap>();
+    private static ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap = new ThreadLocal<InternalThreadLocalMap>();
 
     private static final AtomicInteger nextIndex = new AtomicInteger();
 
     public static final Object UNSET = new Object();
 
-    public static ThreadLocalMap getIfSet() {
-        java.lang.Thread thread = java.lang.Thread.currentThread();
-        if (thread instanceof Thread) {
-            return ((Thread) thread).threadLocalMap();
+    public static InternalThreadLocalMap getIfSet() {
+        Thread thread = Thread.currentThread();
+        if (thread instanceof InternalThread) {
+            return ((InternalThread) thread).threadLocalMap();
         }
         return slowThreadLocalMap.get();
     }
 
-    public static ThreadLocalMap get() {
-        java.lang.Thread thread = java.lang.Thread.currentThread();
-        if (thread instanceof Thread) {
-            return fastGet((Thread) thread);
+    public static InternalThreadLocalMap get() {
+        Thread thread = Thread.currentThread();
+        if (thread instanceof InternalThread) {
+            return fastGet((InternalThread) thread);
         }
         return slowGet();
     }
 
     public static void remove() {
-        java.lang.Thread thread = java.lang.Thread.currentThread();
-        if (thread instanceof Thread) {
-            ((Thread) thread).setThreadLocalMap(null);
+        Thread thread = Thread.currentThread();
+        if (thread instanceof InternalThread) {
+            ((InternalThread) thread).setThreadLocalMap(null);
         } else {
             slowThreadLocalMap.remove();
         }
@@ -77,7 +78,7 @@ public final class ThreadLocalMap {
         return nextIndex.get() - 1;
     }
 
-    private ThreadLocalMap() {
+    private InternalThreadLocalMap() {
         indexedVariables = newIndexedVariableTable();
     }
 
@@ -120,7 +121,7 @@ public final class ThreadLocalMap {
             }
         }
 
-        //the fist element in `indexedVariables` is a set to keep all the ThreadLocal to remove
+        //the fist element in `indexedVariables` is a set to keep all the InternalThreadLocal to remove
         //look at method `addToVariablesToRemove`
         return count - 1;
     }
@@ -131,19 +132,19 @@ public final class ThreadLocalMap {
         return array;
     }
 
-    private static ThreadLocalMap fastGet(Thread thread) {
-        ThreadLocalMap threadLocalMap = thread.threadLocalMap();
+    private static InternalThreadLocalMap fastGet(InternalThread thread) {
+        InternalThreadLocalMap threadLocalMap = thread.threadLocalMap();
         if (threadLocalMap == null) {
-            thread.setThreadLocalMap(threadLocalMap = new ThreadLocalMap());
+            thread.setThreadLocalMap(threadLocalMap = new InternalThreadLocalMap());
         }
         return threadLocalMap;
     }
 
-    private static ThreadLocalMap slowGet() {
-        ThreadLocal<ThreadLocalMap> slowThreadLocalMap = ThreadLocalMap.slowThreadLocalMap;
-        ThreadLocalMap ret = slowThreadLocalMap.get();
+    private static InternalThreadLocalMap slowGet() {
+        ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap = InternalThreadLocalMap.slowThreadLocalMap;
+        InternalThreadLocalMap ret = slowThreadLocalMap.get();
         if (ret == null) {
-            ret = new ThreadLocalMap();
+            ret = new InternalThreadLocalMap();
             slowThreadLocalMap.set(ret);
         }
         return ret;
