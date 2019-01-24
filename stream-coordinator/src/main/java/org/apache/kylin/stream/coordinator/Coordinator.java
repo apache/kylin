@@ -20,10 +20,13 @@ package org.apache.kylin.stream.coordinator;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -32,7 +35,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import org.apache.curator.framework.CuratorFramework;
@@ -42,6 +48,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.ServerMode;
 import org.apache.kylin.cube.CubeInstance;
@@ -59,13 +66,17 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.stream.coordinator.assign.Assigner;
 import org.apache.kylin.stream.coordinator.assign.AssignmentUtil;
 import org.apache.kylin.stream.coordinator.assign.AssignmentsCache;
-import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
-import org.apache.kylin.stream.core.model.CubeAssignment;
-import org.apache.kylin.stream.coordinator.assign.DefaultAssigner;
-import org.apache.kylin.stream.core.model.ReplicaSet;
-import org.apache.kylin.stream.coordinator.client.CoordinatorClient;
+import org.apache.kylin.stream.coordinator.exception.ClusterStateException;
+import org.apache.kylin.stream.coordinator.exception.StoreException;
+import org.apache.kylin.stream.coordinator.exception.ClusterStateException.TransactionStep;
+import org.apache.kylin.stream.coordinator.exception.ClusterStateException.ClusterState;
 import org.apache.kylin.stream.coordinator.exception.CoordinateException;
 import org.apache.kylin.stream.coordinator.exception.NotLeadCoordinatorException;
+import org.apache.kylin.stream.coordinator.assign.DefaultAssigner;
+import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
+import org.apache.kylin.stream.core.model.CubeAssignment;
+import org.apache.kylin.stream.core.model.ReplicaSet;
+import org.apache.kylin.stream.coordinator.client.CoordinatorClient;
 import org.apache.kylin.stream.core.client.HttpReceiverAdminClient;
 import org.apache.kylin.stream.core.client.ReceiverAdminClient;
 import org.apache.kylin.stream.core.model.AssignRequest;
@@ -112,7 +123,7 @@ import javax.annotation.Nullable;
 public class Coordinator implements CoordinatorClient {
     private static final Logger logger = LoggerFactory.getLogger(Coordinator.class);
     private static final int DEFAULT_PORT = 7070;
-    private static volatile Coordinator instance = new Coordinator();
+    private static volatile Coordinator instance = null;
 
     private StreamMetadataStore streamMetadataStore;
     private Assigner assigner;
@@ -132,14 +143,37 @@ public class Coordinator implements CoordinatorClient {
         this.zkClient = ZKUtils.getZookeeperClient();
         this.selector = new CoordinatorLeaderSelector();
         this.jobStatusChecker = new StreamingBuildJobStatusChecker();
-        this.streamingJobCheckExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory(
-                "streaming_job_status_checker"));
+        this.streamingJobCheckExecutor = Executors.newScheduledThreadPool(1,
+                new NamedThreadFactory("streaming_job_status_checker"));
         if (ServerMode.SERVER_MODE.canServeStreamingCoordinator()) {
             start();
         }
     }
 
+    @VisibleForTesting
+    protected Coordinator(StreamMetadataStore metadataStore, ReceiverAdminClient receiverClient) {
+        this.streamMetadataStore = metadataStore;
+        this.receiverAdminClient = receiverClient;
+        this.assigner = new DefaultAssigner();
+        this.zkClient = ZKUtils.getZookeeperClient();
+        this.selector = new CoordinatorLeaderSelector();
+        this.jobStatusChecker = new StreamingBuildJobStatusChecker();
+        this.streamingJobCheckExecutor = Executors.newScheduledThreadPool(1,
+                new NamedThreadFactory("streaming_job_status_checker"));
+        if (ServerMode.SERVER_MODE.canServeStreamingCoordinator()) {
+            start();
+        }
+        this.isLead = true;
+    }
+
     public static Coordinator getInstance() {
+        if (instance == null) {
+            synchronized (Coordinator.class) {
+                if (instance == null) {
+                    instance = new Coordinator();
+                }
+            }
+        }
         return instance;
     }
 
@@ -156,7 +190,8 @@ public class Coordinator implements CoordinatorClient {
             Collections.sort(segmentBuildStates);
             for (SegmentBuildState segmentBuildState : segmentBuildStates) {
                 if (segmentBuildState.isInBuilding()) {
-                    SegmentJobBuildInfo jobBuildInfo = new SegmentJobBuildInfo(cube, segmentBuildState.getSegmentName(), segmentBuildState.getState().getJobId());
+                    SegmentJobBuildInfo jobBuildInfo = new SegmentJobBuildInfo(cube, segmentBuildState.getSegmentName(),
+                            segmentBuildState.getState().getJobId());
                     jobStatusChecker.addSegmentBuildJob(jobBuildInfo);
                 }
             }
@@ -183,8 +218,7 @@ public class Coordinator implements CoordinatorClient {
         if (replicaSets == null || replicaSets.isEmpty()) {
             throw new IllegalStateException("no replicaSet is configured in system");
         }
-        CubeAssignment assignment = assigner.assign(cube, replicaSets,
-                streamMetadataStore.getAllCubeAssignments());
+        CubeAssignment assignment = assigner.assign(cube, replicaSets, streamMetadataStore.getAllCubeAssignments());
         doAssignCube(cubeName, assignment);
     }
 
@@ -316,7 +350,14 @@ public class Coordinator implements CoordinatorClient {
 
     private void checkLead() {
         if (!isLead) {
-            throw new NotLeadCoordinatorException("coordinator is not lead");
+            Node coordinatorLeader;
+            try {
+                coordinatorLeader = streamMetadataStore.getCoordinatorNode();
+            } catch (StoreException store) {
+                throw new NotLeadCoordinatorException("Lead coordinator can not found.", store);
+            }
+            throw new NotLeadCoordinatorException(
+                    "Current coordinator is not lead, please check host " + coordinatorLeader);
         }
     }
 
@@ -383,7 +424,7 @@ public class Coordinator implements CoordinatorClient {
     }
 
     // todo move to source specific implementation?
-    public void doReassign(CubeInstance cubeInstance, CubeAssignment preAssignments, CubeAssignment newAssignments) {
+    void doReassign(CubeInstance cubeInstance, CubeAssignment preAssignments, CubeAssignment newAssignments) {
         String cubeName = preAssignments.getCubeName();
         IStreamingSource streamingSource = StreamingSourceFactory.getStreamingSource(cubeInstance);
         MapDifference<Integer, List<Partition>> assignDiff = Maps.difference(preAssignments.getAssignments(),
@@ -407,26 +448,43 @@ public class Coordinator implements CoordinatorClient {
                 allPositions.add(position);
                 successSyncReplicaSet.add(rs);
             }
-            consumePosition = streamingSource.getSourcePositionHandler().mergePositions(allPositions, MergeStrategy.KEEP_LARGE);
+            consumePosition = streamingSource.getSourcePositionHandler().mergePositions(allPositions,
+                    MergeStrategy.KEEP_LARGE);
             logger.info("the consumer position for cube:{} is:{}", cubeName, consumePosition);
         } catch (Exception e) {
             logger.error("fail to sync assign replicaSet for cube:" + cubeName, e);
             // roll back the success group
+            Set<Integer> needRollback = successSyncReplicaSet.stream().map(ReplicaSet::getReplicaSetID)
+                    .collect(Collectors.toSet());
             for (ReplicaSet rs : successSyncReplicaSet) {
                 StartConsumersRequest request = new StartConsumersRequest();
                 request.setCube(cubeName);
                 try {
                     startConsumersInReplicaSet(rs, request);
+                    needRollback.remove(rs.getReplicaSetID());
                 } catch (IOException e1) {
-                    logger.error(
-                            "fail to start consumers for cube:" + cubeName + " replicaSet:" + rs.getReplicaSetID(), e1);
+                    logger.error("fail to start consumers for cube:" + cubeName + " replicaSet:" + rs.getReplicaSetID(),
+                            e1);
                 }
             }
-            throw new RuntimeException(e);
+            if (needRollback.isEmpty()) {
+                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_SUCCESS,
+                        TransactionStep.STOP_AND_SNYC, "", e);
+            } else {
+                StringBuilder str = new StringBuilder();
+                try {
+                    str.append("Fail restart:").append(JsonUtil.writeValueAsString(needRollback));
+                } catch (JsonProcessingException jpe) {
+                    logger.error("", jpe);
+                }
+                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED, TransactionStep.STOP_AND_SNYC,
+                        str.toString(), e);
+            }
         }
 
         List<ReplicaSet> successAssigned = Lists.newArrayList();
         List<ReplicaSet> successStarted = Lists.newArrayList();
+        Set<Node> failedConvertToImmutableNodes = new HashSet<>();
         // the new assignment is break into two phrase to ensure transactional, first phrase is assign, and second phrase is start consumer.
         try {
             for (Map.Entry<Integer, List<Partition>> cubeAssignmentEntry : newAssignments.getAssignments().entrySet()) {
@@ -447,7 +505,8 @@ public class Coordinator implements CoordinatorClient {
                     continue;
                 }
 
-                ConsumerStartProtocol consumerStartProtocol = new ConsumerStartProtocol(streamingSource.getSourcePositionHandler().serializePosition(consumePosition.advance()));
+                ConsumerStartProtocol consumerStartProtocol = new ConsumerStartProtocol(
+                        streamingSource.getSourcePositionHandler().serializePosition(consumePosition.advance()));
 
                 ReplicaSet rs = getStreamMetadataStore().getReplicaSet(replicaSetID);
                 StartConsumersRequest startRequest = new StartConsumersRequest();
@@ -463,12 +522,19 @@ public class Coordinator implements CoordinatorClient {
                 Integer replicaSetID = removeAssignmentEntry.getKey();
                 logger.info("make cube immutable for cube:{}, replicaSet{}", cubeName, replicaSetID);
                 ReplicaSet rs = getStreamMetadataStore().getReplicaSet(replicaSetID);
-                makeCubeImmutableInReplicaSet(rs, cubeName);
+                List<Node> failedNodes = makeCubeImmutableInReplicaSet(rs, cubeName);
+                failedConvertToImmutableNodes.addAll(failedNodes);
             }
+            if (!failedConvertToImmutableNodes.isEmpty()) {
+                throw new IOException();
+            }
+
             logger.info("finish cube reBalance, cube:{}", cubeName);
         } catch (IOException e) {
             logger.error("fail to start consumers for cube:" + cubeName, e);
             // roll back success started
+            Set<Integer> rollbackStarted = successStarted.stream().map(ReplicaSet::getReplicaSetID)
+                    .collect(Collectors.toSet());
             for (ReplicaSet rs : successStarted) {
                 try {
                     StopConsumersRequest stopRequest = new StopConsumersRequest();
@@ -478,6 +544,7 @@ public class Coordinator implements CoordinatorClient {
                         stopRequest.setRemoveData(true);
                     }
                     stopConsumersInReplicaSet(rs, stopRequest);
+                    rollbackStarted.remove(rs.getReplicaSetID());
                 } catch (IOException e1) {
                     logger.error("fail to stop consumers for cube:" + cubeName + " replicaSet:" + rs.getReplicaSetID(),
                             e1);
@@ -485,17 +552,53 @@ public class Coordinator implements CoordinatorClient {
             }
 
             // roll back success assignment
+            Set<Integer> rollbackAssigned = successAssigned.stream().map(ReplicaSet::getReplicaSetID)
+                    .collect(Collectors.toSet());
             for (ReplicaSet rs : successAssigned) {
                 try {
                     List<Partition> partitions = preAssignments.getPartitionsByReplicaSetID(rs.getReplicaSetID());
                     assignCubeToReplicaSet(rs, cubeName, partitions, true, true);
+                    rollbackAssigned.remove(rs.getReplicaSetID());
                 } catch (IOException e1) {
-                    logger.error(
-                            "fail to start consumers for cube:" + cubeName + " replicaSet:" + rs.getReplicaSetID(), e1);
+                    logger.error("fail to start consumers for cube:" + cubeName + " replicaSet:" + rs.getReplicaSetID(),
+                            e1);
                 }
             }
 
-            throw new RuntimeException(e);
+            Set<Node> failedReceiver = new HashSet<>(failedConvertToImmutableNodes);
+            for (Node node : failedConvertToImmutableNodes) {
+                try {
+                    makeCubeImmutableForReceiver(node, cubeName);
+                    failedReceiver.remove(node);
+                } catch (IOException ioe) {
+                    logger.error("fail to make cube immutable for cube:" + cubeName + " to " + node, ioe);
+                }
+            }
+
+            StringBuilder str = new StringBuilder();
+            try {
+                str.append("FailStarted:").append(JsonUtil.writeValueAsString(rollbackStarted)).append(";");
+                str.append("FailAssigned:").append(JsonUtil.writeValueAsString(rollbackAssigned)).append(";");
+                str.append("FailRemotedPresisted:").append(JsonUtil.writeValueAsString(failedReceiver));
+            } catch (JsonProcessingException jpe) {
+                logger.error("", jpe);
+            }
+
+            String failedInfo = str.toString();
+
+            if (!rollbackStarted.isEmpty()) {
+                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED, TransactionStep.START_NEW,
+                        failedInfo, e);
+            } else if (!rollbackAssigned.isEmpty()) {
+                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED, TransactionStep.ASSIGN_NEW,
+                        failedInfo, e);
+            } else if (!failedReceiver.isEmpty()) {
+                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED,
+                        TransactionStep.MAKE_IMMUTABLE, failedInfo, e);
+            } else {
+                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_SUCCESS, TransactionStep.ASSIGN_NEW,
+                        failedInfo, e);
+            }
         }
 
     }
@@ -508,8 +611,8 @@ public class Coordinator implements CoordinatorClient {
      * @param replicaSet
      * @return the consume position info.
      */
-    private ISourcePosition syncAndStopConsumersInRs(IStreamingSource streamingSource, String cubeName, ReplicaSet replicaSet)
-            throws IOException {
+    private ISourcePosition syncAndStopConsumersInRs(IStreamingSource streamingSource, String cubeName,
+            ReplicaSet replicaSet) throws IOException {
         if (replicaSet.getNodes().size() > 1) { // when group nodes more than 1, force to sync the group
             logger.info("sync consume for cube:{}, replicaSet:{}", cubeName, replicaSet.getReplicaSetID());
 
@@ -518,17 +621,20 @@ public class Coordinator implements CoordinatorClient {
             List<ConsumerStatsResponse> allReceiverConsumeState = pauseConsumersInReplicaSet(replicaSet,
                     suspendRequest);
 
-            List<ISourcePosition> consumePositionList = Lists.transform(allReceiverConsumeState, new Function<ConsumerStatsResponse, ISourcePosition>() {
-                @Nullable
-                @Override
-                public ISourcePosition apply(@Nullable ConsumerStatsResponse input) {
-                    return streamingSource.getSourcePositionHandler().parsePosition(input.getConsumePosition());
-                }
-            });
-            ISourcePosition consumePosition = streamingSource.getSourcePositionHandler().mergePositions(consumePositionList, MergeStrategy.KEEP_LARGE);
+            List<ISourcePosition> consumePositionList = Lists.transform(allReceiverConsumeState,
+                    new Function<ConsumerStatsResponse, ISourcePosition>() {
+                        @Nullable
+                        @Override
+                        public ISourcePosition apply(@Nullable ConsumerStatsResponse input) {
+                            return streamingSource.getSourcePositionHandler().parsePosition(input.getConsumePosition());
+                        }
+                    });
+            ISourcePosition consumePosition = streamingSource.getSourcePositionHandler()
+                    .mergePositions(consumePositionList, MergeStrategy.KEEP_LARGE);
             ResumeConsumerRequest resumeRequest = new ResumeConsumerRequest();
             resumeRequest.setCube(cubeName);
-            resumeRequest.setResumeToPosition(streamingSource.getSourcePositionHandler().serializePosition(consumePosition));
+            resumeRequest
+                    .setResumeToPosition(streamingSource.getSourcePositionHandler().serializePosition(consumePosition));
             // assume that the resume will always succeed when the replica set can be paused successfully
             resumeConsumersInReplicaSet(replicaSet, resumeRequest);
             return consumePosition;
@@ -554,8 +660,8 @@ public class Coordinator implements CoordinatorClient {
         List<StreamingCubeInfo> allCubes = getStreamingCubes();
         List<StreamingCubeInfo> result = Lists.newArrayList();
         for (StreamingCubeInfo cube : allCubes) {
-            CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(
-                    cube.getCubeName());
+            CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
+                    .getCube(cube.getCubeName());
             if (cubeInstance.getStatus() == RealizationStatusEnum.READY) {
                 result.add(cube);
             }
@@ -754,7 +860,8 @@ public class Coordinator implements CoordinatorClient {
         receiverAdminClient.removeFromReplicaSet(receiver);
     }
 
-    private void startConsumersForReceiver(final Node receiver, final StartConsumersRequest request) throws IOException {
+    private void startConsumersForReceiver(final Node receiver, final StartConsumersRequest request)
+            throws IOException {
         receiverAdminClient.startConsumers(receiver, request);
     }
 
@@ -783,10 +890,18 @@ public class Coordinator implements CoordinatorClient {
         }
     }
 
-    public void makeCubeImmutableInReplicaSet(ReplicaSet rs, String cubeName) throws IOException {
+    public List<Node> makeCubeImmutableInReplicaSet(ReplicaSet rs, String cubeName) throws IOException {
+        List<Node> failedNodes = new ArrayList<>();
         for (final Node node : rs.getNodes()) {
-            makeCubeImmutableForReceiver(node, cubeName);
+            try {
+                makeCubeImmutableForReceiver(node, cubeName);
+            } catch (IOException ioe) {
+                logger.error(String.format(Locale.ROOT, "Convert %s to immutable for node %s failed.", cubeName,
+                        node.toNormalizeString()), ioe);
+                failedNodes.add(node);
+            }
         }
+        return failedNodes;
     }
 
     public List<ConsumerStatsResponse> stopConsumersInReplicaSet(ReplicaSet rs, final StopConsumersRequest request)
@@ -862,7 +977,8 @@ public class Coordinator implements CoordinatorClient {
         return triggered;
     }
 
-    private void segmentBuildComplete(CubingJob cubingJob, CubeInstance cubeInstance, CubeSegment cubeSegment, SegmentJobBuildInfo segmentBuildInfo) throws IOException {
+    private void segmentBuildComplete(CubingJob cubingJob, CubeInstance cubeInstance, CubeSegment cubeSegment,
+            SegmentJobBuildInfo segmentBuildInfo) throws IOException {
         if (!checkPreviousSegmentReady(cubeSegment)) {
             logger.warn("the segment:{}'s previous segment is not ready, will not set the segment to ready",
                     cubeSegment);
@@ -910,20 +1026,24 @@ public class Coordinator implements CoordinatorClient {
         tryFindAndBuildSegment(segmentBuildInfo.cubeName); // try to build new segment immediately after build complete
     }
 
-    private void promoteNewSegment(CubingJob cubingJob, CubeInstance cubeInstance, CubeSegment cubeSegment) throws IOException {
+    private void promoteNewSegment(CubingJob cubingJob, CubeInstance cubeInstance, CubeSegment cubeSegment)
+            throws IOException {
         long sourceCount = cubingJob.findSourceRecordCount();
         long sourceSizeBytes = cubingJob.findSourceSizeBytes();
         long cubeSizeBytes = cubingJob.findCubeSizeBytes();
-        Map<Integer, String> sourceCheckpoint = streamMetadataStore.getSourceCheckpoint(cubeInstance.getName(), cubeSegment.getName());
+        Map<Integer, String> sourceCheckpoint = streamMetadataStore.getSourceCheckpoint(cubeInstance.getName(),
+                cubeSegment.getName());
 
-        ISourcePositionHandler positionOperator = StreamingSourceFactory.getStreamingSource(cubeInstance).getSourcePositionHandler();
-        Collection<ISourcePosition> sourcePositions = Collections2.transform(sourceCheckpoint.values(), new Function<String, ISourcePosition>() {
-            @Nullable
-            @Override
-            public ISourcePosition apply(@Nullable String input) {
-                return positionOperator.parsePosition(input);
-            }
-        });
+        ISourcePositionHandler positionOperator = StreamingSourceFactory.getStreamingSource(cubeInstance)
+                .getSourcePositionHandler();
+        Collection<ISourcePosition> sourcePositions = Collections2.transform(sourceCheckpoint.values(),
+                new Function<String, ISourcePosition>() {
+                    @Nullable
+                    @Override
+                    public ISourcePosition apply(@Nullable String input) {
+                        return positionOperator.parsePosition(input);
+                    }
+                });
         ISourcePosition sourcePosition = positionOperator.mergePositions(sourcePositions, MergeStrategy.KEEP_SMALL);
         cubeSegment.setLastBuildJobID(cubingJob.getId());
         cubeSegment.setLastBuildTime(System.currentTimeMillis());
@@ -975,8 +1095,8 @@ public class Coordinator implements CoordinatorClient {
         try {
             Pair<Long, Long> segmentRange = CubeSegment.parseSegmentName(segmentName);
             logger.info("submit streaming segment build, cube:{} segment:{}", cubeName, segmentName);
-            CubeSegment newSeg = getCubeManager().appendSegment(cubeInstance, new TSRange(segmentRange.getFirst(),
-                    segmentRange.getSecond()));
+            CubeSegment newSeg = getCubeManager().appendSegment(cubeInstance,
+                    new TSRange(segmentRange.getFirst(), segmentRange.getSecond()));
             DefaultChainedExecutable executable = new StreamingCubingEngine().createStreamingCubingBuilder(newSeg,
                     "SYSTEM");
             getExecutableManager().addJob(executable);
@@ -1026,7 +1146,7 @@ public class Coordinator implements CoordinatorClient {
             }
 
             if (segmentState.isInBuilding()) {
-                inBuildingSegments ++;
+                inBuildingSegments++;
                 String jobId = segmentState.getState().getJobId();
                 logger.info("there is segment in building, cube:{} segment:{} jobId:{}", cubeName,
                         segmentState.getSegmentName(), jobId);
@@ -1034,21 +1154,23 @@ public class Coordinator implements CoordinatorClient {
                 if (buildStartTime != 0 && jobId != null) {
                     long buildDuration = System.currentTimeMillis() - buildStartTime;
                     if (buildDuration < 40 * 60 * 1000) { // if build time larger than 40 minutes, check the job status
-                        continue; 
+                        continue;
                     }
                     CubingJob cubingJob = (CubingJob) getExecutableManager().getJob(jobId);
                     ExecutableState jobState = cubingJob.getStatus();
                     if (ExecutableState.SUCCEED.equals(jobState)) { // job is already succeed, remove the build state
                         CubeSegment cubeSegment = cubeInstance.getSegment(segmentState.getSegmentName(), null);
                         if (cubeSegment != null && SegmentStatusEnum.READY == cubeSegment.getStatus()) {
-                            logger.info("job:{} is already succeed, and segment:{} is ready, remove segment build state", jobId, segmentState.getSegmentName());
+                            logger.info(
+                                    "job:{} is already succeed, and segment:{} is ready, remove segment build state",
+                                    jobId, segmentState.getSegmentName());
                             streamMetadataStore.removeSegmentBuildState(cubeName, segmentState.getSegmentName());
                         }
                         continue;
                     } else if (ExecutableState.ERROR.equals(jobState)) {
                         logger.info("job:{} is error, resume the job", jobId);
                         getExecutableManager().resumeJob(jobId);
-                        continue; 
+                        continue;
                     } else if (ExecutableState.DISCARDED.equals(jobState)) {
                         // if the job has been discard manually, just think that the segment is not in building
                         logger.info("job:{} is discard, reset the job state in metaStore", jobId);
@@ -1060,12 +1182,12 @@ public class Coordinator implements CoordinatorClient {
                         segmentState.setState(state);
                     } else {
                         logger.info("job:{} is in running, job state: {}", jobId, jobState);
-                        continue; 
+                        continue;
                     }
                 }
             }
             if (leftQuota <= 0) {
-                logger.info("No left quota to build segments for cube:" + cubeName);
+                logger.info("No left quota to build segments for cube:{}", cubeName);
                 return result;
             }
             if (!checkSegmentIsReadyToBuild(segmentStates, i, cubeAssignedReplicaSets)) {
@@ -1076,13 +1198,26 @@ public class Coordinator implements CoordinatorClient {
         }
         return result;
     }
-    
-    private boolean checkSegmentIsReadyToBuild(List<SegmentBuildState> allSegmentStates, int checkedSegmentIdx, Set<Integer> cubeAssignedReplicaSets) {
+
+    /**
+     * <pre>
+     *     When all replica sets have uploaded their local segment cache to remote, we can mark
+     *     this segment as ready to submit a MapReduce job to build into HBase.
+     *
+     *     Note the special situation, when some replica set didn't upload any data in some segment duration for lack
+     *     of entered kafka event, we still try to check the newer segment duration, if found some newer segment have data
+     *     uploaded for current miss replica set, we marked local segment cache has been uploaded for that replica for current segment.
+     *     This workround will prevent job-submit queue from blocking by no data for some topic partition.
+     * </pre>
+     * @return true if all local segment cache has been uploaded successfully, else false
+     */
+    private boolean checkSegmentIsReadyToBuild(List<SegmentBuildState> allSegmentStates, int checkedSegmentIdx,
+            Set<Integer> cubeAssignedReplicaSets) {
         SegmentBuildState checkedSegmentState = allSegmentStates.get(checkedSegmentIdx);
-        Set<Integer> notCompleteReplicaSets = Sets.newHashSet(Sets.difference(cubeAssignedReplicaSets,
-                checkedSegmentState.getCompleteReplicaSets()));
+        Set<Integer> notCompleteReplicaSets = Sets
+                .newHashSet(Sets.difference(cubeAssignedReplicaSets, checkedSegmentState.getCompleteReplicaSets()));
         if (notCompleteReplicaSets.isEmpty()) {
-            return true; 
+            return true;
         } else {
             for (int i = checkedSegmentIdx + 1; i < allSegmentStates.size(); i++) {
                 SegmentBuildState segmentBuildState = allSegmentStates.get(i);
@@ -1150,14 +1285,16 @@ public class Coordinator implements CoordinatorClient {
     private class StreamingBuildJobStatusChecker implements Runnable {
         private int maxJobTryCnt = 5;
         private CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        private ConcurrentMap<String, ConcurrentSkipListSet<SegmentJobBuildInfo>> segmentBuildJobMap = Maps.newConcurrentMap();
+        private ConcurrentMap<String, ConcurrentSkipListSet<SegmentJobBuildInfo>> segmentBuildJobMap = Maps
+                .newConcurrentMap();
         private CopyOnWriteArrayList<String> pendingCubeName = Lists.newCopyOnWriteArrayList();
 
         public void addSegmentBuildJob(SegmentJobBuildInfo segmentBuildJob) {
             ConcurrentSkipListSet<SegmentJobBuildInfo> buildInfos = segmentBuildJobMap.get(segmentBuildJob.cubeName);
             if (buildInfos == null) {
                 buildInfos = new ConcurrentSkipListSet<>();
-                ConcurrentSkipListSet<SegmentJobBuildInfo> previousValue = segmentBuildJobMap.putIfAbsent(segmentBuildJob.cubeName, buildInfos);
+                ConcurrentSkipListSet<SegmentJobBuildInfo> previousValue = segmentBuildJobMap
+                        .putIfAbsent(segmentBuildJob.cubeName, buildInfos);
                 if (previousValue != null) {
                     buildInfos = previousValue;
                 }
@@ -1244,7 +1381,7 @@ public class Coordinator implements CoordinatorClient {
         }
     }
 
-    private class SegmentJobBuildInfo implements Comparable<SegmentJobBuildInfo>{
+    private class SegmentJobBuildInfo implements Comparable<SegmentJobBuildInfo> {
         public String cubeName;
         public String segmentName;
         public String jobID;
