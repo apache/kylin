@@ -151,7 +151,7 @@ public class CliCommandExecutor {
             } catch (InterruptedException e) {
                 // do nothing
             }
-            return Pair.newPair(0, "Killed");
+            return Pair.newPair(1, "Killed");
         }
 
         try {
