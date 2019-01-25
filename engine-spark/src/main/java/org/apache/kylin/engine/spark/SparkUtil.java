@@ -149,7 +149,7 @@ public class SparkUtil {
                         @Override
                         public String[] call(Text text) throws Exception {
                             String s = Bytes.toString(text.getBytes(), 0, text.getLength());
-                            return s.split(BatchConstants.SEQUENCE_FILE_DEFAULT_DELIMITER);
+                            return s.split(BatchConstants.SEQUENCE_FILE_DEFAULT_DELIMITER, -1);
                         }
                     });
         } else {
@@ -173,6 +173,37 @@ public class SparkUtil {
         }
 
         return recordRDD;
+    }
+
+    private static JavaRDD<String[]> getSequenceFormatHiveInput(JavaSparkContext sc, String inputPath) {
+        return sc.sequenceFile(inputPath, BytesWritable.class, Text.class).values()
+                .map(new Function<Text, String[]>() {
+                    @Override
+                    public String[] call(Text text) throws Exception {
+                        String s = Bytes.toString(text.getBytes(), 0, text.getLength());
+                        return s.split(BatchConstants.SEQUENCE_FILE_DEFAULT_DELIMITER, -1);
+                    }
+                });
+    }
+
+    private static JavaRDD<String[]> getOtherFormatHiveInput(JavaSparkContext sc, String hiveTable) {
+        SparkSession sparkSession = SparkSession.builder().config(sc.getConf()).enableHiveSupport().getOrCreate();
+        final Dataset intermediateTable = sparkSession.table(hiveTable);
+        return intermediateTable.javaRDD().map(new Function<Row, String[]>() {
+            @Override
+            public String[] call(Row row) throws Exception {
+                String[] result = new String[row.size()];
+                for (int i = 0; i < row.size(); i++) {
+                    final Object o = row.get(i);
+                    if (o != null) {
+                        result[i] = o.toString();
+                    } else {
+                        result[i] = null;
+                    }
+                }
+                return result;
+            }
+        });
     }
 
 }
