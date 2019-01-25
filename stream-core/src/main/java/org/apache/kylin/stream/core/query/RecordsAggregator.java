@@ -136,14 +136,25 @@ public class RecordsAggregator implements Iterable<Record>{
     final Comparator<String[]> comparator = new Comparator<String[]>() {
         @Override
         public int compare(String[] o1, String[] o2) {
+            int result = 0;
             for (int i = 0; i < groupIndexes.length; i++) {
                 int groupIdx = groupIndexes[i];
-                int result = o1[groupIdx].compareTo(o2[groupIdx]);
-                if (result != 0) {
-                    return result;
+                if (o1[groupIdx] == null && o2[groupIdx] == null) {
+                    continue;
+                } else if (o1[groupIdx] != null && o2[groupIdx] == null) {
+                    return 1;
+                } else if (o1[groupIdx] == null && o2[groupIdx] != null) {
+                    return -1;
+                } else {
+                    result = o1[groupIdx].compareTo(o2[groupIdx]);
+                    if (result == 0) {
+                        continue;
+                    } else {
+                        return result;
+                    }
                 }
             }
-            return 0;
+            return result;
         }
     };
 }
