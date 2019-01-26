@@ -62,12 +62,18 @@ public class StreamingSegmentManager implements Closeable {
     private final String cubeName;
     private final CubeInstance cubeInstance;
 
-    //Cube window defines how streaming events are divided and put into different segments , for example 1 hour per segment(indexer).
-    //If the received events' timestamp is completely out of order and belongs to a very wide range, there will be multiple active segment indexers created and serve the indexing and querying.
+    /**
+     * Cube window defines how streaming events are divided and put into different segments , for example 1 hour per segment(indexer).
+     * If the received events' timestamp is completely out of order and belongs to a very wide range,
+     * there will be multiple active segment indexers created and serve the indexing and querying.
+     * */
     private final long cubeWindow;
 
-    //Cube duration defines how long the oldest streaming segment becomes immutable and does not allow additional modification.
-    //Any further long latency events that can't find a corresponding segment to serve the index, the events will be put to a specific segment for long latency events only.
+    /**
+     * Cube duration defines how long the oldest streaming segment becomes immutable and does not allow additional modification.
+     * Any further long latency events that can't find a corresponding segment to serve the index,
+     * the events will be put to a specific segment for long latency events only.
+     * */
     private final long cubeDuration;
 
     private final long maxCubeDuration;
@@ -223,13 +229,13 @@ public class StreamingSegmentManager implements Closeable {
     private void restoreSegmentsFromCP(List<File> segmentFolders, Map<Long, String> checkpointStoreStats,
                                        Map<Long, String> segmentSourceStartPositions, CubeSegment latestRemoteSegment) {
         if (segmentSourceStartPositions != null) {
-            this.segmentSourceStartPositions = Maps.transformValues(segmentSourceStartPositions, new Function<String, ISourcePosition>() {
+            this.segmentSourceStartPositions.putAll(Maps.transformValues(segmentSourceStartPositions, new Function<String, ISourcePosition>() {
                 @Nullable
                 @Override
                 public ISourcePosition apply(@Nullable String input) {
                     return sourcePositionHandler.parsePosition(input);
                 }
-            });
+            }));
         }
         for (File segmentFolder : segmentFolders) {
             try {
