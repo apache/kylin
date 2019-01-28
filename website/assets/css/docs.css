@@ -152,6 +152,7 @@
 }
 #pjax > article > table td {
     border: 1px solid black;
+    width: 200px;
 }
 #pjax > article > table tr {
     height: 60px;
