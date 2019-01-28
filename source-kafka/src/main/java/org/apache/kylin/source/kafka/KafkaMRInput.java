@@ -110,7 +110,7 @@ public class KafkaMRInput implements IMRInput {
         @Override
         public Collection<String[]> parseMapperInput(Object mapperInput) {
             Text text = (Text) mapperInput;
-            String[] columns  = Bytes.toString(text.getBytes(), 0, text.getLength()).split(delimiter);
+            String[] columns = Bytes.toString(text.getBytes(), 0, text.getLength()).split(delimiter, -1);
             return Collections.singletonList(columns);
         }
 
