@@ -5,7 +5,7 @@ categories: development
 permalink: /development/datasource_sdk.html
 ---
 
-&gt; Available since Apache Kylin v2.6.0
+> Available since Apache Kylin v2.6.0
 
 ## Data source SDK
 
@@ -21,16 +21,85 @@ Developers do not need coding, what they should do is just create a new configur
 
 Structure of the configuration:
 
-* Root node:  
-&lt;DATASOURCE_DEF NAME="kylin" ID="default"&gt;, the value of ID should be name of dialect.
+* Root node: 
+
+```
+<DATASOURCE_DEF NAME="kylin" ID="mysql" DIALECT="mysql"/>
+```
+
+The value of ID is normally the same with configuration file.  
+The value of DIALECT is defined mainly for quote string for database identifier.  
+For example Mysql use ``, Microsoft sql server use [].   
+Mapping of Kylin DIALECT and Apache Calcite Dialect as belows:  
+<table>
+  <tbody align="left">  
+  <tr>
+    <td align="center">Dialect in Kylin</td>
+    <td align="center">Dialect in Apache Calcite</td>
+  </tr>
+  <tr>
+    <td> default </td>
+    <td> SqlDialect.CALCITE </td>
+  </tr>
+  <tr>
+    <td> calcite </td>
+    <td> SqlDialect.CALCITE </td>
+  </tr>
+  <tr>
+    <td> greenplum </td>
+    <td> SqlDialect.DatabaseProduct.POSTGRESQL </td>
+  </tr>
+  <tr>
+    <td> postgresql </td>
+    <td> SqlDialect.DatabaseProduct.POSTGRESQL </td>
+  </tr>
+  <tr>
+    <td> mysql  </td>
+    <td> SqlDialect.DatabaseProduct.MYSQL </td>
+  </tr>
+  <tr>
+     <td> sql.keyword-default-uppercase </td>
+     <td> whether &lt;default&gt; should be transform to uppercase </td>
+  </tr>
+  <tr>
+    <td> mssql </td>
+    <td> SqlDialect.DatabaseProduct.MSSQL </td>
+  </tr>
+  <tr>
+    <td> oracle </td>
+    <td> SqlDialect.DatabaseProduct.ORACLE </td>
+  </tr>
+  <tr>
+    <td> vertica </td>
+    <td> SqlDialect.DatabaseProduct.VERTICA </td>
+  </tr>
+  <tr>
+    <td> redshift </td>
+    <td> SqlDialect.DatabaseProduct.REDSHIFT </td>
+  </tr>
+  <tr>
+    <td> hive </td>
+    <td> SqlDialect.DatabaseProduct.HIVE </td>
+  </tr>
+  <tr>
+    <td> h2 </td>
+    <td> SqlDialect.DatabaseProduct.H2 </td>
+  </tr>
+  <tr>
+    <td> unkown </td>
+    <td> SqlDialect.DUMMY </td>
+  </tr>    
+  </tbody>
+</table>
+
 * Property node:  
 Define the properties of the dialect.
 
 <table>
   <tbody align="left">  
   <tr>
-    <td align="center">属性</td>
-    <td align="center">描述</td>
+    <td align="center">Property</td>
+    <td align="center">Description</td>
   </tr>
   <tr>
     <td> sql.default-converted-enabled </td>
@@ -143,9 +212,9 @@ kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushdownR
 kylin.source.default=16
 kylin.source.jdbc.dialect=mysql
 kylin.source.jdbc.adaptor=org.apache.kylin.sdk.datasource.adaptor.MysqlAdaptor
-kylin.source.jdbc.user={mysql username}
-kylin.source.jdbc.pass={mysql password}
-kylin.source.jdbc.connection-url=jdbc:mysql://{HOST_URL}:3306/{Database name}
+kylin.source.jdbc.user={MYSQL_USERNAME}
+kylin.source.jdbc.pass={MYSQL_PASSWORD}
+kylin.source.jdbc.connection-url=jdbc:mysql://{HOST_URL}:3306/{DATABASE_NAME}
 kylin.source.jdbc.driver=com.mysql.jdbc.Driver
 {% endhighlight %}
 
