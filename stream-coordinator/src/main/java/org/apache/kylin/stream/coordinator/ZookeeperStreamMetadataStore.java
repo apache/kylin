@@ -51,6 +51,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
     public static final String CUBE_BUILD_STATE = "build_state";
     public static final String CUBE_CONSUME_STATE = "consume_state";
     public static final String CUBE_ASSIGNMENT = "assignment";
+    public static final String CUBE_REASSIGN = "reassign";
     public static final String CUBE_CONSUME_SRC_STATE = "consume_source_state";
     public static final String CUBE_SRC_CHECKPOINT = "source_checkpoint";
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperStreamMetadataStore.class);
@@ -261,8 +262,7 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
     @Override
     public void saveSourceCheckpoint(String cubeName, String segmentName, int rsID, String sourceCheckpoint) {
         try {
-            String path = ZKPaths.makePath(cubeRoot, cubeName, CUBE_SRC_CHECKPOINT, segmentName,
-                    String.valueOf(rsID));
+            String path = ZKPaths.makePath(cubeRoot, cubeName, CUBE_SRC_CHECKPOINT, segmentName, String.valueOf(rsID));
             if (client.checkExists().forPath(path) == null) {
                 client.create().creatingParentsIfNeeded().forPath(path);
             } else {
@@ -451,8 +451,8 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
         try {
             String path = getCubeAssignmentPath(newCubeAssignment.getCubeName());
             if (client.checkExists().forPath(path) == null) {
-                client.create().creatingParentsIfNeeded()
-                        .forPath(path, CubeAssignment.serializeCubeAssignment(newCubeAssignment));
+                client.create().creatingParentsIfNeeded().forPath(path,
+                        CubeAssignment.serializeCubeAssignment(newCubeAssignment));
             } else {
                 client.setData().forPath(path, CubeAssignment.serializeCubeAssignment(newCubeAssignment));
             }
@@ -574,5 +574,40 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
 
     private String getCubeConsumeStatePath(String cubeName) {
         return ZKPaths.makePath(cubeRoot, cubeName, CUBE_CONSUME_STATE);
+    }
+
+    @Override
+    public void setCubeClusterState(ReassignResult result) {
+        String path = ZKPaths.makePath(cubeRoot, result.cubeName, CUBE_REASSIGN);
+        logger.info("SaveClusterState {}", result);
+        try {
+            if (client.checkExists().forPath(path) != null) {
+                client.setData().forPath(path, JsonUtil.writeValueAsBytes(result));
+            } else {
+                client.create().creatingParentsIfNeeded().forPath(path, JsonUtil.writeValueAsBytes(result));
+            }
+        } catch (Exception e) {
+            logger.error("Store reassign result error ", e);
+            throw new StoreException(e);
+        }
+    }
+
+    @Override
+    public ReassignResult getCubeClusterState(String cubeName) {
+        String path = ZKPaths.makePath(cubeRoot, cubeName, CUBE_REASSIGN);
+        ReassignResult reassignResult;
+        try {
+            if (client.checkExists().forPath(path) == null) {
+                reassignResult = new ReassignResult(cubeName);
+            } else {
+                byte[] stateBytes = client.getData().forPath(path);
+                String stateStr = Bytes.toString(stateBytes);
+                reassignResult = JsonUtil.readValue(stateStr, ReassignResult.class);
+            }
+        } catch (Exception e) {
+            logger.error("Fetch reassign result error ", e);
+            throw new StoreException(e);
+        }
+        return reassignResult;
     }
 }

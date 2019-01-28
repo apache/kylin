@@ -20,7 +20,11 @@ package org.apache.kylin.stream.coordinator;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.stream.coordinator.exception.ClusterStateException;
 import org.apache.kylin.stream.core.model.CubeAssignment;
 import org.apache.kylin.stream.core.model.ReplicaSet;
 import org.apache.kylin.stream.core.model.Node;
@@ -114,4 +118,52 @@ public interface StreamMetadataStore {
     SegmentBuildState getSegmentBuildState(String cubeName, String segmentName);
 
     boolean removeSegmentBuildState(String cubeName, String segmentName);
+
+    default void setCubeClusterState(ReassignResult result) {
+    }
+
+    default ReassignResult getCubeClusterState(String cubeName) {
+        return null;
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
+    class ReassignResult {
+        @JsonProperty("clusterState")
+        ClusterStateException.ClusterState clusterState;
+        @JsonProperty("failedStep")
+        ClusterStateException.TransactionStep failedStep;
+        @JsonProperty("occurTimestamp")
+        long occurTimestamp;
+        @JsonProperty("failedRs")
+        int failedRs = -1;
+        @JsonProperty("failedRollback")
+        Map<String, Set<Integer>> failedRollback;
+        @JsonProperty("cubeName")
+        String cubeName;
+
+        /** For reflection */
+        public ReassignResult() {
+        }
+
+        public ReassignResult(String cubeName) {
+            this.cubeName = cubeName;
+            this.clusterState = ClusterStateException.ClusterState.CONSISTENT;
+        }
+
+        public ReassignResult(ClusterStateException exception) {
+            this.clusterState = exception.getClusterState();
+            this.failedStep = exception.getTransactionStep();
+            this.occurTimestamp = System.currentTimeMillis();
+            this.failedRs = exception.getFailedRs();
+            this.failedRollback = exception.getInconsistentPart();
+            this.cubeName = exception.getCubeName();
+        }
+
+        @Override
+        public String toString() {
+            return "ReassignResult{" + "clusterState=" + clusterState + ", failedStep=" + failedStep
+                    + ", occurTimestamp=" + occurTimestamp + ", failedRs=" + failedRs + ", failedRollback="
+                    + failedRollback + ", cubeName='" + cubeName + '\'' + '}';
+        }
+    }
 }

@@ -18,14 +18,35 @@
 
 package org.apache.kylin.stream.coordinator.exception;
 
-import java.util.Locale;
+import org.apache.kylin.stream.core.exception.StreamingException;
 
-public class ClusterStateException extends CoordinateException {
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * This exception is to indicate that the receiver cluster is in
+ * some inconsistent situation which maybe caused by failure of a distributed transaction.
+ */
+public class ClusterStateException extends StreamingException {
 
     private final String cubeName;
     private final ClusterState clusterState;
+
+    /**
+     *  The step of a distributed transaction which failed
+     */
     private final TransactionStep transactionStep;
-    private final String inconsistentPart;
+
+    /**
+     *  The set of replica set which failed in roll back
+     */
+    private final Map<String, Set<Integer>> inconsistentRs;
+
+    /**
+     *  The id of replica set which cause the roll back
+     */
+    private final int failedRs;
 
     public ClusterState getClusterState() {
         return clusterState;
@@ -35,18 +56,40 @@ public class ClusterStateException extends CoordinateException {
         return transactionStep;
     }
 
-    public String getInconsistentPart() {
-        return inconsistentPart;
+    public Map<String, Set<Integer>> getInconsistentPart() {
+        return inconsistentRs;
     }
 
-    public ClusterStateException(String cubeName, ClusterState state, TransactionStep step, String failedRs,
-            Throwable cause) {
-        super(String.format(Locale.ROOT, "Cube: %s    State: %s    Step: %s    Affect: %s", cubeName, state.name(),
-                step.name(), failedRs), cause);
+    public ClusterStateException(String cubeName, String msg) {
+        super(msg);
+        this.cubeName = cubeName;
+        this.clusterState = null;
+        this.failedRs = -1;
+        this.inconsistentRs = null;
+        this.transactionStep = null;
+    }
+
+    public ClusterStateException(String cubeName, ClusterState state, TransactionStep step, int failedRs,
+            Map<String, Set<Integer>> inconsistentRs, Throwable cause) {
+        super(String.format(Locale.ROOT, "Cube:%s  State:%s  Step:%s  CausedBy:%s  Affect: %s", cubeName, state.name(),
+                step.name(), failedRs, inconsistentRs), cause);
         this.cubeName = cubeName;
         this.transactionStep = step;
         this.clusterState = state;
-        this.inconsistentPart = failedRs;
+        this.failedRs = failedRs;
+        this.inconsistentRs = inconsistentRs;
+    }
+
+    public String getCubeName() {
+        return cubeName;
+    }
+
+    public Map<String, Set<Integer>> getInconsistentRs() {
+        return inconsistentRs;
+    }
+
+    public int getFailedRs() {
+        return failedRs;
     }
 
     public enum ClusterState {

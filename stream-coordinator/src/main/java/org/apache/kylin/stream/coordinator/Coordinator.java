@@ -20,9 +20,11 @@ package org.apache.kylin.stream.coordinator;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -35,6 +37,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -89,6 +92,7 @@ import org.apache.kylin.stream.core.model.StartConsumersRequest;
 import org.apache.kylin.stream.core.model.StopConsumersRequest;
 import org.apache.kylin.stream.core.model.StreamingCubeConsumeState;
 import org.apache.kylin.stream.core.model.UnAssignRequest;
+import org.apache.kylin.stream.core.model.stats.ConsumerStats;
 import org.apache.kylin.stream.core.model.stats.ReceiverCubeStats;
 import org.apache.kylin.stream.core.source.ISourcePosition;
 import org.apache.kylin.stream.core.source.ISourcePositionHandler;
@@ -132,9 +136,13 @@ public class Coordinator implements CoordinatorClient {
     private CoordinatorLeaderSelector selector;
     private volatile boolean isLead = false;
 
+    private ReentrantLock assignLock = new ReentrantLock();
+
     private ScheduledExecutorService streamingJobCheckExecutor;
+    private ScheduledExecutorService clusterStateAntoRecoverExecutor;
 
     private StreamingBuildJobStatusChecker jobStatusChecker;
+    private AutoRecoveryManager autoRecoveryManager;
 
     private Coordinator() {
         this.streamMetadataStore = StreamMetadataStoreFactory.getStreamMetaDataStore();
@@ -143,8 +151,11 @@ public class Coordinator implements CoordinatorClient {
         this.zkClient = ZKUtils.getZookeeperClient();
         this.selector = new CoordinatorLeaderSelector();
         this.jobStatusChecker = new StreamingBuildJobStatusChecker();
+        this.autoRecoveryManager = new AutoRecoveryManager();
         this.streamingJobCheckExecutor = Executors.newScheduledThreadPool(1,
                 new NamedThreadFactory("streaming_job_status_checker"));
+        this.clusterStateAntoRecoverExecutor = Executors.newScheduledThreadPool(1,
+                new NamedThreadFactory("cluster_state_checker"));
         if (ServerMode.SERVER_MODE.canServeStreamingCoordinator()) {
             start();
         }
@@ -180,6 +191,7 @@ public class Coordinator implements CoordinatorClient {
     public void start() {
         selector.start();
         streamingJobCheckExecutor.scheduleAtFixedRate(jobStatusChecker, 0, 2, TimeUnit.MINUTES);
+        clusterStateAntoRecoverExecutor.scheduleAtFixedRate(autoRecoveryManager, 30, 100, TimeUnit.SECONDS);
     }
 
     private void restoreJobStatusChecker() {
@@ -404,12 +416,35 @@ public class Coordinator implements CoordinatorClient {
             CubeAssignment newAssignments) {
         logger.info("start cube reBalance, cube:{}, previous assignments:{}, new assignments:{}", cubeName,
                 preAssignments, newAssignments);
-        if (newAssignments.equals(preAssignments)) {
-            logger.info("the new assignment is the same as the previous assignment, do nothing for this reassignment");
-            return newAssignments;
+        StreamMetadataStore.ReassignResult reassignResult;
+        try {
+            assignLock.lock();
+            if (newAssignments.equals(preAssignments)) {
+                logger.info(
+                        "the new assignment is the same as the previous assignment, do nothing for this reassignment");
+                return newAssignments;
+            }
+            reassignResult = streamMetadataStore.getCubeClusterState(cubeName);
+            if (reassignResult != null && reassignResult.clusterState != ClusterState.CONSISTENT) {
+                String str = cubeName + " is inconsistent because failure of the lastest reassign. ";
+                try {
+                    str += JsonUtil.writeValueAsString(reassignResult);
+                } catch (JsonProcessingException e) {
+                    logger.warn("", e);
+                }
+                throw new ClusterStateException(cubeName, str);
+            }
+
+            CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+            doReassign(cubeInstance, preAssignments, newAssignments);
+        } catch (ClusterStateException sce) {
+            reassignResult = new StreamMetadataStore.ReassignResult(sce);
+            streamMetadataStore.setCubeClusterState(reassignResult);
+            throw sce;
+        } finally {
+            assignLock.unlock();
         }
-        CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-        doReassign(cubeInstance, preAssignments, newAssignments);
+
         MapDifference<Integer, List<Partition>> assignDiff = Maps.difference(preAssignments.getAssignments(),
                 newAssignments.getAssignments());
 
@@ -436,9 +471,11 @@ public class Coordinator implements CoordinatorClient {
         List<ISourcePosition> allPositions = Lists.newArrayList();
         List<ReplicaSet> successSyncReplicaSet = Lists.newArrayList();
         ISourcePosition consumePosition;
+        int currentRs = -1;
         try {
             for (Map.Entry<Integer, List<Partition>> assignmentEntry : preAssignments.getAssignments().entrySet()) {
                 Integer replicaSetID = assignmentEntry.getKey();
+                currentRs = replicaSetID;
                 if (sameAssign.containsKey(replicaSetID)) {
                     logger.info("the assignment is not changed for cube:{}, replicaSet:{}", cubeName, replicaSetID);
                     continue;
@@ -468,27 +505,24 @@ public class Coordinator implements CoordinatorClient {
                 }
             }
             if (needRollback.isEmpty()) {
-                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_SUCCESS,
-                        TransactionStep.STOP_AND_SNYC, "", e);
+                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_SUCCESS, TransactionStep.STOP_AND_SNYC,
+                        currentRs, Maps.newHashMap(), e);
             } else {
-                StringBuilder str = new StringBuilder();
-                try {
-                    str.append("Fail restart:").append(JsonUtil.writeValueAsString(needRollback));
-                } catch (JsonProcessingException jpe) {
-                    logger.error("", jpe);
-                }
+                Map<String, Set<Integer>> inconsistentRs = new HashMap<>();
+                inconsistentRs.put("Resume", needRollback);
                 throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED, TransactionStep.STOP_AND_SNYC,
-                        str.toString(), e);
+                        currentRs, inconsistentRs, e);
             }
         }
 
         List<ReplicaSet> successAssigned = Lists.newArrayList();
         List<ReplicaSet> successStarted = Lists.newArrayList();
-        Set<Node> failedConvertToImmutableNodes = new HashSet<>();
+        Set<Integer> failedConvertToImmutableRs = new HashSet<>();
         // the new assignment is break into two phrase to ensure transactional, first phrase is assign, and second phrase is start consumer.
         try {
             for (Map.Entry<Integer, List<Partition>> cubeAssignmentEntry : newAssignments.getAssignments().entrySet()) {
                 Integer replicaSetID = cubeAssignmentEntry.getKey();
+                currentRs = replicaSetID;
                 if (sameAssign.containsKey(replicaSetID)) {
                     continue;
                 }
@@ -501,6 +535,7 @@ public class Coordinator implements CoordinatorClient {
 
             for (Map.Entry<Integer, List<Partition>> cubeAssignmentEntry : newAssignments.getAssignments().entrySet()) {
                 Integer replicaSetID = cubeAssignmentEntry.getKey();
+                currentRs = replicaSetID;
                 if (sameAssign.containsKey(replicaSetID)) {
                     continue;
                 }
@@ -520,12 +555,14 @@ public class Coordinator implements CoordinatorClient {
 
             for (Map.Entry<Integer, List<Partition>> removeAssignmentEntry : removedAssign.entrySet()) {
                 Integer replicaSetID = removeAssignmentEntry.getKey();
+                currentRs = replicaSetID;
                 logger.info("make cube immutable for cube:{}, replicaSet{}", cubeName, replicaSetID);
                 ReplicaSet rs = getStreamMetadataStore().getReplicaSet(replicaSetID);
                 List<Node> failedNodes = makeCubeImmutableInReplicaSet(rs, cubeName);
-                failedConvertToImmutableNodes.addAll(failedNodes);
+                if (!failedNodes.isEmpty())
+                    failedConvertToImmutableRs.add(replicaSetID);
             }
-            if (!failedConvertToImmutableNodes.isEmpty()) {
+            if (!failedConvertToImmutableRs.isEmpty()) {
                 throw new IOException();
             }
 
@@ -565,39 +602,24 @@ public class Coordinator implements CoordinatorClient {
                 }
             }
 
-            Set<Node> failedReceiver = new HashSet<>(failedConvertToImmutableNodes);
-            for (Node node : failedConvertToImmutableNodes) {
-                try {
-                    makeCubeImmutableForReceiver(node, cubeName);
-                    failedReceiver.remove(node);
-                } catch (IOException ioe) {
-                    logger.error("fail to make cube immutable for cube:" + cubeName + " to " + node, ioe);
-                }
-            }
+            Map<String, Set<Integer>> infoMap = Maps.newHashMap();
 
-            StringBuilder str = new StringBuilder();
-            try {
-                str.append("FailStarted:").append(JsonUtil.writeValueAsString(rollbackStarted)).append(";");
-                str.append("FailAssigned:").append(JsonUtil.writeValueAsString(rollbackAssigned)).append(";");
-                str.append("FailRemotedPresisted:").append(JsonUtil.writeValueAsString(failedReceiver));
-            } catch (JsonProcessingException jpe) {
-                logger.error("", jpe);
-            }
-
-            String failedInfo = str.toString();
+            infoMap.put("Start", rollbackStarted);
+            infoMap.put("Assign", rollbackAssigned);
+            infoMap.put("Immutable", failedConvertToImmutableRs);
 
             if (!rollbackStarted.isEmpty()) {
                 throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED, TransactionStep.START_NEW,
-                        failedInfo, e);
+                        currentRs, infoMap, e);
             } else if (!rollbackAssigned.isEmpty()) {
                 throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED, TransactionStep.ASSIGN_NEW,
-                        failedInfo, e);
-            } else if (!failedReceiver.isEmpty()) {
-                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED,
-                        TransactionStep.MAKE_IMMUTABLE, failedInfo, e);
+                        currentRs, infoMap, e);
+            } else if (!failedConvertToImmutableRs.isEmpty()) {
+                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED, TransactionStep.MAKE_IMMUTABLE,
+                        currentRs, infoMap, e);
             } else {
                 throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_SUCCESS, TransactionStep.ASSIGN_NEW,
-                        failedInfo, e);
+                        currentRs, infoMap, e);
             }
         }
 
@@ -928,7 +950,11 @@ public class Coordinator implements CoordinatorClient {
             ResumeConsumerRequest resumeRequest = new ResumeConsumerRequest();
             resumeRequest.setCube(request.getCube());
             for (Node receiver : successReceivers) {
-                resumeConsumersForReceiver(receiver, resumeRequest);
+                try {
+                    resumeConsumersForReceiver(receiver, resumeRequest);
+                } catch (IOException ioe2) {
+                    logger.error("Roll back failed for " + receiver, ioe2);
+                }
             }
             throw ioe;
         }
@@ -1433,4 +1459,162 @@ public class Coordinator implements CoordinatorClient {
         }
     }
 
+    /**
+     * try to recover cluster state if possible
+     * TODO will try to move assignment if all receivers in one replica set is dead
+     */
+    private class AutoRecoveryManager implements Runnable {
+
+        int replicaSetNum = 3;
+
+        /**
+         * the cube which is in recover process, this field prevent
+         * recover multi cube at one time to avoid a mess
+         */
+        String inRecovering;
+        int recoverCount = 0;
+
+        /**
+         * record receiver last connect time
+         */
+        private Map<Node, LocalDateTime> receiverNodes = new HashMap<>();
+
+        @Override
+        public void run() {
+            try {
+                if (isLead) {
+                    doRun();
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Receivers: {}", JsonUtil.writeValueAsString(receiverNodes));
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("error", e);
+            }
+        }
+
+        void doRun() {
+            replicaSetNum = streamMetadataStore.getReplicaSetIDs().size();
+            List<CubeAssignment> cubeAssignmentList = streamMetadataStore.getAllCubeAssignments();
+            for (CubeAssignment assignment : cubeAssignmentList) {
+                String cubeName = assignment.getCubeName();
+                if (inRecovering != null && !inRecovering.equalsIgnoreCase(cubeName)) {
+                    logger.debug("{} is in checking for {} times, ignore {}.", inRecovering, recoverCount, cubeName);
+                    break;
+                }
+                inRecovering = cubeName;
+                boolean exceptionThrown = false;
+                logger.debug("Checking state of {} ...", inRecovering);
+                boolean minimnmConsistent = true;
+                for (Integer rsId : assignment.getReplicaSetIDs()) {
+                    try {
+                        minimnmConsistent = checkReplicaSetForCube(cubeName, rsId,
+                                new HashSet<>(assignment.getAssignments().get(rsId))) && minimnmConsistent;
+                    } catch (Exception e) {
+                        exceptionThrown = true;
+                        logger.error("Error for replicaset " + rsId, e);
+                    }
+                }
+
+                if (!exceptionThrown && minimnmConsistent) {
+                    inRecovering = null;
+                    StreamMetadataStore.ReassignResult reassignResult = new StreamMetadataStore.ReassignResult(
+                            cubeName);
+                    streamMetadataStore.setCubeClusterState(reassignResult);
+                    recoverCount = 0;
+                } else {
+                    recoverCount++;
+                }
+            }
+        }
+
+        /**
+         * check the state of cube is inconsistent in current replica set
+         * @return true if at least one receiver roll back to normal state
+         */
+        boolean checkReplicaSetForCube(String cubeName, int rsId, Set<Partition> partitionList) {
+            ReplicaSet rs = streamMetadataStore.getReplicaSet(rsId);
+            boolean recovered = false;
+            for (Node receiver : rs.getNodes()) {
+                try {
+                    ReceiverCubeStats cubeStats = receiverAdminClient.getReceiverCubeStats(receiver, cubeName);
+                    ConsumerStats consumerStats = cubeStats.getConsumerStats();
+
+                    if (consumerStats == null) {
+                        logger.info("{} has no cosume in {}", cubeName, receiver);
+                        tryRecover(receiver, cubeName, false, true, null, partitionList);
+                    } else {
+                        Set<Partition> realPartitions = consumerStats.getPartitionConsumeStatsMap().keySet().stream()
+                                .map(Partition::new).collect(Collectors.toSet());
+                        if (consumerStats.isPaused() || consumerStats.isStopped()) {
+                            String msg = String.format("%s in %s pause is %s and stop is %s", cubeName, receiver,
+                                    consumerStats.isPaused(), consumerStats.isStopped());
+                            logger.info(msg);
+                            tryRecover(receiver, cubeName, consumerStats.isPaused(), consumerStats.isStopped(),
+                                    realPartitions, partitionList);
+                        }
+                    }
+                    receiverNodes.put(receiver, LocalDateTime.now());
+                    recovered = true;
+                } catch (InterruptedException in) {
+                    logger.warn(receiver + " is Interrupted.", in);
+                    Thread.currentThread().interrupt();
+                } catch (IOException ioe) {
+                    logger.error(receiver + " is unreachable", ioe);
+                } catch (RuntimeException e) {
+                    logger.error(receiver + " has unexpected exception", e);
+                }
+            }
+            return recovered;
+        }
+
+        void tryRecover(Node receiver, String cubeName, boolean paused, boolean stopped,
+                Set<Partition> actualPartitions, Set<Partition> shouldPartitions)
+                throws InterruptedException, IOException {
+            StreamMetadataStore.ReassignResult reassignResult = streamMetadataStore.getCubeClusterState(cubeName);
+            if (logger.isDebugEnabled())
+                logger.debug(reassignResult.toString());
+            if (reassignResult.clusterState != ClusterState.CONSISTENT) {
+                boolean shouldAssign = false;
+                if (actualPartitions == null) {
+                    shouldAssign = true;
+                } else if (shouldPartitions == null) {
+                    throw new IllegalArgumentException("");
+                } else {
+                    Set<Partition> lostPartition = Sets.difference(shouldPartitions, actualPartitions);
+                    shouldAssign = !lostPartition.isEmpty();
+                }
+
+                if (assignLock.tryLock(15L * replicaSetNum, TimeUnit.SECONDS)) {
+                    try {
+                        recover(receiver, paused, stopped, actualPartitions, shouldAssign);
+                    } finally {
+                        assignLock.unlock();
+                    }
+                } else {
+                    logger.warn("Timeout when tryLock");
+                }
+            }
+        }
+
+        void recover(Node receiver, boolean isPause, boolean isStopped, Set<Partition> partitions, boolean shouldAssign)
+                throws IOException {
+            logger.info("{} 's state is {} {} {}", receiver, isPause, isStopped, shouldAssign);
+            if (shouldAssign) {
+                AssignRequest assignRequest = new AssignRequest();
+                assignRequest.setCubeName(inRecovering);
+                assignRequest.setPartitions(Lists.newArrayList(partitions));
+                receiverAdminClient.assign(receiver, assignRequest);
+            }
+            if (isStopped) {
+                StartConsumersRequest startConsumersRequest = new StartConsumersRequest();
+                startConsumersRequest.setCube(inRecovering);
+                receiverAdminClient.startConsumers(receiver, startConsumersRequest);
+            } else if (isPause) {
+                ResumeConsumerRequest resumeConsumerRequest = new ResumeConsumerRequest();
+                resumeConsumerRequest.setCube(inRecovering);
+                receiverAdminClient.resumeConsumers(receiver, resumeConsumerRequest);
+            }
+        }
+    }
 }
