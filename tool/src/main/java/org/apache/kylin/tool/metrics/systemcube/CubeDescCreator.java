@@ -455,7 +455,6 @@ public class CubeDescCreator {
         desc.setStorageType(storageType);
         desc.setAggregationGroups(Lists.newArrayList(aggGroup));
         desc.getOverrideKylinProps().putAll(overrideProperties);
-        desc.setSignature(desc.calculateSignature());
         desc.updateRandomUuid();
         return desc;
     }
