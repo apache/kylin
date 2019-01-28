@@ -19,8 +19,78 @@ permalink: /cn/development/datasource_sdk.html
 开发者不需要编码, 只需要为新的数据源新建一个配置文件 *{dialect}.xml*, 
 
 配置文件结构:
-* 根节点:  
-&lt;DATASOURCE_DEF NAME="kylin" ID="default"&gt;, ID的值为方言的名称.
+* 根节点: 
+
+``` 
+<DATASOURCE_DEF NAME="kylin" ID="mysql" DIALECT="mysql"/>
+``` 
+
+ID的值通常和配置文件的名字相同。  
+DIALECT的值的定义主要是为了区分不同数据库对于标识符的引用。  
+举个例子 Mysql 使用 ``, Microsoft sql server 使用 [].   
+Kylin 里定义的DIALECT 和 Apache Calcite 里定义DIALECT 的对应关系:  
+<table>
+  <tbody align="left">  
+  <tr>
+    <td align="center"> Kylin 里定义的方言 </td>
+    <td align="center"> Apache Calcite 里定义的方言 </td>
+  </tr>
+  <tr>
+    <td> default </td>
+    <td> SqlDialect.CALCITE </td>
+  </tr>
+  <tr>
+    <td> calcite </td>
+    <td> SqlDialect.CALCITE </td>
+  </tr>
+  <tr>
+    <td> greenplum </td>
+    <td> SqlDialect.DatabaseProduct.POSTGRESQL </td>
+  </tr>
+  <tr>
+    <td> postgresql </td>
+    <td> SqlDialect.DatabaseProduct.POSTGRESQL </td>
+  </tr>
+  <tr>
+    <td> mysql  </td>
+    <td> SqlDialect.DatabaseProduct.MYSQL </td>
+  </tr>
+  <tr>
+     <td> sql.keyword-default-uppercase </td>
+     <td> whether &lt;default&gt; should be transform to uppercase </td>
+  </tr>
+  <tr>
+    <td> mssql </td>
+    <td> SqlDialect.DatabaseProduct.MSSQL </td>
+  </tr>
+  <tr>
+    <td> oracle </td>
+    <td> SqlDialect.DatabaseProduct.ORACLE </td>
+  </tr>
+  <tr>
+    <td> vertica </td>
+    <td> SqlDialect.DatabaseProduct.VERTICA </td>
+  </tr>
+  <tr>
+    <td> redshift </td>
+    <td> SqlDialect.DatabaseProduct.REDSHIFT </td>
+  </tr>
+  <tr>
+    <td> hive </td>
+    <td> SqlDialect.DatabaseProduct.HIVE </td>
+  </tr>
+  <tr>
+    <td> h2 </td>
+    <td> SqlDialect.DatabaseProduct.H2 </td>
+  </tr>
+  <tr>
+    <td> unkown </td>
+    <td> SqlDialect.DUMMY </td>
+  </tr>    
+  </tbody>
+</table>
+
+
 * 属性节点:  
 定义方言的属性。
 
@@ -141,9 +211,9 @@ kylin.query.pushdown.runner-class-name=org.apache.kylin.query.pushdown.PushdownR
 kylin.source.default=16
 kylin.source.jdbc.dialect=mysql
 kylin.source.jdbc.adaptor=org.apache.kylin.sdk.datasource.adaptor.MysqlAdaptor
-kylin.source.jdbc.user={mysql username}
-kylin.source.jdbc.pass={mysql password}
-kylin.source.jdbc.connection-url=jdbc:mysql://{HOST_URL}:3306/{Database name}
+kylin.source.jdbc.user={mysql 用户名}
+kylin.source.jdbc.pass={mysql 用户密码}
+kylin.source.jdbc.connection-url=jdbc:mysql://{主机url}:3306/{数据库名称}
 kylin.source.jdbc.driver=com.mysql.jdbc.Driver
 {% endhighlight %}
 
