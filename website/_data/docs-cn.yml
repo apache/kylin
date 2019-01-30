@@ -27,12 +27,10 @@
 - title: 教程
   docs:
   - tutorial/kylin_sample
-  - tutorial/kylin_grammar
-  - tutorial/kylin_function
-  - tutorial/kylin_datatype
   - tutorial/web
   - tutorial/create_cube
   - tutorial/cube_build_job
+  - tutorial/sql_reference
   - tutorial/project_level_acl
   - tutorial/cube_spark
   - tutorial/cube_streaming

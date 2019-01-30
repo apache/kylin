@@ -33,7 +33,7 @@ Tutorial
 2. [Web Interface](tutorial/web.html)
 3. [Cube Wizard](tutorial/create_cube.html)
 4. [Cube Build and Job Monitoring](tutorial/cube_build_job.html)
-5. [SQL reference: by Apache Calcite](http://calcite.apache.org/docs/reference.html)
+5. [SQL reference: by Apache Calcite](tutorial/sql_reference.html)
 6. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
 7. [Build Cube with Spark Engine](tutorial/cube_spark.html)
 8. [Cube Build Tuning](tutorial/cube_build_performance.html)
