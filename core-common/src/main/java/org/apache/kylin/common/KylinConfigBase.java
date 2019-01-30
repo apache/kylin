@@ -1673,6 +1673,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.query.cache-signature-enabled", FALSE));
     }
 
+    public int getFlatFilterMaxChildrenSize() {
+        return Integer.parseInt(this.getOptional("kylin.query.flat-filter-max-children", "500000"));
+    }
+
     // ============================================================================
     // SERVER
     // ============================================================================
