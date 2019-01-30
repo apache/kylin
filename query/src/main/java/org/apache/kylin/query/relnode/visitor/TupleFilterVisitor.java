@@ -18,13 +18,12 @@
 
 package org.apache.kylin.query.relnode.visitor;
 
-import java.math.BigDecimal;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.calcite.avatica.util.TimeUnitRange;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
@@ -39,6 +38,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.util.NlsString;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.filter.CaseTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -52,9 +52,11 @@ import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.relnode.ColumnRowType;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import java.math.BigDecimal;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
 
@@ -146,10 +148,7 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
         }
 
         if (op.getKind() == SqlKind.OR) {
-            CompareTupleFilter inFilter = mergeToInClause(filter);
-            if (inFilter != null) {
-                filter = inFilter;
-            }
+            filter = mergeToInClause(filter);
         } else if (op.getKind() == SqlKind.NOT) {
             assert (filter.getChildren().size() == 1);
             filter = filter.getChildren().get(0).reverse();
@@ -221,36 +220,51 @@ public class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
         return constFilter;
     }
 
-    private CompareTupleFilter mergeToInClause(TupleFilter filter) {
+    @VisibleForTesting
+    static TupleFilter mergeToInClause(TupleFilter filter) {
         List<? extends TupleFilter> children = filter.getChildren();
-        TblColRef inColumn = null;
-        List<Object> inValues = new LinkedList<Object>();
-        Map<String, Object> dynamicVariables = new HashMap<>();
+        if (children.isEmpty()) {
+            return filter;
+        }
+        // key: inColumn
+        // Value: first: inValues
+        // Value: second: dynamicVariables
+        Map<TblColRef, Pair<Set<Object>, Map<String, Object>>> inColumnMap = Maps.newHashMap();
+        List<TupleFilter> extraFilters = Lists.newLinkedList();
         for (TupleFilter child : children) {
             if (child.getOperator() == TupleFilter.FilterOperatorEnum.EQ) {
                 CompareTupleFilter compFilter = (CompareTupleFilter) child;
                 TblColRef column = compFilter.getColumn();
-                if (inColumn == null) {
-                    inColumn = column;
-                }
+                if (column != null) {
+                    Pair<Set<Object>, Map<String, Object>> tmpValue = inColumnMap.get(column);
+                    if (tmpValue == null) {
+                        Set<Object> inValues = Sets.newHashSet();
+                        Map<String, Object> dynamicVariables = Maps.newHashMap();
+                        tmpValue = new Pair<>(inValues, dynamicVariables);
+                        inColumnMap.put(column, tmpValue);
+                    }
 
-                if (column == null || !column.equals(inColumn)) {
-                    return null;
+                    tmpValue.getFirst().addAll(compFilter.getValues());
+                    tmpValue.getSecond().putAll(compFilter.getVariables());
+                    continue;
                 }
-                inValues.addAll(compFilter.getValues());
-                dynamicVariables.putAll(compFilter.getVariables());
-            } else {
-                return null;
             }
+            extraFilters.add(child);
         }
 
         children.clear();
 
-        CompareTupleFilter inFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.IN);
-        inFilter.addChild(new ColumnTupleFilter(inColumn));
-        inFilter.addChild(new ConstantTupleFilter(inValues));
-        inFilter.getVariables().putAll(dynamicVariables);
-        return inFilter;
+        TupleFilter ret = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.OR);
+        ret.addChildren(extraFilters);
+        for (Map.Entry<TblColRef, Pair<Set<Object>, Map<String, Object>>> entry : inColumnMap.entrySet()) {
+            CompareTupleFilter inFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.IN);
+            inFilter.addChild(new ColumnTupleFilter(entry.getKey()));
+            inFilter.addChild(new ConstantTupleFilter(entry.getValue().getFirst()));
+            inFilter.getVariables().putAll(entry.getValue().getSecond());
+            ret.addChild(inFilter);
+        }
+
+        return ret.getChildren().size() == 1 ? ret.getChildren().get(0) : ret;
     }
 
     @Override
