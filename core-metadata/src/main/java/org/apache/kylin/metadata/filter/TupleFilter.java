@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.slf4j.Logger;
@@ -215,10 +216,19 @@ public abstract class TupleFilter {
      * @return
      */
     public TupleFilter flatFilter() {
-        return flattenInternal(this);
+        return flatFilter(KylinConfig.getInstanceFromEnv().getFlatFilterMaxChildrenSize());
     }
 
-    private TupleFilter flattenInternal(TupleFilter filter) {
+    /**
+     * throws IllegalStateException when the flat children exceed the maxFlatChildrenSize
+     * @param maxFlatChildrenSize
+     * @return
+     */
+    public TupleFilter flatFilter(int maxFlatChildrenSize) {
+        return flattenInternal(this, maxFlatChildrenSize);
+    }
+
+    private TupleFilter flattenInternal(TupleFilter filter, int maxFlatChildrenSize) {
         TupleFilter flatFilter = null;
         if (!(filter instanceof LogicalTupleFilter)) {
             flatFilter = new LogicalTupleFilter(FilterOperatorEnum.AND);
@@ -231,7 +241,7 @@ public abstract class TupleFilter {
         List<TupleFilter> andChildren = new LinkedList<TupleFilter>();
         List<TupleFilter> orChildren = new LinkedList<TupleFilter>();
         for (TupleFilter child : filter.getChildren()) {
-            TupleFilter flatChild = flattenInternal(child);
+            TupleFilter flatChild = flattenInternal(child, maxFlatChildrenSize);
             FilterOperatorEnum childOp = flatChild.getOperator();
             if (childOp == FilterOperatorEnum.AND) {
                 andChildren.add(flatChild);
@@ -249,7 +259,7 @@ public abstract class TupleFilter {
                 flatFilter.addChildren(andChild.getChildren());
             }
             if (!orChildren.isEmpty()) {
-                List<TupleFilter> fullAndFilters = cartesianProduct(orChildren, flatFilter);
+                List<TupleFilter> fullAndFilters = cartesianProduct(orChildren, flatFilter, maxFlatChildrenSize);
                 flatFilter = new LogicalTupleFilter(FilterOperatorEnum.OR);
                 flatFilter.addChildren(fullAndFilters);
             }
@@ -262,14 +272,18 @@ public abstract class TupleFilter {
         } else if (op == FilterOperatorEnum.NOT) {
             assert (filter.children.size() == 1);
             TupleFilter reverse = filter.children.get(0).reverse();
-            flatFilter = flattenInternal(reverse);
+            flatFilter = flattenInternal(reverse, maxFlatChildrenSize);
         } else {
             throw new IllegalStateException("Filter is " + filter);
+        }
+        if (flatFilter.getChildren() != null && flatFilter.getChildren().size() > maxFlatChildrenSize) {
+            throw new IllegalStateException("the filter is too large after do the flat, size="
+                    + flatFilter.getChildren().size());
         }
         return flatFilter;
     }
 
-    private List<TupleFilter> cartesianProduct(List<TupleFilter> leftOrFilters, TupleFilter partialAndFilter) {
+    private List<TupleFilter> cartesianProduct(List<TupleFilter> leftOrFilters, TupleFilter partialAndFilter, int maxFlatChildrenSize) {
         List<TupleFilter> oldProductFilters = new LinkedList<TupleFilter>();
         oldProductFilters.add(partialAndFilter);
         for (TupleFilter orFilter : leftOrFilters) {
@@ -279,6 +293,10 @@ public abstract class TupleFilter {
                     TupleFilter fullAndFilter = productFilter.copy();
                     fullAndFilter.addChildren(orChildFilter.getChildren());
                     newProductFilters.add(fullAndFilter);
+                    if (newProductFilters.size() > maxFlatChildrenSize) {
+                        throw new IllegalStateException("the filter is too large after do the flat, size="
+                                + newProductFilters.size());
+                    }
                 }
             }
             oldProductFilters = newProductFilters;
