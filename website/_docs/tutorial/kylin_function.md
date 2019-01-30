@@ -11,7 +11,6 @@ permalink: /docs/tutorial/kylin_function.html
 　[COUNT(COLUMN)](#COUNT_COLUMN)
 　[COUNT(*)](#COUNT_)
 [COUNT_DISTINCT](#COUNT_DISTINCT)
-[EXTENDED_COLUMN](#EXTENDED_COLUMN)
 [MAX](#MAX)
 [MIN](#MIN)
 [PERCENTILE](#PERCENTILE)
@@ -57,13 +56,6 @@ SELECT COUNT(*) FROM kylin_sales;
 Example:
 {% highlight Groff markup %}
 SELECT COUNT(DISTINCT seller_id) AS DIST_SELLER FROM kylin_sales;
-{% endhighlight %}
-
-## EXTENDED_COLUMN {#EXTENDED_COLUMN}
-
-Example:
-{% highlight Groff markup %}
-SELECT test_order.order_id, test_extended_column FROM test_kylin_fact as test_kylin_fact INNER JOIN test_order as test_order ON test_kylin_fact.order_id = test_order.order_id INNER JOIN test_category_groupings as test_category_groupings ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id GROUP BY test_order.order_id, test_extended_column;
 {% endhighlight %}
 
 ## MAX {#MAX}

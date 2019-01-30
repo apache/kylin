@@ -10,6 +10,6 @@ permalink: /docs/tutorial/kylin_datatype.html
 | :--------- | :--------- | :--------- | :--------- | :------------------- |
 | ANY        | CHAR       | VARCHAR    | STRING     | BOOLEAN              |
 | BYTE       | BINARY     | INT        | SHORT      | LONG                 |
-| INTEGER    | TINYINT    | SMALLINT   | BIGINT     | INT4 (for test only) |
-| FLOAT      | REAL       | DOUBLE     | DECIMAL    | LONG8 (for test only)|
+| INTEGER    | TINYINT    | SMALLINT   | BIGINT     |  |
+| FLOAT      | REAL       | DOUBLE     | DECIMAL    |  |
 | NUMERIC    | DATE       | TIME       | DATETIME   | TIMESTAMP            |
