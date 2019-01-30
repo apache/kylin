@@ -7,22 +7,21 @@ permalink: /docs/tutorial/cube_streaming.html
 Kylin v1.6 releases the scalable streaming cubing function, it leverages Hadoop to consume the data from Kafka to build the cube, you can check [this blog](/blog/2016/10/18/new-nrt-streaming/) for the high level design. This doc is a step by step tutorial, illustrating how to create and build a sample cube;
 
 ## Preparation
-To finish this tutorial, you need a Hadoop environment which has kylin v1.6.0 or above installed, and also have a Kafka (v0.10.0 or above) running.
+To finish this tutorial, you need a Hadoop environment which has kylin v1.6.0 or above installed; Since kylin v2.5.0, it needs a Kafka v1.0.0 or above.
 
-In this tutorial, we will use Hortonworks HDP 2.2.4 Sandbox VM + Kafka v0.10.0(Scala 2.10) as the environment.
+In this tutorial, we will use Hortonworks HDP 2.2.4 Sandbox VM + Kafka v1.0.2(Scala 2.11) as the environment.
 
-## Install Kafka 0.10.0.0 and Kylin
-Don't use HDP 2.2.4's build-in Kafka as it is too old, stop it first if it is running.
+## Install Kafka and Kylin
+Don't use HDP 2.2.4's build-in Kafka as it is too old, stop it first if it is running. Please download Kafka 1.0 binary package from Kafka project page, and then uncompress it under a folder like /usr/local/.
 {% highlight Groff markup %}
-curl -s https://archive.apache.org/dist/kafka/0.10.0.0/kafka_2.10-0.10.0.0.tgz | tar -xz -C /usr/local/
-
-cd /usr/local/kafka_2.10-0.10.0.0/
+tar -zxvf 
+cd /usr/local/kafka_2.11-1.0.2
 
 bin/kafka-server-start.sh config/server.properties &
 
 {% endhighlight %}
 
-Download the Kylin v1.6 from download page, expand the tar ball in /usr/local/ folder.
+Download the Kylin, expand the tar ball in /usr/local/ folder.
 
 ## Create sample Kafka topic and populate data
 
@@ -37,14 +36,14 @@ Created topic "kylin_streaming_topic".
 Put sample data to this topic; Kylin has an utility class which can do this;
 
 {% highlight Groff markup %}
-export KAFKA_HOME=/usr/local/kafka_2.10-0.10.0.0
-export KYLIN_HOME=/usr/local/apache-kylin-2.1.0-bin
+export KAFKA_HOME=/usr/local/kafka_2.11-1.0.2
+export KYLIN_HOME=/usr/local/apache-kylin-2.6.0-bin
 
 cd $KYLIN_HOME
 ./bin/kylin.sh org.apache.kylin.source.kafka.util.KafkaSampleProducer --topic kylin_streaming_topic --broker localhost:9092
 {% endhighlight %}
 
-This tool will send 100 records to Kafka every second. Please keep it running during this tutorial. You can check the sample message with kafka-console-consumer.sh now:
+This tool will send 100 records to Kafka every second (there is a bug in v2.6.0 on this, please check KYLIN-3793). Please keep it running during this tutorial. You can check the sample message with kafka-console-consumer.sh now:
 
 {% highlight Groff markup %}
 cd $KAFKA_HOME

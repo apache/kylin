@@ -7,22 +7,21 @@ permalink: /cn/docs/tutorial/cube_streaming.html
 Kylin v1.6 发布了可扩展的 streaming cubing 功能，它利用 Hadoop 消费 Kafka 数据的方式构建 cube，您可以查看 [这篇博客](/blog/2016/10/18/new-nrt-streaming/) 以进行高级别的设计。本文档是一步接一步的阐述如何创建和构建样例 cube 的教程;
 
 ## 前期准备
-您需要一个安装了 kylin v1.6.0 或以上版本和可运行的 Kafka（v0.10.0 或以上版本）的 Hadoop 环境。
+您需要一个安装了 kylin v1.6.0 或以上版本和可运行的 Kafka; 自 kylin v2.5 开始，需要 Kafka v1.0.0 或以上版本。
 
-本教程中我们使用 Hortonworks HDP 2.2.4 Sandbox VM + Kafka v0.10.0(Scala 2.10) 作为环境。
+本教程中我们使用 Hortonworks HDP 2.2.4 Sandbox VM + Kafka v1.0.2(Scala 2.11) 作为环境。
 
-## 安装 Kafka 0.10.0.0 和 Kylin
-不要使用 HDP 2.2.4 自带的 Kafka，因为它太旧了，如果其运行着请先停掉。
+## 安装 Kafka 1.0.2 和 Kylin
+不要使用 HDP 2.2.4 自带的 Kafka，因为它太旧了，如果其运行着请先停掉。然后前往 Kafka 项目下载其二进制包到本地 /usr/local/。
 {% highlight Groff markup %}
-curl -s https://archive.apache.org/dist/kafka/0.10.0.0/kafka_2.10-0.10.0.0.tgz | tar -xz -C /usr/local/
-
-cd /usr/local/kafka_2.10-0.10.0.0/
+tar -zxvf kafka_2.11-1.0.2.tgz
+cd kafka_2.11-1.0.2
 
 bin/kafka-server-start.sh config/server.properties &
 
 {% endhighlight %}
 
-从下载页下载 Kylin v1.6，在 /usr/local/ 文件夹中解压 tar 包。
+从下载页下载 Kylin，在 /usr/local/ 文件夹中解压 tar 包。
 
 ## 创建样例 Kafka topic 并填充数据
 
@@ -37,14 +36,14 @@ Created topic "kylin_streaming_topic".
 将样例数据放入 topic；Kylin 有一个实用类可以做这项工作;
 
 {% highlight Groff markup %}
-export KAFKA_HOME=/usr/local/kafka_2.10-0.10.0.0
-export KYLIN_HOME=/usr/local/apache-kylin-2.1.0-bin
+export KAFKA_HOME=/usr/local/kafka_2.11-1.0.2
+export KYLIN_HOME=/usr/local/apache-kylin-2.6.0-bin
 
 cd $KYLIN_HOME
 ./bin/kylin.sh org.apache.kylin.source.kafka.util.KafkaSampleProducer --topic kylin_streaming_topic --broker localhost:9092
 {% endhighlight %}
 
-工具每一秒会向 Kafka 发送 100 条记录。直至本教程结束请让其一直运行。现在您可以用 kafka-console-consumer.sh 查看样例消息:
+工具每一秒会向 Kafka 发送 100 条记录 （v2.6.0 此处有一个bug：KYLIN-3793）。直至本教程结束请让其一直运行。现在您可以用 kafka-console-consumer.sh 查看样例消息:
 
 {% highlight Groff markup %}
 cd $KAFKA_HOME

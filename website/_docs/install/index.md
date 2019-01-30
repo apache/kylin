@@ -11,7 +11,7 @@ permalink: /docs/install/index.html
 * Hive: 0.13 - 1.2.1+
 * HBase: 1.1+, 2.0 (since v2.5)
 * Spark (optional) 2.1.1+
-* Kafka (optional) 0.10.0+
+* Kafka (optional) 1.0.0+ (since v2.5)
 * JDK: 1.8+ (since v2.5)
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
 
