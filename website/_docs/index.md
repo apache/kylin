@@ -11,7 +11,7 @@ Welcome to Apache Kylin™: Extreme OLAP Engine for Big Data
 
 Apache Kylin™ is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
 
-This is the document for the latest released version (v2.5). Document of prior versions: 
+This is the document for the latest released version (v2.5 & v2.6). Document of prior versions: 
 * [v2.4 document](/docs24)
 * [v2.3 document](/docs23)
 * [v2.1 and v2.2 document](/docs21/)
@@ -33,7 +33,7 @@ Tutorial
 2. [Web Interface](tutorial/web.html)
 3. [Cube Wizard](tutorial/create_cube.html)
 4. [Cube Build and Job Monitoring](tutorial/cube_build_job.html)
-5. [SQL reference: by Apache Calcite](tutorial/sql_reference.html)
+5. [SQL reference](tutorial/sql_reference.html)
 6. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
 7. [Build Cube with Spark Engine](tutorial/cube_spark.html)
 8. [Cube Build Tuning](tutorial/cube_build_performance.html)
