@@ -21,7 +21,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.source.hive.DBConnConf;
@@ -36,26 +38,25 @@ public class SQLServerJdbcMetadata extends DefaultJdbcMetadata {
 
     @Override
     public List<String> listDatabases() throws SQLException {
-        List<String> ret = new ArrayList<>();
+        Set<String> ret = new HashSet<>();
         try (Connection con = SqlUtil.getConnection(dbconf)) {
 
             String database = con.getCatalog();
             Preconditions.checkArgument(StringUtils.isNotEmpty(database),
                     "SQL Server needs a specific database in " + "connection string.");
 
-            try (ResultSet rs = con.getMetaData().getSchemas(database, "%")) {
+            try (ResultSet rs = con.getMetaData().getTables(database, null, null, null)) {
                 String schema;
                 String catalog;
                 while (rs.next()) {
                     schema = rs.getString("TABLE_SCHEM");
-                    catalog = rs.getString("TABLE_CATALOG");
-                    // Skip system schemas
-                    if (database.equals(catalog)) {
+                    catalog = rs.getString("TABLE_CAT");
+                    if (database.equals(catalog) || schema.equals("dbo")) {
                         ret.add(schema);
                     }
                 }
             }
         }
-        return ret;
+        return new ArrayList<>(ret);
     }
 }
