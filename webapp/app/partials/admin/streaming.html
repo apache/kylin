@@ -41,8 +41,8 @@
               <svg id="rs-{{replicaSetState.rs_id}}-re-{{receiverState.receiver.host | formatId}}_{{receiverState.receiver.port}}" width="100%" height="60"></svg>
               <div class="text-center" style="font-size: 9px; cursor: pointer;" tooltip="{{receiverState.info}}">
                 <a href="/kylin/streaming/receiver/{{receiverState.receiver.host}}_{{receiverState.receiver.port}}" target="_blank">
-                  <span class="label" ng-class="{'label-success': 'HEALTHY' == receiverState.state, 'label-warning': 'WARN' == receiverState.state, 'label-default': 'UNREACHABLE' == receiverState.state, 'label-danger': 'DOWN' == receiverState.state}">
-                    <i ng-if="(replicaSetState.lead.host == receiverState.receiver.host) && (replicaSetState.lead.port == receiverState.receiver.port)" class="fa fa-star"></i> {{receiverState.receiver.host}}
+                  <span class="label" ng-class="{'label-success': 'HEALTHY' == receiverState.state, 'label-warning': 'WARN' == receiverState.state, 'label-default': 'UNREACHABLE' == receiverState.state, 'label-danger': 'DOWN' == receiverState.state}" tooltip="{{receiverState.receiver.host}}">
+                    <i ng-if="(replicaSetState.lead.host == receiverState.receiver.host) && (replicaSetState.lead.port == receiverState.receiver.port)" class="fa fa-star"></i> {{receiverState.receiver.host | limitTo: 15}}{{receiverState.receiver.host.length > 15 ? '...' : ''}}
                   </span>
                 </a>
               </div>
@@ -51,8 +51,8 @@
               <svg id="rs-{{replicaSetState.rs_id}}-re-{{receiverState.receiver.host | formatId}}_{{receiverState.receiver.port}}" width="105%" height="60"></svg>
               <div class="text-center" style="font-size: 7px; margin: -5px 0 7px 0; cursor: pointer;" tooltip="{{receiverState.info}}">
                 <a href="/kylin/streaming/receiver/{{receiverState.receiver.host}}_{{receiverState.receiver.port}}" target="_blank">
-                  <span class="label" ng-class="{'label-success': 'HEALTHY' == receiverState.state, 'label-warning': 'WARN' == receiverState.state, 'label-default': 'UNREACHABLE' == receiverState.state, 'label-danger': 'DOWN' == receiverState.state}">
-                    <i class="fa fa-star" ng-if="(replicaSetState.lead.host == receiverState.receiver.host) && (replicaSetState.lead.port == receiverState.receiver.port)"></i> {{receiverState.receiver.host}}
+                  <span class="label" ng-class="{'label-success': 'HEALTHY' == receiverState.state, 'label-warning': 'WARN' == receiverState.state, 'label-default': 'UNREACHABLE' == receiverState.state, 'label-danger': 'DOWN' == receiverState.state}" tooltip="{{receiverState.receiver.host}}">
+                    <i class="fa fa-star" ng-if="(replicaSetState.lead.host == receiverState.receiver.host) && (replicaSetState.lead.port == receiverState.receiver.port)"></i> {{receiverState.receiver.host | limitTo: 15}}{{receiverState.receiver.host.length > 15 ? '...' : ''}}
                   </span>
                 </a>
               </div>
@@ -73,7 +73,7 @@
             <div ng-if="!!availableReceiver.length" class="col-md-1" ng-repeat="(re_ind, receiverState) in availableReceiver">
               <svg id="re-{{receiverState.receiver.host | formatId}}_{{receiverState.receiver.port}}" width="100%" height="60"></svg>
               <div class="text-center" style="font-size: 9px;">
-                <span class="label" ng-class="{'label-primary': 'HEALTHY' == receiverState.state, 'label-warning': 'WARN' == receiverState.state, 'label-default': 'UNREACHABLE' == receiverState.state, 'label-danger': 'DOWN' == receiverState.state}" ng-bind="receiverState.receiver.host"></span>
+                <span class="label" ng-class="{'label-primary': 'HEALTHY' == receiverState.state, 'label-warning': 'WARN' == receiverState.state, 'label-default': 'UNREACHABLE' == receiverState.state, 'label-danger': 'DOWN' == receiverState.state}" tooltip="{{receiverState.receiver.host}}">{{receiverState.receiver.host | limitTo: 15}}{{receiverState.receiver.host.length > 15 ? '...' : ''}}</span>
               </div>
             </div>
             <div ng-if="!availableReceiver.length" class="col-md-12 text-center">
@@ -105,19 +105,19 @@
   </div>
   <div class="modal-body">
     <div class="row" ng-repeat="receiver in replicaSet.receiver_states">
-      <div class="col-sm-4 col-sm-offset-3 text-right">{{receiver.receiver.host}}:{{receiver.receiver.port}}</div>
-      <div class="col-sm-5">
+      <div class="col-sm-9 col-sm-offset-1 text-center">{{receiver.receiver.host}}:{{receiver.receiver.port}}</div>
+      <div class="col-sm-2">
         <i class="fa fa-minus" style="color: #d2d6de; cursor: pointer;" ng-click="removeReceiver(receiver)"></i>
       </div>
     </div>
     <div class="row">
-      <div class="col-sm-4 col-sm-offset-3 text-right">
+      <div class="col-sm-9 col-sm-offset-1 text-center">
         <select class="form-control" ng-model="node.selected">
           <option value="">Please select Receiver</option>
           <option value="{{node.receiver.host}}_{{node.receiver.port}}" ng-repeat="node in availableNodes">{{node.receiver.host}}:{{node.receiver.port}}</option>
         </select>
       </div>
-      <div class="col-sm-5">
+      <div class="col-sm-2">
         <i class="fa fa-plus" style="color: #d2d6de; cursor: pointer;" ng-click="addNodeToReplicaSet()"></i>
       </div>
     </div>

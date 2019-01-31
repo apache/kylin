@@ -62,18 +62,9 @@ KylinApp.factory('AdminStreamingService', ['$resource', function ($resource, con
           clusterState.rs_states.forEach(function(receiverState, rs_ind) {
             var assignment = '';
             for (var cube in receiverState.assignment) {
-              assignment += cube + ': ';
-              var assMaxIndex = receiverState.assignment[cube].length -1;
-              receiverState.assignment[cube].forEach(function(partition, p_index) {
-                assignment += partition.partition_id;
-                if (p_index === assMaxIndex) {
-                  assignment += '<br>';
-                } else {
-                  assignment += ',';
-                }
-              });
+              assignment += '<br>' + cube;
             }
-            receiverState.assignmentStr = assignment;
+            receiverState.assignmentStr = assignment.substr(4);
           });
           return clusterState;
         }

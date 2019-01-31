@@ -27,7 +27,7 @@
     <div class="col-sm-4" ng-repeat="(cubeName, assignment) in receiverStats.assignments">
       <div class="box box-solid box-primary">
         <div class="box-header with-border" style="padding:5px">
-          <h3 class="box-title">{{cubeName}}</h3>
+          <h3 class="box-title">{{cubeName | limitTo: 20}}{{cubeName > 20 ? '...' : ''}}</h3>
           <div class="box-tools pull-right">
             <button type="button" class="btn btn-box-tool" style="padding: 3px 5px;" ng-click="moreDetails(receiverStats.cube_stats[cubeName], cubeName)">
               <i class="fa fa-info-circle"></i>
@@ -53,7 +53,7 @@
                 Assignment: 
               </div>
               <div class="col-sm-8">
-                <span class="label label-primary" style="margin-right: 5px;" ng-repeat="partitionBaseInfo in assignment">{{partitionBaseInfo.partition_id}}</span>
+                <span class="label label-primary" style="margin-right: 5px; display: inline-block;" ng-repeat="partitionBaseInfo in assignment">{{partitionBaseInfo.partition_id}}</span>
               </div>
             </div>
           </div>
@@ -63,7 +63,7 @@
                 Partition:
               </div>
               <div class="col-sm-8">
-                <a ng-repeat="(partitionId, partitionInfo) in consumerStats.partition_consume_stats" href="javascript:void(0);" kylinpopover placement="bottom" title="Partition Info" trigger="focus" content="Partition Id: {{partitionId}}</br>Offset Info: {{consumerStats[partitionId]}}</br>1 Minute Rate: {{partitionInfo.one_min_rate | number:0}} msg/s</br>5 Minute Rate: {{partitionInfo.five_min_rate | number:0}} msg/s</br>15 Minute Rate: {{partitionInfo.fifteen_min_rate | number:0}} msg/s</br>AVG Rate: {{partitionInfo.avg_rate | number:0}} msg/s</br>Total Consume: {{partitionInfo.total_consume}}"><i class="fa fa-list-ul" style="color:#3c8dbc; margin-right: 5px;"></i></a>
+                <a ng-repeat="(partitionId, partitionInfo) in consumerStats.partition_consume_stats" href="javascript:void(0);" kylinpopover placement="left" title="Partition Info" trigger="focus" content="Partition Id: {{partitionId}}</br>Offset Info: {{consumerStats[partitionId]}}</br>1 Minute Rate: {{partitionInfo.one_min_rate | number:0}} msg/s</br>5 Minute Rate: {{partitionInfo.five_min_rate | number:0}} msg/s</br>15 Minute Rate: {{partitionInfo.fifteen_min_rate | number:0}} msg/s</br>AVG Rate: {{partitionInfo.avg_rate | number:0}} msg/s</br>Total Consume: {{partitionInfo.total_consume}}"><i class="fa fa-list-ul" style="color:#3c8dbc; margin-right: 5px;"></i></a>
               </div>
             </div>
           </div>
@@ -73,7 +73,7 @@
                 Segment:
               </div>
               <div class="col-sm-8">
-                <a href="javascript:void(0);" ng-repeat="(segmentName, segmentInfo) in segmentStats" kylinpopover placement="bottom" class="segment" title="Segment Info" trigger="focus" content="segment name: {{segmentName}}</br>segment state: {{segmentInfo.segment_state}}</br>fragment number: {{segmentInfo.store_stats.num_fragments}}</br>row number in memory: {{segmentInfo.store_stats.num_rows_in_mem}}</br>last event time: {{segmentInfo.store_stats.latest_event_time | reverseToGMT0}}</br>latest event latency: {{segmentInfo.store_stats.latest_event_latency}}ms"><i class="fa fa-database" style="color: #86bad8; margin-right: 5px;" ng-class="{'active': segmentInfo.segment_state === 'ACTIVE'}"></i></a>
+                <a href="javascript:void(0);" ng-repeat="(segmentName, segmentInfo) in segmentStats" kylinpopover placement="top" class="segment" title="Segment Info" trigger="focus" content="segment name: {{segmentName}}</br>segment state: {{segmentInfo.segment_state}}</br>fragment number: {{segmentInfo.store_stats.num_fragments}}</br>row number in memory: {{segmentInfo.store_stats.num_rows_in_mem}}</br>last event time: {{segmentInfo.store_stats.latest_event_time | reverseToGMT0}}</br>latest event latency: {{segmentInfo.store_stats.latest_event_latency}}ms"><i class="fa fa-database" style="color: #86bad8; margin-right: 5px;" ng-class="{'active': segmentInfo.segment_state === 'ACTIVE'}"></i></a>
               </div>
             </div>
           </div>
