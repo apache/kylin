@@ -96,6 +96,7 @@ public class SegmentMemoryStore implements IStreamingGTSearcher {
             maxEventTime = eventTime;
         }
         List<String> row = event.getData();
+        parsedStreamingCubeInfo.resetAggrs();
         String[] basicCuboidDimensions = buildBasicCuboidKey(row);
         Object[] metricsValues = buildValue(row);
         aggregate(basicCuboidAggBufMap, basicCuboidDimensions, metricsValues);

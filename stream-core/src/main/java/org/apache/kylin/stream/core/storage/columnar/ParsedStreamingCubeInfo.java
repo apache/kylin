@@ -254,4 +254,10 @@ public class ParsedStreamingCubeInfo {
             return (int) (cuboidID ^ (cuboidID >>> 32));
         }
     }
+
+    public void resetAggrs() {
+        for (int i = 0; i < cubeDesc.getMeasures().size(); i++) {
+            measureIngesters[i].reset();
+        }
+    }
 }
