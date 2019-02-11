@@ -145,7 +145,8 @@ public class QueryMetricsFacade {
                 }
             }
             setQueryStats(queryMetricsEvent, //
-                    sqlResponse.getDuration(), sqlResponse.getResults().size(), totalStorageReturnCount);
+                    sqlResponse.getDuration(), sqlResponse.getResults() == null ? 0 : sqlResponse.getResults().size(),
+                    totalStorageReturnCount);
             //For update query level metrics
             MetricsManager.getInstance().update(queryMetricsEvent);
         }
