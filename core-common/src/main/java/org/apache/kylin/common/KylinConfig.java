@@ -331,6 +331,7 @@ public class KylinConfig extends KylinConfigBase {
         if (StringUtils.isEmpty(kylinHome))
             throw new KylinConfigCannotInitException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
 
+        logger.info("Use KYLIN_HOME=" + kylinHome);
         String path = kylinHome + File.separator + "conf";
         return existFile(path);
     }
@@ -372,7 +373,8 @@ public class KylinConfig extends KylinConfigBase {
             // actually it's better to be named kylin-site.properties
             File propFile = getSitePropertiesFile();
             if (propFile == null || !propFile.exists()) {
-                logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
+                logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE + " at '"
+                        + (propFile != null ? propFile.getAbsolutePath() : "") + "'");
                 throw new RuntimeException("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
             }
             loadPropertiesFromInputStream(new FileInputStream(propFile), orderedProperties);
