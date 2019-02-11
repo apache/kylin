@@ -84,7 +84,8 @@ public class SourceConfigurationUtil {
 
         if (!confFile.exists()) {
             if (checkExist)
-                throw new RuntimeException("Failed to read " + xmlFileName);
+                throw new RuntimeException(
+                        "Failed to read " + xmlFileName + " at '" + confFile.getAbsolutePath() + "'");
             else
                 return confProps;
         }
