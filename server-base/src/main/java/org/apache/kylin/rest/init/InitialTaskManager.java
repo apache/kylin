@@ -20,6 +20,7 @@ package org.apache.kylin.rest.init;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ServerDiscovery;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.common.util.ZKBasedServerDiscovery;
 import org.apache.kylin.rest.metrics.QueryMetrics2Facade;
