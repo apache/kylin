@@ -21,7 +21,6 @@ package org.apache.kylin.common.util;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.curator.x.discovery.ServiceCache;
 import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
@@ -65,11 +64,9 @@ public class ZKBasedServerDiscovery implements ServerDiscovery {
     }
   }
 
-
   private CuratorFramework client;
   private ServiceDiscovery<KylinInstanceDetail> serviceDiscovery;
   private ServiceInstance<KylinInstanceDetail> instance;
-  private ServiceCache<KylinInstanceDetail> serviceCache;
 
   public ZKBasedServerDiscovery(KylinConfig config) throws Exception {
     client = CuratorFrameworkFactory.newClient(config.getZookeeperConnectString(),
@@ -82,12 +79,6 @@ public class ZKBasedServerDiscovery implements ServerDiscovery {
         .serializer(serializer)
         .basePath(config.getZookeeperBasePath())
         .build();
-    serviceDiscovery.start();
-
-    serviceCache = serviceDiscovery.serviceCacheBuilder()
-        .name("servers")
-        .build();
-    serviceCache.start();
 
     String host = InetAddress.getLocalHost().getHostName();
     int port = config.getServerPort();
@@ -117,7 +108,7 @@ public class ZKBasedServerDiscovery implements ServerDiscovery {
   @Override
   public List<String> getServers() throws Exception {
     List<String> servers = new ArrayList<String>();
-    for (ServiceInstance<KylinInstanceDetail> instance: serviceCache.getInstances()) {
+    for (ServiceInstance<KylinInstanceDetail> instance: serviceDiscovery.queryForInstances("servers")) {
       servers.add(instance.getPayload().getListenAddress());
     }
     logger.info("Get kylin servers: " + servers);
@@ -126,7 +117,6 @@ public class ZKBasedServerDiscovery implements ServerDiscovery {
 
   public void close() {
     try {
-      serviceCache.close();
       serviceDiscovery.close();
       client.close();
     } catch (Exception e) {

@@ -1693,7 +1693,9 @@ abstract public class KylinConfigBase implements Serializable {
     public String[] getRestServers() {
         if (getServerDiscoveryMode().equals("zookeeper")) {
             try {
-                return ZKBasedServerDiscovery.getInstance().getServers().toArray(new String[0]);
+                List<String> servers = ZKBasedServerDiscovery.getInstance().getServers();
+                setProperty("kylin.server.cluster-servers", StringUtils.join(servers, ","));
+                return servers.toArray(new String[0]);
             } catch (Exception e) {
                 logger.error("Failed to get servers from ZKBasedServerDiscovery", e);
                 return getOptionalStringArray("kylin.server.cluster-servers", new String[0]);

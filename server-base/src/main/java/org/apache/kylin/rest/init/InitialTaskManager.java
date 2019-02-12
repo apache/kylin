@@ -54,7 +54,6 @@ public class InitialTaskManager implements InitializingBean {
             try {
                 final ServerDiscovery serverDiscovery = ZKBasedServerDiscovery.createInstance();
                 serverDiscovery.registerService();
-
                 Runtime.getRuntime().addShutdownHook(new Thread() {
                     public void run() {
                         logger.info("Closing zookeeper based serverDiscovery");
