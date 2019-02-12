@@ -93,7 +93,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
                     benefitPolicy.propagateAggregationCost(best.getCuboidId(), selected);
                     round++;
                     if (logger.isTraceEnabled()) {
-                        logger.trace("Recommend in round {} : {}", round, best.toString());
+                        logger.trace("Recommend in round {} : {}", round, best);
                     }
                 } else {
                     doesRemainSpace = false;

@@ -53,7 +53,7 @@ import com.google.common.collect.Sets;
  * Subclass can override methods in this class to extend the content of the 'properties',
  * with some override values for example.
  */
-abstract public class KylinConfigBase implements Serializable {
+public abstract class KylinConfigBase implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(KylinConfigBase.class);
 
@@ -128,7 +128,7 @@ abstract public class KylinConfigBase implements Serializable {
         this.properties = force ? props : BCC.check(props);
     }
 
-    final protected String getOptional(String prop) {
+    protected final String getOptional(String prop) {
         return getOptional(prop, null);
     }
 
@@ -146,19 +146,19 @@ abstract public class KylinConfigBase implements Serializable {
     /**
      *
      * @param propertyKeys the collection of the properties; if null will return all properties
-     * @return
+     * @return properties which contained in propertyKeys
      */
     protected Properties getProperties(Collection<String> propertyKeys) {
         Map<String, String> envMap = System.getenv();
         StrSubstitutor sub = new StrSubstitutor(envMap);
 
-        Properties properties = new Properties();
+        Properties filteredProperties = new Properties();
         for (Entry<Object, Object> entry : this.properties.entrySet()) {
             if (propertyKeys == null || propertyKeys.contains(entry.getKey())) {
-                properties.put(entry.getKey(), sub.replace((String) entry.getValue()));
+                filteredProperties.put(entry.getKey(), sub.replace((String) entry.getValue()));
             }
         }
-        return properties;
+        return filteredProperties;
     }
 
     protected Properties getRawAllProperties() {
@@ -166,7 +166,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     }
 
-    final protected Map<String, String> getPropertiesByPrefix(String prefix) {
+    protected final Map<String, String> getPropertiesByPrefix(String prefix) {
         Map<String, String> result = Maps.newLinkedHashMap();
         for (Entry<Object, Object> entry : getAllProperties().entrySet()) {
             String key = (String) entry.getKey();
@@ -663,7 +663,7 @@ abstract public class KylinConfigBase implements Serializable {
     // JOB
     // ============================================================================
 
-    public CliCommandExecutor getCliCommandExecutor() throws IOException {
+    public CliCommandExecutor getCliCommandExecutor() {
         CliCommandExecutor exec = new CliCommandExecutor();
         if (getRunAsRemoteCommand()) {
             exec.setRunAtRemote(getRemoteHadoopCliHostname(), getRemoteHadoopCliPort(), getRemoteHadoopCliUsername(),
