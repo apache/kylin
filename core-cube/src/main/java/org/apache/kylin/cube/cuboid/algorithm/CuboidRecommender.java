@@ -41,10 +41,10 @@ public class CuboidRecommender {
     private static final Logger logger = LoggerFactory.getLogger(CuboidRecommender.class);
 
     private static Cache<String, Map<Long, Long>> cuboidRecommendCache = CacheBuilder.newBuilder()
-            .removalListener((notification) -> {
+            .removalListener(notification ->
                 logger.info("Recommended cuboids for cube " + notification.getKey() + " is removed due to "
-                        + notification.getCause());
-            }).maximumSize(KylinConfig.getInstanceFromEnv().getCubePlannerRecommendCuboidCacheMaxSize())
+                        + notification.getCause())
+            ).maximumSize(KylinConfig.getInstanceFromEnv().getCubePlannerRecommendCuboidCacheMaxSize())
             .expireAfterWrite(1, TimeUnit.DAYS).build();
 
     private class CuboidRecommenderSyncListener extends Broadcaster.Listener {
