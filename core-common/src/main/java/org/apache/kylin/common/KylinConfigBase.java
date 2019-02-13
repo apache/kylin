@@ -753,7 +753,12 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getJobRetry() {
-        return Integer.parseInt(this.getOptional("kylin.job.retry", "0"));
+        return Integer.parseInt(getOptional("kylin.job.retry", "0"));
+    }
+
+    // retry interval in milliseconds
+    public int getJobRetryInterval(){
+        return Integer.parseInt(getOptional("kylin.job.retry-interval", "30000"));
     }
 
     public String[] getJobRetryExceptions() {
