@@ -15,6 +15,7 @@
 - title: 开始
   docs:
   - index
+  - gettingstarted/faq
 
 - title: 安装
   docs:

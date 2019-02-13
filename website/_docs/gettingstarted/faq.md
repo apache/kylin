@@ -66,7 +66,7 @@ There is an article about [how to ask a question in a smart way](http://catb.org
 
   * The cube only has aggregated data, so all your queries should be aggregated queries ("GROUP BY"). You can use a SQL with all dimensions be grouped to get them as close as the detailed result, but that is not the raw data.
 
-  * In order to be connected from some BI tools, Kylin tries to answer "select *" query but please aware the result might not be expected. Please make sure each query to Kylin is aggregated.
+  * In order to be connected from some BI tools, Kylin tries to answer "select \*" query but please aware the result might not be expected. Please make sure each query to Kylin is aggregated.
 
 #### How can I query raw data from a cube?
 
@@ -127,7 +127,7 @@ But if you do want, there are some workarounds. 1) Add the primary key as a dime
 
 #### What should I do if I encounter a "java.lang.NoClassDefFoundError" error?
 
-  * Kylin doesn't ship those Hadoop jars, because they should already exist in the Hadoop node. So Kylin will try to find them and then add to Kylin's classpath. Due to Hadoop's complexity, there might be some case a jar wasn't found. In this case please look at the "bin/find-*-dependency.sh" and "bin/kylin.sh", modify them to fit your environment.
+  * Kylin doesn't ship those Hadoop jars, because they should already exist in the Hadoop node. So Kylin will try to find them and then add to Kylin's classpath. Due to Hadoop's complexity, there might be some case a jar wasn't found. In this case please look at the "bin/find-\*-dependency.sh" and "bin/kylin.sh", modify them to fit your environment.
 
 #### How to query Kylin in Python?
 
@@ -308,7 +308,7 @@ $2a$10$A7.J.GIEOQknHmJhEeXUdOnj2wrdG4jhopBgqShTgDkJDMoKxYHVu
 
 {% endhighlight %}
 
-  * Then you can set it into `kylinSecurity.xml'
+  * Then you can set it into `kylinSecurity.xml`
 
 {% highlight Groff markup %}
 
