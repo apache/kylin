@@ -118,10 +118,11 @@ Kylin 会自动从环境中读取 Hadoop 配置（`core-site.xml`），Hive 配�
 ### MapReduce 任务配置重写	{#mr-config-override}
 
 Kylin 支持在项目和 Cube 级别重写 `kylin_job_conf.xml` 和 `kylin_job_conf_inmem.xml` 中参数，以键值对的性质，按照如下格式替换：
-`kylin.job.mr.config.override.<key> = <value>`
-如果用户希望 Cube 的构建任务使用不同的 YARN resource queue，可以设置：
-`kylin.engine.mr.config-override.mapreduce.job.queuename={queueName}` 
-
+`kylin.engine.mr.config-override.<key> = <value>`
+ * 如果用户希望任务从 Yarn 获得更多内存，可以这样设置：
+ `kylin.engine.mr.config-override.mapreduce.map.java.opts=-Xmx7g` 和 `kylin.engine.mr.config-override.mapreduce.map.memory.mb=8192`
+ * 如果用户希望 Cube 的构建任务使用不同的 YARN resource queue，可以设置：
+ `kylin.engine.mr.config-override.mapreduce.job.queuename={queueName}`
 
 
 ### Hive 任务配置重写  {#hive-config-override}

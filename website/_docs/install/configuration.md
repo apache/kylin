@@ -118,8 +118,10 @@ The following configurations can be override in the Cube-level,
 ### MapReduce Configuration Overriding {#mr-config-override}
 
 Kylin supports overriding configuration properties in `kylin_job_conf.xml` and `kylin_job_conf_inmem.xml` at the project and cube level, in the form of key-value pairs, in the following format:
-`kylin.job.mr.config.override.<key> = <value>`
-If user wants the cube's build job to use a different YARN resource queue, user can set: `kylin.engine.mr.config-override.mapreduce.job.queuename={queueName}`
+`kylin.engine.mr.config-override.<key> = <value>`
+* If user wants getting more memory from YARN for jobs, user can set:  `kylin.engine.mr.config-override.mapreduce.map.java.opts=-Xmx7g` and `kylin.engine.mr.config-override.mapreduce.map.memory.mb=8192`
+* If user wants the cube's build job to use a different YARN resource queue, user can set: 
+`kylin.engine.mr.config-override.mapreduce.job.queuename={queueName}` 
 
 
 
@@ -127,7 +129,8 @@ If user wants the cube's build job to use a different YARN resource queue, user 
 
 Kylin supports overriding configuration properties in `kylin_hive_conf.xml` at the project and cube level, in the form of key-value pairs, in the following format:
 `kylin.source.hive.config-override.<key> = <value>`
-If user wants Hive to use a different YARN resource queue, user can set: `kylin.source.hive.config-override.mapreduce.job.queuename={queueName}`
+If user wants Hive to use a different YARN resource queue, user can set: 
+`kylin.source.hive.config-override.mapreduce.job.queuename={queueName}` 
 
 
 
@@ -135,7 +138,8 @@ If user wants Hive to use a different YARN resource queue, user can set: `kylin.
 
 Kylin supports overriding configuration properties in `kylin.properties` at the project and cube level, in the form of key-value pairs, in the following format:
 `kylin.engine.spark-conf.<key> = <value>`
-If user wants Spark to use a different YARN resource queue, user can set: `kylin.engine.spark-conf.spark.yarn.queue={queueName}`
+If user wants Spark to use a different YARN resource queue, user can set: 
+`kylin.engine.spark-conf.spark.yarn.queue={queueName}`
 
 
 
