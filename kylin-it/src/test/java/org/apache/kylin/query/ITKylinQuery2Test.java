@@ -29,6 +29,7 @@ import org.apache.kylin.query.routing.Candidate;
 import org.apache.spark.sql.SparderEnv;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -39,7 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.DriverManager;
 import java.util.Map;
 
-//@Ignore("@RunWith(SparkTestRunner.class) is contained by ITCombination2Test")
+@Ignore("@RunWith(SparkTestRunner.class) is contained by ITCombination2Test")
 @RunWith(SparkTestRunner.class)
 public class ITKylinQuery2Test extends ITKylinQueryTest {
 
@@ -57,7 +58,7 @@ public class ITKylinQuery2Test extends ITKylinQueryTest {
         priorities.put(RealizationType.INVERTED_INDEX, 0);
         Candidate.setPriorities(priorities);
 
-        joinType = "left";
+        joinType = "inner";
 
         setupAll();
     }

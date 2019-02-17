@@ -62,7 +62,6 @@ public class ParquetColumnFiller implements ColumnFiller {
                 final TblColRef extended = ExtendedColumnMeasureType.getExtendedColumn(func);
                 final int extendedColumnInTupleIdx = tupleInfo.hasColumn(extended) ? tupleInfo.getColumnIndex(extended) : -1;
                 tupleIndex[i] = extendedColumnInTupleIdx;
-                measureTypes[i] = measureType;
             } else {
                 throw new UnsupportedOperationException("Unsupported measure type : " + measureType);
             }
@@ -78,11 +77,16 @@ public class ParquetColumnFiller implements ColumnFiller {
         }
 
         for (int i = schema.getDimensions().size(); i < schema.getTotalFieldCount(); i++) {
-            if (tupleIndex[i] >= 0 && measureTypes[i] != null) {
-                if (row[i] == null && measureTypes[i] instanceof BasicMeasureType) {
-                    measureTypes[i].fillTupleSimply(tuple, tupleIndex[i], 0);
+            if (tupleIndex[i] >= 0) {
+                if (measureTypes[i] != null) {
+                    if (row[i] == null && measureTypes[i] instanceof BasicMeasureType) {
+                        measureTypes[i].fillTupleSimply(tuple, tupleIndex[i], 0);
+                    } else {
+                        measureTypes[i].fillTupleSimply(tuple, tupleIndex[i], row[i]);
+                    }
                 } else {
-                    measureTypes[i].fillTupleSimply(tuple, tupleIndex[i], row[i]);
+                    //for ExtendedColumn
+                    tuple.setDimensionValue(tupleIndex[i], Objects.toString(row[i], null));
                 }
             }
         }

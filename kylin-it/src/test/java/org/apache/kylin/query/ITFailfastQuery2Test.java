@@ -81,4 +81,10 @@ public class ITFailfastQuery2Test extends ITFailfastQueryTest {
     public void testQueryNotExceedMaxScanBytes() throws Exception {
         logger.info("testQueryNotExceedMaxScanBytes ignored");
     }
+
+    @Override
+    @Test
+    public void testPartitionExceedMaxScanBytes() throws Exception {
+        logger.info("testPartitionExceedMaxScanBytes ignored");
+    }
 }

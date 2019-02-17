@@ -60,7 +60,14 @@ public class HybridStorageQuery implements IStorageQuery {
 
     @Override
     public boolean keepRuntimeFilter() {
-        return true;
+        boolean keepRuntimeFilter = false;
+        for (IStorageQuery storageQuery : storageEngines) {
+            if (storageQuery.keepRuntimeFilter()) {
+                keepRuntimeFilter = true;
+                break;
+            }
+        }
+        return keepRuntimeFilter;
     }
 
 }
