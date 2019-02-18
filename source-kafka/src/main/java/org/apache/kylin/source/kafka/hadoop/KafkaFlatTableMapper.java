@@ -34,6 +34,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.source.kafka.model.StreamCubeFactTableDesc;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -71,7 +72,9 @@ public class KafkaFlatTableMapper extends KylinMapper<LongWritable, BytesWritabl
         final KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(cubeSegment.getCubeInstance().getRootFactTable());
 
         final IJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeSegment);
-        final List<TblColRef> allColumns = flatTableDesc.getFactColumns();
+        final StreamCubeFactTableDesc streamFactTableDesc = new StreamCubeFactTableDesc(cubeSegment.getCubeDesc(), cubeSegment, flatTableDesc);
+
+        final List<TblColRef> allColumns = streamFactTableDesc.getAllColumns();
 
         try {
             streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getAllParserProperties(), allColumns);

@@ -18,14 +18,12 @@
 
 package org.apache.kylin.source.kafka;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.source.kafka.model.StreamCubeFactTableDesc;
 import org.apache.kylin.engine.mr.IInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -36,22 +34,16 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.ISegment;
-import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.JoinTableDesc;
-import org.apache.kylin.metadata.model.SegmentRange;
-import org.apache.kylin.metadata.model.TableRef;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.hive.CreateFlatHiveTableStep;
 import org.apache.kylin.source.hive.GarbageCollectionStep;
 import org.apache.kylin.source.kafka.hadoop.KafkaFlatTableJob;
 import org.apache.kylin.source.kafka.job.MergeOffsetStep;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+
+import static org.apache.kylin.job.util.FlatTableSqlQuoteUtils.quoteTableIdentity;
 
 public class KafkaInputBase {
 
@@ -89,11 +81,11 @@ public class KafkaInputBase {
                 jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId(), tableLocation, seg));
                 intermediatePaths.add(tableLocation);
             } else {
-                final String mockFactTableName = MetadataConstants.KYLIN_INTERMEDIATE_PREFIX
-                        + cubeName.toLowerCase(Locale.ROOT) + "_" + seg.getUuid().replaceAll("-", "_") + "_fact";
-                jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId(), baseLocation + "/" + mockFactTableName, seg));
-                jobFlow.addTask(createFlatTable(hiveTableDatabase, mockFactTableName, baseLocation, cubeName, cubeDesc,
-                        flatDesc, intermediateTables, intermediatePaths));
+                // sink stream data as a mock fact table, and then join it with dimension tables
+                final StreamCubeFactTableDesc streamFactDesc = new StreamCubeFactTableDesc(cubeDesc, seg, flatDesc);
+                jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId(), baseLocation + "/" + streamFactDesc.getTableName(), seg));
+                jobFlow.addTask(createFlatTable(hiveTableDatabase, baseLocation, cubeName,
+                        streamFactDesc, intermediateTables, intermediatePaths));
             }
         }
 
@@ -150,90 +142,24 @@ public class KafkaInputBase {
         return result;
     }
 
-    protected static AbstractExecutable createFlatTable(final String hiveTableDatabase, final String mockFactTableName,
-            final String baseLocation, final String cubeName, final CubeDesc cubeDesc,
-            final IJoinedFlatTableDesc flatDesc, final List<String> intermediateTables,
-            final List<String> intermediatePaths) {
+    protected static AbstractExecutable createFlatTable(final String hiveTableDatabase,
+                                                        final String baseLocation, final String cubeName,
+                                                        final StreamCubeFactTableDesc streamFactDesc, final List<String> intermediateTables,
+                                                        final List<String> intermediatePaths) {
+        final IJoinedFlatTableDesc flatDesc = streamFactDesc.getFlatTableDesc();
+
         final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(hiveTableDatabase);
 
-        final IJoinedFlatTableDesc mockfactDesc = new IJoinedFlatTableDesc() {
-
-            @Override
-            public String getTableName() {
-                return mockFactTableName;
-            }
-
-            @Override
-            public DataModelDesc getDataModel() {
-                return cubeDesc.getModel();
-            }
-
-            @Override
-            public List<TblColRef> getAllColumns() {
-                final Set<TblColRef> factTableColumnSet = Sets.newHashSet();
-                TableRef rootFactTable = getDataModel().getRootFactTable();
-                for (TblColRef colRef : flatDesc.getAllColumns()) {
-                    if (colRef.getTableRef().equals(rootFactTable)) {
-                        factTableColumnSet.add(colRef);
-                    }
-                }
-                // Add column which belongs to root fact table in join relation but lost
-                for (JoinTableDesc joinTableDesc : getDataModel().getJoinTables()) {
-                    JoinDesc join = joinTableDesc.getJoin();
-                    for (TblColRef colRef : join.getForeignKeyColumns()) {
-                        if (colRef.getTableRef().equals(rootFactTable)) {
-                            factTableColumnSet.add(colRef);
-                        }
-                    }
-                }
-                return new LinkedList<>(factTableColumnSet);
-            }
-
-            @Override
-            public List<TblColRef> getFactColumns() {
-                return null;
-            }
-
-            @Override
-            public int getColumnIndex(TblColRef colRef) {
-                return 0;
-            }
-
-            @Override
-            public SegmentRange getSegRange() {
-                return null;
-            }
-
-            @Override
-            public TblColRef getDistributedBy() {
-                return null;
-            }
-
-            @Override
-            public TblColRef getClusterBy() {
-                return null;
-            }
-
-            @Override
-            public ISegment getSegment() {
-                return null;
-            }
-
-            @Override
-            public boolean useAlias() {
-                return false;
-            }
-        };
-        final String dropFactTableHql = JoinedFlatTable.generateDropTableStatement(mockfactDesc);
+        final String dropFactTableHql = JoinedFlatTable.generateDropTableStatement(streamFactDesc);
         // the table inputformat is sequence file
-        final String createFactTableHql = JoinedFlatTable.generateCreateTableStatement(mockfactDesc, baseLocation,
+        final String createFactTableHql = JoinedFlatTable.generateCreateTableStatement(streamFactDesc, baseLocation,
                 JoinedFlatTable.SEQUENCEFILE);
 
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
         final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, baseLocation);
         String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatDesc);
-        insertDataHqls = insertDataHqls.replace(flatDesc.getDataModel().getRootFactTableName() + " ",
-                mockFactTableName + " ");
+        insertDataHqls = insertDataHqls.replace(flatDesc.getDataModel().getRootFactTable().getTableIdentityQuoted(FlatTableSqlQuoteUtils.QUOTE) + " ",
+                quoteTableIdentity(hiveTableDatabase, streamFactDesc.getTableName()) + " ");
 
         CreateFlatHiveTableStep step = new CreateFlatHiveTableStep();
         CubingExecutableUtil.setCubeName(cubeName, step.getParams());
@@ -243,9 +169,9 @@ public class KafkaInputBase {
         step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
 
         intermediateTables.add(flatDesc.getTableName());
-        intermediateTables.add(mockFactTableName);
+        intermediateTables.add(streamFactDesc.getTableName());
         intermediatePaths.add(baseLocation + "/" + flatDesc.getTableName());
-        intermediatePaths.add(baseLocation + "/" + mockFactTableName);
+        intermediatePaths.add(baseLocation + "/" + streamFactDesc.getTableName());
         return step;
     }
 
