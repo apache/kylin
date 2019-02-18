@@ -42,6 +42,8 @@ import org.apache.kylin.source.kafka.job.MergeOffsetStep;
 
 import com.google.common.collect.Lists;
 
+import static org.apache.kylin.job.util.FlatTableSqlQuoteUtils.quoteTableIdentity;
+
 public class KafkaInputBase {
 
     public static class BaseBatchCubingInputSide implements IInput.IBatchCubingInputSide {
@@ -154,8 +156,8 @@ public class KafkaInputBase {
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
         final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, baseLocation);
         String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatDesc);
-        insertDataHqls = insertDataHqls.replace(flatDesc.getDataModel().getRootFactTableName() + " ",
-                streamFactDesc.getTableName() + " ");
+        insertDataHqls = insertDataHqls.replace(flatDesc.getDataModel().getRootFactTable().getTableIdentityQuoted("`") + " ",
+                quoteTableIdentity(hiveTableDatabase, streamFactDesc.getTableName()) + " ");
 
         CreateFlatHiveTableStep step = new CreateFlatHiveTableStep();
         CubingExecutableUtil.setCubeName(cubeName, step.getParams());
