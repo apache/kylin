@@ -242,11 +242,11 @@ public class KafkaSource implements IStreamingSource {
         return kafkaPosition == null || kafkaPosition.getPartitionOffsets().isEmpty();
     }
 
-    protected Map<String, Object> getKafkaConf(Map<String, String> sourceProperties, KylinConfig kylinConfig) {
+    public static Map<String, Object> getKafkaConf(Map<String, String> sourceProperties, KylinConfig kylinConfig) {
         return getKafkaConf(sourceProperties);
     }
 
-    protected Map<String, Object> getKafkaConf(Map<String, String> sourceProperties) {
+    public static Map<String, Object> getKafkaConf(Map<String, String> sourceProperties) {
         Map<String, Object> conf = Maps.newHashMap();
         String bootstrapServersString = getBootstrapServers(sourceProperties);
         conf.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServersString);
@@ -261,15 +261,15 @@ public class KafkaSource implements IStreamingSource {
         return conf;
     }
 
-    protected String getBootstrapServers(Map<String, String> sourceProperties) {
+    public static String getBootstrapServers(Map<String, String> sourceProperties) {
         return sourceProperties.get(PROP_BOOTSTRAP_SERVERS);
     }
 
-    protected String getTopicName(Map<String, String> sourceProperties) {
+    public static String getTopicName(Map<String, String> sourceProperties) {
         return sourceProperties.get(PROP_TOPIC);
     }
 
-    protected Class<?> getStreamingMessageParserClass(Map<String, String> sourceProperties)
+    public static Class<?> getStreamingMessageParserClass(Map<String, String> sourceProperties)
             throws ClassNotFoundException {
         String parserName = sourceProperties.get(PROP_MESSAGE_PARSER);
         String parserClazzName = DEF_MSSAGE_PARSER_CLAZZ;
@@ -279,7 +279,7 @@ public class KafkaSource implements IStreamingSource {
         return Class.forName(parserClazzName);
     }
 
-    protected String getParserClassName(String parser) {
+    public static String getParserClassName(String parser) {
         return parser;
     }
 }

@@ -39,6 +39,10 @@ public class Node {
         this.port = port;
     }
 
+    public Node() {
+
+    }
+
     public static Node from(String nodeString) {
         return from(nodeString, ":");
     }

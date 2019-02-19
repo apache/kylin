@@ -54,7 +54,8 @@ public class H2Database {
             "default.test_account", //
             "default.test_country", //
             "default.streaming_table", //
-            "default.streaming_category" };
+            "default.streaming_category", //
+            "default.streaming_v2_user_info_table"};
     private static final Map<String, String> javaToH2DataTypeMapping = new HashMap<String, String>();
 
     static {

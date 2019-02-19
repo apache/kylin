@@ -1,0 +1,17 @@
+{
+  "uuid" : "eadbd169-e2c5-c273-8a47-cefbce4ab8e6",
+  "last_modified" : 1548405214200,
+  "version" : "2.6.0.20500",
+  "name" : "test_streaming_v2_user_info_cube",
+  "owner" : "ADMIN",
+  "descriptor" : "test_streaming_v2_user_info_cube",
+  "display_name" : "test_streaming_v2_user_info_cube",
+  "cost" : 50,
+  "status" : "DISABLED",
+  "segments" : [ ],
+  "create_time_utc" : 1548388568736,
+  "cuboid_bytes" : null,
+  "cuboid_bytes_recommend" : null,
+  "cuboid_last_optimized" : 0,
+  "snapshots" : { }
+}

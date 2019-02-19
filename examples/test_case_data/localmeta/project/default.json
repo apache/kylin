@@ -36,6 +36,11 @@
       "name": "test_streaming_v2_cube",
       "type": "CUBE",
       "realization": "test_streaming_v2_cube"
+    },
+    {
+      "name": "test_streaming_v2_user_info_cube",
+      "type" : "CUBE",
+      "realization" : "test_streaming_v2_user_info_cube"
     }, {
       "name" : "test_streaming_join_table_cube",
       "type" : "CUBE",
@@ -60,6 +65,7 @@
     "DEFAULT.FIFTY_DIM",
     "DEFAULT.WIDE_TABLE",
     "DEFAULT.STREAMING_V2_TABLE",
+    "DEFAULT.STREAMING_V2_USER_INFO_TABLE",
     "DEFAULT.STREAMING_CATEGORY"
   ],
   "models": [
@@ -73,6 +79,7 @@
     "twenty_dim",
     "ut_large_dimension_number",
     "test_streaming_v2_model",
+    "test_streaming_v2_user_info_model",
     "test_streaming_join_table_model"
   ],
   "override_kylin_properties" :{

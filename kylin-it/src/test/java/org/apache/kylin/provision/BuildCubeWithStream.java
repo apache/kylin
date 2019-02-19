@@ -128,9 +128,7 @@ public class BuildCubeWithStream {
         kafkaConfig = KafkaConfigManager.getInstance(kylinConfig).getKafkaConfig(streamingConfig.getName());
 
         String topicName = RandomUtil.randomUUID().toString();
-        String localIp = NetworkUtils.getLocalIp();
         BrokerConfig brokerConfig = kafkaConfig.getKafkaClusterConfigs().get(0).getBrokerConfigs().get(0);
-        brokerConfig.setHost(localIp);
         kafkaConfig.setTopic(topicName);
         KafkaConfigManager.getInstance(kylinConfig).updateKafkaConfig(kafkaConfig);
 
@@ -143,7 +141,7 @@ public class BuildCubeWithStream {
         System.out.println("zkConnectionStr" + zkConnectionStr);
         zkConnection = new ZkConnection(zkConnectionStr);
         // Assert.assertEquals(ZooKeeper.States.CONNECTED, zkConnection.getZookeeperState());
-        kafkaServer = new MockKafka(zkConnection, brokerConfig.getPort(), brokerConfig.getId());
+        kafkaServer = new MockKafka(zkConnection, brokerConfig.getHost() + ":" + brokerConfig.getPort(), brokerConfig.getId());
         kafkaServer.start();
 
         kafkaServer.createTopic(topicName, 3, 1);

@@ -1,0 +1,27 @@
+{
+  "uuid" : "f7974e7b-4536-c6ec-44c5-8bf5961a68be",
+  "last_modified" : 1548386609781,
+  "version" : "2.6.0.20500",
+  "name" : "test_streaming_v2_user_info_model",
+  "owner" : "ADMIN",
+  "is_draft" : false,
+  "description" : "",
+  "fact_table" : "DEFAULT.STREAMING_V2_USER_INFO_TABLE",
+  "lookups" : [ ],
+  "dimensions" : [ {
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "columns" : [ "PROVINCE", "LEVEL", "CLASSES", "ALLIACNCE", "RACE", "HOLD", "YEAR_START", "QUARTER_START", "MONTH_START", "WEEK_START", "DAY_START", "HOUR_START", "MINUTE_START" ]
+  } ],
+  "metrics" : [ "STREAMING_V2_USER_INFO_TABLE.COINS", "STREAMING_V2_USER_INFO_TABLE.LID", "STREAMING_V2_USER_INFO_TABLE.UID", "STREAMING_V2_USER_INFO_TABLE.EXPERIENCE", "STREAMING_V2_USER_INFO_TABLE.REPUTATION" ],
+  "filter_condition" : "",
+  "partition_desc" : {
+    "partition_date_column" : "STREAMING_V2_USER_INFO_TABLE.DT",
+    "partition_time_column" : null,
+    "partition_date_start" : 0,
+    "partition_date_format" : "yyyy-MM-dd HH:mm:ss",
+    "partition_time_format" : "HH:mm:ss",
+    "partition_type" : "APPEND",
+    "partition_condition_builder" : "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+  },
+  "capacity" : "MEDIUM"
+}
