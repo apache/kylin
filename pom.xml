@@ -1755,6 +1755,9 @@
                 <exclude>webapp/app/js/directives/select.js</exclude>
                 <exclude>webapp/app/js/directives/ui-grid.js</exclude>
 
+                <!-- BSD license -->
+                <exclude>webapp/app/js/utils/liquidFillGauge.js</exclude>
+
                 <!--configuration file -->
                 <exclude>webapp/app/routes.json</exclude>
                 <exclude>webapp/bower.json</exclude>
