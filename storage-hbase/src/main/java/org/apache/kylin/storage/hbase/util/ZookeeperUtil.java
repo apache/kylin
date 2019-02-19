@@ -18,10 +18,17 @@
 
 package org.apache.kylin.storage.hbase.util;
 
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kylin.common.KylinConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZookeeperUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(ZookeeperUtil.class);
     public static String ZOOKEEPER_UTIL_HBASE_CLASSNAME = "org.apache.kylin.storage.hbase.util.ZooKeeperUtilHbase";
 
     /**
@@ -30,5 +37,19 @@ public class ZookeeperUtil {
     public static String getZKConnectString() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         return config.getZookeeperConnectString();
+    }
+
+    public static void cleanZkPath(String path) {
+        RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+        CuratorFramework zkClient = CuratorFrameworkFactory.newClient(getZKConnectString(), retryPolicy);
+        zkClient.start();
+
+        try {
+            zkClient.delete().deletingChildrenIfNeeded().forPath(path);
+        } catch (Exception e) {
+            logger.warn("Failed to delete zookeeper path: " + path, e);
+        } finally {
+            zkClient.close();
+        }
     }
 }

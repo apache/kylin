@@ -1,0 +1,262 @@
+{
+  "uuid" : "dc61c357-9683-b034-3a22-1c3e4d6ebee1",
+  "last_modified" : 1548388568711,
+  "version" : "2.6.0.20500",
+  "name" : "test_streaming_v2_user_info_cube",
+  "is_draft" : false,
+  "model_name" : "test_streaming_v2_user_info_model",
+  "description" : "",
+  "null_string" : null,
+  "dimensions" : [ {
+    "name" : "PROVINCE",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "PROVINCE",
+    "derived" : null
+  }, {
+    "name" : "LEVEL",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "LEVEL",
+    "derived" : null
+  }, {
+    "name" : "CLASSES",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "CLASSES",
+    "derived" : null
+  }, {
+    "name" : "ALLIACNCE",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "ALLIACNCE",
+    "derived" : null
+  }, {
+    "name" : "RACE",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "RACE",
+    "derived" : null
+  }, {
+    "name" : "HOLD",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "HOLD",
+    "derived" : null
+  }, {
+    "name" : "YEAR_START",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "YEAR_START",
+    "derived" : null
+  }, {
+    "name" : "QUARTER_START",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "QUARTER_START",
+    "derived" : null
+  }, {
+    "name" : "MONTH_START",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "MONTH_START",
+    "derived" : null
+  }, {
+    "name" : "WEEK_START",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "WEEK_START",
+    "derived" : null
+  }, {
+    "name" : "DAY_START",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "DAY_START",
+    "derived" : null
+  }, {
+    "name" : "HOUR_START",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "HOUR_START",
+    "derived" : null
+  }, {
+    "name" : "MINUTE_START",
+    "table" : "STREAMING_V2_USER_INFO_TABLE",
+    "column" : "MINUTE_START",
+    "derived" : null
+  } ],
+  "measures" : [ {
+    "name" : "_COUNT_",
+    "function" : {
+      "expression" : "COUNT",
+      "parameter" : {
+        "type" : "constant",
+        "value" : "1"
+      },
+      "returntype" : "bigint"
+    }
+  }, {
+    "name" : "SUM_COINS",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "STREAMING_V2_USER_INFO_TABLE.COINS"
+      },
+      "returntype" : "decimal(19,4)"
+    }
+  }, {
+    "name" : "MAX_EXPERIENCE",
+    "function" : {
+      "expression" : "MAX",
+      "parameter" : {
+        "type" : "column",
+        "value" : "STREAMING_V2_USER_INFO_TABLE.EXPERIENCE"
+      },
+      "returntype" : "integer"
+    }
+  }, {
+    "name" : "MIN_EXPERIENCE",
+    "function" : {
+      "expression" : "MIN",
+      "parameter" : {
+        "type" : "column",
+        "value" : "STREAMING_V2_USER_INFO_TABLE.EXPERIENCE"
+      },
+      "returntype" : "integer"
+    }
+  }, {
+    "name" : "COUNTDISTINCT_UID",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameter" : {
+        "type" : "column",
+        "value" : "STREAMING_V2_USER_INFO_TABLE.UID"
+      },
+      "returntype" : "bitmap"
+    }
+  }, {
+    "name" : "PERCENTILE_REPUTATION",
+    "function" : {
+      "expression" : "PERCENTILE_APPROX",
+      "parameter" : {
+        "type" : "column",
+        "value" : "STREAMING_V2_USER_INFO_TABLE.REPUTATION"
+      },
+      "returntype" : "percentile(100)"
+    }
+  }, {
+    "name" : "COUNTDISTINCT_LID",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",
+      "parameter" : {
+        "type" : "column",
+        "value" : "STREAMING_V2_USER_INFO_TABLE.LID"
+      },
+      "returntype" : "hllc(16)"
+    }
+  } ],
+  "dictionaries" : [ ],
+  "rowkey" : {
+    "rowkey_columns" : [ {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.MINUTE_START",
+      "encoding" : "time",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.HOUR_START",
+      "encoding" : "time",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.DAY_START",
+      "encoding" : "date",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.ALLIACNCE",
+      "encoding" : "dict",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.CLASSES",
+      "encoding" : "dict",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.RACE",
+      "encoding" : "dict",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.PROVINCE",
+      "encoding" : "dict",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.HOLD",
+      "encoding" : "dict",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.LEVEL",
+      "encoding" : "dict",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.WEEK_START",
+      "encoding" : "date",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.MONTH_START",
+      "encoding" : "date",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.QUARTER_START",
+      "encoding" : "date",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_V2_USER_INFO_TABLE.YEAR_START",
+      "encoding" : "date",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    } ]
+  },
+  "hbase_mapping" : {
+    "column_family" : [ {
+      "name" : "F1",
+      "columns" : [ {
+        "qualifier" : "M",
+        "measure_refs" : [ "_COUNT_", "SUM_COINS", "MAX_EXPERIENCE", "MIN_EXPERIENCE", "PERCENTILE_REPUTATION" ]
+      } ]
+    }, {
+      "name" : "F2",
+      "columns" : [ {
+        "qualifier" : "M",
+        "measure_refs" : [ "COUNTDISTINCT_UID", "COUNTDISTINCT_LID" ]
+      } ]
+    } ]
+  },
+  "aggregation_groups" : [ {
+    "includes" : [ "STREAMING_V2_USER_INFO_TABLE.PROVINCE", "STREAMING_V2_USER_INFO_TABLE.LEVEL", "STREAMING_V2_USER_INFO_TABLE.CLASSES", "STREAMING_V2_USER_INFO_TABLE.ALLIACNCE", "STREAMING_V2_USER_INFO_TABLE.RACE", "STREAMING_V2_USER_INFO_TABLE.HOLD", "STREAMING_V2_USER_INFO_TABLE.YEAR_START", "STREAMING_V2_USER_INFO_TABLE.QUARTER_START", "STREAMING_V2_USER_INFO_TABLE.MONTH_START", "STREAMING_V2_USER_INFO_TABLE.WEEK_START", "STREAMING_V2_USER_INFO_TABLE.DAY_START", "STREAMING_V2_USER_INFO_TABLE.HOUR_START", "STREAMING_V2_USER_INFO_TABLE.MINUTE_START" ],
+    "select_rule" : {
+      "hierarchy_dims" : [ [ "STREAMING_V2_USER_INFO_TABLE.PROVINCE", "STREAMING_V2_USER_INFO_TABLE.HOLD" ] ],
+      "mandatory_dims" : [ ],
+      "joint_dims" : [ [ "STREAMING_V2_USER_INFO_TABLE.ALLIACNCE", "STREAMING_V2_USER_INFO_TABLE.CLASSES" ] ]
+    }
+  } ],
+  "signature" : "UJb/HBuWhTeTmAdX/cEYgg==",
+  "notify_list" : [ ],
+  "status_need_notify" : [ "ERROR", "DISCARDED", "SUCCEED" ],
+  "partition_date_start" : 0,
+  "partition_date_end" : 3153600000000,
+  "auto_merge_time_ranges" : [ 604800000, 2419200000 ],
+  "volatile_range" : 0,
+  "retention_range" : 0,
+  "engine_type" : 2,
+  "storage_type" : 3,
+  "override_kylin_properties" : {
+    "kylin.stream.cube.window" : "1800",
+    "kylin.stream.cube.duration" : "60",
+    "kylin.stream.cube.duration.max" : "600",
+    "kylin.stream.index.checkpoint.intervals" : "180",
+    "kylin.cube.algorithm" : "INMEM",
+    "kylin.stream.segment.retention.policy" : "fullBuild",
+    "kylin.stream.index.maxrows" : "1000"
+  },
+  "cuboid_black_list" : [ ],
+  "parent_forward" : 3,
+  "mandatory_dimension_set_list" : [ ],
+  "snapshot_table_desc_list" : [ ]
+}

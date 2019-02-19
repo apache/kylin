@@ -200,7 +200,7 @@ public class HttpStreamDataSearchClient implements IStreamDataSearchClient {
         }
     }
 
-    private Iterator<ITuple> deserializeResponse(final StreamingTupleConverter tupleConverter,
+    public Iterator<ITuple> deserializeResponse(final StreamingTupleConverter tupleConverter,
             final RecordsSerializer recordsSerializer, String cubeName, TupleInfo tupleInfo, DataResponse response)
             throws IOException, DataFormatException {
         final Iterator<Record> records = recordsSerializer.deserialize(Base64.decodeBase64(response.getData()));

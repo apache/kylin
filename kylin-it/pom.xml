@@ -425,14 +425,14 @@
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
                                         <argument>
-                                            -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
+                                              -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
                                         </argument>
                                         <argument>-DengineType=${engineType}</argument>
                                         <argument>
-                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                              -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
                                         </argument>
                                         <argument>
-                                            -javaagent:${project.basedir}/..//dev-support/jacocoagent.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-engine.exec
+                                              -javaagent:${project.basedir}/..//dev-support/jacocoagent.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-engine.exec
                                         </argument>
                                         <argument>-classpath</argument>
                                         <classpath />
@@ -467,6 +467,38 @@
                                         <argument>-classpath</argument>
                                         <classpath />
                                         <argument>org.apache.kylin.provision.BuildCubeWithStream
+                                        </argument>
+                                    </arguments>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>build_cube_with_stream_v2</id>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <phase>pre-integration-test</phase>
+                                <configuration>
+                                    <skip>${skipTests}</skip>
+                                    <classpathScope>test</classpathScope>
+                                    <executable>java</executable>
+                                    <arguments>
+                                        <argument>-Dhdp.version=${hdp.version}</argument>
+                                        <argument>
+                                            -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
+                                        </argument>
+                                        <argument>
+                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                        </argument>
+                                        <argument>
+                                            -Djava.library.path=/usr/hdp/current/hadoop-client/lib/native
+                                        </argument>
+                                        <argument>
+                                            -javaagent:${project.basedir}/..//dev-support/jacocoagent.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-stream.exec
+                                        </argument>
+                                        <argument>-classpath</argument>
+                                        <classpath />
+                                        <argument>org.apache.kylin.realtime.BuildCubeWithStreamV2
                                         </argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>

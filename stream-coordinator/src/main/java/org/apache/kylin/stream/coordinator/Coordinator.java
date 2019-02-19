@@ -151,7 +151,7 @@ public class Coordinator implements CoordinatorClient {
     }
 
     @VisibleForTesting
-    protected Coordinator(StreamMetadataStore metadataStore, ReceiverAdminClient receiverClient) {
+    public Coordinator(StreamMetadataStore metadataStore, ReceiverAdminClient receiverClient) {
         this.streamMetadataStore = metadataStore;
         this.receiverAdminClient = receiverClient;
         this.assigner = new DefaultAssigner();
@@ -180,6 +180,17 @@ public class Coordinator implements CoordinatorClient {
     public void start() {
         selector.start();
         streamingJobCheckExecutor.scheduleAtFixedRate(jobStatusChecker, 0, 2, TimeUnit.MINUTES);
+    }
+
+    @VisibleForTesting
+    public void setReceiverAdminClient(ReceiverAdminClient receiverAdminClient) {
+        this.receiverAdminClient = receiverAdminClient;
+    }
+
+    @VisibleForTesting
+    public void setToLeader() {
+        streamMetadataStore.setCoordinatorNode(NodeUtil.getCurrentNode(DEFAULT_PORT));
+        this.isLead = true;
     }
 
     private void restoreJobStatusChecker() {
@@ -361,7 +372,7 @@ public class Coordinator implements CoordinatorClient {
         }
     }
 
-    private StreamingCubeInfo getStreamCubeInfo(String cubeName) {
+    public StreamingCubeInfo getStreamCubeInfo(String cubeName) {
         CubeInstance cube = CubeManager.getInstance(getConfig()).getCube(cubeName);
         if (cube == null) {
             return null;
@@ -681,7 +692,7 @@ public class Coordinator implements CoordinatorClient {
         return result;
     }
 
-    private void removeCubeHDFSFiles(String cubeName) {
+    public void removeCubeHDFSFiles(String cubeName) {
         String segmentHDFSPath = HDFSUtil.getStreamingCubeFilePath(cubeName);
         try {
             FileSystem fs = HadoopUtil.getFileSystem(segmentHDFSPath);

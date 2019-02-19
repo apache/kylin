@@ -95,7 +95,8 @@ public class CubeMetaExtractorTest extends LocalFileMetadataTestCase {
                 "/table/SSB.PART.json", //
                 "/table/SSB.SUPPLIER.json", //
                 "/table/SSB.V_LINEORDER.json", //
-                "/table/DEFAULT.STREAMING_V2_TABLE.json"
+                "/table/DEFAULT.STREAMING_V2_TABLE.json", //
+                "/table/DEFAULT.STREAMING_V2_USER_INFO_TABLE.json"
         );
         Set<String> expectTblExd = Sets.newHashSet(
                 "/table_exd/DEFAULT.TEST_COUNTRY.json", //
