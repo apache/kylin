@@ -603,7 +603,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
             return false;
 
         return this.getConfig().isAutoMergeEnabled() && this.getDescriptor().getAutoMergeTimeRanges() != null
-                && this.getDescriptor().getAutoMergeTimeRanges().length > 0;
+                && this.getDescriptor().getAutoMergeTimeRanges().length > 0 && this.getStatus() == RealizationStatusEnum.READY;
     }
 
     public SegmentRange autoMergeCubeSegments() throws IOException {
