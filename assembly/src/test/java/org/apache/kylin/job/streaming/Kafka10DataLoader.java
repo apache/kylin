@@ -76,7 +76,7 @@ public class Kafka10DataLoader extends StreamDataLoader {
         return producer;
     }
 
-    private static Properties constructDefaultKafkaProducerProperties(String brokers, Properties properties) {
+    public static Properties constructDefaultKafkaProducerProperties(String brokers, Properties properties) {
         Properties props = new Properties();
         props.put("retry.backoff.ms", "1000");
         props.put("bootstrap.servers", brokers);

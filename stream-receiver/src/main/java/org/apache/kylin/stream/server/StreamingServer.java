@@ -34,6 +34,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.fs.FileStatus;
@@ -97,7 +98,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
     private static final Logger logger = LoggerFactory.getLogger(StreamingServer.class);
     public static final int DEFAULT_PORT = 9090;
     private static final int CONSUMER_STOP_WAIT_TIMEOUT = 10000;
-    private static StreamingServer instance = new StreamingServer();
+    private static volatile StreamingServer instance = null;
 
     private Map<String, StreamingConsumerChannel> cubeConsumerMap = Maps.newHashMap();
     private Map<String, List<Partition>> assignments = Maps.newHashMap();
@@ -119,7 +120,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
 
     private String baseStorePath;
 
-    public StreamingServer() {
+    private StreamingServer() {
         streamZKClient = ZKUtils.getZookeeperClient();
         streamMetadataStore = StreamMetadataStoreFactory.getStreamMetaDataStore();
         coordinatorClient = new HttpCoordinatorClient(streamMetadataStore);
@@ -131,7 +132,15 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
         segmentFlushExecutor = Executors.newFixedThreadPool(5, new NamedThreadFactory("segment_flush"));
     }
 
-    public static StreamingServer getInstance() {
+    @VisibleForTesting
+    public void setCoordinatorClient(CoordinatorClient coordinatorClient) {
+        this.coordinatorClient = coordinatorClient;
+    }
+
+    public static synchronized StreamingServer getInstance() {
+        if (instance == null) {
+            instance = new StreamingServer();
+        }
         return instance;
     }
 
