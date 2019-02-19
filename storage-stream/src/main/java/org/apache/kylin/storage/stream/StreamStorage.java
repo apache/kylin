@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.stream;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -27,6 +28,7 @@ import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput2Transition;
 import org.apache.kylin.storage.stream.rpc.HttpStreamDataSearchClient;
 import org.apache.kylin.storage.stream.rpc.IStreamDataSearchClient;
+import org.apache.kylin.storage.stream.rpc.MockedStreamDataSearchClient;
 
 //used by reflection
 public class StreamStorage implements IStorage {
@@ -46,7 +48,12 @@ public class StreamStorage implements IStorage {
         if (realTimeSearchClient == null) {
             synchronized (this) {
                 if (realTimeSearchClient == null) {
-                    realTimeSearchClient = new HttpStreamDataSearchClient();
+                    KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+                    if (kylinConfig.isStreamingStandAloneMode()) {
+                        realTimeSearchClient = new MockedStreamDataSearchClient();
+                    } else {
+                        realTimeSearchClient = new HttpStreamDataSearchClient();
+                    }
                 }
             }
         }

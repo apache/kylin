@@ -1,0 +1,86 @@
+{
+  "uuid" : "c30a6b5c-b3b6-d61e-1600-782db1136696",
+  "last_modified" : 1548385562225,
+  "version" : "2.6.0.20500",
+  "name" : "STREAMING_V2_USER_INFO_TABLE",
+  "columns" : [ {
+    "id" : "0",
+    "name" : "PROVINCE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "1",
+    "name" : "LID",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "2",
+    "name" : "UID",
+    "datatype" : "integer"
+  }, {
+    "id" : "3",
+    "name" : "LEVEL",
+    "datatype" : "integer"
+  }, {
+    "id" : "4",
+    "name" : "COINS",
+    "datatype" : "decimal(19,4)"
+  }, {
+    "id" : "5",
+    "name" : "CLASSES",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "EXPERIENCE",
+    "datatype" : "integer"
+  }, {
+    "id" : "7",
+    "name" : "ALLIACNCE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "RACE",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "DT",
+    "datatype" : "timestamp"
+  }, {
+    "id" : "10",
+    "name" : "HOLD",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "11",
+    "name" : "REPUTATION",
+    "datatype" : "decimal(19,4)"
+  }, {
+    "id" : "12",
+    "name" : "YEAR_START",
+    "datatype" : "date"
+  }, {
+    "id" : "13",
+    "name" : "QUARTER_START",
+    "datatype" : "date"
+  }, {
+    "id" : "14",
+    "name" : "MONTH_START",
+    "datatype" : "date"
+  }, {
+    "id" : "15",
+    "name" : "WEEK_START",
+    "datatype" : "date"
+  }, {
+    "id" : "16",
+    "name" : "DAY_START",
+    "datatype" : "date"
+  }, {
+    "id" : "17",
+    "name" : "HOUR_START",
+    "datatype" : "timestamp"
+  }, {
+    "id" : "18",
+    "name" : "MINUTE_START",
+    "datatype" : "timestamp"
+  } ],
+  "source_type" : 20,
+  "table_type" : null,
+  "database" : "DEFAULT"
+}
