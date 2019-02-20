@@ -40,6 +40,7 @@ then
     verbose "KYLIN_HOME is not set, falls back to Apache find-spark-home"
     source find-spark-home
     if [ -z "$SPARK_HOME" ]
+    then
         verbose "find-spark-home failed to set SPARK_HOME"
     else
         spark_home=$SPARK_HOME
