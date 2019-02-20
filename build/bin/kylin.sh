@@ -55,9 +55,7 @@ function retrieveDependency() {
     verbose "HBASE_CLASSPATH: ${HBASE_CLASSPATH}"
 }
 
-# start command
-if [ "$1" == "start" ]
-then
+function retrieveStartCommand() {
     if [ -f "${KYLIN_HOME}/pid" ]
     then
         PID=`cat $KYLIN_HOME/pid`
@@ -105,7 +103,7 @@ then
     verbose "kylin classpath is: $(hbase classpath)"
 
     # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
-    hbase ${KYLIN_EXTRA_START_OPTS} \
+    start_command="hbase ${KYLIN_EXTRA_START_OPTS} \
     -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
     -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
     -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-server-log4j.properties \
@@ -121,8 +119,15 @@ then
     -Dkylin.spark.dependency=${spark_dependency} \
     -Dkylin.hadoop.conf.dir=${kylin_hadoop_conf_dir} \
     -Dspring.profiles.active=${spring_profile} \
-    org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
-    
+    org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start"
+}
+
+# start command
+if [ "$1" == "start" ]
+then
+    retrieveStartCommand
+    ${start_command} >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
+
     echo ""
     echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
     echo "Check the log at ${KYLIN_HOME}/logs/kylin.log"
@@ -130,6 +135,12 @@ then
     kylin_server_port=`echo ${kylin_server_port}` #ignore white space
     echo "Web UI is at http://<hostname>:${kylin_server_port}/kylin"
     exit 0
+    
+# run command
+elif [ "$1" == "run" ]
+then
+    retrieveStartCommand
+    ${start_command}
 
 # stop command
 elif [ "$1" == "stop" ]
