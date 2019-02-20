@@ -7,7 +7,7 @@ permalink: /cn/community/index.html
 	<div class="row">
 		<div class="col-sm-6 col-md-6">
 		    <h2> Apache Kylin 用户案例 </h2>
-			<p>想要了解谁在使用 Apache Kylin，请参考 <a href="/cn/community/poweredby.html">powered by</a> 页面。</p>
+			<p>想要了解谁在使用 Apache Kylin，请参考 <a href="/cn/community/poweredby.html">powered by</a> 页面。<b>注意：如果您在给 mail list 发送邮件后没有收到确认邮件，确认邮件可能会在垃圾邮件中。</b></p>
 		</div>
 
 		<div class="col-sm-6 col-md-6">

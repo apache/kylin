@@ -20,7 +20,7 @@ permalink: /community/index.html
 		<div class="col-sm-6 col-md-6">
 		    <h2> Apache Kylin Mailing List </h2>
 
-		    <p>These are the mailing lists that have been established for this project. For each list, there is a subscribe, unsubscribe, and an archive link.</p>
+		    <p>These are the mailing lists that have been established for this project. For each list, there is a subscribe, unsubscribe, and an archive link. <b>Note: If you do not receive the confirmation email after sending email to the mail list, the email maybe is shown in your trash mail.</b></p>
 
 		    <table>
 		        <tr height="50px">
