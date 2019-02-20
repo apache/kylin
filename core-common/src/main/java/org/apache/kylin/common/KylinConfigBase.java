@@ -1362,6 +1362,30 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
+    // ENGINE.LIVY
+    // ============================================================================
+
+    public boolean enableLivy() {
+        return getOptional("kylin.engine.livy-conf.livy.enable", "false").equalsIgnoreCase("true") ? true : false;
+    }
+
+    public String getLivyUrl() {
+        return getOptional("kylin.engine.livy-conf.livy.url");
+    }
+
+    public Map<String, String> getLivyKey() {
+        return getPropertiesByPrefix("kylin.engine.livy-conf.livy-key.");
+    }
+
+    public Map<String, String> getLivyArr() {
+        return getPropertiesByPrefix("kylin.engine.livy-conf.livy-arr.");
+    }
+
+    public Map<String, String> getLivyMap() {
+        return getPropertiesByPrefix("kylin.engine.livy-conf.livy-map.");
+    }
+
+    // ============================================================================
     // QUERY
     // ============================================================================
 

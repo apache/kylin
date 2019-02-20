@@ -347,7 +347,7 @@ public class SparkExecutable extends AbstractExecutable {
         }
     }
 
-    private void dumpMetadata(CubeSegment segment, List<CubeSegment> mergingSeg) throws ExecuteException {
+    protected void dumpMetadata(CubeSegment segment, List<CubeSegment> mergingSeg) throws ExecuteException {
         try {
             if (mergingSeg == null || mergingSeg.size() == 0) {
                 attachSegmentMetadataWithDict(segment);
@@ -363,7 +363,7 @@ public class SparkExecutable extends AbstractExecutable {
     }
 
     // Spark Cubing can only work in layer algorithm
-    private void setAlgorithmLayer() {
+    protected void setAlgorithmLayer() {
         ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubingJob cubingJob = (CubingJob) execMgr.getJob(this.getParam(JOB_ID));
         cubingJob.setAlgorithm(CubingJob.AlgorithmEnum.LAYER);
@@ -441,7 +441,7 @@ public class SparkExecutable extends AbstractExecutable {
                 this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
     }
 
-    private void readCounters(final Map<String, String> info) {
+    protected void readCounters(final Map<String, String> info) {
         String counter_save_as = getCounterSaveAs();
         if (counter_save_as != null) {
             String[] saveAsNames = counter_save_as.split(",");
