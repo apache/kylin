@@ -29,10 +29,21 @@ then
     spark_home=$SPARK_HOME
 fi
 
-if [ -z "$SPARK_HOME" ]
+if [ -z "$spark_home" ] && [ -n "$KYLIN_HOME" ]
 then
-    verbose "SPARK_HOME wasn't set, use $KYLIN_HOME/spark"
+    verbose "SPARK_HOME is not set, use $KYLIN_HOME/spark"
     spark_home=$KYLIN_HOME/spark
+fi
+
+if [ -z "$spark_home" ]
+then
+    verbose "KYLIN_HOME is not set, falls back to Apache find-spark-home"
+    source find-spark-home
+    if [ -z "$SPARK_HOME" ]
+        verbose "find-spark-home failed to set SPARK_HOME"
+    else
+        spark_home=$SPARK_HOME
+    fi
 fi
 
 spark_dependency=`find -L $spark_home/jars -name '*.jar' ! -name '*slf4j*' ! -name '*calcite*' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
