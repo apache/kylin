@@ -151,6 +151,7 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
    TopN 度量在每个维度结合时预计算，它比未预计算的在查询时间上性能更好；需要两个参数：一是被用来作为 Top 记录的度量列，Kylin 将计算它的 SUM 值并做倒序排列；二是 literal ID，代表最 Top 的记录，例如 seller_id；
    
    合理的选择返回类型，将决定多少 top 记录被监察：top 10, top 100, top 500, top 1000, top 5000 or top 10000。
+   **注意**：如果您想要使用 `TOP_N`，您需要为 “ORDER | SUM by Column” 添加一个 `SUM` 度量。例如，如果您创建了一个根据价格的总和选出 top100 的卖家的度量，那么也应该创建一个 SUM(price) 度量。
 
      ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-topn.png)
 
