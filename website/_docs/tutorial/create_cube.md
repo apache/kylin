@@ -144,6 +144,7 @@ You can use letters, numbers and '_' to name your cube (blank space in name is n
    Approximate TopN measure pre-calculates the top records in each dimension combination, it will provide higher performance in query time than no pre-calculation; Need specify two parameters here: the first is the column will be used as metrics for Top records (aggregated with SUM and then sorted in descending order); the second is the literal ID, represents the entity like seller_id;
 
    Properly select the return type, depends on how many top records to inspect: top 10, top 100, top 500, top 1000, top 5000 or top 10000. 
+   **Note:** If you want to use `TOP_N`, you should also add a `SUM` measure for the "ORDER | SUM by Column". For example, if your creates a measure of Top100 seller_id by the sum of price, it is also should create a measure of SUM(price). 
 
      ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-topn.png)
 
