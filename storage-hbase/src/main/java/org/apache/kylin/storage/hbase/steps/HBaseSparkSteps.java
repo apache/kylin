@@ -73,6 +73,20 @@ public class HBaseSparkSteps extends HBaseJobSteps {
         StringUtil.appendWithSeparator(jars,
                 ClassUtil.findContainingJar("org.apache.hadoop.hbase.regionserver.MetricsRegionServerSourceFactoryImpl", null));//hbase-hadoop2-compat-1.1.1.jar
 
+        //KYLIN-3537
+        StringUtil.appendWithSeparator(jars,
+                ClassUtil.findContainingJar("org.apache.hadoop.hbase.io.hfile.HFileWriterImpl", null));//hbase-server.jar
+        StringUtil.appendWithSeparator(jars,
+                ClassUtil.findContainingJar("org.apache.hbase.thirdparty.com.google.common.cache.CacheLoader", null));//hbase-shaded-miscellaneous.jar
+        StringUtil.appendWithSeparator(jars,
+                ClassUtil.findContainingJar("org.apache.hadoop.hbase.metrics.MetricRegistry", null));//hbase-metrics-api.jar
+        StringUtil.appendWithSeparator(jars,
+                ClassUtil.findContainingJar("org.apache.hadoop.hbase.metrics.impl.MetricRegistriesImpl", null));//hbase-metrics.jar
+        StringUtil.appendWithSeparator(jars,
+                ClassUtil.findContainingJar("org.apache.hbase.thirdparty.com.google.protobuf.Message", null));//hbase-shaded-protobuf.jar
+        StringUtil.appendWithSeparator(jars,
+                ClassUtil.findContainingJar("org.apache.hadoop.hbase.shaded.protobuf.generated.HFileProtos", null));//hbase-protocol-shaded.jar
+
         StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
         sparkExecutable.setJars(jars.toString());
 
