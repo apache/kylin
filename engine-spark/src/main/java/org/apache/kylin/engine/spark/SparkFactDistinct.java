@@ -310,12 +310,12 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                 }
             }
 
-            List<String[]> rows = Lists.newArrayList(rowIterator);
             List<Tuple2<SelfDefineSortableKey, Text>> result = Lists.newArrayList();
 
             int rowCount = 0;
 
-            for (String[] row : rows) {
+            while (rowIterator.hasNext()) {
+                String[] row = rowIterator.next();
                 bytesWritten.add(countSizeInBytes(row));
 
                 for (int i = 0; i < allCols.size(); i++) {
