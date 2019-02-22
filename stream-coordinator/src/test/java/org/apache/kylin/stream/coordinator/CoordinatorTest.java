@@ -111,6 +111,7 @@ public class CoordinatorTest extends LocalFileMetadataTestCase {
     @After
     public void tearDown() throws Exception {
         coordinator = null;
+        System.clearProperty("kylin.stream.zookeeper");
         testingServer.stop();// clear metadata
     }
 

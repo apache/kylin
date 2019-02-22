@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -479,6 +480,21 @@ public class StreamingV2Service extends BasicService {
         if (emptyMap(receiverAssignment) && emptyMap(rsAssignment)) {
             return true;
         }
+
+        if (receiverAssignment != null) {
+            for (Map.Entry<String, List<Partition>> entry : receiverAssignment.entrySet()) {
+                Collections.sort(entry.getValue());
+                entry.setValue(entry.getValue());
+            }
+        }
+
+        if (rsAssignment != null) {
+            for (Map.Entry<String, List<Partition>> entry : rsAssignment.entrySet()) {
+                Collections.sort(entry.getValue());
+                entry.setValue(entry.getValue());
+            }
+        }
+
         if (receiverAssignment != null && receiverAssignment.equals(rsAssignment)) {
             return true;
         }

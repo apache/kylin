@@ -2059,6 +2059,18 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.stream.segment.retention.policy", "fullBuild");
     }
 
+    public String getStreamingAssigner() {
+        return getOptional("kylin.stream.assigner", "DefaultAssigner");
+    }
+
+    public int getCoordinatorHttpClientTimeout() {
+        return Integer.parseInt(getOptional("kylin.stream.coordinator.client.timeout.millsecond", "5000"));
+    }
+
+    public int getReceiverHttpClientTimeout() {
+        return Integer.parseInt(getOptional("kylin.stream.receiver.client.timeout.millsecond", "5000"));
+    }
+
     public int getStreamingReceiverHttpMaxThreads() {
         return Integer.parseInt(getOptional("kylin.stream.receiver.http.max.threads", "200"));
     }

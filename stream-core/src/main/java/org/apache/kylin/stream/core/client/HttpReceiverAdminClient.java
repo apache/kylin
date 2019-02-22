@@ -20,6 +20,7 @@ package org.apache.kylin.stream.core.client;
 
 import java.io.IOException;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.stream.core.model.AssignRequest;
 import org.apache.kylin.stream.core.model.ConsumerStatsResponse;
@@ -46,7 +47,7 @@ public class HttpReceiverAdminClient implements ReceiverAdminClient {
     private RetryCaller retryCaller;
 
     public HttpReceiverAdminClient() {
-        int connectionTimeout = 5000; // default connection timeout is 5s, todo move to configuration
+        int connectionTimeout = KylinConfig.getInstanceFromEnv().getReceiverHttpClientTimeout();
         int readTimeout = 30000;
         this.maxRetry = 3;
         this.retryPauseTime = 1000;

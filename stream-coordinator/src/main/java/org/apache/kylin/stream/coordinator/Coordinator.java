@@ -66,6 +66,7 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.stream.coordinator.assign.Assigner;
 import org.apache.kylin.stream.coordinator.assign.AssignmentUtil;
 import org.apache.kylin.stream.coordinator.assign.AssignmentsCache;
+import org.apache.kylin.stream.coordinator.assign.CubePartitionRoundRobinAssigner;
 import org.apache.kylin.stream.coordinator.exception.ClusterStateException;
 import org.apache.kylin.stream.coordinator.exception.StoreException;
 import org.apache.kylin.stream.coordinator.exception.ClusterStateException.TransactionStep;
@@ -139,7 +140,7 @@ public class Coordinator implements CoordinatorClient {
     private Coordinator() {
         this.streamMetadataStore = StreamMetadataStoreFactory.getStreamMetaDataStore();
         this.receiverAdminClient = new HttpReceiverAdminClient();
-        this.assigner = new DefaultAssigner();
+        this.assigner = getAssigner();
         this.zkClient = ZKUtils.getZookeeperClient();
         this.selector = new CoordinatorLeaderSelector();
         this.jobStatusChecker = new StreamingBuildJobStatusChecker();
@@ -154,7 +155,7 @@ public class Coordinator implements CoordinatorClient {
     public Coordinator(StreamMetadataStore metadataStore, ReceiverAdminClient receiverClient) {
         this.streamMetadataStore = metadataStore;
         this.receiverAdminClient = receiverClient;
-        this.assigner = new DefaultAssigner();
+        this.assigner = getAssigner();
         this.zkClient = ZKUtils.getZookeeperClient();
         this.selector = new CoordinatorLeaderSelector();
         this.jobStatusChecker = new StreamingBuildJobStatusChecker();
@@ -479,8 +480,8 @@ public class Coordinator implements CoordinatorClient {
                 }
             }
             if (needRollback.isEmpty()) {
-                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_SUCCESS,
-                        TransactionStep.STOP_AND_SNYC, "", e);
+                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_SUCCESS, TransactionStep.STOP_AND_SNYC,
+                        "", e);
             } else {
                 StringBuilder str = new StringBuilder();
                 try {
@@ -604,8 +605,8 @@ public class Coordinator implements CoordinatorClient {
                 throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED, TransactionStep.ASSIGN_NEW,
                         failedInfo, e);
             } else if (!failedReceiver.isEmpty()) {
-                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED,
-                        TransactionStep.MAKE_IMMUTABLE, failedInfo, e);
+                throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_FAILED, TransactionStep.MAKE_IMMUTABLE,
+                        failedInfo, e);
             } else {
                 throw new ClusterStateException(cubeName, ClusterState.ROLLBACK_SUCCESS, TransactionStep.ASSIGN_NEW,
                         failedInfo, e);
@@ -1249,6 +1250,23 @@ public class Coordinator implements CoordinatorClient {
             }
         }
         return false;
+    }
+
+    private Assigner getAssigner() {
+        String assignerName = getConfig().getStreamingAssigner();
+        Assigner oneAssigner;
+        logger.debug("Using assigner {}", assignerName);
+        switch (assignerName) {
+        case "DefaultAssigner":
+            oneAssigner = new DefaultAssigner();
+            break;
+        case "CubePartitionRoundRobinAssigner":
+            oneAssigner = new CubePartitionRoundRobinAssigner();
+            break;
+        default:
+            oneAssigner = new DefaultAssigner();
+        }
+        return oneAssigner;
     }
 
     private class CoordinatorLeaderSelector extends LeaderSelectorListenerAdapter implements Closeable {

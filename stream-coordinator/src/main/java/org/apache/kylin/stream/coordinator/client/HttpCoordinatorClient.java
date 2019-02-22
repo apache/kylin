@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.stream.coordinator.StreamMetadataStore;
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory;
 public class HttpCoordinatorClient implements CoordinatorClient {
     private static final Logger logger = LoggerFactory.getLogger(HttpCoordinatorClient.class);
 
+    private static final String CUBES = "/cubes/";
     private StreamMetadataStore streamMetadataStore;
     private RestService restService;
     private Node coordinatorNode;
@@ -52,8 +54,7 @@ public class HttpCoordinatorClient implements CoordinatorClient {
         int maxRetry = 10;
 
         this.retryCaller = new RetryCaller(maxRetry, 1000);
-        int connectionTimeout = 5000; // default connection timeout is 5s, todo
-                                      // move to configuration
+        int connectionTimeout = KylinConfig.getInstanceFromEnv().getCoordinatorHttpClientTimeout();
         int readTimeout = 10000;
         this.restService = new RestService(connectionTimeout, readTimeout);
     }
@@ -115,7 +116,7 @@ public class HttpCoordinatorClient implements CoordinatorClient {
     public void assignCube(String cubeName) {
         logger.info("send assign request to coordinator");
         try {
-            putRequest("/cubes/" + cubeName + "/assign");
+            putRequest(CUBES + cubeName + "/assign");
         } catch (IOException e) {
             throw new StreamingException(e);
         }
@@ -125,7 +126,7 @@ public class HttpCoordinatorClient implements CoordinatorClient {
     public void unAssignCube(String cubeName) {
         logger.info("send unAssign request to coordinator");
         try {
-            putRequest("/cubes/" + cubeName + "/unAssign");
+            putRequest(CUBES + cubeName + "/unAssign");
         } catch (IOException e) {
             throw new StreamingException(e);
         }
@@ -135,7 +136,7 @@ public class HttpCoordinatorClient implements CoordinatorClient {
     public void reAssignCube(String cubeName, CubeAssignment newAssignments) {
         logger.info("send reassign request to coordinator");
         try {
-            String path = "/cubes/" + cubeName + "/reAssign";
+            String path = CUBES + cubeName + "/reAssign";
             String content = JsonUtil.writeValueAsIndentString(newAssignments);
             postRequest(path, content);
         } catch (IOException e) {
@@ -192,7 +193,7 @@ public class HttpCoordinatorClient implements CoordinatorClient {
     public void pauseConsumers(String cubeName) {
         logger.info("send cube pause request to coordinator: {}", cubeName);
         try {
-            String path = "/cubes/" + cubeName + "/pauseConsume";
+            String path = CUBES + cubeName + "/pauseConsume";
             putRequest(path);
         } catch (IOException e) {
             throw new StreamingException(e);
@@ -203,7 +204,7 @@ public class HttpCoordinatorClient implements CoordinatorClient {
     public void resumeConsumers(String cubeName) {
         logger.info("send cube resume request to coordinator: {}", cubeName);
         try {
-            String path = "/cubes/" + cubeName + "/resumeConsume";
+            String path = CUBES + cubeName + "/resumeConsume";
             putRequest(path);
         } catch (IOException e) {
             throw new StreamingException(e);
