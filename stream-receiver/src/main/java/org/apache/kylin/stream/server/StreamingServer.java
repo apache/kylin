@@ -160,9 +160,6 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
             @Override
             public void run() {
                 Collection<StreamingSegmentManager> segmentManagers = getAllCubeSegmentManagers();
-                ServerContext serverContext = new ServerContext();
-                serverContext.setReplicaSetID(replicaSetID);
-                serverContext.setReceiver(currentNode);
                 for (StreamingSegmentManager segmentManager : segmentManagers) {
                     CubeInstance cubeInstance = segmentManager.getCubeInstance();
                     String cubeName = cubeInstance.getName();
@@ -193,8 +190,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
     /**
      * <pre>
      * When segment status was changed to immutable, the leader of replica will
-     * try to upload local segment cache to remote, while the follower will remove
-     * local segment cache.
+     * try to upload local segment cache to remote.
      * </pre>
      */
     private void handleImmutableCubeSegments(String cubeName, StreamingSegmentManager segmentManager,

@@ -117,7 +117,7 @@ public class RestService {
                     displayMessage = msg;
                 }
                 logger.trace("Send request: {}. And receive response[{}] which lenght is {}, and content is {}.", code,
-                        request.getRequestLine().toString(), msg.length(), displayMessage);
+                        request.getRequestLine(), msg.length(), displayMessage);
             }
             if (code != 200)
                 throw new IOException("Invalid http response " + code + " when send request: "
