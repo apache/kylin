@@ -29,9 +29,14 @@ import com.google.common.io.Files;
 
 public class LZ4CompressorTest {
     public static void main(String[] args) throws Exception {
+
+        if(args.length == 0){
+            System.out.println("args[0] must be data file path");
+            return;
+        }
         LZ4Factory factory = LZ4Factory.fastestInstance();
 
-        byte[] data = Files.toByteArray(new File("/Users/ganma/dev/githome/kylin/stream-core/stream_index/test_streaming_v2_cube/20180730070000_20180730080000/1/1.data"));
+        byte[] data = Files.toByteArray(new File(args[0]));
         final int decompressedLength = data.length;
 
         // compress data
