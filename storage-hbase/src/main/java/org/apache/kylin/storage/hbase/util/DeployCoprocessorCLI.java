@@ -98,20 +98,19 @@ public class DeployCoprocessorCLI {
             hbaseAdmin = conn.getAdmin();
             String localCoprocessorJar;
             int curIdx = 0;
-            if ("default".equals(args[curIdx++])) {
+            if ("default".equals(args[curIdx])) {
                 localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
             } else {
-                curIdx--;
-                localCoprocessorJar = new File(args[curIdx++]).getAbsolutePath();
+                localCoprocessorJar = new File(args[curIdx]).getAbsolutePath();
             }
-
+            curIdx++;
             logger.info("Identify coprocessor jar " + localCoprocessorJar);
 
             try {
-                MAX_THREADS = Integer.parseInt(args[curIdx++]);
+                MAX_THREADS = Integer.parseInt(args[curIdx]);
             } catch (Exception e) {
-                curIdx--;
             }
+            curIdx++;
             logger.info("Use at most {} threads to do upgrade", MAX_THREADS);
 
             List<String> tableNames = getHTableNames(kylinConfig);
