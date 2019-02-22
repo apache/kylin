@@ -109,6 +109,7 @@ public class DeployCoprocessorCLI {
             try {
                 MAX_THREADS = Integer.parseInt(args[curIdx]);
             } catch (Exception e) {
+                
             }
             curIdx++;
             logger.info("Use at most {} threads to do upgrade", MAX_THREADS);
