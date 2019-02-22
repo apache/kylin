@@ -14,18 +14,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase.util;
-
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executor;
 
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -40,12 +31,22 @@ import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.job.lock.JobLock;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.Shell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executor;
+
 /**
  * A distributed lock based on zookeeper. Every instance is owned by a client, on whose behalf locks are acquired and/or released.
- * 
+ * <p>
  * All <code>lockPath</code> will be prefix-ed with "/kylin/metadata-prefix" automatically.
  */
 public class ZookeeperDistributedLock implements DistributedLock, JobLock {
@@ -266,14 +267,14 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
                 @Override
                 public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) throws Exception {
                     switch (event.getType()) {
-                    case CHILD_ADDED:
-                        watcher.onLock(event.getData().getPath(), new String(event.getData().getData(), StandardCharsets.UTF_8));
-                        break;
-                    case CHILD_REMOVED:
-                        watcher.onUnlock(event.getData().getPath(), new String(event.getData().getData(), StandardCharsets.UTF_8));
-                        break;
-                    default:
-                        break;
+                        case CHILD_ADDED:
+                            watcher.onLock(event.getData().getPath(), new String(event.getData().getData(), StandardCharsets.UTF_8));
+                            break;
+                        case CHILD_REMOVED:
+                            watcher.onUnlock(event.getData().getPath(), new String(event.getData().getData(), StandardCharsets.UTF_8));
+                            break;
+                        default:
+                            break;
                     }
                 }
             }, executor);
@@ -295,17 +296,23 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             path = "/" + path;
         if (path.endsWith("/"))
             path = path.substring(0, path.length() - 1);
-        for (int n = Integer.MAX_VALUE; n > path.length();) {
+        for (int n = Integer.MAX_VALUE; n > path.length(); ) {
             n = path.length();
             path = path.replace("//", "/");
         }
 
-        try {
-            return new File(path).getCanonicalPath();
-        } catch (IOException e) {
-            logger.error("get canonical path failed, use original path", e);
-            return path;
+        if (Shell.WINDOWS) {
+            return new File(path).toURI().getPath();
+        } else {
+            try {
+                return new File(path).getCanonicalPath();
+            } catch (IOException e) {
+                logger.error("get canonical path failed, use original path", e);
+                return path;
+            }
         }
+
+
     }
 
     // ============================================================================
