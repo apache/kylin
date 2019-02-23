@@ -188,3 +188,59 @@ kylin.source.hive.sparksql-beeline-params=-n root -u 'jdbc:hive2://thriftserveri
 Restart Kylin server to take effective. To disable, set `kylin.source.hive.enable-sparksql-for-table-ops` back to `false`.
 
 
+## Use Memcached as Kylin cache
+
+From v2.6.0, Kylin can use Memcached as the cache. To enable this feature, you need to do the following steps:
+
+1. Install memcached in each node
+
+2. Modify the applicationContext.xml under $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/classes directory as following:
+
+comment the following code:
+{% highlight Groff markup %}
+<bean id="ehcache"
+      class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+      p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
+
+<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
+      p:cacheManager-ref="ehcache"/>
+{% endhighlight %}
+uncomment the following code:
+{% highlight Groff markup %}
+<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+      p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
+
+<bean id="remoteCacheManager" class="org.apache.kylin.cache.cachemanager.MemcachedCacheManager" />
+<bean id="localCacheManager" class="org.apache.kylin.cache.cachemanager.InstrumentedEhCacheCacheManager"
+      p:cacheManager-ref="ehcache"/>
+<bean id="cacheManager" class="org.apache.kylin.cache.cachemanager.RemoteLocalFailOverCacheManager" />
+
+<bean id="memcachedCacheConfig" class="org.apache.kylin.cache.memcached.MemcachedCacheConfig">
+    <property name="timeout" value="500" />
+    <property name="hosts" value="${kylin.cache.memcached.hosts}" />
+</bean>
+{% endhighlight %}
+The value of `${kylin.cache.memcached.hosts}` in applicationContext.xml is the value of `kylin.cache.memcached.hosts` in conf/kylin.properties. 
+
+3.Add the following parameters to conf/kylin.properties:
+{% highlight Groff markup %}
+kylin.query.cache-enabled=true
+kylin.query.lazy-query-enabled=true
+kylin.query.cache-signature-enabled=true
+kylin.query.segment-cache-enabled=true
+kylin.cache.memcached.hosts=memcached1:11211,memcached2:11211,memcached3:11211
+{% endhighlight %}
+
+- The default value of `kylin.query.cache-enabled` is true, so you can also don't set that parameter.
+- If you want to use lazy query cache, set `kylin.query.lazy-query-enabled` to true. 
+- Set `kylin.query.cache-signature-enabled` to true enable the signature check. If your signature changed, it will remove the old cache. Signature for the cube is the last build time. Signature for the hybrid is the maximum last build time of its realization instances. Signature for SQLResponse is the maximum last build time of those realizations. 
+- Set `kylin.query.segment-cache-enabled` to true can improve query performance for the cube that is built frequently. But that you can not set `kylin.query.segment-cache-enabled`, `kylin.query.lazy-query-enabled` and `kylin.query.cache-enabled` to true at the same time. It will make the segment cache disabled. If you don't want to use segment for the current query, set DEBUG_TOGGLE_DISABLE_QUERY_SEGMENT_CACHE=true. This should be put into the request body as follow:
+
+```
+"backdoorToggles": {
+     "DEBUG_TOGGLE_DISABLE_QUERY_SEGMENT_CACHE": "true"
+ }
+```
+
+- The default value of `kylin.query.lazy-query-enabled`, `kylin.query.cache-signature-enabled` and `kylin.query.segment-cache-enabled` are false.
+- `kylin.cache.memcached.hosts` indicates the host of memcached.
