@@ -40,6 +40,7 @@ import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.job.lock.JobLock;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.Shell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -300,11 +301,15 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             path = path.replace("//", "/");
         }
 
-        try {
-            return new File(path).getCanonicalPath();
-        } catch (IOException e) {
-            logger.error("get canonical path failed, use original path", e);
-            return path;
+        if (Shell.WINDOWS) {
+            return new File(path).toURI().getPath();
+        } else {
+            try {
+                return new File(path).getCanonicalPath();
+            } catch (IOException e) {
+                logger.error("get canonical path failed, use original path", e);
+                return path;
+            }
         }
     }
 
