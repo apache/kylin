@@ -312,8 +312,11 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testStreamingTableQuery() throws Exception {
-        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_streaming", null, true);
+        if ("inner".equalsIgnoreCase(joinType)) {
+            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_streaming", null, true);
+        }
     }
+
 
     @Test
     public void testTableauQuery() throws Exception {
