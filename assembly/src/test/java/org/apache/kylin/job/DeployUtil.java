@@ -30,8 +30,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -138,7 +140,11 @@ public class DeployUtil {
             System.out.println("build normal cubes with provided dataset");
         }
 
-        deployTables(modelName);
+        // the special VIEW_SELLER_TYPE_DIM is a wrapper of TABLE_SELLER_TYPE_DIM_TABLE
+        final String databaseName = "EDW";
+        final Map<String, String> tableViewMap = Maps.newHashMap();
+        tableViewMap.put("EDW.TEST_SELLER_TYPE_DIM_TABLE", "EDW.TEST_SELLER_TYPE_DIM");
+        deployTablesInModelWithWrapperViews(modelName, databaseName, tableViewMap);
     }
 
     public static void prepareTestDataForStreamingCube(long startTime, long endTime, int numberOfRecords,
@@ -195,26 +201,52 @@ public class DeployUtil {
 
     }
 
-    private static void deployTables(String modelName) throws Exception {
-        // the special VIEW_SELLER_TYPE_DIM is a wrapper of TABLE_SELLER_TYPE_DIM_TABLE
-        final String VIEW_SELLER_TYPE_DIM = "EDW.TEST_SELLER_TYPE_DIM";
-        final String TABLE_SELLER_TYPE_DIM_TABLE = "EDW.TEST_SELLER_TYPE_DIM_TABLE";
+    public static Set<String> buildExclusiveSet(String[] exclusiveTables) {
+        Set<String> exclusiveSet = new HashSet<String>();
+        if (exclusiveTables != null) {
+            for (String table : exclusiveTables) {
+                exclusiveSet.add(table);
+            }
+        }
+        return exclusiveSet;
+    }
 
+    public static void deployTablesInModelWithWrapperViews(String modelName, String extraDatabase, Map<String, String> extraTableViews) throws Exception {
+        deployTablesInModel(modelName, extraDatabase, extraTableViews, null);
+    }
+
+    public static void deployTablesInModelWithExclusiveTables(String modelName, String[] exclusiveTables) throws Exception {
+        deployTablesInModel(modelName, null,  null, exclusiveTables);
+    }
+
+    public static void deployTablesInModel(String modelName) throws Exception {
+        deployTablesInModel(modelName, null, null, null);
+    }
+
+    public static void deployTablesInModel(String modelName, String extraDatabase, Map<String, String>  extraTableViews, String[] exclusiveTables) throws Exception {
         TableMetadataManager metaMgr = TableMetadataManager.getInstance(config());
         DataModelManager modelMgr = DataModelManager.getInstance(config());
         DataModelDesc model = modelMgr.getDataModelDesc(modelName);
 
         Set<TableRef> tables = model.getAllTables();
         Set<String> TABLE_NAMES = new HashSet<String>();
+        Set<String> exclusiveSet = buildExclusiveSet(exclusiveTables);
+
         for (TableRef tr : tables) {
             if (!tr.getTableDesc().isView()) {
                 String tableName = tr.getTableName();
                 String schema = tr.getTableDesc().getDatabase();
                 String identity = String.format(Locale.ROOT, "%s.%s", schema, tableName);
+                if (exclusiveSet.contains(identity)) {
+                    continue;
+                }
                 TABLE_NAMES.add(identity);
             }
         }
-        TABLE_NAMES.add(TABLE_SELLER_TYPE_DIM_TABLE); // the wrapper view VIEW_SELLER_TYPE_DIM need this table
+
+        if (extraTableViews != null && !extraTableViews.isEmpty()) {
+            TABLE_NAMES.addAll(extraTableViews.keySet()); // the wrapper view need this table
+        }
 
         // scp data files, use the data from hbase, instead of local files
         File tempDir = Files.createTempDir();
@@ -240,8 +272,12 @@ public class DeployUtil {
         ISampleDataDeployer sampleDataDeployer = SourceManager.getSource(model.getRootFactTable().getTableDesc())
                 .getSampleDataDeployer();
 
+        // create hive database
+        if (StringUtils.isNotEmpty(extraDatabase)) {
+            sampleDataDeployer.createSampleDatabase(extraDatabase);
+        }
+
         // create hive tables
-        sampleDataDeployer.createSampleDatabase("EDW");
         for (String tablename : TABLE_NAMES) {
             logger.info(String.format(Locale.ROOT, "get table desc %s", tablename));
             sampleDataDeployer.createSampleTable(metaMgr.getTableDesc(tablename, model.getProject()));
@@ -255,6 +291,10 @@ public class DeployUtil {
         }
 
         // create the view automatically here
-        sampleDataDeployer.createWrapperView(TABLE_SELLER_TYPE_DIM_TABLE, VIEW_SELLER_TYPE_DIM);
+        if (extraTableViews != null && !extraTableViews.isEmpty()) {
+            for (Map.Entry<String, String> tableView : extraTableViews.entrySet()) {
+                sampleDataDeployer.createWrapperView(tableView.getKey(), tableView.getValue());
+            }
+        }
     }
 }

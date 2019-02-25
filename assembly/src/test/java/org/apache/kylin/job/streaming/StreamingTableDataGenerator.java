@@ -46,6 +46,9 @@ public class StreamingTableDataGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamingTableDataGenerator.class);
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final String COLUMN_TIMESTAMP = "timestamp";
+    private static final String COLUMN_ITEM = "itm";
+    private static final String COLUMN_CATEGORY = "category_id";
 
     public static List<String> generate(int recordCount, long startTime, long endTime, String tableName, String prj) {
         Preconditions.checkArgument(startTime < endTime);
@@ -63,9 +66,11 @@ public class StreamingTableDataGenerator {
 
         List<String> ret = Lists.newArrayList();
         HashMap<String, String> kvs = Maps.newHashMap();
+        HashMap<String, Integer> itemCategory = Maps.newHashMap();
+
         for (long time : times) {
             kvs.clear();
-            kvs.put("timestamp", String.valueOf(time));
+            kvs.put(COLUMN_TIMESTAMP, String.valueOf(time));
             for (ColumnDesc columnDesc : tableDesc.getColumns()) {
                 String lowerCaseColumnName = columnDesc.getName().toLowerCase(Locale.ROOT);
                 DataType dataType = columnDesc.getType();
@@ -76,7 +81,19 @@ public class StreamingTableDataGenerator {
                     char c = (char) ('A' + (int) (26 * r.nextDouble()));
                     kvs.put(lowerCaseColumnName, String.valueOf(c));
                 } else if (dataType.isIntegerFamily()) {
-                    int v = r.nextInt(10000);
+                    int v;
+                    // generate category_id for joined lookup table
+                    if (COLUMN_CATEGORY.equals(lowerCaseColumnName)) {
+                        String itm = kvs.get(COLUMN_ITEM);
+                        if (itemCategory.get(itm) == null) {
+                            v = r.nextInt(10);
+                            itemCategory.put(itm, v);
+                        } else {
+                            v = itemCategory.get(itm);
+                        }
+                    } else {
+                        v = r.nextInt(10000);
+                    }
                     kvs.put(lowerCaseColumnName, String.valueOf(v));
                 } else if (dataType.isNumberFamily()) {
                     String v = String.format(Locale.ROOT, "%.4f", r.nextDouble() * 100);
