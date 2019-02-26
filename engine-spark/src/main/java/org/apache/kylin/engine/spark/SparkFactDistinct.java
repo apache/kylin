@@ -725,9 +725,9 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                 }
             }
 
-            List<Tuple2<SelfDefineSortableKey, Iterable<Text>>> tuples = Lists.newArrayList(tuple2Iterator);
+            while(tuple2Iterator.hasNext()) {
 
-            for (Tuple2<SelfDefineSortableKey, Iterable<Text>> tuple : tuples) {
+                Tuple2<SelfDefineSortableKey, Iterable<Text>> tuple = tuple2Iterator.next();
                 Text key = tuple._1.getText();
 
                 if (isStatistics) {
