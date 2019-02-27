@@ -102,7 +102,6 @@
     <jamm.version>0.3.1</jamm.version>
     <mockito.version>2.7.14</mockito.version>
     <powermock.version>1.7.0</powermock.version>
-    <curator.version>2.7.1</curator.version>
 
     <!-- Commons -->
     <commons-lang3.version>3.4</commons-lang3.version>
@@ -479,19 +478,16 @@
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-framework</artifactId>
         <version>${curator.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-recipes</artifactId>
         <version>${curator.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-client</artifactId>
         <version>${curator.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
@@ -865,12 +861,6 @@
         <artifactId>opensaml</artifactId>
         <version>${opensaml.version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.apache.curator</groupId>
-        <artifactId>curator-test</artifactId>
-        <version>${curator.version}</version>
-        <scope>test</scope>
-      </dependency>
 
       <!-- Spring Core -->
       <dependency>
@@ -977,6 +967,18 @@
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-reflect</artifactId>
         <version>${scala.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-x-discovery</artifactId>
+        <version>${curator.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-test</artifactId>
+        <version>${curator.version}</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

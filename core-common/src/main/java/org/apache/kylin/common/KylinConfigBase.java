@@ -1694,6 +1694,10 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptionalStringArray("kylin.server.cluster-servers", new String[0]);
     }
 
+    public String getServerRestAddress() {
+        return getOptional("kylin.server.host-address", "localhost:7070");
+    }
+
     public String getClusterName() {
         return this.getOptional("kylin.server.cluster-name", getMetadataUrlPrefix());
     }
