@@ -18,7 +18,7 @@ This document introduces how to run Kylin on EMR.
 
 ### Start EMR cluster
 
-Launch an EMR cluser with AWS web console, command line or API. Select *HBase* in the applications as Kylin need HBase service. 
+Launch an EMR cluster with AWS web console, command line or API. Select *HBase* in the applications as Kylin need HBase service. 
 
 You can select "HDFS" or "S3" as the storage for HBase, depending on whether you need Cube data be persisted after shutting down the cluster. EMR HDFS uses the local disk of EC2 instances, which will erase the data when cluster is stopped, then Kylin metadata and Cube data can be lost.
 
@@ -45,7 +45,7 @@ If you use S3 as HBase's storage, you need customize its configuration for `hbas
 
 ### Install Kylin
 
-When EMR cluser is in "Waiting" status, you can SSH into its master  node, download Kylin and then uncompress the tar ball:
+When EMR cluster is in "Waiting" status, you can SSH into its master  node, download Kylin and then uncompress the tar-ball file:
 
 ```sh
 sudo mkdir /usr/local/kylin
@@ -170,7 +170,7 @@ cp /usr/lib/hadoop/hadoop-common*-amzn-*.jar $KYLIN_HOME/spark/jars/
 $KYLIN_HOME/bin/kylin.sh start
 ```
 
-You can also copy EMR's spark-defauts configuration to Kylin's spark for a better utilization of the cluster resources.
+You can also copy EMR's spark-defaults configuration to Kylin's spark for a better utilization of the cluster resources.
 
 
 

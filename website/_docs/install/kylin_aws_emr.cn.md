@@ -168,7 +168,7 @@ cp /usr/lib/hadoop/hadoop-common*-amzn-*.jar $KYLIN_HOME/spark/jars/
 $KYLIN_HOME/bin/kylin.sh start
 ```
 
-您也可以参考 EMR Spark 的 spark-defauts 来设置 Kylin 的 Spark 配置，以获得更好的对集群资源的适配。
+您也可以参考 EMR Spark 的 spark-defaults 来设置 Kylin 的 Spark 配置，以获得更好的对集群资源的适配。
 
 
 
