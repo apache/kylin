@@ -362,6 +362,18 @@ public abstract class KylinConfigBase implements Serializable {
         throw new RuntimeException("Please set 'kylin.env.zookeeper-connect-string' in kylin.properties");
     }
 
+    public int getZKBaseSleepTimeMs() {
+        return Integer.parseInt(getOptional("kylin.env.zookeeper-base-sleep-time", "3000"));
+    }
+
+    public int getZKMaxRetries() {
+        return Integer.parseInt(getOptional("kylin.env.zookeeper-max-retries", "3"));
+    }
+
+    public int getZKMonitorInterval() {
+        return Integer.parseInt(getOptional("kylin.job.zookeeper-monitor-interval", "30"));
+    }
+
     public boolean isZookeeperAclEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.env.zookeeper-acl-enabled", FALSE));
     }

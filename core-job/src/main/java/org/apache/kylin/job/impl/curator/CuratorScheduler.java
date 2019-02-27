@@ -20,10 +20,12 @@ package org.apache.kylin.job.impl.curator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
@@ -88,7 +90,11 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
                 return;
             }
 
-            curatorClient = CuratorFrameworkFactory.newClient(zkAddress, new ExponentialBackoffRetry(3000, 3));
+            int baseSleepTimeMs = kylinConfig.getZKBaseSleepTimeMs();
+            int maxRetries = kylinConfig.getZKMaxRetries();
+            curatorClient = CuratorFrameworkFactory.newClient(zkAddress,
+                    new ExponentialBackoffRetry(baseSleepTimeMs, maxRetries));
+            logger.info("New ZK Client start: ", zkAddress);
             curatorClient.start();
 
             final String restAddress = kylinConfig.getServerRestAddress();
@@ -105,6 +111,7 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
                 try {
                     logger.info("start Job Engine, lock path is: " + jobEnginePath);
                     jobClient.start();
+                    monitorJobEngine();
                 } catch (IOException e) {
                     throw new SchedulerException(e);
                 }
@@ -180,6 +187,31 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
         return String.format(Locale.ROOT, KYLIN_SERVICE_PATH, metadataUrlPrefix);
     }
 
+    private void monitorJobEngine() {
+        logger.info("Start collect monitor ZK Participants");
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    boolean hasLeadership = jobClient.hasLeadership();
+                    boolean hasDefaultSchedulerStarted = jobClient.hasDefaultSchedulerStarted();
+                    if (!(hasLeadership == hasDefaultSchedulerStarted)) {
+                        logger.error("Node(" + InetAddress.getLocalHost().getHostAddress()
+                                + ") job server state conflict. Is ZK leader: " + hasLeadership
+                                + "; Is active job server: " + hasDefaultSchedulerStarted);
+                    }
+
+                    if (count.incrementAndGet() == 10) {
+                        logger.info("Current Participants: " + jobClient.getParticipants());
+                        count.set(0);
+                    }
+                } catch (Throwable th) {
+                    logger.error("Error when getting JVM info.", th);
+                }
+            }
+        }, 3, kylinConfig.getInstanceFromEnv().getZKMonitorInterval(), TimeUnit.SECONDS);
+    }
+
     @Override
     public void shutdown() throws SchedulerException {
         IOUtils.closeQuietly(serviceCache);
@@ -204,6 +236,10 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
     @Override
     public boolean hasStarted() {
         return started;
+    }
+
+    public static CuratorLeaderSelector getLeaderSelector() {
+        return jobClient;
     }
 
     static class JsonInstanceSerializer<T> implements InstanceSerializer<T> {

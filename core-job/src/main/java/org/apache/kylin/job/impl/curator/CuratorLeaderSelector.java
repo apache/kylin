@@ -20,11 +20,14 @@ package org.apache.kylin.job.impl.curator;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.apache.curator.framework.recipes.leader.LeaderSelectorListenerAdapter;
+import org.apache.curator.framework.recipes.leader.Participant;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.lock.MockJobLock;
@@ -38,36 +41,72 @@ public class CuratorLeaderSelector extends LeaderSelectorListenerAdapter impleme
     private JobEngineConfig jobEngineConfig;
     private DefaultScheduler defaultScheduler = null;
 
-    public CuratorLeaderSelector(CuratorFramework client, String path, String name, JobEngineConfig jobEngineConfig) {
+    CuratorLeaderSelector(CuratorFramework client, String path, String name, JobEngineConfig jobEngineConfig) {
         this.name = name;
-        leaderSelector = new LeaderSelector(client, path, this);
-        leaderSelector.autoRequeue();
+        this.leaderSelector = new LeaderSelector(client, path, this);
+        this.leaderSelector.setId(name);
+        this.leaderSelector.autoRequeue();
         this.jobEngineConfig = jobEngineConfig;
+        this.defaultScheduler = DefaultScheduler.getInstance();
+    }
+
+    public Participant getLeader() {
+        try {
+            return leaderSelector.getLeader();
+        } catch (Exception e) {
+            logger.error("Can not get leader.", e);
+        }
+        return new Participant("", false);
+    }
+
+    public List<Participant> getParticipants() {
+        List<Participant> r = new ArrayList<>();
+        try {
+            r.addAll(leaderSelector.getParticipants());
+        } catch (Exception e) {
+            logger.error("Can not get participants.", e);
+        }
+        return r;
+    }
+
+    public boolean hasDefaultSchedulerStarted() {
+        return defaultScheduler.hasStarted();
     }
 
     public void start() throws IOException {
         leaderSelector.start();
     }
 
+    public boolean hasLeadership() throws IOException {
+        return leaderSelector.hasLeadership();
+    }
+
     @Override
     public void close() throws IOException {
-        leaderSelector.close();
+        try {
+            leaderSelector.close();
+        } catch (IllegalStateException e) {
+            if (e.getMessage().equals("Already closed or has not been started")) {
+                logger.warn("LeaderSelector already closed or has not been started");
+            } else {
+                throw e;
+            }
+        }
         logger.info(name + " is stopped");
     }
 
     @Override
     public void takeLeadership(CuratorFramework client) throws Exception {
         logger.info(name + " is the leader for job engine now.");
-        defaultScheduler = DefaultScheduler.createInstance();
-        defaultScheduler.init(jobEngineConfig, new MockJobLock());
-
         try {
+            defaultScheduler.init(jobEngineConfig, new MockJobLock());
             while (true) {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(5L));
             }
-        } catch (InterruptedException var6) {
-            logger.error(this.name + " was interrupted.", var6);
-            Thread.currentThread().interrupt();
+        } catch (InterruptedException ie) {
+            logger.error(this.name + " was interrupted.", ie);
+        } catch (Throwable th) {
+            logger.error("Other exception occurred when initialization DefaultScheduler:", th);
         } finally {
             logger.warn(this.name + " relinquishing leadership.");
             if (defaultScheduler != null)
