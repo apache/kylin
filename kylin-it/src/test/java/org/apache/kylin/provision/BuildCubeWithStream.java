@@ -87,6 +87,7 @@ public class BuildCubeWithStream {
     private DefaultScheduler scheduler;
     protected ExecutableManager jobService;
     static final String cubeName = "test_streaming_table_cube";
+    static final String joinTableCubeName = "test_streaming_join_table_cube";
 
     private KafkaConfig kafkaConfig;
     private MockKafka kafkaServer;
@@ -97,7 +98,7 @@ public class BuildCubeWithStream {
     private volatile boolean generateData = true;
     private volatile boolean generateDataDone = false;
 
-    private static final int BUILD_ROUND = 5;
+    private static final int BUILD_ROUND = 4;
 
     public void before() throws Exception {
         deployEnv();
@@ -165,6 +166,7 @@ public class BuildCubeWithStream {
 
     public void build() throws Exception {
         clearSegment(cubeName);
+        clearSegment(joinTableCubeName);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -208,24 +210,25 @@ public class BuildCubeWithStream {
                 Thread.sleep(30 * 1000); // wait for new messages
             }
 
-            FutureTask futureTask = new FutureTask(new Callable<ExecutableState>() {
-                @Override
-                public ExecutableState call() {
-                    ExecutableState result = null;
-                    try {
-                        result = buildSegment(cubeName, 0, Long.MAX_VALUE);
-                    } catch (Exception e) {
-                        // previous build hasn't been started, or other case.
-                        e.printStackTrace();
-                    }
-
-                    return result;
-                }
-            });
+            FutureTask futureTask = new FutureTask(new StreamOffsetCallable(cubeName, 0, Long.MAX_VALUE));
 
             executorService.submit(futureTask);
             futures.add(futureTask);
         }
+
+        Thread.sleep(30 * 1000);
+
+        // build joined lookup table streaming cube
+        // range is normal streaming cube's first segment.start and last segment.end
+        CubeInstance cube = cubeManager.getCube(cubeName);
+        CubeSegment firstSeg = cube.getFirstSegment();
+        CubeSegment lastSeg = cube.getLastSegment();
+        SourcePartition sourcePartition = new SourcePartition(null, new SegmentRange(firstSeg.getSegRange().start, lastSeg.getSegRange().end), firstSeg.getSourcePartitionOffsetStart(), lastSeg.getSourcePartitionOffsetEnd());
+
+        FutureTask futureTask = new FutureTask(new StreamSourcePartitionCallable(joinTableCubeName, sourcePartition));
+
+        executorService.submit(futureTask);
+        futures.add(futureTask);
 
         generateData = false;
         executorService.shutdown();
@@ -241,7 +244,9 @@ public class BuildCubeWithStream {
 
         logger.info(succeedBuild + " build jobs have been successfully completed.");
         List<CubeSegment> segments = cubeManager.getCube(cubeName).getSegments(SegmentStatusEnum.READY);
-        Assert.assertTrue(segments.size() == succeedBuild);
+        List<CubeSegment> joinTableSegments = cubeManager.getCube(joinTableCubeName).getSegments(SegmentStatusEnum.READY);
+
+        Assert.assertTrue(segments.size() + joinTableSegments.size() == succeedBuild);
 
         if (fastBuildMode == false) {
             long endOffset = (Long) segments.get(segments.size() - 1).getSegRange().end.v;
@@ -286,18 +291,29 @@ public class BuildCubeWithStream {
         ISource source = SourceManager.getSource(cubeInstance);
         SourcePartition partition = source.enrichSourcePartitionBeforeBuild(cubeInstance,
                 new SourcePartition(null, new SegmentRange(startOffset, endOffset), null, null));
+
+        return buildSegment(cubeName, partition);
+    }
+
+    protected ExecutableState buildSegment(String cubeName, SourcePartition partition) throws Exception {
+        logger.info("SourcePartition: {}", partition.toString());
         CubeSegment segment = cubeManager.appendSegment(cubeManager.getCube(cubeName), partition);
+
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
         return job.getStatus();
     }
 
-    protected void deployEnv() throws IOException {
+    protected void deployEnv() throws Exception {
         DeployUtil.overrideJobJarLocations();
-        //                DeployUtil.initCliWorkDir();
-        //                DeployUtil.deployMetadata();
+//        DeployUtil.initCliWorkDir();
+//        DeployUtil.deployMetadata();
+
+        // prepare test data for joined lookup table
+        DeployUtil.deployTablesInModelWithExclusiveTables("test_streaming_join_table_model", new String[]{"DEFAULT.STREAMING_TABLE"});
     }
+
 
     public static void beforeClass() throws Exception {
         logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
@@ -383,5 +399,51 @@ public class BuildCubeWithStream {
         System.out.println("Time elapsed: " + (millis / 1000) + " sec - in " + BuildCubeWithStream.class.getName());
 
         System.exit(exitCode);
+    }
+
+    class StreamOffsetCallable implements Callable<ExecutableState> {
+        private final String cubeName;
+        private final long startOffset;
+        private final long endOffset;
+
+        public StreamOffsetCallable(String cubeName, long startOffset, long endOffset) {
+            this.cubeName = cubeName;
+            this.startOffset = startOffset;
+            this.endOffset = endOffset;
+        }
+
+        @Override
+        public ExecutableState call() throws Exception {
+            ExecutableState result = null;
+            try {
+                result = buildSegment(cubeName, startOffset, endOffset);
+            } catch (Exception e) {
+                // previous build hasn't been started, or other case.
+                e.printStackTrace();
+            }
+            return result;
+        }
+    }
+
+    class StreamSourcePartitionCallable implements Callable<ExecutableState> {
+        private final String cubeName;
+        private final SourcePartition sourcePartition;
+
+        public StreamSourcePartitionCallable(String cubeName, SourcePartition sourcePartition) {
+            this.cubeName = cubeName;
+            this.sourcePartition = sourcePartition;
+        }
+
+        @Override
+        public ExecutableState call() throws Exception {
+            ExecutableState result = null;
+            try {
+                result = buildSegment(cubeName, sourcePartition);
+            } catch (Exception e) {
+                // previous build hasn't been started, or other case.
+                e.printStackTrace();
+            }
+            return result;
+        }
     }
 }

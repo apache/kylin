@@ -21,6 +21,7 @@ package org.apache.kylin.common.util;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import java.util.Iterator;
 import java.util.Locale;
 
 import com.google.common.base.Splitter;
@@ -75,11 +76,24 @@ public class StringUtil {
 
     public static String join(Iterable<String> parts, String separator) {
         StringBuilder buf = new StringBuilder();
-        for (String p : parts) {
-            if (buf.length() > 0)
-                buf.append(separator);
-            buf.append(p);
+        Iterator<String> iterator = parts.iterator();
+        if (iterator == null || (!iterator.hasNext())) {
+            return null;
         }
+        final String first = iterator.next();
+        if (first != null) {
+            buf.append(first);
+        }
+        while (iterator.hasNext()) {
+            if (separator != null) {
+                buf.append(separator);
+            }
+            final String part = iterator.next();
+            if (part != null) {
+                buf.append(part);
+            }
+        }
+
         return buf.toString();
     }
 

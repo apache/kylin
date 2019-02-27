@@ -43,6 +43,7 @@ import org.apache.kylin.source.ISampleDataDeployer;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
+import org.apache.kylin.source.hive.HiveMetadataExplorer;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
@@ -250,7 +251,8 @@ public class KafkaSource implements ISource {
 
     @Override
     public ISampleDataDeployer getSampleDataDeployer() {
-        throw new UnsupportedOperationException();
+        // joined lookup table
+        return new HiveMetadataExplorer();
     }
 
     @Override

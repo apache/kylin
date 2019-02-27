@@ -39,6 +39,11 @@
       "id": "7",
       "name": "item_count",
       "datatype": "int"
+    },
+    {
+      "id": "8",
+      "name": "category_id",
+      "datatype": "int"
     }
   ],
   "database": "DEFAULT",

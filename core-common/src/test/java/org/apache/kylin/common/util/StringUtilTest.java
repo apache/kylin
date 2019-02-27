@@ -18,8 +18,11 @@
 
 package org.apache.kylin.common.util;
 
+import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.List;
 
 public class StringUtilTest {
     @Test
@@ -49,5 +52,25 @@ public class StringUtilTest {
     public void splitByCommaTest() {
         String[] expected = new String[] { "Hello", "Kylin" };
         Assert.assertArrayEquals(expected, StringUtil.splitByComma("Hello,Kylin"));
+    }
+
+    @Test
+    public void testJoin() {
+        List<String> stringListNormal = Lists.newArrayList();
+        List<String> stringListEmpty = Lists.newArrayList();
+
+        stringListNormal.add("aaa");
+        stringListNormal.add("bbb");
+        stringListNormal.add("ccc");
+        String joinedNormal = StringUtil.join(stringListNormal, ",");
+        Assert.assertEquals("aaa,bbb,ccc", joinedNormal);
+
+        stringListEmpty.add("");
+        stringListEmpty.add("aa");
+        stringListEmpty.add("");
+        stringListEmpty.add("bb");
+        stringListEmpty.add("");
+        String joinedEmpty = StringUtil.join(stringListEmpty, ",");
+        Assert.assertEquals(",aa,,bb,", joinedEmpty);
     }
 }

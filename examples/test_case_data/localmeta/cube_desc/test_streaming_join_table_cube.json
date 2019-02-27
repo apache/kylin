@@ -1,0 +1,151 @@
+{
+  "uuid" : "3ccd4a79-9e8d-9a87-d0b3-951d2fac4924",
+  "last_modified" : 1550561621987,
+  "version" : "2.6.0.20500",
+  "name" : "test_streaming_join_table_cube",
+  "is_draft" : false,
+  "model_name" : "test_streaming_join_table_model",
+  "description" : "",
+  "null_string" : null,
+  "dimensions" : [ {
+    "name" : "MINUTE_START",
+    "table" : "STREAMING_TABLE",
+    "column" : "MINUTE_START",
+    "derived" : null
+  }, {
+    "name" : "HOUR_START",
+    "table" : "STREAMING_TABLE",
+    "column" : "HOUR_START",
+    "derived" : null
+  }, {
+    "name" : "DAY_START",
+    "table" : "STREAMING_TABLE",
+    "column" : "DAY_START",
+    "derived" : null
+  }, {
+    "name" : "ITM",
+    "table" : "STREAMING_TABLE",
+    "column" : "ITM",
+    "derived" : null
+  }, {
+    "name" : "SITE",
+    "table" : "STREAMING_TABLE",
+    "column" : "SITE",
+    "derived" : null
+  }, {
+    "name" : "REGION",
+    "table" : "STREAMING_CATEGORY",
+    "column" : "REGION",
+    "derived" : null
+  }, {
+    "name" : "NAME",
+    "table" : "STREAMING_CATEGORY",
+    "column" : null,
+    "derived" : [ "NAME" ]
+  } ],
+  "measures" : [ {
+    "name" : "_COUNT_",
+    "function" : {
+      "expression" : "COUNT",
+      "parameter" : {
+        "type" : "constant",
+        "value" : "1"
+      },
+      "returntype" : "bigint"
+    }
+  }, {
+    "name" : "GMV_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "STREAMING_TABLE.GMV"
+      },
+      "returntype" : "decimal(19,6)"
+    }
+  }, {
+    "name" : "ITEM_COUNT_SUM",
+    "function" : {
+      "expression" : "SUM",
+      "parameter" : {
+        "type" : "column",
+        "value" : "STREAMING_TABLE.ITEM_COUNT"
+      },
+      "returntype" : "bigint"
+    }
+  } ],
+  "dictionaries" : [ ],
+  "rowkey" : {
+    "rowkey_columns" : [ {
+      "column" : "STREAMING_TABLE.MINUTE_START",
+      "encoding" : "time",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_TABLE.HOUR_START",
+      "encoding" : "time",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_TABLE.DAY_START",
+      "encoding" : "date",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_TABLE.CATEGORY_ID",
+      "encoding" : "integer:4",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_TABLE.ITM",
+      "encoding" : "dict",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_TABLE.SITE",
+      "encoding" : "dict",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    }, {
+      "column" : "STREAMING_CATEGORY.REGION",
+      "encoding" : "dict",
+      "encoding_version" : 1,
+      "isShardBy" : false
+    } ]
+  },
+  "hbase_mapping" : {
+    "column_family" : [ {
+      "name" : "F1",
+      "columns" : [ {
+        "qualifier" : "M",
+        "measure_refs" : [ "_COUNT_", "GMV_SUM", "ITEM_COUNT_SUM" ]
+      } ]
+    } ]
+  },
+  "aggregation_groups" : [ {
+    "includes" : [ "STREAMING_TABLE.MINUTE_START", "STREAMING_TABLE.HOUR_START", "STREAMING_TABLE.DAY_START", "STREAMING_TABLE.ITM", "STREAMING_TABLE.SITE", "STREAMING_TABLE.CATEGORY_ID", "STREAMING_CATEGORY.REGION" ],
+    "select_rule" : {
+      "hierarchy_dims" : [ [ "STREAMING_TABLE.DAY_START", "STREAMING_TABLE.HOUR_START", "STREAMING_TABLE.MINUTE_START" ] ],
+      "mandatory_dims" : [ ],
+      "joint_dims" : [ ]
+    }
+  } ],
+  "signature" : "ZZ9DIaVI8jmu7n08S1M7Eg==",
+  "notify_list" : [ ],
+  "status_need_notify" : [ "ERROR", "DISCARDED", "SUCCEED" ],
+  "partition_date_start" : 0,
+  "partition_date_end" : 3153600000000,
+  "auto_merge_time_ranges" : [ ],
+  "volatile_range" : 0,
+  "retention_range" : 0,
+  "engine_type" : 2,
+  "storage_type" : 2,
+  "override_kylin_properties" : {
+    "kylin.cube.algorithm" : "algorithm inmem",
+    "kylin.cube.max-building-segments" : "5"
+  },
+  "cuboid_black_list" : [ ],
+  "parent_forward" : 3,
+  "mandatory_dimension_set_list" : [ ],
+  "snapshot_table_desc_list" : [ ]
+}
