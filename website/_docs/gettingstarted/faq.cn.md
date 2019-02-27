@@ -1,7 +1,7 @@
 ---
 layout: docs
 title:  常见问题
-categories: gettingstarted
+categories: 开始
 permalink: /cn/docs/gettingstarted/faq.html
 since: v0.6.x
 ---
