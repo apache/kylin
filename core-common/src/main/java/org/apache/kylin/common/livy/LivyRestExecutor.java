@@ -46,30 +46,29 @@ public class LivyRestExecutor {
             JSONObject resultJson = new JSONObject(result);
             String state = resultJson.getString("state");
             logAppender.log("Livy submit Result: " + state);
+            logger.info("Livy submit Result: {}", state);
 
             livyLog(resultJson, logAppender);
 
-            if (resultJson.getString("state").equalsIgnoreCase(LivyStateEnum.starting.toString())) {
-                final String livyTaskId = resultJson.getString("id");
-                while (!LivyStateEnum.shutting_down.toString().equalsIgnoreCase(state)
-                        && !LivyStateEnum.error.toString().equalsIgnoreCase(state)
-                        && !LivyStateEnum.dead.toString().equalsIgnoreCase(state)
-                        && !LivyStateEnum.success.toString().equalsIgnoreCase(state)) {
+            final String livyTaskId = resultJson.getString("id");
+            while (!LivyStateEnum.shutting_down.toString().equalsIgnoreCase(state)
+                    && !LivyStateEnum.error.toString().equalsIgnoreCase(state)
+                    && !LivyStateEnum.dead.toString().equalsIgnoreCase(state)
+                    && !LivyStateEnum.success.toString().equalsIgnoreCase(state)) {
 
-                    String statusResult = restClient.livyGetJobStatusBatches(livyTaskId);
-                    JSONObject stateJson = new JSONObject(statusResult);
-                    if (!state.equalsIgnoreCase(stateJson.getString("state"))) {
-                        logAppender.log("Livy status Result: " + stateJson.getString("state"));
-                        livyLog(stateJson, logAppender);
-                    }
-                    state = stateJson.getString("state");
-                    Thread.sleep(10*1000);
+                String statusResult = restClient.livyGetJobStatusBatches(livyTaskId);
+                JSONObject stateJson = new JSONObject(statusResult);
+                if (!state.equalsIgnoreCase(stateJson.getString("state"))) {
+                    logAppender.log("Livy status Result: " + stateJson.getString("state"));
+                    livyLog(stateJson, logAppender);
                 }
-                if (!LivyStateEnum.success.toString().equalsIgnoreCase(state)) {
-                    throw new RuntimeException("livy get status failed. state is " + state);
-                }
-            } else {
-                throw new RuntimeException("livy start execute failed. state is " + state);
+                state = stateJson.getString("state");
+                Thread.sleep(10*1000);
+            }
+            if (!LivyStateEnum.success.toString().equalsIgnoreCase(state)) {
+                logAppender.log("livy start execute failed. state is " + state);
+                logger.info("livy start execute failed. state is {}", state);
+                throw new RuntimeException("livy get status failed. state is " + state);
             }
             logAppender.log("costTime : " + (System.currentTimeMillis() - startTime) / 1000 + " s");
         } catch (Exception e) {
