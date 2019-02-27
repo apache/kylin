@@ -57,8 +57,7 @@ permalink: /cn/docs/install/configuration.html
 	- [集成 LDAP 实现单点登录](#ldap-sso)
 	- [集成 Apache Ranger](#ranger)
 	- [启用 ZooKeeper ACL](#zookeeper-acl)
-
-
+- [启用 Memcached 做分布式查询缓存](#distributed-cache)
 
 
 ### 配置文件及参数重写 {#kylin-config}
@@ -678,3 +677,52 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 - `kylin.env.zookeeper-acl-enabled`：启用 ZooKeeper ACL 以阻止未经授权的用户访问 Znode 或降低由此导致的不良操作的风险，默认值为 `FALSE`
 - `kylin.env.zookeeper.zk-auth`：使用 用户名：密码 作为 ACL 标识，默认值为 `digest:ADMIN:KYLIN`
 - `kylin.env.zookeeper.zk-acl`：使用单个 ID 作为 ACL 标识，默认值为 `world:anyone:rwcda`，`anyone` 表示任何人
+
+### 使用 Memcached 作为 Kylin 查询缓存 {#distributed-cache}
+
+从 v2.6.0，Kylin 可以使用 Memcached 作为查询缓存。想要启用该功能，您需要执行以下步骤：
+
+1. 在一个或多个节点上安装 Memcached;
+
+2. 按照如下所示方式修改 $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/classes 目录下的 applicationContext.xml 的内容：
+
+注释如下代码：
+{% highlight Groff markup %}
+<bean id="ehcache"
+      class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+      p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
+
+<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
+      p:cacheManager-ref="ehcache"/>
+{% endhighlight %}
+取消如下代码的注释：
+{% highlight Groff markup %}
+<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+      p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
+
+<bean id="remoteCacheManager" class="org.apache.kylin.cache.cachemanager.MemcachedCacheManager" />
+<bean id="localCacheManager" class="org.apache.kylin.cache.cachemanager.InstrumentedEhCacheCacheManager"
+      p:cacheManager-ref="ehcache"/>
+<bean id="cacheManager" class="org.apache.kylin.cache.cachemanager.RemoteLocalFailOverCacheManager" />
+
+<bean id="memcachedCacheConfig" class="org.apache.kylin.cache.memcached.MemcachedCacheConfig">
+    <property name="timeout" value="500" />
+    <property name="hosts" value="${kylin.cache.memcached.hosts}" />
+</bean>
+{% endhighlight %}
+applicationContext.xml 中 `${kylin.cache.memcached.hosts}` 的值就是在 conf/kylin.properties 中指定的 `kylin.cache.memcached.hosts` 的值。 
+
+3.在 `conf/kylin.properties` 中添加如下参数：
+{% highlight Groff markup %}
+kylin.query.cache-enabled=true
+kylin.query.lazy-query-enabled=true
+kylin.query.cache-signature-enabled=true
+kylin.query.segment-cache-enabled=true
+kylin.cache.memcached.hosts=memcached1:11211,memcached2:11211,memcached3:11211
+{% endhighlight %}
+
+- `kylin.query.cache-enabled` 是否开启查询缓存的总开关，默认值为 `true`。
+- `kylin.query.lazy-query-enabled` 是否为短时间内重复发送的查询，等待并重用前次查询的结果，默认为 false。  
+- `kylin.query.cache-signature-enabled` 是否为缓存进行签名检查，依据签名变化来决定缓存的有效性。缓存的签名由项目中的 cube / hybrid 的状态以及它们的最后构建时间等来动态计算（在缓存被记录时）。 
+- `kylin.query.segment-cache-enabled` 是否在 segment 级别缓存从 存储引擎(HBase)返回的数据，默认为false；设置为 true，且启用 memcached 分布式缓存开启的时候，此功能才会生效。可为频繁构建的 cube （如 streaming cube）提升缓存命中率，从而提升性能。
+- `kylin.cache.memcached.hosts` 指明了 memcached 的机器名和端口。

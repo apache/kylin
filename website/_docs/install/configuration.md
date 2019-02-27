@@ -56,7 +56,7 @@ permalink: /docs/install/configuration.html
 	- [Integrated LDAP for SSO](#ldap-sso)
 	- [Integrate with Apache Ranger](#ranger)
 	- [Enable ZooKeeper ACL](#zookeeper-acl)
-
+- [Distributed query cache with Memcached](#distributed-cache)
 
 
 
@@ -673,3 +673,50 @@ This section introduces Kylin security-related configuration.
 - `kylin.env.zookeeper-acl-enabled`: Enable ZooKeeper ACL to prevent unauthorized users from accessing the Znode or reducing the risk of bad operations resulting from this. The default value is *FALSE*
 - `kylin.env.zookeeper.zk-auth`: use username: password as the ACL identifier. The default value is *digest:ADMIN:KYLIN*
 - `kylin.env.zookeeper.zk-acl`: Use a single ID as the ACL identifier. The default value is *world:anyone:rwcda*, *anyone* for anyone
+
+### Distributed query cache with Memcached {#distributed-cache}
+
+From v2.6.0, Kylin can use Memcached as the cache. To enable this feature, you need to do the following steps:
+
+1. Install Memcached on 1 or multiple nodes;
+
+2. Modify the applicationContext.xml under $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/classes directory, comment the following code:
+{% highlight Groff markup %}
+<bean id="ehcache"
+      class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+      p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
+
+<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
+      p:cacheManager-ref="ehcache"/>
+{% endhighlight %}
+Uncomment the following code:
+{% highlight Groff markup %}
+<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+      p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
+
+<bean id="remoteCacheManager" class="org.apache.kylin.cache.cachemanager.MemcachedCacheManager" />
+<bean id="localCacheManager" class="org.apache.kylin.cache.cachemanager.InstrumentedEhCacheCacheManager"
+      p:cacheManager-ref="ehcache"/>
+<bean id="cacheManager" class="org.apache.kylin.cache.cachemanager.RemoteLocalFailOverCacheManager" />
+
+<bean id="memcachedCacheConfig" class="org.apache.kylin.cache.memcached.MemcachedCacheConfig">
+    <property name="timeout" value="500" />
+    <property name="hosts" value="${kylin.cache.memcached.hosts}" />
+</bean>
+{% endhighlight %}
+The value of `${kylin.cache.memcached.hosts}` in applicationContext.xml is from the value of `kylin.cache.memcached.hosts` in conf/kylin.properties. 
+
+3.Add the following parameters to `conf/kylin.properties`:
+{% highlight Groff markup %}
+kylin.query.cache-enabled=true
+kylin.query.lazy-query-enabled=true
+kylin.query.cache-signature-enabled=true
+kylin.query.segment-cache-enabled=true
+kylin.cache.memcached.hosts=memcached1:11211,memcached2:11211,memcached3:11211
+{% endhighlight %}
+
+- `kylin.query.cache-enabled` controls the on-off of query cache, its default value is `true`.
+- `kylin.query.lazy-query-enabled` : whether to lazily answer the queries that be sent repeatedly in a short time (hold it until the previous query be returned, and then reuse the result); The default value is `false`. 
+- `kylin.query.cache-signature-enabled` : whether to use the signature of a query to determine the cache's validity. The signature is calculated by the cube/hybrid list of the project, their last build time and other information (at the moment when cache is persisted); It's default value is `false`.
+- `kylin.query.segment-cache-enabled` : whether to cache the segment level returned data (from HBase storage) into Memcached. This feature is mainly for the cube that built very frequently (e.g, streaming cube, whose last build time always changed, the whole query cache is very likely be cleaned). This only works when Memcached configured. It's default value is `false`.
+- `kylin.cache.memcached.hosts`: a list of memcached node and port, connected with comma.
