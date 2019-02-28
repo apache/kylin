@@ -192,7 +192,7 @@ public class DataModelManager {
     }
 
     // within a project, find models that use the specified table
-    public List<String> getModelsUsingTable(TableDesc table, String project) throws IOException {
+    public List<String> getModelsUsingTable(TableDesc table, String project) {
         try (AutoLock lock = modelMapLock.lockForRead()) {
             List<String> models = new ArrayList<>();
             for (DataModelDesc modelDesc : getModels(project)) {
