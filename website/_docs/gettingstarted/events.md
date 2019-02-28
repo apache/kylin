@@ -21,6 +21,7 @@ __Conferences__
 * [Apache Kylin: OLAP Engine on Hadoop - Tech Deep Dive](http://v.csdn.hudong.com/s/article.html?arcid=15820707) ([video](http://v.csdn.hudong.com/s/article.html?arcid=15820707), [slides](http://www.slideshare.net/XuJiang2/kylin-hadoop-olap-engine)) by [Jiang Xu](https://www.linkedin.com/pub/xu-jiang/4/5a8/230), at Shanghai Big Data Summit 2014 in Shanghai, China , 2014-10-25
 
 __Meetup__
+* [Apache Kylin Meetup @Shanghai](http://www.huodongxing.com/event/4476570217900), [slides](https://www.slidestalk.com/x/241/apache_kylin_innovation_meetup) Shangai, China; 1:00 PM - 4:30 PM, Saturday, 2019-02-23 
 * [Apache Kylin for Extreme OLAP and Big Data @eBay South Campus](https://www.eventbrite.com/e/thursday-nov-29-meetup-apache-kylin-for-extreme-olap-and-big-data-tickets-52275347973?aff=estw), Sanjose, CA, US; 6:30 PM - 8:30 PM, Thursday, 2018-11-29 
 * [Apache Kylin Meetup @Hangzhou](http://www.huodongxing.com/event/7461326621900), China; 1:30PM - 17:00PM, Saturday, 2018-10-26
 * [CDAP in Cloud, Extreme OLAP w Apache Kylin, Twitter Reviews & DataStax](https://www.meetup.com/BigDataApps/events/253429041/) @ Google Cloud, US; 6:00PM to 8:00PM, 2018-8-29

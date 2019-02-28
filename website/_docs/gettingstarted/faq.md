@@ -334,4 +334,8 @@ vi ./tomcat/webapps/kylin/WEB-INF/classes/kylinSecurity.xml
 
   * The data in 'hdfs-working-dir' ('hdfs:///kylin/kylin_metadata/' by default) includes intermediate files (will be GC) and Cuboid data (won't be GC). The Cuboid data is kept for the further segments' merge, as Kylin couldn't merge from HBase. If you're sure those segments won't be merged, you can move them to other paths or even delete.
 
-  * Please pay attention to the "resources" sub-folder under 'hdfs-working-dir', which persists some big metadata files like  dictionaries and lookup tables' snapshots. They shouldn't be moved.
+  * Please pay attention to the "resources" or "jdbc-resources" sub-folder under '/kylin/kylin_metadata/', which persists big metadata files like dictionaries and lookup tables' snapshots. They shouldn't be manually moved.
+
+#### How to escape the key word in fuzzy match (like) queries?
+"%", "_" are key words in the "like" clause; "%" matches any character, and "_" matches a single character; When you wants to match the key word like "_", need to escape them with another character ahead; Below is a sample with "/" to escape, the query is to match the "xiao_":
+"select username from gg_user where username like '%xiao/_%' escape '/'; "  

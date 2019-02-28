@@ -10,7 +10,7 @@ __如何贡献案例__
 __公司 & 组织__
 
 * [Telecoming](https://www.telecoming.com/), 2019-01-21
-    * Telecoming 采用了 Apache Kylin，因为它是一个非常有用的商业智能工具。Kylin 缩短了查询时间，改进了报表生成，最重要的是它有助于业务决策。
+    * Telecoming 采用了 Apache Kylin，因为它是一个非常有用的商业智能工具。Kylin 缩短了查询时间，改进了报表生成，最重要的是它有助于业务决策。关于更多信息，请参考[此页面](http://www.stratebi.com/-/big-data-marketing-telecoming)。
 
 * [Cisco Systems, Inc. 思科](https://www.cisco.com/), 2019-01-17
     * 思科是 IT、网络和网络安全解决方案领域的全球领导者。思科将 Apache Kylin 应用于报表系统，以在高并发场景中获取良好的查询性能。想要了解更多请阅读[此博客](http://kylin.apache.org/blog/2019/01/17/cisco-throughput-5x/)。

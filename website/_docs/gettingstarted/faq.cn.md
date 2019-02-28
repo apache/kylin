@@ -232,4 +232,8 @@ vi $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/classes/kylinSecurity.xml
 
 HDFS 上的工作目录中的数据包括了中间数据 (将被垃圾清理所清除) 和 Cuboid 数据 (不会被垃圾清理所清除)，Cuboid 数据将为之后的 Segment 合并而保留。所以如果用户确认这些 Segment 在之后不会被合并，可以将 Cuboid 数据移动到其他路径甚至删除。
 
-另外，请留意 HDFS 工作目录下的 "resources" 子目录中会存放一些大的元数据，如字典文件和维表的快照，这些文件不能被删除。
+另外，请留意 HDFS 工作目录下的 "resources" 或 "jdbc-resources" 子目录中会存放一些大的元数据，如字典文件和维表的快照，这些文件不能被删除。
+
+#### 如何对 like 语句中的关键字进行转义？
+"%", "_" 是 "like" 语句中的保留关键字; "%" 可以匹配任意个字符,  "_" 匹配单个字符; 如果你想匹配关键字如 "_", 需要使用另一个字符在前面进行转义; 下面是一个使用 "/" 进行转义的例子, 此查询试图匹配 "xiao_":
+"select username from gg_user where username like '%xiao/_%' escape '/'; "

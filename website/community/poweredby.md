@@ -10,7 +10,7 @@ Send a quick description of your organization and usage to the [mailing list](ma
 __Companies & Organizations__
 
 * [Telecoming](https://www.telecoming.com/), 2019-01-21
-    * Telecoming has adopted Apache Kylin, since it's an extremely useful business intelligence tool. It has encouraged lower consultation time, it has improved report generation and above all it contributes to improving business decisions.
+    * Telecoming has adopted Apache Kylin, since it's an extremely useful business intelligence tool. It has encouraged lower consultation time, it has improved report generation and above all it contributes to improving business decisions. Read more at [this blog](http://www.stratebi.com/-/big-data-marketing-telecoming)
 
 * [Cisco Systems, Inc.](https://www.cisco.com/), 2019-01-17
     * Cisco is the worldwide leader in IT, networking, and cybersecurity solutions. Apache Kylin is adopted in its reporting system and delivers a good query performance in high concurrency scenarios. Read more at [this blog](http://kylin.apache.org/blog/2019/01/17/cisco-throughput-5x/).
