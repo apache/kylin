@@ -146,7 +146,7 @@ public class TableService extends BasicService {
         // do schema check
         TableMetadataManager metaMgr = getTableManager();
         CubeManager cubeMgr = getCubeManager();
-        TableSchemaUpdateChecker checker = new TableSchemaUpdateChecker(metaMgr, cubeMgr);
+        TableSchemaUpdateChecker checker = new TableSchemaUpdateChecker(metaMgr, cubeMgr, getDataModelManager());
         for (Pair<TableDesc, TableExtDesc> pair : allMeta) {
             TableDesc tableDesc = pair.getFirst();
             TableSchemaUpdateChecker.CheckResult result = checker.allowReload(tableDesc, project);
