@@ -75,26 +75,34 @@ public class StringUtil {
     }
 
     public static String join(Iterable<String> parts, String separator) {
-        StringBuilder buf = new StringBuilder();
-        Iterator<String> iterator = parts.iterator();
-        if (iterator == null || (!iterator.hasNext())) {
+        if (parts == null) {
             return null;
         }
-        final String first = iterator.next();
-        if (first != null) {
-            buf.append(first);
-        }
-        while (iterator.hasNext()) {
-            if (separator != null) {
-                buf.append(separator);
-            }
-            final String part = iterator.next();
-            if (part != null) {
-                buf.append(part);
-            }
-        }
 
-        return buf.toString();
+        Iterator<String> iterator = parts.iterator();
+
+        if (iterator == null) {
+            return null;
+        } else if (!iterator.hasNext()) {
+            return "";
+        } else {
+            StringBuilder buf = new StringBuilder();
+            final String first = iterator.next();
+            if (first != null) {
+                buf.append(first);
+            }
+            while (iterator.hasNext()) {
+                if (separator != null) {
+                    buf.append(separator);
+                }
+                final String part = iterator.next();
+                if (part != null) {
+                    buf.append(part);
+                }
+            }
+
+            return buf.toString();
+        }
     }
 
     public static void toUpperCaseArray(String[] source, String[] target) {
