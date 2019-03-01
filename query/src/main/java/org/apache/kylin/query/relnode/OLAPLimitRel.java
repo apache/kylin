@@ -78,6 +78,7 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
 
         this.columnRowType = buildColumnRowType();
         this.context = implementor.getContext();
+        this.context.hasLimit = true;
 
         // ignore limit after having clause
         // ignore limit after another limit, e.g. select A, count(*) from (select A,B from fact group by A,B limit 100) limit 10

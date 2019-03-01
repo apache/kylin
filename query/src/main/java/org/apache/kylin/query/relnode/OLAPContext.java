@@ -132,6 +132,7 @@ public class OLAPContext {
     public boolean limitPrecedesAggr = false;
     public boolean afterJoin = false;
     public boolean hasJoin = false;
+    public boolean hasLimit = false;
     public boolean hasWindow = false;
     public boolean groupByExpression = false; // checkout if group by column has operator
     public boolean afterOuterAggregate = false;
@@ -197,7 +198,7 @@ public class OLAPContext {
                     metricsColumns, aggregations, aggrSqlCalls, dynFuncs, // aggregation
                     rtDimColumns, rtMetricColumns, // runtime related columns
                     filterColumns, filter, havingFilter, // filter
-                    sortColumns, sortOrders, limitPrecedesAggr, // sort & limit
+                    sortColumns, sortOrders, limitPrecedesAggr, hasLimit, // sort & limit
                     involvedMeasure);
         }
         return sqlDigest;
