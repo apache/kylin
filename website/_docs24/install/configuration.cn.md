@@ -88,7 +88,7 @@ Kylin 的主要配置文件。
 | kylin.cube.ignore-signature-inconsistency             | false                |                                                              |                           |
 | kylin.cube.aggrgroup.max-combination                  | 4096                 | Max cuboid numbers in a Cube                                 | Yes                       |
 | kylin.cube.aggrgroup.is-mandatory-only-valid          | false                | Whether allow a Cube only has the base cuboid.               | Yes                       |
-| kylin.cube.rowkey.max-size                            | 63                   | Max columns in Rowkey                                        | No                        |
+| kylin.cube.rowkey.max-size                            | 63                   | Max columns in Rowkey, and it can not be more than 63                                        | No                        |
 | kylin.metadata.dimension-encoding-max-length          | 256                  | Max length for one dimension's encoding                      | Yes                       |
 | kylin.cube.max-building-segments                      | 10                   | Max building segments in one Cube                            | Yes                       |
 | kylin.cube.allow-appear-in-multiple-projects          | false                | Whether allow a Cueb appeared in multiple projects           | No                        |

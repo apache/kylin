@@ -284,7 +284,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 - `kylin.cube.ignore-signature-inconsistency`：Cube desc 中的 signature 信息能保证 Cube 不被更改为损坏状态，默认值为 FALSE
 - `kylin.cube.aggrgroup.max-combination`：指定一个 Cube 的聚合组 Cuboid 上限，默认值为 32768
 - `kylin.cube.aggrgroup.is-mandatory-only-valid`：是否允许 Cube 只包含 Base Cuboid，默认值为 FALSE，当使用 Spark Cubing 时需设置为 TRUE
-- `kylin.cube.rowkey.max-size`：指定可以设置为 Rowkeys 的最大列数，默认值为 63
+- `kylin.cube.rowkey.max-size`：指定可以设置为 Rowkeys 的最大列数，默认值为 63，且最大不能超过 63
 - `kylin.cube.allow-appear-in-multiple-projects`：是否允许一个 Cube 出现在多个项目中
 - `kylin.cube.gtscanrequest-serialization-level`：默认值为 1
 - `kylin.metadata.dimension-encoding-max-length`：指定维度作为 Rowkeys 时使用 fix_length 编码时的最大长度，默认值为 256

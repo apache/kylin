@@ -286,7 +286,7 @@ This section introduces Kylin data modeling and build related configuration.
 - `kylin.cube.ignore-signature-inconsistency`:The signature in Cube desc ensures that the cube is not changed to a corrupt state. The default value is *FALSE*
 - `kylin.cube.aggrgroup.max-combination`: specifies the max combination number of aggregation groups. The default value is 32768.
 - `kylin.cube.aggrgroup.is-mandatory-only-valid`: whether to allow Cube contains only Base Cuboid. The default value is *FALSE*, set to *TRUE* when using Spark Cubing
-- `kylin.cube.rowkey.max-size`: specifies the maximum number of columns that can be set to Rowkeys. The default value is 63.
+- `kylin.cube.rowkey.max-size`: specifies the maximum number of columns that can be set to Rowkeys. The default value is 63, and it can not be more than 63.
 - `kylin.cube.allow-appear-in-multiple-projects`: whether to allow a cube to appear in multiple projects
 - `kylin.cube.gtscanrequest-serialization-level`: the default value is 1
 
