@@ -676,9 +676,9 @@ This section introduces Kylin security-related configuration.
 
 ### Distributed query cache with Memcached {#distributed-cache}
 
-From v2.6.0, Kylin can use Memcached as the cache. To enable this feature, you need to do the following steps:
+From v2.6.0, Kylin can use Memcached as the distributed cache, and also there are some improvements on the cache policy ([KYLIN-2895](https://issues.apache.org/jira/browse/KYLIN-2895)). To enable these new features, you need to do the following steps:
 
-1. Install Memcached on 1 or multiple nodes;
+1. Install Memcached (latest v1.5.12) on 1 or multiple nodes; You can install it on all Kylin nodes if resource is enough;
 
 2. Modify the applicationContext.xml under $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/classes directory, comment the following code:
 {% highlight Groff markup %}
@@ -717,6 +717,6 @@ kylin.cache.memcached.hosts=memcached1:11211,memcached2:11211,memcached3:11211
 
 - `kylin.query.cache-enabled` controls the on-off of query cache, its default value is `true`.
 - `kylin.query.lazy-query-enabled` : whether to lazily answer the queries that be sent repeatedly in a short time (hold it until the previous query be returned, and then reuse the result); The default value is `false`. 
-- `kylin.query.cache-signature-enabled` : whether to use the signature of a query to determine the cache's validity. The signature is calculated by the cube/hybrid list of the project, their last build time and other information (at the moment when cache is persisted); It's default value is `false`.
-- `kylin.query.segment-cache-enabled` : whether to cache the segment level returned data (from HBase storage) into Memcached. This feature is mainly for the cube that built very frequently (e.g, streaming cube, whose last build time always changed, the whole query cache is very likely be cleaned). This only works when Memcached configured. It's default value is `false`.
+- `kylin.query.cache-signature-enabled` : whether to use the signature of a query to determine the cache's validity. The signature is calculated by the cube/hybrid list of the project, their last build time and other information (at the moment when cache is persisted); It's default value is `false`, highly recommend to set it to `true`.
+- `kylin.query.segment-cache-enabled` : whether to cache the segment level returned data (from HBase storage) into Memcached. This feature is mainly for the cube that built very frequently (e.g, streaming cube, whose last build time always changed a couple minutes, the whole SQL statement level cache is very likely be cleaned; in this case, the by-segment cache can reduce the I/O). This only works when Memcached configured, the default value is `false`.
 - `kylin.cache.memcached.hosts`: a list of memcached node and port, connected with comma.

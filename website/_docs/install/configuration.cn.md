@@ -680,9 +680,9 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 ### 使用 Memcached 作为 Kylin 查询缓存 {#distributed-cache}
 
-从 v2.6.0，Kylin 可以使用 Memcached 作为查询缓存。想要启用该功能，您需要执行以下步骤：
+从 v2.6.0，Kylin 可以使用 Memcached 作为查询缓存，一起引入的还有一系列缓存增强 ([KYLIN-2895](https://issues.apache.org/jira/browse/KYLIN-2895))。想要启用该功能，您需要执行以下步骤：
 
-1. 在一个或多个节点上安装 Memcached;
+1. 在一个或多个节点上安装 Memcached (最新稳定版 v1.5.12); 如果资源够的话，可以在每个安装 Kylin 的节点上安装 Memcached。
 
 2. 按照如下所示方式修改 $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/classes 目录下的 applicationContext.xml 的内容：
 
@@ -722,7 +722,7 @@ kylin.cache.memcached.hosts=memcached1:11211,memcached2:11211,memcached3:11211
 {% endhighlight %}
 
 - `kylin.query.cache-enabled` 是否开启查询缓存的总开关，默认值为 `true`。
-- `kylin.query.lazy-query-enabled` 是否为短时间内重复发送的查询，等待并重用前次查询的结果，默认为 false。  
-- `kylin.query.cache-signature-enabled` 是否为缓存进行签名检查，依据签名变化来决定缓存的有效性。缓存的签名由项目中的 cube / hybrid 的状态以及它们的最后构建时间等来动态计算（在缓存被记录时）。 
-- `kylin.query.segment-cache-enabled` 是否在 segment 级别缓存从 存储引擎(HBase)返回的数据，默认为false；设置为 true，且启用 memcached 分布式缓存开启的时候，此功能才会生效。可为频繁构建的 cube （如 streaming cube）提升缓存命中率，从而提升性能。
+- `kylin.query.lazy-query-enabled` 是否为短时间内重复发送的查询，等待并重用前次查询的结果，默认为 `false`。  
+- `kylin.query.cache-signature-enabled` 是否为缓存进行签名检查，依据签名变化来决定缓存的有效性。缓存的签名由项目中的 cube / hybrid 的状态以及它们的最后构建时间等来动态计算（在缓存被记录时）,默认为 `false`，高度推荐设置为 `true`。 
+- `kylin.query.segment-cache-enabled` 是否在 segment 级别缓存从 存储引擎(HBase)返回的数据，默认为 `false`；设置为 `true`，且启用 Memcached 分布式缓存开启的时候，此功能才会生效。可为频繁构建的 cube （如 streaming cube）提升缓存命中率，从而提升性能。
 - `kylin.cache.memcached.hosts` 指明了 memcached 的机器名和端口。
