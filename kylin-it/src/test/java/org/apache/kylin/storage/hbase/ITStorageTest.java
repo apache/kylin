@@ -148,7 +148,7 @@ public class ITStorageTest extends HBaseMetadataTestCase {
                     /*runtimeDimensionColumns*/ Collections.<TblColRef> emptySet(), //
                     /*runtimeMetricColumns*/ Collections.<TblColRef> emptySet(), //
                     /*filter col*/ Collections.<TblColRef> emptySet(), filter, null, //
-                    /*sortCol*/ new ArrayList<TblColRef>(), new ArrayList<SQLDigest.OrderEnum>(), false, new HashSet<MeasureDesc>());
+                    /*sortCol*/ new ArrayList<TblColRef>(), new ArrayList<SQLDigest.OrderEnum>(), false, false, new HashSet<MeasureDesc>());
             iterator = storageEngine.search(context, sqlDigest, mockup.newTupleInfo(groups, aggregations));
             while (iterator.hasNext()) {
                 ITuple tuple = iterator.next();
