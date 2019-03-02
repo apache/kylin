@@ -56,7 +56,6 @@ public class StreamingConsumerChannel implements Runnable {
     private volatile long addEventErrorCnt;
     private volatile long incomingEventCnt;
     private volatile long dropEventCnt;
-
     private Map<Integer, Meter> eventConsumeMeters;
 
     public StreamingConsumerChannel(String cubeName, IStreamingConnector connector,
@@ -145,19 +144,16 @@ public class StreamingConsumerChannel implements Runnable {
 
     private void removeMetrics() {
         for (Map.Entry<Integer, Meter> meterEntry : eventConsumeMeters.entrySet()) {
-            StreamingMetrics
-                    .getInstance()
-                    .getMetrics()
-                    .remove(MetricRegistry.name(StreamingMetrics.CONSUME_RATE_PFX, cubeName,
-                            String.valueOf(meterEntry.getKey())));
+            StreamingMetrics.getInstance().getMetrics().remove(MetricRegistry.name(StreamingMetrics.CONSUME_RATE_PFX,
+                    cubeName, String.valueOf(meterEntry.getKey())));
         }
     }
 
     protected void recordConsumeMetric(Integer partitionId, Map<String, Object> eventParams) {
         Meter partitionEventConsumeMeter = eventConsumeMeters.get(partitionId);
         if (partitionEventConsumeMeter == null) {
-            partitionEventConsumeMeter = StreamingMetrics.newMeter(MetricRegistry.name(
-                    StreamingMetrics.CONSUME_RATE_PFX, cubeName, String.valueOf(partitionId)));
+            partitionEventConsumeMeter = StreamingMetrics.newMeter(
+                    MetricRegistry.name(StreamingMetrics.CONSUME_RATE_PFX, cubeName, String.valueOf(partitionId)));
             eventConsumeMeters.put(partitionId, partitionEventConsumeMeter);
         }
         partitionEventConsumeMeter.mark();
@@ -193,7 +189,8 @@ public class StreamingConsumerChannel implements Runnable {
                 return;
             }
             if (!hasStoppedConsuming) {
-                logger.warn("Consumer not stopped normally, close it forcedly, but the thread may not be stopped correctly");
+                logger.warn(
+                        "Consumer not stopped normally, close it forcedly, but the thread may not be stopped correctly");
                 connector.wakeup();
             }
             stoppedSucceed = stopLatch.await(timeoutInMs, TimeUnit.MILLISECONDS);
@@ -254,10 +251,12 @@ public class StreamingConsumerChannel implements Runnable {
     }
 
     public String getSourceConsumeInfo() {
-        return cubeSegmentManager.getConsumePosition();
+        return cubeSegmentManager.getConsumePositionStr();
     }
 
     public ConsumerStats getConsumerStats() {
+        Map<Integer, Long> consumeLagMap = connector.getSource().calConsumeLag(cubeName, cubeSegmentManager.getConsumePosition());
+        long totalLag = 0L;
         Map<Integer, PartitionConsumeStats> partitionConsumeStatsMap = Maps.newHashMap();
         for (Map.Entry<Integer, Meter> meterEntry : eventConsumeMeters.entrySet()) {
             Meter meter = meterEntry.getValue();
@@ -267,6 +266,9 @@ public class StreamingConsumerChannel implements Runnable {
             stats.setFiveMinRate(meter.getFiveMinuteRate());
             stats.setFifteenMinRate(meter.getFifteenMinuteRate());
             stats.setTotalConsume(meter.getCount());
+            long thisLag = consumeLagMap.getOrDefault(meterEntry.getKey(), 0L);
+            totalLag += thisLag;
+            stats.setConsumeLag(thisLag);
             partitionConsumeStatsMap.put(meterEntry.getKey(), stats);
         }
 
@@ -283,6 +285,7 @@ public class StreamingConsumerChannel implements Runnable {
         stats.setTotalExceptionEvents(parseEventErrorCnt + addEventErrorCnt);
         stats.setPartitionConsumeStatsMap(partitionConsumeStatsMap);
         stats.setConsumeOffsetInfo(getSourceConsumeInfo());
+        stats.setConsumeLag(totalLag);
         return stats;
     }
 

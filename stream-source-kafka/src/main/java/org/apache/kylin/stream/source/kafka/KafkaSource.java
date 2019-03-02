@@ -41,6 +41,7 @@ import org.apache.kylin.stream.core.consumer.ConsumerStartMode;
 import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
 import org.apache.kylin.stream.core.consumer.IStreamingConnector;
 import org.apache.kylin.stream.core.exception.StreamingException;
+import org.apache.kylin.stream.core.source.ISourcePosition;
 import org.apache.kylin.stream.core.source.ISourcePositionHandler;
 import org.apache.kylin.stream.core.source.IStreamingMessageParser;
 import org.apache.kylin.stream.core.source.IStreamingSource;
@@ -75,8 +76,8 @@ public class KafkaSource implements IStreamingSource {
         KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(kylinConf).getCube(cubeName);
         String streamingTableName = cube.getRootFactTable();
-        StreamingSourceConfig streamingSourceConfig = StreamingSourceConfigManager.getInstance(kylinConf).getConfig(
-                streamingTableName);
+        StreamingSourceConfig streamingSourceConfig = StreamingSourceConfigManager.getInstance(kylinConf)
+                .getConfig(streamingTableName);
 
         String topicName = getTopicName(streamingSourceConfig.getProperties());
         Map<String, Object> conf = getKafkaConf(streamingSourceConfig.getProperties(), cube.getConfig());
@@ -137,7 +138,8 @@ public class KafkaSource implements IStreamingSource {
     @Override
     public IStreamingConnector createStreamingConnector(String cubeName, List<Partition> assignedPartitions,
             ConsumerStartProtocol startProtocol, StreamingSegmentManager streamingSegmentManager) {
-        logger.info("Create StreamingConnector for Cube {}, assignedPartitions {}, startProtocol {}", cubeName, assignedPartitions, startProtocol);
+        logger.info("Create StreamingConnector for Cube {}, assignedPartitions {}, startProtocol {}", cubeName,
+                assignedPartitions, startProtocol);
         try {
             KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
             CubeInstance cubeInstance = CubeManager.getInstance(kylinConf).getCube(cubeName);
@@ -150,9 +152,9 @@ public class KafkaSource implements IStreamingSource {
 
             Class<?> clazz = getStreamingMessageParserClass(streamingSourceConfig.getProperties());
             Constructor<?> constructor = clazz.getConstructor(CubeDesc.class, MessageParserInfo.class);
-            IStreamingMessageParser<?> parser = (IStreamingMessageParser<?>) constructor.newInstance(
-                    cubeInstance.getDescriptor(), streamingSourceConfig.getParserInfo());
-            KafkaConnector connector = new KafkaConnector(conf, topic, parser);
+            IStreamingMessageParser<?> parser = (IStreamingMessageParser<?>) constructor
+                    .newInstance(cubeInstance.getDescriptor(), streamingSourceConfig.getParserInfo());
+            KafkaConnector connector = new KafkaConnector(conf, topic, parser, this);
             if (startProtocol != null) {
                 if (startProtocol.getStartPosition() != null && startProtocol.getStartPosition().length() > 0) {
                     KafkaPosition position = (KafkaPosition) streamingSource.getSourcePositionHandler().parsePosition(startProtocol.getStartPosition());
@@ -281,5 +283,47 @@ public class KafkaSource implements IStreamingSource {
 
     public static String getParserClassName(String parser) {
         return parser;
+    }
+
+    private ISourcePosition getLatestPosition(String cubeName) {
+        KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
+        CubeInstance cube = CubeManager.getInstance(kylinConf).getCube(cubeName);
+        String streamingTableName = cube.getRootFactTable();
+        StreamingSourceConfig streamingSourceConfig = StreamingSourceConfigManager.getInstance(kylinConf)
+                .getConfig(streamingTableName);
+        String topicName = getTopicName(streamingSourceConfig.getProperties());
+        ISourcePosition sourcePosition = new KafkaPosition();
+        Map<String, Object> conf = getKafkaConf(streamingSourceConfig.getProperties(), cube.getConfig());
+        try (KafkaConsumer consumer = new KafkaConsumer<>(conf);) {
+            Set<TopicPartition> partitions = Sets.newHashSet(FluentIterable.from(consumer.partitionsFor(topicName))
+                    .transform(new Function<PartitionInfo, TopicPartition>() {
+                        @Override
+                        public TopicPartition apply(PartitionInfo input) {
+                            return new TopicPartition(input.topic(), input.partition());
+                        }
+                    }));
+            Map<TopicPartition, Long> lastestEventOffset = consumer.endOffsets(partitions);
+            for (Map.Entry<TopicPartition, Long> entry : lastestEventOffset.entrySet()) {
+                KafkaPosition.KafkaPartitionPosition partitionPosition = new KafkaPosition.KafkaPartitionPosition(
+                        entry.getKey().partition(), entry.getValue());
+                sourcePosition.update(partitionPosition);
+            }
+        }
+        return sourcePosition;
+    }
+
+    public Map<Integer, Long> calConsumeLag(String cubeName, ISourcePosition currentPosition) {
+        ISourcePosition latestPosition = getLatestPosition(cubeName);
+        Map<Integer, Long> consumeLag = Maps.newHashMap();
+        for (ISourcePosition.IPartitionPosition partitionPosition : currentPosition.getPartitionPositions().values()) {
+            long current = ((KafkaPosition.KafkaPartitionPosition) partitionPosition).offset;
+            ISourcePosition.IPartitionPosition latestPartition = latestPosition.getPartitionPositions()
+                    .get(partitionPosition.getPartition());
+            if (latestPartition != null) {
+                long diff = ((KafkaPosition.KafkaPartitionPosition) latestPartition).offset - current;
+                consumeLag.put(partitionPosition.getPartition(), diff);
+            }
+        }
+        return consumeLag;
     }
 }
