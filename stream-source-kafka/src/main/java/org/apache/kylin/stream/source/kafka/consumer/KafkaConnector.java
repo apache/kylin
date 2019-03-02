@@ -20,7 +20,6 @@ package org.apache.kylin.stream.source.kafka.consumer;
 
 import java.util.List;
 import java.util.Map;
-
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -29,7 +28,9 @@ import org.apache.kylin.stream.core.consumer.ConsumerStartMode;
 import org.apache.kylin.stream.core.consumer.IStreamingConnector;
 import org.apache.kylin.stream.core.model.StreamingMessage;
 import org.apache.kylin.stream.core.source.IStreamingMessageParser;
+import org.apache.kylin.stream.core.source.IStreamingSource;
 import org.apache.kylin.stream.core.source.Partition;
+import org.apache.kylin.stream.source.kafka.KafkaSource;
 
 import com.google.common.collect.Lists;
 
@@ -43,10 +44,13 @@ public class KafkaConnector implements IStreamingConnector {
     private List<Partition> partitions;
     private Map<Integer, Long> partitionOffsets;
 
-    public KafkaConnector(Map<String, Object> conf, String topic, IStreamingMessageParser parser) {
+    private KafkaSource kafkaSource;
+
+    public KafkaConnector(Map<String, Object> conf, String topic, IStreamingMessageParser parser, KafkaSource kafkaSource) {
         this.kafkaConsumer = new KafkaConsumer<>(conf);
         this.topic = topic;
         this.parser = parser;
+        this.kafkaSource = kafkaSource;
     }
 
     public void setStartPartition(List<Partition> partitions, ConsumerStartMode startMode,
@@ -115,4 +119,7 @@ public class KafkaConnector implements IStreamingConnector {
         this.buffer = newBuffer;
     }
 
+    public IStreamingSource getSource() {
+        return kafkaSource;
+    }
 }

@@ -33,6 +33,8 @@ public class PartitionConsumeStats {
     private double fifteenMinRate;
     @JsonProperty("total_consume")
     private long totalConsume;
+    @JsonProperty("consume_lag")
+    private long consumeLag;
 
     public double getAvgRate() {
         return avgRate;
@@ -72,5 +74,13 @@ public class PartitionConsumeStats {
 
     public void setTotalConsume(long totalConsume) {
         this.totalConsume = totalConsume;
+    }
+
+    public long getConsumeLag() {
+        return consumeLag;
+    }
+
+    public void setConsumeLag(long consumeLag) {
+        this.consumeLag = consumeLag;
     }
 }
