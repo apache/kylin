@@ -44,6 +44,9 @@ public class ConsumerStats {
     @JsonProperty("consume_offset_info")
     private String consumeOffsetInfo;
 
+    @JsonProperty("consume_lag")
+    private long consumeLag;
+
     public Map<Integer, PartitionConsumeStats> getPartitionConsumeStatsMap() {
         return partitionConsumeStatsMap;
     }
@@ -90,5 +93,13 @@ public class ConsumerStats {
 
     public void setStopped(boolean stopped) {
         this.stopped = stopped;
+    }
+
+    public long getConsumeLag() {
+        return consumeLag;
+    }
+
+    public void setConsumeLag(long consumeLag) {
+        this.consumeLag = consumeLag;
     }
 }

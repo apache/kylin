@@ -507,8 +507,12 @@ public class StreamingSegmentManager implements Closeable {
         }
     }
 
-    public String getConsumePosition() {
+    public String getConsumePositionStr() {
         return sourcePositionHandler.serializePosition(consumePosition);
+    }
+
+    public ISourcePosition getConsumePosition() {
+        return consumePosition;
     }
 
     public long getIngestCount() {

@@ -19,6 +19,7 @@
 package org.apache.kylin.stream.core.source;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
 import org.apache.kylin.stream.core.consumer.IStreamingConnector;
@@ -53,4 +54,8 @@ public interface IStreamingSource {
 
     ISourcePositionHandler getSourcePositionHandler();
 
+    /**
+     * Calculate the lag from latest offset to current offset
+     */
+    Map<Integer, Long> calConsumeLag(String cubeName, ISourcePosition currentPosition);
 }

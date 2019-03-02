@@ -21,6 +21,7 @@ package org.apache.kylin.stream.core.consumer;
 import java.util.List;
 
 import org.apache.kylin.stream.core.model.StreamingMessage;
+import org.apache.kylin.stream.core.source.IStreamingSource;
 import org.apache.kylin.stream.core.source.Partition;
 
 /**
@@ -43,4 +44,6 @@ public interface IStreamingConnector {
      * @return
      */
     StreamingMessage nextEvent();
+
+    IStreamingSource getSource();
 }
