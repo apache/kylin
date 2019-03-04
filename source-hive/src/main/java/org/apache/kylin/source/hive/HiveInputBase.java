@@ -44,6 +44,7 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -84,8 +85,13 @@ public class HiveInputBase {
 
             // then count and redistribute
             if (cubeConfig.isHiveRedistributeEnabled()) {
-                jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc,
-                        cubeInstance.getDescriptor()));
+                final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+                //jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc, cubeInstance.getDescriptor()));
+                if (kylinConfig.enableLivy() && cubeInstance.getEngineType() == IEngineAware.ID_SPARK) {
+                    jobFlow.addTask(createRedistributeFlatHiveTableByLivyStep(hiveInitStatements, cubeName, flatDesc, cubeInstance.getDescriptor()));
+                } else {
+                    jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc, cubeInstance.getDescriptor()));
+                }
             }
 
             // special for hive
@@ -97,7 +103,15 @@ public class HiveInputBase {
             final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
             final String jobWorkingDir = getJobWorkingDir(jobFlow, hdfsWorkingDir);
 
-            jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
+            final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
+
+            if (kylinConfig.enableLivy() && cubeInstance.getEngineType() == IEngineAware.ID_SPARK) {
+                jobFlow.addTask(createFlatHiveTableByLivyStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
+            } else {
+                jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
+            }
+            //jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
         }
 
         protected void addStepPhase1_DoMaterializeLookupTable(DefaultChainedExecutable jobFlow) {
@@ -152,9 +166,35 @@ public class HiveInputBase {
         return step;
     }
 
+    protected static AbstractExecutable createFlatHiveTableByLivyStep(String hiveInitStatements, String jobWorkingDir,
+                                                                      String cubeName, IJoinedFlatTableDesc flatDesc) {
+        //from hive to hive
+        final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
+        final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, jobWorkingDir);
+        String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatDesc);
+
+        CreateFlatHiveTableByLivyStep step = new CreateFlatHiveTableByLivyStep();
+        step.setInitStatement(hiveInitStatements);
+        step.setCreateTableStatement(dropTableHql + createTableHql + insertDataHqls);
+        CubingExecutableUtil.setCubeName(cubeName, step.getParams());
+        step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
+        return step;
+    }
+
     protected static AbstractExecutable createRedistributeFlatHiveTableStep(String hiveInitStatements, String cubeName,
             IJoinedFlatTableDesc flatDesc, CubeDesc cubeDesc) {
         RedistributeFlatHiveTableStep step = new RedistributeFlatHiveTableStep();
+        step.setInitStatement(hiveInitStatements);
+        step.setIntermediateTable(flatDesc.getTableName());
+        step.setRedistributeDataStatement(JoinedFlatTable.generateRedistributeFlatTableStatement(flatDesc, cubeDesc));
+        CubingExecutableUtil.setCubeName(cubeName, step.getParams());
+        step.setName(ExecutableConstants.STEP_NAME_REDISTRIBUTE_FLAT_HIVE_TABLE);
+        return step;
+    }
+
+    protected static AbstractExecutable createRedistributeFlatHiveTableByLivyStep(String hiveInitStatements, String cubeName,
+                                                                                  IJoinedFlatTableDesc flatDesc, CubeDesc cubeDesc) {
+        RedistributeFlatHiveTableByLivyStep step = new RedistributeFlatHiveTableByLivyStep();
         step.setInitStatement(hiveInitStatements);
         step.setIntermediateTable(flatDesc.getTableName());
         step.setRedistributeDataStatement(JoinedFlatTable.generateRedistributeFlatTableStatement(flatDesc, cubeDesc));
