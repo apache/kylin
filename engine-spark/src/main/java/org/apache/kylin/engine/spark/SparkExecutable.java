@@ -45,6 +45,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
+import org.apache.kylin.engine.spark.exception.SparkException;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -339,9 +340,10 @@ public class SparkExecutable extends AbstractExecutable {
                 extra = mgr.getOutput(getId()).getExtra();
                 extra.put(ExecutableConstants.SPARK_JOB_ID, "");
                 getManager().addJobInfo(getId(), extra);
-                return new ExecuteResult(ExecuteResult.State.ERROR, result != null ? result.getSecond() : "");
+
+                return ExecuteResult.createFailed(new SparkException(result != null ? result.getSecond() : ""));
             } catch (Exception e) {
-                logger.error("error run spark job:", e);
+                logger.error("Error run spark job:", e);
                 return ExecuteResult.createError(e);
             }
         }
