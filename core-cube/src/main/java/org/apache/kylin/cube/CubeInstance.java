@@ -534,7 +534,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         if (result.capable) {
             result.cost = getCost(digest);
             for (CapabilityInfluence i : result.influences) {
-                result.cost *= (i.suggestCostMultiplier() == 0) ? 1.0 : i.suggestCostMultiplier();
+                double suggestCost = i.suggestCostMultiplier();
+                result.cost *= (suggestCost == 0) ? 1.0 : suggestCost;
             }
         } else {
             result.cost = -1;

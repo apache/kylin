@@ -17,6 +17,8 @@
  */
 package org.apache.kylin.measure.topn;
 
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -41,7 +43,7 @@ public class DoubleDeltaSerializer implements java.io.Serializable {
     final private int precision;
     final private int multiplier;
 
-    transient ThreadLocal<long[]> deltasThreadLocal;
+    transient InternalThreadLocal<long[]> deltasThreadLocal;
 
     public DoubleDeltaSerializer() {
         this(2);
@@ -112,7 +114,7 @@ public class DoubleDeltaSerializer implements java.io.Serializable {
         len = Math.max(0, len);
 
         if (deltasThreadLocal == null) {
-            deltasThreadLocal = new ThreadLocal<>();
+            deltasThreadLocal = new InternalThreadLocal<>();
         }
 
         long[] deltas = deltasThreadLocal.get();

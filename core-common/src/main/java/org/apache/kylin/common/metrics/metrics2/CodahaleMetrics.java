@@ -39,6 +39,7 @@ import org.apache.kylin.common.metrics.common.Metrics;
 import org.apache.kylin.common.metrics.common.MetricsConstant;
 import org.apache.kylin.common.metrics.common.MetricsScope;
 import org.apache.kylin.common.metrics.common.MetricsVariable;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +76,7 @@ public class CodahaleMetrics implements Metrics {
     private final Lock metersLock = new ReentrantLock();
     private final Lock histogramLock = new ReentrantLock();
     private final Set<Closeable> reporters = new HashSet<Closeable>();
-    private final ThreadLocal<HashMap<String, CodahaleMetricsScope>> threadLocalScopes = new ThreadLocal<HashMap<String, CodahaleMetricsScope>>() {
+    private final InternalThreadLocal<HashMap<String, CodahaleMetricsScope>> threadLocalScopes = new InternalThreadLocal<HashMap<String, CodahaleMetricsScope>>() {
         @Override
         protected HashMap<String, CodahaleMetricsScope> initialValue() {
             return new HashMap<String, CodahaleMetricsScope>();

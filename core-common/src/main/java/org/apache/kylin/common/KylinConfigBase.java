@@ -362,6 +362,18 @@ public abstract class KylinConfigBase implements Serializable {
         throw new RuntimeException("Please set 'kylin.env.zookeeper-connect-string' in kylin.properties");
     }
 
+    public int getZKBaseSleepTimeMs() {
+        return Integer.parseInt(getOptional("kylin.env.zookeeper-base-sleep-time", "3000"));
+    }
+
+    public int getZKMaxRetries() {
+        return Integer.parseInt(getOptional("kylin.env.zookeeper-max-retries", "3"));
+    }
+
+    public int getZKMonitorInterval() {
+        return Integer.parseInt(getOptional("kylin.job.zookeeper-monitor-interval", "30"));
+    }
+
     public boolean isZookeeperAclEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.env.zookeeper-acl-enabled", FALSE));
     }
@@ -1360,7 +1372,31 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isSparkSanityCheckEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark.sanity-check-enabled", FALSE));
     }
+    
+    // ============================================================================
+    // ENGINE.LIVY
+    // ============================================================================
 
+    public boolean enableLivy() {
+        return getOptional("kylin.engine.livy-conf.livy.enable", "false").equalsIgnoreCase("true") ? true : false;
+    }
+
+    public String getLivyUrl() {
+        return getOptional("kylin.engine.livy-conf.livy.url");
+    }
+
+    public Map<String, String> getLivyKey() {
+        return getPropertiesByPrefix("kylin.engine.livy-conf.livy-key.");
+    }
+
+    public Map<String, String> getLivyArr() {
+        return getPropertiesByPrefix("kylin.engine.livy-conf.livy-arr.");
+    }
+
+    public Map<String, String> getLivyMap() {
+        return getPropertiesByPrefix("kylin.engine.livy-conf.livy-map.");
+    }
+    
     // ============================================================================
     // QUERY
     // ============================================================================
@@ -1692,6 +1728,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public String[] getRestServers() {
         return getOptionalStringArray("kylin.server.cluster-servers", new String[0]);
+    }
+
+    public String getServerRestAddress() {
+        return getOptional("kylin.server.host-address", "localhost:7070");
     }
 
     public String getClusterName() {

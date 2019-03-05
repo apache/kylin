@@ -18,11 +18,13 @@
 
 package org.apache.kylin.rest.msg;
 
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
+
 /**
  * Created by luwei on 17-4-12.
  */
 public class MsgPicker {
-    private static ThreadLocal<Message> msg = new ThreadLocal<Message>();
+    private static InternalThreadLocal<Message> msg = new InternalThreadLocal<Message>();
 
     public static void setMsg(String lang) {
         if ("cn".equals(lang))

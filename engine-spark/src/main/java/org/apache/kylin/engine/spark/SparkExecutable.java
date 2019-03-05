@@ -45,6 +45,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
+import org.apache.kylin.engine.spark.exception.SparkException;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -339,15 +340,16 @@ public class SparkExecutable extends AbstractExecutable {
                 extra = mgr.getOutput(getId()).getExtra();
                 extra.put(ExecutableConstants.SPARK_JOB_ID, "");
                 getManager().addJobInfo(getId(), extra);
-                return new ExecuteResult(ExecuteResult.State.ERROR, result != null ? result.getSecond() : "");
+
+                return ExecuteResult.createFailed(new SparkException(result != null ? result.getSecond() : ""));
             } catch (Exception e) {
-                logger.error("error run spark job:", e);
+                logger.error("Error run spark job:", e);
                 return ExecuteResult.createError(e);
             }
         }
     }
 
-    private void dumpMetadata(CubeSegment segment, List<CubeSegment> mergingSeg) throws ExecuteException {
+    protected void dumpMetadata(CubeSegment segment, List<CubeSegment> mergingSeg) throws ExecuteException {
         try {
             if (mergingSeg == null || mergingSeg.size() == 0) {
                 attachSegmentMetadataWithDict(segment);
@@ -363,7 +365,7 @@ public class SparkExecutable extends AbstractExecutable {
     }
 
     // Spark Cubing can only work in layer algorithm
-    private void setAlgorithmLayer() {
+    protected void setAlgorithmLayer() {
         ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubingJob cubingJob = (CubingJob) execMgr.getJob(this.getParam(JOB_ID));
         cubingJob.setAlgorithm(CubingJob.AlgorithmEnum.LAYER);
@@ -441,7 +443,7 @@ public class SparkExecutable extends AbstractExecutable {
                 this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
     }
 
-    private void readCounters(final Map<String, String> info) {
+    protected void readCounters(final Map<String, String> info) {
         String counter_save_as = getCounterSaveAs();
         if (counter_save_as != null) {
             String[] saveAsNames = counter_save_as.split(",");

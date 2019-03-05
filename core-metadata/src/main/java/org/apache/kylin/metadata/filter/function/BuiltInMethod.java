@@ -28,13 +28,14 @@ import java.util.Map;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
 import com.google.common.collect.ImmutableMap;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 
 public enum BuiltInMethod {
     UPPER(BuiltInMethod.class, "upper", String.class), LOWER(BuiltInMethod.class, "lower", String.class), SUBSTRING(BuiltInMethod.class, "substring", String.class, int.class, int.class), CHAR_LENGTH(BuiltInMethod.class, "charLength", String.class), LIKE(BuiltInMethod.class, "like", String.class, String.class), INITCAP(BuiltInMethod.class, "initcap", String.class), CONCAT(BuiltInMethod.class, "concat", String.class, String.class);
     public final Method method;
     public static final ImmutableMap<String, BuiltInMethod> MAP;
 
-    private static ThreadLocal<Map<String, LikeMatcher>> likePatterns = new ThreadLocal<Map<String, LikeMatcher>>() {
+    private static InternalThreadLocal<Map<String, LikeMatcher>> likePatterns = new InternalThreadLocal<Map<String, LikeMatcher>>() {
         @Override
         public Map<String, LikeMatcher> initialValue() {
             return new HashMap<>();
