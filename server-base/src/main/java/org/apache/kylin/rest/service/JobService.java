@@ -485,6 +485,9 @@ public class JobService extends BasicService implements InitializingBean {
         result.setLastModified(cubeJob.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
+        result.setExecStartTime(cubeJob.getStartTime());
+        result.setExecEndTime(cubeJob.getEndTime());
+        result.setExecInterruptTime(cubeJob.getInterruptTime());
         result.setType(CubeBuildTypeEnum.BUILD);
         result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
         result.setMrWaiting(cubeJob.getMapReduceWaitTime() / 1000);
@@ -509,6 +512,9 @@ public class JobService extends BasicService implements InitializingBean {
         result.setLastModified(job.getLastModified());
         result.setSubmitter(job.getSubmitter());
         result.setUuid(job.getId());
+        result.setExecStartTime(job.getStartTime());
+        result.setExecEndTime(job.getEndTime());
+        result.setExecInterruptTime(job.getInterruptTime());
         result.setType(CubeBuildTypeEnum.BUILD);
         result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
         result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
@@ -539,6 +545,9 @@ public class JobService extends BasicService implements InitializingBean {
         result.setLastModified(job.getLastModified());
         result.setSubmitter(job.getSubmitter());
         result.setUuid(job.getId());
+        result.setExecStartTime(job.getStartTime());
+        result.setExecEndTime(job.getEndTime());
+        result.setExecInterruptTime(job.getInterruptTime());
         result.setType(CubeBuildTypeEnum.CHECKPOINT);
         result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
         result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
