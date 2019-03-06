@@ -31,10 +31,12 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   };
 
   this.getProperty = function (name) {
-    if(angular.isUndefined(_config)){
+    if(angular.isUndefined(name)
+        || name.length === 0
+        || angular.isUndefined(_config)){
       return '';
     }
-    var keyIndex = _config.indexOf('\n' + name + '=');
+    var keyIndex = _config.indexOf(name + '=');
     var keyLength = name.length;
     var partialResult = _config.substr(keyIndex);
     var preValueIndex = partialResult.indexOf("=");
