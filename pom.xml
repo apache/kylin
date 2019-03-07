@@ -303,6 +303,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-engine-flink</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-source-hive</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -1365,6 +1370,7 @@
     <module>stream-coordinator</module>
     <module>stream-core</module>
     <module>stream-source-kafka</module>
+    <module>engine-flink</module>
   </modules>
 
   <reporting>
