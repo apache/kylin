@@ -277,6 +277,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.kylin</groupId>
+        <artifactId>kylin-engine-flink</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin-source-hive</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -1306,6 +1311,7 @@
     <module>metrics-reporter-kafka</module>
     <module>cache</module>
     <module>datasource-sdk</module>
+    <module>engine-flink</module>
   </modules>
 
   <reporting>
