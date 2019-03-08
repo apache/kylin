@@ -103,130 +103,139 @@ title: 首页
         <h4 class="index-title" style="margin-top:50px;"><span>谁在使用 Kylin？</span></h4>
         <div class="row" style="margin-top:30px;">
             <!-- 1 -->
-            <a href="https://www.gome.com.cn/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/gome.png">
+            <a class="sponsor" href="http://www.ebay.com/"> 
+                <img src="/images/logo/ebay.png">
             </a>
-            <a href="https://www.toutiao.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/toutiao.png">
+            <a class="sponsor" href="https://www.cisco.com/"> 
+                <img src="/images/logo/cisco.png">
             </a>
-            <a href="http://map.baidu.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/baidu.png">
+            <a class="sponsor" href="https://about.yahoo.co.jp/info/en/"> 
+                <img src="/images/logo/yahoo.png">
             </a>
-            <a href="http://www.jd.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/jd.png">
+            <a class="sponsor" href="https://www.samsung.com/cn/"> 
+                <img src="/images/logo/samsung.png">
             </a>
-            <a href="https://about.yahoo.co.jp/info/en/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/yahoo.png">
+            <a class="sponsor" href="http://map.baidu.com/"> 
+                <img src="/images/logo/baidu.png">
             </a>
             <!-- 2 -->
-            <a href="http://www.4399.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/4399.png">
+            <a class="sponsor" href="https://www.gome.com.cn/"> 
+                <img src="/images/logo/gome.png">
             </a>
-            <a href="http://www.didiglobal.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/didi.png">
+            <a class="sponsor" href="https://www.jpmorgan.com/"> 
+                <img src="/images/logo/jpmorgan.png">
             </a>
-            <a href="http://www.uc.cn/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/uc.png">
-            </a>
-            <a href="https://www.cisco.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/cisco.png">
-            </a>
-            <a href="https://www.infoworks.io/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/infoworks.png">
-            </a>
-            <!-- 3 -->
-            <a href="http://life.pingan.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/pingan.png">
-            </a>
-            <a href="http://www.iqiyi.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/iqiyi.png">
-            </a>
-            <a href="http://www.mininglamp.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/mininglamp.png">
-            </a>
-            <a href="http://www.vip.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/vipcom.png">
-            </a>
-            <a href="http://www.163.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/netease.png">
-            </a>
-            <!-- 4 -->
-            <a href="http://www.stratebi.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/stratebi.png">
-            </a>
-            <a href="https://www.qunar.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/qunar.png">
-            </a>
-            <a href="http://www.ebay.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/ebay.png">
-            </a>
-            <a href="https://www.58.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/58.png">
-            </a>
-            <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/leeco.png">
-            <!-- 5 -->
-            <a href="https://www.samsung.com/cn/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/samsung.png">
-            </a>
-            <a href="https://gameforge.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/gameforge.png">
-            </a>
-            <a href="http://www.300.cn/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/growforce.png">
-            </a>
-            <a href="http://www.wanda.cn/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/wanda.png">
-            </a>
-            <a href="http://www.dream-it.cn/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/dreamsoft.png">
-            </a>
-            <!-- 6 -->
-            <a href="http://www.iflytek.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/iflytek.png">
-            </a>
-            <a href="https://cn.danale.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/danale.png">
-            </a>
-            <a href="http://www.meituan.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/meituan.png">
-            </a>
-            <a href="https://www.envision-group.com/cn/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/envision.png">
-            </a>
-            <a href="https://www.meizu.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/meizu.png">
-            </a>
-            <!-- 7 -->
-            <a href="https://www.sohu.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/soho.png">
-            </a>
-            <a href="https://www.jpmorgan.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/jpmorgan.png">
-            </a>
-            <a href="https://www.glispa.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/glispa.png">
-            </a>
-            <a href="http://www.exponential.com/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/exponential.png">
-            </a>
-            <a href="http://www.zte.com.cn/"> 
-                <img style="width: 200px;height: 80px;margin-bottom: 10px" src="/images/logo/zte.png">
-            </a>
-            <!-- 8 -->
-            <a href="https://www.trinitymobility.com/"> 
-                <img style="width: 200px;height: 80px" src="/images/logo/trinity.png">
-            </a>
-            <a href="https://www.hobsons.com/"> 
-                <img style="width: 200px;height: 80px" src="/images/logo/hobsons.png">
-            </a>
-            <a href="https://strikingly.com/"> 
+            <a class="sponsor" href="https://strikingly.com/"> 
                 <img style="width: 200px;height: 80px" src="/images/logo/strikingly.png">
             </a>
-            <a href="http://www.ctrip.com/"> 
+            <a class="sponsor" href="https://cn.danale.com/"> 
+                <img src="/images/logo/danale.png">
+            </a>
+            <a class="sponsor" href="https://www.58.com/"> 
+                <img src="/images/logo/58.png">
+            </a>
+            <!-- 3 -->
+            <a class="sponsor" href="http://www.jd.com/"> 
+                <img src="/images/logo/jd.png">
+            </a>
+            <a class="sponsor" href="http://www.4399.com/"> 
+                <img src="/images/logo/4399.png">
+            </a>
+            <a class="sponsor" href="http://www.exponential.com/"> 
+                <img src="/images/logo/exponential.png">
+            </a>
+            <a class="sponsor" href="http://www.ctrip.com/"> 
                 <img style="width: 200px;height: 80px" src="/images/logo/ctrip.png">
             </a>
-            <a href="https://www.ele.me/home/"> 
-                <img style="width: 200px;height: 80px" src="/images/logo/ele.png">
+            <a class="sponsor" href="http://www.didiglobal.com/"> 
+                <img src="/images/logo/didi.png">
+            </a>
+            <!-- 4 -->
+            <a class="sponsor" href="http://www.dream-it.cn/"> 
+                <img src="/images/logo/dreamsoft.png">
+            </a>
+            <a class="sponsor" href="http://www.meituan.com/"> 
+                <img src="/images/logo/meituan.png">
+            </a>
+            <a class="sponsor" href="https://www.envision-group.com/cn/"> 
+                <img src="/images/logo/envision.png">
+            </a>
+            <a class="sponsor" href="https://gameforge.com/"> 
+                <img src="/images/logo/gameforge.png">
+            </a>
+            <a class="sponsor" href="https://www.glispa.com/"> 
+                <img src="/images/logo/glispa.jpg">
+            </a>
+            <!-- 5 -->
+            <a class="sponsor" href="https://www.sohu.com/"> 
+                <img src="/images/logo/soho.png">
+            </a>
+            <a class="sponsor" href="http://www.300.cn/"> 
+                <img src="/images/logo/growforce.png">
+            </a>
+            <a class="sponsor" href="https://www.hobsons.com/"> 
+                <img style="width: 200px;height: 80px" src="/images/logo/hobsons.png">
+            </a>
+            <a class="sponsor" href="http://www.iflytek.com/"> 
+                <img src="/images/logo/iflytek.png">
+            </a>
+            <a class="sponsor" href="http://www.iqiyi.com/"> 
+                <img src="/images/logo/iqiyi.png">
+            </a>
+            <!-- 6 -->
+            <a class="sponsor" href="javascript:void(0);">
+                <img src="/images/logo/leeco.png">
+            </a>
+            <a class="sponsor" href="https://www.meizu.com/"> 
+                <img src="/images/logo/meizu.png">
+            </a>
+            <a class="sponsor" href="http://life.pingan.com/"> 
+                <img src="/images/logo/pingan.png">
+            </a>
+            <a class="sponsor" href="https://www.qunar.com/"> 
+                <img src="/images/logo/qunar.png">
+            </a>
+            <a class="sponsor" href="http://www.stratebi.com/"> 
+                <img src="/images/logo/stratebi.png">
+            </a>
+            <!-- 7 -->
+            <a class="sponsor" href="https://www.toutiao.com/"> 
+                <img src="/images/logo/toutiao.png">
+            </a>
+            <a class="sponsor" href="https://www.trinitymobility.com/"> 
+                <img style="width: 200px;height: 80px" src="/images/logo/trinity.png">
+            </a>
+            <a class="sponsor" href="http://www.uc.cn/"> 
+                <img src="/images/logo/uc.png">
+            </a>
+            <a class="sponsor" href="http://www.vip.com/"> 
+                <img src="/images/logo/vipcom.png">
+            </a>
+            <a class="sponsor" href="http://www.wanda.cn/"> 
+                <img src="/images/logo/wanda.png">
+            </a>
+            <!-- 8 -->
+            <a class="sponsor" href="http://www.zte.com.cn/"> 
+                <img src="/images/logo/zte.png">
+            </a>             
+            <a class="sponsor" href="https://www.infoworks.io/"> 
+                <img src="/images/logo/infoworks.png">
+            </a>
+            <a class="sponsor" href="https://www.expedia.com/"> 
+                <img src="/images/logo/expedia.jpg">
+            </a>             
+            <a class="sponsor" href="https://www.telecoming.com/"> 
+                <img src="/images/logo/telecoming.jpg">
+            </a>
+            <a class="sponsor" href="http://www.163.com/"> 
+                <img src="/images/logo/netease.png">
+            </a>
+            <!-- 9 -->
+            <a class="sponsor" href="http://www.mininglamp.com/"> 
+                <img style="width: 200px;height: 80px;margin-bottom: 10px;text-align: left;" src="/images/logo/mininglamp.png">
+            </a>
+            <a class="sponsor" href="https://www.ele.me/home/"> 
+                <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/ele.png">
             </a>
         </div>
         <!-- /container --> 
