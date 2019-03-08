@@ -10,7 +10,7 @@ permalink: /docs/install/index.html
 * Hadoop: 2.7+, 3.1+ (since v2.5)
 * Hive: 0.13 - 1.2.1+
 * HBase: 1.1+, 2.0 (since v2.5)
-* Spark (optional) 2.1.1+
+* Spark (optional) 2.3.0+
 * Kafka (optional) 1.0.0+ (since v2.5)
 * JDK: 1.8+ (since v2.5)
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
@@ -51,6 +51,18 @@ wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0
 tar -zxvf apache-kylin-2.5.0-bin-hbase1x.tar.gz
 cd apache-kylin-2.5.0-bin-hbase1x
 export KYLIN_HOME=`pwd`
+```
+
+From v2.6.1, Kylin will not ship Spark binary anymore; You need to install Spark seperately, and then point `SPARK_HOME` system environment variable to it: 
+
+```shell
+export SPARK_HOME=/path/to/spark
+```
+
+or run the script to download it:
+
+```shell
+$KYLIN_HOME/bin/download-spark.sh
 ```
 
 ### Kylin tarball structure

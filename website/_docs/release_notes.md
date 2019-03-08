@@ -15,6 +15,44 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v2.6.1 - 2019-03-08
+_Tag:_ [kylin-2.6.1](https://github.com/apache/kylin/tree/kylin-2.6.1)
+This is a bugfix release after 2.6.0, with 7 enhancements and 19 bug fixes.
+
+__Improvement__
+
+* [KYLIN-3780] - Add built instance in Job info and email notification
+* [KYLIN-3794] - mergeToInClause in TupleFilterVisitor cannot work properly in some edge cases
+* [KYLIN-3804] - Advanced Snapshot Table save not friendly
+* [KYLIN-3816] - Current CI doesn't cover the case of streaming table join lookup table
+* [KYLIN-3819] - kylin.sh run in the foreground
+* [KYLIN-3822] - "bin/kylin.sh org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI [file_path] [nOfThread] all" can not run successfully
+* [KYLIN-3826] - MergeCuboidJob only uploads necessary segment's dictionary
+
+__Bug Fix__
+
+* [KYLIN-3494] - Build cube with spark reports ArrayIndexOutOfBoundsException
+* [KYLIN-3537] - Use Spark to build Cube on Yarn faild at Setp8 on HDP3.0
+* [KYLIN-3703] - Get negative value when sum on an integer column
+* [KYLIN-3714] - com.esotericsoftware.kryo.KryoException: java.lang.IllegalArgumentException: Class is not registered: scala.reflect.ManifestFactory$$anon$2
+* [KYLIN-3727] - Can not build empty segment, HadoopShellException
+* [KYLIN-3770] - ZipFileUtils is not compatible CubeMetaIngester
+* [KYLIN-3772] - CubeMetaIngester works abnormally
+* [KYLIN-3773] - Using Mysql instead of Hive as Data Source fails with LinkageError
+* [KYLIN-3776] - Float type in MySQL not properly converted to HIVE Double Type
+* [KYLIN-3778] - Invalid data source for each project at project level
+* [KYLIN-3782] - ZookeeperDistributedLock can't acquir lock on windows because wrong Path
+* [KYLIN-3790] - Wrong error code when command executor is interrupted
+* [KYLIN-3793] - org.apache.kylin.source.kafka.util.KafkaSampleProducer exit after generating 1 message
+* [KYLIN-3798] - SQL Server cannot list databases
+* [KYLIN-3799] - Wrong hive-exec jar may be found by find-hive-dependency.sh on CDH
+* [KYLIN-3801] - find-hive-dependency.sh fail to grep env:CLASSPATH from beeline output
+* [KYLIN-3815] - Unexpected behavior when joinning streaming table and hive table
+* [KYLIN-3828] - ArrayIndexOutOfBoundsException thrown when build a streaming cube with empty data in its first dimension
+* [KYLIN-3833] - Potential OOM in Spark Extract Fact Table Distinct Columns step
+* [KYLIN-3836] - Kylin StringUtil.join() may cause NPE if iterator is empty
+
+
 ## v2.6.0 - 2019-01-12
 _Tag:_ [kylin-2.6.0](https://github.com/apache/kylin/tree/kylin-2.6.0)
 This is a major release after 2.5, with more than 90 bug fixes and enhancements.

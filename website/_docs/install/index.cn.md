@@ -10,7 +10,7 @@ permalink: /cn/docs/install/index.html
 * Hadoop: 2.7+, 3.1+ (since v2.5)
 * Hive: 0.13 - 1.2.1+
 * HBase: 1.1+, 2.0 (since v2.5)
-* Spark (可选) 2.1.1+
+* Spark (可选) 2.3.0+
 * Kafka (可选) 1.0.0+ (since v2.5)
 * JDK: 1.8+ (since v2.5)
 * OS: Linux only, CentOS 6.5+ or Ubuntu 16.0.4+
@@ -49,6 +49,18 @@ wget http://mirror.bit.edu.cn/apache/kylin/apache-kylin-2.5.0/apache-kylin-2.5.0
 tar -zxvf apache-kylin-2.5.0-bin-hbase1x.tar.gz
 cd apache-kylin-2.5.0-bin-hbase1x
 export KYLIN_HOME=`pwd`
+```
+
+从 v2.6.1 开始， Kylin 不再包含 Spark 二进制包; 您需要另外下载 Spark，然后设置 `SPARK_HOME` 系统变量到 Spark 安装目录： 
+
+```shell
+export SPARK_HOME=/path/to/spark
+```
+
+或者使用脚本下载:
+
+```shell
+$KYLIN_HOME/bin/download-spark.sh
 ```
 
 ### Kylin tarball 目录
