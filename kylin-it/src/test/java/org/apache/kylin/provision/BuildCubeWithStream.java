@@ -36,15 +36,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kafka.common.requests.MetadataResponse;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.common.util.ZKUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -56,6 +54,7 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.apache.kylin.job.streaming.Kafka10DataLoader;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -68,8 +67,6 @@ import org.apache.kylin.source.SourcePartition;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
-import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
-import org.apache.kylin.storage.hbase.util.ZookeeperUtil;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,7 +136,7 @@ public class BuildCubeWithStream {
 
     private void startEmbeddedKafka(String topicName, BrokerConfig brokerConfig) {
         //Start mock Kakfa
-        String zkConnectionStr = ZookeeperUtil.getZKConnectString() + kafkaZkPath;
+        String zkConnectionStr = ZKUtil.getZKConnectString(KylinConfig.getInstanceFromEnv()) + kafkaZkPath;
         System.out.println("zkConnectionStr" + zkConnectionStr);
         zkConnection = new ZkConnection(zkConnectionStr);
         // Assert.assertEquals(ZooKeeper.States.CONNECTED, zkConnection.getZookeeperState());
@@ -333,9 +330,7 @@ public class BuildCubeWithStream {
     }
 
     private void cleanKafkaZkPath(String path) {
-        RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        CuratorFramework zkClient = CuratorFrameworkFactory.newClient(ZookeeperUtil.getZKConnectString(), retryPolicy);
-        zkClient.start();
+        CuratorFramework zkClient = ZKUtil.newZookeeperClient();
 
         try {
             zkClient.delete().deletingChildrenIfNeeded().forPath(kafkaZkPath);

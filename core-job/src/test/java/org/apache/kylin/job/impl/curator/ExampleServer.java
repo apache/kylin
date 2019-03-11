@@ -18,13 +18,15 @@
 
 package org.apache.kylin.job.impl.curator;
 
+import java.io.Closeable;
+import java.io.IOException;
+
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ZKUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.lock.MockJobLock;
-
-import java.io.Closeable;
-import java.io.IOException;
 
 /**
  */
@@ -40,7 +42,8 @@ public class ExampleServer implements Closeable {
         KylinConfig kylinConfig1 = KylinConfig.createKylinConfig(kylinConfig);
         kylinConfig1.setProperty("kylin.server.host-address", address);
 
-        scheduler = new CuratorScheduler();
+        CuratorFramework client = ZKUtil.newZookeeperClient(kylinConfig1);
+        scheduler = new CuratorScheduler(client);
         scheduler.init(new JobEngineConfig(kylinConfig1), new MockJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");

@@ -52,7 +52,7 @@ public class CuratorLeaderSelectorTest extends LocalFileMetadataTestCase {
         final String zkString = zkTestServer.getConnectString();
         final String server1 = "server1:1111";
         final String server2 = "server2:2222";
-        String jobEnginePath = CuratorScheduler.getJobEnginePath(CuratorScheduler.slickMetadataPrefix(kylinConfig.getMetadataUrlPrefix()));
+        String jobEnginePath = CuratorScheduler.JOB_ENGINE_LEADER_PATH;
         CuratorFramework client = CuratorFrameworkFactory.newClient(zkString, new ExponentialBackoffRetry(3000, 3));
         client.start();
         CuratorLeaderSelector s1 = new CuratorLeaderSelector(client //

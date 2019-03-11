@@ -70,7 +70,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
-import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

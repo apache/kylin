@@ -17,18 +17,21 @@
  */
 package org.apache.kylin.job.impl.curator;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.test.TestingServer;
 import org.apache.curator.utils.CloseableUtils;
 import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.ZKUtil;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.junit.After;
 import org.junit.Assert;
@@ -37,10 +40,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -75,7 +76,6 @@ public class CuratorSchedulerTest extends LocalFileMetadataTestCase {
     public void test() throws Exception {
 
         final String zkString = zkTestServer.getConnectString();
-        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
         ServiceDiscovery<LinkedHashMap> serviceDiscovery = null;
         CuratorFramework curatorClient = null;
@@ -83,9 +83,8 @@ public class CuratorSchedulerTest extends LocalFileMetadataTestCase {
 
             final CuratorScheduler.JsonInstanceSerializer<LinkedHashMap> serializer = new CuratorScheduler.JsonInstanceSerializer<>(
                     LinkedHashMap.class);
-            String servicePath = CuratorScheduler.getServicePath(CuratorScheduler.slickMetadataPrefix(kylinConfig.getMetadataUrlPrefix()));
-            curatorClient = CuratorFrameworkFactory.newClient(zkString, new ExponentialBackoffRetry(3000, 3));
-            curatorClient.start();
+            String servicePath = CuratorScheduler.KYLIN_SERVICE_PATH;
+            curatorClient = ZKUtil.newZookeeperClient(zkString, new ExponentialBackoffRetry(3000, 3));
             serviceDiscovery = ServiceDiscoveryBuilder.builder(LinkedHashMap.class).client(curatorClient)
                     .basePath(servicePath).serializer(serializer).build();
             serviceDiscovery.start();
