@@ -22,12 +22,6 @@ You can verify the download by following these [procedures](https://www.apache.o
 
 Kylin JDBC Driver, `kylin-jdbc-<version>.jar`, is in the "lib" folder of the binary package.
 
-#### ODBC Driver
-
-* [Kylin ODBC Driver v2.1.0](http://kylin.apache.org/download/KylinODBCDriver-2.1.0.zip) (compatible with all Kylin versions)
-
-Please note, it requires [Microsoft Visual C++ 2012 Redistributable](http://www.microsoft.com/en-us/download/details.aspx?id=30679). 
-
 #### Previous Release
 
 Older releases can be found in [https://archive.apache.org/dist/kylin/](https://archive.apache.org/dist/kylin/).
