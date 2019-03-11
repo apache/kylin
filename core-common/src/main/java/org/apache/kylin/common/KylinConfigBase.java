@@ -1332,6 +1332,11 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.engine.mr.yarn-check-interval-seconds", "10"));
     }
 
+
+    public boolean isUseLocalClasspathEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.mr.use-local-classpath", TRUE));
+    }
+
     // ============================================================================
     // ENGINE.SPARK
     // ============================================================================
