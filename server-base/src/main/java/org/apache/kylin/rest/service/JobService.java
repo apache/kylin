@@ -76,7 +76,7 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.SourcePartition;
-import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -120,6 +120,12 @@ public class JobService extends BasicService implements InitializingBean {
         TimeZone.setDefault(tzone);
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+
+        // In case of that kylin.server.cluster-name is not set,
+        // this method have to be called first to avoid the influence of the change of kylin.metadata.url
+        String clusterName = kylinConfig.getClusterName();
+        logger.info("starting to initialize an instance in cluster {}", clusterName);
+
         final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory
                 .scheduler(kylinConfig.getSchedulerType());
 

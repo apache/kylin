@@ -40,7 +40,6 @@ import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.ZooKeeperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -351,15 +350,7 @@ public abstract class KylinConfigBase implements Serializable {
      * A comma separated list of host:port pairs, each corresponding to a ZooKeeper server
      */
     public String getZookeeperConnectString() {
-        String str = getOptional("kylin.env.zookeeper-connect-string");
-        if (str != null)
-            return str;
-
-        str = ZooKeeperUtil.getZKConnectStringFromHBase();
-        if (str != null)
-            return str;
-
-        throw new RuntimeException("Please set 'kylin.env.zookeeper-connect-string' in kylin.properties");
+        return getOptional("kylin.env.zookeeper-connect-string");
     }
 
     public int getZKBaseSleepTimeMs() {
@@ -466,7 +457,7 @@ public abstract class KylinConfigBase implements Serializable {
 
     public DistributedLockFactory getDistributedLockFactory() {
         String clsName = getOptional("kylin.metadata.distributed-lock-impl",
-                "org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock$Factory");
+                "org.apache.kylin.job.lock.zookeeper.ZookeeperDistributedLock$Factory");
         return (DistributedLockFactory) ClassUtil.newInstance(clsName);
     }
 
@@ -1735,7 +1726,10 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public String getClusterName() {
-        return this.getOptional("kylin.server.cluster-name", getMetadataUrlPrefix());
+        String key = "kylin.server.cluster-name";
+        String clusterName = this.getOptional(key, getMetadataUrlPrefix());
+        setProperty(key, clusterName);
+        return clusterName;
     }
 
     public String getInitTasks() {

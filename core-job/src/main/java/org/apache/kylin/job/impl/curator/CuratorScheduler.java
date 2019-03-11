@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,9 +31,7 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.x.discovery.ServiceCache;
 import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
@@ -44,6 +41,7 @@ import org.apache.curator.x.discovery.details.ServiceCacheListener;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.ServerMode;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.common.util.ZKUtil;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.SchedulerException;
@@ -55,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
@@ -69,20 +68,24 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
     private KylinConfig kylinConfig;
     private AtomicInteger count = new AtomicInteger();
 
-    static final String JOB_ENGINE_LEADER_PATH = "/kylin/%s/job_engine/leader";
-    static final String KYLIN_SERVICE_PATH = "/kylin/%s/service";
+    static final String JOB_ENGINE_LEADER_PATH = "/job_engine/leader";
+    static final String KYLIN_SERVICE_PATH = "/service";
     static final String SERVICE_NAME = "kylin";
     static final String SERVICE_PAYLOAD_DESCRIPTION = "description";
 
+    // the default constructor should exist for reflection initialization
     public CuratorScheduler() {
 
+    }
+
+    @VisibleForTesting
+    CuratorScheduler(CuratorFramework curatorClient) {
+        this.curatorClient = curatorClient;
     }
 
     @Override
     public void init(JobEngineConfig jobEngineConfig, JobLock jobLock) throws SchedulerException {
         kylinConfig = jobEngineConfig.getConfig();
-
-        String zkAddress = kylinConfig.getZookeeperConnectString();
 
         synchronized (this) {
             if (started) {
@@ -90,12 +93,11 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
                 return;
             }
 
-            int baseSleepTimeMs = kylinConfig.getZKBaseSleepTimeMs();
-            int maxRetries = kylinConfig.getZKMaxRetries();
-            curatorClient = CuratorFrameworkFactory.newClient(zkAddress,
-                    new ExponentialBackoffRetry(baseSleepTimeMs, maxRetries));
-            logger.info("New ZK Client start: ", zkAddress);
-            curatorClient.start();
+            // curatorClient can be assigned before only for test cases
+            // due to creating independent curator client rather than share a cached one to avoid influences
+            if (curatorClient == null) {
+                curatorClient = ZKUtil.getZookeeperClient(kylinConfig);
+            }
 
             final String restAddress = kylinConfig.getServerRestAddress();
             try {
@@ -104,7 +106,7 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
                 throw new SchedulerException(e);
             }
 
-            String jobEnginePath = getJobEnginePath(slickMetadataPrefix(kylinConfig.getMetadataUrlPrefix()));
+            String jobEnginePath = JOB_ENGINE_LEADER_PATH;
 
             if (ServerMode.isJob(jobEngineConfig.getConfig())) {
                 jobClient = new CuratorLeaderSelector(curatorClient, jobEnginePath, restAddress, jobEngineConfig);
@@ -127,7 +129,7 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
         final String port = restAddress.substring(restAddress.indexOf(":") + 1);
 
         final JsonInstanceSerializer<LinkedHashMap> serializer = new JsonInstanceSerializer<>(LinkedHashMap.class);
-        final String servicePath = getServicePath(slickMetadataPrefix(kylinConfig.getMetadataUrlPrefix()));
+        final String servicePath = KYLIN_SERVICE_PATH;
         serviceDiscovery = ServiceDiscoveryBuilder.builder(LinkedHashMap.class).client(curatorClient)
                 .basePath(servicePath).serializer(serializer).build();
         serviceDiscovery.start();
@@ -177,14 +179,6 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
             }
         }
         serviceDiscovery.registerService(thisInstance);
-    }
-
-    static String getJobEnginePath(String metadataUrlPrefix) {
-        return String.format(Locale.ROOT, JOB_ENGINE_LEADER_PATH, metadataUrlPrefix);
-    }
-
-    static String getServicePath(String metadataUrlPrefix) {
-        return String.format(Locale.ROOT, KYLIN_SERVICE_PATH, metadataUrlPrefix);
     }
 
     private void monitorJobEngine() {
