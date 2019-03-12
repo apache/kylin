@@ -49,6 +49,7 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.SystemDefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.kylin.jdbc.KylinMeta.KMetaCatalog;
 import org.apache.kylin.jdbc.KylinMeta.KMetaColumn;
@@ -79,23 +80,29 @@ public class KylinClient implements IRemoteClient {
     public KylinClient(KylinConnectionInfo connInfo) {
         this.connInfo = connInfo;
         this.connProps = connInfo.getConnectionProperties();
-        this.httpClient = new DefaultHttpClient();
         this.jsonMapper = new ObjectMapper();
 
-        // trust all certificates
         if (isSSL()) {
-            try {
-                SSLSocketFactory sslsf = new SSLSocketFactory(new TrustStrategy() {
-                    public boolean isTrusted(final X509Certificate[] chain, String authType)
-                            throws CertificateException {
-                        // Oh, I am easy...
-                        return true;
-                    }
-                });
-                httpClient.getConnectionManager().getSchemeRegistry().register(new Scheme("https", 443, sslsf));
-            } catch (Exception e) {
-                throw new RuntimeException("Initialize HTTPS client failed", e);
+            if (isSetKeyTrustStore()) {
+                this.httpClient = new SystemDefaultHttpClient();
+            } else {
+                this.httpClient = new DefaultHttpClient();
+                // trust all certificates
+                try {
+                    SSLSocketFactory sslsf = new SSLSocketFactory(new TrustStrategy() {
+                        public boolean isTrusted(final X509Certificate[] chain, String authType)
+                                throws CertificateException {
+                            // Oh, I am easy...
+                            return true;
+                        }
+                    });
+                    httpClient.getConnectionManager().getSchemeRegistry().register(new Scheme("https", 443, sslsf));
+                } catch (Exception e) {
+                    throw new RuntimeException("Initialize HTTPS client failed", e);
+                }
             }
+        } else {
+            this.httpClient = new DefaultHttpClient();
         }
     }
 
@@ -211,6 +218,22 @@ public class KylinClient implements IRemoteClient {
 
     private boolean isSSL() {
         return Boolean.parseBoolean(connProps.getProperty("ssl", "false"));
+    }
+
+    private boolean isSetKeyTrustStore() {
+        return isSetKeyStore() && isSetTrustStore();
+    }
+
+    private boolean isSetKeyStore() {
+        return System.getProperty("javax.net.ssl.keyStoreType") != null
+                && System.getProperty("javax.net.ssl.keyStore") != null
+                && System.getProperty("javax.net.ssl.keyStorePassword") != null;
+    }
+
+    private boolean isSetTrustStore() {
+        return System.getProperty("javax.net.ssl.trustStoreType") != null
+                && System.getProperty("javax.net.ssl.trustStore") != null
+                && System.getProperty("javax.net.ssl.trustStorePassword") != null;
     }
 
     private String baseUrl() {
