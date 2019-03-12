@@ -68,7 +68,6 @@ public class FunctionDesc implements Serializable {
         BUILT_IN_AGGREGATIONS.add(FUNC_COUNT);
         BUILT_IN_AGGREGATIONS.add(FUNC_MAX);
         BUILT_IN_AGGREGATIONS.add(FUNC_MIN);
-        BUILT_IN_AGGREGATIONS.add(FUNC_SUM);
         BUILT_IN_AGGREGATIONS.add(FUNC_COUNT_DISTINCT);
         BUILT_IN_AGGREGATIONS.add(FUNC_PERCENTILE);
     }
