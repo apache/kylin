@@ -18,9 +18,12 @@
 
 package org.apache.kylin.jdbc;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.sql.Date;
@@ -49,7 +52,6 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.SystemDefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.kylin.jdbc.KylinMeta.KMetaCatalog;
 import org.apache.kylin.jdbc.KylinMeta.KMetaColumn;
@@ -82,27 +84,40 @@ public class KylinClient implements IRemoteClient {
         this.connProps = connInfo.getConnectionProperties();
         this.jsonMapper = new ObjectMapper();
 
+        this.httpClient = new DefaultHttpClient();
         if (isSSL()) {
-            if (isSetKeyTrustStore()) {
-                this.httpClient = new SystemDefaultHttpClient();
-            } else {
-                this.httpClient = new DefaultHttpClient();
-                // trust all certificates
-                try {
-                    SSLSocketFactory sslsf = new SSLSocketFactory(new TrustStrategy() {
+            SSLSocketFactory sslsf;
+            try {
+                if (isSetKeyTrustStore()) {
+                    // get key store
+                    KeyStore ks = KeyStore.getInstance(getSSLProperty("javax.net.ssl.keyStoreType"));
+                    File ksFile = new File(getSSLProperty("javax.net.ssl.keyStore"));
+                    try (FileInputStream is = new FileInputStream(ksFile)) {
+                        ks.load(is, getSSLProperty("javax.net.ssl.keyStorePassword").toCharArray());
+                    }
+
+                    // get trust store
+                    KeyStore ts = KeyStore.getInstance(getSSLProperty("javax.net.ssl.trustStoreType"));
+                    File tsFile = new File(getSSLProperty("javax.net.ssl.trustStore"));
+                    try (FileInputStream is = new FileInputStream(tsFile)) {
+                        ts.load(is, getSSLProperty("javax.net.ssl.trustStorePassword").toCharArray());
+                    }
+
+                    sslsf = new SSLSocketFactory(ks, getSSLProperty("javax.net.ssl.keyStorePassword"), ts);
+                } else {
+                    // trust all certificates
+                    sslsf = new SSLSocketFactory(new TrustStrategy() {
                         public boolean isTrusted(final X509Certificate[] chain, String authType)
                                 throws CertificateException {
                             // Oh, I am easy...
                             return true;
                         }
                     });
-                    httpClient.getConnectionManager().getSchemeRegistry().register(new Scheme("https", 443, sslsf));
-                } catch (Exception e) {
-                    throw new RuntimeException("Initialize HTTPS client failed", e);
                 }
+                httpClient.getConnectionManager().getSchemeRegistry().register(new Scheme("https", 443, sslsf));
+            } catch (Exception e) {
+                throw new RuntimeException("Initialize HTTPS client failed", e);
             }
-        } else {
-            this.httpClient = new DefaultHttpClient();
         }
     }
 
@@ -225,15 +240,19 @@ public class KylinClient implements IRemoteClient {
     }
 
     private boolean isSetKeyStore() {
-        return System.getProperty("javax.net.ssl.keyStoreType") != null
-                && System.getProperty("javax.net.ssl.keyStore") != null
-                && System.getProperty("javax.net.ssl.keyStorePassword") != null;
+        return getSSLProperty("javax.net.ssl.keyStoreType") != null //
+                && getSSLProperty("javax.net.ssl.keyStore") != null //
+                && getSSLProperty("javax.net.ssl.keyStorePassword") != null;
     }
 
     private boolean isSetTrustStore() {
-        return System.getProperty("javax.net.ssl.trustStoreType") != null
-                && System.getProperty("javax.net.ssl.trustStore") != null
-                && System.getProperty("javax.net.ssl.trustStorePassword") != null;
+        return getSSLProperty("javax.net.ssl.trustStoreType") != null //
+                && getSSLProperty("javax.net.ssl.trustStore") != null //
+                && getSSLProperty("javax.net.ssl.trustStorePassword") != null;
+    }
+
+    private String getSSLProperty(String key) {
+        return connProps.getProperty(key) != null ? connProps.getProperty(key) : System.getProperty(key);
     }
 
     private String baseUrl() {
