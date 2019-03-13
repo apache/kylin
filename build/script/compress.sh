@@ -35,6 +35,7 @@ cd build/
 rm -rf ${package_name}
 mkdir ${package_name}
 cp -r ext lib tool bin conf tomcat ../examples/sample_cube commit_SHA1 ${package_name}
+cp ../NOTICE ../LICENSE ../README.md ${package_name}
 rm -rf ext lib tomcat commit_SHA1
 
 ## comment all default properties, and append them to the user visible kylin.properties
