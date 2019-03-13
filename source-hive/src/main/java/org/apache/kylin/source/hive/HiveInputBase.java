@@ -87,7 +87,7 @@ public class HiveInputBase {
             if (cubeConfig.isHiveRedistributeEnabled()) {
                 final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
                 //jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc, cubeInstance.getDescriptor()));
-                if (kylinConfig.enableLivy() && cubeInstance.getEngineType() == IEngineAware.ID_SPARK) {
+                if (kylinConfig.isLivyEnabled() && cubeInstance.getEngineType() == IEngineAware.ID_SPARK) {
                     jobFlow.addTask(createRedistributeFlatHiveTableByLivyStep(hiveInitStatements, cubeName, flatDesc, cubeInstance.getDescriptor()));
                 } else {
                     jobFlow.addTask(createRedistributeFlatHiveTableStep(hiveInitStatements, cubeName, flatDesc, cubeInstance.getDescriptor()));
@@ -106,7 +106,7 @@ public class HiveInputBase {
             final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
             CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
 
-            if (kylinConfig.enableLivy() && cubeInstance.getEngineType() == IEngineAware.ID_SPARK) {
+            if (kylinConfig.isLivyEnabled() && cubeInstance.getEngineType() == IEngineAware.ID_SPARK) {
                 jobFlow.addTask(createFlatHiveTableByLivyStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));
             } else {
                 jobFlow.addTask(createFlatHiveTableStep(hiveInitStatements, jobWorkingDir, cubeName, flatDesc));

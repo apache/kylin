@@ -40,7 +40,7 @@ public class HBaseSparkSteps extends HBaseJobSteps {
         String inputPath = cuboidRootPath + (cuboidRootPath.endsWith("/") ? "" : "/");
 
         SparkBatchCubingJobBuilder2 jobBuilder2 = new SparkBatchCubingJobBuilder2(seg, null);
-        final SparkExecutable sparkExecutable = SparkExecutableFactory.instance(seg.getConfig().enableLivy());
+        final SparkExecutable sparkExecutable = SparkExecutableFactory.instance(seg.getConfig());
         sparkExecutable.setClassName(SparkCubeHFile.class.getName());
         sparkExecutable.setParam(SparkCubeHFile.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
         sparkExecutable.setParam(SparkCubeHFile.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());

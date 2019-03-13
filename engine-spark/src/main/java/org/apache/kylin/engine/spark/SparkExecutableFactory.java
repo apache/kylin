@@ -17,6 +17,7 @@
 */
 package org.apache.kylin.engine.spark;
 
+import org.apache.kylin.common.KylinConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -25,8 +26,8 @@ public class SparkExecutableFactory {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SparkExecutableFactory.class);
 
-    public static SparkExecutable instance(boolean livy) {
-        return livy ? new SparkExecutableLivy() : new SparkExecutable();
+    public static SparkExecutable instance(KylinConfig kylinConfig) {
+        return kylinConfig.isLivyEnabled() ? new SparkExecutableLivy() : new SparkExecutable();
     }
 
 }

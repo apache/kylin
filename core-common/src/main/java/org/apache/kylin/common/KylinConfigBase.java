@@ -1377,12 +1377,12 @@ public abstract class KylinConfigBase implements Serializable {
     // ENGINE.LIVY
     // ============================================================================
 
-    public boolean enableLivy() {
-        return getOptional("kylin.engine.livy-conf.livy.enable", "false").equalsIgnoreCase("true") ? true : false;
+    public boolean isLivyEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.livy-conf.livy-enabled", FALSE));
     }
 
     public String getLivyUrl() {
-        return getOptional("kylin.engine.livy-conf.livy.url");
+        return getOptional("kylin.engine.livy-conf.livy-url");
     }
 
     public Map<String, String> getLivyKey() {
@@ -1396,7 +1396,7 @@ public abstract class KylinConfigBase implements Serializable {
     public Map<String, String> getLivyMap() {
         return getPropertiesByPrefix("kylin.engine.livy-conf.livy-map.");
     }
-    
+
     // ============================================================================
     // QUERY
     // ============================================================================
