@@ -288,6 +288,7 @@ export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX`MaxPermSize=512M -v
 - `kylin.cube.allow-appear-in-multiple-projects`：是否允许一个 Cube 出现在多个项目中
 - `kylin.cube.gtscanrequest-serialization-level`：默认值为 1
 - `kylin.metadata.dimension-encoding-max-length`：指定维度作为 Rowkeys 时使用 fix_length 编码时的最大长度，默认值为 256
+- `kylin.web.hide-measures`: 隐藏一些可能不需要的度量，默认值是RAW
 
 
 
