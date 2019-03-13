@@ -289,6 +289,7 @@ This section introduces Kylin data modeling and build related configuration.
 - `kylin.cube.rowkey.max-size`: specifies the maximum number of columns that can be set to Rowkeys. The default value is 63, and it can not be more than 63.
 - `kylin.cube.allow-appear-in-multiple-projects`: whether to allow a cube to appear in multiple projects
 - `kylin.cube.gtscanrequest-serialization-level`: the default value is 1
+- `kylin.web.hide-measures`: hides some measures that may not be needed, the default value is RAW.   
 
 
 
