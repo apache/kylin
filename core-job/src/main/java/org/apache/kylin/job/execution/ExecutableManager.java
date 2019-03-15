@@ -444,7 +444,7 @@ public class ExecutableManager {
                 jobOutput.setStatus(newStatus.toString());
             }
             if (info != null) {
-                jobOutput.getInfo().putAll(info);
+                jobOutput.setInfo(info);
             }
             if (output != null) {
                 jobOutput.setContent(output);
