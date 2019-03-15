@@ -498,7 +498,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 * HBase 表压缩
 
-该项压缩通过 `kyiln.properties` 中的 `kylin.hbase.default.compression.codec` 进行配置，参数值可选 `none`，`snappy`， `lzo`， `gzip`， `lz4`），默认值为 none，即不压缩数据。
+该项压缩通过 `kyiln.properties` 中的 `kylin.storage.hbase.compression-codec` 进行配置，参数值可选 `none`，`snappy`， `lzo`， `gzip`， `lz4`），默认值为 none，即不压缩数据。
 
 > **注意**：在修改压缩算法前，请确保用户的 HBase 集群支持所选压缩算法。
 
@@ -648,7 +648,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 
 ### 集成 LDAP 实现单点登录	{#ldap-sso}
 
-- `kylin.security.profile=ldap`：启用 LDAP
+- `kylin.security.profile`：安全认证的方式，参数值可选 `ldap`，`testing`，`saml`。集成 LDAP 实现单点登录时应设置为 `ldap`
 - `kylin.security.ldap.connection-server`：LDAP 服务器，如 ldap://ldap_server:389
 - `kylin.security.ldap.connection-username`：LDAP 用户名
 - `kylin.security.ldap.connection-password`：LDAP 密码

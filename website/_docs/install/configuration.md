@@ -496,7 +496,7 @@ Kylin can use three types of compression, HBase table compression, Hive output c
 
 * HBase table compression
 
-This compression is configured by `kylin.hbase.default.compression.codec` in `kyiln.properties`. Optional values include `none`, `snappy`, `lzo`, `gzip` and `lz4`. The default value is none, which means no data is compressed.
+This compression is configured by `kylin.storage.hbase.compression-codec` in `kyiln.properties`. Optional values include `none`, `snappy`, `lzo`, `gzip` and `lz4`. The default value is none, which means no data is compressed.
 
 > *Note*: Before modifying the compression algorithm, make sure userr HBase cluster supports the selected compression algorithm.
 
@@ -644,7 +644,7 @@ This section introduces Kylin security-related configuration.
 
 ### Integrated LDAP for SSO {#ldap-sso}
 
-- `kylin.security.profile=ldap`: whether to enable LDAP
+- `kylin.security.profile`: specifies the way of security authentication, optional values include `ldap`, `testing`, `saml`, it should be set to `ldap` when integrating LDAP for SSO
 - `kylin.security.ldap.connection-server`: specifies LDAP server, such as *ldap://ldap_server:389*
 - `kylin.security.ldap.connection-username`: specifies LDAP username
 - `kylin.security.ldap.connection-password`: specifies LDAP password
