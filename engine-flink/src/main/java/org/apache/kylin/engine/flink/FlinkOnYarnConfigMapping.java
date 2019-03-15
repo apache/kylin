@@ -47,7 +47,7 @@ public class FlinkOnYarnConfigMapping {
         }
 
         //mapping task manager heap size -> -ytm
-        ConfigOption<String> tmHeapSizeOption = TaskManagerOptions.MANAGED_MEMORY_SIZE;
+        ConfigOption<String> tmHeapSizeOption = TaskManagerOptions.TASK_MANAGER_HEAP_MEMORY;
         flinkOnYarnConfigMap.put(tmHeapSizeOption.key(), "-ytm");
         if (tmHeapSizeOption.hasDeprecatedKeys()) {
             Iterator<String> deprecatedKeyIterator = tmHeapSizeOption.deprecatedKeys().iterator();
