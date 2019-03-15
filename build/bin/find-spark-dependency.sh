@@ -35,6 +35,11 @@ then
     spark_home=$KYLIN_HOME/spark
 fi
 
+if [ ! -d "$spark_home/jars" ]
+  then
+    quit "spark not found, set SPARK_HOME, or run bin/download-spark.sh"
+fi
+
 spark_dependency=`find -L $spark_home/jars -name '*.jar' ! -name '*slf4j*' ! -name '*calcite*' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
 if [ -z "$spark_dependency" ]
 then
