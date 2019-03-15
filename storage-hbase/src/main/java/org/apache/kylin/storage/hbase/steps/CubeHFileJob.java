@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
@@ -78,7 +79,10 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             // use current hbase configuration
             Configuration configuration = new Configuration(HBaseConnection.getCurrentHBaseConfiguration());
+            String[] allServices = getAllServices(configuration);
             merge(configuration, getConf());
+            configuration.setStrings(DFSConfigKeys.DFS_NAMESERVICES, allServices);
+
             job = Job.getInstance(configuration, getOptionValue(OPTION_JOB_NAME));
 
             setJobClasspath(job, cube.getConfig());
@@ -151,6 +155,15 @@ public class CubeHFileJob extends AbstractHadoopJob {
         } else {
             logger.info("File '" + path.toString() + " doesn't exist, will not reconfigure hfile Partitions");
         }
+    }
+
+    private String[] getAllServices(Configuration hbaseConf) {
+        Collection<String> hbaseHdfsServices
+            = hbaseConf.getTrimmedStringCollection(DFSConfigKeys.DFS_NAMESERVICES);
+        Collection<String> mainNameServices
+            = getConf().getTrimmedStringCollection(DFSConfigKeys.DFS_NAMESERVICES);
+        mainNameServices.addAll(hbaseHdfsServices);
+        return mainNameServices.toArray(new String[0]);
     }
 
     public static void main(String[] args) throws Exception {
