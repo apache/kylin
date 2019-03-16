@@ -41,7 +41,7 @@ script:
         echo "The pull request from ${TRAVIS_PULL_REQUEST_SLUG} is an EXTERNAL pull request. Skip sonar analysis.";
     else
         git fetch --unshallow --quiet;
-        mvn sonar:sonar -e;
+        #mvn sonar:sonar -e;
     fi
 
 notification:
