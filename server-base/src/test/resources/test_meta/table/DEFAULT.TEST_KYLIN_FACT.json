@@ -28,7 +28,7 @@
     "id" : "5",
     "name" : "LEAF_CATEG_ID",
     "datatype" : "bigint",
-    "data_gen" : "FK,null,nullstr=0",
+    "data_gen" : "FK",
     "index": "T"
   }, {
     "id" : "6",
@@ -62,6 +62,11 @@
     "name" : "TEST_COUNT_DISTINCT_BITMAP",
     "datatype" : "string",
     "data_gen" : "RAND"
+  }, {
+    "id" : "12",
+    "name" : "TEST_COUNT_COLUMN",
+    "datatype" : "string",
+    "data_gen" : "RAND,null=true,nullpct=0.2"
   } ],
   "database" : "DEFAULT",
   "last_modified" : 0

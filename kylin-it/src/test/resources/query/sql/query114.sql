@@ -16,9 +16,13 @@
 -- limitations under the License.
 --
 
-
- 
- 
-  select test_kylin_fact.lstg_format_name, sum(price) as GMV, count(price) as GMV_CNT
- from test_kylin_fact where test_kylin_fact.lstg_format_name <= 'ABZ'
- group by test_kylin_fact.lstg_format_name having count(price) > 2
+SELECT COUNT(test_kylin_fact.test_count_column) AS TEST_COUNT_COLUMN_CNT
+FROM test_kylin_fact 
+ inner JOIN edw.test_cal_dt as test_cal_dt
+ ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
+ inner JOIN test_category_groupings
+ ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
+ inner JOIN edw.test_sites as test_sites
+ ON test_kylin_fact.lstg_site_id = test_sites.site_id
+WHERE test_cal_dt.WEEK_BEG_DT >= '2001-09-09'
+ AND test_cal_dt.WEEK_BEG_DT <= '2018-05-16'

@@ -218,6 +218,7 @@
     }
   ],
   "metrics": [
+    "TEST_KYLIN_FACT.TEST_COUNT_COLUMN",
     "TEST_KYLIN_FACT.PRICE",
     "TEST_KYLIN_FACT.ITEM_COUNT"
   ],

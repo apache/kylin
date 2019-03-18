@@ -65,7 +65,6 @@ public class FunctionDesc implements Serializable {
     public static final Set<String> BUILT_IN_AGGREGATIONS = Sets.newHashSet();
 
     static {
-        BUILT_IN_AGGREGATIONS.add(FUNC_COUNT);
         BUILT_IN_AGGREGATIONS.add(FUNC_MAX);
         BUILT_IN_AGGREGATIONS.add(FUNC_MIN);
         BUILT_IN_AGGREGATIONS.add(FUNC_COUNT_DISTINCT);
@@ -146,7 +145,11 @@ public class FunctionDesc implements Serializable {
 
     public String getRewriteFieldName() {
         if (isCount()) {
-            return "_KY_" + "COUNT__"; // ignores parameter, count(*), count(1), count(col) are all the same
+            if (parameter == null || parameter.isConstantType()) {
+                return "_KY_" + "COUNT__";
+            } else {
+                return "_KY_" + getFullExpression().replaceAll("[(),. ]", "_");
+            }
         } else if (isCountDistinct()) {
             return "_KY_" + getFullExpressionInAlphabetOrder().replaceAll("[(),. ]", "_");
         } else {
@@ -289,7 +292,8 @@ public class FunctionDesc implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((expression == null) ? 0 : expression.hashCode());
-        result = prime * result + ((isCount() || parameter == null) ? 0 : parameter.hashCode());
+        result = prime * result + ((parameter == null || (isCount() && parameter.isConstantType()))
+            ? 0 : parameter.hashCode());
         // NOTE: don't compare returnType, FunctionDesc created at query engine does not have a returnType
         return result;
     }
@@ -316,12 +320,21 @@ public class FunctionDesc implements Serializable {
             } else {
                 return parameter.equalInArbitraryOrder(other.parameter);
             }
-        } else if (!isCount()) { // NOTE: don't check the parameter of count()
+        } else {
             if (parameter == null) {
-                if (other.parameter != null)
+                if (isCount()) {
+                    if (other.parameter != null && other.parameter.isColumnType()) {
+                        return false;
+                    }
+                } else if (other.parameter != null)
                     return false;
             } else {
-                if (!parameter.equals(other.parameter))
+                if (isCount()) {
+                    if ((parameter.isConstantType() && other.parameter != null && other.parameter.isColumnType())
+                        || (parameter.isColumnType() && !parameter.equals(other.parameter))) {
+                        return false;
+                    }
+                } else if (!parameter.equals(other.parameter))
                     return false;
             }
         }
