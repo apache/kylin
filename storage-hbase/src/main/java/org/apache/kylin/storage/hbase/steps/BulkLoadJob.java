@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.hadoop.mapred.FileOutputCommitter;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.mr.MRUtil;
@@ -82,10 +83,15 @@ public class BulkLoadJob extends AbstractHadoopJob {
         Path inputPath = new Path(input);
         FileSystem fs = HadoopUtil.getFileSystem(inputPath);
         FileStatus[] fileStatuses = fs.listStatus(inputPath);
-        for(FileStatus fileStatus: fileStatuses) {
-            if(fileStatus.isDirectory()) {
-                count++;
-                break;
+
+        for (FileStatus fileStatus : fileStatuses) {
+            if (fileStatus.isDirectory()) {
+                Path path = fileStatus.getPath();
+                if (path.getName().equals(FileOutputCommitter.TEMP_DIR_NAME)) {
+                    fs.delete(path, true);
+                } else {
+                    count++;
+                }
             }
         }
 
