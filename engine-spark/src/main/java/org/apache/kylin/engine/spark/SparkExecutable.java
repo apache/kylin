@@ -303,7 +303,7 @@ public class SparkExecutable extends AbstractExecutable {
                     executorService.shutdownNow(); // interrupt
                     extra = mgr.getOutput(getId()).getExtra();
                     if (extra != null) {
-                        String  newJobId = extra.get(ExecutableConstants.SPARK_JOB_ID);
+                        String newJobId = extra.get(ExecutableConstants.SPARK_JOB_ID);
                         if (StringUtils.isNotEmpty(newJobId)) {
                             killAppRetry(newJobId);
                         }
