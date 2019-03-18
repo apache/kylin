@@ -88,6 +88,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
             if (fileStatus.isDirectory()) {
                 Path path = fileStatus.getPath();
                 if (path.getName().equals(FileOutputCommitter.TEMP_DIR_NAME)) {
+                    logger.info("Delete temporary path: " + path);
                     fs.delete(path, true);
                 } else {
                     count++;
