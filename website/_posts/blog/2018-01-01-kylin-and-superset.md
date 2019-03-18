@@ -96,7 +96,7 @@ Now everything you need is installed and ready to go. Let’s try to create an A
   Figure 5: Apache Superset Login Page
 
 2. Go to Source -> Datasource to configure a new data source.
-- SQLAlchemy URI pattern is : kylin://<username>:<password>@<hostname>:<port>/<project name>
+- SQLAlchemy URI pattern is : kylin://\<username\>:\<password\>@\<hostname\>:\<port\>/\<project name\>
 - Check “Expose in SQL Lab” if you want to expose this data source in SQL Lab.
 - Click “Test Connection” to see if the URI is working properly.
 
