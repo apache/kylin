@@ -126,10 +126,6 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
 
             }
         }
-
-        if (countFuncs.size() != 1) {
-            context.addResult(ResultLevel.ERROR, "Must define one and only one count(1) function, but there are " + countFuncs.size() + " -- " + countFuncs);
-        }
     }
 
     /**

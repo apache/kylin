@@ -165,6 +165,17 @@
       }
     },
     {
+      "name": "GMV_CNT",
+      "function": {
+        "expression": "COUNT",
+        "parameter": {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.PRICE"
+        },
+        "returntype": "bigint"
+      }
+    },
+    {
       "name": "GMV_MIN",
       "function": {
         "expression": "MIN",
@@ -329,6 +340,17 @@
         },
         "returntype": "percentile(100)"
       }
+    },
+    {
+      "name": "TEST_COUNT_COLUMN_CNT",
+      "function": {
+        "expression": "COUNT",
+        "parameter": {
+          "type": "column",
+          "value": "TEST_KYLIN_FACT.TEST_COUNT_COLUMN"
+        },
+        "returntype": "bigint"
+      }
     }
   ],
   "dictionaries": [
@@ -439,8 +461,10 @@
               "TRANS_CNT",
               "ITEM_COUNT_SUM",
               "GMV_SUM",
+              "GMV_CNT",
               "GMV_MIN",
-              "GMV_MAX"
+              "GMV_MAX",
+              "TEST_COUNT_COLUMN_CNT"
             ]
           }
         ]

@@ -91,12 +91,18 @@ public class KeyValueBuilder implements Serializable {
         int colParamIdx = 0; // index among parameters of column type
         for (int i = 0; i < paramCount; i++, param = param.getNextParameter()) {
             String value;
-            if (function.isCount()) {
-                value = "1";
-            } else if (param.isColumnType()) {
+            if (param.isColumnType()) {
                 value = getCell(colIdxOnFlatTable[colParamIdx++], row);
+                if (function.isCount() && value == null) {
+                    value = "0";
+                } else if (function.isCount()) {
+                    value = "1";
+                }
             } else {
                 value = param.getValue();
+                if (function.isCount()) {
+                    value = "1";
+                }
             }
             inputToMeasure.add(value);
         }

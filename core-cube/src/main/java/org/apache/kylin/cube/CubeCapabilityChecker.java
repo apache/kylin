@@ -224,12 +224,6 @@ public class CubeCapabilityChecker {
         while (it.hasNext()) {
             FunctionDesc functionDesc = it.next();
 
-            // let calcite handle count
-            if (functionDesc.isCount()) {
-                it.remove();
-                continue;
-            }
-
             // calcite can do aggregation from columns on-the-fly
             ParameterDesc parameterDesc = functionDesc.getParameter();
             if (parameterDesc == null) {

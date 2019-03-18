@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
 /**
@@ -130,6 +131,10 @@ public class ParameterDesc implements Serializable {
 
     public boolean isColumnType() {
         return FunctionDesc.PARAMETER_TYPE_COLUMN.equals(type);
+    }
+
+    public boolean isConstantType() {
+        return !Strings.isNullOrEmpty(type) && FunctionDesc.PARAMETER_TYPE_CONSTANT.equals(type);
     }
 
     @Override
