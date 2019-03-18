@@ -74,6 +74,9 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
 
     @Override
     public void addChild(TupleFilter child) {
+        if (child instanceof CompareTupleFilter) {
+            child = optimizeChildCompareTupleFilter((CompareTupleFilter) child);
+        }
         super.addChild(child);
         if (child instanceof ColumnTupleFilter) {
             ColumnTupleFilter columnFilter = (ColumnTupleFilter) child;
@@ -281,6 +284,18 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
     @Override
     public TupleFilter acceptOptimizeTransformer(FilterOptimizeTransformer transformer) {
         return transformer.visit(this);
+    }
+
+    private TupleFilter optimizeChildCompareTupleFilter(CompareTupleFilter child) {
+        FilterOptimizeTransformer transformer = new FilterOptimizeTransformer();
+        TupleFilter result = child.acceptOptimizeTransformer(transformer);
+        if (result == ConstantTupleFilter.TRUE) {
+            // use string instead of boolean since it's encoded as string
+            result = new ConstantTupleFilter("true");
+        } else if (result == ConstantTupleFilter.FALSE) {
+            result = new ConstantTupleFilter("false");
+        }
+        return result;
     }
 
     @Override
