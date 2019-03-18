@@ -185,10 +185,18 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return segments.getMergingSegments(mergedSegment);
     }
 
+    public CubeSegment getOriginalSegmentToRefresh(CubeSegment refreshedSegment) {
+        return getOriginalSegment(refreshedSegment);
+    }
+
     public CubeSegment getOriginalSegmentToOptimize(CubeSegment optimizedSegment) {
+        return getOriginalSegment(optimizedSegment);
+    }
+
+    private CubeSegment getOriginalSegment(CubeSegment toSegment) {
         for (CubeSegment segment : this.getSegments(SegmentStatusEnum.READY)) {
-            if (!optimizedSegment.equals(segment) //
-                    && optimizedSegment.getSegRange().equals(segment.getSegRange())) {
+            if (!toSegment.equals(segment) //
+                    && toSegment.getSegRange().equals(segment.getSegRange())) {
                 return segment;
             }
         }

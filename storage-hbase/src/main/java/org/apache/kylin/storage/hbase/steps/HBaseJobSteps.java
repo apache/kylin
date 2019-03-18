@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.hbase.steps;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.common.util.StringUtil;
@@ -115,20 +116,6 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
         return bulkLoadStep;
     }
 
-    public MergeGCStep createMergeGCStep() {
-        MergeGCStep result = new MergeGCStep();
-        result.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HBASE);
-        result.setOldHTables(getMergingHTables());
-        return result;
-    }
-
-    public MergeGCStep createOptimizeGCStep() {
-        MergeGCStep result = new MergeGCStep();
-        result.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
-        result.setOldHTables(getOptimizeHTables());
-        return result;
-    }
-
     public List<CubeSegment> getOptimizeSegments() {
         CubeInstance cube = (CubeInstance) seg.getRealization();
         List<CubeSegment> newSegments = Lists.newArrayList(cube.getSegments(SegmentStatusEnum.READY_PENDING));
@@ -153,19 +140,25 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
 
     public List<String> getMergingHTables() {
         final List<CubeSegment> mergingSegments = ((CubeInstance) seg.getRealization())
-                .getMergingSegments((CubeSegment) seg);
+                .getMergingSegments(seg);
         Preconditions.checkState(mergingSegments.size() > 1,
                 "there should be more than 2 segments to merge, target segment " + seg);
-        final List<String> mergingHTables = Lists.newArrayList();
-        for (CubeSegment merging : mergingSegments) {
-            mergingHTables.add(merging.getStorageLocationIdentifier());
-        }
-        return mergingHTables;
+        return getOldHTables(mergingSegments);
+    }
+
+    public List<String> getRefreshingHTables() {
+        final CubeSegment refreshingSegment = ((CubeInstance) seg.getRealization()).getOriginalSegmentToRefresh(seg);
+        return getOldHTables(Collections.singletonList(refreshingSegment));
+    }
+
+    public List<String> getRefreshingHDFSPaths() {
+        final CubeSegment refreshingSegment = ((CubeInstance) seg.getRealization()).getOriginalSegmentToRefresh(seg);
+        return getOldHDFSPaths(Collections.singletonList(refreshingSegment));
     }
 
     public List<String> getMergingHDFSPaths() {
         final List<CubeSegment> mergingSegments = ((CubeInstance) seg.getRealization())
-                .getMergingSegments((CubeSegment) seg);
+                .getMergingSegments(seg);
         Preconditions.checkState(mergingSegments.size() > 1,
                 "there should be more than 2 segments to merge, target segment " + seg);
         final List<String> mergingHDFSPaths = Lists.newArrayList();
@@ -203,10 +196,7 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
         List<String> toDeletePaths = new ArrayList<>();
         toDeletePaths.add(getOptimizationRootPath(jobId));
 
-        HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
-        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HDFS);
-        step.setDeletePaths(toDeletePaths);
-        step.setJobId(jobId);
+        HDFSPathGarbageCollectionStep step =createHDFSPathGCStep(toDeletePaths, jobId);
 
         jobFlow.addTask(step);
     }
@@ -214,15 +204,13 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
     public void addCheckpointGarbageCollectionSteps(DefaultChainedExecutable jobFlow) {
         String jobId = jobFlow.getId();
 
-        jobFlow.addTask(createOptimizeGCStep());
+        MergeGCStep hBaseGCStep = createHBaseGCStep(getOptimizeHTables());
+        jobFlow.addTask(hBaseGCStep);
 
         List<String> toDeletePaths = new ArrayList<>();
         toDeletePaths.addAll(getOptimizeHDFSPaths());
 
-        HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
-        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HDFS);
-        step.setDeletePaths(toDeletePaths);
-        step.setJobId(jobId);
+        HDFSPathGarbageCollectionStep step = createHDFSPathGCStep(toDeletePaths, jobId);
 
         jobFlow.addTask(step);
     }
@@ -230,16 +218,14 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
     public void addMergingGarbageCollectionSteps(DefaultChainedExecutable jobFlow) {
         String jobId = jobFlow.getId();
 
-        jobFlow.addTask(createMergeGCStep());
+        MergeGCStep hBaseGCStep = createHBaseGCStep(getMergingHTables());
+        jobFlow.addTask(hBaseGCStep);
 
         List<String> toDeletePaths = new ArrayList<>();
         toDeletePaths.addAll(getMergingHDFSPaths());
         toDeletePaths.add(getHFilePath(jobId));
 
-        HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
-        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HDFS);
-        step.setDeletePaths(toDeletePaths);
-        step.setJobId(jobId);
+        HDFSPathGarbageCollectionStep step = createHDFSPathGCStep(toDeletePaths, jobId);
 
         jobFlow.addTask(step);
     }
@@ -252,12 +238,46 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
         toDeletePaths.add(getHFilePath(jobId));
         toDeletePaths.add(getShrunkenDictionaryPath(jobId));
 
-        HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
-        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HBASE);
-        step.setDeletePaths(toDeletePaths);
-        step.setJobId(jobId);
+        CubeSegment oldSegment = ((CubeInstance)seg.getRealization()).getOriginalSegmentToRefresh(seg);
 
+        // refresh segment
+        if (oldSegment != null) {
+            // delete old hdfs job
+            toDeletePaths.addAll(getRefreshingHDFSPaths());
+
+            // drop old htables
+            MergeGCStep hBaseGCStep = createHBaseGCStep(getRefreshingHTables());
+            jobFlow.addTask(hBaseGCStep);
+        }
+
+        HDFSPathGarbageCollectionStep step = createHDFSPathGCStep(toDeletePaths, jobId);
         jobFlow.addTask(step);
+    }
+
+    /**
+     * create 'HBase Garbage clean step' to drop HTables in HBase
+     * @param toDropHTables
+     * @return
+     */
+    public MergeGCStep createHBaseGCStep(List<String> toDropHTables) {
+        MergeGCStep hBaseGCStep = new MergeGCStep();
+        hBaseGCStep.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HBASE);
+        hBaseGCStep.setOldHTables(toDropHTables);
+        return hBaseGCStep;
+    }
+
+    /**
+     * create 'HDFS Garbage clean step' to delete paths on HDFS
+     * @param toDeletePaths
+     * @param jobId
+     * @return
+     */
+    public HDFSPathGarbageCollectionStep createHDFSPathGCStep(List<String> toDeletePaths, String jobId) {
+        HDFSPathGarbageCollectionStep hdfsGCStep = new HDFSPathGarbageCollectionStep();
+        hdfsGCStep.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HDFS);
+        hdfsGCStep.setDeletePaths(toDeletePaths);
+        hdfsGCStep.setJobId(jobId);
+        return hdfsGCStep;
     }
 
 }

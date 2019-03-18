@@ -60,7 +60,7 @@ public class HBaseSparkOutputTransition implements ISparkOutput {
 
             @Override
             public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-                // nothing to do
+                steps.addCubingGarbageCollectionSteps(jobFlow);
             }
 
         };
