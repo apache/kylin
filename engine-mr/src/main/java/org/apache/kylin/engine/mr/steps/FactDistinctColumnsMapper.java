@@ -172,8 +172,20 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
         Collection<String[]> rowCollection = flatTableInputFormat.parseMapperInput(record);
 
         for (String[] row : rowCollection) {
+            if (rowCount < 10) {
+                StringBuilder builder = new StringBuilder();
+                for (String item : row) {
+                    builder.append(" |  " + item + "  |  ");
+                }
+                logger.info("mr-dict ~ 1 : " + builder.toString());
+            }
+
             context.getCounter(RawDataCounter.BYTES).increment(countSizeInBytes(row));
             for (int i = 0; i < allCols.size(); i++) {
+                if (rowCount < 10) {
+                    logger.info("mr-dict ~ 2 | " + allCols.get(i));
+                }
+
                 String fieldValue = row[columnIndex[i]];
                 if (fieldValue == null)
                     continue;

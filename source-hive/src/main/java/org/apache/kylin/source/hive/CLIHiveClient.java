@@ -19,6 +19,7 @@
 package org.apache.kylin.source.hive;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -127,6 +128,36 @@ public class CLIHiveClient implements IHiveClient {
     public long getHiveTableRows(String database, String tableName) throws Exception {
         Table table = getMetaStoreClient().getTable(database, tableName);
         return getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.ROW_COUNT);
+    }
+
+    @Override
+    public List<Object[]> getHiveResult(String hql) throws Exception {
+        List<Object[]> data = new ArrayList<>();
+
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement(hql);
+        Pair<Integer, String> response = KylinConfig.getInstanceFromEnv().getCliCommandExecutor().execute(hiveCmdBuilder.toString());
+
+        String[] respData = response.getSecond().split("\n");
+
+        boolean isData = false;
+
+        for (String item : respData) {
+            if (item.trim().equalsIgnoreCase("OK")) {
+                isData = true;
+                continue;
+            }
+            if (item.trim().startsWith("Time taken")) {
+                isData = false;
+            }
+            if (isData) {
+                Object[] arr = item.split("\t");
+                data.add(arr);
+            }
+
+        }
+
+        return data;
     }
 
     private HiveMetaStoreClient getMetaStoreClient() throws Exception {

@@ -73,4 +73,9 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_MATERIALIZE_LOOKUP_TABLE_UPDATE_CUBE = "Update Cube Info";
 
     public static final String SPARK_SPECIFIC_CONFIG_NAME_MERGE_DICTIONARY = "mergedict";
+
+    // MR - Hive Dict
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_EXTRACT_DICTVAL = "Global Dict Mr/Hive extract dict_val from Data";
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_BUILD_DICTVAL = "Global Dict Mr/Hive build dict_val";
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL = "Global Dict Mr/Hive replace dict_val to Data";
 }
