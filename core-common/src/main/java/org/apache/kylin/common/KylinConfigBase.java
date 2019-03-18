@@ -1206,6 +1206,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.storage.hbase.replication-scope", "0"));
     }
 
+    public boolean cleanStorageAfterDelOperation() {
+        return Boolean.parseBoolean(getOptional("kylin.storage.clean-after-delete-operation", FALSE));
+    }
+
     // ============================================================================
     // ENGINE.MR
     // ============================================================================
