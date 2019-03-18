@@ -40,6 +40,8 @@
   <properties>
     <!-- General Properties -->
     <javaVersion>1.8</javaVersion>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
     <maven-model.version>3.3.9</maven-model.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -1037,7 +1039,7 @@
     </repository>
 
     <repository>
-      <id>nexus</id>
+      <id>kyligence</id>
       <name>Kyligence Repository</name>
       <url>http://repository.kyligence.io:8081/repository/maven-public/
       </url>
