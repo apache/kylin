@@ -133,7 +133,7 @@ public class SparkExecutable extends AbstractExecutable {
         final Output output = getOutput();
         if (output.getExtra().containsKey(START_TIME)) {
             final String sparkJobID = output.getExtra().get(ExecutableConstants.SPARK_JOB_ID);
-            if (sparkJobID == null) {
+            if (StringUtils.isEmpty(sparkJobID)) {
                 getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
                 return;
             }
@@ -302,8 +302,11 @@ public class SparkExecutable extends AbstractExecutable {
                 if (future.isDone() == false) { // user cancelled
                     executorService.shutdownNow(); // interrupt
                     extra = mgr.getOutput(getId()).getExtra();
-                    if (extra != null && extra.get(ExecutableConstants.SPARK_JOB_ID) != null) {
-                        killAppRetry(extra.get(ExecutableConstants.SPARK_JOB_ID));
+                    if (extra != null) {
+                        String  newJobId = extra.get(ExecutableConstants.SPARK_JOB_ID);
+                        if (StringUtils.isNotEmpty(newJobId)) {
+                            killAppRetry(newJobId);
+                        }
                     }
 
                     if (isDiscarded()) {
@@ -372,6 +375,9 @@ public class SparkExecutable extends AbstractExecutable {
     }
 
     private String getAppState(String appId) throws IOException {
+        if (StringUtils.isEmpty(appId)) {
+            throw new IOException("The app is is null or empty");
+        }
         CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
         PatternedLogger patternedLogger = new PatternedLogger(logger);
         String stateCmd = String.format(Locale.ROOT, "yarn application -status %s", appId);
@@ -387,6 +393,11 @@ public class SparkExecutable extends AbstractExecutable {
     }
 
     private int killAppRetry(String appId) throws IOException, InterruptedException {
+        if (StringUtils.isEmpty(appId)) {
+            logger.warn("The app is is null or empty");
+            return 0;
+        }
+
         String state = getAppState(appId);
         if ("SUCCEEDED".equals(state) || "FAILED".equals(state) || "KILLED".equals(state)) {
             logger.warn(appId + "is final state, no need to kill");
