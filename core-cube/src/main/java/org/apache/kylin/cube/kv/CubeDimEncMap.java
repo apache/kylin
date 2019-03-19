@@ -70,8 +70,12 @@ public class CubeDimEncMap implements IDimensionEncodingMap, java.io.Serializabl
                     result = new DictionaryDimEnc(dict);
                 }
             } else {
-                // normal case
-                result = DimensionEncodingFactory.create(colDesc.getEncodingName(), colDesc.getEncodingArgs(), colDesc.getEncodingVersion());
+                try {
+                    // normal case
+                    result = DimensionEncodingFactory.create(colDesc.getEncodingName(), colDesc.getEncodingArgs(), colDesc.getEncodingVersion());
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Illegal column desc: " + colDesc, e);
+                }
             }
             encMap.put(col, result);
         }
