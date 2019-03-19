@@ -21,5 +21,9 @@ title: 下载
 
 Kylin JDBC 驱动程序, `kylin-jdbc-<version>.jar`, 在 Kylin 二进制包的 "lib" 目录下.
 
+#### ODBC Driver
+
+从源代码编译 (在 "odbc" 子目录), 或联系第三方技术支持.
+
 #### 以前的版本  
 Apache Kylin的旧版本可以从 [https://archive.apache.org/dist/kylin/](https://archive.apache.org/dist/kylin/) 下载。
