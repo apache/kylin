@@ -278,7 +278,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             TblColRef groupOutCol = inputColumnRowType.getColumnByIndex(i);
             if (tupleExpression instanceof ColumnTupleExpression) {
                 this.groups.add(((ColumnTupleExpression) tupleExpression).getColumn());
-            } else if (this.context.isDynamicColumnEnabled()) {
+            } else if (this.context.isDynamicColumnEnabled() && tupleExpression.ifForDynamicColumn()) {
                 Pair<Set<TblColRef>, Set<TblColRef>> cols = ExpressionColCollector.collectColumnsPair(tupleExpression);
 
                 // push down only available for the innermost aggregation

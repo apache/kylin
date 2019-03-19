@@ -47,7 +47,8 @@ public class CaseTupleExpression extends TupleExpression {
     protected boolean ifAbleToPushDown() {
         if (ifAbleToPushDown == null) {
             for (Pair<TupleFilter, TupleExpression> whenEntry : whenList) {
-                ifAbleToPushDown = whenEntry.getSecond().ifAbleToPushDown();
+                ifAbleToPushDown = TupleFilter.isEvaluableRecursively(whenEntry.getFirst())
+                        && whenEntry.getSecond().ifAbleToPushDown();
                 if (!ifAbleToPushDown) {
                     break;
                 }

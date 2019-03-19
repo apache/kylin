@@ -38,6 +38,9 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
         AlwaysTrue, AlwaysFalse, Unknown
     }
 
+    // if the two children are both CompareTupleFilter, isNormal will be false
+    private boolean isNormal = true;
+
     // operand 1 is either a column or a function
     private TblColRef column;
     private FunctionTupleFilter function;
@@ -237,7 +240,7 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
 
     @Override
     public boolean isEvaluable() {
-        return (column != null || (function != null && function.isEvaluable())) //
+        return isNormal && (column != null || (function != null && function.isEvaluable())) //
                 && (!conditionValues.isEmpty() || operator == FilterOperatorEnum.ISNOTNULL || operator == FilterOperatorEnum.ISNULL) //
                 && secondColumn == null;
     }
@@ -294,6 +297,8 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
             result = new ConstantTupleFilter("true");
         } else if (result == ConstantTupleFilter.FALSE) {
             result = new ConstantTupleFilter("false");
+        } else {
+            this.isNormal = false;
         }
         return result;
     }
