@@ -23,11 +23,7 @@ import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
-import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.engine.mr.common.MapReduceExecutable;
-import org.apache.kylin.engine.mr.steps.MergeDictionaryJob;
 import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.engine.JobEngineConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +62,7 @@ public class FlinkBatchMergeJobBuilder2 extends JobBuilderSupport {
 
         // Phase 1: Merge Dictionary
         inputSide.addStepPhase1_MergeDictionary(result);
-        result.addTask(createMergeDictionaryMRStep(cubeSegment, jobId, mergingSegmentIds));
+        result.addTask(createMergeDictionaryFlinkStep(cubeSegment, jobId, mergingSegmentIds));
         result.addTask(createUpdateDictionaryStep(cubeSegment, jobId, mergingSegmentIds));
         outputSide.addStepPhase1_MergeDictionary(result);
 
@@ -83,25 +79,27 @@ public class FlinkBatchMergeJobBuilder2 extends JobBuilderSupport {
         return result;
     }
 
-    public MapReduceExecutable createMergeDictionaryMRStep(CubeSegment seg, String jobID, List<String> mergingSegmentIds) {
-        MapReduceExecutable mergeDictionaryStep = new MapReduceExecutable();
-        mergeDictionaryStep.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY);
-        StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, JobEngineConfig.IN_MEM_JOB_CONF_SUFFIX);
+    public FlinkExecutable createMergeDictionaryFlinkStep(CubeSegment seg, String jobID, List<String> mergingSegmentIds) {
+        final FlinkExecutable flinkExecutable = new FlinkExecutable();
+        flinkExecutable.setClassName(FlinkMergingDictionary.class.getName());
 
-        appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getCubeInstance().getName());
-        appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
-        appendExecCmdParameters(cmd, BatchConstants.ARG_META_URL, getSegmentMetadataUrl(seg.getConfig(), jobID));
-        appendExecCmdParameters(cmd, BatchConstants.ARG_META_URL, getSegmentMetadataUrl(seg.getConfig(), jobID));
-        appendExecCmdParameters(cmd, MergeDictionaryJob.OPTION_MERGE_SEGMENT_IDS.getOpt(), StringUtil.join(mergingSegmentIds, ","));
-        appendExecCmdParameters(cmd, MergeDictionaryJob.OPTION_OUTPUT_PATH_DICT.getOpt(), getDictInfoPath(jobID));
-        appendExecCmdParameters(cmd, MergeDictionaryJob.OPTION_OUTPUT_PATH_STAT.getOpt(), getStatisticsPath(jobID));
-        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Merge_Dictionary_" + seg.getCubeInstance().getName() + "_Step");
+        flinkExecutable.setParam(FlinkMergingDictionary.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
+        flinkExecutable.setParam(FlinkMergingDictionary.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());
+        flinkExecutable.setParam(FlinkMergingDictionary.OPTION_META_URL.getOpt(), getSegmentMetadataUrl(seg.getConfig(), jobID));
+        flinkExecutable.setParam(FlinkMergingDictionary.OPTION_MERGE_SEGMENT_IDS.getOpt(), StringUtil.join(mergingSegmentIds, ","));
+        flinkExecutable.setParam(FlinkMergingDictionary.OPTION_OUTPUT_PATH_DICT.getOpt(), getDictInfoPath(jobID));
+        flinkExecutable.setParam(FlinkMergingDictionary.OPTION_OUTPUT_PATH_STAT.getOpt(), getStatisticsPath(jobID));
 
-        mergeDictionaryStep.setMapReduceParams(cmd.toString());
-        mergeDictionaryStep.setMapReduceJobClass(MergeDictionaryJob.class);
+        flinkExecutable.setJobId(jobID);
+        flinkExecutable.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY);
+        flinkExecutable.setFlinkConfigName(ExecutableConstants.FLINK_SPECIFIC_CONFIG_NAME_MERGE_DICTIONARY);
 
-        return mergeDictionaryStep;
+        StringBuilder jars = new StringBuilder();
+
+        StringUtil.appendWithSeparator(jars, seg.getConfig().getFlinkAdditionalJars());
+        flinkExecutable.setJars(jars.toString());
+
+        return flinkExecutable;
     }
 
     public FlinkExecutable createMergeCuboidDataFlinkStep(CubeSegment seg, List<CubeSegment> mergingSegments, String jobID) {
