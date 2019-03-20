@@ -20,12 +20,13 @@ package org.apache.kylin.common.metrics.perflog;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PerfLoggerFactory {
 
-    protected static final ThreadLocal<IPerfLogger> perfLogger = new ThreadLocal<IPerfLogger>();
+    protected static final InternalThreadLocal<IPerfLogger> perfLogger = new InternalThreadLocal<IPerfLogger>();
     static final private Logger LOG = LoggerFactory.getLogger(PerfLoggerFactory.class.getName());
 
     public static IPerfLogger getPerfLogger() {

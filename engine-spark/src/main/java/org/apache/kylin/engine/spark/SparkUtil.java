@@ -161,7 +161,7 @@ public class SparkUtil {
                     @Override
                     public String[] call(Text text) throws Exception {
                         String s = Bytes.toString(text.getBytes(), 0, text.getLength());
-                        return s.split(BatchConstants.SEQUENCE_FILE_DEFAULT_DELIMITER);
+                        return s.split(BatchConstants.SEQUENCE_FILE_DEFAULT_DELIMITER, -1);
                     }
                 });
     }

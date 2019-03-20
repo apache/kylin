@@ -19,28 +19,45 @@ package org.apache.kylin.source.jdbc;
 
 import java.sql.Types;
 
-import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class SqlUtilTest {
 
     @Test
     public void testJdbcTypetoKylinDataType() {
         this.getClass().getClassLoader().toString();
-        Assert.assertEquals("double", SqlUtil.jdbcTypeToKylinDataType(Types.FLOAT));
-        Assert.assertEquals("varchar", SqlUtil.jdbcTypeToKylinDataType(Types.NVARCHAR));
-        Assert.assertEquals("any", SqlUtil.jdbcTypeToKylinDataType(Types.ARRAY));
+        assertEquals("double", SqlUtil.jdbcTypeToKylinDataType(Types.FLOAT));
+        assertEquals("varchar", SqlUtil.jdbcTypeToKylinDataType(Types.NVARCHAR));
+        assertEquals("any", SqlUtil.jdbcTypeToKylinDataType(Types.ARRAY));
+        assertEquals("integer", SqlUtil.jdbcTypeToKylinDataType((4)));
+        assertEquals("smallint", SqlUtil.jdbcTypeToKylinDataType((5)));
+        assertEquals("tinyint", SqlUtil.jdbcTypeToKylinDataType((-6)));
+        assertEquals("char", SqlUtil.jdbcTypeToKylinDataType((1)));
+        assertEquals("decimal", SqlUtil.jdbcTypeToKylinDataType((2)));
+        assertEquals("varchar", SqlUtil.jdbcTypeToKylinDataType((-1)));
+        assertEquals("byte", SqlUtil.jdbcTypeToKylinDataType((-2)));
+        assertEquals("any", SqlUtil.jdbcTypeToKylinDataType((-1720774701)));
+        assertEquals("boolean", SqlUtil.jdbcTypeToKylinDataType((-7)));
+        assertEquals("timestamp", SqlUtil.jdbcTypeToKylinDataType((93)));
+        assertEquals("time", SqlUtil.jdbcTypeToKylinDataType((92)));
+        assertEquals("date", SqlUtil.jdbcTypeToKylinDataType((91)));
+        assertEquals("bigint", SqlUtil.jdbcTypeToKylinDataType((-5)));
     }
 
     @Test
     public void testIsPrecisionApplicable() {
-        Assert.assertFalse(SqlUtil.isPrecisionApplicable("boolean"));
-        Assert.assertTrue(SqlUtil.isPrecisionApplicable("varchar"));
+        assertFalse(SqlUtil.isPrecisionApplicable("boolean"));
+        assertTrue(SqlUtil.isPrecisionApplicable("varchar"));
     }
 
     @Test
     public void testIsScaleApplicable() {
-        Assert.assertFalse(SqlUtil.isScaleApplicable("varchar"));
-        Assert.assertTrue(SqlUtil.isScaleApplicable("decimal"));
+        assertFalse(SqlUtil.isScaleApplicable("varchar"));
+        assertTrue(SqlUtil.isScaleApplicable("decimal"));
     }
+
 }

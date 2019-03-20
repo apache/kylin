@@ -72,6 +72,8 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
     private String submitter;
     @JsonProperty("job_status")
     private JobStatusEnum status;
+    @JsonProperty("build_instance")
+    private String buildInstance;
 
     public JobStep getRunningStep() {
         for (JobStep step : this.getSteps()) {
@@ -289,6 +291,14 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         this.submitter = submitter;
     }
 
+    public String getBuildInstance() {
+        return buildInstance;
+    }
+
+    public void setBuildInstance(String buildInstance) {
+        this.buildInstance = buildInstance;
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class JobStep implements Comparable<JobStep> {
 
@@ -450,6 +460,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         public void setRunAsync(boolean runAsync) {
             this.runAsync = runAsync;
         }
+
 
         /**
          * @return the jobInstance

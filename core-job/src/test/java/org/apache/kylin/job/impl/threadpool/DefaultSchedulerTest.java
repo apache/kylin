@@ -52,6 +52,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultSchedulerTest extends BaseSchedulerTest {
     private static final Logger logger = LoggerFactory.getLogger(DefaultSchedulerTest.class);
+    private static final int MAX_WAIT_TIME = 20000;
 
     @Override
     public void after() throws Exception {
@@ -70,7 +71,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         BaseTestExecutable task1 = new SucceedTestExecutable();
         job.addTask(task1);
         execMgr.addJob(job);
-        waitForJobFinish(job.getId(), 10000);
+        waitForJobFinish(job.getId(), MAX_WAIT_TIME);
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
     }
@@ -84,7 +85,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task1);
         job.addTask(task2);
         execMgr.addJob(job);
-        waitForJobFinish(job.getId(), 10000);
+        waitForJobFinish(job.getId(), MAX_WAIT_TIME);
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task2.getId()).getState());
@@ -99,7 +100,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task1);
         job.addTask(task2);
         execMgr.addJob(job);
-        waitForJobFinish(job.getId(), 10000);
+        waitForJobFinish(job.getId(), MAX_WAIT_TIME);
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(task2.getId()).getState());
@@ -114,7 +115,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         job.addTask(task1);
         job.addTask(task2);
         execMgr.addJob(job);
-        waitForJobFinish(job.getId(), 10000);
+        waitForJobFinish(job.getId(), MAX_WAIT_TIME);
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(task1.getId()).getState());
         Assert.assertEquals(ExecutableState.READY, execMgr.getOutput(task2.getId()).getState());
@@ -130,7 +131,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         Thread.sleep(1100); // give time to launch job/task1 
         waitForJobStatus(job.getId(), ExecutableState.RUNNING, 500);
         execMgr.discardJob(job.getId());
-        waitForJobFinish(job.getId(), 10000);
+        waitForJobFinish(job.getId(), MAX_WAIT_TIME);
         Assert.assertEquals(ExecutableState.DISCARDED, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.DISCARDED, execMgr.getOutput(task1.getId()).getState());
         task1.waitForDoWork();
@@ -147,7 +148,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         execMgr.addJob(job);
         ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv()).updateJobOutput(task2.getId(),
                 ExecutableState.RUNNING, null, null);
-        waitForJobFinish(job.getId(), 10000);
+        waitForJobFinish(job.getId(), MAX_WAIT_TIME);
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(task2.getId()).getState());
@@ -160,12 +161,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         logger.info("testSchedulerPool");
         ScheduledExecutorService fetchPool = Executors.newScheduledThreadPool(1);
         final CountDownLatch countDownLatch = new CountDownLatch(3);
-        ScheduledFuture future = fetchPool.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                countDownLatch.countDown();
-            }
-        }, 0, 1, TimeUnit.SECONDS);
+        ScheduledFuture future = fetchPool.scheduleAtFixedRate(countDownLatch::countDown, 0, 1, TimeUnit.SECONDS);
         assertTrue("countDownLatch should reach zero in 15 secs", countDownLatch.await(7, TimeUnit.SECONDS));
         assertTrue("future should still running", future.cancel(true));
 
@@ -190,7 +186,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         execMgr.addJob(job);
         Thread.sleep(2500);
         runningJobToError(job.getId());
-        waitForJobFinish(job.getId(), 10000);
+        waitForJobFinish(job.getId(), MAX_WAIT_TIME);
         Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job.getId()).getState());
     }
 
@@ -230,7 +226,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         //restart
         startScheduler();
 
-        waitForJobFinish(job.getId(), 10000);
+        waitForJobFinish(job.getId(), MAX_WAIT_TIME);
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
     }

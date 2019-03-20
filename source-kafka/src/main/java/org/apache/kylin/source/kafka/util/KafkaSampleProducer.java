@@ -132,10 +132,11 @@ public class KafkaSampleProducer {
                 record.put("user", user);
                 //send message
                 ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
-                if(logger.isInfoEnabled()) logger.info("Sending 1 message: {}", JsonUtil.writeValueAsString(record));
+                if (logger.isInfoEnabled())
+                    logger.info("Sending 1 message: {}", JsonUtil.writeValueAsString(record));
                 producer.send(data);
                 Thread.sleep(interval);
-                if(System.currentTimeMillis() - startTime <= 7 * 24 * 3600 * 1000){
+                if (System.currentTimeMillis() - startTime >= 7 * 24 * 3600 * 1000) {
                     alive = false;
                 }
             }

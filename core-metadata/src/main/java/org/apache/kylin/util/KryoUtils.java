@@ -20,6 +20,7 @@ package org.apache.kylin.util;
 
 import java.util.BitSet;
 
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -28,7 +29,7 @@ import com.esotericsoftware.kryo.io.Output;
 
 public class KryoUtils {
 
-    private static ThreadLocal<Kryo> _Kryo = new ThreadLocal<>();
+    private static InternalThreadLocal<Kryo> _Kryo = new InternalThreadLocal<>();
 
     private KryoUtils() {
         throw new IllegalStateException("Class KryoUtils is an utility class !");

@@ -14,21 +14,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-package org.apache.kylin.storage.hbase.util;
+package org.apache.kylin.engine.spark.exception;
 
-import org.apache.kylin.common.KylinConfig;
+public class SparkException extends Exception {
 
-public class ZookeeperUtil {
-
-    public static String ZOOKEEPER_UTIL_HBASE_CLASSNAME = "org.apache.kylin.storage.hbase.util.ZooKeeperUtilHbase";
-
-    /**
-     * Get zookeeper connection string from HBase Configuration or from kylin.properties
-     */
-    public static String getZKConnectString() {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        return config.getZookeeperConnectString();
+    public SparkException(String message) {
+        super(message);
     }
+
+    public SparkException(Throwable cause) {
+        super(cause);
+    }
+
+    public SparkException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public SparkException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
 }

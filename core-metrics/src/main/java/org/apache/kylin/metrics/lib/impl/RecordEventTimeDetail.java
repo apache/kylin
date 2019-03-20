@@ -24,11 +24,12 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 
 public class RecordEventTimeDetail {
     private static final TimeZone timeZone;
-    private static final ThreadLocal<SimpleDateFormat> dateFormatThreadLocal = new ThreadLocal<SimpleDateFormat>();
-    private static final ThreadLocal<SimpleDateFormat> timeFormatThreadLocal = new ThreadLocal<SimpleDateFormat>();
+    private static final InternalThreadLocal<SimpleDateFormat> dateFormatThreadLocal = new InternalThreadLocal<SimpleDateFormat>();
+    private static final InternalThreadLocal<SimpleDateFormat> timeFormatThreadLocal = new InternalThreadLocal<SimpleDateFormat>();
 
     static {
         timeZone = TimeZone.getTimeZone(KylinConfig.getInstanceFromEnv().getTimeZone());

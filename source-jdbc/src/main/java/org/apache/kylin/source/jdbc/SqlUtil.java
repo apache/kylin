@@ -159,6 +159,6 @@ public class SqlUtil {
     }
 
     public static boolean isScaleApplicable(String typeName) {
-        return DataType.NUMBER_FAMILY.contains(typeName) && !DataType.INTEGER_FAMILY.contains(typeName);
+        return typeName.equals("decimal") || typeName.equals("numeric");
     }
 }

@@ -76,7 +76,7 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.SourcePartition;
-import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -120,6 +120,12 @@ public class JobService extends BasicService implements InitializingBean {
         TimeZone.setDefault(tzone);
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+
+        // In case of that kylin.server.cluster-name is not set,
+        // this method have to be called first to avoid the influence of the change of kylin.metadata.url
+        String clusterName = kylinConfig.getClusterName();
+        logger.info("starting to initialize an instance in cluster {}", clusterName);
+
         final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory
                 .scheduler(kylinConfig.getSchedulerType());
 
@@ -470,6 +476,7 @@ public class JobService extends BasicService implements InitializingBean {
         CubingJob cubeJob = (CubingJob) job;
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        Output output = cubeJob.getOutput();
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         if (cube != null) {
@@ -484,9 +491,13 @@ public class JobService extends BasicService implements InitializingBean {
         result.setLastModified(cubeJob.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
+        result.setExecStartTime(cubeJob.getStartTime());
+        result.setExecEndTime(cubeJob.getEndTime());
+        result.setExecInterruptTime(cubeJob.getInterruptTime());
         result.setType(CubeBuildTypeEnum.BUILD);
         result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
         result.setMrWaiting(cubeJob.getMapReduceWaitTime() / 1000);
+        result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
         result.setDuration(cubeJob.getDuration() / 1000);
         for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
             AbstractExecutable task = cubeJob.getTasks().get(i);
@@ -499,7 +510,7 @@ public class JobService extends BasicService implements InitializingBean {
         if (job == null) {
             return null;
         }
-
+        Output output = job.getOutput();
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
@@ -507,8 +518,12 @@ public class JobService extends BasicService implements InitializingBean {
         result.setLastModified(job.getLastModified());
         result.setSubmitter(job.getSubmitter());
         result.setUuid(job.getId());
+        result.setExecStartTime(job.getStartTime());
+        result.setExecEndTime(job.getEndTime());
+        result.setExecInterruptTime(job.getInterruptTime());
         result.setType(CubeBuildTypeEnum.BUILD);
         result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
+        result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
         result.setDuration(job.getDuration() / 1000);
         for (int i = 0; i < job.getTasks().size(); ++i) {
             AbstractExecutable task = job.getTasks().get(i);
@@ -528,6 +543,7 @@ public class JobService extends BasicService implements InitializingBean {
         }
 
         CheckpointExecutable checkpointExecutable = (CheckpointExecutable) job;
+        Output output = checkpointExecutable.getOutput();
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
@@ -535,8 +551,12 @@ public class JobService extends BasicService implements InitializingBean {
         result.setLastModified(job.getLastModified());
         result.setSubmitter(job.getSubmitter());
         result.setUuid(job.getId());
+        result.setExecStartTime(job.getStartTime());
+        result.setExecEndTime(job.getEndTime());
+        result.setExecInterruptTime(job.getInterruptTime());
         result.setType(CubeBuildTypeEnum.CHECKPOINT);
         result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
+        result.setBuildInstance(AbstractExecutable.getBuildInstance(output));
         result.setDuration(job.getDuration() / 1000);
         for (int i = 0; i < checkpointExecutable.getTasks().size(); ++i) {
             AbstractExecutable task = checkpointExecutable.getTasks().get(i);

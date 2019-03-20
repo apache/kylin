@@ -45,6 +45,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
+import org.apache.kylin.engine.spark.exception.SparkException;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -132,7 +133,7 @@ public class SparkExecutable extends AbstractExecutable {
         final Output output = getOutput();
         if (output.getExtra().containsKey(START_TIME)) {
             final String sparkJobID = output.getExtra().get(ExecutableConstants.SPARK_JOB_ID);
-            if (sparkJobID == null) {
+            if (StringUtils.isEmpty(sparkJobID)) {
                 getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
                 return;
             }
@@ -301,8 +302,11 @@ public class SparkExecutable extends AbstractExecutable {
                 if (future.isDone() == false) { // user cancelled
                     executorService.shutdownNow(); // interrupt
                     extra = mgr.getOutput(getId()).getExtra();
-                    if (extra != null && extra.get(ExecutableConstants.SPARK_JOB_ID) != null) {
-                        killAppRetry(extra.get(ExecutableConstants.SPARK_JOB_ID));
+                    if (extra != null) {
+                        String newJobId = extra.get(ExecutableConstants.SPARK_JOB_ID);
+                        if (StringUtils.isNotEmpty(newJobId)) {
+                            killAppRetry(newJobId);
+                        }
                     }
 
                     if (isDiscarded()) {
@@ -339,15 +343,16 @@ public class SparkExecutable extends AbstractExecutable {
                 extra = mgr.getOutput(getId()).getExtra();
                 extra.put(ExecutableConstants.SPARK_JOB_ID, "");
                 getManager().addJobInfo(getId(), extra);
-                return new ExecuteResult(ExecuteResult.State.ERROR, result != null ? result.getSecond() : "");
+
+                return ExecuteResult.createFailed(new SparkException(result != null ? result.getSecond() : ""));
             } catch (Exception e) {
-                logger.error("error run spark job:", e);
+                logger.error("Error run spark job:", e);
                 return ExecuteResult.createError(e);
             }
         }
     }
 
-    private void dumpMetadata(CubeSegment segment, List<CubeSegment> mergingSeg) throws ExecuteException {
+    protected void dumpMetadata(CubeSegment segment, List<CubeSegment> mergingSeg) throws ExecuteException {
         try {
             if (mergingSeg == null || mergingSeg.size() == 0) {
                 attachSegmentMetadataWithDict(segment);
@@ -363,13 +368,16 @@ public class SparkExecutable extends AbstractExecutable {
     }
 
     // Spark Cubing can only work in layer algorithm
-    private void setAlgorithmLayer() {
+    protected void setAlgorithmLayer() {
         ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubingJob cubingJob = (CubingJob) execMgr.getJob(this.getParam(JOB_ID));
         cubingJob.setAlgorithm(CubingJob.AlgorithmEnum.LAYER);
     }
 
     private String getAppState(String appId) throws IOException {
+        if (StringUtils.isEmpty(appId)) {
+            throw new IOException("The app is is null or empty");
+        }
         CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
         PatternedLogger patternedLogger = new PatternedLogger(logger);
         String stateCmd = String.format(Locale.ROOT, "yarn application -status %s", appId);
@@ -385,6 +393,11 @@ public class SparkExecutable extends AbstractExecutable {
     }
 
     private int killAppRetry(String appId) throws IOException, InterruptedException {
+        if (StringUtils.isEmpty(appId)) {
+            logger.warn("The app is is null or empty");
+            return 0;
+        }
+
         String state = getAppState(appId);
         if ("SUCCEEDED".equals(state) || "FAILED".equals(state) || "KILLED".equals(state)) {
             logger.warn(appId + "is final state, no need to kill");
@@ -441,7 +454,7 @@ public class SparkExecutable extends AbstractExecutable {
                 this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt()));
     }
 
-    private void readCounters(final Map<String, String> info) {
+    protected void readCounters(final Map<String, String> info) {
         String counter_save_as = getCounterSaveAs();
         if (counter_save_as != null) {
             String[] saveAsNames = counter_save_as.split(",");

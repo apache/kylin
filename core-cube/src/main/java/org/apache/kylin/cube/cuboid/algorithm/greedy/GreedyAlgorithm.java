@@ -19,7 +19,6 @@
 package org.apache.kylin.cube.cuboid.algorithm.greedy;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -75,34 +74,32 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
         remaining.addAll(cuboidStats.getAllCuboidsForSelection());
 
         long round = 0;
-        while (true) {
-            if (shouldCancel()) {
-                break;
-            }
+        boolean doesRemainSpace = true;
+        while (!shouldCancel() && doesRemainSpace) {
             // Choose one cuboId having the maximum benefit per unit space in all available list
             CuboidBenefitModel best = recommendBestOne();
+
             // If return null, then we should finish the process and return
-            if (best == null) {
-                break;
-            }
             // If we finally find the cuboid selected does not meet a minimum threshold of benefit (for
             // example, a cuboid with 0.99M roll up from a parent cuboid with 1M
             // rows), then we should finish the process and return
-            if (!benefitPolicy.ifEfficient(best)) {
-                break;
-            }
+            if (best != null && benefitPolicy.ifEfficient(best)) {
+                remainingSpace -= cuboidStats.getCuboidSize(best.getCuboidId());
 
-            remainingSpace -= cuboidStats.getCuboidSize(best.getCuboidId());
-            // If we finally find there is no remaining space,  then we should finish the process and return
-            if (remainingSpace <= 0) {
-                break;
-            }
-            selected.add(best.getCuboidId());
-            remaining.remove(best.getCuboidId());
-            benefitPolicy.propagateAggregationCost(best.getCuboidId(), selected);
-            round++;
-            if (logger.isTraceEnabled()) {
-                logger.trace(String.format(Locale.ROOT, "Recommend in round %d : %s", round, best.toString()));
+                // If we finally find there is no remaining space,  then we should finish the process and return
+                if (remainingSpace > 0) {
+                    selected.add(best.getCuboidId());
+                    remaining.remove(best.getCuboidId());
+                    benefitPolicy.propagateAggregationCost(best.getCuboidId(), selected);
+                    round++;
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Recommend in round {} : {}", round, best);
+                    }
+                } else {
+                    doesRemainSpace = false;
+                }
+            } else {
+                doesRemainSpace = false;
             }
         }
 
@@ -115,14 +112,14 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
         logger.info("Greedy Algorithm finished.");
 
         if (logger.isTraceEnabled()) {
-            logger.trace(String.format(Locale.ROOT, "Excluded cuboidId size:%d", excluded.size()));
+            logger.trace("Excluded cuboidId size: {}", excluded.size());
             logger.trace("Excluded cuboidId detail:");
             for (Long cuboid : excluded) {
-                logger.trace(String.format(Locale.ROOT, "cuboidId %d and Cost: %d and Space: %f", cuboid,
-                        cuboidStats.getCuboidQueryCost(cuboid), cuboidStats.getCuboidSize(cuboid)));
+                logger.trace("cuboidId {} and Cost: {} and Space: {}", cuboid,
+                        cuboidStats.getCuboidQueryCost(cuboid), cuboidStats.getCuboidSize(cuboid));
             }
-            logger.trace("Total Space:" + (spaceLimit - remainingSpace));
-            logger.trace("Space Expansion Rate:" + (spaceLimit - remainingSpace) / cuboidStats.getBaseCuboidSize());
+            logger.trace("Total Space: {}", spaceLimit - remainingSpace);
+            logger.trace("Space Expansion Rate: {}", (spaceLimit - remainingSpace) / cuboidStats.getBaseCuboidSize());
         }
         return Lists.newArrayList(selected);
     }
@@ -133,9 +130,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
 
         final CountDownLatch counter = new CountDownLatch(remaining.size());
         for (final Long cuboid : remaining) {
-            executor.submit(new Runnable() {
-                @Override
-                public void run() {
+            executor.submit(() -> {
                     CuboidBenefitModel currentBest = best.get();
                     assert (selected.size() == selectedSize);
                     CuboidBenefitModel.BenefitModel benefitModel = benefitPolicy.calculateBenefit(cuboid, selected);
@@ -150,8 +145,7 @@ public class GreedyAlgorithm extends AbstractRecommendAlgorithm {
                         }
                     }
                     counter.countDown();
-                }
-            });
+                });
         }
 
         try {

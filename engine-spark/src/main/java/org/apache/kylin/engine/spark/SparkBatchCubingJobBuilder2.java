@@ -88,7 +88,7 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
     }
 
     public SparkExecutable createFactDistinctColumnsSparkStep(String jobId) {
-        final SparkExecutable sparkExecutable = new SparkExecutable();
+        final SparkExecutable sparkExecutable = SparkExecutableFactory.instance(seg.getConfig());
         final IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(seg);
         final String tablePath = JoinedFlatTable.getTableDir(flatTableDesc, getJobWorkingDir(jobId));
 
@@ -115,7 +115,7 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
     }
 
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {
-        final SparkExecutable sparkExecutable = new SparkExecutable();
+        final SparkExecutable sparkExecutable = SparkExecutableFactory.instance(seg.getConfig());
         sparkExecutable.setClassName(SparkCubingByLayer.class.getName());
         configureSparkJob(seg, sparkExecutable, jobId, cuboidRootPath);
         result.addTask(sparkExecutable);

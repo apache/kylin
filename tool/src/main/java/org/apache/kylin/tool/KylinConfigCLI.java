@@ -52,7 +52,7 @@ public class KylinConfigCLI {
         }
     }
 
-    static private Map<String, String> getPropertiesByPrefix(Properties props, String prefix) {
+    private static Map<String, String> getPropertiesByPrefix(Properties props, String prefix) {
         Map<String, String> result = Maps.newLinkedHashMap();
         for (Map.Entry<Object, Object> entry : props.entrySet()) {
             String entryKey = (String) entry.getKey();

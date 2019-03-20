@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.lock.DistributedLock.Watcher;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperDistributedLock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

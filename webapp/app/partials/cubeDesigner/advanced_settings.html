@@ -509,92 +509,95 @@
          <div class="form-group large-popover" style="margin-bottom:30px;">
            <h3 style="margin-left:42px;margin-bottom:30px;">Advanced Snapshot Table  <i kylinpopover placement="right" title="Advanced Snapshot Table" template="AdvanceSnapshotTableTip.html" class="fa fa-info-circle"></i></h3>
            <div style="margin-left:42px">
-             <!-- edit mode-->
-             <div ng-if="state.mode=='edit'" class="box-body">
-               <table class="table table-hover table-bordered list" style="table-layout: fixed;width:92%;">
+             <div class="box-body">
+               <br/>
+               <table class="table table-striped table-hover">
                  <thead>
-                   <tr>
-                     <th style="width:60%">Snapshot Table</th>
-                     <th style="width:25%">Type</th>
-                     <th style="width:10%">Global</th>
-                     <th style="width:5%"></th>
-                   </tr>
+                 <tr>
+                   <th>Snapshot Table</th>
+                   <th>Type</th>
+                   <th>Global</th>
+                   <th ng-if="state.mode=='edit'">Actions</th>
+                 </tr>
                  </thead>
                  <tbody>
-                   <tr ng-repeat="snapshot in cubeMetaFrame.snapshot_table_desc_list track by $index">
+                   <tr ng-repeat="snapshotTable in cubeMetaFrame.snapshot_table_desc_list track by $index">
                      <td>
-                       <select style="width:95%" chosen ng-model="snapshot.table_name"
-                               ng-change="changeSnapshotTable(snapshot, '{{snapshot.table_name}}', {{cubeMetaFrame.snapshot_table_desc_list}})"
-                               ng-options="tableName as tableName for tableName in cubeLookups">
-                         <option value=""></option>
-                       </select>
+                       <p>{{snapshotTable.table_name}}</p>
                      </td>
                      <td>
-                       <select style="width:95%" chosen ng-model="snapshot.storage_type"
-                               ng-change="changeSnapshotStorage(snapshot)"
-                               ng-options="storageType.value as storageType.name for storageType in cubeConfig.snapshotStorageTypes">
-                         <option value=""></option>
-                       </select>
+                       <p>{{snapshotTable.storage_type}}</p>
                      </td>
                      <td>
-                       <input type="checkbox" ng-model="snapshot.global" ng-disabled="(snapshot.storage_type == 'hbase')">
+                       <input type="checkbox" ng-model="snapshotTable.global" disabled="true">
                      </td>
-                     <td>
-                       <button class="btn btn-xs btn-info" ng-click="removeSnapshotTable($index)">
-                         <i class="fa fa-minus"></i>
+                     <td ng-if="state.mode=='edit'">
+                       <button class="btn btn-xs btn-info" ng-click="addNewSnapshot(snapshotTable, $index)" ng-disabled="instance.status=='READY'">
+                         <i class="fa fa-pencil"></i>
                        </button>
-                     </td>
-                   </tr>
-                   <tr>
-                     <td>
-                       <select style="width:95%" chosen ng-model="newSnapshot.select.table_name"
-                               ng-options="tableName as tableName for tableName in cubeLookups">
-                         <option value=""></option>
-                       </select>
-                     </td>
-                     <td>
-                       <select style="width:95%" chosen ng-model="newSnapshot.select.storage_type"
-                               ng-change="changeSnapshotStorage(newSnapshot.select)"
-                               ng-options="storageType.value as storageType.name for storageType in cubeConfig.snapshotStorageTypes">
-                         <option value=""></option>
-                       </select>
-                     </td>
-                     <td>
-                       <input type="checkbox" ng-model="newSnapshot.select.global" ng-disabled="(newSnapshot.select.storage_type == 'hbase')">
-                     </td>
-                     <td>
-                       <button class="btn btn-xs btn-info" ng-click="addSnapshot(newSnapshot.select)">
-                         <i class="fa fa-plus"></i>
+                       <button class="btn btn-xs  btn-danger" ng-click="removeSnapshotTable($index)" ng-disabled="instance.status=='READY'">
+                         <i class="fa fa-trash-o"></i>
                        </button>
                      </td>
                    </tr>
                  </tbody>
                </table>
              </div>
-             <!-- view-->
-             <div ng-if="state.mode=='view'" class="box-body">
-               <table class="table table-hover table-bordered list" style="table-layout: fixed;width:92%;">
-                  <thead>
-                   <tr>
-                     <th style="width:60%">Snapshot Table</th>
-                     <th style="width:25%">Type</th>
-                     <th style="width:10%">Global</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   <tr ng-repeat="snapshot in cubeMetaFrame.snapshot_table_desc_list track by $index">
-                     <td>
-                         <p>{{snapshot.table_name}}</p>
-                     </td>
-                     <td>
-                         <p>{{snapshot.storage_type}}</p>
-                     </td>
-                     <td>
-                         <input type="checkbox" ng-model="snapshot.global" disabled="true">
-                     </td>
-                   </tr>
-                 </tbody>
-               </table>
+           </div>
+           <!-- Add  Snapshot-->
+           <div class="form-group" style="margin-left:42px;">
+             <button class="btn btn-sm btn-info" ng-click="addNewSnapshot()" ng-show="state.mode=='edit' && !addNewSanpshot" ng-disabled="instance.status=='READY'">
+               <i class="fa fa-plus"></i> Snapshot Table
+             </button>
+           </div>
+           <!--Edit Snapshot-->
+           <div class="box box-solid"  ng-if="addNewSanpshot" style="margin-left:42px;">
+             <div class="box-header">
+               <h4 class="box-title text-info">Edit Snapshot</h4>
+             </div>
+             <div class="box-body">
+               <div class="row">
+                 <div class="col-xs-8">
+                   <!--Column-->
+                   <div class="form-group middle-popover">
+                     <div class="row">
+                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Snapshot Table</b></label>
+                       <div class="col-xs-12 col-sm-6">
+                         <select style="width:95%" chosen ng-model="newSnapshot.select.table_name"
+                              ng-options="tableName as tableName for tableName in cubeLookups">
+                         <option value=""></option>
+                       </select>
+                       </div>
+                     </div>
+                   </div>
+                   <div class="form-group">
+                     <div class="row">
+                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Type</b></label>
+                       <div class="col-xs-12 col-sm-6">
+                         <select style="width:95%" chosen ng-model="newSnapshot.select.storage_type"
+                              ng-change="changeSnapshotStorage(newSnapshot.select)"
+                              ng-options="storageType.value as storageType.name for storageType in cubeConfig.snapshotStorageTypes">
+                           <option value=""></option>
+                         </select>
+                       </div>
+                     </div>
+                   </div>
+                   <!--Builder-->
+                   <div class="form-group" ng-if="!isReuse" >
+                     <div class="row">
+                       <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Global</b></label>
+                       <div class="col-xs-12 col-sm-6">
+                         <input type="checkbox" ng-model="newSnapshot.select.global" ng-disabled="(newSnapshot.select.storage_type == 'hbase')">
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+             <div class="box-footer">
+               <button class="btn btn-sm btn-info"
+                     ng-click="addSnapshot(newSnapshot.select)" ng-show="state.mode=='edit'">OK</button>
+               <button class="btn btn-link" ng-click="cancelEditSnapshot()">Cancel</button>
              </div>
            </div>
          </div>

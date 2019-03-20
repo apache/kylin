@@ -74,4 +74,16 @@ public class CubeInstanceTest {
         Assert.assertEquals(origSegCount, cubeInstance.getSegments().size());
         Assert.assertEquals(origSegCount + 1, newCubeInstance.getSegments().size());
     }
+
+    @Test
+    public void equalTest() {
+        CubeInstance cubeInstanceWithOtherName = CubeInstance.getCopyOf(cubeInstance);
+        cubeInstanceWithOtherName.setName("other");
+
+        Assert.assertNotEquals(cubeInstance, cubeInstanceWithOtherName);
+
+        Assert.assertEquals(cubeInstance, CubeInstance.getCopyOf(cubeInstance));
+
+        Assert.assertNotEquals(cubeInstance, null);
+    }
 }

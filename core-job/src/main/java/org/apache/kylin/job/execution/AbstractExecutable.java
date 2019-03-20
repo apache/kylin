@@ -23,6 +23,7 @@ import java.io.StringWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
 import org.apache.commons.lang.StringUtils;
@@ -55,6 +56,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String START_TIME = "startTime";
     protected static final String END_TIME = "endTime";
     protected static final String INTERRUPT_TIME = "interruptTime";
+    protected static final String BUILD_INSTANCE = "buildInstance";
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
     public static final String NO_NEED_TO_SEND_EMAIL_USER_LIST_IS_EMPTY = "no need to send email, user list is empty";
@@ -157,7 +159,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
             Throwable realException;
             do {
                 if (retry > 0) {
-                    logger.info("Retry {}", retry);
+                    pauseOnRetry();
+                    logger.info("Begin to retry, retry time: {}", retry);
                 }
                 catchedException = null;
                 result = null;
@@ -375,6 +378,14 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return getExtraInfoAsLong(getOutput(), key, defaultValue);
     }
 
+    public static String getBuildInstance(Output output) {
+        final String str = output.getExtra().get(BUILD_INSTANCE);
+        if (str != null) {
+            return str;
+        }
+        return "unknown";
+    }
+
     public static long getStartTime(Output output) {
         return getExtraInfoAsLong(output, START_TIME, 0L);
     }
@@ -489,6 +500,18 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
             return false;
         } else {
             return isRetryableException(t.getClass().getName());
+        }
+    }
+
+    // pauseOnRetry should only works when retry has been triggered
+    public void pauseOnRetry() {
+        int interval = KylinConfig.getInstanceFromEnv().getJobRetryInterval();
+        logger.info("Pause {} milliseconds before retry", interval);
+        try {
+            TimeUnit.MILLISECONDS.sleep(interval);
+        } catch (InterruptedException e) {
+            logger.error("Job retry was interrupted, details: {}", e);
+            Thread.currentThread().interrupt();
         }
     }
 

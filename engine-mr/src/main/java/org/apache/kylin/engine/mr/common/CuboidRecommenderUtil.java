@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 public class CuboidRecommenderUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(CuboidRecommenderUtil.class);
+    private static final String BASE_CUBOID_COUNT_IN_CUBOID_STATISTICS_IS_ZERO = "Base cuboid count in cuboid statistics is 0.";
 
     /** Trigger cube planner phase one */
     public static Map<Long, Long> getRecommendCuboidList(CubeSegment segment) throws IOException {
@@ -52,7 +53,7 @@ public class CuboidRecommenderUtil {
         long baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
         if (cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == null
                 || cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == 0L) {
-            logger.info("Base cuboid count in cuboid statistics is 0.");
+            logger.info(BASE_CUBOID_COUNT_IN_CUBOID_STATISTICS_IS_ZERO);
             return null;
         }
 
@@ -75,7 +76,7 @@ public class CuboidRecommenderUtil {
                 .readCuboidStatsAndSizeFromCube(currentCuboids, cube);
         long baseCuboid = cuboidScheduler.getBaseCuboidId();
         if (statsPair.getFirst().get(baseCuboid) == null || statsPair.getFirst().get(baseCuboid) == 0L) {
-            logger.info("Base cuboid count in cuboid statistics is 0.");
+            logger.info(BASE_CUBOID_COUNT_IN_CUBOID_STATISTICS_IS_ZERO);
             return null;
         }
 
@@ -120,7 +121,7 @@ public class CuboidRecommenderUtil {
         long baseCuboid = cube.getCuboidScheduler().getBaseCuboidId();
         if (cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == null
                 || cubeStatsReader.getCuboidRowEstimatesHLL().get(baseCuboid) == 0L) {
-            logger.info("Base cuboid count in cuboid statistics is 0.");
+            logger.info(BASE_CUBOID_COUNT_IN_CUBOID_STATISTICS_IS_ZERO);
             return null;
         }
 

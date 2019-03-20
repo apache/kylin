@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.Bytes;
 
 import com.google.common.collect.Maps;
@@ -38,7 +39,7 @@ public class Number2BytesConverter implements BytesConverter<String>, Serializab
 
     int maxDigitsBeforeDecimalPoint;
 
-    static final transient ThreadLocal<Map<Integer, NumberBytesCodec>> LOCAL = new ThreadLocal<Map<Integer, NumberBytesCodec>>();
+    static final transient InternalThreadLocal<Map<Integer, NumberBytesCodec>> LOCAL = new InternalThreadLocal<Map<Integer, NumberBytesCodec>>();
 
     static NumberBytesCodec getCodec(int maxDigitsBeforeDecimalPoint) {
         Map<Integer, NumberBytesCodec> codecMap = LOCAL.get();

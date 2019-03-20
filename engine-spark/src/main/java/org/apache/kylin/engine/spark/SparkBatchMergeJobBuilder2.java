@@ -77,7 +77,7 @@ public class SparkBatchMergeJobBuilder2 extends JobBuilderSupport {
     }
 
     public SparkExecutable createMergeDictionaryStep(CubeSegment seg, String jobID, List<String> mergingSegmentIds) {
-        final SparkExecutable sparkExecutable = new SparkExecutable();
+        final SparkExecutable sparkExecutable = SparkExecutableFactory.instance(seg.getConfig());
         sparkExecutable.setClassName(SparkMergingDictionary.class.getName());
 
         sparkExecutable.setParam(SparkMergingDictionary.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
@@ -108,7 +108,7 @@ public class SparkBatchMergeJobBuilder2 extends JobBuilderSupport {
         String formattedPath = StringUtil.join(mergingCuboidPaths, ",");
         String outputPath = getCuboidRootPath(jobID);
 
-        final SparkExecutable sparkExecutable = new SparkExecutable();
+        final SparkExecutable sparkExecutable = SparkExecutableFactory.instance(seg.getConfig());
         sparkExecutable.setClassName(SparkCubingMerge.class.getName());
         sparkExecutable.setParam(SparkCubingMerge.OPTION_CUBE_NAME.getOpt(), seg.getRealization().getName());
         sparkExecutable.setParam(SparkCubingMerge.OPTION_SEGMENT_ID.getOpt(), seg.getUuid());

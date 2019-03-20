@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.storage.hbase.util;
+package org.apache.kylin.job.lock.zookeeper;
 
 import java.io.Closeable;
 import java.util.concurrent.Executor;

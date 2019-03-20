@@ -82,6 +82,7 @@ public class CubeMetaExtractorTest extends LocalFileMetadataTestCase {
         Set<String> expectTbl = Sets.newHashSet(
                 "/table/DEFAULT.FIFTY_DIM.json", //
                 "/table/DEFAULT.STREAMING_TABLE.json", //
+                "/table/DEFAULT.STREAMING_CATEGORY.json", //
                 "/table/DEFAULT.TEST_ACCOUNT.json", //
                 "/table/DEFAULT.TEST_CATEGORY_GROUPINGS.json", //
                 "/table/DEFAULT.TEST_COUNTRY.json", //

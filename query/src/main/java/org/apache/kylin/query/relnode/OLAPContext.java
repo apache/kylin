@@ -31,6 +31,7 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.expression.ExpressionColCollector;
@@ -65,9 +66,9 @@ public class OLAPContext {
     public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
     public static final String PRM_USER_AUTHEN_INFO = "UserAuthenInfo";
 
-    static final ThreadLocal<Map<String, String>> _localPrarameters = new ThreadLocal<Map<String, String>>();
+    static final InternalThreadLocal<Map<String, String>> _localPrarameters = new InternalThreadLocal<Map<String, String>>();
 
-    static final ThreadLocal<Map<Integer, OLAPContext>> _localContexts = new ThreadLocal<Map<Integer, OLAPContext>>();
+    static final InternalThreadLocal<Map<Integer, OLAPContext>> _localContexts = new InternalThreadLocal<Map<Integer, OLAPContext>>();
 
     public static void setParameters(Map<String, String> parameters) {
         _localPrarameters.set(parameters);
@@ -132,9 +133,11 @@ public class OLAPContext {
     public boolean limitPrecedesAggr = false;
     public boolean afterJoin = false;
     public boolean hasJoin = false;
+    public boolean hasLimit = false;
     public boolean hasWindow = false;
     public boolean groupByExpression = false; // checkout if group by column has operator
     public boolean afterOuterAggregate = false;
+    public boolean disableLimitPushdown = !KylinConfig.getInstanceFromEnv().isLimitPushDownEnabled();
 
     // cube metadata
     public IRealization realization;
@@ -196,7 +199,7 @@ public class OLAPContext {
                     metricsColumns, aggregations, aggrSqlCalls, dynFuncs, // aggregation
                     rtDimColumns, rtMetricColumns, // runtime related columns
                     filterColumns, filter, havingFilter, // filter
-                    sortColumns, sortOrders, limitPrecedesAggr, // sort & limit
+                    sortColumns, sortOrders, limitPrecedesAggr, hasLimit, // sort & limit
                     involvedMeasure);
         }
         return sqlDigest;
@@ -293,6 +296,7 @@ public class OLAPContext {
         }
         fixedModel = false;
     }
+
     public void bindVariable(DataContext dataContext) {
         bindVariable(this.filter, dataContext);
     }

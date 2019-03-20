@@ -29,6 +29,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.metadata.model.Segments;
 
 public class MergeCuboidJob extends CuboidJob {
 
@@ -61,8 +62,9 @@ public class MergeCuboidJob extends CuboidJob {
             setJobClasspath(job, cube.getConfig());
 
             // add metadata to distributed cache
-            // TODO actually only dictionaries from merging segments are needed
-            attachCubeMetadataWithDict(cube, job.getConfiguration());
+            Segments<CubeSegment> allSegs = cube.getMergingSegments(cubeSeg);
+            allSegs.add(cubeSeg);
+            attachSegmentsMetadataWithDict(allSegs, job.getConfiguration());
 
             // Mapper
             job.setMapperClass(MergeCuboidMapper.class);

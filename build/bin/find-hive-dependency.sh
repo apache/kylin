@@ -31,7 +31,7 @@ if [ "${client_mode}" == "beeline" ]
 then
     beeline_shell=`$KYLIN_HOME/bin/get-properties.sh kylin.source.hive.beeline-shell`
     beeline_params=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.beeline-params`
-    hive_env=`${beeline_shell} ${hive_conf_properties} ${beeline_params} --outputformat=dsv -e "set;" 2>&1 | grep 'env:CLASSPATH' `
+    hive_env=`${beeline_shell} ${hive_conf_properties} ${beeline_params} --outputformat=dsv -e "set;" 2>&1 | grep --text 'env:CLASSPATH' `
 else
     source ${dir}/check-hive-usability.sh
     hive_env=`hive ${hive_conf_properties} -e set 2>&1 | grep 'env:CLASSPATH'`
@@ -61,7 +61,7 @@ fi
 
 for data in ${arr[@]}
 do
-    result=`echo $data | grep -e 'hive-exec[a-z0-9A-Z\.-]*.jar'`
+    result=`echo $data | grep -e 'hive-exec[a-z0-9A-Z\.-]*.jar' | grep -v 'auxlib'`
     # In some cases there are more than one lib dirs, only the first one will be applied.
     if [ $result ] && [ -z "$hive_exec_path" ]
     then
@@ -189,6 +189,12 @@ then
         quit "HIVE_LIB not found, please check hive installation or export HIVE_LIB='YOUR_LOCAL_HIVE_LIB'."
     fi
 else
+    if [[ $HIVE_LIB =~ ^\/.*hive.*\/lib[\/]* ]]
+    then
+        verbose "HIVE_LIB is set to ${HIVE_LIB}"
+    else
+        echo "WARNING: HIVE_LIB is set to ${HIVE_LIB}, it's advised to set it to the lib dir under hive's installation directory"
+    fi
     hive_lib_dir="$HIVE_LIB"
 fi
 hive_lib=`find -L ${hive_lib_dir} -name '*.jar' ! -name '*druid*' ! -name '*slf4j*' ! -name '*avatica*' ! -name '*calcite*' ! -name '*jackson-datatype-joda*' ! -name '*derby*' -printf '%p:' | sed 's/:$//'`

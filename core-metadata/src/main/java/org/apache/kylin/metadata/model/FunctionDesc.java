@@ -68,7 +68,6 @@ public class FunctionDesc implements Serializable {
         BUILT_IN_AGGREGATIONS.add(FUNC_COUNT);
         BUILT_IN_AGGREGATIONS.add(FUNC_MAX);
         BUILT_IN_AGGREGATIONS.add(FUNC_MIN);
-        BUILT_IN_AGGREGATIONS.add(FUNC_SUM);
         BUILT_IN_AGGREGATIONS.add(FUNC_COUNT_DISTINCT);
         BUILT_IN_AGGREGATIONS.add(FUNC_PERCENTILE);
     }
@@ -160,7 +159,7 @@ public class FunctionDesc implements Serializable {
             if (isMax() || isMin()) {
                 return parameter.getColRefs().get(0).getType();
             } else if (isSum()) {
-                return parameter.isColumnType() ? parameter.getColRefs().get(0).getType() : DataType.getType("bigint");
+                return parameter.isColumnType() ? DataType.getType(returnType) : DataType.getType("bigint");
             } else if (isCount()) {
                 return DataType.getType("bigint");
             } else {

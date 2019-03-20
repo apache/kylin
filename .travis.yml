@@ -32,14 +32,15 @@ jdk:
 
 before_script:
   - echo "MAVEN_OPTS='-Xms1024m -Xmx3072m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m'" > ~/.mavenrc
+  - sed -i 's/log4j.logger.org.apache.kylin=DEBUG/log4j.logger.org.apache.kylin=INFO/g' build/conf/kylin-server-log4j.properties
+  - sed -i 's/log4j.logger.org.apache.kylin=DEBUG/log4j.logger.org.apache.kylin=INFO/g' build/conf/kylin-tools-log4j.properties
 
 script:
-  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test  coveralls:report
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test coveralls:report -e
   - if [[ -n "${TRAVIS_PULL_REQUEST_SLUG}" && "${TRAVIS_PULL_REQUEST_SLUG}" != "${TRAVIS_REPO_SLUG}" ]]; then
         echo "The pull request from ${TRAVIS_PULL_REQUEST_SLUG} is an EXTERNAL pull request. Skip sonar analysis.";
     else
         git fetch --unshallow --quiet;
-        mvn sonar:sonar;
     fi
 
 notification:

@@ -30,6 +30,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
@@ -38,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.slf4j.Logger;
@@ -66,7 +68,7 @@ public class KylinConfig extends KylinConfigBase {
     private static OrderedProperties defaultOrderedProperties = new OrderedProperties();
 
     // thread-local instances, will override SYS_ENV_INSTANCE
-    private static transient ThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new ThreadLocal<>();
+    private static transient InternalThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new InternalThreadLocal<>();
 
     static {
         /*
@@ -150,7 +152,7 @@ public class KylinConfig extends KylinConfigBase {
             logger.info("Destroy KylinConfig");
             dumpStackTrace();
             SYS_ENV_INSTANCE = null;
-            THREAD_ENV_INSTANCE = new ThreadLocal<>();
+            THREAD_ENV_INSTANCE = new InternalThreadLocal<>();
         }
     }
 
@@ -183,7 +185,7 @@ public class KylinConfig extends KylinConfigBase {
         try {
             File file = new File(metaUri);
             if (file.exists() || metaUri.contains("/")) {
-                if (file.exists() == false) {
+                if (!file.exists()) {
                     file.mkdirs();
                 }
                 if (file.isDirectory()) {
@@ -261,7 +263,7 @@ public class KylinConfig extends KylinConfigBase {
                 try {
                     KylinConfig config = new KylinConfig();
                     config.reloadKylinConfig(prop);
-                    logger.info("Resetting SYS_ENV_INSTANCE by a input stream: " + System.identityHashCode(config));
+                    logger.info("Resetting SYS_ENV_INSTANCE by a input stream: {}", System.identityHashCode(config));
                     SYS_ENV_INSTANCE = config;
                 } catch (IllegalArgumentException e) {
                     throw new IllegalStateException("Failed to find KylinConfig ", e);
@@ -321,7 +323,7 @@ public class KylinConfig extends KylinConfigBase {
     static File getSitePropertiesFile() {
         String kylinConfHome = System.getProperty(KYLIN_CONF);
         if (!StringUtils.isEmpty(kylinConfHome)) {
-            logger.info("Use KYLIN_CONF=" + kylinConfHome);
+            logger.info("Use KYLIN_CONF={}", kylinConfHome);
             return existFile(kylinConfHome);
         }
 
@@ -331,6 +333,7 @@ public class KylinConfig extends KylinConfigBase {
         if (StringUtils.isEmpty(kylinHome))
             throw new KylinConfigCannotInitException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
 
+        logger.info("Use KYLIN_HOME={}", kylinHome);
         String path = kylinHome + File.separator + "conf";
         return existFile(path);
     }
@@ -372,7 +375,8 @@ public class KylinConfig extends KylinConfigBase {
             // actually it's better to be named kylin-site.properties
             File propFile = getSitePropertiesFile();
             if (propFile == null || !propFile.exists()) {
-                logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
+                logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE + " at '"
+                        + (propFile != null ? propFile.getAbsolutePath() : "") + "'");
                 throw new RuntimeException("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
             }
             loadPropertiesFromInputStream(new FileInputStream(propFile), orderedProperties);
@@ -395,7 +399,7 @@ public class KylinConfig extends KylinConfigBase {
     private static void loadPropertiesFromInputStream(InputStream inputStream, OrderedProperties properties) {
         Preconditions.checkNotNull(properties);
 
-        try (BufferedReader confReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"))) {
+        try (BufferedReader confReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             OrderedProperties temp = new OrderedProperties();
             temp.load(confReader);
             temp = BCC.check(temp);
@@ -452,7 +456,7 @@ public class KylinConfig extends KylinConfigBase {
                 return (T) mgr;
 
             try {
-                logger.info("Creating new manager instance of " + clz);
+                logger.info("Creating new manager instance of {}", clz);
 
                 // new manager via static Manager.newInstance()
                 Method method = clz.getDeclaredMethod("newInstance", KylinConfig.class);
@@ -483,7 +487,7 @@ public class KylinConfig extends KylinConfigBase {
         return copy;
     }
 
-    public String exportAllToString() throws IOException {
+    public String exportAllToString() {
         final Properties allProps = getProperties(null);
         final OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
 
@@ -501,7 +505,7 @@ public class KylinConfig extends KylinConfigBase {
 
     }
 
-    public String exportToString(Collection<String> propertyKeys) throws IOException {
+    public String exportToString(Collection<String> propertyKeys) {
         Properties filteredProps = getProperties(propertyKeys);
         OrderedProperties orderedProperties = KylinConfig.buildSiteOrderedProps();
 

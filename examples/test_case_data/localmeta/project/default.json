@@ -31,6 +31,10 @@
       "name": "fifty_dim_full_build_cube",
       "type": "CUBE",
       "realization": "fifty_dim_full_build_cube"
+    }, {
+      "name" : "test_streaming_join_table_cube",
+      "type" : "CUBE",
+      "realization" : "test_streaming_join_table_cube"
     }
   ],
   "tables": [
@@ -49,7 +53,8 @@
     "SSB.SUPPLIER",
     "SSB.V_LINEORDER",
     "DEFAULT.FIFTY_DIM",
-    "DEFAULT.WIDE_TABLE"
+    "DEFAULT.WIDE_TABLE",
+    "DEFAULT.STREAMING_CATEGORY"
   ],
   "models": [
     "ssb",
@@ -60,7 +65,8 @@
     "test_streaming_table_model_desc",
     "fifty_dim",
     "twenty_dim",
-    "ut_large_dimension_number"
+    "ut_large_dimension_number",
+    "test_streaming_join_table_model"
   ],
   "override_kylin_properties" :{
     "kylin.storage.hbase.owner-tag": "kylin@kylin.apache.org"

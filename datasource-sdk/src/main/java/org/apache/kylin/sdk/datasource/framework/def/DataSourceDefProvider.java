@@ -47,9 +47,17 @@ public class DataSourceDefProvider {
 
     private DataSourceDef loadDataSourceFromEnv(String id) {
         String resourcePath = RESOURCE_DIR + "/" + id + ".xml";
+        String resourcePathOverride = resourcePath + ".override";
         InputStream is = null;
         try {
-            URL url = cl.getResource(resourcePath);
+            URL urlOverride, url;
+            urlOverride = cl.getResource(resourcePathOverride);
+            if (urlOverride == null) {
+                url = cl.getResource(resourcePath);
+            } else {
+                url = urlOverride;
+                logger.debug("Use override xml:{}", resourcePathOverride);
+            }
             if (url == null)
                 return null;
 

@@ -22,9 +22,14 @@ import java.io.IOException;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.hadoop.mapred.FileOutputCommitter;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.storage.hbase.HBaseConnection;
@@ -74,10 +79,33 @@ public class BulkLoadJob extends AbstractHadoopJob {
         newArgs[0] = input;
         newArgs[1] = tableName;
 
-        logger.debug("Start to run LoadIncrementalHFiles");
-        int ret = MRUtil.runMRJob(new LoadIncrementalHFiles(conf), newArgs);
-        logger.debug("End to run LoadIncrementalHFiles");
-        return ret;
+        int count = 0;
+        Path inputPath = new Path(input);
+        FileSystem fs = HadoopUtil.getFileSystem(inputPath);
+        FileStatus[] fileStatuses = fs.listStatus(inputPath);
+
+        for (FileStatus fileStatus : fileStatuses) {
+            if (fileStatus.isDirectory()) {
+                Path path = fileStatus.getPath();
+                if (path.getName().equals(FileOutputCommitter.TEMP_DIR_NAME)) {
+                    logger.info("Delete temporary path: " + path);
+                    fs.delete(path, true);
+                } else {
+                    count++;
+                }
+            }
+        }
+
+        int ret = 0;
+        if (count > 0) {
+            logger.debug("Start to run LoadIncrementalHFiles");
+            ret = MRUtil.runMRJob(new LoadIncrementalHFiles(conf), newArgs);
+            logger.debug("End to run LoadIncrementalHFiles");
+            return ret;
+        } else {
+            logger.debug("Nothing to load, cube is empty");
+            return ret;
+        }
     }
 
     public static void main(String[] args) throws Exception {
