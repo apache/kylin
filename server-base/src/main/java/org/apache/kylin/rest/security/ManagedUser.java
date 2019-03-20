@@ -240,7 +240,7 @@ public class ManagedUser extends RootPersistentEntity implements UserDetails {
         ManagedUser that = (ManagedUser) o;
         return disabled == that.disabled && defaultPassword == that.defaultPassword && locked == that.locked
                 && lockedTime == that.lockedTime && wrongTime == that.wrongTime
-                && Objects.equals(username, that.username) && Objects.equals(password, that.password)
+                && username.equalsIgnoreCase(that.username) && Objects.equals(password, that.password)
                 && Objects.equals(authorities, that.authorities);
     }
 
