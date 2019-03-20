@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.engine.flink.IFlinkOutput;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.spark.ISparkOutput;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -31,6 +32,7 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.IStorage;
 import org.apache.kylin.storage.IStorageQuery;
+import org.apache.kylin.storage.hbase.steps.HBaseFlinkOutputTransition;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput2Transition;
 import org.apache.kylin.storage.hbase.steps.HBaseSparkOutputTransition;
 
@@ -89,6 +91,8 @@ public class HBaseStorage implements IStorage {
             return (I) new HBaseMROutput2Transition();
         } else if (engineInterface == ISparkOutput.class) {
             return (I) new HBaseSparkOutputTransition();
+        } else if (engineInterface == IFlinkOutput.class) {
+            return (I) new HBaseFlinkOutputTransition();
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }
