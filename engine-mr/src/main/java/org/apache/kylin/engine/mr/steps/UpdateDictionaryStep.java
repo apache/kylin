@@ -89,7 +89,7 @@ public class UpdateDictionaryStep extends AbstractExecutable {
             FileStatus[] fileStatuss = fs.listStatus(new Path(dictInfoPath), new PathFilter() {
                 @Override
                 public boolean accept(Path path) {
-                    return path.getName().startsWith("part");
+                    return path.getName().startsWith("part") || path.getName().startsWith("tmp");
                 }
             });
 
