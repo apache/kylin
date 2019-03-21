@@ -14,6 +14,43 @@ kylin.metadata.url=kylin_metadata@hbase
 
 This indicates that the metadata will be saved as a htable called `kylin_metadata`. You can scan the htable in hbase shell to check it out.
 
+## Metadata directory
+
+Kylin metastore use `resource root path + resource name + resource suffix` as key (rowkey in hbase) to store metadata. You can refer to the following table to use `./bin/metastore.sh`.
+ 
+| Resource root path  | resource name         | resource suffix
+| --------------------| :---------------------| :--------------|
+| /cube               | /cube name            | .json |
+| /cube_desc          | /cube name            | .json |
+| /cube_statistics    | /cube name/uuid       | .seq |
+| /model_desc         | /model name           | .json |
+| /dict               | /DATABASE.TABLE/COLUMN/uuid | .dict |
+| /project            | /project name         | .json |
+| /table_snapshot     | /DATABASE.TABLE/uuid  | .snapshot |
+| /table              | /DATABASE.TABLE--project name | .json |
+| /table_exd          | /DATABASE.TABLE--project name | .json |
+| /execute            | /job id               |  |
+| /execute_out        | /job id-step index    |  |
+| /kafaka             | /DATABASE.TABLE       | .json |
+| /streaming          | /DATABASE.TABLE       | .json |
+| /user               | /user name            |  |
+
+## View metadata
+
+Kylin store metadata in Byte format in HBase. If you want to view some metadata, you can run:
+
+{% highlight Groff markup %}
+./bin/metastore.sh list /path/to/store/metadata
+{% endhighlight %}
+
+to list the entity stored in specified directory, and then run: 
+
+{% highlight Groff markup %}
+./bin/metastore.sh cat /path/to/store/entity/metadata.
+{% endhighlight %}
+
+to view one entity metadata.
+
 ## Backup metadata with binary package
 
 Sometimes you need to backup the Kylin's metadata store from hbase to your disk file system.
@@ -24,6 +61,14 @@ In such cases, assuming you're on the hadoop CLI(or sandbox) where you deployed 
 {% endhighlight %}
 
 to dump your metadata to your local folder a folder under KYLIN_HOME/metadata_backps, the folder is named after current time with the syntax: KYLIN_HOME/meta_backups/meta_year_month_day_hour_minute_second
+
+In addition, you can run:
+
+{% highlight Groff markup %}
+./bin/metastore.sh fetch /path/to/store/metadata
+{% endhighlight %}
+
+to dump metadata selectively. For example, run `./bin/metastore.sh fetch /cube_desc/` to get all cube desc metadata, or run `./bin/metastore.sh fetch /cube_desc/kylin_sales_cube.json` to get single cube desc metadata.
 
 ## Restore metadata with binary package
 
