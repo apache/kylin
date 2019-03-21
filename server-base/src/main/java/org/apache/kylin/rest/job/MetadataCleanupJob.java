@@ -40,6 +40,7 @@ import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryInfoSerializer;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,14 +147,27 @@ public class MetadataCleanupJob {
         }
         toDeleteCandidates.removeAll(activeResources);
 
-        // delete old and completed jobs
         long outdatedJobTimeCut = System.currentTimeMillis() - jobOutdatedDays * 24 * 3600 * 1000L;
         ExecutableDao executableDao = ExecutableDao.getInstance(config);
         List<ExecutablePO> allExecutable = executableDao.getJobs();
+
+        // discard all expired ERROR or STOPPED jobs at first
         for (ExecutablePO executable : allExecutable) {
             long lastModified = executable.getLastModified();
             String jobStatus = executableDao.getJobOutput(executable.getUuid()).getStatus();
+            if (System.currentTimeMillis() - lastModified > outdatedJobTimeCut
+                && (ExecutableState.ERROR.toString().equals(jobStatus)
+                || ExecutableState.STOPPED.toString().equals(jobStatus))) {
+                logger.info("Discard expired job: " + executable.getId());
+                ExecutableManager.getInstance(config).discardJob(executable.getId());
+            }
+        }
 
+        // delete old and completed jobs
+        allExecutable = executableDao.getJobs();
+        for (ExecutablePO executable : allExecutable) {
+            long lastModified = executable.getLastModified();
+            String jobStatus = executableDao.getJobOutput(executable.getUuid()).getStatus();
             if (lastModified < outdatedJobTimeCut && (ExecutableState.SUCCEED.toString().equals(jobStatus)
                     || ExecutableState.DISCARDED.toString().equals(jobStatus))) {
                 toDeleteCandidates.add(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executable.getUuid());
