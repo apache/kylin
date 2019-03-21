@@ -61,7 +61,12 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         inputSide.addStepPhase1_CreateFlatTable(result);
 
         // Phase 2: Build Dictionary
-        result.addTask(createFactDistinctColumnsSparkStep(jobId));
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        if (config.isSparkFactDistinctEnable()) {
+            result.addTask(createFactDistinctColumnsSparkStep(jobId));
+        } else {
+            result.addTask(createFactDistinctColumnsStep(jobId));
+        }
 
         if (isEnableUHCDictStep()) {
             result.addTask(createBuildUHCDictStep(jobId));

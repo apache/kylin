@@ -1985,4 +1985,8 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isLimitPushDownEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.storage.limit-push-down-enabled", TRUE));
     }
+
+    public boolean isSparkFactDistinctEnable() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-fact-distinct", "false"));
+    }
 }
