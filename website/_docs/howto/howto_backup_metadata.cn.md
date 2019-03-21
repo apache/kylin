@@ -14,6 +14,43 @@ kylin.metadata.url=kylin_metadata@hbase
 
 这表明元数据会被保存在一个叫作 “kylin_metadata”的htable 里。你可以在 hbase shell 里 scan 该 htbale 来获取它。
 
+## 元数据路径
+
+Kylin使用`resource root path + resource name + resource suffix`作为key值(HBase中的rowkey)来存储元数据。你可以参考如下表格使用`./bin/metastore.sh`命令。
+ 
+| Resource root path  | resource name         | resource suffix
+| --------------------| :---------------------| :--------------|
+| /cube               | /cube name            | .json |
+| /cube_desc          | /cube name            | .json |
+| /cube_statistics    | /cube name/uuid       | .seq |
+| /model_desc         | /model name           | .json |
+| /dict               | /DATABASE.TABLE/COLUMN/uuid | .dict |
+| /project            | /project name         | .json |
+| /table_snapshot     | /DATABASE.TABLE/uuid  | .snapshot |
+| /table              | /DATABASE.TABLE--project name | .json |
+| /table_exd          | /DATABASE.TABLE--project name | .json |
+| /execute            | /job id               |  |
+| /execute_out        | /job id-step index    |  |
+| /kafaka             | /DATABASE.TABLE       | .json |
+| /streaming          | /DATABASE.TABLE       | .json |
+| /user               | /user name            |  |
+
+## 查看元数据
+
+Kylin以二进制字节的格式将元数据存储在HBase中，如果你想要查看一些元数据，可以运行：
+
+{% highlight Groff markup %}
+./bin/metastore.sh list /path/to/store/metadata
+{% endhighlight %}
+
+列出存储在指定路径下的所有实体元数据。然后运行： 
+
+{% highlight Groff markup %}
+./bin/metastore.sh cat /path/to/store/entity/metadata.
+{% endhighlight %}
+
+查看某个实体的元数据。
+
 ## 使用二进制包来备份 metadata
 
 有时你需要将 Kylin 的 metadata store 从 hbase 备份到磁盘文件系统。在这种情况下，假设你在部署 Kylin 的 hadoop 命令行（或沙盒）里，你可以到KYLIN_HOME并运行：
@@ -23,6 +60,14 @@ kylin.metadata.url=kylin_metadata@hbase
 {% endhighlight %}
 
 来将你的元数据导出到本地目录，这个目录在KYLIN_HOME/metadata_backps下，它的命名规则使用了当前时间作为参数：KYLIN_HOME/meta_backups/meta_year_month_day_hour_minute_second 。
+
+此外, 你可以运行:
+
+{% highlight Groff markup %}
+./bin/metastore.sh fetch /path/to/store/metadata
+{% endhighlight %}
+
+有选择地导出元数据. 举个栗子, 运行 `./bin/metastore.sh fetch /cube_desc/` 获取所有的cube desc元数据, 或者运行 `./bin/metastore.sh fetch /cube_desc/kylin_sales_cube.json` 导出单个cube desc的元数据。
 
 ## 使用二进制包来恢复 metadata
 
