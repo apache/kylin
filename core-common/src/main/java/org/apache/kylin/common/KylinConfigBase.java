@@ -1377,6 +1377,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark.sanity-check-enabled", FALSE));
     }
 
+    public boolean isSparkFactDistinctEnable() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark-fact-distinct", "false"));
+    }
+
     // ============================================================================
     // QUERY
     // ============================================================================
