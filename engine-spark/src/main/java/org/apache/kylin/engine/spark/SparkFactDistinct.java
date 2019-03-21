@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -195,8 +196,8 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
             JavaPairRDD<SelfDefineSortableKey, Text> flatOutputRDD = recordRDD.mapPartitionsToPair(
                     new FlatOutputFucntion(cubeName, segmentId, metaUrl, sConf, samplingPercent, bytesWritten));
 
-            JavaPairRDD<SelfDefineSortableKey, Iterable<Text>> aggredRDD = flatOutputRDD.groupByKey(
-                    new FactDistinctPartitioner(cubeName, metaUrl, sConf, reducerMapping.getTotalReducerNum()));
+            JavaPairRDD<SelfDefineSortableKey, Text> aggredRDD = flatOutputRDD
+                .repartitionAndSortWithinPartitions(new FactDistinctPartitioner(cubeName, metaUrl, sConf, reducerMapping.getTotalReducerNum()));
 
             JavaPairRDD<String, Tuple3<Writable, Writable, String>> outputRDD = aggredRDD
                     .mapPartitionsToPair(new MultiOutputFunction(cubeName, metaUrl, sConf, samplingPercent));
@@ -631,7 +632,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
     }
 
     static class MultiOutputFunction implements
-            PairFlatMapFunction<Iterator<Tuple2<SelfDefineSortableKey, Iterable<Text>>>, String, Tuple3<Writable, Writable, String>> {
+            PairFlatMapFunction<Iterator<Tuple2<SelfDefineSortableKey, Text>>, String, Tuple3<Writable, Writable, String>> {
         private transient volatile boolean initialized = false;
         private String DICT_FILE_POSTFIX = ".rldict";
         private String DIMENSION_COL_INFO_FILE_POSTFIX = ".dci";
@@ -718,7 +719,7 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
 
         @Override
         public Iterator<Tuple2<String, Tuple3<Writable, Writable, String>>> call(
-                Iterator<Tuple2<SelfDefineSortableKey, Iterable<Text>>> tuple2Iterator) throws Exception {
+                Iterator<Tuple2<SelfDefineSortableKey, Text>> tuple2Iterator) throws Exception {
             if (initialized == false) {
                 synchronized (SparkFactDistinct.class) {
                     if (initialized == false) {
@@ -726,63 +727,29 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
                     }
                 }
             }
-
-            while(tuple2Iterator.hasNext()) {
-
-                Tuple2<SelfDefineSortableKey, Iterable<Text>> tuple = tuple2Iterator.next();
-                Text key = tuple._1.getText();
-
-                if (isStatistics) {
-                    // for hll
-                    long cuboidId = Bytes.toLong(key.getBytes(), 1, Bytes.SIZEOF_LONG);
-
-                    for (Text value : tuple._2) {
-                        HLLCounter hll = new HLLCounter(cubeConfig.getCubeStatsHLLPrecision());
-                        ByteBuffer bf = ByteBuffer.wrap(value.getBytes(), 0, value.getLength());
-                        hll.readRegisters(bf);
-
-                        totalRowsBeforeMerge += hll.getCountEstimate();
-
-                        if (cuboidId == baseCuboidId) {
-                            baseCuboidRowCountInMappers.add(hll.getCountEstimate());
-                        }
-
-                        if (cuboidHLLMap.get(cuboidId) != null) {
-                            cuboidHLLMap.get(cuboidId).merge(hll);
-                        } else {
-                            cuboidHLLMap.put(cuboidId, hll);
-                        }
-                    }
-
-                } else {
-                    String value = Bytes.toString(key.getBytes(), 1, key.getLength() - 1);
-                    logAFewRows(value);
-                    // if dimension col, compute max/min value
-                    if (cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col) && col.getType().needCompare()) {
-                        if (minValue == null || col.getType().compare(minValue, value) > 0) {
-                            minValue = value;
-                        }
-                        if (maxValue == null || col.getType().compare(maxValue, value) < 0) {
-                            maxValue = value;
-                        }
-                    }
-
-                    //if dict column
-                    if (cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col)) {
-                        if (buildDictInReducer) {
-                            builder.addValue(value);
-                        } else {
-                            byte[] keyBytes = Bytes.copy(key.getBytes(), 1, key.getLength() - 1);
-                            // output written to baseDir/colName/-r-00000 (etc)
-                            String fileName = col.getIdentity() + "/";
-                            result.add(new Tuple2<String, Tuple3<Writable, Writable, String>>(
-                                    BatchConstants.CFG_OUTPUT_COLUMN, new Tuple3<Writable, Writable, String>(
-                                            NullWritable.get(), new Text(keyBytes), fileName)));
-                        }
+            SelfDefineSortableKey prevKey = null;
+            List<Text> values = new ArrayList<Text>();
+            while (tuple2Iterator.hasNext()) {
+                Tuple2<SelfDefineSortableKey, Text> tuple = tuple2Iterator.next();
+                if (prevKey != null) {
+                    int cmp = tuple._1.compareTo(prevKey);
+                    // check
+                    if (cmp < 0) {
+                        throw new IOException(" key must be sorted. prevKey: " + prevKey + " current: " + tuple._1);
+                    } else if (cmp > 0) {
+                        processRow(prevKey.getText(), values);
+                        prevKey = null;
+                        values.clear();
                     }
                 }
+                prevKey = tuple._1;
+                values.add(tuple._2);
+            }
 
-                rowCount++;
+            if (prevKey != null || values.size() > 0) {
+                processRow(prevKey.getText(), values);
+                prevKey = null;
+                values.clear();
             }
 
             if (isStatistics) {
@@ -806,6 +773,58 @@ public class SparkFactDistinct extends AbstractApplication implements Serializab
             }
 
             return result.iterator();
+        }
+
+        private void processRow(Text key, List<Text> values) throws IOException {
+            if (isStatistics) {
+                // for hll
+                long cuboidId = Bytes.toLong(key.getBytes(), 1, Bytes.SIZEOF_LONG);
+
+                for (Text value : values) {
+                    HLLCounter hll = new HLLCounter(cubeConfig.getCubeStatsHLLPrecision());
+                    ByteBuffer bf = ByteBuffer.wrap(value.getBytes(), 0, value.getLength());
+                    hll.readRegisters(bf);
+
+                    totalRowsBeforeMerge += hll.getCountEstimate();
+
+                    if (cuboidId == baseCuboidId) {
+                        baseCuboidRowCountInMappers.add(hll.getCountEstimate());
+                    }
+
+                    if (cuboidHLLMap.get(cuboidId) != null) {
+                        cuboidHLLMap.get(cuboidId).merge(hll);
+                    } else {
+                        cuboidHLLMap.put(cuboidId, hll);
+                    }
+                }
+            } else {
+                String value = Bytes.toString(key.getBytes(), 1, key.getLength() - 1);
+                logAFewRows(value);
+                // if dimension col, compute max/min value
+                if (cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col) && col.getType().needCompare()) {
+                    if (minValue == null || col.getType().compare(minValue, value) > 0) {
+                        minValue = value;
+                    }
+                    if (maxValue == null || col.getType().compare(maxValue, value) < 0) {
+                        maxValue = value;
+                    }
+                }
+
+                //if dict column
+                if (cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col)) {
+                    if (buildDictInReducer) {
+                        builder.addValue(value);
+                    } else {
+                        byte[] keyBytes = Bytes.copy(key.getBytes(), 1, key.getLength() - 1);
+                        // output written to baseDir/colName/-r-00000 (etc)
+                        String fileName = col.getIdentity() + "/";
+                        result.add(new Tuple2<String, Tuple3<Writable, Writable, String>>(
+                            BatchConstants.CFG_OUTPUT_COLUMN, new Tuple3<Writable, Writable, String>(
+                            NullWritable.get(), new Text(keyBytes), fileName)));
+                    }
+                }
+            }
+            rowCount++;
         }
 
         private void logMapperAndCuboidStatistics(List<Long> allCuboids) {
