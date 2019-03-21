@@ -377,6 +377,9 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.env.zookeeper.zk-acl", "world:anyone:rwcda");
     }
 
+    public String[] getRestServersWithMode() {
+        return getOptionalStringArray("kylin.server.cluster-servers-with-mode", new String[0]);
+    }
     // ============================================================================
     // METADATA
     // ============================================================================

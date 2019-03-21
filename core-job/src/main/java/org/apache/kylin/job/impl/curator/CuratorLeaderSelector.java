@@ -20,8 +20,8 @@ package org.apache.kylin.job.impl.curator;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -59,8 +59,8 @@ public class CuratorLeaderSelector extends LeaderSelectorListenerAdapter impleme
         return new Participant("", false);
     }
 
-    public List<Participant> getParticipants() {
-        List<Participant> r = new ArrayList<>();
+    public Set<Participant> getParticipants() {
+        Set<Participant> r = new HashSet<>();
         try {
             r.addAll(leaderSelector.getParticipants());
         } catch (Exception e) {
