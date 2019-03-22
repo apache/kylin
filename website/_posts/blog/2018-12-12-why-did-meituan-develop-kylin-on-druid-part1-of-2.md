@@ -81,7 +81,7 @@ Meituan deployed into production an offline OLAP platform with Apache Kylin as i
  
 Kylin stores its data in HBase by converting the Dimensions and Measures into HBase Keys and Values, respectively. As HBase doesn’t support secondary index and only has one RowKey index, Kylin’s Dimension values will be combined into a fixed sequence to store as RowKey. In this way, filtering on a Dimension in the front of the sequence will perform better than those at the back. Here’s an example:
  
-In the testing environment, there are two almost identical Cubes (Cube1 and Cube2). They both have the same data source and the same Dimensions/Measures. The only difference is the order of the Dimensions in the RowKey: Cube1 puts P_LINEORDER.LO_CUSTKEY at the first while Cube2 the last.
+In the testing environment, there are two almost identical Cubes (Cube1 and Cube2). They both have the same data source and the same Dimensions/Measures. The only difference is the order of the Dimensions in the RowKey: Cube1 puts P_LINEORDER.LO_ORDERKEY at the first while Cube2 the last.
 ![](/images/blog/Kylin-On-Durid/5 cube1_rowkey_sequence.png)
 Graphic 5 Cube1 RowKey Sequence
 
