@@ -55,7 +55,7 @@ public class ZKUtils {
         return client;
     }
 
-    private static String getHBaseZKConnString() {
+    public static String getHBaseZKConnString() {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         final String serverList = conf.get(HConstants.ZOOKEEPER_QUORUM);
         final String port = conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
@@ -68,4 +68,5 @@ public class ZKUtils {
                     }
                 }), ",");
     }
+
 }

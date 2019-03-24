@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.kafka.common.requests.MetadataResponse;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -90,7 +89,6 @@ public class BuildCubeWithStream {
     private MockKafka kafkaServer;
     private ZkConnection zkConnection;
     private final String kafkaZkPath = "/kylin/streaming/" + RandomUtil.randomUUID().toString();
-
     protected static boolean fastBuildMode = false;
     private volatile boolean generateData = true;
     private volatile boolean generateDataDone = false;
@@ -322,21 +320,11 @@ public class BuildCubeWithStream {
     }
 
     public void after() {
-        kafkaServer.stop();
-        cleanKafkaZkPath(kafkaZkPath);
-        DefaultScheduler.destroyInstance();
-    }
-
-    private void cleanKafkaZkPath(String path) {
-        CuratorFramework zkClient = ZKUtil.newZookeeperClient();
-
-        try {
-            zkClient.delete().deletingChildrenIfNeeded().forPath(kafkaZkPath);
-        } catch (Exception e) {
-            logger.warn("Failed to delete zookeeper path: " + path, e);
-        } finally {
-            zkClient.close();
+        if (kafkaServer != null) {
+            kafkaServer.stop();
         }
+        ZKUtil.cleanZkPath(kafkaZkPath);
+        DefaultScheduler.destroyInstance();
     }
 
     protected void waitForJob(String jobId) {

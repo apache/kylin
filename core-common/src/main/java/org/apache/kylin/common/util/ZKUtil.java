@@ -214,4 +214,18 @@ public class ZKUtil {
                     }
                 }), ",");
     }
+
+
+
+    public static void cleanZkPath(String path) {
+        CuratorFramework zkClient = ZKUtil.newZookeeperClient();
+
+        try {
+            zkClient.delete().deletingChildrenIfNeeded().forPath(path);
+        } catch (Exception e) {
+            logger.warn("Failed to delete zookeeper path: " + path, e);
+        } finally {
+            zkClient.close();
+        }
+    }
 }

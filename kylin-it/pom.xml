@@ -543,7 +543,7 @@
                                             -Djava.library.path=/usr/hdp/current/hadoop-client/lib/native
                                         </argument>
                                         <argument>
-                                            -javaagent:${project.basedir}/..//dev-support/jacocoagent.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-stream.exec
+                                            -javaagent:${project.basedir}/..//dev-support/org.jacoco.agent-${jacoco.version}-runtime.jar=includes=org.apache.kylin.*,output=file,destfile=jacoco-it-streamv2.exec
                                         </argument>
                                         <argument>-classpath</argument>
                                         <classpath />

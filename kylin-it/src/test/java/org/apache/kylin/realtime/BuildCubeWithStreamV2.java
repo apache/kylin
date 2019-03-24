@@ -40,22 +40,18 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.RandomUtil;
+import org.apache.kylin.common.util.ZKUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.CheckpointExecutable;
-import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.streaming.Kafka10DataLoader;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.provision.MockKafka;
 import org.apache.kylin.query.KylinTestBase;
 import org.apache.kylin.rest.job.StorageCleanupJob;
-import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
-import org.apache.kylin.storage.hbase.util.ZookeeperUtil;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.apache.kylin.stream.coordinator.Coordinator;
 import org.apache.kylin.stream.coordinator.ZKUtils;
 import org.apache.kylin.stream.core.client.ReceiverAdminClient;
@@ -156,19 +152,19 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
         deployEnv();
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        ExecutableManager jobService = ExecutableManager.getInstance(kylinConfig);
+//        ExecutableManager jobService = ExecutableManager.getInstance(kylinConfig);
         scheduler = DefaultScheduler.createInstance();
         scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
 
-        for (String jobId : jobService.getAllJobIds()) {
-            AbstractExecutable executable = jobService.getJob(jobId);
-            if (executable instanceof CubingJob || executable instanceof CheckpointExecutable) {
-                jobService.deleteJob(jobId);
-            }
-        }
+//        for (String jobId : jobService.getAllJobIds()) {
+//            AbstractExecutable executable = jobService.getJob(jobId);
+//            if (executable instanceof CubingJob || executable instanceof CheckpointExecutable) {
+//                jobService.deleteJob(jobId);
+//            }
+//        }
 
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(CUBE_NAME);
         final String streamingTableName = cubeInstance.getRootFactTable();
@@ -255,7 +251,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
         waittime = 0;
         boolean consumeDataDone = false;
         // is consume data done, total wait 5 min
-        while ((consumeDataDone = isComsumeDataDone()) == false && waittime < 5) {
+        while ((consumeDataDone = isConsumeDataDone()) == false && waittime < 5) {
             Thread.sleep(60 * 1000);
             waittime++;
         }
@@ -289,8 +285,11 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     public void after() throws Exception {
         coordinator.unAssignCube(CUBE_NAME);
         streamingServer.removeFromReplicaSet();
-        kafkaServer.stop();
-        ZookeeperUtil.cleanZkPath(kafkaZkPath);
+        if (kafkaServer != null) {
+            kafkaServer.stop();
+
+        }
+        ZKUtil.cleanZkPath(kafkaZkPath);
         DefaultScheduler.destroyInstance();
     }
 
@@ -319,7 +318,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
         }
     }
 
-    private boolean isComsumeDataDone() throws Exception {
+    private boolean isConsumeDataDone() throws Exception {
         return execAndCompSuccess("src/test/resources/query/sql_streaming_v2/count", null, false);
     }
 
@@ -335,9 +334,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     }
 
     private void startEmbeddedKafka(String topicName, String server, int brokerId) {
-        String zkConnectionStr = ZookeeperUtil.getZKConnectString() + kafkaZkPath;
-        logger.info("zkConnectionStr: {}" + zkConnectionStr);
-        ZkConnection zkConnection = new ZkConnection(zkConnectionStr);
+        ZkConnection zkConnection = new ZkConnection(ZKUtil.getZKConnectString(KylinConfig.getInstanceFromEnv()) + kafkaZkPath);
 
         // start kafka server
         kafkaServer = new MockKafka(zkConnection, server, brokerId);
@@ -358,7 +355,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     }
 
     public static void cleanStreamZkRoot() {
-        ZookeeperUtil.cleanZkPath(ZKUtils.ZK_ROOT);
+        ZKUtil.cleanZkPath(ZKUtils.ZK_ROOT);
     }
 
     public static void main(String[] args) {
