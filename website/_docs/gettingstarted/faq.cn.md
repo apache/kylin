@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs-cn
 title:  常见问题
 categories: 开始
 permalink: /cn/docs/gettingstarted/faq.html
