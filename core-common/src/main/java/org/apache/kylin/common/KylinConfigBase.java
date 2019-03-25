@@ -542,7 +542,7 @@ public abstract class KylinConfigBase implements Serializable {
     }
 
     public boolean isShrunkenDictFromGlobalEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.dictionary.shrunken-from-global-enabled", FALSE));
+        return Boolean.parseBoolean(this.getOptional("kylin.dictionary.shrunken-from-global-enabled", TRUE));
     }
 
     // ============================================================================
