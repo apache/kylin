@@ -67,7 +67,7 @@ public class JoinedFlatTable {
     }
 
     public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir) {
-        String storageFormat = flatDesc.getDataModel().getConfig().getFlatTableStorageFormat();
+        String storageFormat = flatDesc.getSegment().getConfig().getFlatTableStorageFormat();
         return generateCreateTableStatement(flatDesc, storageDfsDir, storageFormat);
     }
 
