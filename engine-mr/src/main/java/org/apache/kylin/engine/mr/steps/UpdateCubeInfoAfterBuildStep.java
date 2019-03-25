@@ -161,11 +161,10 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             DataTypeOrder order = dimColRef.getType().getOrder();
             String minValue = order.min(minValues);
             String maxValue = order.max(maxValues);
-            logger.info("updateSegment step. {} minValue:" + minValue + " maxValue:" + maxValue, dimColRef.getName());
 
             if (segment.isOffsetCube() && partitionCol != null
                     && partitionCol.getIdentity().equals(dimColRef.getIdentity())) {
-                logger.info("update partition. {} timeMinValue:" + minValue + " timeMaxValue:" + maxValue,
+                logger.debug("update partition. {} timeMinValue:" + minValue + " timeMaxValue:" + maxValue,
                         dimColRef.getName());
                 if (DateFormat.stringToMillis(minValue) != timeMinValue
                         && DateFormat.stringToMillis(maxValue) != timeMaxValue) {
