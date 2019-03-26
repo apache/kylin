@@ -22,8 +22,6 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.AppendTrieDictionary;
 import org.apache.kylin.dict.BytesConverter;
 import org.apache.kylin.dict.StringBytesConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,7 +30,6 @@ import java.util.TreeMap;
 import static com.google.common.base.Preconditions.checkState;
 
 public class AppendTrieDictionaryBuilder {
-    private static Logger logger = LoggerFactory.getLogger(AppendTrieDictionaryBuilder.class);
     private final String baseDir;
     private final String workingDir;
     private final int maxEntriesPerSlice;
@@ -47,7 +44,6 @@ public class AppendTrieDictionaryBuilder {
 
     private AppendDictSliceKey curKey;
     private AppendDictNode curNode;
-    private AppendDictSliceKey preKey;
 
     public AppendTrieDictionaryBuilder(String baseDir, int maxEntriesPerSlice, boolean isAppendDictGlobal) throws IOException {
         this.baseDir = baseDir;
@@ -89,13 +85,7 @@ public class AppendTrieDictionaryBuilder {
         }
         checkState(sliceFileMap.firstKey().equals(AppendDictSliceKey.START_KEY), "first key should be \"\", but got \"%s\"", sliceFileMap.firstKey());
 
-        AppendDictSliceKey key = AppendDictSliceKey.wrap(valueBytes);
-        if (preKey != null && key.compareTo(preKey) < 0) {
-            logger.warn("Current key: " + key + " is less than preview key: " + preKey
-                + ", which may cost too many slice file flush/delete/read operations");
-        }
-        preKey = key;
-        AppendDictSliceKey nextKey = sliceFileMap.floorKey(key);
+        AppendDictSliceKey nextKey = sliceFileMap.floorKey(AppendDictSliceKey.wrap(valueBytes));
 
         if (curKey != null && !nextKey.equals(curKey)) {
             // you may suppose nextKey>=curKey, but nextKey<curKey could happen when a node splits.
