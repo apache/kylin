@@ -141,7 +141,7 @@ public class Coordinator implements CoordinatorClient {
         this.streamMetadataStore = StreamMetadataStoreFactory.getStreamMetaDataStore();
         this.receiverAdminClient = new HttpReceiverAdminClient();
         this.assigner = getAssigner();
-        this.zkClient = ZKUtils.getZookeeperClient();
+        this.zkClient = StreamingUtils.getZookeeperClient();
         this.selector = new CoordinatorLeaderSelector();
         this.jobStatusChecker = new StreamingBuildJobStatusChecker();
         this.streamingJobCheckExecutor = Executors.newScheduledThreadPool(1,
@@ -156,7 +156,7 @@ public class Coordinator implements CoordinatorClient {
         this.streamMetadataStore = metadataStore;
         this.receiverAdminClient = receiverClient;
         this.assigner = getAssigner();
-        this.zkClient = ZKUtils.getZookeeperClient();
+        this.zkClient = StreamingUtils.getZookeeperClient();
         this.selector = new CoordinatorLeaderSelector();
         this.jobStatusChecker = new StreamingBuildJobStatusChecker();
         this.streamingJobCheckExecutor = Executors.newScheduledThreadPool(1,
@@ -1273,7 +1273,7 @@ public class Coordinator implements CoordinatorClient {
         private LeaderSelector leaderSelector;
 
         public CoordinatorLeaderSelector() {
-            String path = ZKUtils.COORDINATOR_LEAD;
+            String path = StreamingUtils.COORDINATOR_LEAD;
             leaderSelector = new LeaderSelector(zkClient, path, this);
             leaderSelector.autoRequeue();
         }

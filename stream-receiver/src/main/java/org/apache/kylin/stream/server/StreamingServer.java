@@ -57,7 +57,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.stream.coordinator.StreamMetadataStore;
 import org.apache.kylin.stream.coordinator.StreamMetadataStoreFactory;
-import org.apache.kylin.stream.coordinator.ZKUtils;
+import org.apache.kylin.stream.coordinator.StreamingUtils;
 import org.apache.kylin.stream.coordinator.client.CoordinatorClient;
 import org.apache.kylin.stream.coordinator.client.HttpCoordinatorClient;
 import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
@@ -121,7 +121,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
     private String baseStorePath;
 
     private StreamingServer() {
-        streamZKClient = ZKUtils.getZookeeperClient();
+        streamZKClient = StreamingUtils.getZookeeperClient();
         streamMetadataStore = StreamMetadataStoreFactory.getStreamMetaDataStore();
         coordinatorClient = new HttpCoordinatorClient(streamMetadataStore);
         currentNode = NodeUtil.getCurrentNode(DEFAULT_PORT);

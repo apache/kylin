@@ -88,7 +88,7 @@ public class BuildCubeWithStream {
     private KafkaConfig kafkaConfig;
     private MockKafka kafkaServer;
     private ZkConnection zkConnection;
-    private final String kafkaZkPath = "/kylin/streaming/" + RandomUtil.randomUUID().toString();
+    private final String kafkaZkPath = ZKUtil.getZkRootBasedPath("streaming") + "/" + RandomUtil.randomUUID().toString();
     protected static boolean fastBuildMode = false;
     private volatile boolean generateData = true;
     private volatile boolean generateDataDone = false;

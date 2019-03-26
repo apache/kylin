@@ -18,7 +18,6 @@
 
 package org.apache.kylin.stream.coordinator;
 
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.kylin.common.KylinConfig;
 
 public class StreamMetadataStoreFactory {
@@ -45,8 +44,7 @@ public class StreamMetadataStoreFactory {
     }
 
     public static StreamMetadataStore getZKStreamMetaDataStore() {
-        CuratorFramework client = ZKUtils.getZookeeperClient();
-        StreamMetadataStore store = new ZookeeperStreamMetadataStore(client);
+        StreamMetadataStore store = new ZookeeperStreamMetadataStore();
         return store;
     }
 

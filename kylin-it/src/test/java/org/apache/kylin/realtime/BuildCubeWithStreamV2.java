@@ -53,7 +53,7 @@ import org.apache.kylin.query.KylinTestBase;
 import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.apache.kylin.stream.coordinator.Coordinator;
-import org.apache.kylin.stream.coordinator.ZKUtils;
+import org.apache.kylin.stream.coordinator.StreamingUtils;
 import org.apache.kylin.stream.core.client.ReceiverAdminClient;
 import org.apache.kylin.stream.core.consumer.ConsumerStartMode;
 import org.apache.kylin.stream.core.consumer.ConsumerStartProtocol;
@@ -81,7 +81,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithStreamV2.class);
 
     private static final String CUBE_NAME = "test_streaming_v2_user_info_cube";
-    private final String kafkaZkPath = "/kylin/streamingv2/" + RandomUtil.randomUUID().toString();
+    private final String kafkaZkPath = ZKUtil.getZkRootBasedPath("streamingv2") + "/" + RandomUtil.randomUUID().toString();
     private final String messageFile = "src/test/resources/streaming_v2_user_info_messages.txt";
 
     private String topicName;
@@ -152,19 +152,11 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
         deployEnv();
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-//        ExecutableManager jobService = ExecutableManager.getInstance(kylinConfig);
         scheduler = DefaultScheduler.createInstance();
         scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
-
-//        for (String jobId : jobService.getAllJobIds()) {
-//            AbstractExecutable executable = jobService.getJob(jobId);
-//            if (executable instanceof CubingJob || executable instanceof CheckpointExecutable) {
-//                jobService.deleteJob(jobId);
-//            }
-//        }
 
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(CUBE_NAME);
         final String streamingTableName = cubeInstance.getRootFactTable();
@@ -355,7 +347,7 @@ public class BuildCubeWithStreamV2 extends KylinTestBase {
     }
 
     public static void cleanStreamZkRoot() {
-        ZKUtil.cleanZkPath(ZKUtils.ZK_ROOT);
+        ZKUtil.cleanZkPath(StreamingUtils.STREAM_ZK_ROOT);
     }
 
     public static void main(String[] args) {
