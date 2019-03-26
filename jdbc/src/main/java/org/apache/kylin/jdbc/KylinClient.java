@@ -310,7 +310,6 @@ public class KylinClient implements IRemoteClient {
         List<KMetaTable> tables = convertMetaTables(tableMetaStubs);
         List<KMetaSchema> schemas = convertMetaSchemas(tables);
         List<KMetaCatalog> catalogs = convertMetaCatalogs(schemas);
-        get.releaseConnection();
         return new KMetaProject(project, catalogs);
     }
 
@@ -432,7 +431,6 @@ public class KylinClient implements IRemoteClient {
         }
 
         SQLResponseStub stub = jsonMapper.readValue(response.getEntity().getContent(), SQLResponseStub.class);
-        post.releaseConnection();
         return stub;
     }
 
