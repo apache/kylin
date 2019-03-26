@@ -30,6 +30,8 @@ fi
 flink_version="1.7.2"
 scala_version="2.11"
 flink_pkg_md5="e0b5ce7f6352009c74b6c369f5872a5a"
+guava_dependency_version="14.0.1"
+jersey_version="1.9"
 
 if [ ! -f "build/flink-${flink_version}-bin-hadoop27-scala_${scala_version}.tgz" ]; then
     echo "no binary file found"
@@ -50,3 +52,8 @@ mv build/flink-${flink_version} build/flink
 rm -f build/flink/lib/flink-python*
 rm -rf build/flink/examples
 rm -rf build/flink/opt
+
+# Download some dependencies
+wget --directory-prefix=build/flink/lib/ http://central.maven.org/maven2/com/google/guava/guava/${guava_dependency_version}/guava-${guava_dependency_version}.jar || echo "Download guava dependency failed."
+wget --directory-prefix=build/flink/lib/ http://central.maven.org/maven2/org/apache/flink/flink-hadoop-compatibility_${scala_version}/${flink_version}/flink-hadoop-compatibility_${scala_version}-${flink_version}.jar || echo "Download flink-hadoop-compatibility dependency failed."
+wget --directory-prefix=build/flink/lib/ http://central.maven.org/maven2/com/sun/jersey/jersey-core/${jersey_version}/jersey-core-${jersey_version}.jar || echo "Download jersey-core dependency failed."
