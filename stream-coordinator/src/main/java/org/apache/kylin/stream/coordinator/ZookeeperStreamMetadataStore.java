@@ -61,9 +61,9 @@ public class ZookeeperStreamMetadataStore implements StreamMetadataStore {
     private String cubeRoot;
     private String coordinatorRoot;
 
-    public ZookeeperStreamMetadataStore(CuratorFramework client) {
-        this.client = client;
-        this.zkRoot = ZKUtils.ZK_ROOT;
+    public ZookeeperStreamMetadataStore() {
+        this.client = StreamingUtils.getZookeeperClient();
+        this.zkRoot = StreamingUtils.STREAM_ZK_ROOT;
         init();
     }
 

@@ -2052,10 +2052,6 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.stream.metadata.store.type", "zk");
     }
 
-    public String getStreamingCoordinateZK() {
-        return getOptional("kylin.stream.zookeeper", null);
-    }
-
     public String getStreamingSegmentRetentionPolicy() {
         return getOptional("kylin.stream.segment.retention.policy", "fullBuild");
     }

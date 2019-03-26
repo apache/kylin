@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.apache.curator.framework.recipes.leader.LeaderSelectorListenerAdapter;
-import org.apache.kylin.stream.coordinator.ZKUtils;
+import org.apache.kylin.stream.coordinator.StreamingUtils;
 import org.apache.kylin.stream.core.model.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class ReplicaSetLeaderSelector extends LeaderSelectorListenerAdapter impl
     public ReplicaSetLeaderSelector(CuratorFramework client, Node currNode, int replicaSetID) {
         this.node = currNode;
         this.replicaSetID = replicaSetID;
-        String path = ZKUtils.REPLICASETS_LEADER_ELECT + "/" + replicaSetID;
+        String path = StreamingUtils.REPLICASETS_LEADER_ELECT + "/" + replicaSetID;
         leaderSelector = new LeaderSelector(client, path, this);
         leaderSelector.autoRequeue();
         leaderChangeListeners = Lists.newArrayList();

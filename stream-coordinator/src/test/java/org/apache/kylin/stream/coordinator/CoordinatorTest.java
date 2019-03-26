@@ -21,6 +21,7 @@ package org.apache.kylin.stream.coordinator;
 import com.google.common.collect.Lists;
 import org.apache.curator.test.TestingServer;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.ZKUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.stream.coordinator.exception.ClusterStateException;
@@ -102,7 +103,7 @@ public class CoordinatorTest extends LocalFileMetadataTestCase {
         staticCreateTestMetadata();
         testingServer = new TestingServer(12181, false);
         testingServer.start();
-        System.setProperty("kylin.stream.zookeeper", "localhost:12181");
+        System.setProperty("kylin.env.zookeeper-connect-string", "localhost:12181");
         metadataStore = StreamMetadataStoreFactory.getZKStreamMetaDataStore();
         initZookeeperMetadataStore();
         mockCube();
@@ -111,8 +112,10 @@ public class CoordinatorTest extends LocalFileMetadataTestCase {
     @After
     public void tearDown() throws Exception {
         coordinator = null;
-        System.clearProperty("kylin.stream.zookeeper");
+        ZKUtil.cleanZkPath(StreamingUtils.STREAM_ZK_ROOT);
+        StreamingUtils.getZookeeperClient().close();
         testingServer.stop();// clear metadata
+        System.clearProperty("kylin.env.zookeeper-connect-string");
     }
 
     private void initZookeeperMetadataStore() {
