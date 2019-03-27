@@ -146,8 +146,8 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
             if (table.source_type == tableConfig.streamingSourceType.kafka_hive) {
               cube.lambda = true;
             }
-            defer.resolve(cube);
           }
+          defer.resolve(cube);
         });
       }
       return defer.promise;
