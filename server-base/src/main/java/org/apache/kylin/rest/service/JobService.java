@@ -54,7 +54,6 @@ import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.SchedulerFactory;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
-import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.exception.SchedulerException;
@@ -749,17 +748,15 @@ public class JobService extends BasicService implements InitializingBean {
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
         long timeEndInMillis = Long.MAX_VALUE;
         Set<ExecutableState> states = convertStatusEnumToStates(statusList);
-        final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs(timeStartInMillis, timeEndInMillis);
-
         return Lists
                 .newArrayList(
                         FluentIterable
                                 .from(innerSearchCubingJobs(cubeName, jobName, states, timeStartInMillis,
-                                        timeEndInMillis, allOutputs, false, projectName))
+                                        timeEndInMillis, false, projectName))
                                 .transform(new Function<CubingJob, JobInstance>() {
                                     @Override
                                     public JobInstance apply(CubingJob cubingJob) {
-                                        return JobInfoConverter.parseToJobInstanceQuietly(cubingJob, allOutputs);
+                                        return JobInfoConverter.parseToJobInstanceQuietly(cubingJob);
                                     }
                                 }).filter(new Predicate<JobInstance>() {
                                     @Override
@@ -772,12 +769,10 @@ public class JobService extends BasicService implements InitializingBean {
     /**
      * loads all metadata of "execute" and returns list of cubing job within the scope of the given filters
      *
-     * @param allOutputs map of executable output data with type DefaultOutput parsed from ExecutableOutputPO
-     *
      */
     public List<CubingJob> innerSearchCubingJobs(final String cubeName, final String jobName,
             final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
-            final Map<String, Output> allOutputs, final boolean nameExactMatch, final String projectName) {
+            final boolean nameExactMatch, final String projectName) {
         List<CubingJob> results = Lists.newArrayList(
                 FluentIterable.from(getExecutableManager().getAllExecutables(timeStartInMillis, timeEndInMillis))
                         .filter(new Predicate<AbstractExecutable>() {
@@ -818,7 +813,7 @@ public class JobService extends BasicService implements InitializingBean {
                             @Override
                             public boolean apply(CubingJob executable) {
                                 try {
-                                    Output output = allOutputs.get(executable.getId());
+                                    Output output = getExecutableManager().getOutput(executable.getId());
                                     if (output == null) {
                                         return false;
                                     }
@@ -861,23 +856,20 @@ public class JobService extends BasicService implements InitializingBean {
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
         long timeEndInMillis = Long.MAX_VALUE;
         Set<ExecutableState> states = convertStatusEnumToStates(statusList);
-        final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs(timeStartInMillis, timeEndInMillis);
-
         return Lists
                 .newArrayList(FluentIterable
-                        .from(innerSearchCheckpointJobs(cubeName, jobName, states, timeStartInMillis, timeEndInMillis,
-                                allOutputs, false, projectName))
+                        .from(innerSearchCheckpointJobs(cubeName, jobName, states, timeStartInMillis, timeEndInMillis, false, projectName))
                         .transform(new Function<CheckpointExecutable, JobInstance>() {
                             @Override
                             public JobInstance apply(CheckpointExecutable checkpointExecutable) {
-                                return JobInfoConverter.parseToJobInstanceQuietly(checkpointExecutable, allOutputs);
+                                return JobInfoConverter.parseToJobInstanceQuietly(checkpointExecutable);
                             }
                         }));
     }
 
     public List<CheckpointExecutable> innerSearchCheckpointJobs(final String cubeName, final String jobName,
             final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
-            final Map<String, Output> allOutputs, final boolean nameExactMatch, final String projectName) {
+            final boolean nameExactMatch, final String projectName) {
         List<CheckpointExecutable> results = Lists.newArrayList(
                 FluentIterable.from(getExecutableManager().getAllExecutables(timeStartInMillis, timeEndInMillis))
                         .filter(new Predicate<AbstractExecutable>() {
@@ -918,7 +910,7 @@ public class JobService extends BasicService implements InitializingBean {
                             @Override
                             public boolean apply(CheckpointExecutable executable) {
                                 try {
-                                    Output output = allOutputs.get(executable.getId());
+                                    Output output = getExecutableManager().getOutput(executable.getId());
                                     if (output == null) {
                                         return false;
                                     }
@@ -1023,16 +1015,14 @@ public class JobService extends BasicService implements InitializingBean {
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
         long timeEndInMillis = Long.MAX_VALUE;
         Set<ExecutableState> states = convertStatusEnumToStates(statusList);
-        final Map<String, ExecutableOutputPO> allOutputDigests = getExecutableManager()
-                .getAllOutputDigests(timeStartInMillis, timeEndInMillis);
         return Lists
                 .newArrayList(FluentIterable
                         .from(innerSearchCubingJobsV2(cubeName, jobName, states, timeStartInMillis, timeEndInMillis,
-                                allOutputDigests, false, projectName))
+                                false, projectName))
                         .transform(new Function<CubingJob, JobSearchResult>() {
                             @Override
                             public JobSearchResult apply(CubingJob cubingJob) {
-                                return JobInfoConverter.parseToJobSearchResult(cubingJob, allOutputDigests);
+                                return JobInfoConverter.parseToJobSearchResult(cubingJob);
                             }
                         }).filter(new Predicate<JobSearchResult>() {
                             @Override
@@ -1055,15 +1045,13 @@ public class JobService extends BasicService implements InitializingBean {
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
         long timeEndInMillis = Long.MAX_VALUE;
         Set<ExecutableState> states = convertStatusEnumToStates(statusList);
-        final Map<String, ExecutableOutputPO> allOutputDigests = getExecutableManager()
-                .getAllOutputDigests(timeStartInMillis, timeEndInMillis);
         return Lists.newArrayList(FluentIterable
                 .from(innerSearchCheckpointJobsV2(cubeName, jobName, states, timeStartInMillis, timeEndInMillis,
-                        allOutputDigests, false, projectName))
+                        false, projectName))
                 .transform(new Function<CheckpointExecutable, JobSearchResult>() {
                     @Override
                     public JobSearchResult apply(CheckpointExecutable checkpointExecutable) {
-                        return JobInfoConverter.parseToJobSearchResult(checkpointExecutable, allOutputDigests);
+                        return JobInfoConverter.parseToJobSearchResult(checkpointExecutable);
                     }
                 }).filter(new Predicate<JobSearchResult>() {
                     @Override
@@ -1076,13 +1064,10 @@ public class JobService extends BasicService implements InitializingBean {
     /**
      * Called by searchJobsByCubeNameV2, it loads all cache of digest metadata of "execute" and returns list of cubing job within the scope of the given filters
      *
-     * @param allExecutableOutputPO map of executable output data with type ExecutableOutputPO
-     *
      */
     public List<CubingJob> innerSearchCubingJobsV2(final String cubeName, final String jobName,
             final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
-            final Map<String, ExecutableOutputPO> allExecutableOutputPO, final boolean nameExactMatch,
-            final String projectName) {
+            final boolean nameExactMatch, final String projectName) {
         List<CubingJob> results = Lists.newArrayList(
                 FluentIterable.from(getExecutableManager().getAllExecutableDigests(timeStartInMillis, timeEndInMillis))
                         .filter(new Predicate<AbstractExecutable>() {
@@ -1123,10 +1108,8 @@ public class JobService extends BasicService implements InitializingBean {
                             @Override
                             public boolean apply(CubingJob executable) {
                                 try {
-                                    ExecutableOutputPO executableOutputPO = allExecutableOutputPO
-                                            .get(executable.getId());
-                                    ExecutableState state = ExecutableState.valueOf(executableOutputPO.getStatus());
-                                    return statusList.contains(state);
+                                    Output output = getExecutableManager().getOutput(executable.getId());
+                                    return statusList.contains(output.getState());
 
                                 } catch (Exception e) {
                                     throw e;
@@ -1156,8 +1139,7 @@ public class JobService extends BasicService implements InitializingBean {
 
     public List<CheckpointExecutable> innerSearchCheckpointJobsV2(final String cubeName, final String jobName,
             final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
-            final Map<String, ExecutableOutputPO> allExecutableOutputPO, final boolean nameExactMatch,
-            final String projectName) {
+            final boolean nameExactMatch, final String projectName) {
         List<CheckpointExecutable> results = Lists.newArrayList(
                 FluentIterable.from(getExecutableManager().getAllExecutableDigests(timeStartInMillis, timeEndInMillis))
                         .filter(new Predicate<AbstractExecutable>() {
@@ -1198,10 +1180,8 @@ public class JobService extends BasicService implements InitializingBean {
                             @Override
                             public boolean apply(CheckpointExecutable executable) {
                                 try {
-                                    ExecutableOutputPO executableOutputPO = allExecutableOutputPO
-                                            .get(executable.getId());
-                                    ExecutableState state = ExecutableState.valueOf(executableOutputPO.getStatus());
-                                    return statusList.contains(state);
+                                    Output output = getExecutableManager().getOutput(executable.getId());
+                                    return statusList.contains(output.getState());
 
                                 } catch (Exception e) {
                                     throw e;
@@ -1234,7 +1214,7 @@ public class JobService extends BasicService implements InitializingBean {
     public List<CubingJob> listJobsByRealizationName(final String realizationName, final String projectName,
             final Set<ExecutableState> statusList) {
         return innerSearchCubingJobs(realizationName, null, statusList, 0L, Long.MAX_VALUE,
-                getExecutableManager().getAllOutputs(), true, projectName);
+                true, projectName);
     }
 
     public List<CubingJob> listJobsByRealizationName(final String realizationName, final String projectName) {

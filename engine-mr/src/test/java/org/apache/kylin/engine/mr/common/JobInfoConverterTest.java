@@ -37,7 +37,7 @@ public class JobInfoConverterTest {
     @Test
     public void testParseToJobInstance() {
         TestJob task = new TestJob();
-        JobInstance instance = JobInfoConverter.parseToJobInstanceQuietly(task, Maps.<String, Output> newHashMap());
+        JobInstance instance = JobInfoConverter.parseToJobInstanceQuietly(task);
         // no exception thrown is expected
         Assert.assertTrue(instance == null);
     }

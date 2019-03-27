@@ -99,7 +99,6 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
     private List<JobInstance> listJobInstances(String project, String cube, long startTime, long endTime) {
         final List<JobInstance> result = Lists.newArrayList();
         final List<AbstractExecutable> executables = executableManager.getAllExecutables(startTime, endTime);
-        final Map<String, Output> allOutputs = executableManager.getAllOutputs();
         for (AbstractExecutable executable : executables) {
             if (executable instanceof CubingJob) {
                 String cubeName = CubingExecutableUtil.getCubeName(executable.getParams());
@@ -116,18 +115,18 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
                 }
 
                 if (shouldExtract) {
-                    result.add(parseToJobInstance((CubingJob) executable, allOutputs));
+                    result.add(parseToJobInstance((CubingJob) executable));
                 }
             }
         }
         return result;
     }
 
-    private JobInstance parseToJobInstance(CubingJob cubeJob, Map<String, Output> outputs) {
+    private JobInstance parseToJobInstance(CubingJob cubeJob) {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
 
-        Output output = outputs.get(cubeJob.getId());
+        Output output = executableManager.getOutput(cubeJob.getId());
         final JobInstance result = new JobInstance();
         result.setName(cubeJob.getName());
         if (cube != null) {
@@ -152,7 +151,7 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
         result.setDuration(AbstractExecutable.getDuration(AbstractExecutable.getStartTime(output), AbstractExecutable.getEndTime(output), AbstractExecutable.getInterruptTime(output)) / 1000);
         for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
             AbstractExecutable task = cubeJob.getTasks().get(i);
-            result.addStep(parseToJobStep(task, i, outputs.get(task.getId())));
+            result.addStep(parseToJobStep(task, i, executableManager.getOutput(task.getId())));
         }
         return result;
     }

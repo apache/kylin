@@ -27,7 +27,6 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.QueryConnection;
 import org.junit.Assert;
@@ -69,8 +68,7 @@ public class JobServiceTest extends ServiceTestBase {
         AbstractExecutable executable = new TestJob();
         manager.addJob(executable);
         List<CubingJob> jobs = jobService.innerSearchCubingJobs("cube", "jobName",
-                Collections.<ExecutableState> emptySet(), 0, Long.MAX_VALUE, Collections.<String, Output> emptyMap(),
-                true, "project");
+                Collections.<ExecutableState> emptySet(), 0, Long.MAX_VALUE, true, "project");
         Assert.assertEquals(0, jobs.size());
     }
 
