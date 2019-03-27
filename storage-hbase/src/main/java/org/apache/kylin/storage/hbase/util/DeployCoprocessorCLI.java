@@ -294,7 +294,9 @@ public class DeployCoprocessorCLI {
         logger.info("reset coprocessor on " + tableName);
 
         logger.info("Disable " + tableName);
-        hbaseAdmin.disableTable(TableName.valueOf(tableName));
+        if (hbaseAdmin.isTableEnabled(TableName.valueOf(tableName))) {
+            hbaseAdmin.disableTable(TableName.valueOf(tableName));
+        }
 
         while (desc.hasCoprocessor(CubeObserverClassOld2)) {
             desc.removeCoprocessor(CubeObserverClassOld2);
