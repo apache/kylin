@@ -649,6 +649,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cube.max-building-segments", "10"));
     }
 
+    public long getMaxSegmentMergeSpan() {
+        return Long.parseLong(getOptional("kylin.cube.max-segment-merge.span", "-1"));
+    }
+
     public boolean allowCubeAppearInMultipleProjects() {
         return Boolean.parseBoolean(getOptional("kylin.cube.allow-appear-in-multiple-projects", FALSE));
     }

@@ -869,7 +869,6 @@ public class CubeManager implements IRealizationProvider {
         }
 
         private void checkReadyForMerge(Segments<CubeSegment> mergingSegments) {
-
             // check if the segments to be merged are continuous
             for (int i = 0; i < mergingSegments.size() - 1; i++) {
                 if (!mergingSegments.get(i).getSegRange().connects(mergingSegments.get(i + 1).getSegRange()))
@@ -882,6 +881,15 @@ public class CubeManager implements IRealizationProvider {
             for (CubeSegment seg : mergingSegments) {
                 if (seg.getSizeKB() == 0 && seg.getInputRecords() == 0) {
                     emptySegment.add(seg.getName());
+                }
+            }
+            long maxSegMergeSpan = KylinConfig.getInstanceFromEnv().getMaxSegmentMergeSpan();
+
+            for (CubeSegment seg : mergingSegments) {
+                if (maxSegMergeSpan > 0 && seg.getTSRange().duration() > maxSegMergeSpan) {
+                    throw new IllegalArgumentException(
+                        "Segment range is larger than the max segement merge span, couldn't merge unless 'forceMergeEmptySegment' set to true: "
+                            + seg);
                 }
             }
 
