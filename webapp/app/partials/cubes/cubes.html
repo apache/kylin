@@ -70,6 +70,7 @@
                     {{ cube.status}}
                 </span>
             </td>
+            <td>{{ cube.project}}</td>
             <td><span tooltip-html-unsafe="<div style='text-align:left'>
                 Source Table Size: {{dataSize(cube.input_records_size)}}<br/>
                 Expansion Rate: {{(cube.input_records_size>0? cube.size_kb*1024/cube.input_records_size : 0) * 100 | number:2}}%

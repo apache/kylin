@@ -479,6 +479,7 @@ public class JobService extends BasicService implements InitializingBean {
         Output output = cubeJob.getOutput();
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
+        result.setProjectName(cubeJob.getProjectName());
         if (cube != null) {
             result.setRelatedCube(cube.getName());
             result.setDisplayCubeName(cube.getDisplayName());
@@ -513,6 +514,7 @@ public class JobService extends BasicService implements InitializingBean {
         Output output = job.getOutput();
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
+        result.setProjectName(job.getProjectName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(job.getParams()));
         result.setLastModified(job.getLastModified());
@@ -546,6 +548,7 @@ public class JobService extends BasicService implements InitializingBean {
         Output output = checkpointExecutable.getOutput();
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
+        result.setProjectName(checkpointExecutable.getProjectName());
         result.setRelatedCube(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setDisplayCubeName(CubingExecutableUtil.getCubeName(job.getParams()));
         result.setLastModified(job.getLastModified());
