@@ -108,13 +108,13 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
     $scope.loadDetail = function (cube) {
       var defer = $q.defer();
       if (cube.detail) {
-        defer.resolve(cube.detail);
+        defer.resolve(cube);
       } else {
         CubeDescService.query({cube_name: cube.name}, {}, function (detail) {
           if (detail.length > 0 && detail[0].hasOwnProperty("name")) {
             cube.detail = detail[0];
             cube.model = modelsManager.getModel(cube.detail.model_name);
-              defer.resolve(cube.detail);
+              defer.resolve(cube);
 
           } else {
             SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
@@ -387,10 +387,10 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
     $scope.startJobSubmit = function (cube) {
 
       $scope.metaModel={
-        model:cube.detail.model
+        model:cube.model
       };
 
-      if(cube.detail.streaming){
+      if(cube.streaming){
         SweetAlert.swal({
           title: '',
           text: "Are you sure to start the build?",
@@ -404,7 +404,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
             loadingRequest.show();
             CubeService.rebuildStreamingCube(
               {
-                cubeId: cube.detail.name
+                cubeId: cube.name
               },
               {
                 sourceOffsetStart:0,
@@ -439,7 +439,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
             controller: jobSubmitCtrl,
             resolve: {
               cube: function () {
-                return cube.detail;
+                return cube;
               },
               metaModel:function(){
                 return $scope.metaModel;
@@ -470,7 +470,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
               loadingRequest.show();
               CubeService.rebuildCube(
                 {
-                  cubeId: cube.detail.name
+                  cubeId: cube.name
                 },
                 {
                   buildType: 'BUILD',
@@ -502,14 +502,14 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
     $scope.startRefresh = function (cube) {
 
       $scope.metaModel={
-        model:cube.detail.model
+        model:cube.model
       };
       $modal.open({
         templateUrl: 'jobRefresh.html',
         controller: jobSubmitCtrl,
         resolve: {
           cube: function () {
-            return cube.detail;
+            return cube;
           },
           metaModel:function(){
             return $scope.metaModel;
@@ -536,7 +536,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
         windowClass:"clone-cube-window",
         resolve: {
           cube: function () {
-            return cube.detail;
+            return cube;
           }
         }
       });
@@ -547,14 +547,14 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
     $scope.startMerge = function (cube) {
 
       $scope.metaModel={
-        model:cube.detail.model
+        model:cube.model
       };
       $modal.open({
         templateUrl: 'jobMerge.html',
         controller: jobSubmitCtrl,
         resolve: {
           cube: function () {
-            return cube.detail;
+            return cube;
           },
           metaModel:function(){
             return $scope.metaModel;
@@ -572,14 +572,14 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
      $scope.startDeleteSegment = function (cube) {
        $scope.metaModel={
-         model:modelsManager.getModelByCube(cube.detail.name)
+         model:modelsManager.getModelByCube(cube.name)
        };
        $modal.open({
          templateUrl: 'deleteSegment.html',
          controller: deleteSegmentCtrl,
          resolve: {
            cube: function () {
-             return cube.detail;
+             return cube;
            },
            scope: function() {
              return $scope;
@@ -590,14 +590,14 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
     $scope.startLookupRefresh = function(cube) {
       $scope.metaModel={
-        model:cube.detail.model
+        model:cube.model
       };
       $modal.open({
         templateUrl: 'lookupRefresh.html',
         controller: lookupRefreshCtrl,
         resolve: {
           cube: function () {
-            return cube.detail;
+            return cube;
           },
           scope:function(){
             return $scope;
