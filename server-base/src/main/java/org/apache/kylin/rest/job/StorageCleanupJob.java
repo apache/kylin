@@ -269,7 +269,7 @@ public class StorageCleanupJob extends AbstractApplication {
                         + " with status " + state);
             }
         }
-
+        long maxSegMergeSpan = KylinConfig.getInstanceFromEnv().getMaxSegmentMergeSpan();
         // remove every segment working dir from deletion list
         for (CubeInstance cube : cubeMgr.reloadAndListAllCubes()) {
             for (CubeSegment seg : cube.getSegments()) {
@@ -282,9 +282,14 @@ public class StorageCleanupJob extends AbstractApplication {
                         Path p = Path.getPathWithoutSchemeAndAuthority(new Path(path));
                         path = HadoopUtil.getFileSystem(path).makeQualified(p).toString();
                     }
-                    allHdfsPathsNeedToBeDeleted.remove(path);
-                    logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg
-                            + " of cube " + cube.getName());
+                    if (maxSegMergeSpan > 0 && seg.getTSRange().duration() >= maxSegMergeSpan) {
+                        logger.info("Keep " + path + " from deletion list, as the path belongs to segment " + seg
+                                + " of cube " + cube.getName() + " with max merging span.");
+                    } else {
+                        allHdfsPathsNeedToBeDeleted.remove(path);
+                        logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg
+                                + " of cube " + cube.getName());
+                    }
                 }
             }
         }
