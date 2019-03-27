@@ -37,7 +37,6 @@ public class LookupSnapshotBuildJob extends DefaultChainedExecutable {
 
     private static final String DEPLOY_ENV_NAME = "envName";
     private static final String PROJECT_INSTANCE_NAME = "projectName";
-    private static final String CUBE_NAME = "cubeName";
 
     private static final String JOB_TYPE = "Lookup ";
 
@@ -85,10 +84,6 @@ public class LookupSnapshotBuildJob extends DefaultChainedExecutable {
 
     public void setProjectName(String name) {
         setParam(PROJECT_INSTANCE_NAME, name);
-    }
-
-    public String getCubeName() {
-        return getParam(CUBE_NAME);
     }
 
     @Override

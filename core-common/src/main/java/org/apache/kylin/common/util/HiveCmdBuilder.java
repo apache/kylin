@@ -46,6 +46,7 @@ public class HiveCmdBuilder {
     public HiveCmdBuilder() {
         kylinConfig = KylinConfig.getInstanceFromEnv();
         hiveConfProps = SourceConfigurationUtil.loadHiveConfiguration();
+        hiveConfProps.putAll(kylinConfig.getHiveConfigOverride());
     }
 
     public String build() {

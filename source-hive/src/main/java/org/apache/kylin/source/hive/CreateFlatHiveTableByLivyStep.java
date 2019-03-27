@@ -27,9 +27,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.livy.LivyRestBuilder;
 import org.apache.kylin.common.livy.LivyRestExecutor;
 import org.apache.kylin.common.livy.LivyTypeEnum;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -83,14 +80,6 @@ public class CreateFlatHiveTableByLivyStep extends AbstractExecutable {
         ContentSummary contentSummary = fs.getContentSummary(path);
         long length = contentSummary.getLength();
         return length;
-    }
-
-
-    private KylinConfig getCubeSpecificConfig() {
-        String cubeName = CubingExecutableUtil.getCubeName(getParams());
-        CubeManager manager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-        CubeInstance cube = manager.getCube(cubeName);
-        return cube.getConfig();
     }
 
     @Override

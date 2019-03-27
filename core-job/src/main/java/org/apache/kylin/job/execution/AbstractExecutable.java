@@ -33,6 +33,8 @@ import org.apache.kylin.common.util.MailService;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
@@ -51,6 +53,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     public static final Integer DEFAULT_PRIORITY = 10;
 
+    public static final String CUBE_NAME = "cubeName";
     protected static final String SUBMITTER = "submitter";
     protected static final String NOTIFY_LIST = "notify_list";
     protected static final String START_TIME = "startTime";
@@ -89,6 +92,13 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         Map<String, String> info = Maps.newHashMap();
         info.put(START_TIME, Long.toString(System.currentTimeMillis()));
         getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
+    }
+
+    public KylinConfig getCubeSpecificConfig() {
+        String cubeName = getCubeName();
+        CubeManager manager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+        CubeInstance cube = manager.getCube(cubeName);
+        return cube.getConfig();
     }
 
     private void onExecuteFinishedWithRetry(ExecuteResult result, ExecutableContext executableContext)
@@ -367,6 +377,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     public final String getSubmitter() {
         return getParam(SUBMITTER);
+    }
+
+    public final String getCubeName() {
+        return getParam(CUBE_NAME);
     }
 
     @Override
