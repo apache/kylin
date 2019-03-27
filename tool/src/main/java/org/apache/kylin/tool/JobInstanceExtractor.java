@@ -130,6 +130,7 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
         Output output = outputs.get(cubeJob.getId());
         final JobInstance result = new JobInstance();
         result.setName(cubeJob.getName());
+        result.setProjectName(cubeJob.getProjectName());
         if (cube != null) {
             result.setRelatedCube(cube.getName());
             result.setDisplayCubeName(cube.getDisplayName());
