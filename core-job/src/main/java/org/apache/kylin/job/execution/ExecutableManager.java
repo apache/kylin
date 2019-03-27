@@ -23,7 +23,6 @@ import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
 import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Locale;
@@ -190,44 +189,6 @@ public class ExecutableManager {
         return result;
     }
 
-    public Map<String, Output> getAllOutputs() {
-        try {
-            final List<ExecutableOutputPO> jobOutputs = executableDao.getJobOutputs();
-            HashMap<String, Output> result = Maps.newHashMap();
-            for (ExecutableOutputPO jobOutput : jobOutputs) {
-                result.put(jobOutput.getId(), parseOutput(jobOutput));
-            }
-            return result;
-        } catch (PersistentException e) {
-            logger.error("fail to get all job output:", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Map<String, Output> getAllOutputs(long timeStartInMillis, long timeEndInMillis) {
-        try {
-            final List<ExecutableOutputPO> jobOutputs = executableDao.getJobOutputs(timeStartInMillis, timeEndInMillis);
-            HashMap<String, Output> result = Maps.newHashMap();
-            for (ExecutableOutputPO jobOutput : jobOutputs) {
-                result.put(jobOutput.getId(), parseOutput(jobOutput));
-            }
-            return result;
-        } catch (PersistentException e) {
-            logger.error("fail to get all job output:", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Map<String, ExecutableOutputPO> getAllOutputDigests(long timeStartInMillis, long timeEndInMillis) {
-        final List<ExecutableOutputPO> jobOutputs = executableDao.getJobOutputDigests(timeStartInMillis,
-                timeEndInMillis);
-        HashMap<String, ExecutableOutputPO> result = Maps.newHashMap();
-        for (ExecutableOutputPO jobOutput : jobOutputs) {
-            result.put(jobOutput.getId(), jobOutput);
-        }
-        return result;
-    }
-
     public List<AbstractExecutable> getAllExecutables() {
         try {
             List<AbstractExecutable> ret = Lists.newArrayList();
@@ -355,7 +316,7 @@ public class ExecutableManager {
             final long endTime = job.getEndTime();
             if (endTime != 0) {
                 long interruptTime = System.currentTimeMillis() - endTime + job.getInterruptTime();
-                info = Maps.newHashMap(getJobOutput(jobId).getInfo());
+                info = Maps.newHashMap(getOutput(jobId).getExtra());
                 info.put(AbstractExecutable.INTERRUPT_TIME, Long.toString(interruptTime));
                 info.remove(AbstractExecutable.END_TIME);
             }
@@ -435,14 +396,6 @@ public class ExecutableManager {
         updateJobOutput(jobId, ExecutableState.STOPPED, null, null);
     }
 
-    public ExecutableOutputPO getJobOutput(String jobId) {
-        try {
-            return executableDao.getJobOutput(jobId);
-        } catch (PersistentException e) {
-            logger.error("Can't get output of Job " + jobId);
-            throw new RuntimeException(e);
-        }
-    }
 
     public void updateJobOutput(String jobId, ExecutableState newStatus, Map<String, String> info, String output) {
         // when 

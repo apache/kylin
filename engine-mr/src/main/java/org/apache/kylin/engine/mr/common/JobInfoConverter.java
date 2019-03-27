@@ -31,10 +31,10 @@ import org.apache.kylin.job.JobSearchResult;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
-import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.slf4j.Logger;
@@ -43,31 +43,31 @@ import org.slf4j.LoggerFactory;
 public class JobInfoConverter {
     private static final Logger logger = LoggerFactory.getLogger(JobInfoConverter.class);
 
-    public static JobInstance parseToJobInstanceQuietly(CubingJob job, Map<String, Output> outputs) {
+    public static JobInstance parseToJobInstanceQuietly(CubingJob job) {
         try {
-            return parseToJobInstance(job, outputs);
+            return parseToJobInstance(job);
         } catch (Exception e) {
             logger.error("Failed to parse job instance: uuid={}", job, e);
             return null;
         }
     }
 
-    public static JobInstance parseToJobInstanceQuietly(CheckpointExecutable job, Map<String, Output> outputs) {
+    public static JobInstance parseToJobInstanceQuietly(CheckpointExecutable job) {
         try {
-            return parseToJobInstance(job, outputs);
+            return parseToJobInstance(job);
         } catch (Exception e) {
             logger.error("Failed to parse job instance: uuid={}", job, e);
             return null;
         }
     }
 
-    public static JobInstance parseToJobInstance(CubingJob job, Map<String, Output> outputs) {
+    public static JobInstance parseToJobInstance(CubingJob job) {
         if (job == null) {
             logger.warn("job is null.");
             return null;
         }
-
-        Output output = outputs.get(job.getId());
+        ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
+        Output output = executableManager.getOutput(job.getId());
         if (output == null) {
             logger.warn("job output is null.");
             return null;
@@ -97,18 +97,18 @@ public class JobInfoConverter {
                 result.getExecInterruptTime()) / 1000);
         for (int i = 0; i < job.getTasks().size(); ++i) {
             AbstractExecutable task = job.getTasks().get(i);
-            result.addStep(parseToJobStep(task, i, outputs.get(task.getId())));
+            result.addStep(parseToJobStep(task, i, executableManager.getOutput(task.getId())));
         }
         return result;
     }
 
-    public static JobInstance parseToJobInstance(CheckpointExecutable job, Map<String, Output> outputs) {
+    public static JobInstance parseToJobInstance(CheckpointExecutable job) {
         if (job == null) {
             logger.warn("job is null.");
             return null;
         }
-
-        Output output = outputs.get(job.getId());
+        ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
+        Output output = executableManager.getOutput(job.getId());
         if (output == null) {
             logger.warn("job output is null.");
             return null;
@@ -132,7 +132,7 @@ public class JobInfoConverter {
                 result.getExecInterruptTime()) / 1000);
         for (int i = 0; i < job.getTasks().size(); ++i) {
             AbstractExecutable task = job.getTasks().get(i);
-            result.addStep(parseToJobStep(task, i, outputs.get(task.getId())));
+            result.addStep(parseToJobStep(task, i, executableManager.getOutput(task.getId())));
         }
         return result;
     }
@@ -209,13 +209,13 @@ public class JobInfoConverter {
         }
     }
 
-    public static JobSearchResult parseToJobSearchResult(DefaultChainedExecutable job, Map<String, ExecutableOutputPO> outputs) {
+    public static JobSearchResult parseToJobSearchResult(DefaultChainedExecutable job) {
         if (job == null) {
             logger.warn("job is null.");
             return null;
         }
-
-        ExecutableOutputPO output = outputs.get(job.getId());
+        ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
+        Output output = executableManager.getOutput(job.getId());
         if (output == null) {
             logger.warn("job output is null.");
             return null;
