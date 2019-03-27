@@ -138,7 +138,11 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
       if (cube.streamingV2) {
         defer.resolve(cube);
       } else {
-        TableService.get({tableName: modelsManager.getModel(cube.model_name).fact_table, pro: $scope.projectModel.selectedProject},function(table){
+        var cubeModel = modelsManager.getModel(cube.model.name);
+        var cubeTable = cubeModel.fact_table;
+        var cubeProject = $scope.projectModel.selectedProject || cubeModel.project;
+
+        TableService.get({tableName: cubeTable, pro: cubeProject},function(table){
           if (table && table.source_type == 1) {
             cube.streaming = true;
           } else if (table && _.values(tableConfig.streamingSourceType).indexOf(table.source_type) > -1){
