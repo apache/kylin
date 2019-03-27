@@ -54,6 +54,10 @@ public class SourceConfigurationUtil {
         for (Map.Entry<String, String> entry : hiveConfiguration.entrySet()) {
             ret.put(HIVE_CONF_PREFIX + entry.getKey(), entry.getValue());
         }
+        Map<String, String> overrideConf = KylinConfig.getInstanceFromEnv().getHiveConfigOverride();
+        for (Map.Entry<String, String> entry : overrideConf.entrySet()) {
+            ret.put(HIVE_CONF_PREFIX + entry.getKey(), entry.getValue());
+        }
         return ret;
     }
 
