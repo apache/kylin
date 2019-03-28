@@ -186,6 +186,8 @@ public class CubeService extends BasicService implements InitializingBean {
                 filterCubes.add(cubeInstance);
             }
         }
+        // sort the cube list by create time in descending order
+        filterCubes.sort((o1, o2) -> Long.compare(o2.getCreateTimeUTC(), o1.getCreateTimeUTC()));
 
         return filterCubes;
     }
