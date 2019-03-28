@@ -156,7 +156,7 @@ cube 名字可以使用字母，数字和下划线（空格不允许）。`Notif
      ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-topn.png)
 
    * EXTENDED_COLUMN
-   Extended_Column 作为度量比作为维度更节省空间。一列和零一列可以生成新的列。
+   Extended_Column 作为度量比作为维度更节省空间。一列和另一列可以生成新的列。
    
      ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/8 measure-extended_column.PNG)
 

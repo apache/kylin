@@ -12,8 +12,11 @@ permalink: /cn/development/dev_env.html
 ## Hadoop 客户端环境
 
 Off-Hadoop-CLI 安装需要您有一个有 hadoop 客户端的机器（或一个 hadoop 沙箱）以及本地开发机器。为了简化操作，我们强烈建议您从 hadoop 沙箱上运行 Kylin 开始。在下面的教程中，我们将使用 Hortonworks®Sandbox2.4.0.0-169，您可以从 Hortonworks 下载页面下载它，展开“Hortonworks Sandbox Archive”链接，然后搜索“HDP® 2.4 on Hortonworks Sandbox”进行下载。建议您为沙箱虚拟机提供足够的内存，首选 8G 或更多。
+**提示：**使用HDP-2.4.0.0.169沙箱并使用10GB或者更多内存进行部署会更好。一些新版本的HDP沙箱使用docker部署它们的集群服务并且封装在虚拟机里面。你需要上传你的项目到docker容器中来运行集成测试，这不太方便。更高的内存将减少虚拟机杀掉测试进程的可能性。
 
 ### 启动 Hadoop
+
+启动完成之后，你可以使用root账户登陆。
 
 在 Hortonworks sandbox 中, ambari 会帮助您运行 hadoop：
 
@@ -21,8 +24,14 @@ Off-Hadoop-CLI 安装需要您有一个有 hadoop 客户端的机器（或一个
 ambari-agent start
 ambari-server start
 {% endhighlight %}
-	
-上述命令执行成功后您可以到 ambari 主页 <http://yoursandboxip:8080> 去检查所有组件的状态。默认情况下 ambari 使 HBase 失效，您需要手动启动 `HBase` 服务。
+
+然后重置ambari的admin用户密码为`admin`:
+
+{% highlight Groff markup %}
+ambari-admin-password-reset
+{% endhighlight %}
+
+上述命令执行成功后您可以以admin的身份登陆到 ambari 主页 <http://yoursandboxip:8080> 去检查所有组件的状态。默认情况下 ambari 使 HBase 失效，您需要手动启动 `HBase` 服务。
 ![start hbase in ambari](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/installation/starthbase.png)
 
 对于 hadoop 分布式，基本上启动 hadoop 集群，确保 HDFS，YARN，Hive，HBase 运行着即可。
@@ -30,7 +39,8 @@ ambari-server start
 注意：
 
 * 为YARN resource manager 分配 3-4GB 内存.
-* 升级 Sandbox 里的 Java 到 Java 8 (Kyin 2.5 需要 Java 8).
+* 升级 Sandbox 里的 Java 到 Java 8 (Kyin 2.5 需要 Java 8). 链接原本的JAVA_HOME指向新的将改变每一个用户的jdk版本。否则，你也许会遇到`UnsupportedClassVersionError`异常. 这里有一些邮件是关于这个问题的: [spark task error occurs when run IT in sanbox](https://lists.apache.org/thread.html/46eb7e4083fd25a461f09573fc4225689e61c0d8150463a2c0eb65ef@%3Cdev.kylin.apache.org%3E)     
+**Tips:** 这里有一些关于沙箱的教程会有帮助。 [Learning the Ropes of the HDP Sandbox](https://hortonworks.com/tutorial/learning-the-ropes-of-the-hortonworks-sandbox)  
 
 ## 开发机器的环境
 
