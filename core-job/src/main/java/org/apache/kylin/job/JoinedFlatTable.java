@@ -250,11 +250,11 @@ public class JoinedFlatTable {
         sql.append(whereBuilder.toString());
     }
 
-    private static String colName(TblColRef col) {
+    public static String colName(TblColRef col) {
         return colName(col, true);
     }
 
-    private static String colName(TblColRef col, boolean useAlias) {
+    public static String colName(TblColRef col, boolean useAlias) {
         return useAlias ? col.getTableAlias() + "_" + col.getName() : col.getName();
     }
 

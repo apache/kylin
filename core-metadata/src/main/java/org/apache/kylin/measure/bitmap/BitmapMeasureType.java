@@ -151,6 +151,9 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
     // In order to keep compatibility with old version, tinyint/smallint/int column use value directly, without dictionary
     private boolean needDictionaryColumn(FunctionDesc functionDesc) {
         DataType dataType = functionDesc.getParameter().getColRefs().get(0).getType();
+        if (functionDesc.isMrDict()) {
+            return false;
+        }
         if (dataType.isIntegerFamily() && !dataType.isBigInt()) {
             return false;
         }

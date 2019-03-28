@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -1336,6 +1337,22 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             for (DictionaryDesc dictDesc : dictionaries) {
                 TblColRef col = dictDesc.getColumnRef();
                 result.add(col);
+            }
+        }
+
+        //mr - hive global dict
+        if (overrideKylinProps.containsKey("kylin.dictionary.mr-hive.columns")) {
+            String mrHiveDictColumns = overrideKylinProps.get("kylin.dictionary.mr-hive.columns");
+            if (Objects.nonNull(mrHiveDictColumns) && StringUtils.isNotEmpty(mrHiveDictColumns)) {
+                String[] mrHiveDictColumnArr = mrHiveDictColumns.split(",");
+                for (String dictColumn : mrHiveDictColumnArr) {
+                    for (TblColRef colRef : result) {
+                        String aliasCol = colRef.getTableAlias() + "_" + colRef.getName();
+                        if (aliasCol.equalsIgnoreCase(dictColumn)) {
+                            result.remove(colRef);
+                        }
+                    }
+                }
             }
         }
 

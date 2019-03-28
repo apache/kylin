@@ -77,4 +77,10 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_STREAMING_CREATE_DICTIONARY = "Build Dimension Dictionaries For Steaming Job";
     public static final String STEP_NAME_STREAMING_BUILD_BASE_CUBOID = "Build Base Cuboid Data For Streaming Job";
     public static final String STEP_NAME_STREAMING_SAVE_DICTS = "Save Cube Dictionaries";
+
+    // MR - Hive Dict
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_EXTRACT_DICTVAL = "Global Dict Mr/Hive extract dict_val from Data";
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_BUILD_DICTVAL = "Global Dict Mr/Hive build dict_val";
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL = "Global Dict Mr/Hive replace dict_val to Data";
+
 }
