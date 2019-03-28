@@ -25,6 +25,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -121,6 +122,28 @@ public class BeelineHiveClient implements IHiveClient {
             DBUtils.closeQuietly(resultSet);
         }
         return count;
+    }
+
+    @Override
+    public List<Object[]> getHiveResult(String hql) throws Exception {
+        ResultSet resultSet = null;
+        List<Object[]> datas = new ArrayList<>();
+        try {
+            resultSet = stmt.executeQuery(hql);
+            int columnCtn = resultSet.getMetaData().getColumnCount();
+            while (resultSet.next()) {
+                Object[] data = new Object[columnCtn];
+                for (int i = 0; i < columnCtn; i++) {
+                    data[i] = resultSet.getObject(i + 1);
+                }
+                datas.add(data);
+            }
+        } catch (Exception e) {
+            throw new Exception(e);
+        } finally {
+            DBUtils.closeQuietly(resultSet);
+        }
+        return datas;
     }
 
     @Override

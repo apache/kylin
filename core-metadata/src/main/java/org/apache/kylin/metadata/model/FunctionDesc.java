@@ -89,6 +89,15 @@ public class FunctionDesc implements Serializable {
     private DataType returnDataType;
     private MeasureType<?> measureType;
     private boolean isDimensionAsMetric = false;
+    private boolean isMrDict = false;
+
+    public boolean isMrDict() {
+        return isMrDict;
+    }
+
+    public void setMrDict(boolean mrDict) {
+        isMrDict = mrDict;
+    }
 
     public void init(DataModelDesc model) {
         expression = expression.toUpperCase(Locale.ROOT);
