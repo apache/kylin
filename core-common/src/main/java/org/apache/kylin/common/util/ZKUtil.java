@@ -106,6 +106,10 @@ public class ZKUtil {
         return zkString;
     }
 
+    public static String getZkRootBasedPath(String path) {
+        return zkChRoot + "/" + path;
+    }
+
     public static CuratorFramework getZookeeperClient(KylinConfig config) {
         RetryPolicy retryPolicy = getRetryPolicy(config);
         return getZookeeperClient(getZKConnectString(config), retryPolicy);
@@ -213,5 +217,17 @@ public class ZKUtil {
                         return input + ":" + port;
                     }
                 }), ",");
+    }
+
+    public static void cleanZkPath(String path) {
+        CuratorFramework zkClient = ZKUtil.newZookeeperClient();
+
+        try {
+            zkClient.delete().deletingChildrenIfNeeded().forPath(path);
+        } catch (Exception e) {
+            logger.warn("Failed to delete zookeeper path: {}", path, e);
+        } finally {
+            zkClient.close();
+        }
     }
 }

@@ -18,13 +18,17 @@
 #
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
-
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/util.sh
 
 # get port from configuraton
 kylin_port=`grep "<Connector port=" ${KYLIN_HOME}/tomcat/conf/server.xml |grep protocol=\"HTTP/1.1\" | cut -d '=' -f 2 | cut -d \" -f 2`
 
 # check the availability of the port
-kylin_port_in_use=`netstat -tlpn | grep "\b${kylin_port}\b"`
+if isMacosX; then
+    kylin_port_in_use=`lsof -nP -iTCP:"${kylin_port}" | grep LISTEN`
+else
+    kylin_port_in_use=`netstat -tlpn | grep "\b${kylin_port}\b"`
+fi
 
 # if not available, prompt error messeage
 [[ -z ${kylin_port_in_use} ]] || quit "ERROR: Port ${kylin_port} is in use, please check the availability of the port and re-start Kylin"

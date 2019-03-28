@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, MessageService, CubeService, cubeConfig, TableService, ModelGraphService, UserService,SweetAlert,loadingRequest,modelsManager,$modal,cubesManager, $location, MessageBox) {
+KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, MessageService, CubeService, cubeConfig, TableService, ModelGraphService, UserService,SweetAlert,loadingRequest,modelsManager,$modal,cubesManager, $location, MessageBox, AdminStreamingService) {
     $scope.newAccess = null;
     $scope.state = {jsonEdit: false};
 
@@ -293,5 +293,39 @@ KylinApp.controller('CubeCtrl', function ($scope, $rootScope, AccessService, Mes
             return d3.scale.category20c().range()[colorIndex+3];
         }
     }
+
+    // streaming cube status
+    $scope.getStreamingInfo = function(cube) {
+        AdminStreamingService.getCubeRealTimeStats({cubeName: cube.name}, function(data){
+            $scope.replicaSets = data.receiver_cube_real_time_states;
+        });
+    };
+
+    // streaming node stats detail
+    $scope.nodeStatsDetail = function(node, receiverStatus) {
+      $modal.open({
+        templateUrl: 'nodeStatsDetail.html',
+        controller: NodeStatsDetailCtrlV2,
+        backdrop: 'static',
+        windowClass: 'cube-streaming-stats-modal',
+        resolve: {
+          node: function () {
+            return node;
+          },
+          receiverStatus: function () {
+            return receiverStatus;
+          }
+        }
+      });
+    };
+
+    var NodeStatsDetailCtrlV2 = function($scope, node, receiverStatus, $modalInstance, MessageService) {
+        $scope.receiverStats = receiverStatus;
+        $scope.node = node;
+
+        $scope.cancel = function () {
+            $modalInstance.dismiss('cancel');
+        };
+     };
 });
 

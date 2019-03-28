@@ -242,6 +242,7 @@
             <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
             <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll" />
             <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>
             <scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/models*/**" access="isAuthenticated()"/>
@@ -288,6 +289,7 @@
             <scr:intercept-url pattern="/api/metadata*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/**/metrics" access="permitAll"/>
             <scr:intercept-url pattern="/api/cache*/**" access="permitAll"/>
+            <scr:intercept-url pattern="/api/streaming_coordinator/**" access="permitAll" />
             <scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')"/>
             <scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()"/>
             <scr:intercept-url pattern="/api/models*/**" access="isAuthenticated()"/>

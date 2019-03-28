@@ -294,7 +294,9 @@ public class DeployCoprocessorCLI {
         logger.info("reset coprocessor on " + tableName);
 
         logger.info("Disable " + tableName);
-        hbaseAdmin.disableTable(TableName.valueOf(tableName));
+        if (hbaseAdmin.isTableEnabled(TableName.valueOf(tableName))) {
+            hbaseAdmin.disableTable(TableName.valueOf(tableName));
+        }
 
         while (desc.hasCoprocessor(CubeObserverClassOld2)) {
             desc.removeCoprocessor(CubeObserverClassOld2);
@@ -528,7 +530,7 @@ public class DeployCoprocessorCLI {
 
         ArrayList<String> result = new ArrayList<String>();
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
-            if (cube.getStorageType() == IStorageAware.ID_HBASE || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
+            if (cube.getStorageType() == IStorageAware.ID_HBASE || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE || cube.getStorageType() == IStorageAware.ID_REALTIME_AND_HBASE) {
                 for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
                     String tableName = seg.getStorageLocationIdentifier();
                     if (StringUtils.isBlank(tableName) == false) {

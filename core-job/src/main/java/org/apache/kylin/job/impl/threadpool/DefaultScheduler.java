@@ -160,7 +160,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable> {
                 new SynchronousQueue<Runnable>());
         context = new DefaultContext(Maps.<String, Executable> newConcurrentMap(), jobEngineConfig.getConfig());
 
-        logger.info("Staring resume all running jobs.");
+        logger.info("Starting resume all running jobs.");
         ExecutableManager executableManager = getExecutableManager();
         executableManager.resumeAllRunningJobs();
         logger.info("Finishing resume all running jobs.");

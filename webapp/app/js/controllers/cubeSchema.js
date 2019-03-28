@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService,VdmUtil) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService,VdmUtil,tableConfig) {
     $scope.modelsManager = modelsManager;
     $scope.cubesManager = cubesManager;
     $scope.projects = [];
@@ -306,6 +306,14 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     if(($scope.state.mode === "edit") &&$scope.cubeMode=="addNewCube"&&($scope.allCubes.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
       SweetAlert.swal('Oops...', "The cube named [" + $scope.cubeMetaFrame.name.toUpperCase() + "] already exists", 'warning');
       return false;
+    }
+    // Update storage type according to the streaming table in model
+    if(TableModel.selectProjectTables.some(function(table) {
+        return (table.name === $scope.metaModel.model.fact_table && _.values(tableConfig.streamingSourceType).indexOf(table.source_type) > -1)
+    })) {
+        $scope.cubeMetaFrame.storage_type = 3;
+    } else {
+        $scope.cubeMetaFrame.storage_type = 2;
     }
     return true;
   }

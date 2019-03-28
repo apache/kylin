@@ -426,4 +426,12 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         this.tableType = tableType;
     }
 
+    public boolean isStreamingTable() {
+        if (sourceType == ISourceAware.ID_KAFKA
+                || sourceType == ISourceAware.ID_KAFKA_HIVE) {
+            return true;
+        }
+        return false;
+    }
+
 }

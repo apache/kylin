@@ -224,12 +224,12 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 }
 
                 if (shardNum > nRegion) {
-                    logger.info(String.format(Locale.ROOT,
+                    logger.debug(String.format(Locale.ROOT,
                             "Cuboid %d 's estimated size %.2f MB will generate %d regions, " + "reduce to %d", cuboidId,
                             estimatedSize, shardNum, nRegion));
                     shardNum = nRegion;
                 } else {
-                    logger.info(
+                    logger.debug(
                             String.format(Locale.ROOT, "Cuboid %d 's estimated size %.2f MB will generate %d regions",
                                     cuboidId, estimatedSize, shardNum));
                 }
@@ -244,7 +244,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             }
 
             for (int i = 0; i < nRegion; ++i) {
-                logger.info("Region {0}'s estimated size is {1} MB, accounting for {2} percent",
+                logger.debug("Region {0}'s estimated size is {1} MB, accounting for {2} percent",
                                 String.valueOf(i), String.valueOf(regionSizes[i]), String.valueOf(100.0 * regionSizes[i] / totalSizeInM));
             }
 
@@ -314,7 +314,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             for (Long cuboid : allCuboids) {
 
                 if (accumulatedSize >= hfileSizeMB) {
-                    logger.info("Region {0}'s hfile {1} size is {2} mb", String.valueOf(i), String.valueOf(j), String.valueOf(accumulatedSize));
+                    logger.debug("Region {0}'s hfile {1} size is {2} mb", String.valueOf(i), String.valueOf(j), String.valueOf(accumulatedSize));
                     byte[] split = new byte[RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN];
                     BytesUtil.writeUnsigned(i, split, 0, RowConstants.ROWKEY_SHARDID_LEN);
                     System.arraycopy(Bytes.toBytes(cuboid), 0, split, RowConstants.ROWKEY_SHARDID_LEN,

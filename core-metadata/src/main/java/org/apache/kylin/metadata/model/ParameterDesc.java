@@ -149,8 +149,11 @@ public class ParameterDesc implements Serializable {
             if (p.isColumnType()) {
                 if (q.isColumnType() == false)
                     return false;
-                if (q.getColRef().equals(p.getColRef()) == false)
+                if (q.getColRef() != null && q.getColRef().equals(p.getColRef()) == false)
                     return false;
+                if (!(q.getType().equals(p.getType()) && q.getValue().equals(q.getValue()))) {
+                    return false;
+                }
             } else {
                 if (q.isColumnType() == true)
                     return false;
@@ -185,8 +188,13 @@ public class ParameterDesc implements Serializable {
 
     @Override
     public String toString() {
-        String thisStr = isColumnType() ? colRef.toString() : value;
-        return nextParameter == null ? thisStr : thisStr + "," + nextParameter.toString();
+        String tmp = null;
+        if (isColumnType() && colRef != null) {
+            tmp = colRef.toString();
+        } else {
+            tmp = value;
+        }
+        return nextParameter == null ? tmp : tmp + "," + nextParameter.toString();
     }
 
     /**

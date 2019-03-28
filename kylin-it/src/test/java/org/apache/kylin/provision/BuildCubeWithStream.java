@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.kafka.common.requests.MetadataResponse;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -89,8 +88,7 @@ public class BuildCubeWithStream {
     private KafkaConfig kafkaConfig;
     private MockKafka kafkaServer;
     private ZkConnection zkConnection;
-    private final String kafkaZkPath = "/kylin/streaming/" + RandomUtil.randomUUID().toString();
-
+    private final String kafkaZkPath = ZKUtil.getZkRootBasedPath("streaming") + "/" + RandomUtil.randomUUID().toString();
     protected static boolean fastBuildMode = false;
     private volatile boolean generateData = true;
     private volatile boolean generateDataDone = false;
@@ -125,9 +123,7 @@ public class BuildCubeWithStream {
         kafkaConfig = KafkaConfigManager.getInstance(kylinConfig).getKafkaConfig(streamingConfig.getName());
 
         String topicName = RandomUtil.randomUUID().toString();
-        String localIp = NetworkUtils.getLocalIp();
         BrokerConfig brokerConfig = kafkaConfig.getKafkaClusterConfigs().get(0).getBrokerConfigs().get(0);
-        brokerConfig.setHost(localIp);
         kafkaConfig.setTopic(topicName);
         KafkaConfigManager.getInstance(kylinConfig).updateKafkaConfig(kafkaConfig);
 
@@ -140,7 +136,7 @@ public class BuildCubeWithStream {
         System.out.println("zkConnectionStr" + zkConnectionStr);
         zkConnection = new ZkConnection(zkConnectionStr);
         // Assert.assertEquals(ZooKeeper.States.CONNECTED, zkConnection.getZookeeperState());
-        kafkaServer = new MockKafka(zkConnection, brokerConfig.getPort(), brokerConfig.getId());
+        kafkaServer = new MockKafka(zkConnection, brokerConfig.getHost() + ":" + brokerConfig.getPort(), brokerConfig.getId());
         kafkaServer.start();
 
         kafkaServer.createTopic(topicName, 3, 1);
@@ -324,21 +320,11 @@ public class BuildCubeWithStream {
     }
 
     public void after() {
-        kafkaServer.stop();
-        cleanKafkaZkPath(kafkaZkPath);
-        DefaultScheduler.destroyInstance();
-    }
-
-    private void cleanKafkaZkPath(String path) {
-        CuratorFramework zkClient = ZKUtil.newZookeeperClient();
-
-        try {
-            zkClient.delete().deletingChildrenIfNeeded().forPath(kafkaZkPath);
-        } catch (Exception e) {
-            logger.warn("Failed to delete zookeeper path: " + path, e);
-        } finally {
-            zkClient.close();
+        if (kafkaServer != null) {
+            kafkaServer.stop();
         }
+        ZKUtil.cleanZkPath(kafkaZkPath);
+        DefaultScheduler.destroyInstance();
     }
 
     protected void waitForJob(String jobId) {
