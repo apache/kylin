@@ -298,20 +298,21 @@ public class KylinClient implements IRemoteClient {
         addHttpHeaders(get);
 
         HttpResponse response = httpClient.execute(get);
+        try {
+            if (response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 201) {
+                throw asIOException(get, response);
+            }
 
-        if (response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 201) {
-            throw asIOException(get, response);
+            List<TableMetaStub> tableMetaStubs = jsonMapper.readValue(response.getEntity().getContent(),
+                    new TypeReference<List<TableMetaStub>>() {
+                    });
+            List<KMetaTable> tables = convertMetaTables(tableMetaStubs);
+            List<KMetaSchema> schemas = convertMetaSchemas(tables);
+            List<KMetaCatalog> catalogs = convertMetaCatalogs(schemas);
+            return new KMetaProject(project, catalogs);
+        } finally {
+           get.releaseConnection(); 
         }
-
-        List<TableMetaStub> tableMetaStubs = jsonMapper.readValue(response.getEntity().getContent(),
-                new TypeReference<List<TableMetaStub>>() {
-                });
-
-        List<KMetaTable> tables = convertMetaTables(tableMetaStubs);
-        List<KMetaSchema> schemas = convertMetaSchemas(tables);
-        List<KMetaCatalog> catalogs = convertMetaCatalogs(schemas);
-        get.releaseConnection();
-        return new KMetaProject(project, catalogs);
     }
 
     private List<KMetaCatalog> convertMetaCatalogs(List<KMetaSchema> schemas) {
@@ -426,14 +427,16 @@ public class KylinClient implements IRemoteClient {
         post.setEntity(requestEntity);
 
         HttpResponse response = httpClient.execute(post);
+        try {
+            if (response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 201) {
+                throw asIOException(post, response);
+            }
 
-        if (response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 201) {
-            throw asIOException(post, response);
+            SQLResponseStub stub = jsonMapper.readValue(response.getEntity().getContent(), SQLResponseStub.class);
+            return stub;
+        } finally {
+            post.releaseConnection();
         }
-
-        SQLResponseStub stub = jsonMapper.readValue(response.getEntity().getContent(), SQLResponseStub.class);
-        post.releaseConnection();
-        return stub;
     }
 
     private List<ColumnMetaData> convertColumnMeta(SQLResponseStub queryResp) {
