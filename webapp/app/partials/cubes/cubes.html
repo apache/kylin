@@ -109,13 +109,11 @@
                         <li ng-if="cube.status!='DISABLED' && cube.consumeState=='PAUSED'"><a ng-click="resumeCube(cube, $index);">Resume</a></li>
                         <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube, $index)">Disable</a></li>
                         <li ng-if="cube.status!='DISABLED' && userService.hasRole('ROLE_ADMIN')"><a ng-click="viewAssignment(cube, $index);">Assignment</a></li>
-                        <li ng-if="cube.status!='DESCBROKEN' && cube.lambda"><a ng-click="startJobSubmit(cube, $index);">Build</a></li>
                         <li ng-if="cube.status!='DESCBROKEN' && cube.lambda"><a ng-click="startRefresh(cube, $index)">Refresh</a></li>
                         <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)) "><a ng-click="dropCube(cube, $index)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
                         <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="cubeEdit(cube);">Edit</a></li>
                         <li><a ng-click="startMerge(cube, $index)">Merge</a></li>
                         <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube, $index)">Enable</a></li>
-                        <li ng-if="cube.lambda"><a ng-click="startDeleteSegment(cube)">Delete Segment</a></li>
                         <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube, $index)">Purge</a></li>
                         <li><a ng-click="cloneCube(cube)">Clone</a></li>
                     </ul>
