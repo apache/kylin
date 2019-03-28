@@ -11,9 +11,12 @@ By following this tutorial, you will be able to build Kylin test cubes by runnin
 
 ## Environment on the Hadoop CLI
 
-Off-Hadoop-CLI installation requires you having a hadoop CLI machine (or a hadoop sandbox) as well as your local develop machine. To make things easier we strongly recommend you starting with running Kylin on a hadoop sandbox. In the following tutorial we'll go with **Hortonworks® Sandbox 2.4.0.0-169**, you can download it from [Hortonworks download page](https://hortonworks.com/downloads/#sandbox), expand the "Hortonworks Sandbox Archive" link, and then search "HDP® 2.4 on Hortonworks Sandbox" to download. It is recommended that you provide enough memory to your sandbox vm, 8G or more is preferred.
-
+Off-Hadoop-CLI installation requires you having a hadoop CLI machine (or a hadoop sandbox) as well as your local develop machine. To make things easier we strongly recommend you starting with running Kylin on a hadoop sandbox. In the following tutorial we'll go with **Hortonworks® Sandbox 2.4.0.0-169**, you can download it from [Hortonworks download page](https://hortonworks.com/downloads/#sandbox), expand the "Hortonworks Sandbox Archive" link, and then search "HDP® 2.4 on Hortonworks Sandbox" to download. It is recommended that you provide enough memory to your sandbox vm, 8G or more is preferred.  
+**Tips:** Use HDP-2.4.0.0.169 sandbox and deploy it with 10GB memory or more will be better. Some newer version HDP sandbox use docker deploy their cluster service and wraped in virual machine. You need to upload you project into docker container to run integration test, which doesn't convenient. Higher memory will reduce the possibility that virtual machine kill the test process.
+ 
 ### Start Hadoop
+
+After start the virtual machine, you can login as root.  
 
 In Hortonworks sandbox, ambari helps to launch hadoop:
 
@@ -21,8 +24,14 @@ In Hortonworks sandbox, ambari helps to launch hadoop:
 ambari-agent start
 ambari-server start
 {% endhighlight %}
+
+And reset the password of ambari user admin to `admin`:
+
+{% highlight Groff markup %}
+ambari-admin-password-reset
+{% endhighlight %}
 	
-With both command successfully run you can go to ambari home page at <http://yoursandboxip:8080> to check everything's status. By default ambari disables HBase, you need to manually start the `HBase` service.
+With both command successfully run you can login ambari home page as admin at <http://yoursandboxip:8080> to check everything's status. By default ambari disables HBase, you need to manually start the `HBase` service.
 ![start hbase in ambari](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/installation/starthbase.png)
 
 For other hadoop distribution, basically start the hadoop cluster, make sure HDFS, YARN, Hive, HBase are running.
@@ -30,7 +39,8 @@ For other hadoop distribution, basically start the hadoop cluster, make sure HDF
 Note:
 
 * You may need to adjust the YARN configuration, allocating 3-4GB memory to YARN resource manager.
-* The JDK in the sandbox VM might be old, please manually upgrade to Java 8 (Kyin 2.5 requires Java 8).
+* The JDK in the sandbox VM might be old, please manually upgrade to Java 8 (Kyin 2.5 requires Java 8). Relink the orginal JAVA_HOME to an new one will change the jdk version for every user. Otherwise, you may encounter `UnsupportedClassVersionError` exception. Here are some mails about this problem: [spark task error occurs when run IT in sanbox](https://lists.apache.org/thread.html/46eb7e4083fd25a461f09573fc4225689e61c0d8150463a2c0eb65ef@%3Cdev.kylin.apache.org%3E)     
+**Tips:** Here is a tutorial about sandbox will be helpful. [Learning the Ropes of the HDP Sandbox](https://hortonworks.com/tutorial/learning-the-ropes-of-the-hortonworks-sandbox)
 
 ## Environment on the dev machine
 
@@ -104,7 +114,7 @@ mvn test -fae -Dhdp.version=<hdp-version> -P sandbox
 ### Run integration tests
 Before actually running integration tests, need to run some end-to-end cube building jobs for test data population, in the meantime validating cubing process. Then comes with the integration tests.
 
-It might take a while (maybe two hours), please keep patient.
+It might take a while (maybe two hours), please keep patient and smooth network.
  
 {% highlight Groff markup %}
 mvn verify -fae -Dhdp.version=<hdp-version> -P sandbox
