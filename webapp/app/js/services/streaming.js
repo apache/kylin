@@ -251,6 +251,7 @@ KylinApp.factory('AdminStreamingService', ['$resource', function ($resource, con
                     receiver_cube_real_time_states.consumer_info.total_consume += partitonInfo.total_consume;
                   }
                   receiver_cube_real_time_states.partition_consume_stats = receiver_cube_real_time_states.consumer_stats.partition_consume_stats;
+                  receiver_cube_real_time_states.consume_lag = receiver_cube_real_time_states.consumer_stats.consume_lag;
                 }
                 delete receiver_cube_real_time_states.consumer_stats;
                 receiver_cube_real_time_states.receiver_state =  data.receiver_cube_real_time_states[rsId][node]['receiver_state'];
