@@ -87,7 +87,7 @@
                             data-toggle="dropdown" ng-click="$event.stopPropagation(); listCubeAccess(cube, 'CubeInstance'); listCubeAction(cube)">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
-                    <ul ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask,permissions.OPERATION.mask)) && !cube.detail.streamingV2 && actionLoaded" class="dropdown-menu" role="menu" style="right:0;left:auto;">
+                    <ul ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask,permissions.OPERATION.mask)) && !cube.streamingV2 && actionLoaded" class="dropdown-menu" role="menu" style="right:0;left:auto;">
                         <li ng-if="cube.status!='READY' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
                             <a ng-click="dropCube(cube)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
                         <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)">
@@ -104,7 +104,7 @@
                         <li ng-if="cube.status=='READY' && isAutoMigrateCubeEnabled() && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)) "><a ng-click="migrateCube(cube)">Migrate</a></li>
 
                     </ul>
-                    <ul ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)) && cube.detail.streamingV2 && actionLoaded" class="dropdown-menu" role="menu" style="right:0;left:auto;">
+                    <ul ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)) && cube.streamingV2 && actionLoaded" class="dropdown-menu" role="menu" style="right:0;left:auto;">
                         <li ng-if="cube.status!='DISABLED' && cube.consumeState=='RUNNING'"><a ng-click="pauseCube(cube, $index);">Pause</a></li>
                         <li ng-if="cube.status!='DISABLED' && cube.consumeState=='PAUSED'"><a ng-click="resumeCube(cube, $index);">Resume</a></li>
                         <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube, $index)">Disable</a></li>
