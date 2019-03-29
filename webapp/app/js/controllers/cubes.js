@@ -618,7 +618,16 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
     // streaming cube action
     $scope.startCube = function(cube) {
       AdminStreamingService.assignCube({cubeName:cube.name}, {}, function(data){
-        SweetAlert.swal('Success!', 'Cube start successful', 'success');
+        SweetAlert.swal({
+          title: 'Success!',
+          text: 'Cube start successful',
+          type: 'success',
+          confirmButtonText: 'OK',
+          confirmButtonClass: 'btn-primary',
+          closeOnConfirm: true
+        }, function () {
+          location.reload();
+        });
       }, function(e){
         if(e.data&& e.data.exception){
           var message =e.data.exception;
@@ -632,7 +641,16 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
     $scope.pauseCube = function(cube) {
       AdminStreamingService.suspendCubeConsume({cubeName:cube.name}, {}, function(data){
-        SweetAlert.swal('Success!', 'Cube pause successful', 'success');
+        SweetAlert.swal({
+          title: 'Success!',
+          text: 'Cube pause successful',
+          type: 'success',
+          confirmButtonText: 'OK',
+          confirmButtonClass: 'btn-primary',
+          closeOnConfirm: true
+        }, function () {
+          location.reload();
+        });
       }, function(e){
         if(e.data&& e.data.exception){
           var message =e.data.exception;
@@ -646,7 +664,16 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
 
     $scope.resumeCube = function(cube) {
       AdminStreamingService.resumeCubeConsume({cubeName:cube.name}, {}, function(data){
-        SweetAlert.swal('Success!', 'Cube resume successful', 'success');
+        SweetAlert.swal({
+          title: 'Success!',
+          text: 'Cube resume successful',
+          type: 'success',
+          confirmButtonText: 'OK',
+          confirmButtonClass: 'btn-primary',
+          closeOnConfirm: true
+        }, function () {
+          location.reload();
+        });
       }, function(e){
         if(e.data&& e.data.exception){
           var message =e.data.exception;
