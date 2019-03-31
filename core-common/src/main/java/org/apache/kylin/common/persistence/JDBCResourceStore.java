@@ -400,12 +400,12 @@ public class JDBCResourceStore extends PushdownResourceStore {
 
             if (content.length > smallCellMetadataWarningThreshold) {
                 logger.warn(
-                        "A JSON metadata entry's size is not supposed to exceed kap.metadata.jdbc.small-cell-meta-size-warning-threshold({}), resPath: {}, actual size: {}",
+                        "A JSON metadata entry's size is not supposed to exceed kylin.metadata.jdbc.small-cell-meta-size-warning-threshold({}), resPath: {}, actual size: {}",
                         smallCellMetadataWarningThreshold, resPath, content.length);
             }
             if (content.length > smallCellMetadataErrorThreshold) {
                 throw new SQLException(new IllegalArgumentException(
-                        "A JSON metadata entry's size is not supposed to exceed kap.metadata.jdbc.small-cell-meta-size-error-threshold("
+                        "A JSON metadata entry's size is not supposed to exceed kylin.metadata.jdbc.small-cell-meta-size-error-threshold("
                                 + smallCellMetadataErrorThreshold + "), resPath: " + resPath + ", actual size: "
                                 + content.length));
             }
