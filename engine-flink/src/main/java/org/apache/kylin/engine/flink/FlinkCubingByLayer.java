@@ -70,7 +70,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Flink application to build cube with the "by-layer" algorithm. Only support source data from Hive; Metadata in HBase.
+ * Flink application to build cube with the "by-layer" algorithm.
  */
 public class FlinkCubingByLayer extends AbstractApplication implements Serializable {
 
