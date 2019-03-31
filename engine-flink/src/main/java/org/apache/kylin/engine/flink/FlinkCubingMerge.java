@@ -299,9 +299,9 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
         @Override
         public Tuple2<Text, Text> map(Tuple2<Text, Object[]> tuple2) throws Exception {
             ByteBuffer valueBuf = codec.encode(tuple2.f1);
-            byte[] encodedBytes = new byte[valueBuf.position()];
-            System.arraycopy(valueBuf.array(), 0, encodedBytes, 0, valueBuf.position());
-            return new Tuple2<>(tuple2.f0, new Text(encodedBytes));
+            Text result = new Text();
+            result.set(valueBuf.array(), 0, valueBuf.position());
+            return new Tuple2<>(tuple2.f0, result);
         }
 
     }
