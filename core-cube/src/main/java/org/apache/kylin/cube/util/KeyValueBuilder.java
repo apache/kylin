@@ -34,6 +34,8 @@ import com.google.common.collect.Sets;
 public class KeyValueBuilder implements Serializable {
 
     public static final String HIVE_NULL = "\\N";
+    public static final String ZERO = "0";
+    public static final String ONE = "1";
 
     private Set<String> nullStrs;
     private CubeJoinedFlatTableEnrich flatDesc;
@@ -94,14 +96,14 @@ public class KeyValueBuilder implements Serializable {
             if (param.isColumnType()) {
                 value = getCell(colIdxOnFlatTable[colParamIdx++], row);
                 if (function.isCount() && value == null) {
-                    value = "0";
+                    value = ZERO;
                 } else if (function.isCount()) {
-                    value = "1";
+                    value = ONE;
                 }
             } else {
                 value = param.getValue();
                 if (function.isCount()) {
-                    value = "1";
+                    value = ONE;
                 }
             }
             inputToMeasure.add(value);

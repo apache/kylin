@@ -64,7 +64,7 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
             return;
         }
 
-        List<FunctionDesc> countFuncs = new ArrayList<FunctionDesc>();
+        List<FunctionDesc> countStarFuncs = new ArrayList<FunctionDesc>();
 
         Iterator<MeasureDesc> it = measures.iterator();
         while (it.hasNext()) {
@@ -103,8 +103,8 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
                 context.addResult(ResultLevel.ERROR, ex.getMessage());
             }
 
-            if (func.isCount())
-                countFuncs.add(func);
+            if (func.isCount() && func.getParameter().isConstant())
+                countStarFuncs.add(func);
 
             if (TopNMeasureType.FUNC_TOP_N.equalsIgnoreCase(func.getExpression())) {
                 if (parameter.getNextParameter() == null) {
@@ -125,6 +125,12 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
                 }
 
             }
+        }
+
+
+        if (countStarFuncs.size() != 1) {
+            context.addResult(ResultLevel.ERROR, "Must define one and only one count(1) function, but there are "
+                    + countStarFuncs.size() + " -- " + countStarFuncs);
         }
     }
 
