@@ -73,7 +73,7 @@ import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
 /**
- * Spark application to build cube with the "by-layer" algorithm. Only support source data from Hive; Metadata in HBase.
+ * Spark application to build cube with the "by-layer" algorithm.
  */
 public class SparkCubingByLayer extends AbstractApplication implements Serializable {
 

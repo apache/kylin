@@ -140,8 +140,6 @@ public class FlinkUtil {
                         @Override
                         public String[] map(Tuple2<BytesWritable, Text> tuple2) throws Exception {
 
-                            System.out.println("read records from hive.");
-
                             String s = Bytes.toString(tuple2.f1.getBytes(), 0, tuple2.f1.getLength());
                             return s.split(BatchConstants.SEQUENCE_FILE_DEFAULT_DELIMITER);
                         }
