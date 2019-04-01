@@ -77,6 +77,8 @@ public interface BatchConstants {
 
     String CFG_SHARD_NUM = "shard.num";
 
+    String CFG_CONVERGE_CUBOID_PARTITION_PARAM = "converge.cuboid.partition.param";
+
     /**
      * command line ARGuments
      */
