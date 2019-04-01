@@ -161,6 +161,10 @@ public class CubeStatsReader {
         return samplingPercentage;
     }
 
+    public long getSourceRowCount() {
+        return sourceRowCount;
+    }
+
     public Map<Long, Long> getCuboidRowEstimatesHLL() {
         return getCuboidRowCountMapFromSampling(cuboidRowEstimatesHLL, samplingPercentage);
     }
