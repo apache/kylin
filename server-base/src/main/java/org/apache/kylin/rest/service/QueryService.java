@@ -224,11 +224,11 @@ public class QueryService extends BasicService {
             Pair<List<List<String>>, List<SelectedColumnMeta>> r = PushDownUtil.tryPushDownNonSelectQuery(
                     sqlRequest.getProject(), sqlRequest.getSql(), conn.getSchema(), BackdoorToggles.getPrepareOnly());
 
-            List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
-            columnMetas.add(new SelectedColumnMeta(false, false, false, false, 1, false, Integer.MAX_VALUE, "c0", "c0",
-                    null, null, null, Integer.MAX_VALUE, 128, 1, "char", false, false, false));
+//            List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
+//            columnMetas.add(new SelectedColumnMeta(false, false, false, false, 1, false, Integer.MAX_VALUE, "c0", "c0",
+//                    null, null, null, Integer.MAX_VALUE, 128, 1, "char", false, false, false));
 
-            return buildSqlResponse(sqlRequest.getProject(), true, r.getFirst(), columnMetas);
+            return buildSqlResponse(sqlRequest.getProject(), true, r.getFirst(), r.getSecond());
 
         } catch (Exception e) {
             logger.info("pushdown engine failed to finish current non-select query");
