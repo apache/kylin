@@ -20,9 +20,11 @@ package org.apache.kylin.engine.mr.common;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
@@ -30,6 +32,8 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.exception.JobException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Sets;
 
 public class MapReduceUtil {
 
@@ -112,7 +116,35 @@ public class MapReduceUtil {
         for (Double cuboidSize : cubeSizeMap.values()) {
             totalSizeInM += cuboidSize;
         }
+        return getReduceTaskNum(totalSizeInM, kylinConfig);
+    }
 
+    // @return the first indicates the total reducer number, the second indicates the reducer number for base cuboid
+    public static Pair<Integer, Integer> getConvergeCuboidDataReduceTaskNums(CubeSegment cubeSeg) throws IOException {
+        long baseCuboidId = cubeSeg.getCuboidScheduler().getBaseCuboidId();
+
+        Set<Long> overlapCuboids = Sets.newHashSet(cubeSeg.getCuboidScheduler().getAllCuboidIds());
+        overlapCuboids.retainAll(cubeSeg.getCubeInstance().getCuboidsRecommend());
+        overlapCuboids.add(baseCuboidId);
+
+        Pair<Map<Long, Long>, Long> cuboidStats = CuboidStatsReaderUtil
+                .readCuboidStatsWithSourceFromSegment(overlapCuboids, cubeSeg);
+        Map<Long, Double> cubeSizeMap = CubeStatsReader.getCuboidSizeMapFromRowCount(cubeSeg, cuboidStats.getFirst(),
+                cuboidStats.getSecond());
+        double totalSizeInM = 0;
+        for (Double cuboidSize : cubeSizeMap.values()) {
+            totalSizeInM += cuboidSize;
+        }
+
+        double baseSizeInM = cubeSizeMap.get(baseCuboidId);
+
+        KylinConfig kylinConfig = cubeSeg.getConfig();
+        int nBase = getReduceTaskNum(baseSizeInM, kylinConfig);
+        int nOther = getReduceTaskNum(totalSizeInM - baseSizeInM, kylinConfig);
+        return new Pair<>(nBase + nOther, nBase);
+    }
+
+    private static int getReduceTaskNum(double totalSizeInM, KylinConfig kylinConfig) {
         double perReduceInputMB = kylinConfig.getDefaultHadoopJobReducerInputMB();
         double reduceCountRatio = kylinConfig.getDefaultHadoopJobReducerCountRatio();
 

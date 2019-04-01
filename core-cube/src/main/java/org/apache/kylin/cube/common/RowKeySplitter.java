@@ -90,9 +90,14 @@ public class RowKeySplitter implements java.io.Serializable {
 
 
     public long parseCuboid(byte[] bytes) {
+        return getCuboidId(bytes, enableSharding);
+    }
+
+    public static long getCuboidId(byte[] bytes, boolean enableSharding) {
         int offset = enableSharding ? RowConstants.ROWKEY_SHARDID_LEN : 0;
         return Bytes.toLong(bytes, offset, RowConstants.ROWKEY_CUBOIDID_LEN);
     }
+
     /**
      * @param bytes
      * @return cuboid ID
