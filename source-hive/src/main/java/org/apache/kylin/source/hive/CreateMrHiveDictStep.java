@@ -51,6 +51,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(CreateMrHiveDictStep.class);
     private final PatternedLogger stepLogger = new PatternedLogger(logger);
     private DistributedLock lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentThread();
+    private static final String GET_SQL = "\" Get Max Dict Value Sql : \"";
 
     protected void createMrHiveDict(KylinConfig config) throws Exception {
         try {
@@ -94,20 +95,19 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
                             List<Object[]> datas = null;
                             try {
                                 datas = hiveClient.getHiveResult(maxDictValSql);
-                                if (Objects.nonNull(datas) && datas.size() > 0) {
+                                if (Objects.nonNull(datas) && !datas.isEmpty()) {
                                     max = Integer.valueOf(datas.get(0)[0] + "");
-                                    stepLogger.log(columnName + " Get Max Dict Value Sql : " + maxDictValSql);
+                                    stepLogger.log(columnName + GET_SQL + maxDictValSql);
                                     stepLogger.log(columnName + " Get Max Dict Value Of : " + max);
                                 } else {
-                                    stepLogger.log(columnName + " Get Max Dict Value Sql : " + maxDictValSql);
+                                    stepLogger.log(columnName + GET_SQL + maxDictValSql);
                                     stepLogger.log(columnName + " Get Max Dict Value Of ERROR: hive execute result is null.");
                                     throw new IOException("execute get max dict result fail : " + maxDictValSql);
                                 }
                             } catch (Exception e) {
-                                stepLogger.log(columnName + " Get Max Dict Value Sql : " + maxDictValSql);
+                                stepLogger.log(columnName + GET_SQL + maxDictValSql);
                                 stepLogger.log(columnName + " Get Max Dict Value Of ERROR :" + e.getMessage());
-                                logger.error("execute get max dict result fail : " + maxDictValSql);
-                                e.printStackTrace();
+                                logger.error("execute get max dict result fail : " + maxDictValSql, e);
                             }
                             String dictSql = dictSqlMap.get(columnName).replace("___maxDictVal___", max + "");
                             hiveCmdBuilder.addStatement(dictSql);
@@ -142,8 +142,8 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
                 lock.unlock(getLockPath(getLockPathName()));
                 stepLogger.log("zookeeper unlock path :" + getLockPathName());
             }
-            e.printStackTrace();
-            throw new Exception(e.getMessage());
+            logger.error("", e);
+            throw e;
         }
     }
 
@@ -183,7 +183,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
         if (Objects.nonNull(cmd)) {
             stepLogger.log("cmd : " + cmd);
             int currTimes = 0;
-            int maxTimes = 1 * 60 * 6; //最长等待6个小时就失败
+            int maxTimes = 360;
             boolean flag = true;
             while (flag && currTimes <= maxTimes) {
                 try {
@@ -192,10 +192,8 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
                     flag = false;
                 } catch (Exception e) {
                     stepLogger.log("execute : " + cmd + " Failed && And errLog is " + e.getMessage());
-                    if (currTimes == maxTimes) {
-                        throw new Exception(e);
-                    }
-                    Thread.sleep(1000 * 60);
+                    Thread.sleep(60000);
+                    currTimes += 60;
                 }
             }
         }
@@ -284,7 +282,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
                 try {
                     jsonObject.put(key, value);
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    logger.error("Json Error", e);
                 }
                 result.put(jsonObject);
             });
@@ -308,7 +306,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
                     }
                 }
             } catch (JSONException e) {
-                e.printStackTrace();
+                logger.error("Json Error", e);
             }
         }
         return result;
@@ -317,6 +315,4 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
     private String getLockPath(String pathName) {
         return MRHiveDictUtil.DictHiveType.MrDictLockPath.getName() + pathName;
     }
-
-
 }
