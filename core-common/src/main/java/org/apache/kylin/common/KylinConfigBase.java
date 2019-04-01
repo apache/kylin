@@ -1347,6 +1347,7 @@ public abstract class KylinConfigBase implements Serializable {
     // ============================================================================
     // mr-hive dict
     // ============================================================================
+
     public String[] getMrHiveDictColumns() {
         String columnStr = getOptional("kylin.dictionary.mr-hive.columns", "");
         if (Objects.nonNull(columnStr) && columnStr.length()>0) {
@@ -1354,6 +1355,7 @@ public abstract class KylinConfigBase implements Serializable {
         }
         return null;
     }
+
     public String getMrHiveDictDB() {
         return getOptional("kylin.dictionary.mr-hive.database", getHiveDatabaseForIntermediateTable());
     }
@@ -1362,6 +1364,13 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.dictionary.mr-hive.table.suffix", "_global_dict");
     }
 
+    /**
+     * different version hive use different UNION style
+     * https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Union
+     */
+    public String getHiveUnionStyle(){
+        return getOptional("kylin.hive.union.style", "UNION");
+    }
 
     // ============================================================================
     // ENGINE.SPARK

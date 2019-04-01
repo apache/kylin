@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1346,10 +1347,13 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             if (Objects.nonNull(mrHiveDictColumns) && StringUtils.isNotEmpty(mrHiveDictColumns)) {
                 String[] mrHiveDictColumnArr = mrHiveDictColumns.split(",");
                 for (String dictColumn : mrHiveDictColumnArr) {
-                    for (TblColRef colRef : result) {
+                    Iterator<TblColRef> it = result.iterator();
+                    while (it.hasNext()) {
+                        TblColRef colRef = it.next();
                         String aliasCol = colRef.getTableAlias() + "_" + colRef.getName();
                         if (aliasCol.equalsIgnoreCase(dictColumn)) {
-                            result.remove(colRef);
+                            logger.debug("Remove column {} because it has been built by MR", aliasCol);
+                            it.remove();
                         }
                     }
                 }
