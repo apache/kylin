@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Properties;
+import java.io.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DBUtils;
@@ -59,6 +60,17 @@ public class BeelineHiveClient implements IHiveClient {
             if ("-p".equals(splits[i])) {
                 password = stripQuotes(splits[i + 1]);
             }
+            if ("-w".equals(splits[i])) {
+                File file = new File(splits[i + 1]);
+                BufferedReader br = null;
+                try {
+                    br = new BufferedReader(new FileReader(file));                
+                    password = br.readLine();
+                    br.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }            
         }
         Properties jdbcProperties = SourceConfigurationUtil.loadHiveJDBCProperties();
         jdbcProperties.put(HIVE_AUTH_PASSWD, password);
