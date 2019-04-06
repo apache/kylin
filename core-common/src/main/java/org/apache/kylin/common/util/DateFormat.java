@@ -25,7 +25,6 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.time.FastDateFormat;
-import org.apache.kylin.common.KylinConfig;
 
 public class DateFormat {
 
@@ -98,18 +97,17 @@ public class DateFormat {
         return date;
     }
 
-    public static String formatToSystemTimeStr(long mills){
-        return formatToSystemPattenStr(mills, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
+    public static String formatToTimeStrWithTimeZone(TimeZone timeZone, long mills){
+        return formatToStrWithTimeZone(timeZone, mills, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
     }
 
-    public static String formatToSystemDateStr(long mills){
-        return formatToSystemPattenStr(mills, DEFAULT_DATE_PATTERN);
+    public static String formatToDateStrWithTimeZone(TimeZone timeZone, long mills){
+        return formatToStrWithTimeZone(timeZone, mills, DEFAULT_DATE_PATTERN);
     }
 
-    private static String formatToSystemPattenStr(long mills, String pattern){
+    private static String formatToStrWithTimeZone(TimeZone timeZone, long mills, String pattern){
         SimpleDateFormat format = new SimpleDateFormat(pattern);
-        String systemZone = KylinConfig.getInstanceFromEnv().getTimeZone();
-        format.setTimeZone(TimeZone.getTimeZone(systemZone));
+        format.setTimeZone(timeZone);
         return format.format(new Date(mills));
     }
 
