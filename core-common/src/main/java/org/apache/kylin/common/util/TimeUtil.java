@@ -44,7 +44,7 @@ public class TimeUtil {
     }
 
     public static long getDayStart(long ts) {
-        return ts / ONE_DAY_TS * ONE_DAY_TS;
+        return ts;
     }
 
     public static long getWeekStart(long ts) {

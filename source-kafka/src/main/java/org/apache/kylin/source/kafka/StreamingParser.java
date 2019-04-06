@@ -118,31 +118,31 @@ public abstract class StreamingParser {
         switch (derivedTimeColumn) {
         case 1:
             normalized = TimeUtil.getMinuteStart(t);
-            result.add(DateFormat.formatToTimeWithoutMilliStr(normalized));
+            result.add(DateFormat.formatToSystemTimeStr(normalized));
             break;
         case 2:
             normalized = TimeUtil.getHourStart(t);
-            result.add(DateFormat.formatToTimeWithoutMilliStr(normalized));
+            result.add(DateFormat.formatToSystemTimeStr(normalized));
             break;
         case 3:
             normalized = TimeUtil.getDayStart(t);
-            result.add(DateFormat.formatToDateStr(normalized));
+            result.add(DateFormat.formatToSystemDateStr(normalized));
             break;
         case 4:
             normalized = TimeUtil.getWeekStart(t);
-            result.add(DateFormat.formatToDateStr(normalized));
+            result.add(DateFormat.formatToSystemDateStr(normalized));
             break;
         case 5:
             normalized = TimeUtil.getMonthStart(t);
-            result.add(DateFormat.formatToDateStr(normalized));
+            result.add(DateFormat.formatToSystemDateStr(normalized));
             break;
         case 6:
             normalized = TimeUtil.getQuarterStart(t);
-            result.add(DateFormat.formatToDateStr(normalized));
+            result.add(DateFormat.formatToSystemDateStr(normalized));
             break;
         case 7:
             normalized = TimeUtil.getYearStart(t);
-            result.add(DateFormat.formatToDateStr(normalized));
+            result.add(DateFormat.formatToSystemDateStr(normalized));
             break;
         default:
             throw new IllegalStateException();

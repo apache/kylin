@@ -18,12 +18,14 @@
 package org.apache.kylin.common.util;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.time.FastDateFormat;
+import org.apache.kylin.common.KylinConfig;
 
 public class DateFormat {
 
@@ -94,6 +96,21 @@ public class DateFormat {
             throw new IllegalArgumentException("'" + str + "' is not a valid date of pattern '" + pattern + "'", e);
         }
         return date;
+    }
+
+    public static String formatToSystemTimeStr(long mills){
+        return formatToSystemPattenStr(mills, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
+    }
+
+    public static String formatToSystemDateStr(long mills){
+        return formatToSystemPattenStr(mills, DEFAULT_DATE_PATTERN);
+    }
+
+    private static String formatToSystemPattenStr(long mills, String pattern){
+        SimpleDateFormat format = new SimpleDateFormat(pattern);
+        String systemZone = KylinConfig.getInstanceFromEnv().getTimeZone();
+        format.setTimeZone(TimeZone.getTimeZone(systemZone));
+        return format.format(new Date(mills));
     }
 
     public static long stringToMillis(String str) {
