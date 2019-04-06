@@ -18,7 +18,6 @@
 package org.apache.kylin.common.util;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
@@ -106,9 +105,8 @@ public class DateFormat {
     }
 
     private static String formatToStrWithTimeZone(TimeZone timeZone, long mills, String pattern){
-        SimpleDateFormat format = new SimpleDateFormat(pattern);
-        format.setTimeZone(timeZone);
-        return format.format(new Date(mills));
+        FastDateFormat dateFormat =  FastDateFormat.getInstance(pattern, timeZone);
+        return dateFormat.format(new Date(mills));
     }
 
     public static long stringToMillis(String str) {
