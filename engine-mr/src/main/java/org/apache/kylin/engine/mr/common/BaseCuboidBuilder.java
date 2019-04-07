@@ -73,23 +73,7 @@ public class BaseCuboidBuilder implements java.io.Serializable {
         measureCodec = new BufferedMeasureCodec(measureDescList);
 
         kvBuilder = new KeyValueBuilder(intermediateTableDesc);
-
-        Set<String> mrDictColumnSet = new HashSet<>();
-        if (kylinConfig.getMrHiveDictColumns() != null) {
-            Collections.addAll(mrDictColumnSet, kylinConfig.getMrHiveDictColumns());
-        }
-
-        for (MeasureDesc measure : measureDescList) {
-            if (measure.getFunction().getExpression().equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT)) {
-                FunctionDesc functionDesc = measure.getFunction();
-                TblColRef colRef = functionDesc.getParameter().getColRefs().get(0);
-                if (mrDictColumnSet.contains(JoinedFlatTable.colName(colRef, true))) {
-                    functionDesc.setMrDict(true);
-                    logger.info("setMrDict for {}", colRef);
-                    measure.setFunction(functionDesc);
-                }
-            }
-        }
+        checkMrDictClolumn();
     }
 
     public BaseCuboidBuilder(KylinConfig kylinConfig, CubeDesc cubeDesc, CubeSegment cubeSegment,
@@ -108,23 +92,7 @@ public class BaseCuboidBuilder implements java.io.Serializable {
         measureCodec = new BufferedMeasureCodec(measureDescList);
 
         kvBuilder = new KeyValueBuilder(intermediateTableDesc);
-
-        Set<String> mrDictColumnSet = new HashSet<>();
-        if (kylinConfig.getMrHiveDictColumns() != null) {
-            Collections.addAll(mrDictColumnSet, kylinConfig.getMrHiveDictColumns());
-        }
-
-        for (MeasureDesc measure : measureDescList) {
-            if (measure.getFunction().getExpression().equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT)) {
-                FunctionDesc functionDesc = measure.getFunction();
-                TblColRef colRef = functionDesc.getParameter().getColRefs().get(0);
-                if (mrDictColumnSet.contains(JoinedFlatTable.colName(colRef, true))) {
-                    functionDesc.setMrDict(true);
-                    logger.info("setMrDict for {}", colRef);
-                    measure.setFunction(functionDesc);
-                }
-            }
-        }
+        checkMrDictClolumn();
     }
 
     public byte[] buildKey(String[] flatRow) {
@@ -150,6 +118,25 @@ public class BaseCuboidBuilder implements java.io.Serializable {
     public void resetAggrs() {
         for (int i = 0; i < cubeDesc.getMeasures().size(); i++) {
             aggrIngesters[i].reset();
+        }
+    }
+
+    private void checkMrDictClolumn(){
+        Set<String> mrDictColumnSet = new HashSet<>();
+        if (kylinConfig.getMrHiveDictColumns() != null) {
+            Collections.addAll(mrDictColumnSet, kylinConfig.getMrHiveDictColumns());
+        }
+
+        for (MeasureDesc measure : measureDescList) {
+            if (measure.getFunction().getExpression().equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT)) {
+                FunctionDesc functionDesc = measure.getFunction();
+                TblColRef colRef = functionDesc.getParameter().getColRefs().get(0);
+                if (mrDictColumnSet.contains(JoinedFlatTable.colName(colRef, true))) {
+                    functionDesc.setMrDict(true);
+                    logger.info("setMrDict for {}", colRef);
+                    measure.setFunction(functionDesc);
+                }
+            }
         }
     }
 }

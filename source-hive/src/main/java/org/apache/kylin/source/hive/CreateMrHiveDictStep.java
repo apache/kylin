@@ -83,8 +83,8 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
             if (sql != null && sql.length() > 0) {
                 hiveCmdBuilder.addStatement(sql);
             }
-            Map<String, String> maxDictValMap = deSerilizableForMap(getMaxDictStatementMap());
-            Map<String, String> dictSqlMap = deSerilizableForMap(getCreateTableStatementMap());
+            Map<String, String> maxDictValMap = deserilizeForMap(getMaxDictStatementMap());
+            Map<String, String> dictSqlMap = deserilizeForMap(getCreateTableStatementMap());
 
             if (dictSqlMap != null && dictSqlMap.size() > 0) {
                 IHiveClient hiveClient = HiveClientFactory.getHiveClient();
@@ -217,7 +217,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
     }
 
     public void setCreateTableStatementMap(Map<String, String> dictSqlMap) {
-        setParam("HiveRedistributeDataMap", serilizableForMap(dictSqlMap));
+        setParam("HiveRedistributeDataMap", serilizeToMap(dictSqlMap));
     }
 
     public String getCreateTableStatementMap() {
@@ -225,7 +225,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
     }
 
     public void setMaxDictStatementMap(Map<String, String> maxDictValMap) {
-        setParam("DictMaxMap", serilizableForMap(maxDictValMap));
+        setParam("DictMaxMap", serilizeToMap(maxDictValMap));
     }
 
     public String getMaxDictStatementMap() {
@@ -274,7 +274,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
         return getParam("lockPathName");
     }
 
-    private static String serilizableForMap(Map<String, String> map) {
+    private static String serilizeToMap(Map<String, String> map) {
         JSONArray result = new JSONArray();
         if (map != null && map.size() > 0) {
             map.forEach((key, value) -> {
@@ -290,7 +290,7 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
         return result.toString();
     }
 
-    private static Map<String, String> deSerilizableForMap(String mapStr) {
+    private static Map<String, String> deserilizeForMap(String mapStr) {
         Map<String, String> result = new HashMap<>();
         if (mapStr != null) {
             try {

@@ -593,7 +593,9 @@
   "engine_type": 4,
   "storage_type": 2,
   "override_kylin_properties": {
-    "kylin.cube.algorithm": "LAYER"
+    "kylin.cube.algorithm": "LAYER",
+    "kylin.dictionary.shrunken-from-global-enabled": "false",
+    "kylin.dictionary.mr-hive.columns": "TEST_KYLIN_FACT_TEST_COUNT_DISTINCT_BITMAP"
   },
   "partition_date_start": 0
 }
