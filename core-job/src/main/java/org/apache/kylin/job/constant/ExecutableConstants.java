@@ -79,8 +79,8 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_STREAMING_SAVE_DICTS = "Save Cube Dictionaries";
 
     // MR - Hive Dict
-    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_EXTRACT_DICTVAL = "Global Dict Mr/Hive extract dict_val from Data";
-    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_BUILD_DICTVAL = "Global Dict Mr/Hive build dict_val";
-    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL = "Global Dict Mr/Hive replace dict_val to Data";
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_EXTRACT_DICTVAL = "Build Global Dict - extract distinct value from data";
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_BUILD_DICTVAL = "Build Global Dict - merge to dict table";
+    public static final String STEP_NAME_GLOBAL_DICT_MRHIVE_REPLACE_DICTVAL = "Build Global Dict - replace intermediate table";
 
 }

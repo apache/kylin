@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TimeZone;
@@ -544,6 +543,26 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isShrunkenDictFromGlobalEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.shrunken-from-global-enabled", TRUE));
+    }
+
+    // ============================================================================
+    // mr-hive dict
+    // ============================================================================
+
+    public String[] getMrHiveDictColumns() {
+        String columnStr = getOptional("kylin.dictionary.mr-hive.columns", "");
+        if (!StringUtils.isEmpty(columnStr)) {
+            return columnStr.split(",");
+        }
+        return null;
+    }
+
+    public String getMrHiveDictDB() {
+        return getOptional("kylin.dictionary.mr-hive.database", getHiveDatabaseForIntermediateTable());
+    }
+
+    public String getMrHiveDictTableSuffix() {
+        return getOptional("kylin.dictionary.mr-hive.table.suffix", "_global_dict");
     }
 
     // ============================================================================
@@ -1344,25 +1363,6 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.engine.mr.use-local-classpath", TRUE));
     }
 
-    // ============================================================================
-    // mr-hive dict
-    // ============================================================================
-
-    public String[] getMrHiveDictColumns() {
-        String columnStr = getOptional("kylin.dictionary.mr-hive.columns", "");
-        if (Objects.nonNull(columnStr) && columnStr.length()>0) {
-            return columnStr.split(",");
-        }
-        return null;
-    }
-
-    public String getMrHiveDictDB() {
-        return getOptional("kylin.dictionary.mr-hive.database", getHiveDatabaseForIntermediateTable());
-    }
-
-    public String getMrHiveDictTableSuffix() {
-        return getOptional("kylin.dictionary.mr-hive.table.suffix", "_global_dict");
-    }
 
     /**
      * different version hive use different UNION style

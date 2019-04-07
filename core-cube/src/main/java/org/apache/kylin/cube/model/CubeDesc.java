@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -1344,7 +1343,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         //mr - hive global dict
         if (overrideKylinProps.containsKey("kylin.dictionary.mr-hive.columns")) {
             String mrHiveDictColumns = overrideKylinProps.get("kylin.dictionary.mr-hive.columns");
-            if (Objects.nonNull(mrHiveDictColumns) && StringUtils.isNotEmpty(mrHiveDictColumns)) {
+            if (StringUtils.isNotEmpty(mrHiveDictColumns)) {
                 String[] mrHiveDictColumnArr = mrHiveDictColumns.split(",");
                 for (String dictColumn : mrHiveDictColumnArr) {
                     Iterator<TblColRef> it = result.iterator();
