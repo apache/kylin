@@ -25,6 +25,7 @@ This page lists the major RESTful APIs provided by Kylin.
 * JOB
    * [Resume job](#resume-job)
    * [Pause job](#pause-job)
+   * [Drop job](#drop-job)
    * [Discard job](#discard-job)
    * [Get job status](#get-job-status)
    * [Get job step output](#get-job-step-output)
@@ -47,6 +48,10 @@ This page lists the major RESTful APIs provided by Kylin.
 #### Request Header
 Authorization data encoded by basic auth is needed in the header, such as:
 Authorization:Basic {data}
+You can generate {data} by using below python script
+```
+python -c "import base64; print base64.standard_b64encode('$UserName:$Password')"
+```
 
 #### Response Body
 * userDetails - Defined authorities and status of current user.
@@ -877,6 +882,12 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 
 ## Discard Job
 `PUT /kylin/api/jobs/{jobId}/cancel`
+
+#### Path variable
+* jobId - `required` `string` Job id.
+
+## Drop Job
+`DELETE /kylin/api/jobs/{jobId}/drop`
 
 #### Path variable
 * jobId - `required` `string` Job id.
