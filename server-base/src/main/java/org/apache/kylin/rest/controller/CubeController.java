@@ -625,6 +625,17 @@ public class CubeController extends BasicController {
             throw new BadRequestException(
                     "the number of input measure and the number of measure defined in cubedesc are not consistent");
         }
+
+        for (RowKeyColDesc colDesc : cubeDesc.getRowkey().getRowKeyColumns()) {
+            if (!colDesc.isUsingDictionary()) {
+                try {
+                    // normal case
+                    DimensionEncodingFactory.create(colDesc.getEncodingName(), colDesc.getEncodingArgs(), colDesc.getEncodingVersion());
+                } catch (Exception e) {
+                    throw new BadRequestException("Illegal column desc: " + colDesc);
+                }
+            }
+        }
     }
 
     /**
