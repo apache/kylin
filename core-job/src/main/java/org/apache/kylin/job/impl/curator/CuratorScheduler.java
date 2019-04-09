@@ -171,6 +171,7 @@ public class CuratorScheduler implements Scheduler<AbstractExecutable> {
 
                 // get servers and its mode(query, job, all)
                 final String restServersInClusterWithMode = StringUtil.join(instanceNodes, ",");
+                logger.info("kylin.server.cluster-servers-with-mode update to " + restServersInClusterWithMode);
                 System.setProperty("kylin.server.cluster-servers-with-mode", restServersInClusterWithMode);
             }
         });
