@@ -40,8 +40,8 @@ public class SparkBatchCubingEngine2 implements IBatchCubingEngine {
     }
 
     @Override
-    public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
-        return new SparkBatchCubingJobBuilder2(newSegment, submitter).build();
+    public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter, Integer priorityOffset) {
+        return new SparkBatchCubingJobBuilder2(newSegment, submitter, priorityOffset).build();
     }
 
     @Override

@@ -77,6 +77,7 @@ public class ExecutableManager {
         result.setUuid(executable.getId());
         result.setType(executable.getClass().getName());
         result.setParams(executable.getParams());
+        result.setPriority(executable.getPriority());
         if (executable instanceof ChainedExecutable) {
             List<ExecutablePO> tasks = Lists.newArrayList();
             for (AbstractExecutable task : ((ChainedExecutable) executable).getTasks()) {
@@ -569,6 +570,7 @@ public class ExecutableManager {
         result.setId(executablePO.getUuid());
         result.setName(executablePO.getName());
         result.setParams(executablePO.getParams());
+        result.setPriority(executablePO.getPriority());
 
         if (!(result instanceof BrokenExecutable)) {
             List<ExecutablePO> tasks = executablePO.getTasks();
