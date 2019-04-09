@@ -352,7 +352,7 @@ public class CubeController extends BasicController {
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest req) {
         return buildInternal(cubeName, new TSRange(req.getStartTime(), req.getEndTime()), null, null, null,
-                req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment());
+                req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment(), req.getPriorityOffset());
     }
 
     /**
@@ -380,19 +380,19 @@ public class CubeController extends BasicController {
     public JobInstance rebuild2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
         return buildInternal(cubeName, null, new SegmentRange(req.getSourceOffsetStart(), req.getSourceOffsetEnd()),
                 req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(), req.getBuildType(),
-                req.isForce());
+                req.isForce(), req.getPriorityOffset());
     }
 
     private JobInstance buildInternal(String cubeName, TSRange tsRange, SegmentRange segRange, //
             Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
-            String buildType, boolean force) {
+            String buildType, boolean force, Integer priorityOffset) {
         try {
             String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
 
             checkBuildingSegment(cube);
             return jobService.submitJob(cube, tsRange, segRange, sourcePartitionOffsetStart, sourcePartitionOffsetEnd,
-                    CubeBuildTypeEnum.valueOf(buildType), force, submitter);
+                    CubeBuildTypeEnum.valueOf(buildType), force, submitter, priorityOffset);
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
