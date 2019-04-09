@@ -53,12 +53,14 @@ public class ServiceDiscoveryStateController extends BasicController {
     @RequestMapping(value = "/is_active_job_node", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public boolean isActiveJobNode() {
+        checkCuratorSchedulerEnabled();
         return serviceDiscoveryStateService.isActiveJobNode();
     }
 
     @RequestMapping(value = "/all", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public EnvelopeResponse<ServiceDiscoveryState> getAllNodeStates() throws IOException {
+        checkCuratorSchedulerEnabled();
         Set<String> allNodes = new HashSet<>();
         Set<String> queryNodes = new HashSet<>();
 
@@ -95,6 +97,15 @@ public class ServiceDiscoveryStateController extends BasicController {
         return new EnvelopeResponse<>(ResponseCode.CODE_SUCCESS,
                 new ServiceDiscoveryState(allNodes, jobNodes, queryNodes, leaders, activeJobNodes),
                 "get service discovery's state");
+    }
+
+    private void checkCuratorSchedulerEnabled() {
+        // 100 means CuratorScheduler
+        // This monitor only meaningful to CuratorScheduler
+        if (KylinConfig.getInstanceFromEnv().getSchedulerType() != 100) {
+            throw new UnsupportedOperationException("Only meaningful when scheduler is CuratorScheduler, " +
+                    "try set kylin.job.scheduler.default to 100 to enable CuratorScheduler.");
+        }
     }
 
     private Set<String> getActiveJobNodes(Collection<String> allNodes) throws IOException {

@@ -55,9 +55,11 @@ public class ServiceDiscoveryStateService extends BasicService {
     public Map<String, String> getJobServerState(Collection<String> servers) throws IOException {
         Map<String, String> r = new HashMap<>();
         for (String server : servers) {
-            logger.debug("Ask server: " + server + " for its job server state");
             RestClient client = new RestClient(server);
             Pair<String, String> jobServerState = client.getJobServerWithState();
+            logger.info("Ask server: {} for its job server state, is active job node: {}" //
+                    , jobServerState.getFirst() //
+                    , jobServerState.getSecond());//
             r.put(jobServerState.getFirst(), jobServerState.getSecond());
         }
         return r;
