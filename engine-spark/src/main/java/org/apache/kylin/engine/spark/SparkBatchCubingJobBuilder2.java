@@ -45,7 +45,11 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
     private final ISparkOutput.ISparkBatchCubingOutputSide outputSide;
 
     public SparkBatchCubingJobBuilder2(CubeSegment newSegment, String submitter) {
-        super(newSegment, submitter);
+        this(newSegment, submitter, 0);
+    }
+    
+    public SparkBatchCubingJobBuilder2(CubeSegment newSegment, String submitter, Integer priorityOffset) {
+        super(newSegment, submitter, priorityOffset);
         this.inputSide = SparkUtil.getBatchCubingInputSide(seg);
         this.outputSide = SparkUtil.getBatchCubingOutputSide(seg);
     }
@@ -83,6 +87,10 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
         result.addTask(createUpdateCubeInfoAfterBuildStep(jobId, lookupMaterializeContext));
         inputSide.addStepPhase4_Cleanup(result);
         outputSide.addStepPhase4_Cleanup(result);
+
+        // Set the task priority if specified
+        result.setPriorityBasedOnPriorityOffset(priorityOffset);
+        result.getTasks().forEach(task -> task.setPriorityBasedOnPriorityOffset(priorityOffset));
 
         return result;
     }

@@ -53,7 +53,11 @@ public class EngineFactory {
 
     /** Build a new cube segment, typically its time range appends to the end of current cube. */
     public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
-        return batchEngine(newSegment).createBatchCubingJob(newSegment, submitter);
+        return createBatchCubingJob(newSegment, submitter, 0);
+    }
+
+    public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter, Integer priorityOffset) {
+        return batchEngine(newSegment).createBatchCubingJob(newSegment, submitter, priorityOffset);
     }
 
     /** Merge multiple small segments into a big one. */

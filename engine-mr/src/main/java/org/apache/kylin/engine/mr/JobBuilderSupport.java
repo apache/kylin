@@ -59,6 +59,7 @@ public class JobBuilderSupport {
     final protected JobEngineConfig config;
     final protected CubeSegment seg;
     final protected String submitter;
+    final protected Integer priorityOffset;
 
     final public static String LayeredCuboidFolderPrefix = "level_";
 
@@ -68,10 +69,15 @@ public class JobBuilderSupport {
     final public static Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
 
     public JobBuilderSupport(CubeSegment seg, String submitter) {
+        this(seg, submitter, 0);
+    }
+
+    public JobBuilderSupport(CubeSegment seg, String submitter, Integer priorityOffset) {
         Preconditions.checkNotNull(seg, "segment cannot be null");
         this.config = new JobEngineConfig(seg.getConfig());
         this.seg = seg;
         this.submitter = submitter;
+        this.priorityOffset = priorityOffset;
     }
 
     public MapReduceExecutable createFactDistinctColumnsStep(String jobId) {

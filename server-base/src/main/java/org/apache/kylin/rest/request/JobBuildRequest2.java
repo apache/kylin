@@ -35,6 +35,8 @@ public class JobBuildRequest2 {
     private String buildType;
 
     private boolean force;
+    
+    private Integer priorityOffset = 0;
 
     public long getSourceOffsetStart() {
         return sourceOffsetStart;
@@ -84,4 +86,11 @@ public class JobBuildRequest2 {
         this.force = force;
     }
 
+    public Integer getPriorityOffset() {
+        return priorityOffset;
+    }
+
+    public void setPriorityOffset(Integer priorityOffset) {
+        this.priorityOffset = priorityOffset;
+    }
 }

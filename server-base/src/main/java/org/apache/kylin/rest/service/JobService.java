@@ -198,17 +198,17 @@ public class JobService extends BasicService implements InitializingBean {
 
     public JobInstance submitJob(CubeInstance cube, TSRange tsRange, SegmentRange segRange, //
             Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
-            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
+            CubeBuildTypeEnum buildType, boolean force, String submitter, Integer priorityOffset) throws IOException {
         aclEvaluate.checkProjectOperationPermission(cube);
         JobInstance jobInstance = submitJobInternal(cube, tsRange, segRange, sourcePartitionOffsetStart,
-                sourcePartitionOffsetEnd, buildType, force, submitter);
+                sourcePartitionOffsetEnd, buildType, force, submitter, priorityOffset);
 
         return jobInstance;
     }
 
     public JobInstance submitJobInternal(CubeInstance cube, TSRange tsRange, SegmentRange segRange, //
             Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd, //
-            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
+            CubeBuildTypeEnum buildType, boolean force, String submitter, Integer priorityOffset) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
@@ -232,13 +232,13 @@ public class JobService extends BasicService implements InitializingBean {
                         sourcePartitionOffsetEnd);
                 src = source.enrichSourcePartitionBeforeBuild(cube, src);
                 newSeg = getCubeManager().appendSegment(cube, src);
-                job = EngineFactory.createBatchCubingJob(newSeg, submitter);
+                job = EngineFactory.createBatchCubingJob(newSeg, submitter, priorityOffset);
             } else if (buildType == CubeBuildTypeEnum.MERGE) {
                 newSeg = getCubeManager().mergeSegments(cube, tsRange, segRange, force);
                 job = EngineFactory.createBatchMergeJob(newSeg, submitter);
             } else if (buildType == CubeBuildTypeEnum.REFRESH) {
                 newSeg = getCubeManager().refreshSegment(cube, tsRange, segRange);
-                job = EngineFactory.createBatchCubingJob(newSeg, submitter);
+                job = EngineFactory.createBatchCubingJob(newSeg, submitter, priorityOffset);
             } else {
                 throw new BadRequestException(String.format(Locale.ROOT, msg.getINVALID_BUILD_TYPE(), buildType));
             }

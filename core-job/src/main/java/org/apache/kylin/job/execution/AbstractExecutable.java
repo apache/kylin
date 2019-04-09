@@ -66,6 +66,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     private String id;
     private AbstractExecutable parentExecutable = null;
     private Map<String, String> params = Maps.newHashMap();
+    protected Integer priority;
 
     public AbstractExecutable() {
         setId(RandomUtil.randomUUID().toString());
@@ -473,6 +474,21 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
      * */
     public int getDefaultPriority() {
         return DEFAULT_PRIORITY;
+    }
+
+    public Integer getPriority() {
+        return priority == null ? getDefaultPriority() : priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    /**
+     * The different jobs have different default priorities.
+     * */
+    public void setPriorityBasedOnPriorityOffset(Integer priorityOffset) {
+        this.priority = getDefaultPriority() + (priorityOffset == null ? 0 : priorityOffset);
     }
 
     /*
