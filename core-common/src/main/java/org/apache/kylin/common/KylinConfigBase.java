@@ -1005,6 +1005,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.source.jdbc.sqoop-mapper-num", "4"));
     }
 
+    public String getSqoopNullString() {
+        return getOptional("kylin.source.jdbc.sqoop-null-string", "\\\\N");
+    }
+
+    public String getSqoopNullNonString() {
+        return getOptional("kylin.source.jdbc.sqoop-null-non-string", "\\\\N");
+    }
+
     public Map<String, String> getSqoopConfigOverride() {
         return getPropertiesByPrefix("kylin.source.jdbc.sqoop-config-override.");
     }
