@@ -296,6 +296,9 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
     $window.open(downloadUrl);
   }
 
+  $scope.isCuratorScheduler = function() {
+    return kylinConfig.getProperty("kylin.job.scheduler.default") === "100";
+  }
 
   $scope.getEnv();
   $scope.getConfig();
