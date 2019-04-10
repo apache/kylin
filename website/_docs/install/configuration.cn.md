@@ -363,7 +363,7 @@ Kylin 和 HBase 都在写入磁盘时使用压缩，因此，Kylin 将在其原�
 - `kylin.dictionary.append-max-versions`：默认值为 3
 - `kylin.dictionary.append-version-ttl`：默认值为 259200000
 - `kylin.dictionary.resuable`：是否重用字典，默认值为 FALSE
-- `kylin.dictionary.shrunken-from-global-enable`：是否缩小全局字典，默认值为 FALSE
+- `kylin.dictionary.shrunken-from-global-enabled`：是否缩小全局字典，默认值为 FALSE
 
 
 
@@ -454,7 +454,8 @@ Cube 构建默认在 **Extract Fact Table Distinct Column** 这一步为每一�
 - `kylin.cube.cubeplanner.algorithm-threshold-greedy`：默认值为 8
 - `kylin.cube.cubeplanner.expansion-threshold`：默认值为 15.0
 - `kylin.cube.cubeplanner.recommend-cache-max-size`：默认值为 200
-- `kylin.cube.cubeplanner.mandatory-rollup-threshold`：默认值为 1000
+- `kylin.cube.cubeplanner.query-uncertainty-ratio`：默认值为 0.1
+- `kylin.cube.cubeplanner.bpus-min-benefit-ratio`：默认值为 0.01
 - `kylin.cube.cubeplanner.algorithm-threshold-genetic`：默认值为 23
 
 
@@ -621,6 +622,7 @@ Kylin 可以使用三种类型的压缩，分别是 HBase 表压缩，Hive 输�
 ### 查询改写 {#convert-sql}
 
 - `kylin.query.force-limit`：该参数通过为 select * 语句强制添加 LIMIT 分句，达到缩短数据返回时间的目的，该参数默认值为 -1，将该参数值设置为正整数，如 1000，该值会被应用到 LIMIT 分句，查询语句最终会被转化成 select * from fact_table limit 1000
+- `kylin.storage.limit-push-down-enabled`: 默认值为 *TRUE*，设置为 *FALSE* 意味着关闭存储层的 limit-pushdown 
 
 
 

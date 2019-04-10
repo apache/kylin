@@ -363,7 +363,7 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 - `kylin.dictionary.append-max-versions`: The default value is 3
 - `kylin.dictionary.append-version-ttl`: The default value is 259200000
 - `kylin.dictionary.resuable`: whether to reuse the dictionary. The default value is FALSE
-- `kylin.dictionary.shrunken-from-global-enable`: whether to reduce the size of global dictionary. The default value is *FALSE*
+- `kylin.dictionary.shrunken-from-global-enabled`: whether to reduce the size of global dictionary. The default value is *FALSE*
 
 
 
@@ -453,7 +453,8 @@ Both Kylin and HBase use compression when writing to disk, so Kylin will multipl
 - `kylin.cube.cubeplanner.algorithm-threshold-greedy`: the default value is 8
 - `kylin.cube.cubeplanner.expansion-threshold`: the default value is 15.0
 - `kylin.cube.cubeplanner.recommend-cache-max-size`: the default value is 200
-- `kylin.cube.cubeplanner.mandatory-rollup-threshold`: the default value is 1000
+- `kylin.cube.cubeplanner.query-uncertainty-ratio`: the default value is 0.1
+- `kylin.cube.cubeplanner.bpus-min-benefit-ratio`: the default value is 0.01
 - `kylin.cube.cubeplanner.algorithm-threshold-genetic`: the default value is 23
 
 > Note: For more information, please refer to [Using Cube Planner](/docs/tutorial/use_cube_planner.html).
@@ -617,6 +618,7 @@ The value of `kylin.query.timeout-seconds` is greater than 60 or equals 0, the m
 ### Query rewriting {#convert-sql}
 
 - `kylin.query.force-limit`: this parameter achieves the purpose of shortening the query duration by forcing a LIMIT clause for the select * statement. The default value is *-1*, and the parameter value is set to a positive integer, such as 1000, the value will be applied to the LIMIT clause, and the query will eventually be converted to select * from fact_table limit 1000
+- `kylin.storage.limit-push-down-enabled`: the default value is *TRUE*, set to *FALSE* to close the limit-pushdown of storage layer
 
 
 
