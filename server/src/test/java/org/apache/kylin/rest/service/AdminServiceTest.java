@@ -53,6 +53,7 @@ public class AdminServiceTest extends ServiceTestBase {
             String expected = "kylin.web.link-streaming-guide=http://kylin.apache.org/\n" +
                     "kylin.web.dashboard-enabled=\n" +
                     "kylin.web.contact-mail=\n" +
+                    "kylin.job.scheduler.default=0\n" +
                     "kylin.query.cache-enabled=true\n" +
                     "kylin.web.link-diagnostic=\n" +
                     "kylin.web.help.length=4\n" +

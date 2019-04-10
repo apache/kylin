@@ -1,0 +1,64 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<div class="row" style="margin-top:15px;" ng-controller="InstanceCtrl">
+
+  <!--No Instances-->
+  <div ng-if="!loading && jobNodes.length==0 && queryNodes.length==0">
+    <div no-result text="No Kylin instance registered"></div>
+  </div>
+  <!--Loading Instances-->
+  <div ng-if="loading">
+    <loading text="Loading Instances ..."></loading>
+  </div>
+  <!--Queries Table Content-->
+  <table ng-if="queryNodes.length>0||jobNodes.length>0" style="margin-left:42px; width:80%" class="table table-striped table-bordered table-hover dataTable no-footer">
+    <thead>
+    <tr style="cursor: pointer">
+      <th ng-repeat="instanceItem in instanceConfig.instanceItems">
+        {{instanceItem.name}}
+      </th>
+    </tr>
+    </thead>
+    <tbody class="odd table table-striped table-bordered table-hover dataTable no-footer">
+    <tr ng-repeat="node in queryNodes" style="cursor: pointer">
+      <td>
+        {{node}}
+      </td>
+      <td>Query Node</td>
+      <td>
+        <i class="fa fa-check-circle" style="color:green"></i> Active
+      </td>
+    </tr>
+    <tr ng-repeat="node in jobNodes" style="cursor: pointer">
+      <td>
+        {{node}}
+      </td>
+      <td>{{getJobNodeType(node)}}</td>
+      <td>
+        <div ng-if=isJobNodeActive(node)>
+          <i class="fa fa-check-circle" style="color:green"></i> Active
+        </div>
+        <div ng-if=!isJobNodeActive(node)>
+          <i class="fa fa-check-circle" style="color:grey"></i> Available
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
