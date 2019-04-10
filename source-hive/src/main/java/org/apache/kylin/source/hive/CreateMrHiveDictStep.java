@@ -147,7 +147,8 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
         }
     }
 
-    private KylinConfig getCubeSpecificConfig() {
+    @Override
+    public KylinConfig getCubeSpecificConfig() {
         String cubeName = CubingExecutableUtil.getCubeName(getParams());
         CubeManager manager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubeInstance cube = manager.getCube(cubeName);
