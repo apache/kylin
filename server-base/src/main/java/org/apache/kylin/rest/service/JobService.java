@@ -39,7 +39,6 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.BatchOptimizeJobCheckpointBuilder;
@@ -629,10 +628,7 @@ public class JobService extends BasicService implements InitializingBean {
                 }
             }
 
-            CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
-            cubeBuilder.setToRemoveSegs(toRemoveSegments.toArray(new CubeSegment[toRemoveSegments.size()]));
-            cubeBuilder.setCuboidsRecommend(Sets.<Long> newHashSet()); //Set recommend cuboids to be null
-            getCubeManager().updateCube(cubeBuilder);
+            getCubeManager().dropOptmizingSegments(cubeInstance, toRemoveSegments.toArray(new CubeSegment[] {}));
         }
 
         for (String jobId : jobIdList) {

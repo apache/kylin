@@ -308,6 +308,16 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    public CubeInstance dropOptmizingSegments(CubeInstance cube, CubeSegment... segsToDrop) throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            cube = cube.latestCopyForWrite(); // get a latest copy
+            CubeUpdate update = new CubeUpdate(cube);
+            update.setToRemoveSegs(segsToDrop);
+            update.setCuboidsRecommend(Sets.<Long> newHashSet()); //Set recommend cuboids to be null
+            return updateCube(update);
+        }
+    }
+
     public CubeInstance updateCubeSegStatus(CubeSegment seg, SegmentStatusEnum status) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             CubeInstance cube = seg.getCubeInstance().latestCopyForWrite();
