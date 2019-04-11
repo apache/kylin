@@ -24,6 +24,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -48,7 +49,14 @@ public class AclEvaluate {
     private ProjectInstance getProjectByJob(JobInstance job) {
         AbstractExecutable executable = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getJob(job.getUuid());
-        String projectName = ((CubingJob) executable).getProjectName();
+        String projectName = null;
+        if (executable instanceof CubingJob) {
+            projectName = ((CubingJob) executable).getProjectName();
+        } else if (executable instanceof CheckpointExecutable) {
+            projectName = ((CheckpointExecutable) executable).getProjectName();
+        } else {
+            return null;
+        }
         return getProjectInstance(projectName);
     }
 
