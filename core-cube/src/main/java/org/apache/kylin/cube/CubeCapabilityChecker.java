@@ -224,6 +224,13 @@ public class CubeCapabilityChecker {
         while (it.hasNext()) {
             FunctionDesc functionDesc = it.next();
 
+            // let calcite handle count
+            if (functionDesc.isCount()) {
+                logger.warn("No count measure found for column {}, will use count(1) to replace it, please note that it will count all value(include null value)", functionDesc.getParameter() == null ? "" : functionDesc.getParameter().getColRef().getName());
+                it.remove();
+                continue;
+            }
+
             // calcite can do aggregation from columns on-the-fly
             ParameterDesc parameterDesc = functionDesc.getParameter();
             if (parameterDesc == null) {

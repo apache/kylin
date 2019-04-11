@@ -497,10 +497,28 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     FunctionDesc findInMeasures(FunctionDesc aggFunc, List<MeasureDesc> measures) {
         for (MeasureDesc m : measures) {
-            if (aggFunc.equals(m.getFunction()))
+            if (aggFunc.equals(m.getFunction())) {
                 return m.getFunction();
+            }
         }
+
+        // no count(col) measure found, use count(1) to replace it.
+        if (aggFunc.isCount()) {
+            FunctionDesc func = findCountConstantFunc(measures);
+            if (func != null)
+                return func;
+        }
+
         return aggFunc;
+    }
+
+    private FunctionDesc findCountConstantFunc(List<MeasureDesc> measures) {
+        for (MeasureDesc measure : measures) {
+            if (measure.getFunction().isCountConstant()) {
+                return measure.getFunction();
+            }
+        }
+        return null;
     }
 
     void buildRewriteFieldsAndMetricsColumns() {
