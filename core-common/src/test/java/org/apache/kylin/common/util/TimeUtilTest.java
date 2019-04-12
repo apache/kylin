@@ -42,9 +42,11 @@ public class TimeUtilTest {
 
         a.setTimeInMillis(timeMillis);
         if (unit == NormalizedTimeUnit.MINUTE) {
-            b.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH), a.get(Calendar.HOUR_OF_DAY), a.get(Calendar.MINUTE));
+            b.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH),
+                    a.get(Calendar.HOUR_OF_DAY), a.get(Calendar.MINUTE));
         } else if (unit == NormalizedTimeUnit.HOUR) {
-            b.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH), a.get(Calendar.HOUR_OF_DAY), 0);
+            b.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH),
+                    a.get(Calendar.HOUR_OF_DAY), 0);
         }
         return b.getTimeInMillis();
     }
@@ -72,7 +74,6 @@ public class TimeUtilTest {
         Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(), TimeUtil.getMonthEnd(t3));
         Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(), TimeUtil.getQuarterEnd(t3));
         Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(), TimeUtil.getYearEnd(t3));
-
 
         long t4 = dateFormat.parse("2012/10/29 11:02:01").getTime();
         Assert.assertEquals(dateFormat.parse("2012/10/29 00:00:00").getTime(), TimeUtil.getDayStart(t4));
@@ -108,7 +109,6 @@ public class TimeUtilTest {
         Assert.assertEquals(dateFormat.parse("2016/1/1 00:00:00").getTime(), TimeUtil.getYearEnd(t6));
     }
 
-
     @Test
     public void basicTestWithTimeZone() throws ParseException {
         java.text.DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.ROOT);
@@ -124,48 +124,83 @@ public class TimeUtilTest {
         Assert.assertEquals(normalizeTime(t2, NormalizedTimeUnit.MINUTE), TimeUtil.getMinuteStart(t2));
 
         long t3 = dateFormat.parse("2012/12/31 11:02:01").getTime();
-        Assert.assertEquals(dateFormat.parse("2012/12/31 00:00:00").getTime(), TimeUtil.getDayStartWithTimeZone(timeZone, t3));
-        Assert.assertEquals(dateFormat.parse("2012/12/30 00:00:00").getTime(), TimeUtil.getWeekStartWithTimeZone(timeZone, t3));
-        Assert.assertEquals(dateFormat.parse("2012/12/1 00:00:00").getTime(), TimeUtil.getMonthStartWithTimeZone(timeZone, t3));
-        Assert.assertEquals(dateFormat.parse("2012/10/1 00:00:00").getTime(), TimeUtil.getQuarterStartWithTimeZone(timeZone, t3));
-        Assert.assertEquals(dateFormat.parse("2012/1/1 00:00:00").getTime(), TimeUtil.getYearStartWithTimeZone(timeZone, t3));
-        Assert.assertEquals(dateFormat.parse("2013/1/6 00:00:00").getTime(), TimeUtil.getWeekEndWithTimeZone(timeZone, t3));
-        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(), TimeUtil.getMonthEndWithTimeZone(timeZone, t3));
-        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(), TimeUtil.getQuarterEndWithTimeZone(timeZone, t3));
-        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(), TimeUtil.getYearEndWithTimeZone(timeZone, t3));
-
+        Assert.assertEquals(dateFormat.parse("2012/12/31 00:00:00").getTime(),
+                TimeUtil.getDayStartWithTimeZone(timeZone, t3));
+        Assert.assertEquals(dateFormat.parse("2012/12/30 00:00:00").getTime(),
+                TimeUtil.getWeekStartWithTimeZone(timeZone, t3));
+        Assert.assertEquals(dateFormat.parse("2012/12/1 00:00:00").getTime(),
+                TimeUtil.getMonthStartWithTimeZone(timeZone, t3));
+        Assert.assertEquals(dateFormat.parse("2012/10/1 00:00:00").getTime(),
+                TimeUtil.getQuarterStartWithTimeZone(timeZone, t3));
+        Assert.assertEquals(dateFormat.parse("2012/1/1 00:00:00").getTime(),
+                TimeUtil.getYearStartWithTimeZone(timeZone, t3));
+        Assert.assertEquals(dateFormat.parse("2013/1/6 00:00:00").getTime(),
+                TimeUtil.getWeekEndWithTimeZone(timeZone, t3));
+        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(),
+                TimeUtil.getMonthEndWithTimeZone(timeZone, t3));
+        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(),
+                TimeUtil.getQuarterEndWithTimeZone(timeZone, t3));
+        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(),
+                TimeUtil.getYearEndWithTimeZone(timeZone, t3));
 
         long t4 = dateFormat.parse("2012/10/29 11:02:01").getTime();
-        Assert.assertEquals(dateFormat.parse("2012/10/29 00:00:00").getTime(), TimeUtil.getDayStartWithTimeZone(timeZone, t4));
-        Assert.assertEquals(dateFormat.parse("2012/10/28 00:00:00").getTime(), TimeUtil.getWeekStartWithTimeZone(timeZone, t4));
-        Assert.assertEquals(dateFormat.parse("2012/10/1 00:00:00").getTime(), TimeUtil.getMonthStartWithTimeZone(timeZone, t4));
-        Assert.assertEquals(dateFormat.parse("2012/10/1 00:00:00").getTime(), TimeUtil.getQuarterStartWithTimeZone(timeZone, t4));
-        Assert.assertEquals(dateFormat.parse("2012/1/1 00:00:00").getTime(), TimeUtil.getYearStartWithTimeZone(timeZone, t4));
-        Assert.assertEquals(dateFormat.parse("2012/11/4 00:00:00").getTime(), TimeUtil.getWeekEndWithTimeZone(timeZone, t4));
-        Assert.assertEquals(dateFormat.parse("2012/11/1 00:00:00").getTime(), TimeUtil.getMonthEndWithTimeZone(timeZone, t4));
-        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(), TimeUtil.getQuarterEndWithTimeZone(timeZone, t4));
-        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(), TimeUtil.getYearEndWithTimeZone(timeZone, t4));
+        Assert.assertEquals(dateFormat.parse("2012/10/29 00:00:00").getTime(),
+                TimeUtil.getDayStartWithTimeZone(timeZone, t4));
+        Assert.assertEquals(dateFormat.parse("2012/10/28 00:00:00").getTime(),
+                TimeUtil.getWeekStartWithTimeZone(timeZone, t4));
+        Assert.assertEquals(dateFormat.parse("2012/10/1 00:00:00").getTime(),
+                TimeUtil.getMonthStartWithTimeZone(timeZone, t4));
+        Assert.assertEquals(dateFormat.parse("2012/10/1 00:00:00").getTime(),
+                TimeUtil.getQuarterStartWithTimeZone(timeZone, t4));
+        Assert.assertEquals(dateFormat.parse("2012/1/1 00:00:00").getTime(),
+                TimeUtil.getYearStartWithTimeZone(timeZone, t4));
+        Assert.assertEquals(dateFormat.parse("2012/11/4 00:00:00").getTime(),
+                TimeUtil.getWeekEndWithTimeZone(timeZone, t4));
+        Assert.assertEquals(dateFormat.parse("2012/11/1 00:00:00").getTime(),
+                TimeUtil.getMonthEndWithTimeZone(timeZone, t4));
+        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(),
+                TimeUtil.getQuarterEndWithTimeZone(timeZone, t4));
+        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(),
+                TimeUtil.getYearEndWithTimeZone(timeZone, t4));
 
         long t5 = dateFormat.parse("2012/8/29 23:12:41").getTime();
-        Assert.assertEquals(dateFormat.parse("2012/8/29 00:00:00").getTime(), TimeUtil.getDayStartWithTimeZone(timeZone, t5));
-        Assert.assertEquals(dateFormat.parse("2012/8/26 00:00:00").getTime(), TimeUtil.getWeekStartWithTimeZone(timeZone, t5));
-        Assert.assertEquals(dateFormat.parse("2012/8/1 00:00:00").getTime(), TimeUtil.getMonthStartWithTimeZone(timeZone, t5));
-        Assert.assertEquals(dateFormat.parse("2012/7/1 00:00:00").getTime(), TimeUtil.getQuarterStartWithTimeZone(timeZone, t5));
-        Assert.assertEquals(dateFormat.parse("2012/1/1 00:00:00").getTime(), TimeUtil.getYearStartWithTimeZone(timeZone, t5));
-        Assert.assertEquals(dateFormat.parse("2012/9/2 00:00:00").getTime(), TimeUtil.getWeekEndWithTimeZone(timeZone, t5));
-        Assert.assertEquals(dateFormat.parse("2012/9/1 00:00:00").getTime(), TimeUtil.getMonthEndWithTimeZone(timeZone, t5));
-        Assert.assertEquals(dateFormat.parse("2012/10/1 00:00:00").getTime(), TimeUtil.getQuarterEndWithTimeZone(timeZone, t5));
-        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(), TimeUtil.getYearEndWithTimeZone(timeZone, t5));
+        Assert.assertEquals(dateFormat.parse("2012/8/29 00:00:00").getTime(),
+                TimeUtil.getDayStartWithTimeZone(timeZone, t5));
+        Assert.assertEquals(dateFormat.parse("2012/8/26 00:00:00").getTime(),
+                TimeUtil.getWeekStartWithTimeZone(timeZone, t5));
+        Assert.assertEquals(dateFormat.parse("2012/8/1 00:00:00").getTime(),
+                TimeUtil.getMonthStartWithTimeZone(timeZone, t5));
+        Assert.assertEquals(dateFormat.parse("2012/7/1 00:00:00").getTime(),
+                TimeUtil.getQuarterStartWithTimeZone(timeZone, t5));
+        Assert.assertEquals(dateFormat.parse("2012/1/1 00:00:00").getTime(),
+                TimeUtil.getYearStartWithTimeZone(timeZone, t5));
+        Assert.assertEquals(dateFormat.parse("2012/9/2 00:00:00").getTime(),
+                TimeUtil.getWeekEndWithTimeZone(timeZone, t5));
+        Assert.assertEquals(dateFormat.parse("2012/9/1 00:00:00").getTime(),
+                TimeUtil.getMonthEndWithTimeZone(timeZone, t5));
+        Assert.assertEquals(dateFormat.parse("2012/10/1 00:00:00").getTime(),
+                TimeUtil.getQuarterEndWithTimeZone(timeZone, t5));
+        Assert.assertEquals(dateFormat.parse("2013/1/1 00:00:00").getTime(),
+                TimeUtil.getYearEndWithTimeZone(timeZone, t5));
 
         long t6 = dateFormat.parse("2015/01/01 10:01:30").getTime();
-        Assert.assertEquals(dateFormat.parse("2015/01/01 00:00:00").getTime(), TimeUtil.getDayStartWithTimeZone(timeZone, t6));
-        Assert.assertEquals(dateFormat.parse("2014/12/28 00:00:00").getTime(), TimeUtil.getWeekStartWithTimeZone(timeZone, t6));
-        Assert.assertEquals(dateFormat.parse("2015/1/1 00:00:00").getTime(), TimeUtil.getMonthStartWithTimeZone(timeZone, t6));
-        Assert.assertEquals(dateFormat.parse("2015/1/1 00:00:00").getTime(), TimeUtil.getQuarterStartWithTimeZone(timeZone, t6));
-        Assert.assertEquals(dateFormat.parse("2015/1/1 00:00:00").getTime(), TimeUtil.getYearStartWithTimeZone(timeZone, t6));
-        Assert.assertEquals(dateFormat.parse("2015/1/4 00:00:00").getTime(), TimeUtil.getWeekEndWithTimeZone(timeZone, t6));
-        Assert.assertEquals(dateFormat.parse("2015/2/1 00:00:00").getTime(), TimeUtil.getMonthEndWithTimeZone(timeZone, t6));
-        Assert.assertEquals(dateFormat.parse("2015/4/1 00:00:00").getTime(), TimeUtil.getQuarterEndWithTimeZone(timeZone, t6));
-        Assert.assertEquals(dateFormat.parse("2016/1/1 00:00:00").getTime(), TimeUtil.getYearEndWithTimeZone(timeZone, t6));
+        Assert.assertEquals(dateFormat.parse("2015/01/01 00:00:00").getTime(),
+                TimeUtil.getDayStartWithTimeZone(timeZone, t6));
+        Assert.assertEquals(dateFormat.parse("2014/12/28 00:00:00").getTime(),
+                TimeUtil.getWeekStartWithTimeZone(timeZone, t6));
+        Assert.assertEquals(dateFormat.parse("2015/1/1 00:00:00").getTime(),
+                TimeUtil.getMonthStartWithTimeZone(timeZone, t6));
+        Assert.assertEquals(dateFormat.parse("2015/1/1 00:00:00").getTime(),
+                TimeUtil.getQuarterStartWithTimeZone(timeZone, t6));
+        Assert.assertEquals(dateFormat.parse("2015/1/1 00:00:00").getTime(),
+                TimeUtil.getYearStartWithTimeZone(timeZone, t6));
+        Assert.assertEquals(dateFormat.parse("2015/1/4 00:00:00").getTime(),
+                TimeUtil.getWeekEndWithTimeZone(timeZone, t6));
+        Assert.assertEquals(dateFormat.parse("2015/2/1 00:00:00").getTime(),
+                TimeUtil.getMonthEndWithTimeZone(timeZone, t6));
+        Assert.assertEquals(dateFormat.parse("2015/4/1 00:00:00").getTime(),
+                TimeUtil.getQuarterEndWithTimeZone(timeZone, t6));
+        Assert.assertEquals(dateFormat.parse("2016/1/1 00:00:00").getTime(),
+                TimeUtil.getYearEndWithTimeZone(timeZone, t6));
     }
 }

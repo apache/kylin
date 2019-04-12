@@ -31,9 +31,9 @@ public class TimeUtil {
     }
 
     private static TimeZone gmt = TimeZone.getTimeZone("GMT");
-    public static long ONE_MINUTE_TS = 60 * 1000L;
-    public static long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;
-    public static long ONE_DAY_TS = 24 * ONE_HOUR_TS;
+    public static final long ONE_MINUTE_TS = 60 * 1000L;
+    public static final long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;
+    public static final long ONE_DAY_TS = 24 * ONE_HOUR_TS;
 
     public static long getMinuteStart(long ts) {
         return ts / ONE_MINUTE_TS * ONE_MINUTE_TS;
@@ -47,7 +47,7 @@ public class TimeUtil {
         return getDayStartWithTimeZone(gmt, ts);
     }
 
-    public static long getDayStartWithTimeZone(TimeZone timeZone, long ts){
+    public static long getDayStartWithTimeZone(TimeZone timeZone, long ts) {
         Calendar calendar = Calendar.getInstance(timeZone, Locale.ROOT);
         calendar.setTimeInMillis(ts);
         int year = calendar.get(Calendar.YEAR);
@@ -62,7 +62,7 @@ public class TimeUtil {
         return getWeekStartWithTimeZone(gmt, ts);
     }
 
-    public static long getWeekStartWithTimeZone(TimeZone timeZone, long ts){
+    public static long getWeekStartWithTimeZone(TimeZone timeZone, long ts) {
         Calendar calendar = Calendar.getInstance(timeZone, Locale.ROOT);
         calendar.setTimeInMillis(getDayStartWithTimeZone(timeZone, ts));
         calendar.add(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek() - calendar.get(Calendar.DAY_OF_WEEK));
@@ -73,7 +73,7 @@ public class TimeUtil {
         return getMonthStartWithTimeZone(gmt, ts);
     }
 
-    public static long getMonthStartWithTimeZone(TimeZone timeZone, long ts){
+    public static long getMonthStartWithTimeZone(TimeZone timeZone, long ts) {
         Calendar calendar = Calendar.getInstance(timeZone, Locale.ROOT);
         calendar.setTimeInMillis(ts);
         int year = calendar.get(Calendar.YEAR);
@@ -128,7 +128,8 @@ public class TimeUtil {
     public static long getMonthEndWithTimeZone(TimeZone timeZone, long ts) {
         Calendar calendar = Calendar.getInstance(timeZone, Locale.ROOT);
         calendar.setTimeInMillis(ts);
-        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONDAY), calendar.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONDAY), calendar.get(Calendar.DAY_OF_MONTH), 0,
+                0, 0);
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         calendar.set(Calendar.HOUR_OF_DAY, 24);
         return calendar.getTimeInMillis();

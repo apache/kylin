@@ -73,7 +73,8 @@ public abstract class StreamingParser {
 
     abstract public boolean filter(StreamingMessageRow streamingMessageRow);
 
-    public static StreamingParser getStreamingParser(String parserName, String parserProperties, List<TblColRef> columns) throws ReflectiveOperationException {
+    public static StreamingParser getStreamingParser(String parserName, String parserProperties,
+            List<TblColRef> columns) throws ReflectiveOperationException {
         if (!StringUtils.isEmpty(parserName)) {
             logger.info("Construct StreamingParse {} with properties {}", parserName, parserProperties);
             Class clazz = Class.forName(parserName);
@@ -81,7 +82,8 @@ public abstract class StreamingParser {
             Constructor constructor = clazz.getConstructor(List.class, Map.class);
             return (StreamingParser) constructor.newInstance(columns, properties);
         } else {
-            throw new IllegalStateException("Invalid StreamingConfig, parserName " + parserName + ", parserProperties " + parserProperties + ".");
+            throw new IllegalStateException("Invalid StreamingConfig, parserName " + parserName + ", parserProperties "
+                    + parserProperties + ".");
         }
     }
 
