@@ -2,7 +2,7 @@
 layout: docs
 title:  Cube Build and Job Monitoring
 categories: tutorial
-permalink: /docs/tutorial/cube_build_job.html
+permalink: /docs30/tutorial/cube_build_job.html
 ---
 
 ### Cube Build

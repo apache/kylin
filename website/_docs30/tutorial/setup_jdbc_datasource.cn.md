@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  建立 JDBC 数据源
 categories: howto
-permalink: /cn/docs/tutorial/setup_jdbc_datasource.html
+permalink: /cn/docs30/tutorial/setup_jdbc_datasource.html
 ---
 
 > 自 Apache Kylin v2.3.x 起有效

@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  基于 MySQL 的 Metastore 配置
 categories: 教程
-permalink: /cn/docs/tutorial/mysql_metastore.html
+permalink: /cn/docs30/tutorial/mysql_metastore.html
 since: v2.5.0
 ---
 

@@ -2,7 +2,7 @@
 layout: docs
 title:  "Installation Guide"
 categories: install
-permalink: /docs/install/index.html
+permalink: /docs30/install/index.html
 ---
 
 ### Software Requirements

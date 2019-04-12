@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  优化 Cube 设计
 categories: howto
-permalink: /cn/docs/howto/howto_optimize_cubes.html
+permalink: /cn/docs30/howto/howto_optimize_cubes.html
 ---
 
 ## Hierarchies:

@@ -2,7 +2,7 @@
 layout: docs-cn
 title: 概述
 categories: docs
-permalink: /cn/docs/index.html
+permalink: /cn/docs30/index.html
 ---
 
 欢迎来到 Apache Kylin™

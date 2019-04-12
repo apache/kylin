@@ -2,7 +2,7 @@
 layout: docs
 title:  Set Up System Cube
 categories: tutorial
-permalink: /docs/tutorial/setup_systemcube.html
+permalink: /docs30/tutorial/setup_systemcube.html
 ---
 
 > Available since Apache Kylin v2.3.0

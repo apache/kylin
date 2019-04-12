@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "Superset"
 categories: tutorial
-permalink: /cn/docs/tutorial/superset.html
+permalink: /cn/docs30/tutorial/superset.html
 ---
 ### Apache Kylin 与 Apache Superset 的集成
 

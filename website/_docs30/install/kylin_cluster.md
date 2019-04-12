@@ -2,7 +2,7 @@
 layout: docs
 title:  "Deploy in Cluster Mode"
 categories: install
-permalink: /docs/install/kylin_cluster.html
+permalink: /docs30/install/kylin_cluster.html
 ---
 
 

@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "Excel 及 Power BI 教程"
 categories: tutorial
-permalink: /cn/docs/tutorial/powerbi.html
+permalink: /cn/docs30/tutorial/powerbi.html
 version: v1.2
 since: v1.2
 ---

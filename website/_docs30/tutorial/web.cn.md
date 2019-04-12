@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  Web 界面
 categories: 教程
-permalink: /cn/docs/tutorial/web.html
+permalink: /cn/docs30/tutorial/web.html
 version: v1.2
 ---
 

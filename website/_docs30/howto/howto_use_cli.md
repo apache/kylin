@@ -2,7 +2,7 @@
 layout: docs
 title:  Use Utility CLIs
 categories: howto
-permalink: /docs/howto/howto_use_cli.html
+permalink: /docs30/howto/howto_use_cli.html
 ---
 Kylin has some client utility tools. This document will introduce the following class: KylinConfigCLI.java, CubeMetaExtractor.java, CubeMetaIngester.java, CubeMigrationCLI.java and CubeMigrationCheckCLI.java. Before using these tools, you have to switch to the KYLIN_HOME directory. 
 

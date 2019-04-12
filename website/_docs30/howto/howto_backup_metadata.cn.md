@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  备份元数据
 categories: 帮助
-permalink: /cn/docs/howto/howto_backup_metadata.html
+permalink: /cn/docs30/howto/howto_backup_metadata.html
 ---
 
 Kylin将它全部的元数据（包括cube描述和实例、项目、倒排索引描述和实例、任务、表和字典）组织成层级文件系统的形式。然而，Kylin 使用 HBase 来存储元数据，而不是一个普通的文件系统。如果你查看过Kylin的配置文件（kylin.properties），你会发现这样一行：

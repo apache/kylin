@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  Cube 创建
 categories: 教程
-permalink: /cn/docs/tutorial/create_cube.html
+permalink: /cn/docs30/tutorial/create_cube.html
 version: v1.2
 since: v0.7.1
 ---

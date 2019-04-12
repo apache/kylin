@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  使用 Cube Planner
 categories: tutorial
-permalink: /cn/docs/tutorial/use_cube_planner.html
+permalink: /cn/docs30/tutorial/use_cube_planner.html
 ---
 
 > 自 Apache Kylin v2.3.0 起使用

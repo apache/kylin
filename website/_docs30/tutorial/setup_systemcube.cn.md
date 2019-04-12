@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  建立系统 Cube
 categories: tutorial
-permalink: /cn/docs/tutorial/setup_systemcube.html
+permalink: /cn/docs30/tutorial/setup_systemcube.html
 ---
 
 > 自 Apache Kylin v2.3.0 起有效

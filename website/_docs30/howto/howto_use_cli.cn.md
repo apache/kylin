@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "实用 CLI 工具"
 categories: howto
-permalink: /cn/docs/howto/howto_use_cli.html
+permalink: /cn/docs30/howto/howto_use_cli.html
 ---
 Kylin 提供一些方便实用的工具类。这篇文档会介绍以下几个工具类：KylinConfigCLI.java，CubeMetaExtractor.java，CubeMetaIngester.java，CubeMigrationCLI.java 和 CubeMigrationCheckCLI.java。在使用这些工具类前，首先要切换到 KYLIN_HOME 目录下。
 

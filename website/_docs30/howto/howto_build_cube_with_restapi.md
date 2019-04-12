@@ -2,7 +2,7 @@
 layout: docs
 title:  Build Cube with API
 categories: howto
-permalink: /docs/howto/howto_build_cube_with_restapi.html
+permalink: /docs30/howto/howto_build_cube_with_restapi.html
 ---
 
 ### 1.	Authentication

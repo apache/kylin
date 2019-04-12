@@ -2,7 +2,7 @@
 layout: docs
 title:  MS Excel and Power BI
 categories: tutorial
-permalink: /docs/tutorial/powerbi.html
+permalink: /docs30/tutorial/powerbi.html
 since: v1.2
 ---
 

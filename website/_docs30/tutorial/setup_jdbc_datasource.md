@@ -2,7 +2,7 @@
 layout: docs
 title:  Setup JDBC Data Source
 categories: howto
-permalink: /docs/tutorial/setup_jdbc_datasource.html
+permalink: /docs30/tutorial/setup_jdbc_datasource.html
 ---
 
 > Available since Apache Kylin v2.3.x

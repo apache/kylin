@@ -2,7 +2,7 @@
 layout: docs
 title:  "Events and Conferences"
 categories: gettingstarted
-permalink: /docs/gettingstarted/events.html
+permalink: /docs30/gettingstarted/events.html
 ---
 
 __Conferences__

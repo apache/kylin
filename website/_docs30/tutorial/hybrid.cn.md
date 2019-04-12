@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  Hybrid 模型
 categories: 教程
-permalink: /cn/docs/tutorial/hybrid.html
+permalink: /cn/docs30/tutorial/hybrid.html
 version: v1.2
 since: v2.5.0
 ---

@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "样例 Cube 快速入门"
 categories: tutorial
-permalink: /cn/docs/tutorial/kylin_sample.html
+permalink: /cn/docs30/tutorial/kylin_sample.html
 ---
 
 Kylin 提供了一个创建样例 Cube 脚本；脚本会创建五个样例 Hive 表:

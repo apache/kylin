@@ -2,7 +2,7 @@
 layout: docs
 title:  "Community Best Practices"
 categories: gettingstarted
-permalink: /docs/gettingstarted/best_practices.html
+permalink: /docs30/gettingstarted/best_practices.html
 since: v1.3.x
 ---
 

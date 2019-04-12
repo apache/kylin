@@ -2,7 +2,7 @@
 layout: docs
 title:  Use distributed job scheduler
 categories: howto
-permalink: /docs/howto/howto_use_distributed_scheduler.html
+permalink: /docs30/howto/howto_use_distributed_scheduler.html
 ---
 
 Since Kylin 2.0, Kylin support distributed job scheduler.

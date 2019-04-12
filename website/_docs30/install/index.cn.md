@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "安装指南"
 categories: install
-permalink: /cn/docs/install/index.html
+permalink: /cn/docs30/install/index.html
 ---
 
 ### 软件要求

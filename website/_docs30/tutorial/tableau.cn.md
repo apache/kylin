@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  Tableau 8
 categories: 教程
-permalink: /cn/docs/tutorial/tableau.html
+permalink: /cn/docs30/tutorial/tableau.html
 version: v1.2
 since: v0.7.1
 ---

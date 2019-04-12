@@ -2,7 +2,7 @@
 layout: docs
 title:  Apache Flink
 categories: tutorial
-permalink: /docs/tutorial/flink.html
+permalink: /docs30/tutorial/flink.html
 ---
 
 
