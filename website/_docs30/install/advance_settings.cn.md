@@ -2,7 +2,7 @@
 layout: docs-cn
 title: "高级设置"
 categories: install
-permalink: /cn/docs/install/advance_settings.html
+permalink: /cn/docs30/install/advance_settings.html
 ---
 
 ## 在 Cube 级别重写默认的 kylin.properties

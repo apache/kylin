@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "Python 客户端"
 categories: 教程
-permalink: /cn/docs/tutorial/kylin_client_tool.html
+permalink: /cn/docs30/tutorial/kylin_client_tool.html
 ---
 
 Apache Kylin Python 客户端工具库是基于Python可访问Kylin的客户端. 此工具库包含两个可使用组件. 

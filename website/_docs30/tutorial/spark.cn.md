@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  Apache Spark
 categories: tutorial
-permalink: /cn/docs/tutorial/spark.html
+permalink: /cn/docs30/tutorial/spark.html
 ---
 
 

@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  SQuirreL
 categories: tutorial
-permalink: /cn/docs/tutorial/squirrel.html
+permalink: /cn/docs30/tutorial/squirrel.html
 ---
 
 ### Introduction

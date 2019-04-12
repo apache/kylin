@@ -2,7 +2,7 @@
 layout: docs
 title:  "FAQ"
 categories: gettingstarted
-permalink: /docs/gettingstarted/faq.html
+permalink: /docs30/gettingstarted/faq.html
 since: v0.6.x
 ---
 

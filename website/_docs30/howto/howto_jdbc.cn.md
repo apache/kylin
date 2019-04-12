@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  Kylin JDBC Driver
 categories: 帮助
-permalink: /cn/docs/howto/howto_jdbc.html
+permalink: /cn/docs30/howto/howto_jdbc.html
 ---
 
 ### 认证

@@ -2,7 +2,7 @@
 layout: docs
 title:  Use RESTful API
 categories: howto
-permalink: /docs/howto/howto_use_restapi.html
+permalink: /docs30/howto/howto_use_restapi.html
 since: v0.7.1
 ---
 

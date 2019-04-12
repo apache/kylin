@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "从 Kafka 流构建 Cube"
 categories: tutorial
-permalink: /cn/docs/tutorial/cube_streaming.html
+permalink: /cn/docs30/tutorial/cube_streaming.html
 ---
 Kylin v1.6 发布了可扩展的 streaming cubing 功能，它利用 Hadoop 消费 Kafka 数据的方式构建 cube，您可以查看 [这篇博客](/blog/2016/10/18/new-nrt-streaming/) 以进行高级别的设计。本文档是一步接一步的阐述如何创建和构建样例 cube 的教程;
 

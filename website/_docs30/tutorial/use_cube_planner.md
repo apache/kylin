@@ -2,7 +2,7 @@
 layout: docs
 title:  Use Cube Planner
 categories: tutorial
-permalink: /docs/tutorial/use_cube_planner.html
+permalink: /docs30/tutorial/use_cube_planner.html
 ---
 
 > Available since Apache Kylin v2.3.0

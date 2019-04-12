@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "用 Spark 构建 Cube"
 categories: tutorial
-permalink: /cn/docs/tutorial/cube_spark.html
+permalink: /cn/docs30/tutorial/cube_spark.html
 ---
 Kylin v2.0 介绍了 Spark cube engine，在 build cube 步骤中使用 Apache Spark 代替 MapReduce；您可以通过查看 [这篇博客](/blog/2017/02/23/by-layer-spark-cubing/) 的图片了解整体情况。当前的文档使用样例 cube 对如何尝试 new engine 进行了演示。
 

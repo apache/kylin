@@ -2,7 +2,7 @@
 layout: docs-cn
 title: "优化 Cube 构建"
 categories: tutorial
-permalink: /cn/docs/tutorial/cube_build_performance.html
+permalink: /cn/docs30/tutorial/cube_build_performance.html
 ---
  *本教程是关于如何一步步优化 cube build 的样例。* 
  

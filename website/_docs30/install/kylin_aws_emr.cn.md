@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "在 AWS EMR 上安装 Kylin"
 categories: install
-permalink: /cn/docs/install/kylin_aws_emr.html
+permalink: /cn/docs30/install/kylin_aws_emr.html
 ---
 
 本文档介绍了在 EMR 上如何运行 Kylin。

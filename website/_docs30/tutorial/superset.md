@@ -2,7 +2,7 @@
 layout: docs
 title:  "Superset"
 categories: tutorial
-permalink: /docs/tutorial/superset.html
+permalink: /docs30/tutorial/superset.html
 ---
 ### Integrate Apache Kylin and Apache Superset
 

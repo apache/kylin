@@ -2,7 +2,7 @@
 layout: docs
 title:  Enable Zookeeper ACL
 categories: howto
-permalink: /docs/howto/howto_enable_zookeeper_acl.html
+permalink: /docs30/howto/howto_enable_zookeeper_acl.html
 ---
 
 Edit $KYLIN_HOME/conf/kylin.properties to add following configuration item:

@@ -2,7 +2,7 @@
 layout: docs
 title:  Enable Query Pushdown
 categories: tutorial
-permalink: /docs/tutorial/query_pushdown.html
+permalink: /docs30/tutorial/query_pushdown.html
 since: v2.1
 ---
 

@@ -2,7 +2,7 @@
 layout: docs
 title:  Web Interface
 categories: tutorial
-permalink: /docs/tutorial/web.html
+permalink: /docs30/tutorial/web.html
 ---
 
 > **Supported Browsers**

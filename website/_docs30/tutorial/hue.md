@@ -2,7 +2,7 @@
 layout: docs
 title: Hue
 categories: tutorial
-permalink: /docs/tutorial/hue.html
+permalink: /docs30/tutorial/hue.html
 ---
 ### Introduction
  In [Hue-2745](https://issues.cloudera.org/browse/HUE-2745) v3.10, add JDBC support like Phoenix, Kylin, Redshift, Solr Parallel SQL, …

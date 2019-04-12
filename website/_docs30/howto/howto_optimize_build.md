@@ -2,7 +2,7 @@
 layout: docs
 title:  Optimize Cube Build
 categories: howto
-permalink: /docs/howto/howto_optimize_build.html
+permalink: /docs30/howto/howto_optimize_build.html
 ---
 
 Kylin decomposes a Cube build task into several steps and then executes them in sequence. These steps include Hive operations, MapReduce jobs, and other types job. When you have many Cubes to build daily, then you definitely want to speed up this process. Here are some practices that you probably want to know, and they are organized in the same order as the steps sequence.

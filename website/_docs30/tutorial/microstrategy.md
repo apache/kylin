@@ -2,7 +2,7 @@
 layout: docs
 title:  MicroStrategy
 categories: tutorial
-permalink: /docs/tutorial/microstrategy.html
+permalink: /docs30/tutorial/microstrategy.html
 ---
 
 ### Install ODBC Driver

@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "集群模式部署"
 categories: install
-permalink: /cn/docs/install/kylin_cluster.html
+permalink: /cn/docs30/install/kylin_cluster.html
 ---
 
 Kylin 实例是无状态的服务，运行时的状态信息存储在 HBase metastore 中。 出于负载均衡的考虑，您可以启用多个共享一个 metastore 的 Kylin 实例，使得各个节点分担查询压力且互为备份，从而提高服务的可用性。下图描绘了 Kylin 集群模式部署的一个典型场景：

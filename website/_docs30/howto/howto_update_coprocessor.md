@@ -2,7 +2,7 @@
 layout: docs
 title:  Update Coprocessor
 categories: howto
-permalink: /docs/howto/howto_update_coprocessor.html
+permalink: /docs30/howto/howto_update_coprocessor.html
 ---
 
 Kylin leverages HBase coprocessor to optimize query performance. After new versions released, the RPC protocol may get changed, so user need to redeploy coprocessor to HTable.

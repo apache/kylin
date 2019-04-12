@@ -2,7 +2,7 @@
 layout: docs
 title:  SQL Reference
 categories: tutorial
-permalink: /docs/tutorial/sql_reference.html
+permalink: /docs30/tutorial/sql_reference.html
 ---
    
 Apache Kylin relies on Apache Calcite to parse and optimize the SQL statements. As an OLAP engine, Kylin supports `SELECT` statements, while doesn't support others like `INSERT`, `UPDATE` and `DELETE` operations in SQL, so Kylin's SQL grammer is a subset of Apache Calcite. This page lists the SQL grammar, the functions and the basic data types that Kylin supports. You can also check [Calcite SQL reference](https://calcite.apache.org/docs/reference.html) for more detailed info. 

@@ -2,7 +2,7 @@
 layout: docs
 title:  Upgrade From Old Versions
 categories: howto
-permalink: /docs/howto/howto_upgrade.html
+permalink: /docs30/howto/howto_upgrade.html
 since: v1.5.1
 ---
 

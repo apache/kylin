@@ -2,7 +2,7 @@
 layout: docs
 title:  JDBC Driver
 categories: howto
-permalink: /docs/howto/howto_jdbc.html
+permalink: /docs30/howto/howto_jdbc.html
 ---
 
 ### Authentication

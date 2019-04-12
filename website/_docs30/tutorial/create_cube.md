@@ -2,7 +2,7 @@
 layout: docs
 title:  Cube Wizard
 categories: tutorial
-permalink: /docs/tutorial/create_cube.html
+permalink: /docs30/tutorial/create_cube.html
 ---
 
 This tutorial will guide you to create a cube. It need you have at least 1 sample table in Hive. If you don't have, you can follow this to create some data.

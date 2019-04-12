@@ -2,7 +2,7 @@
 layout: docs
 title: Secure with LDAP and SSO
 categories: howto
-permalink: /docs/howto/howto_ldap_and_sso.html
+permalink: /docs30/howto/howto_ldap_and_sso.html
 ---
 
 ## Enable LDAP authentication

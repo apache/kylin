@@ -2,7 +2,7 @@
 layout: docs
 title:  Release Notes
 categories: gettingstarted
-permalink: /docs/release_notes.html
+permalink: /docs30/release_notes.html
 ---
 
 To download latest release, please visit: [http://kylin.apache.org/download/](http://kylin.apache.org/download/), 

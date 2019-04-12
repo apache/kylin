@@ -2,7 +2,7 @@
 layout: docs
 title:  Use Dashboard
 categories: tutorial
-permalink: /docs/tutorial/use_dashboard.html
+permalink: /docs30/tutorial/use_dashboard.html
 ---
 
 > Available since Apache Kylin v2.3.0

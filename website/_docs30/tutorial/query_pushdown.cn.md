@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  查询下压
 categories: tutorial
-permalink: /cn/docs/tutorial/query_pushdown.html
+permalink: /cn/docs30/tutorial/query_pushdown.html
 since: v2.1
 ---
 

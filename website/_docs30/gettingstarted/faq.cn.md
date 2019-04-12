@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  常见问题
 categories: 开始
-permalink: /cn/docs/gettingstarted/faq.html
+permalink: /cn/docs30/gettingstarted/faq.html
 since: v0.6.x
 ---
 

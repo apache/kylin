@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  优化 Cube 构建
 categories: 帮助
-permalink: /cn/docs/howto/howto_optimize_build.html
+permalink: /cn/docs30/howto/howto_optimize_build.html
 ---
 
 Kylin将Cube构建任务分解为几个依次执行的步骤，这些步骤包括Hive操作、MapReduce操作和其他类型的操作。如果你有很多Cube构建任务需要每天运行，那么你肯定想要减少其中消耗的时间。下文按照Cube构建步骤顺序提供了一些优化经验。

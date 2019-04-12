@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  RESTful API
 categories: howto
-permalink: /cn/docs/howto/howto_use_restapi.html
+permalink: /cn/docs30/howto/howto_use_restapi.html
 since: v0.7.1
 ---
 

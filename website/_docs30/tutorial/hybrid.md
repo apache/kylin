@@ -2,7 +2,7 @@
 layout: docs
 title: Hybrid Model
 categories: tutorial
-permalink: /docs/tutorial/hybrid.html
+permalink: /docs30/tutorial/hybrid.html
 since: v2.5.0
 ---
 

@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "JDBC 驱动"
 categories: 教程
-permalink: /cn/docs/tutorial/jdbc.html
+permalink: /cn/docs30/tutorial/jdbc.html
 ---
 
 ### 认证

@@ -2,7 +2,7 @@
 layout: docs
 title:  "Terminology"
 categories: gettingstarted
-permalink: /docs/gettingstarted/terminology.html
+permalink: /docs30/gettingstarted/terminology.html
 since: v0.5.x
 ---
  

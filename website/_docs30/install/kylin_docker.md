@@ -2,7 +2,7 @@
 layout: docs
 title:  "Run Kylin with Docker"
 categories: install
-permalink: /docs/install/kylin_docker.html
+permalink: /docs30/install/kylin_docker.html
 version: v1.5.3
 since: v1.5.2
 ---

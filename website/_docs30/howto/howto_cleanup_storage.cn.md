@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  清理存储
 categories: 帮助
-permalink: /cn/docs/howto/howto_cleanup_storage.html
+permalink: /cn/docs30/howto/howto_cleanup_storage.html
 ---
 
 Kylin 在构建 cube 期间会在 HDFS 上生成中间文件；除此之外，当清理/删除/合并 cube 时，一些 HBase 表可能被遗留在 HBase 却以后再也不会被查询；虽然 Kylin 已经开始做自动化的垃圾回收，但不一定能覆盖到所有的情况；你可以定期做离线的存储清理：

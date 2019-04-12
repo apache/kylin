@@ -2,7 +2,7 @@
 layout: docs
 title:  Kylin JDBC Driver
 categories: tutorial
-permalink: /docs/tutorial/jdbc.html
+permalink: /docs30/tutorial/jdbc.html
 ---
 
 ### Authentication

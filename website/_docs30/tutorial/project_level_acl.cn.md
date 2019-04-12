@@ -2,7 +2,7 @@
 layout: docs-cn
 title: Project Level ACL
 categories: tutorial
-permalink: /cn/docs/tutorial/project_level_acl.html
+permalink: /cn/docs30/tutorial/project_level_acl.html
 since: v2.1.0
 ---
 

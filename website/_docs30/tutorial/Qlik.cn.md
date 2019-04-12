@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  Qlik Sense 集成
 categories: tutorial
-permalink: /cn/docs/tutorial/Qlik.html
+permalink: /cn/docs30/tutorial/Qlik.html
 since: v2.2
 ---
 

@@ -2,7 +2,7 @@
 layout: docs
 title:  Quick Start with Sample Cube
 categories: tutorial
-permalink: /docs/tutorial/kylin_sample.html
+permalink: /docs30/tutorial/kylin_sample.html
 ---
 
 Kylin provides a script for you to create a sample Cube; the script will also create five sample Hive tables:

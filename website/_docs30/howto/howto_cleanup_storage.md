@@ -2,7 +2,7 @@
 layout: docs
 title:  Cleanup Storage
 categories: howto
-permalink: /docs/howto/howto_cleanup_storage.html
+permalink: /docs30/howto/howto_cleanup_storage.html
 ---
 
 Kylin will generate intermediate files in HDFS during the cube building; Besides, when purge/drop/merge cubes, some HBase tables may be left in HBase and will no longer be queried; Although Kylin has started to do some 

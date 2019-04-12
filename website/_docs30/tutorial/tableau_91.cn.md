@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  Tableau 9 
 categories: tutorial
-permalink: /cn/docs/tutorial/tableau_91.html
+permalink: /cn/docs30/tutorial/tableau_91.html
 version: v1.2
 since: v1.2
 ---

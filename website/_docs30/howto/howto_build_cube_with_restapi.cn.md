@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  用 API 构建 Cube
 categories: 帮助
-permalink: /cn/docs/howto/howto_build_cube_with_restapi.html
+permalink: /cn/docs30/howto/howto_build_cube_with_restapi.html
 ---
 
 ### 1. 认证

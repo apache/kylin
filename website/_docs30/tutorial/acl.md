@@ -2,7 +2,7 @@
 layout: docs
 title: Cube Permission (v2.1)
 categories: tutorial
-permalink: /docs/tutorial/acl.html
+permalink: /docs30/tutorial/acl.html
 since: v0.7.1
 ---
 

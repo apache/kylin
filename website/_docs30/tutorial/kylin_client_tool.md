@@ -2,7 +2,7 @@
 layout: docs
 title:  Kylin Python Client
 categories: tutorial
-permalink: /docs/tutorial/kylin_client_tool.html
+permalink: /docs30/tutorial/kylin_client_tool.html
 ---
 
 Apache Kylin Python Client Library is a python-based Apache Kylin client. There are two components in Apache Kylin Python Client Library:

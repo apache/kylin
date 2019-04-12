@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "SQL 快速参考"
 categories: tutorial
-permalink: /cn/docs/tutorial/sql_reference.html
+permalink: /cn/docs30/tutorial/sql_reference.html
 ---
 
 Apache Kylin 使用 Apache Calcite 做 SQL 解析和优化。作为一款 OLAP 引擎, Kylin 支持 `SELECT` 操作，而不支持其它操作例如 `INSERT`，`UPDATE` 和 `DELETE`，因此 Kylin 的 SQL 语法是 Apache Calcite 支持语法的一个子集。本文列举了 Kylin 支持的 SQL 语法、函数以及数据类型，但可能并不完整。您可以查看 [Calcite SQL reference](https://calcite.apache.org/docs/reference.html) 以了解更多内容。 

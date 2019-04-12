@@ -2,7 +2,7 @@
 layout: docs
 title: Qlik Sense
 categories: tutorial
-permalink: /docs/tutorial/Qlik.html
+permalink: /docs30/tutorial/Qlik.html
 ---
 
 Qlik Sense delivers intuitive platform solutions for self-service data visualization, guided analytics applications, embedded analytics, and reporting. It is a new player in the Business Intelligence (BI) tools world, with a high growth since 2013. It has connectors with Hadoop Database (Hive and Impala). Now it can be integrated with Apache Kylin. This article will guide you to connect Apache Kylin with Qlik Sense.  

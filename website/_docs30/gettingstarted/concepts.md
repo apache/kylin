@@ -2,7 +2,7 @@
 layout: docs
 title:  "Technical Concepts"
 categories: gettingstarted
-permalink: /docs/gettingstarted/concepts.html
+permalink: /docs30/gettingstarted/concepts.html
 since: v1.2
 ---
  

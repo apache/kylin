@@ -2,7 +2,7 @@
 layout: docs
 title:  Use Beeline for Hive
 categories: howto
-permalink: /docs/howto/howto_use_beeline.html
+permalink: /docs30/howto/howto_use_beeline.html
 ---
 
 Beeline(https://cwiki.apache.org/confluence/display/Hive/HiveServer2+Clients) is recommended by many venders to replace Hive CLI. By default Kylin uses Hive CLI to synchronize Hive tables, create flatten intermediate tables, etc. By simple configuration changes you can set Kylin to use Beeline instead.

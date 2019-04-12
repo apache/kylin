@@ -2,7 +2,7 @@
 layout: docs
 title:  Use MySQL as Metastore
 categories: tutorial
-permalink: /docs/tutorial/mysql_metastore.html
+permalink: /docs30/tutorial/mysql_metastore.html
 since: v2.5.0
 ---
 

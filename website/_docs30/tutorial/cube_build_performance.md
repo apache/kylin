@@ -2,7 +2,7 @@
 layout: docs
 title: Cube Build Tuning
 categories: tutorial
-permalink: /docs/tutorial/cube_build_performance.html
+permalink: /docs30/tutorial/cube_build_performance.html
 ---
  *This tutorial is an example step by step about how to optimize build of cube.* 
  

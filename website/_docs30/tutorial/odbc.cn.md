@@ -2,7 +2,7 @@
 layout: docs-cn
 title:  "ODBC 驱动"
 categories: 教程
-permalink: /cn/docs/tutorial/odbc.html
+permalink: /cn/docs30/tutorial/odbc.html
 version: v1.2
 since: v0.7.1
 ---

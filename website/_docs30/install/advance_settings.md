@@ -2,7 +2,7 @@
 layout: docs
 title:  "Advanced Settings"
 categories: install
-permalink: /docs/install/advance_settings.html
+permalink: /docs30/install/advance_settings.html
 ---
 
 ## Overwrite default kylin.properties at Cube level
