@@ -245,7 +245,12 @@ public class KafkaSource implements IStreamingSource {
     }
 
     public static Map<String, Object> getKafkaConf(Map<String, String> sourceProperties, KylinConfig kylinConfig) {
-        return getKafkaConf(sourceProperties);
+        Map<String, String> kafkaConfigOverride = kylinConfig.getKafkaConfigOverride();
+        Map<String, Object> kafkaConf = getKafkaConf(sourceProperties);
+        kafkaConf.putAll(kafkaConfigOverride);
+
+        return kafkaConf;
+        //return getKafkaConf(sourceProperties);
     }
 
     public static Map<String, Object> getKafkaConf(Map<String, String> sourceProperties) {
