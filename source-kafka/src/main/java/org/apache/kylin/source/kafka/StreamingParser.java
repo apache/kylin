@@ -25,6 +25,9 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import java.nio.ByteBuffer;
+import java.util.TimeZone;
+
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.StreamingMessageRow;
 import org.apache.kylin.common.util.TimeUtil;
@@ -108,6 +111,8 @@ public abstract class StreamingParser {
      * @return true if the columnName is a derived time column; otherwise false;
      */
     public static final boolean populateDerivedTimeColumns(String columnName, List<String> result, long t) {
+        String timeZoneStr = KylinConfig.getInstanceFromEnv().getTimeZone();
+        TimeZone timeZone = TimeZone.getTimeZone(timeZoneStr);
 
         Integer derivedTimeColumn = derivedTimeColumns.get(columnName);
         if (derivedTimeColumn == null) {
@@ -118,31 +123,31 @@ public abstract class StreamingParser {
         switch (derivedTimeColumn) {
         case 1:
             normalized = TimeUtil.getMinuteStart(t);
-            result.add(DateFormat.formatToTimeWithoutMilliStr(normalized));
+            result.add(DateFormat.formatToTimeStrWithTimeZone(timeZone, normalized));
             break;
         case 2:
             normalized = TimeUtil.getHourStart(t);
-            result.add(DateFormat.formatToTimeWithoutMilliStr(normalized));
+            result.add(DateFormat.formatToTimeStrWithTimeZone(timeZone, normalized));
             break;
         case 3:
-            normalized = TimeUtil.getDayStart(t);
-            result.add(DateFormat.formatToDateStr(normalized));
+            normalized = TimeUtil.getDayStartWithTimeZone(timeZone, t);
+            result.add(DateFormat.formatToDateStrWithTimeZone(timeZone, normalized));
             break;
         case 4:
-            normalized = TimeUtil.getWeekStart(t);
-            result.add(DateFormat.formatToDateStr(normalized));
+            normalized = TimeUtil.getWeekStartWithTimeZone(timeZone, t);
+            result.add(DateFormat.formatToDateStrWithTimeZone(timeZone, normalized));
             break;
         case 5:
-            normalized = TimeUtil.getMonthStart(t);
-            result.add(DateFormat.formatToDateStr(normalized));
+            normalized = TimeUtil.getMonthStartWithTimeZone(timeZone, t);
+            result.add(DateFormat.formatToDateStrWithTimeZone(timeZone, normalized));
             break;
         case 6:
-            normalized = TimeUtil.getQuarterStart(t);
-            result.add(DateFormat.formatToDateStr(normalized));
+            normalized = TimeUtil.getQuarterStartWithTimeZone(timeZone, t);
+            result.add(DateFormat.formatToDateStrWithTimeZone(timeZone, normalized));
             break;
         case 7:
-            normalized = TimeUtil.getYearStart(t);
-            result.add(DateFormat.formatToDateStr(normalized));
+            normalized = TimeUtil.getYearStartWithTimeZone(timeZone, t);
+            result.add(DateFormat.formatToDateStrWithTimeZone(timeZone, normalized));
             break;
         default:
             throw new IllegalStateException();

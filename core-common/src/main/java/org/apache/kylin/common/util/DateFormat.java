@@ -96,6 +96,19 @@ public class DateFormat {
         return date;
     }
 
+    public static String formatToTimeStrWithTimeZone(TimeZone timeZone, long mills){
+        return formatToStrWithTimeZone(timeZone, mills, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
+    }
+
+    public static String formatToDateStrWithTimeZone(TimeZone timeZone, long mills){
+        return formatToStrWithTimeZone(timeZone, mills, DEFAULT_DATE_PATTERN);
+    }
+
+    private static String formatToStrWithTimeZone(TimeZone timeZone, long mills, String pattern){
+        FastDateFormat dateFormat =  FastDateFormat.getInstance(pattern, timeZone);
+        return dateFormat.format(new Date(mills));
+    }
+
     public static long stringToMillis(String str) {
         // try to be smart and guess the date format
         if (isAllDigits(str)) {
