@@ -605,6 +605,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Double.parseDouble(getOptional("kylin.cube.algorithm.layer-or-inmem-threshold", "7"));
     }
 
+    public boolean isAutoInmemToOptimize() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.algorithm.inmem-auto-optimize", TRUE));
+    }
+
     public int getCubeAlgorithmAutoMapperLimit() {
         return Integer.parseInt(getOptional("kylin.cube.algorithm.inmem-split-limit", "500"));
     }

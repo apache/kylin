@@ -48,7 +48,7 @@ public class StatisticsDecisionUtil {
         KylinConfig kylinConf = seg.getConfig();
         String algPref = kylinConf.getCubeAlgorithm();
         CubingJob.AlgorithmEnum alg;
-        if (mapperOverlapRatio == 0) { // no source records
+        if (mapperOverlapRatio == 0 && kylinConf.isAutoInmemToOptimize()) { // no source records
             alg = CubingJob.AlgorithmEnum.INMEM;
         } else if (CubingJob.AlgorithmEnum.INMEM.name().equalsIgnoreCase(algPref)) {
             alg = CubingJob.AlgorithmEnum.INMEM;
