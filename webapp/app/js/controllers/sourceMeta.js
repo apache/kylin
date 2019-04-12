@@ -578,6 +578,48 @@ KylinApp
       }
 
     }
+    // 推断列的类型
+    function checkColumnValType(val,key){
+      var defaultType;
+      if(typeof val ==="number"){
+          if(/id/i.test(key)&&val.toString().indexOf(".")==-1){
+            defaultType="int";
+          }else if(val <= 2147483647){
+            if(val.toString().indexOf(".")!=-1){
+              defaultType="decimal";
+            }else{
+              defaultType="int";
+            }
+          }else{
+            defaultType="timestamp";
+          }
+      }else if(typeof val ==="string"){
+          if(!isNaN((new Date(val)).getFullYear())&&typeof ((new Date(val)).getFullYear())==="number"){
+            defaultType="date";
+          }else{
+            defaultType="varchar(256)";
+          }
+      }else if(Object.prototype.toString.call(val)=="[object Array]"){
+          defaultType="varchar(256)";
+      }else if (typeof val ==="boolean"){
+          defaultType="boolean";
+      }
+      return defaultType;
+    }
+    // 打平straming表结构
+    function flatStreamingJson (objRebuildFunc, flatResult) {
+      return function flatObj (obj,base,comment) {
+        base=base?base+"_":"";
+        comment= comment?comment+"|":""
+        for(var i in obj){
+          if(Object.prototype.toString.call(obj[i])=="[object Object]"){
+            flatObj(obj[i],base+i,comment+i);
+            continue;
+          }
+          flatResult.push(objRebuildFunc(base+i,obj[i],comment+i));
+        }
+      }
+    }
 
     var StreamingSourceCtrl = function ($scope, $location,$interpolate,$templateCache, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig,cubeConfig,StreamingModel,StreamingService) {
 
@@ -686,51 +728,10 @@ KylinApp
         $scope.table.sourceValid = true;
 
         //streaming table data change structure
-        var columnList=[]
-        function changeObjTree(obj,base,comment){
-          base=base?base+"_":"";
-          comment= comment?comment+"|":""
-          for(var i in obj){
-            if(Object.prototype.toString.call(obj[i])=="[object Object]"){
-              changeObjTree(obj[i],base+i,comment+i);
-              continue;
-            }
-            columnList.push(createNewObj(base+i,obj[i],comment+i));
-          }
-        }
-
-        function checkValType(val,key){
-          var defaultType;
-          if(typeof val ==="number"){
-              if(/id/i.test(key)&&val.toString().indexOf(".")==-1){
-                defaultType="int";
-              }else if(val <= 2147483647){
-                if(val.toString().indexOf(".")!=-1){
-                  defaultType="decimal";
-                }else{
-                  defaultType="int";
-                }
-              }else{
-                defaultType="timestamp";
-              }
-          }else if(typeof val ==="string"){
-              if(!isNaN((new Date(val)).getFullYear())&&typeof ((new Date(val)).getFullYear())==="number"){
-                defaultType="date";
-              }else{
-                defaultType="varchar(256)";
-              }
-          }else if(Object.prototype.toString.call(val)=="[object Array]"){
-              defaultType="varchar(256)";
-          }else if (typeof val ==="boolean"){
-              defaultType="boolean";
-          }
-          return defaultType;
-        }
-
         function createNewObj(key,val,comment){
           var obj={};
           obj.name=key;
-          obj.type=checkValType(val,key);
+          obj.type=checkColumnValType(val,key);
           obj.fromSource="Y";
           obj.checked="Y";
           obj.comment=comment;
@@ -739,7 +740,8 @@ KylinApp
           }
           return obj;
         }
-        changeObjTree($scope.streaming.parseResult);
+       var columnList = []
+        flatStreamingJson(createNewObj, columnList)($scope.streaming.parseResult)
         var timeMeasure = $scope.cubeConfig.streamingAutoGenerateMeasure;
         for(var i = 0;i<timeMeasure.length;i++){
           var defaultCheck = 'Y';
@@ -1044,7 +1046,6 @@ KylinApp
       };
 
       $scope.getTableData = function() {
-
         $scope.tableData.name = '';
         $scope.tableData.columns = [];
 
@@ -1067,43 +1068,22 @@ KylinApp
           $scope.streaming.errMsg = 'Source json invalid, Please correct your schema and generate again.';
           return;
         }
-
-        var columnsByTemplate = [];
-
         // kafka parser
+        var columnsByTemplate=[]
+        function createNewObj(key,val,comment){
+          var obj={};
+          obj.name=key;
+          obj.datatype=checkColumnValType(val,key);
+          obj.comment=comment;
+          if (obj.datatype === 'timestamp') {
+            $scope.streaming.TSColumnArr.push(key);
+          }
+          return obj;
+        }
         if (tableConfig.streamingSourceType.kafka === $scope.tableData.source_type) {
           // TODO kafka need to support json not just first layer
-          for (var key in templateObj) {
-
-            var contentType = 'varchar(256)';
-            var content = templateObj[key];
-
-            // TODO optimize the type parse
-            if (typeof content !== 'string') {
-              if (typeof content === 'boolean') {
-                contentType = 'boolean';
-              } else if (typeof content === 'number'){
-                if (content <= 2147483647) { //631152000
-                  if (content.toString().indexOf('.') != -1){
-                    contentType = 'decimal';
-                  } else {
-                    contentType = 'int';
-                  }
-                } else {
-                  contentType = 'timestamp';
-                  $scope.streaming.TSColumnArr.push(key);
-                }
-              }
-            }
-
-            columnsByTemplate.push({
-              name: key,
-              datatype: contentType
-            });
-
-          }
+          flatStreamingJson(createNewObj, columnsByTemplate)(templateObj)
         }
-
         var columnsByAuto = [];
 
         // TODO change the streamingAutoGenerateMeasure format
