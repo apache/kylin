@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  "从 Kafka 流构建 Cube"
 categories: tutorial
 permalink: /cn/docs24/tutorial/cube_streaming.html

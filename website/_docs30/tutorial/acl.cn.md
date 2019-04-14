@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  Cube 权限授予(v2.1)
 categories: 教程
 permalink: /cn/docs30/tutorial/acl.html

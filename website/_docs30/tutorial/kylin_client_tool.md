@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Kylin Python Client
 categories: tutorial
 permalink: /docs30/tutorial/kylin_client_tool.html

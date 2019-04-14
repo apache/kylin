@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Use Cube Planner
 categories: tutorial
 permalink: /docs30/tutorial/use_cube_planner.html

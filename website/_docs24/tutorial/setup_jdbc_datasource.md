@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Setup JDBC Data Source
 categories: howto
 permalink: /docs24/tutorial/setup_jdbc_datasource.html

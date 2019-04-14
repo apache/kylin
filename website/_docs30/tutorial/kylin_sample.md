@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Quick Start with Sample Cube
 categories: tutorial
 permalink: /docs30/tutorial/kylin_sample.html

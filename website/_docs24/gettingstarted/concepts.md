@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  "Technical Concepts"
 categories: gettingstarted
 permalink: /docs24/gettingstarted/concepts.html

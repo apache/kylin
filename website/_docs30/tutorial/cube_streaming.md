@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Scalable Cubing from Kafka
 categories: tutorial
 permalink: /docs30/tutorial/cube_streaming.html

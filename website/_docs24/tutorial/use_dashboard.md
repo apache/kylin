@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Use Dashboard
 categories: tutorial
 permalink: /docs24/tutorial/use_dashboard.html

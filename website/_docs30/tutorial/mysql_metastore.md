@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Use MySQL as Metastore
 categories: tutorial
 permalink: /docs30/tutorial/mysql_metastore.html

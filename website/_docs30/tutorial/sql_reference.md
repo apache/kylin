@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  SQL Reference
 categories: tutorial
 permalink: /docs30/tutorial/sql_reference.html

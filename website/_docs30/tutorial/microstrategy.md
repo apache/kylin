@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  MicroStrategy
 categories: tutorial
 permalink: /docs30/tutorial/microstrategy.html

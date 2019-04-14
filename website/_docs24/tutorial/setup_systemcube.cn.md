@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  建立系统 Cube
 categories: tutorial
 permalink: /cn/docs24/tutorial/setup_systemcube.html

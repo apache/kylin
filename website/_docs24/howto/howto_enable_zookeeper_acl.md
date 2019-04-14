@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Enable Zookeeper ACL
 categories: howto
 permalink: /docs24/howto/howto_enable_zookeeper_acl.html

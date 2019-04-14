@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  优化 Cube 构建
 categories: 帮助
 permalink: /cn/docs24/howto/howto_optimize_build.html

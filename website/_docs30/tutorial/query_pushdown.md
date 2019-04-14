@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Enable Query Pushdown
 categories: tutorial
 permalink: /docs30/tutorial/query_pushdown.html

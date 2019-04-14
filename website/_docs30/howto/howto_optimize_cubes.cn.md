@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  优化 Cube 设计
 categories: howto
 permalink: /cn/docs30/howto/howto_optimize_cubes.html

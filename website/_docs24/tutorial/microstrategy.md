@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  MicroStrategy
 categories: tutorial
 permalink: /docs24/tutorial/microstrategy.html

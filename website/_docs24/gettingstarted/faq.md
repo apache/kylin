@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  "FAQ"
 categories: gettingstarted
 permalink: /docs24/gettingstarted/faq.html

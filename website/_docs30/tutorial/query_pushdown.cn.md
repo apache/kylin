@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  查询下压
 categories: tutorial
 permalink: /cn/docs30/tutorial/query_pushdown.html

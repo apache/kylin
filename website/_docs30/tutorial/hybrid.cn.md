@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  Hybrid 模型
 categories: 教程
 permalink: /cn/docs30/tutorial/hybrid.html

@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  "Installation Guide"
 categories: install
 permalink: /docs30/install/index.html

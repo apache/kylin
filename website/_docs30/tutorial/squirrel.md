@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  SQuirreL
 categories: tutorial
 permalink: /docs30/tutorial/squirrel.html

@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title: "高级设置"
 categories: install
 permalink: /cn/docs30/install/advance_settings.html

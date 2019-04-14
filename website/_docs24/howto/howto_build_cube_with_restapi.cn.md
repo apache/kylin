@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  用 API 构建 Cube
 categories: 帮助
 permalink: /cn/docs24/howto/howto_build_cube_with_restapi.html

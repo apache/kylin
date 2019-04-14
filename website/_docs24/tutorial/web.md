@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Web Interface
 categories: tutorial
 permalink: /docs24/tutorial/web.html

@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  "Python 客户端"
 categories: 教程
 permalink: /cn/docs30/tutorial/kylin_client_tool.html

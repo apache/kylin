@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Optimize Cube Design
 categories: howto
 permalink: /docs24/howto/howto_optimize_cubes.html

@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Use RESTful API in Javascript
 categories: howto
 permalink: /docs24/howto/howto_use_restapi_in_js.html

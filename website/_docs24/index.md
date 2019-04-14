@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title: Overview
 categories: docs
 permalink: /docs24/index.html

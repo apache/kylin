@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Tableau 8
 categories: tutorial
 permalink: /docs24/tutorial/tableau.html

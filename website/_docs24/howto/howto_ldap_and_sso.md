@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title: Secure with LDAP and SSO
 categories: howto
 permalink: /docs24/howto/howto_ldap_and_sso.html

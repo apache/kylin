@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  RESTful API
 categories: howto
 permalink: /cn/docs30/howto/howto_use_restapi.html

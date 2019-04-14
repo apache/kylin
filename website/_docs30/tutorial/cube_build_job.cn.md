@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title: "Cube 构建和 Job 监控"
 categories: 教程
 permalink: /cn/docs30/tutorial/cube_build_job.html

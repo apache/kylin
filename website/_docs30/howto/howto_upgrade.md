@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Upgrade From Old Versions
 categories: howto
 permalink: /docs30/howto/howto_upgrade.html

@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  "用 Docker 运行 Kylin"
 categories: install
 permalink: /cn/docs24/install/kylin_docker.html

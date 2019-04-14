@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  Web 界面
 categories: 教程
 permalink: /cn/docs30/tutorial/web.html

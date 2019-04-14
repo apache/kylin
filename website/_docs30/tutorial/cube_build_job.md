@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Cube Build and Job Monitoring
 categories: tutorial
 permalink: /docs30/tutorial/cube_build_job.html

@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title: Project Level ACL
 categories: tutorial
 permalink: /docs30/tutorial/project_level_acl.html

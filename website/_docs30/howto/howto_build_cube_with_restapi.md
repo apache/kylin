@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Build Cube with API
 categories: howto
 permalink: /docs30/howto/howto_build_cube_with_restapi.html

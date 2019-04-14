@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  Cube 创建
 categories: 教程
 permalink: /cn/docs30/tutorial/create_cube.html

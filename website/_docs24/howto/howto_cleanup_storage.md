@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Cleanup Storage
 categories: howto
 permalink: /docs24/howto/howto_cleanup_storage.html

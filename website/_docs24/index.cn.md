@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title: 概述
 categories: docs
 permalink: /cn/docs24/index.html

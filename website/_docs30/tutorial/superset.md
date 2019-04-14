@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  "Superset"
 categories: tutorial
 permalink: /docs30/tutorial/superset.html

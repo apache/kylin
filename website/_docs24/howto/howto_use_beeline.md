@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Use Beeline for Hive
 categories: howto
 permalink: /docs24/howto/howto_use_beeline.html

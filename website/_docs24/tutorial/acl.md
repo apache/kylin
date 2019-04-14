@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title: Cube Permission (v2.1)
 categories: tutorial
 permalink: /docs24/tutorial/acl.html

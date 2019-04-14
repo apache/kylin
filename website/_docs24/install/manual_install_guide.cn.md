@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  "手动安装指南"
 categories: 安装
 permalink: /cn/docs24/install/manual_install_guide.html

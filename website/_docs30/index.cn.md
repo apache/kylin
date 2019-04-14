@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title: 概述
 categories: docs
 permalink: /cn/docs30/index.html

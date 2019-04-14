@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  "Community Best Practices"
 categories: gettingstarted
 permalink: /docs24/gettingstarted/best_practices.html

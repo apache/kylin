@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Kylin JDBC Driver
 categories: tutorial
 permalink: /docs24/tutorial/jdbc.html

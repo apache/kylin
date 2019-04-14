@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  "Kylin 配置"
 categories: install
 permalink: /cn/docs30/install/configuration.html

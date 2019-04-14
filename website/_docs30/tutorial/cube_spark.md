@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Build Cube with Spark
 categories: tutorial
 permalink: /docs30/tutorial/cube_spark.html

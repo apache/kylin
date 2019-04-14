@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  SQuirreL
 categories: tutorial
 permalink: /docs24/tutorial/squirrel.html

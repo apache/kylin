@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  "Deploy in Cluster Mode"
 categories: install
 permalink: /docs24/install/kylin_cluster.html

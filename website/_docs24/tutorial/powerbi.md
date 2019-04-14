@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  MS Excel and Power BI
 categories: tutorial
 permalink: /docs24/tutorial/powerbi.html

@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  "Hadoop Environment"
 categories: install
 permalink: /docs24/install/hadoop_env.html

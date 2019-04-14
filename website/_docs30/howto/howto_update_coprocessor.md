@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Update Coprocessor
 categories: howto
 permalink: /docs30/howto/howto_update_coprocessor.html

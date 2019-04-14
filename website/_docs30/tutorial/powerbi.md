@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  MS Excel and Power BI
 categories: tutorial
 permalink: /docs30/tutorial/powerbi.html
