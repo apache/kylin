@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title: Qlik Sense
 categories: tutorial
 permalink: /docs30/tutorial/Qlik.html

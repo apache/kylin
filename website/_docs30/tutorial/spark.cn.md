@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  Apache Spark
 categories: tutorial
 permalink: /cn/docs30/tutorial/spark.html

@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  "样例 Cube 快速入门"
 categories: tutorial
 permalink: /cn/docs30/tutorial/kylin_sample.html

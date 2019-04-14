@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  备份元数据
 categories: 帮助
 permalink: /cn/docs24/howto/howto_backup_metadata.html

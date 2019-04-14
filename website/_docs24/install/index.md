@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  "Installation Guide"
 categories: install
 permalink: /docs24/install/index.html

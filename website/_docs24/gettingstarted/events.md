@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  "Events and Conferences"
 categories: gettingstarted
 permalink: /docs24/gettingstarted/events.html

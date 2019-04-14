@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Backup Metadata
 categories: howto
 permalink: /docs30/howto/howto_backup_metadata.html

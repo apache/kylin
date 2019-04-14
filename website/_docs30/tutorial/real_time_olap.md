@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Real-time OLAP
 categories: tutorial
 permalink: /docs30/tutorial/realtime_olap.html

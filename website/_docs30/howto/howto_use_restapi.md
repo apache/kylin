@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Use RESTful API
 categories: howto
 permalink: /docs30/howto/howto_use_restapi.html

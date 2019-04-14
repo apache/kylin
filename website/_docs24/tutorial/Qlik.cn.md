@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  Qlik Sense 集成
 categories: tutorial
 permalink: /cn/docs24/tutorial/Qlik.html

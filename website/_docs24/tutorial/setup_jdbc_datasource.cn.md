@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  建立 JDBC 数据源
 categories: howto
 permalink: /cn/docs24/tutorial/setup_jdbc_datasource.html

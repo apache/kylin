@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  "Advanced Settings"
 categories: install
 permalink: /docs24/install/advance_settings.html

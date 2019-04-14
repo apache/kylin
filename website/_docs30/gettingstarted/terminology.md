@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  "Terminology"
 categories: gettingstarted
 permalink: /docs30/gettingstarted/terminology.html

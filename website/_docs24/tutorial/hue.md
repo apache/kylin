@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title: Hue
 categories: tutorial
 permalink: /docs24/tutorial/hue.html

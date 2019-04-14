@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  Tableau 9 
 categories: tutorial
 permalink: /cn/docs30/tutorial/tableau_91.html

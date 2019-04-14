@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  "Install Kylin on AWS EMR"
 categories: install
 permalink: /docs30/install/kylin_aws_emr.html

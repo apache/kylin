@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Release Notes
 categories: gettingstarted
 permalink: /docs24/release_notes.html

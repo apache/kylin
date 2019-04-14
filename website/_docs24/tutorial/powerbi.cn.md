@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  "Excel 及 Power BI 教程"
 categories: tutorial
 permalink: /cn/docs24/tutorial/powerbi.html

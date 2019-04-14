@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Backup Metadata
 categories: howto
 permalink: /docs24/howto/howto_backup_metadata.html

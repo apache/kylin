@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  "SQL 快速参考"
 categories: tutorial
 permalink: /cn/docs30/tutorial/sql_reference.html

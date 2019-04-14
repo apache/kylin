@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  使用 Cube Planner
 categories: tutorial
 permalink: /cn/docs30/tutorial/use_cube_planner.html

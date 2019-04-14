@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Set Up System Cube
 categories: tutorial
 permalink: /docs30/tutorial/setup_systemcube.html

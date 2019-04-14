@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  "安装指南"
 categories: install
 permalink: /cn/docs24/install/index.html

@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  Tableau 8
 categories: 教程
 permalink: /cn/docs30/tutorial/tableau.html

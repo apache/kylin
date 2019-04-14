@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Kylin ODBC Driver
 categories: tutorial
 permalink: /docs30/tutorial/odbc.html

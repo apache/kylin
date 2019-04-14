@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Use distributed job scheduler
 categories: howto
 permalink: /docs30/howto/howto_use_distributed_scheduler.html

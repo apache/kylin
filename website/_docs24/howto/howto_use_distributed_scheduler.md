@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs24
 title:  Use distributed job scheduler
 categories: howto
 permalink: /docs24/howto/howto_use_distributed_scheduler.html

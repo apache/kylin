@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title: Hybrid Model
 categories: tutorial
 permalink: /docs30/tutorial/hybrid.html

@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  "在 AWS EMR 上安装 Kylin"
 categories: install
 permalink: /cn/docs30/install/kylin_aws_emr.html

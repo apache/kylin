@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  "实用 CLI 工具"
 categories: howto
 permalink: /cn/docs30/howto/howto_use_cli.html

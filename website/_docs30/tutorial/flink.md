@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Apache Flink
 categories: tutorial
 permalink: /docs30/tutorial/flink.html

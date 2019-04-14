@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title: Secure with LDAP and SSO
 categories: howto
 permalink: /docs30/howto/howto_ldap_and_sso.html

@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  "用 Spark 构建 Cube"
 categories: tutorial
 permalink: /cn/docs24/tutorial/cube_spark.html

@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Web Interface
 categories: tutorial
 permalink: /docs30/tutorial/web.html

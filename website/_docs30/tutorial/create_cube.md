@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  Cube Wizard
 categories: tutorial
 permalink: /docs30/tutorial/create_cube.html

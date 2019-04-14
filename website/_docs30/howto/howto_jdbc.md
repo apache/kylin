@@ -1,5 +1,5 @@
 ---
-layout: docs
+layout: docs30
 title:  JDBC Driver
 categories: howto
 permalink: /docs30/howto/howto_jdbc.html

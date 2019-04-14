@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  "安装指南"
 categories: install
 permalink: /cn/docs30/install/index.html

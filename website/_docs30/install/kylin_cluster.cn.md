@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs30-cn
 title:  "集群模式部署"
 categories: install
 permalink: /cn/docs30/install/kylin_cluster.html

@@ -1,5 +1,5 @@
 ---
-layout: docs-cn
+layout: docs24-cn
 title:  清理存储
 categories: 帮助
 permalink: /cn/docs24/howto/howto_cleanup_storage.html
