@@ -7,13 +7,15 @@ permalink: /docs30/tutorial/realtime_olap.html
 
 Kylin v3.0.0 will release the real-time OLAP function, by the power of new added streaming reciever cluster, Kylin can query streaming data with sub-second latency. This doc is a step by step tutorial, illustrating how to create and build a sample streaming cube.
 
-In this tutorial, we will use Hortonworks HDP 2.2.4 Sandbox VM + Kafka v1.0.2(Scala 2.11) as the environment.
+In this tutorial, we will use Hortonworks HDP-2.4.0.0.169 Sandbox VM + Kafka v1.0.2(Scala 2.11) as the environment.
 
 1. Basic concept
 2. Prepare environment
 3. Create cube
 4. Start consumption
 5. Monitor receiver
+
+The configuration can be found at [Real-time OLAP configuration](http://kylin.apache.org/docs30/install/configuration.html#realtime-olap).
 
 ----
 
@@ -107,7 +109,7 @@ python user_action.py --max-uid 2000 --max-vid 2000 --msg-sec 100 --enable-hour-
 This tool will send 100 records to Kafka every second. Please keep it running during this tutorial. You can check the sample message with kafka-console-consumer.sh now.
 
 ### Start Kylin Process
-The kylin process will work as coordinator of the receiver cluster.
+The kylin process will work as coordinator of the receiver cluster. 7070 is the default port for coordinator.
 {% highlight Groff markup %}
 cd /usr/local/apache-kylin-3.0.0-SNAPSHOT-bin-master
 export KYLIN_HOME=`pwd`
@@ -115,7 +117,7 @@ sh bin/kylin.sh start
 {% endhighlight %}
 
 ### Start Receiver Process
-The receiver process will work as worker of the receiver cluster.
+The receiver process will work as worker of the receiver cluster. 9090 is the default port for receiver.
 {% highlight Groff markup %}
 cd ../apache-kylin-3.0.0-SNAPSHOT-bin-receiver/
 export KYLIN_HOME=`pwd`
@@ -231,3 +233,10 @@ When the mouse pointer moves over the segment icon, the segment level statistics
 
 When the mouse pointer moves over the segment icon, the partition level statistics will be displayed.
 ![image](/images/RealtimeOlap/monitor_streaming_3.png)
+
+## Trouble shooting
+
+- Please make sure that the port 7070 and 9090 is not occupied. If you have to change port, please do this set `kylin.stream.node` in `kylin.properties` for receiver or coordinator separately.
+- If you find you have messed up and want to clean up, please remove streaming metadata in Zookeeper. 
+This can be done by executing `rmr PATH_TO_DELETE` in `zookeeper-client` shell. By default, the root dir of streaming metadata is under `kylin.env.zookeeper-base-path` + `kylin.metadata.url` + `/stream`. 
+For example, if you set `kylin.env.zookeeper-base-path` to `/kylin`， set `kylin.metadata.url` to `kylin_metadata@hbase`, you should delete path `/kylin/kylin_metadata/stream`.
