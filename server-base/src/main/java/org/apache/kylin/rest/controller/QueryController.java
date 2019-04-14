@@ -154,6 +154,10 @@ public class QueryController extends BasicController {
                 headerList.add(column.getLabel());
             }
 
+            //KYLIN-3939
+            //Add BOM character,slove the bug that it shows Chinese garbled when using excel to open scv file on windows.
+            csvWriter.write(new String(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte)0xBF }));
+
             String[] headers = new String[headerList.size()];
             csvWriter.writeHeader(headerList.toArray(headers));
 
