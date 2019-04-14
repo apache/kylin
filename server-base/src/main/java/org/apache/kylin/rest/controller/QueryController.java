@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -80,6 +81,11 @@ public class QueryController extends BasicController {
     @Autowired
     @Qualifier("queryService")
     private QueryService queryService;
+
+    private static String BOM_CHARACTER;
+    {
+        BOM_CHARACTER = new String(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF}, StandardCharsets.UTF_8);
+    }
 
     @RequestMapping(value = "/query", method = RequestMethod.POST, produces = { "application/json" })
     @ResponseBody
@@ -154,9 +160,10 @@ public class QueryController extends BasicController {
                 headerList.add(column.getLabel());
             }
 
-            //KYLIN-3939
-            //Add BOM character,slove the bug that it shows Chinese garbled when using excel to open scv file on windows.
-            csvWriter.write(new String(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte)0xBF }));
+            // KYLIN-3939
+            // Add BOM character,slove the bug that it shows Chinese garbled when using
+            // excel to open scv file on windows.
+            csvWriter.write(BOM_CHARACTER);
 
             String[] headers = new String[headerList.size()];
             csvWriter.writeHeader(headerList.toArray(headers));
