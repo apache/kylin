@@ -11,12 +11,13 @@ Welcome to Apache Kylin™: Extreme OLAP Engine for Big Data
 
 Apache Kylin™ is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
 
-This is the document for the latest released version (v2.5 & v2.6). Document of prior versions: 
+This is the document for v3.0 with the new feature Real-time OLAP. Document of prior versions: 
+* [v2.5 and v2.6 document](/docs)
 * [v2.4 document](/docs24)
 * [v2.3 document](/docs23)
 * [v2.1 and v2.2 document](/docs21/)
 * [v2.0 document](/docs20/)
-* [Archive](/archive/)
+* [Archived](/archive/)
 
 Installation & Setup
 ------------  
@@ -34,14 +35,15 @@ Tutorial
 3. [Cube Wizard](tutorial/create_cube.html)
 4. [Cube Build and Job Monitoring](tutorial/cube_build_job.html)
 5. [SQL reference](tutorial/sql_reference.html)
-6. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
-7. [Build Cube with Spark Engine](tutorial/cube_spark.html)
-8. [Cube Build Tuning](tutorial/cube_build_performance.html)
-9. [Enable Query Pushdown](tutorial/query_pushdown.html)
-10. [Setup System Cube](tutorial/setup_systemcube.html)
-11. [Optimize with Cube Planner](tutorial/use_cube_planner.html)
-12. [Use System Dashboard](tutorial/use_dashboard.html)
-13. [Setup JDBC Data Source](tutorial/setup_jdbc_datasource.html)
+6. [Build Cube with Streaming Data (Near real-time)](tutorial/cube_streaming.html)
+7. [Real-time OLAP (NEW!)](tutorial/realtime_olap.html)
+8. [Build Cube with Spark Engine](tutorial/cube_spark.html)
+9. [Cube Build Tuning](tutorial/cube_build_performance.html)
+10. [Enable Query Pushdown](tutorial/query_pushdown.html)
+11. [Setup System Cube](tutorial/setup_systemcube.html)
+12. [Optimize with Cube Planner](tutorial/use_cube_planner.html)
+13. [Use System Dashboard](tutorial/use_dashboard.html)
+14. [Setup JDBC Data Source](tutorial/setup_jdbc_datasource.html)
 
 
 Connectivity and APIs

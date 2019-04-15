@@ -1,8 +1,8 @@
 ---
-layout: docs
+layout: docs30
 title:  Release Notes
 categories: gettingstarted
-permalink: /docs/release_notes.html
+permalink: /docs30/release_notes.html
 ---
 
 To download latest release, please visit: [http://kylin.apache.org/download/](http://kylin.apache.org/download/), 
@@ -14,6 +14,60 @@ or send to Apache Kylin mailing list:
 
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
+
+
+## v3.0.0-alpha - 2019-04-12
+_Tag:_ [kylin-3.0.0-alpha](https://github.com/apache/kylin/tree/kylin-3.0.0-alpha)
+This is the alpha release of Kylin's next generation after 2.x, with the new real-time OLAP feature.
+
+__New Feature__
+* [KYLIN-3654] - Kylin Real-time Streaming
+* [KYLIN-3795] - Submit Spark jobs via Apache Livy
+* [KYLIN-3820] - Add a curator-based scheduler
+
+__Improvement__
+* [KYLIN-3716] - FastThreadLocal replaces ThreadLocal
+* [KYLIN-3744] - Add javadoc and unittest for Kylin New Streaming Solution
+* [KYLIN-3759] - Streaming ClassNotFoundExeception when lambda is enable in MR job
+* [KYLIN-3786] - Add integration test for real-time streaming
+* [KYLIN-3791] - Map return by Maps.transformValues is a immutable view
+* [KYLIN-3797] - Too many or filters may break Kylin server when flatting filter
+* [KYLIN-3814] - Add pause interval for job retry
+* [KYLIN-3821] - Expose real-time streaming data consuming lag info
+* [KYLIN-3834] - Add monitor for curator-based scheduler
+* [KYLIN-3839] - Storage clean up after refreshing or deleting a segment
+* [KYLIN-3864] - Provide a function to judge whether the os type is Mac os x or not
+* [KYLIN-3867] - Enable JDBC to use key store & trust store for https connection
+* [KYLIN-3901] - Use multi threads to speed up the storage cleanup job
+* [KYLIN-3905] - Enable shrunken dictionary default
+* [KYLIN-3908] - KylinClient's HttpRequest.releaseConnection is not needed in retrieveMetaData & executeKylinQuery
+* [KYLIN-3929] - Check satisfaction before execute cubeplanner algorithm
+* [KYLIN-3690] - New streaming backend implementation
+* [KYLIN-3691] - New streaming ui implementation
+* [KYLIN-3692] - New streaming ui implementation
+* [KYLIN-3745] - Real-time segment state changed from active to immutable is not sequently
+* [KYLIN-3747] - Use FQDN to register a streaming receiver instead of ip
+* [KYLIN-3768] - Save streaming metadata a standard kylin path in zookeeper
+
+__Bug Fix__
+* [KYLIN-3787] - NPE throws when dimension value has null when query real-time data
+* [KYLIN-3789] - Stream receiver admin page issue fix
+Bug
+* [KYLIN-3800] - Real-time streaming count distinct result wrong
+* [KYLIN-3817] - Duration in Cube building is a negative number
+* [KYLIN-3818] - After Cube disabled, auto-merge cube job still running
+* [KYLIN-3830] - Wrong result when 'SELECT SUM(dim1)' without set a relative metric of dim1.
+* [KYLIN-3866] - Whether to set mapreduce.application.classpath is determined by the user
+* [KYLIN-3880] - DataType is incompatible in Kylin HBase coprocessor
+* [KYLIN-3888] - TableNotDisabledException when running "Convert Lookup Table to HFile"
+* [KYLIN-3898] - Cube level properties are ineffective in the some build steps
+* [KYLIN-3902] - NoRealizationFoundException due to creating a wrong JoinDesc
+* [KYLIN-3909] - Spark cubing job failed for MappeableRunContainer is not registered
+* [KYLIN-3911] - Check if HBase table is enabled before diabling table in DeployCoprocessorCLI
+* [KYLIN-3916] - Fix cube build action issue after streaming migrate
+* [KYLIN-3922] - Fail to update coprocessor when run DeployCoprocessorCLI
+* [KYLIN-3923] - UT GeneralColumnDataTest fail
+
 
 ## v2.6.1 - 2019-03-08
 _Tag:_ [kylin-2.6.1](https://github.com/apache/kylin/tree/kylin-2.6.1)
