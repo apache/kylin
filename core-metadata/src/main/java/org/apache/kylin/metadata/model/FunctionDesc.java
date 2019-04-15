@@ -167,7 +167,15 @@ public class FunctionDesc implements Serializable {
             if (isMax() || isMin()) {
                 return parameter.getColRefs().get(0).getType();
             } else if (isSum()) {
-                return parameter.isColumnType() ? DataType.getType(returnType) : DataType.getType("bigint");
+                if (parameter.isColumnType()) {
+                    if (parameter.getColRefs().get(0).getType().isIntegerFamily()) {
+                        return DataType.getType("bigint");
+                    } else {
+                        return parameter.getColRefs().get(0).getType();
+                    }
+                } else {
+                    return DataType.getType("bigint");
+                }
             } else if (isCount()) {
                 return DataType.getType("bigint");
             } else {

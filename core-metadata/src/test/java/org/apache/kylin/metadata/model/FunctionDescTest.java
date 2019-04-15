@@ -37,6 +37,7 @@ public class FunctionDescTest {
     public void getRewriteFieldType() {
         TblColRef mockColOfDoubleType = TblColRef.mockup(TableDesc.mockup("mock_table"), 0, "price", "double", "");
         TblColRef mockColOfDecimalType = TblColRef.mockup(TableDesc.mockup("mock_table"), 1, "price", "decimal", "");
+        TblColRef mockColOfIntegerType = TblColRef.mockup(TableDesc.mockup("mock_table"), 2, "price", "integer", "");
 
         FunctionDesc function = FunctionDesc.newInstance("SUM", ParameterDesc.newInstance("1"), "bigint");
         assertEquals(DataType.getType("bigint"), function.getRewriteFieldType());
@@ -44,6 +45,8 @@ public class FunctionDescTest {
         assertEquals(DataType.getType("bigint"), function.getRewriteFieldType());
         function = FunctionDesc.newInstance("SUM", ParameterDesc.newInstance(mockColOfDoubleType), "double");
         assertEquals(DataType.getType("double"), function.getRewriteFieldType());
+        function = FunctionDesc.newInstance("SUM", ParameterDesc.newInstance(mockColOfIntegerType), "bigint");
+        assertEquals(DataType.getType("bigint"), function.getRewriteFieldType());
         function = FunctionDesc.newInstance("MAX", ParameterDesc.newInstance(mockColOfDecimalType), "double");
         assertEquals(DataType.getType("decimal"), function.getRewriteFieldType());
         function = FunctionDesc.newInstance("MIN", ParameterDesc.newInstance(mockColOfDecimalType), "double");
