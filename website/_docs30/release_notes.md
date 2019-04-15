@@ -6,7 +6,7 @@ permalink: /docs30/release_notes.html
 ---
 
 To download latest release, please visit: [http://kylin.apache.org/download/](http://kylin.apache.org/download/), 
-there are source code package, binary package, ODBC driver and installation guide avaliable.
+there are source code package, binary package and installation guide avaliable.
 
 Any problem or issue, please report to Apache Kylin JIRA project: [https://issues.apache.org/jira/browse/KYLIN](https://issues.apache.org/jira/browse/KYLIN)
 
@@ -21,11 +21,13 @@ _Tag:_ [kylin-3.0.0-alpha](https://github.com/apache/kylin/tree/kylin-3.0.0-alph
 This is the alpha release of Kylin's next generation after 2.x, with the new real-time OLAP feature.
 
 __New Feature__
+
 * [KYLIN-3654] - Kylin Real-time Streaming
 * [KYLIN-3795] - Submit Spark jobs via Apache Livy
 * [KYLIN-3820] - Add a curator-based scheduler
 
 __Improvement__
+
 * [KYLIN-3716] - FastThreadLocal replaces ThreadLocal
 * [KYLIN-3744] - Add javadoc and unittest for Kylin New Streaming Solution
 * [KYLIN-3759] - Streaming ClassNotFoundExeception when lambda is enable in MR job
@@ -50,6 +52,7 @@ __Improvement__
 * [KYLIN-3768] - Save streaming metadata a standard kylin path in zookeeper
 
 __Bug Fix__
+
 * [KYLIN-3787] - NPE throws when dimension value has null when query real-time data
 * [KYLIN-3789] - Stream receiver admin page issue fix
 Bug
