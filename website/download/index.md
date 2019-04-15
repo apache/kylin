@@ -6,6 +6,14 @@ permalink: /download/index.html
 
 You can verify the download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](https://www.apache.org/dist/kylin/KEYS).
 
+#### v3.0.0-alpha
+- This is the alpha release of Kylin's next generation after 2.x, with the new real-time OLAP feature, Kylin can query streaming data with sub-second latency. To learn about real-time OLAP, please visit [tutorial for real-time OLAP](/docs30/tutorial/realtime_olap.html) and [blog for real-time OLAP](/blog/2019/04/12/rt-streaming-design/).
+- [Release notes](/docs30/release_notes.html), [installation guide](/docs30/install/index.html) and [upgrade guide](/docs30/howto/howto_upgrade.html)
+- Source download: [apache-kylin-3.0.0-alpha-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-source-release.zip)
+- Binary for Hadoop 2 download:
+  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-3.0.0-alpha-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-hbase1x.tar.gz.sha256)\]
+  - for Cloudera CDH 5.7+ - [apache-kylin-3.0.0-alpha-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-cdh57.tar.gz.sha256)\]
+
 #### v2.6.1
 - This is a major release after 2.6.0, with 26 bug fixes and enhancement. Check the release notes.
 - [Release notes](/docs/release_notes.html), [installation guide](/docs/install/index.html) and [upgrade guide](/docs/howto/howto_upgrade.html)
