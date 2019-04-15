@@ -5,6 +5,14 @@ title: 下载
 
 您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](https://www.apache.org/dist/kylin/KEYS)来验证下载文件的有效性.
 
+#### v3.0.0-alpha
+- 这是 Kylin 在 2.x 版本后开发的包含实时 OLAP 等功能的新版本。使用该版本，Kylin 支持对流式数据的亚秒级查询。请访问 [实时 OLAP 使用教程](/docs30/tutorial/realtime_olap.html) 和 [实时 OLAP 博客](/blog/2019/04/12/rt-streaming-design/) 获取详情。
+- [发布说明](/docs30/release_notes.html), [安装指南](/docs30/install/index.html) and [升级指南](/docs30/howto/howto_upgrade.html)
+- 源码下载: [apache-kylin-3.0.0-alpha-source-release.zip](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-source-release.zip)
+- Hadoop 2 二进制包:
+  - for HBase 1.x (includes HDP 2.3+, AWS EMR 5.0+, Azure HDInsight 3.4 - 3.6) - [apache-kylin-3.0.0-alpha-bin-hbase1x.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-hbase1x.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-hbase1x.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-hbase1x.tar.gz.sha256)\]
+  - for Cloudera CDH 5.7+ - [apache-kylin-3.0.0-alpha-bin-cdh57.tar.gz](https://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-cdh57.tar.gz) \[[asc](https://www.apache.org/dist/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-cdh57.tar.gz.asc)\] \[[sha256](https://www.apache.org/dist/kylin/apache-kylin-3.0.0-alpha/apache-kylin-3.0.0-alpha-bin-cdh57.tar.gz.sha256)\]
+
 #### v2.6.1
 - 这是2.6.0 版本后的一个 bugfix 发布版本，包含了26个问题的修复以及各种改进。关于具体内容请查看发布说明.
 - [发布说明](/docs/release_notes.html)， [安装指南](/docs/install/index.html) 和 [升级指南](/docs/howto/howto_upgrade.html)
