@@ -65,6 +65,7 @@ Build Engine: Extend the existing build engine, support to build full cube from 
 4. Query Engine aggregate the query results, and send response back to client
 
 ## Detail Design
+
 ### Real-time Segment Store
 Real-time segments are divided by event time, when new event comes, it will be calculated which segment it will be located, if the segment doesn’t exist, create a new one.
 
@@ -99,6 +100,7 @@ The third part is invert-index data, use Roaring Bitmap to store the invert-inde
 ![Kylin RT Streaming InvertIndex Format](/images/blog/rt_stream_invertindex_format.png)
 
 Real-time data is stored in compressed format, currently support two type compression: Run Length Encoding and LZ4.
+
  * Use RLE compression for time-related dim and first dim
  * Use LZ4 for other dimensions by default
  * Use LZ4 Compression for simple-type measure(long, double)
