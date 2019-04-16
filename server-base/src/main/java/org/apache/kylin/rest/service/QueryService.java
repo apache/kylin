@@ -117,6 +117,7 @@ import org.apache.kylin.rest.util.SQLResponseSignatureUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
+import org.apache.kylin.storage.stream.StreamStorageQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -480,6 +481,23 @@ public class QueryService extends BasicService {
             logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
                     String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()),
                     String.valueOf(sqlResponse.getTotalScanCount()));
+
+            boolean realtimeQuery = false;
+            Collection<OLAPContext> olapContexts = OLAPContext.getThreadLocalContexts();
+            if (olapContexts != null) {
+                for (OLAPContext ctx : olapContexts) {
+                    try {
+                        if (ctx.storageContext.getStorageQuery() instanceof StreamStorageQuery) {
+                            realtimeQuery = true;
+                            logger.debug("Shutdown query cache for realtime.");
+                        }
+                    } catch (Exception e) {
+                        logger.error("Error", e);
+                    }
+
+                }
+            }
+
             if (checkCondition(queryCacheEnabled, "query cache is disabled") //
                     && checkCondition(!Strings.isNullOrEmpty(sqlResponse.getCube()),
                             "query does not hit cube nor hybrid") //
@@ -499,7 +517,10 @@ public class QueryService extends BasicService {
                     && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(),
                             "query response is too large: {} ({})", sqlResponse.getResults().size(),
                             kylinConfig.getLargeQueryThreshold())) {
-                cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
+
+                if (!realtimeQuery) {
+                    cacheManager.getCache(QUERY_CACHE).put(sqlRequest.getCacheKey(), sqlResponse);
+                }
             } else if (isDummpyResponseEnabled) {
                 cacheManager.getCache(QUERY_CACHE).evict(sqlRequest.getCacheKey());
             }
