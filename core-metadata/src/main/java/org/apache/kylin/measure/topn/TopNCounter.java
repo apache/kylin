@@ -155,25 +155,12 @@ public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializabl
      * @return
      */
     public TopNCounter<T> merge(TopNCounter<T> another) {
-        boolean thisFull = this.size() >= this.capacity;
-        boolean anotherFull = another.size() >= another.capacity;
-        double m1 = thisFull ? this.counterList.getLast().count : 0.0;
-        double m2 = anotherFull ? another.counterList.getLast().count : 0.0;
-
-        if (anotherFull == true) {
-            for (Counter<T> entry : this.counterMap.values()) {
-                entry.count += m2;
-            }
-        }
-
         for (Map.Entry<T, Counter<T>> entry : another.counterMap.entrySet()) {
             Counter<T> counter = this.counterMap.get(entry.getKey());
             if (counter != null) {
-                //                this.offer(entry.getValue().getItem(), (entry.getValue().count - m2));
-                counter.setCount(counter.getCount() + (entry.getValue().count - m2));
+                counter.setCount(counter.getCount() + entry.getValue().count);
             } else {
-                //                this.offer(entry.getValue().getItem(), entry.getValue().count + m1);
-                counter = new Counter<T>(entry.getValue().getItem(), entry.getValue().count + m1);
+                counter = new Counter<T>(entry.getValue().getItem(), entry.getValue().count);
                 this.counterMap.put(entry.getValue().getItem(), counter);
                 this.counterList.add(counter);
             }
