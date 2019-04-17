@@ -32,6 +32,7 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,14 +58,17 @@ public class GarbageCollectionStep extends AbstractExecutable {
     }
 
     private String cleanUpIntermediateFlatTable(KylinConfig config) throws IOException {
+        String quoteCharacter = FlatTableSqlQuoteUtils.getQuote();
         StringBuffer output = new StringBuffer();
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         final List<String> hiveTables = this.getIntermediateTables();
-        if (!config.isHiveKeepFlatTable()){
+        if (!config.isHiveKeepFlatTable()) {
             for (String hiveTable : hiveTables) {
                 if (StringUtils.isNotEmpty(hiveTable)) {
                     hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
-                    hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  `" + hiveTable + "`;");
+                    hiveCmdBuilder
+                            .addStatement("DROP TABLE IF EXISTS " + quoteCharacter + hiveTable + quoteCharacter + ";");
+
                     output.append("Hive table " + hiveTable + " is dropped. \n");
                 }
             }

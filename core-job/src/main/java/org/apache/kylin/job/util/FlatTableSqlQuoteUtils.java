@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -36,47 +37,50 @@ import com.google.common.collect.Maps;
 
 public class FlatTableSqlQuoteUtils {
 
-    public static final String QUOTE = "`";
+    private FlatTableSqlQuoteUtils() {
+    }
+
+    private static String quote = null;
+
+    private static synchronized void setQuote() {
+        if (quote != null)
+            return;
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        if (kylinConfig.enableHiveDdlQuote()) {
+            quote = kylinConfig.getQuoteCharacter();
+        } else {
+            quote = "";
+        }
+    }
+
+    public static String getQuote() {
+        setQuote();
+        return quote;
+    }
 
     /**
      * Quote identifier by default quote `
-     * @param identifier
-     * @return
      */
-    public static String quoteIdentifier(String identifier){
-        return QUOTE + identifier + QUOTE;
+    public static String quoteIdentifier(String identifier) {
+        setQuote();
+        return quote + identifier + quote;
     }
 
     /**
      * Quote table identity, eg. `default`.`kylin_sales`
-     * @param database
-     * @param table
-     * @param quote
-     * @return
      */
-    public static String quoteTableIdentity(String database, String table, String quote) {
+    public static String quoteTableIdentity(String database, String table) {
+        setQuote();
         String dbName = quote + database + quote;
         String tableName = quote + table + quote;
         return String.format(Locale.ROOT, "%s.%s", dbName, tableName).toUpperCase(Locale.ROOT);
     }
 
     /**
-     * use default quote ` to quote table identity
-     * @param database
-     * @param table
-     * @return
-     */
-    public static String quoteTableIdentity(String database, String table) {
-        return quoteTableIdentity(database, table, QUOTE);
-    }
-
-    /**
      * Used for quote identifiers in Sql Filter Expression & Computed Column Expression for flat table
-     * @param flatDesc
-     * @param quotation
-     * @return
      */
-    public static String quoteIdentifierInSqlExpr(IJoinedFlatTableDesc flatDesc, String sqlExpr, String quotation) {
+    public static String quoteIdentifierInSqlExpr(IJoinedFlatTableDesc flatDesc, String sqlExpr) {
+        setQuote();
         Map<String, String> tabToAliasMap = buildTableToTableAliasMap(flatDesc);
         Map<String, Map<String, String>> tabToColsMap = buildTableToColumnsMap(flatDesc);
 
@@ -84,14 +88,14 @@ public class FlatTableSqlQuoteUtils {
         for (String table : tabToAliasMap.keySet()) {
             List<String> tabPatterns = getTableNameOrAliasPatterns(table);
             if (isIdentifierNeedToQuote(sqlExpr, table, tabPatterns)) {
-                sqlExpr = quoteIdentifier(sqlExpr, quotation, table, tabPatterns);
+                sqlExpr = quoteIdentifier(sqlExpr, table, tabPatterns);
                 tableMatched = true;
             }
 
             String tabAlias = tabToAliasMap.get(table);
             List<String> tabAliasPatterns = getTableNameOrAliasPatterns(tabAlias);
             if (isIdentifierNeedToQuote(sqlExpr, tabAlias, tabAliasPatterns)) {
-                sqlExpr = quoteIdentifier(sqlExpr, quotation, tabAlias, tabAliasPatterns);
+                sqlExpr = quoteIdentifier(sqlExpr, tabAlias, tabAliasPatterns);
                 tableMatched = true;
             }
 
@@ -100,13 +104,13 @@ public class FlatTableSqlQuoteUtils {
                 for (String column : columns) {
                     List<String> colPatterns = getColumnNameOrAliasPatterns(column);
                     if (isIdentifierNeedToQuote(sqlExpr, column, colPatterns)) {
-                        sqlExpr = quoteIdentifier(sqlExpr, quotation, column, colPatterns);
+                        sqlExpr = quoteIdentifier(sqlExpr, column, colPatterns);
                     }
                     if (columnHasAlias(table, column, tabToColsMap)) {
                         String colAlias = getColumnAlias(table, column, tabToColsMap);
                         List<String> colAliasPattern = getColumnNameOrAliasPatterns(colAlias);
                         if (isIdentifierNeedToQuote(sqlExpr, colAlias, colAliasPattern)) {
-                            sqlExpr = quoteIdentifier(sqlExpr, quotation, colAlias, colPatterns);
+                            sqlExpr = quoteIdentifier(sqlExpr, colAlias, colPatterns);
                         }
                     }
                 }
@@ -121,15 +125,14 @@ public class FlatTableSqlQuoteUtils {
      * Used to quote identifiers for JDBC ext job when quoting cc expr
      * @param tableDesc
      * @param sqlExpr
-     * @param quot
      * @return
      */
-    public static String quoteIdentifierInSqlExpr(TableDesc tableDesc, String sqlExpr, String quot) {
+    public static String quoteIdentifierInSqlExpr(TableDesc tableDesc, String sqlExpr) {
         String table = tableDesc.getName();
         boolean tableMatched = false;
         List<String> tabPatterns = getTableNameOrAliasPatterns(table);
         if (isIdentifierNeedToQuote(sqlExpr, table, tabPatterns)) {
-            sqlExpr = quoteIdentifier(sqlExpr, quot, table, tabPatterns);
+            sqlExpr = quoteIdentifier(sqlExpr, table, tabPatterns);
             tableMatched = true;
         }
 
@@ -138,7 +141,7 @@ public class FlatTableSqlQuoteUtils {
                 String column = columnDesc.getName();
                 List<String> colPatterns = getColumnNameOrAliasPatterns(column);
                 if (isIdentifierNeedToQuote(sqlExpr, column, colPatterns)) {
-                    sqlExpr = quoteIdentifier(sqlExpr, quot, column, colPatterns);
+                    sqlExpr = quoteIdentifier(sqlExpr, column, colPatterns);
                 }
             }
         }
@@ -164,9 +167,9 @@ public class FlatTableSqlQuoteUtils {
     }
 
     // visible for test
-    static String quoteIdentifier(String sqlExpr, String quotation, String identifier,
-                                  List<String> identifierPatterns) {
-        String quotedIdentifier = quotation + identifier.trim() + quotation;
+    static String quoteIdentifier(String sqlExpr, String identifier, List<String> identifierPatterns) {
+        setQuote();
+        String quotedIdentifier = quote + identifier.trim() + quote;
 
         for (String pattern : identifierPatterns) {
             Matcher matcher = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(sqlExpr);
@@ -220,7 +223,7 @@ public class FlatTableSqlQuoteUtils {
     }
 
     private static Map<String, String> getColToColAliasMapInTable(String tableName,
-                                                                  Map<String, Map<String, String>> tableToColumnsMap) {
+            Map<String, Map<String, String>> tableToColumnsMap) {
         if (tableToColumnsMap.containsKey(tableName)) {
             return tableToColumnsMap.get(tableName);
         }
@@ -228,13 +231,13 @@ public class FlatTableSqlQuoteUtils {
     }
 
     private static Set<String> listColumnsInTable(String tableName,
-                                                  Map<String, Map<String, String>> tableToColumnsMap) {
+            Map<String, Map<String, String>> tableToColumnsMap) {
         Map<String, String> colToAliasMap = getColToColAliasMapInTable(tableName, tableToColumnsMap);
         return colToAliasMap.keySet();
     }
 
     private static boolean columnHasAlias(String tableName, String columnName,
-                                          Map<String, Map<String, String>> tableToColumnsMap) {
+            Map<String, Map<String, String>> tableToColumnsMap) {
         Map<String, String> colToAliasMap = getColToColAliasMapInTable(tableName, tableToColumnsMap);
         if (colToAliasMap.containsKey(columnName)) {
             return true;
@@ -243,7 +246,7 @@ public class FlatTableSqlQuoteUtils {
     }
 
     private static String getColumnAlias(String tableName, String columnName,
-                                         Map<String, Map<String, String>> tableToColumnsMap) {
+            Map<String, Map<String, String>> tableToColumnsMap) {
         Map<String, String> colToAliasMap = getColToColAliasMapInTable(tableName, tableToColumnsMap);
         if (colToAliasMap.containsKey(columnName)) {
             return colToAliasMap.get(columnName);
