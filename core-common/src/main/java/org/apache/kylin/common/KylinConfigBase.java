@@ -1825,6 +1825,10 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.server.auth-user-cache.max-entries", "100"));
     }
 
+    public String getSecurityProfile() {
+        return getOptional("kylin.security.profile", "testing");
+    }
+
     public String getExternalAclProvider() {
         return getOptional("kylin.server.external-acl-provider", "");
     }
