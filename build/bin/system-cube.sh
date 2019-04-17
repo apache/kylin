@@ -18,33 +18,46 @@
 #
 
 
-#check kylin home
-if [ -z "$KYLIN_HOME" ]
-then
-    echo 'Please make sure KYLIN_HOME has been set'
-    exit 1
-else
-    echo "KYLIN_HOME is set to ${KYLIN_HOME}"
-fi
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
+function printHelp {
+    echo "usage: system-cube.sh setup"
+    echo "       system-cube.sh build [INTERVAL:600000] [DELAY:0]"
+    echo "       system-cube.sh cron"
+    echo "       system-cube.sh help"
+    exit 1
+}
+
+if [[ "$@" == *"help"* ]]
+then
+    printHelp
+fi
 
 OUTPUT_FORDER=$KYLIN_HOME/system_cube
 
-SC_NAME_1="KYLIN_HIVE_METRICS_QUERY_QA"
-SC_NAME_2="KYLIN_HIVE_METRICS_QUERY_CUBE_QA"
-SC_NAME_3="KYLIN_HIVE_METRICS_QUERY_RPC_QA"
-SC_NAME_4="KYLIN_HIVE_METRICS_JOB_QA"
-SC_NAME_5="KYLIN_HIVE_METRICS_JOB_EXCEPTION_QA"
+KYLIN_ENV=`grep "^kylin.env=" $KYLIN_HOME/conf/kylin.properties | cut -d "=" -f 2`
+KYLIN_ENV=${KYLIN_ENV:-"QA"}
+
+SC_NAME_1="KYLIN_HIVE_METRICS_QUERY_${KYLIN_ENV}"
+SC_NAME_2="KYLIN_HIVE_METRICS_QUERY_CUBE_${KYLIN_ENV}"
+SC_NAME_3="KYLIN_HIVE_METRICS_QUERY_RPC_${KYLIN_ENV}"
+SC_NAME_4="KYLIN_HIVE_METRICS_JOB_${KYLIN_ENV}"
+SC_NAME_5="KYLIN_HIVE_METRICS_JOB_EXCEPTION_${KYLIN_ENV}"
 
 if [ "$1" == "build" ]
 then
     if [ -d "${OUTPUT_FORDER}" ]
     then
-		sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_1} 600000 0
-		sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_2} 600000 0
-		sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_3} 600000 0
-		sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_4} 600000 0
-		sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_5} 600000 0
+        BUILD_INTERVAL=${2:-"600000"}
+        BUILD_DELAY=${3:-"0"}
+
+        echo "build system cubes, build_interval:${BUILD_INTERVAL}, build_delay:${BUILD_DELAY}"
+
+		sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_1} ${BUILD_INTERVAL} ${BUILD_DELAY}
+		sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_2} ${BUILD_INTERVAL} ${BUILD_DELAY}
+		sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_3} ${BUILD_INTERVAL} ${BUILD_DELAY}
+		sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_4} ${BUILD_INTERVAL} ${BUILD_DELAY}
+		sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_5} ${BUILD_INTERVAL} ${BUILD_DELAY}
     else
     	echo "Please setup system cube first."
 		exit 1
@@ -53,7 +66,12 @@ elif [ "$1" == "setup" ]
 then
 	#creat SCSinkTools.json
 	SINK_TOOLS_FILE=$KYLIN_HOME/SCSinkTools.json
-	cat <<- EOF > ${SINK_TOOLS_FILE}
+
+	echo "setup system cubes"
+
+	rm -rf $SINK_TOOLS_FILE $OUTPUT_FORDER
+
+	cat <<-EOF > ${SINK_TOOLS_FILE}
 	[
 	  [
 		"org.apache.kylin.tool.metrics.systemcube.util.HiveSinkTool",
@@ -80,20 +98,21 @@ then
 
     #refresh signature
     $KYLIN_HOME/bin/kylin.sh org.apache.kylin.cube.cli.CubeSignatureRefresher ${SC_NAME_1},${SC_NAME_2},${SC_NAME_3},${SC_NAME_4},${SC_NAME_5}
-
+elif [ "$1" == "cron" ]
+then
     #add a crontab job
+    echo "add to a crontab job"
+
     CRONTAB_FILE=$KYLIN_HOME/crontabJob
-    cat <<-EOF > ${CRONTAB_FILE}
-    0 */4 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_1} 3600000 1200000
-    20 */4 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_2} 3600000 1200000
-    40 */8 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_3} 3600000 1200000
-    30 */8 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_4} 3600000 1200000
-    50 */24 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_5} 3600000 1200000
+	cat <<-EOF > ${CRONTAB_FILE}
+    0 */2 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_1} 3600000 1200000
+    20 */2 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_2} 3600000 1200000
+    40 */4 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_3} 3600000 1200000
+    30 */4 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_4} 3600000 1200000
+    50 */12 * * * sh ${KYLIN_HOME}/bin/build-incremental-cube.sh ${SC_NAME_5} 3600000 1200000
 	EOF
     crontab ${CRONTAB_FILE}
     rm ${CRONTAB_FILE}
 else
-    echo "usage: system-cube.sh setup"
-    echo "       system-cube.sh build"
-    exit 1
+    printHelp
 fi

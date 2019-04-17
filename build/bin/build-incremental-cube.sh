@@ -17,22 +17,21 @@
 # limitations under the License.
 #
 
-dir=$(dirname ${0})
-if [ -z "$KYLIN_HOME" ]; then
-	export KYLIN_HOME=${dir}/../
-fi
-echo KYLIN_HOME is set to $KYLIN_HOME
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
 if [ ! $1 ]; then
 	echo "usage: build-incremental-cube.sh CUBE INTERVAL DELAY"
 	exit 1
 fi
 
+tomcat_root=${dir}/../tomcat
+export tomcat_root
+
 CUBE=$1
 INTERVAL=${2:-"3600000"}
 DELAY=${3:-"0"}
-SERVER="localhost"
-PORT="7070"
+
+kylin_rest_address=`hostname -f`":"`grep "<Connector port=" ${tomcat_root}/conf/server.xml |grep protocol=\"HTTP/1.1\" | cut -d '=' -f 2 | cut -d \" -f 2`
 
 CURRENT_TIME_IN_SECOND=`date +%s`
 CURRENT_TIME=$((CURRENT_TIME_IN_SECOND * 1000))
@@ -42,4 +41,4 @@ END=$((END_TIME - END_TIME%INTERVAL))
 ID="$END"
 echo "Building for ${CUBE}_${ID}" | tee ${KYLIN_HOME}/logs/build_trace.log
 echo "Check the log at ${KYLIN_HOME}/logs/incremental_cube_${CUBE}_${END}.log"
-curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d "{\"endTime\": ${END}, \"buildType\": \"BUILD\"}" http://${SERVER}:${PORT}/kylin/api/cubes/${CUBE}/rebuild  > ${KYLIN_HOME}/logs/incremental_cube_${CUBE}_${END}.log 2>&1 &
+curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d "{\"endTime\": ${END}, \"buildType\": \"BUILD\"}" http://${kylin_rest_address}/kylin/api/cubes/${CUBE}/rebuild  > ${KYLIN_HOME}/logs/incremental_cube_${CUBE}_${END}.log 2>&1 &
