@@ -32,6 +32,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.util.FlatTableSqlQuoteUtils;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
@@ -89,7 +90,7 @@ public class JoinedFlatTable {
             if (i > 0) {
                 ddl.append(",");
             }
-            ddl.append(colName(col, flatDesc.useAlias()) + " " + getHiveDataType(col.getDatatype()) + "\n");
+            ddl.append(quoteIdentifier(colName(col, flatDesc.useAlias())) + " " + getHiveDataType(col.getDatatype()) + "\n");
         }
         ddl.append(")" + "\n");
         if (TEXTFILE.equals(storageFormat)) {
@@ -170,7 +171,7 @@ public class JoinedFlatTable {
 
         DataModelDesc model = flatDesc.getDataModel();
         TableRef rootTable = model.getRootFactTable();
-        sql.append(" FROM ").append(flatDesc.getDataModel().getRootFactTable().getTableIdentityQuoted("`"))
+        sql.append(" FROM ").append(flatDesc.getDataModel().getRootFactTable().getTableIdentityQuoted(FlatTableSqlQuoteUtils.getQuote()))
                 .append(" as ").append(quoteIdentifier(rootTable.getAlias())).append(sep);
 
         for (JoinTableDesc lookupDesc : model.getJoinTables()) {
@@ -185,7 +186,7 @@ public class JoinedFlatTable {
                     }
                     String joinType = join.getType().toUpperCase(Locale.ROOT);
 
-                    sql.append(joinType).append(" JOIN ").append(dimTable.getTableIdentityQuoted("`"))
+                    sql.append(joinType).append(" JOIN ").append(dimTable.getTableIdentityQuoted(FlatTableSqlQuoteUtils.getQuote()))
                             .append(" as ").append(quoteIdentifier(dimTable.getAlias())).append(sep);
                     sql.append("ON ");
                     for (int i = 0; i < pk.length; i++) {
@@ -229,7 +230,7 @@ public class JoinedFlatTable {
         DataModelDesc model = flatDesc.getDataModel();
         if (StringUtils.isNotEmpty(model.getFilterCondition())) {
             String quotedFilterCondition = quoteIdentifierInSqlExpr(flatDesc,
-                    model.getFilterCondition(), "`");
+                    model.getFilterCondition());
             whereBuilder.append(" AND (").append(quotedFilterCondition).append(") "); // -> filter condition contains special character may cause bug
         }
         if (flatDesc.getSegment() != null) {
@@ -240,7 +241,7 @@ public class JoinedFlatTable {
                 if (segRange != null && !segRange.isInfinite()) {
                     whereBuilder.append(" AND (");
                     String quotedPartitionCond = quoteIdentifierInSqlExpr(flatDesc,
-                            partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, flatDesc.getSegment(), segRange), "`");
+                            partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, flatDesc.getSegment(), segRange));
                     whereBuilder.append(quotedPartitionCond);
                     whereBuilder.append(")" + sep);
                 }
@@ -313,7 +314,7 @@ public class JoinedFlatTable {
                     + quoteIdentifier(col.getName());
         } else {
             String computeExpr = col.getColumnDesc().getComputedColumnExpr();
-            return quoteIdentifierInSqlExpr(flatDesc, computeExpr, "`");
+            return quoteIdentifierInSqlExpr(flatDesc, computeExpr);
         }
     }
 }
