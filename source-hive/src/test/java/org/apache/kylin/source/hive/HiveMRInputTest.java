@@ -28,13 +28,20 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-public class HiveMRInputTest {
+public class HiveMRInputTest extends LocalFileMetadataTestCase {
+
+    @Before
+    public void setup() throws Exception {
+        createTestMetadata();
+    }
 
     @Test
     public void TestGetJobWorkingDir() throws IOException {

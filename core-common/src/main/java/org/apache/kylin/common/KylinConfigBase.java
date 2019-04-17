@@ -840,6 +840,14 @@ abstract public class KylinConfigBase implements Serializable {
         return r;
     }
 
+    public boolean enableHiveDdlQuote(){
+        return Boolean.parseBoolean(getOptional("kylin.source.hive.quote-enabled", TRUE));
+    }
+
+    public String getQuoteCharacter(){
+        return getOptional("kylin.source.quote.character", "`");
+    }
+
     /**
      * was for route to hive, not used any more
      */
