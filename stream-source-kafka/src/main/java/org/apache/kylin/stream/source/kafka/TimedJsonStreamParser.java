@@ -21,6 +21,7 @@ package org.apache.kylin.stream.source.kafka;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -56,30 +58,50 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
     private static final Logger logger = LoggerFactory.getLogger(TimedJsonStreamParser.class);
     private final ObjectMapper mapper = new ObjectMapper();
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class),
-            SimpleType.construct(String.class));
+            SimpleType.construct(Object.class));
     private List<TblColRef> allColumns;
     private boolean formatTs = false;//not used
     private String tsColName = "timestamp";
-    private Map<String, String> columnToSourceFieldMapping;
+
+    /**
+     * the path of {"user" : {"name": "kite", "sex":"female"}}
+     * is user_name -> [user, name]
+     */
+    private Map<String, String[]> columnToSourceFieldMapping = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private Map<String, Object> root = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private Map<String, Object> tmp = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public TimedJsonStreamParser(CubeDesc cubeDesc, MessageParserInfo parserInfo) {
-        this.allColumns = new CubeJoinedFlatTableDesc(cubeDesc).getAllColumns();
+        this(new CubeJoinedFlatTableDesc(cubeDesc).getAllColumns(), parserInfo);
+    }
+
+    public TimedJsonStreamParser(List<TblColRef> cols, MessageParserInfo parserInfo) {
+        this.allColumns = cols;
         if (parserInfo != null) {
             this.formatTs = parserInfo.isFormatTs();
             this.tsColName = parserInfo.getTsColName();
-            this.columnToSourceFieldMapping = parserInfo.getColumnToSourceFieldMapping();
+            Map<String, String> mapping = parserInfo.getColumnToSourceFieldMapping();
+            if (mapping != null && !mapping.isEmpty()) {
+                for (String col : mapping.keySet()) {
+                    if (mapping.get(col) != null && mapping.get(col).contains("."))
+                        columnToSourceFieldMapping.put(col, mapping.get(col).split("\\."));
+                }
+                logger.info("Using parser field mapping by {}", parserInfo.getColumnToSourceFieldMapping());
+            }
         }
-
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper.disable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE);
+        mapper.enable(DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY);
         logger.info("TimedJsonStreamParser with formatTs {} tsColName {}", formatTs, tsColName);
     }
 
     @Override
     public StreamingMessage parse(ConsumerRecord<byte[], byte[]> record) {
         try {
-            Map<String, String> message = mapper.readValue(parseToString(record.value()), mapType);
-            Map<String, String> root = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            Map<String, Object> message = mapper.readValue(parseToString(record.value()), mapType);
+            root.clear();
             root.putAll(message);
-            String tsStr = root.get(tsColName);
+            String tsStr = root.get(tsColName).toString();
             //Preconditions.checkArgument(!StringUtils.isEmpty(tsStr), "Timestamp field " + tsColName + //
             //" cannot be null, the message offset is " + messageAndOffset.getOffset() + " content is " + new String(messageAndOffset.getRawData()));
             long t;
@@ -96,8 +118,17 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
                 if (columnType != null) {
                     result.add(String.valueOf(columnType.normalize(t)));
                 } else {
-                    String x = root.get(columnName.toLowerCase(Locale.ROOT));
-                    result.add(x);
+                    Object value = root.get(columnName.toLowerCase(Locale.ROOT));
+                    if (value == null) {
+                        String[] pathToValue = columnToSourceFieldMapping.get(columnName);
+                        if (pathToValue != null) {
+                            result.add(processMultiLevelJson(pathToValue, root));
+                        } else {
+                            result.add(StringUtils.EMPTY);
+                        }
+                    } else {
+                        result.add(value.toString());
+                    }
                 }
             }
 
@@ -117,5 +148,28 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
             throw new StreamingException(e);
         }
         return value;
+    }
+
+    private String processMultiLevelJson(String[] path, Map map) {
+        Object value = null;
+        for (String key : path) {
+            value = map.get(key);
+            if (value instanceof Map) {
+                tmp.clear();
+                tmp.putAll((Map) value);
+                map = tmp;
+            } else {
+                break;
+            }
+        }
+        return objToString(value);
+    }
+
+    public static String objToString(Object value) {
+        if (value == null)
+            return StringUtils.EMPTY;
+        if (value.getClass().isArray())
+            return String.valueOf(Arrays.asList((Object[]) value));
+        return String.valueOf(value);
     }
 }
