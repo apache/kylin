@@ -228,6 +228,7 @@ a:hover, a:focus {
 
 
 **********************************************************************/
+
 .navbar {
 	/*
 	background: #f4f4f4 url(../images/data.png) top center;
@@ -246,6 +247,90 @@ a:hover, a:focus {
 	margin: 0px;
 
 }
+/* search input */
+.icon-navbar li.li-search {
+  width: auto;
+  height: 32px;
+	position: relative;
+	background:none;
+}
+.icon-navbar li.li-search:hover {
+	background:none;
+}
+.search-container {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.search-container .form-control {
+	padding:0;
+}
+.search-container .form-control:focus {
+	padding:0 0 0 36px;
+}
+.search-container .search {
+  position: absolute;
+  /*float: left;*/
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  background: #0988DE;
+  border-radius: 50%;
+  transition: all 1s;
+  z-index: 4;
+  line-height: 32px;
+  text-align: center;
+  color:#fff;
+}
+.search-container .search:hover {
+  cursor: pointer;
+}
+.search-container input {
+  position: relative;
+  margin: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  transition: all 0.5s;
+  opacity: 0;
+  box-shadow: none!important;
+  z-index: 5;
+  letter-spacing: 0.1em;
+  border:solid 1px #cfd8dc!important;
+}
+.search-container input:hover {
+  cursor: pointer;
+}
+.search-container input:focus {
+  width: 134px;
+  opacity: 1;
+  cursor: text;
+}
+.search-container input:focus ~ .search {
+  right: 250px;
+  background: #F3982A;
+  z-index: 6;
+}
+.search-container input:focus ~ .search::before {
+  top: 0;
+  left: 0;
+  width: 25px;
+}
+.search-container input:focus ~ .search::after {
+  top: 0;
+  left: 0;
+  width: 25px;
+  height: 2px;
+  border: none;
+  border-radius: 0%;
+}
+/* end */
+
 .navbar.stick {
 	position: fixed;
 	top: 0;
@@ -1032,6 +1117,9 @@ ol.none-icon li{
 
 	.icon-navbar {
 		right: 80px;
+	}
+	ul.icon-navbar li {
+		margin-right: 2px;
 	}
 	.header-apache div {
 		margin-top: 255px;
