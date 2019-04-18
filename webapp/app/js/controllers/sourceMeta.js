@@ -1055,7 +1055,10 @@ KylinApp
 
         // Check template is not empty
         if (!$scope.streaming.template) {
-          $scope.tableData = undefined;
+          // $scope.tableData = undefined;
+          $scope.tableData = {
+            source_type: $scope.tableData.source_type
+          };
           $scope.streaming.errMsg = 'Please input Streaming source record to generate schema.';
           return;
         }
@@ -1064,7 +1067,9 @@ KylinApp
         try {
           var templateObj = JSON.parse($scope.streaming.template);
         } catch (error) {
-          $scope.tableData = undefined;
+          $scope.tableData = {
+            source_type: $scope.tableData.source_type
+          };
           $scope.streaming.errMsg = 'Source json invalid, Please correct your schema and generate again.';
           return;
         }
@@ -1246,7 +1251,12 @@ KylinApp
         }
         // Set ts column
         $scope.streamingConfig.parser_info.ts_col_name = $scope.streaming.TSColumnSelected;
-
+        $scope.streamingConfig.parser_info.field_mapping = {}
+        $scope.tableData.columns.forEach(function(col) {
+          if (col.comment) {
+            $scope.streamingConfig.parser_info.field_mapping[col.name] = col.comment.replace(/\|/g, '.') || ''
+          }
+        })
         SweetAlert.swal({
           title: '',
           text: 'Are you sure to save the streaming table?',
