@@ -5,7 +5,7 @@ categories: tutorial
 permalink: /docs30/tutorial/realtime_olap.html
 ---
 
-Kylin v3.0.0 will release the real-time OLAP function, by the power of new added streaming reciever cluster, Kylin can query streaming data with sub-second latency. This doc is a step by step tutorial, illustrating how to create and build a sample streaming cube.
+Kylin v3.0.0 will release the real-time OLAP function, by the power of new added streaming reciever cluster, Kylin can query streaming data with sub-second latency. You can check [this tech blog](/blog/2019/04/12/rt-streaming-design/) for the overall design and core concept. This doc is a step by step tutorial, illustrating how to create and build a sample streaming cube.
 
 In this tutorial, we will use Hortonworks HDP-2.4.0.0.169 Sandbox VM + Kafka v1.0.2(Scala 2.11) as the environment.
 
