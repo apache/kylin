@@ -46,6 +46,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.engine.flink.util.PercentileCounterSerializer;
 import org.apache.kylin.engine.mr.BatchCubingJobBuilder2;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
@@ -55,6 +56,7 @@ import org.apache.kylin.engine.mr.common.SerializableConfiguration;
 import org.apache.kylin.engine.mr.steps.SegmentReEncoder;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregators;
+import org.apache.kylin.measure.percentile.PercentileCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,6 +127,8 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
         FlinkUtil.setHadoopConfForCuboid(job, cubeSegment, metaUrl);
 
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+        env.getConfig().registerKryoType(PercentileCounter.class);
+        env.getConfig().registerTypeWithKryoSerializer(PercentileCounter.class, PercentileCounterSerializer.class);
 
         final MeasureAggregators aggregators = new MeasureAggregators(cubeDesc.getMeasures());
 
