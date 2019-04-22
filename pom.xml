@@ -505,7 +505,6 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>${guava.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>com.jcraft</groupId>
@@ -1730,6 +1729,9 @@
                 <exclude>**/*.log</exclude>
                 <exclude>jdbc/kylin_jdbc.log*</exclude>
                 <exclude>server/logs/**</exclude>
+
+                <!-- jdbc service -->
+                <exclude>**/java.sql.Driver</exclude>
 
                 <!--ODBC sub project is a VS project, exclude related files -->
                 <exclude>**/*.sln</exclude>

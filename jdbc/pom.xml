@@ -47,11 +47,16 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -101,6 +106,10 @@
                                 <relocation>
                                     <pattern>org.apache.commons</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.google.common</pattern>
+                                    <shadedPattern>${shadeBase}.com.google.common</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
