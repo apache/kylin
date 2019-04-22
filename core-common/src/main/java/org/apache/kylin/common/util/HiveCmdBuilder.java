@@ -138,6 +138,10 @@ public class HiveCmdBuilder {
         statements.add(statement);
     }
 
+    public List<String> getStatements() {
+        return statements;
+    }
+
     public void addStatements(String[] stats) {
         for (String s : stats) {
             statements.add(s);
