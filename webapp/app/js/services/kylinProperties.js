@@ -33,16 +33,22 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   this.getProperty = function (name) {
     if(angular.isUndefined(name)
         || name.length === 0
-        || angular.isUndefined(_config)){
+        || angular.isUndefined(_config)
+        || _config.length === 0){
       return '';
     }
-    var keyIndex = _config.indexOf(name + '=');
-    var keyLength = name.length;
-    var partialResult = _config.substr(keyIndex);
-    var preValueIndex = partialResult.indexOf("=");
-    var sufValueIndex = partialResult.indexOf("\n", 2);
-    return partialResult.substring(preValueIndex + 1, sufValueIndex);
-
+    var nameAugmented = name + '=';
+    var keyIndex = 0;
+    if(_config.substr(0, nameAugmented.length) !== nameAugmented){
+       nameAugmented = "\n" + nameAugmented;
+       keyIndex = _config.indexOf(nameAugmented);
+       if(keyIndex === -1){
+          return '';
+       }     
+    }
+    var partialResult = _config.substr(keyIndex + nameAugmented.length);
+    var sufValueIndex = partialResult.indexOf("\n");
+    return partialResult.substring(0, sufValueIndex);
   }
 
   this.getTimeZone = function () {
