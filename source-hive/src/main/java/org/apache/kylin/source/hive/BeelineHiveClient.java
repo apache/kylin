@@ -182,14 +182,15 @@ public class BeelineHiveClient implements IHiveClient {
                 resultSet.next();
                 Preconditions.checkArgument("# col_name".equals(resultSet.getString(1).trim()));
                 resultSet.next();
-                Preconditions.checkArgument("".equals(resultSet.getString(1).trim()));
-                while (resultSet.next()) {
-                    if ("".equals(resultSet.getString(1).trim())) {
-                        break;
-                    }
-                    partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(resultSet.getString(1).trim(),
-                            resultSet.getString(2).trim(), resultSet.getString(3).trim()));
-                }
+            if ("".equals(resultSet.getString(1).trim()))
+                resultSet.next();
+            do {
+                 if ("".equals(resultSet.getString(1).trim())) {
+                     break;
+                 }
+                 partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(resultSet.getString(1).trim(),
+                         resultSet.getString(2).trim(), resultSet.getString(3).trim()));
+            } while (resultSet.next());
                 builder.setPartitionColumns(partitionColumns);
             }
 
