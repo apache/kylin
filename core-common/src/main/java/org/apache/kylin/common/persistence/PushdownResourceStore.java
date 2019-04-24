@@ -211,7 +211,7 @@ abstract public class PushdownResourceStore extends ResourceStore {
         FileSystem fileSystem = pushdownFS();
 
         if (fileSystem.exists(path)) {
-            fileSystem.setTimes(path, timestamp, timestamp);
+            fileSystem.setTimes(path, timestamp, -1);
             logger.debug("Update temp file timestamp success. Temp file: {} .", path);
         } else {
             logger.debug("{} is not exists in the file system.", path);

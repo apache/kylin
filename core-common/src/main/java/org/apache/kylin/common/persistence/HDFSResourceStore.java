@@ -252,7 +252,7 @@ public class HDFSResourceStore extends ResourceStore {
         try {
             Path p = getRealHDFSPath(resPath);
             if (fs.exists(p)) {
-                fs.setTimes(p, timestamp, timestamp);
+                fs.setTimes(p, timestamp, -1);
             }
         } catch (Exception e) {
             throw new IOException("Update resource timestamp fail", e);
