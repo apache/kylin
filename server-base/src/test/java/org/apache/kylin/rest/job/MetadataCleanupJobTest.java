@@ -42,12 +42,13 @@ public class MetadataCleanupJobTest {
 
     @Test
     public void testCleanUp() throws Exception {
-        staticCreateTestMetadata(false, new ResetTimeHook(1, "src/test/resources/test_meta"));
+        // file resource store may lose timestamp precision with millis second, set last modified as 2000
+        staticCreateTestMetadata(false, new ResetTimeHook(2000, "src/test/resources/test_meta"));
         MetadataCleanupJob metadataCleanupJob = new MetadataCleanupJob();
         Map<String, Long> cleanupMap = metadataCleanupJob.cleanup(false, 30);
         Assert.assertEquals(7, cleanupMap.size());
         for (long timestamp : cleanupMap.values()) {
-            Assert.assertEquals(1, timestamp);
+            Assert.assertEquals(2000, timestamp);
         }
     }
 
