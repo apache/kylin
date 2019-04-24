@@ -658,11 +658,15 @@ public class JobService extends BasicService implements InitializingBean {
         }
     }
 
-    public JobInstance pauseJob(JobInstance job) {
+    public void pauseJob(JobInstance job) {
         aclEvaluate.checkProjectOperationPermission(job);
+        logger.info("Pause job [" + job.getId() + "] trigger by "
+            + SecurityContextHolder.getContext().getAuthentication().getName());
+        if (job.getStatus().isComplete()) {
+          throw new IllegalStateException(
+              "The job " + job.getId() + " has already been finished and cannot be stopped.");
+        }
         getExecutableManager().pauseJob(job.getId());
-        job.setStatus(JobStatusEnum.STOPPED);
-        return job;
     }
 
     public void dropJob(JobInstance job) {
