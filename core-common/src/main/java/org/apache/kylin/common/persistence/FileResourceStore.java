@@ -43,7 +43,7 @@ public class FileResourceStore extends ResourceStore {
     public FileResourceStore(KylinConfig kylinConfig) {
         super(kylinConfig);
         root = new File(getPath(kylinConfig)).getAbsoluteFile();
-        if (root.exists() == false)
+        if (!root.exists())
             throw new IllegalArgumentException(
                     "File not exist by '" + kylinConfig.getMetadataUrl() + "': " + root.getAbsolutePath());
     }
@@ -60,7 +60,7 @@ public class FileResourceStore extends ResourceStore {
 
     @Override
     protected void visitFolderImpl(String folderPath, boolean recursive, VisitFilter filter, boolean loadContent,
-                                   Visitor visitor) throws IOException {
+            Visitor visitor) throws IOException {
         if (--failVisitFolderCountDown == 0)
             throw new IOException("for test");
 
@@ -184,6 +184,20 @@ public class FileResourceStore extends ResourceStore {
         try {
             if (f.exists())
                 FileUtils.forceDelete(f);
+        } catch (FileNotFoundException e) {
+            // FileNotFoundException is not a problem in case of delete
+        }
+    }
+
+    @Override
+    protected void deleteResourceImpl(String resPath, long timestamp) throws IOException {
+        File f = file(resPath);
+        try {
+            if (f.exists()) {
+                long origLastModified = getResourceTimestampImpl(resPath);
+                if (checkTimeStampBeforeDelete(origLastModified, timestamp))
+                    FileUtils.forceDelete(f);
+            }
         } catch (FileNotFoundException e) {
             // FileNotFoundException is not a problem in case of delete
         }

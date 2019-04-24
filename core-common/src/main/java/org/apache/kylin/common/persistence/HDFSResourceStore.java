@@ -65,7 +65,7 @@ public class HDFSResourceStore extends ResourceStore {
 
         fs = HadoopUtil.getFileSystem(path);
         Path metadataPath = new Path(path);
-        if (fs.exists(metadataPath) == false) {
+        if (!fs.exists(metadataPath)) {
             logger.warn("Path not exist in HDFS, create it: {}. ", path);
             createMetaFolder(metadataPath);
         }
@@ -136,7 +136,7 @@ public class HDFSResourceStore extends ResourceStore {
 
     @Override
     protected void visitFolderImpl(String folderPath, boolean recursive, VisitFilter filter, boolean loadContent,
-                                   Visitor visitor) throws IOException {
+            Visitor visitor) throws IOException {
         Path p = getRealHDFSPath(folderPath);
         if (!fs.exists(p) || !fs.isDirectory(p)) {
             return;
@@ -258,6 +258,21 @@ public class HDFSResourceStore extends ResourceStore {
             throw new IOException("Delete resource fail", e);
         }
     }
+
+    @Override
+    protected void deleteResourceImpl(String resPath, long timestamp) throws IOException {
+        try {
+            Path p = getRealHDFSPath(resPath);
+            if (fs.exists(p)) {
+                long origLastModified = fs.getFileStatus(p).getModificationTime();
+                if (checkTimeStampBeforeDelete(origLastModified, timestamp))
+                    fs.delete(p, true);
+            }
+        } catch (Exception e) {
+            throw new IOException("Delete resource fail", e);
+        }
+    }
+
     @Override
     protected String getReadableResourcePathImpl(String resPath) {
         return getRealHDFSPath(resPath).toString();

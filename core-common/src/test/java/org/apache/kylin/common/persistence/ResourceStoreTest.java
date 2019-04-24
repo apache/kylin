@@ -113,12 +113,24 @@ public class ResourceStoreTest {
         String dir2 = "/table";
         String path2 = "/table/_test.json";
         StringEntity content2 = new StringEntity("something");
+        String dir3 = "/model_desc";
+        String path3 = "/model_desc/_test.json";
+        StringEntity content3 = new StringEntity("test check timestamp before delete");
 
         // cleanup legacy if any
         store.deleteResource(path1);
         store.deleteResource(path2);
+        store.deleteResource(path3);
 
         StringEntity t;
+
+        // get non-exist
+        assertNull(store.getResource(path1));
+        assertNull(store.getResource(path1, StringEntity.serializer));
+        assertNull(store.getResource(path2));
+        assertNull(store.getResource(path2, StringEntity.serializer));
+        assertNull(store.getResource(path3));
+        assertNull(store.getResource(path3, StringEntity.serializer));
 
         // put/get
         store.checkAndPutResource(path1, content1, StringEntity.serializer);
@@ -144,39 +156,86 @@ public class ResourceStoreTest {
             // expected
         }
 
+        // put path3
+        store.checkAndPutResource(path3, content3, StringEntity.serializer);
+        assertTrue(store.exists(path3));
+        t = store.getResource(path3, StringEntity.serializer);
+        assertEquals(content3, t);
+
         // list
-        NavigableSet<String> list = null;
+        NavigableSet<String> list;
 
         list = store.listResources(dir1);
-        System.out.println(list);
         assertTrue(list.contains(path1));
-        assertTrue(list.contains(path2) == false);
+        assertTrue(!list.contains(path2));
+        assertTrue(!list.contains(path3));
 
         list = store.listResources(dir2);
         assertTrue(list.contains(path2));
-        assertTrue(list.contains(path1) == false);
+        assertTrue(!list.contains(path1));
+        assertTrue(!list.contains(path3));
+
+        list = store.listResources(dir3);
+        assertTrue(list.contains(path3));
+        assertTrue(!list.contains(path1));
+        assertTrue(!list.contains(path2));
 
         list = store.listResources("/");
         assertTrue(list.contains(dir1));
         assertTrue(list.contains(dir2));
-        assertTrue(list.contains(path1) == false);
-        assertTrue(list.contains(path2) == false);
+        assertTrue(list.contains(dir3));
+        assertTrue(!list.contains(path1));
+        assertTrue(!list.contains(path2));
+        assertTrue(!list.contains(path3));
 
         list = store.listResources(path1);
         assertNull(list);
         list = store.listResources(path2);
         assertNull(list);
+        list = store.listResources(path3);
+        assertNull(list);
 
         // delete/exist
         store.deleteResource(path1);
-        assertTrue(store.exists(path1) == false);
+        assertTrue(!store.exists(path1));
         list = store.listResources(dir1);
-        assertTrue(list == null || list.contains(path1) == false);
+        assertTrue(list == null || !list.contains(path1));
 
         store.deleteResource(path2);
-        assertTrue(store.exists(path2) == false);
+        assertTrue(!store.exists(path2));
         list = store.listResources(dir2);
-        assertTrue(list == null || list.contains(path2) == false);
+        assertTrue(list == null || !list.contains(path2));
+
+        long origLastModified = store.getResourceTimestamp(path3);
+        long beforeLastModified = origLastModified - 100;
+
+        //  beforeLastModified < origLastModified  ==> not delete expected
+        store.deleteResource(path3, beforeLastModified);
+        assertTrue(store.exists(path3));
+        list = store.listResources(dir3);
+        assertTrue(list != null && list.contains(path3));
+
+        //  beforeLastModified = origLastModified  ==> delete expected
+        store.deleteResource(path3, origLastModified);
+        assertTrue(!store.exists(path3));
+        list = store.listResources(dir3);
+        assertTrue(list == null || !list.contains(path3));
+
+        // put again
+        content3 = new StringEntity("test check timestamp before delete new");
+        store.checkAndPutResource(path3, content3, StringEntity.serializer);
+        assertTrue(store.exists(path3));
+        t = store.getResource(path3, StringEntity.serializer);
+        assertEquals(content3, t);
+
+        origLastModified = store.getResourceTimestamp(path3);
+        long afterLastModified = origLastModified + 100;
+
+        // afterLastModified > origLastModified ==> delete expected
+        store.deleteResource(path3, afterLastModified);
+        assertTrue(!store.exists(path3));
+        list = store.listResources(dir3);
+        assertTrue(list == null || !list.contains(path3));
     }
 
     private static long testWritePerformance(ResourceStore store) throws IOException {
