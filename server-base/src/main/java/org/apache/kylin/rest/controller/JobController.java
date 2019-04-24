@@ -180,7 +180,8 @@ public class JobController extends BasicController {
 
         try {
             final JobInstance jobInstance = jobService.getJobInstance(jobId);
-            return jobService.pauseJob(jobInstance);
+            jobService.pauseJob(jobInstance);
+            return jobService.getJobInstance(jobId);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
