@@ -163,7 +163,13 @@ public class QueryController extends BasicController {
             // KYLIN-3939
             // Add BOM character,slove the bug that it shows Chinese garbled when using
             // excel to open scv file on windows.
-            csvWriter.write(BOM_CHARACTER);
+            // BOM character should add on head of CSV file.
+            // So add it to the head of the first index of headerList.
+            if(headerList.size()>0){
+                String tmpHeaderFirst = headerList.get(0);
+                String headerFirst = BOM_CHARACTER.concat(tmpHeaderFirst);
+                headerList.set(0, headerFirst);
+            }
 
             String[] headers = new String[headerList.size()];
             csvWriter.writeHeader(headerList.toArray(headers));
