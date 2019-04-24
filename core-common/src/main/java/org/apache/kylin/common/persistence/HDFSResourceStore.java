@@ -248,6 +248,18 @@ public class HDFSResourceStore extends ResourceStore {
     }
 
     @Override
+    protected void updateTimestampImpl(String resPath, long timestamp) throws IOException {
+        try {
+            Path p = getRealHDFSPath(resPath);
+            if (fs.exists(p)) {
+                fs.setTimes(p, timestamp, timestamp);
+            }
+        } catch (Exception e) {
+            throw new IOException("Update resource timestamp fail", e);
+        }
+    }
+
+    @Override
     protected void deleteResourceImpl(String resPath) throws IOException {
         try {
             Path p = getRealHDFSPath(resPath);

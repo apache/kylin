@@ -444,6 +444,33 @@ abstract public class ResourceStore {
     }
 
     /**
+     * update resource timestamp to timestamp
+     */
+    final public void updateTimestamp(String resPath, long timestamp) throws IOException {
+        logger.trace("Updating resource: {} with timestamp {} (Store {})", resPath, timestamp,
+                kylinConfig.getMetadataUrl());
+        updateTimestampCheckPoint(norm(resPath), timestamp);
+    }
+
+    private void updateTimestampCheckPoint(String resPath, long timestamp) throws IOException {
+        beforeChange(resPath);
+        updateTimestampWithRetry(resPath, timestamp);
+    }
+
+    private void updateTimestampWithRetry(final String resPath, final long timestamp) throws IOException {
+        ExponentialBackoffRetry retry = new ExponentialBackoffRetry(this);
+        retry.doWithRetry(new Callable() {
+            @Override
+            public Object call() throws IOException {
+                updateTimestampImpl(resPath, timestamp);
+                return null;
+            }
+        });
+    }
+
+    abstract protected void updateTimestampImpl(String resPath, long timestamp) throws IOException;
+
+    /**
      * delete a resource, does nothing on a folder
      */
     final public void deleteResource(String resPath) throws IOException {

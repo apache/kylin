@@ -516,6 +516,33 @@ public class JDBCResourceStore extends PushdownResourceStore {
     }
 
     @Override
+    protected void updateTimestampImpl(final String resPath, final long timestamp) throws IOException {
+        try {
+            boolean skipHdfs = isJsonMetadata(resPath);
+            JDBCResourceSQL sqls = getJDBCResourceSQL(getMetaTableName(resPath));
+            executeSql(new SqlOperation() {
+                @Override
+                public void execute(Connection connection) throws SQLException {
+                    pstat = connection.prepareStatement(sqls.getReplaceSqlWithoutContent());
+                    pstat.setLong(1, timestamp);
+                    pstat.setString(2, resPath);
+                    pstat.executeUpdate();
+                }
+            });
+
+            if (!skipHdfs) {
+                try {
+                    updateTimestampPushdown(resPath, timestamp);
+                } catch (Throwable e) {
+                    throw new SQLException(e);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
     protected void deleteResourceImpl(final String resPath) throws IOException {
         try {
             boolean skipHdfs = isJsonMetadata(resPath);

@@ -202,4 +202,19 @@ abstract public class PushdownResourceStore extends ResourceStore {
             logger.debug("{} is not exists in the file system.", path);
         }
     }
+
+    protected void updateTimestampPushdown(String resPath, long timestamp) throws IOException {
+        updateTimestampPushdownFile(pushdownPath(resPath), timestamp);
+    }
+
+    private void updateTimestampPushdownFile(Path path, long timestamp) throws IOException {
+        FileSystem fileSystem = pushdownFS();
+
+        if (fileSystem.exists(path)) {
+            fileSystem.setTimes(path, timestamp, timestamp);
+            logger.debug("Update temp file timestamp success. Temp file: {} .", path);
+        } else {
+            logger.debug("{} is not exists in the file system.", path);
+        }
+    }
 }

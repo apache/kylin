@@ -63,6 +63,7 @@ public class ResourceStoreTest {
     private static void testAStore(ResourceStore store) throws IOException {
         testBasics(store);
         testGetAllResources(store);
+        testUpdateResourceTimestamp(store);
     }
 
     private static void testPerformance(ResourceStore store) throws IOException {
@@ -265,6 +266,46 @@ public class ResourceStoreTest {
         String oldUrl = kylinConfig.getMetadataUrl().toString();
         kylinConfig.setProperty("kylin.metadata.url", newUrl);
         return oldUrl;
+    }
+
+    private static void testUpdateResourceTimestamp(ResourceStore store) throws IOException {
+        String dir1 = "/cube";
+        String path1 = "/cube/_test.json";
+        StringEntity content1 = new StringEntity("test update timestamp");
+        // cleanup legacy if any
+        store.deleteResource(path1);
+
+        // get non-exist
+        assertNull(store.getResource(path1));
+        assertNull(store.getResource(path1, StringEntity.serializer));
+
+        // put/get
+        StringEntity t;
+        store.checkAndPutResource(path1, content1, StringEntity.serializer);
+        assertTrue(store.exists(path1));
+        t = store.getResource(path1, StringEntity.serializer);
+        assertEquals(content1, t);
+
+        long oldTS = store.getResourceTimestamp(path1);
+        long newTS = oldTS + 1000;
+        // update timestamp to newTS
+        store.updateTimestamp(path1, newTS);
+
+        long updatedTS = store.getResourceTimestamp(path1);
+        assertEquals(updatedTS, newTS);
+
+        newTS = 0L;
+        store.updateTimestamp(path1, newTS);
+        updatedTS = store.getResourceTimestamp(path1);
+        assertEquals(updatedTS, newTS);
+
+        // delete/exist
+        NavigableSet<String> list;
+        store.deleteResource(path1);
+        assertTrue(!store.exists(path1));
+        list = store.listResources(dir1);
+        assertTrue(list == null || !list.contains(path1));
+
     }
 
 }

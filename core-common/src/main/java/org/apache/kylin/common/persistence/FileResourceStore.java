@@ -178,6 +178,19 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
+    protected void updateTimestampImpl(String resPath, long timestamp) throws IOException {
+        File f = file(resPath);
+        if (f.exists()) {
+            // note file timestamp may lose precision for last two digits of timestamp
+            boolean success = f.setLastModified(timestamp);
+            if (!success) {
+                throw new IOException(
+                        "Update resource timestamp failed, resPath:" + resPath + ", timestamp: " + timestamp);
+            }
+        }
+    }
+
+    @Override
     protected void deleteResourceImpl(String resPath) throws IOException {
 
         File f = file(resPath);
