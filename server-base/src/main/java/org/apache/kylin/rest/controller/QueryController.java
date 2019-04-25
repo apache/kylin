@@ -165,7 +165,7 @@ public class QueryController extends BasicController {
             // excel to open scv file on windows.
             // BOM character should add on head of CSV file.
             // So add it to the head of the first index of headerList.
-            if(headerList.size()>0){
+            if (headerList.size() > 0) {
                 String tmpHeaderFirst = headerList.get(0);
                 String headerFirst = BOM_CHARACTER.concat(tmpHeaderFirst);
                 headerList.set(0, headerFirst);
