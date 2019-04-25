@@ -74,6 +74,9 @@ public class StorageCleanupJob extends AbstractApplication {
     protected static final Option OPTION_FORCE = OptionBuilder.withArgName("force").hasArg().isRequired(false)
             .withDescription("Warning: will delete all kylin intermediate hive tables").create("force");
 
+    protected static final Option THREAD_NUM = OptionBuilder.withArgName("thread").hasArg().isRequired(false)
+        .withDescription("Warning: use at multi threads to cleanup storage").create("thread");
+
     protected static final Logger logger = LoggerFactory.getLogger(StorageCleanupJob.class);
 
     // ============================================================================
@@ -85,6 +88,7 @@ public class StorageCleanupJob extends AbstractApplication {
 
     protected boolean delete = false;
     protected boolean force = false;
+    protected int threadsNum = 1;
 
     private List<String> hiveGarbageTables = Collections.emptyList();
     private List<String> hbaseGarbageTables = Collections.emptyList();
@@ -132,6 +136,7 @@ public class StorageCleanupJob extends AbstractApplication {
         Options options = new Options();
         options.addOption(OPTION_DELETE);
         options.addOption(OPTION_FORCE);
+        options.addOption(THREAD_NUM);
         return options;
     }
 
@@ -140,8 +145,18 @@ public class StorageCleanupJob extends AbstractApplication {
         logger.info("options: '" + optionsHelper.getOptionsAsString() + "'");
         logger.info("delete option value: '" + optionsHelper.getOptionValue(OPTION_DELETE) + "'");
         logger.info("force option value: '" + optionsHelper.getOptionValue(OPTION_FORCE) + "'");
+        logger.info("thread option value: '" + optionsHelper.getOptionValue(THREAD_NUM) + "'");
         delete = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_DELETE));
         force = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_FORCE));
+        try {
+            String threads = optionsHelper.getOptionValue(THREAD_NUM);
+            if (threads != null) {
+                threadsNum = Integer.parseInt(threads);
+            }
+        } catch (Exception e) {
+            logger.info("Failed to parse value: {} for thread option: {}",
+                optionsHelper.getOptionValue(THREAD_NUM), THREAD_NUM);
+        }
 
         cleanup();
     }
@@ -161,9 +176,9 @@ public class StorageCleanupJob extends AbstractApplication {
                 // use reflection to isolate NoClassDef errors when HBase is not available
                 Class hbaseCleanUpUtil = Class.forName("org.apache.kylin.rest.job.StorageCleanJobHbaseUtil");
                 Method cleanUnusedHBaseTables = hbaseCleanUpUtil.getDeclaredMethod("cleanUnusedHBaseTables",
-                        boolean.class, int.class);
+                        boolean.class, int.class, int.class);
                 hbaseGarbageTables = (List<String>) cleanUnusedHBaseTables.invoke(hbaseCleanUpUtil, delete,
-                        deleteTimeoutMin);
+                        deleteTimeoutMin, threadsNum);
             } catch (Throwable e) {
                 logger.error("Error during HBase clean up", e);
             }
@@ -186,7 +201,6 @@ public class StorageCleanupJob extends AbstractApplication {
         for (Pair<FileSystem, String> entry : collector.list) {
             FileSystem fs = entry.getKey();
             String path = entry.getValue();
-
             try {
                 garbageList.add(path);
                 ContentSummary sum = fs.getContentSummary(new Path(path));

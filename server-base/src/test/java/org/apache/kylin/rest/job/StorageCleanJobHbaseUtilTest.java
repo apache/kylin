@@ -66,7 +66,7 @@ public class StorageCleanJobHbaseUtilTest {
 
         when(hBaseAdmin.tableExists(toBeDel)).thenReturn(true);
         when(hBaseAdmin.isTableEnabled(toBeDel)).thenReturn(false);
-        StorageCleanJobHbaseUtil.cleanUnusedHBaseTables(hBaseAdmin, true, 100000);
+        StorageCleanJobHbaseUtil.cleanUnusedHBaseTables(hBaseAdmin, true, 100000, 1);
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(hBaseAdmin).deleteTable(captor.capture());
