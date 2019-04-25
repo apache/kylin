@@ -42,6 +42,7 @@ import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.threadlocal.InternalThreadLocal;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OrderedProperties;
+import org.apache.zookeeper.Shell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -184,7 +185,8 @@ public class KylinConfig extends KylinConfigBase {
 
         try {
             File file = new File(metaUri);
-            if (file.exists() || metaUri.contains("/")) {
+            // for the developers using windows, without this condition, it will never find the file
+            if (file.exists() || metaUri.contains("/") || Shell.WINDOWS) {
                 if (!file.exists()) {
                     file.mkdirs();
                 }
