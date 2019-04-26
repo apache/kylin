@@ -45,18 +45,23 @@ import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.engine.mr.common.CuboidStatsReaderUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.exception.JobException;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -78,6 +83,7 @@ import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.service.TableService;
 import org.apache.kylin.rest.util.ValidateUtil;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
@@ -112,6 +118,10 @@ public class CubeController extends BasicController {
     @Autowired
     @Qualifier("cubeMgmtService")
     private CubeService cubeService;
+
+    @Autowired
+    @Qualifier("tableService")
+    private TableService tableService;
 
     @Autowired
     @Qualifier("jobService")
@@ -627,12 +637,28 @@ public class CubeController extends BasicController {
         }
 
         for (RowKeyColDesc colDesc : cubeDesc.getRowkey().getRowKeyColumns()) {
-            if (!colDesc.isUsingDictionary()) {
-                try {
-                    // normal case
-                    DimensionEncodingFactory.create(colDesc.getEncodingName(), colDesc.getEncodingArgs(), colDesc.getEncodingVersion());
-                } catch (Exception e) {
-                    throw new BadRequestException("Illegal column desc: " + colDesc);
+            if (colDesc.getEncoding().equalsIgnoreCase("integer:undefined")) {
+                throw new BadRequestException("The encoding length of " + colDesc.getColumn() + " should not be null");
+            }
+
+            Object[] encodingConf = DimensionEncoding.parseEncodingConf(colDesc.getEncoding());
+            String encodingName = (String) encodingConf[0];
+            String[] encodingArgs = (String[]) encodingConf[1];
+            List<ProjectInstance> prj = cubeService.getProjectManager().findProjects(RealizationType.CUBE, cubeDesc.getName());
+            if (prj.size() == 1) {
+                TableDesc tableDesc = cubeService.getTableManager().getTableDesc(colDesc.getColumn().split("\\.")[0], prj.get(0).getName());
+                ColumnDesc columnDesc = tableDesc.findColumnByName(colDesc.getColumn());
+                if (!encodingName.equals("dict")) {
+                    if ((encodingName.equals("integer") && !DataType.INTEGER_FAMILY.contains(columnDesc.getDatatype()))
+                            || (encodingName.equals("date") && !DataType.DATETIME_FAMILY.contains(columnDesc.getDatatype()))) {
+                        throw new BadRequestException("Illegal column desc: " + colDesc);
+                    } else {
+                        try {
+                            DimensionEncodingFactory.create(encodingName, encodingArgs, colDesc.getEncodingVersion());
+                        } catch (Exception e) {
+                            throw new BadRequestException("Illegal column desc: " + colDesc);
+                        }
+                    }
                 }
             }
         }
