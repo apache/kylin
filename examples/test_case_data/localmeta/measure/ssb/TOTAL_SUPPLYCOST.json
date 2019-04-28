@@ -1,0 +1,9 @@
+{
+  "uuid" : "57d3ee89-c95c-f846-1c88-8a3a876cfea7",
+  "last_modified" : 1556584529232,
+  "version" : "2.6.0.20500",
+  "name" : "TOTAL_SUPPLYCOST",
+  "cube_name" : "ssb",
+  "segments_name" : [ ],
+  "online" : true
+}

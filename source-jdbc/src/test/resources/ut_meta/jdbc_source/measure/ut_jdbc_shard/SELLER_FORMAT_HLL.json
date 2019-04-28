@@ -1,0 +1,9 @@
+{
+  "uuid" : "d785181a-8d7e-d613-89b9-a59046932919",
+  "last_modified" : 1556980986004,
+  "version" : "2.6.0.20500",
+  "name" : "SELLER_FORMAT_HLL",
+  "cube_name" : "ut_jdbc_shard",
+  "segments_name" : [ ],
+  "online" : true
+}

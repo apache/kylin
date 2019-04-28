@@ -1,0 +1,9 @@
+{
+  "uuid" : "4728882d-5def-9245-7906-a3f32c67f1a0",
+  "last_modified" : 1556584529149,
+  "version" : "2.6.0.20500",
+  "name" : "TEST_EXTENDED_COLUMN",
+  "cube_name" : "ci_inner_join_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

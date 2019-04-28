@@ -1,0 +1,9 @@
+{
+  "uuid" : "58b5b26f-03fe-305b-8cd7-e2ccf4245b44",
+  "last_modified" : 1556980986033,
+  "version" : "2.6.0.20500",
+  "name" : "GVM_PERCENTILE",
+  "cube_name" : "ut_jdbc_shard",
+  "segments_name" : [ ],
+  "online" : true
+}

@@ -1,0 +1,9 @@
+{
+  "uuid" : "1c8e1ebd-855b-8d5e-1b60-6da269e11605",
+  "last_modified" : 1556584529204,
+  "version" : "2.6.0.20500",
+  "name" : "SELLER_CONTACT",
+  "cube_name" : "ci_left_join_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

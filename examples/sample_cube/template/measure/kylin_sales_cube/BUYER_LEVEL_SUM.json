@@ -1,0 +1,9 @@
+{
+  "uuid" : "4f099a83-1e14-702a-3756-cbab09740bd6",
+  "last_modified" : 1557191165660,
+  "version" : "2.6.0.20500",
+  "name" : "BUYER_LEVEL_SUM",
+  "cube_name" : "kylin_sales_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

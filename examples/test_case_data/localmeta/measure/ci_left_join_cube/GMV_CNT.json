@@ -1,0 +1,9 @@
+{
+  "uuid" : "238e8d62-fed2-0f28-b059-d7ae49e29f29",
+  "last_modified" : 1556584529178,
+  "version" : "2.6.0.20500",
+  "name" : "GMV_CNT",
+  "cube_name" : "ci_left_join_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

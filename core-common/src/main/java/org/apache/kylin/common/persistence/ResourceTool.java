@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceParallelCopier.Stats;
@@ -192,7 +193,8 @@ public class ResourceTool {
     public NavigableSet<String> list(KylinConfig config, String path) throws IOException {
         ResourceStore store = ResourceStore.getStore(config);
         NavigableSet<String> result = store.listResources(path);
-        System.out.println("" + result);
+        System.out.println("" + result.stream().collect(Collectors.joining(System.lineSeparator())));
+        System.out.println();
         return result;
     }
 

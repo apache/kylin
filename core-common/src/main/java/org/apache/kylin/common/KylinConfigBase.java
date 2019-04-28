@@ -484,6 +484,30 @@ public abstract class KylinConfigBase implements Serializable {
         return getOptional("kylin.metadata.hbase-client-retries-number", "1");
     }
 
+    public int getMaxMeasureNumberInOneColumn() {
+        return Integer.parseInt(getOptional("kylin.metadata.max-measure-number-in-one-column", "10"));
+    }
+
+    public int getMaxColumnFamilyNumber() {
+        return Integer.parseInt(getOptional("kylin.metadata.max-column-family-number", "10"));
+    }
+
+    public String getAutoHBaseColumnFamilyMapper() {
+        return getOptional("kylin.metadata.auto-hbase-column-family-mapper", "org.apache.kylin.cube.adapter.MemoryHungryHBaseMappingAdapter");
+    }
+
+    public String getHBaseColumnQualifierPrefix() {
+        return getOptional("kylin.metadata.hbase-column-qualifier-prefix", "M");
+    }
+
+    public String getHBaseColumnFamilyNamePrefix() {
+        return getOptional("kylin.metadata.hbase-column-family-name-prefix", "F");
+    }
+
+    public boolean isAutoHBaseMappingEnable() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.is-auto-hbase-mapping-enable", "false"));
+    }
+
     // ============================================================================
     // DICTIONARY & SNAPSHOT
     // ============================================================================
@@ -651,6 +675,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isAutoMergeEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.cube.is-automerge-enabled", TRUE));
+    }
+
+    public boolean isEditableMetricCube() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.is-editable-metric-cube", "false"));
     }
 
     // ============================================================================

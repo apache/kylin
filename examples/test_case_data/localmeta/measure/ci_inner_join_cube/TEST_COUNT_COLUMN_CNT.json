@@ -1,0 +1,9 @@
+{
+  "uuid" : "5ba87fd0-0584-e754-c1c6-63ef37e45b5a",
+  "last_modified" : 1556584529166,
+  "version" : "2.6.0.20500",
+  "name" : "TEST_COUNT_COLUMN_CNT",
+  "cube_name" : "ci_inner_join_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

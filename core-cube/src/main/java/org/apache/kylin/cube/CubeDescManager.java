@@ -38,6 +38,7 @@ import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
+import org.apache.kylin.measure.MeasureManager;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
@@ -248,10 +249,9 @@ public class CubeDescManager {
             }
 
             desc.setSignature(desc.calculateSignature());
-
             // save resource
             crud.save(desc);
-
+            MeasureManager.getInstance(config).updateMeasuresOnCube(desc);
             return desc;
         }
     }

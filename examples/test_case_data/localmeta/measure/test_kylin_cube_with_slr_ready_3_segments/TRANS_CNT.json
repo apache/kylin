@@ -1,0 +1,9 @@
+{
+  "uuid" : "43766b32-114b-5a33-4088-1d1f7684a26d",
+  "last_modified" : 1556584529406,
+  "version" : "2.6.0.20500",
+  "name" : "TRANS_CNT",
+  "cube_name" : "test_kylin_cube_with_slr_ready_3_segments",
+  "segments_name" : [ "19691231160000_20131112000000", "20131112000000_20131212000000" ],
+  "online" : true
+}
