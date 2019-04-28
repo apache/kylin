@@ -1,0 +1,9 @@
+{
+  "uuid" : "8347f264-ba0b-e646-bb87-2a52c1aa2078",
+  "last_modified" : 1556980986012,
+  "version" : "2.6.0.20500",
+  "name" : "TEST_COUNT_DISTINCT_BITMAP",
+  "cube_name" : "ut_jdbc_shard",
+  "segments_name" : [ ],
+  "online" : true
+}

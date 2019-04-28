@@ -1,0 +1,9 @@
+{
+  "uuid" : "ef5aebba-f293-8c65-8139-29333c17f183",
+  "last_modified" : 1556584529426,
+  "version" : "2.6.0.20500",
+  "name" : "SITE_EXTENDED_1",
+  "cube_name" : "test_kylin_cube_without_slr_empty",
+  "segments_name" : [ ],
+  "online" : true
+}

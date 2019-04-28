@@ -1,0 +1,9 @@
+{
+  "uuid" : "a1d86904-9382-c16b-7b23-d11d339012cd",
+  "last_modified" : 1556584529265,
+  "version" : "2.6.0.20500",
+  "name" : "TOTAL_REVENUE",
+  "cube_name" : "ssb_cube3",
+  "segments_name" : [ ],
+  "online" : true
+}

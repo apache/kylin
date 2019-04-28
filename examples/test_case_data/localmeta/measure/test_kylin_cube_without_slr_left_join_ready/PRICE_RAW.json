@@ -1,0 +1,9 @@
+{
+  "uuid" : "35d9f2df-6e1f-23f7-bb54-1b50453b02be",
+  "last_modified" : 1556584529515,
+  "version" : "2.6.0.20500",
+  "name" : "PRICE_RAW",
+  "cube_name" : "test_kylin_cube_without_slr_left_join_ready",
+  "segments_name" : [ "2accs32a-a33e-4b69-83dd-xxe8b1f8dddd" ],
+  "online" : true
+}

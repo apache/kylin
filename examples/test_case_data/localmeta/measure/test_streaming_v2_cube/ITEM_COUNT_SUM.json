@@ -1,0 +1,9 @@
+{
+  "uuid" : "cb694b28-727d-f9a6-0b08-6ff0d33f9017",
+  "last_modified" : 1556584529612,
+  "version" : "2.6.0.20500",
+  "name" : "ITEM_COUNT_SUM",
+  "cube_name" : "test_streaming_v2_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

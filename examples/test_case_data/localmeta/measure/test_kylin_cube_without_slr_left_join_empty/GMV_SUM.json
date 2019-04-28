@@ -1,0 +1,9 @@
+{
+  "uuid" : "63e1c52e-4b7b-76d9-d88d-597b310b35c8",
+  "last_modified" : 1556584529442,
+  "version" : "2.6.0.20500",
+  "name" : "GMV_SUM",
+  "cube_name" : "test_kylin_cube_without_slr_left_join_empty",
+  "segments_name" : [ ],
+  "online" : true
+}

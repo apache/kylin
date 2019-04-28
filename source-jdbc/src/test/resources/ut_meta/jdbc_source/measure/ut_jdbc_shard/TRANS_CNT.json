@@ -1,0 +1,9 @@
+{
+  "uuid" : "7bc0aa31-466a-5bdb-5ecb-9c668fe3df2f",
+  "last_modified" : 1556980985985,
+  "version" : "2.6.0.20500",
+  "name" : "TRANS_CNT",
+  "cube_name" : "ut_jdbc_shard",
+  "segments_name" : [ ],
+  "online" : true
+}

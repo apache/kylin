@@ -1,0 +1,9 @@
+{
+  "uuid" : "b786963b-3774-3b0b-3f15-fc131df55a2c",
+  "last_modified" : 1556584529394,
+  "version" : "2.6.0.20500",
+  "name" : "ITEM_COUNT_SUM",
+  "cube_name" : "test_kylin_cube_with_slr_ready_2_segments",
+  "segments_name" : [ "19691231160000_20131112000000", "20131112000000_20131212000000" ],
+  "online" : true
+}

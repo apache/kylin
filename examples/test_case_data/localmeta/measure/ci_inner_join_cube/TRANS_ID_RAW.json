@@ -1,0 +1,9 @@
+{
+  "uuid" : "3bf11317-348b-59ab-61bb-ba887a841ee8",
+  "last_modified" : 1556584529157,
+  "version" : "2.6.0.20500",
+  "name" : "TRANS_ID_RAW",
+  "cube_name" : "ci_inner_join_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

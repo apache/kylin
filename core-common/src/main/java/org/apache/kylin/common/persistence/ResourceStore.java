@@ -80,6 +80,7 @@ abstract public class ResourceStore {
     public static final String DRAFT_RESOURCE_ROOT = "/draft";
     public static final String USER_ROOT = "/user";
     public static final String EXT_SNAPSHOT_RESOURCE_ROOT = "/ext_table_snapshot";
+    public static final String MEASURE_RESOURCE_ROOT = "/measure";
 
     public static final String METASTORE_UUID_TAG = "/UUID";
 

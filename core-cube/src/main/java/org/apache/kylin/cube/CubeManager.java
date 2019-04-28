@@ -44,6 +44,7 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.measure.MeasureManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
@@ -346,6 +347,10 @@ public class CubeManager implements IRealizationProvider {
         if (update == null || update.getCubeInstance() == null)
             throw new IllegalStateException();
 
+        boolean isNewCube = getCube(update.getCubeInstance().getName()) == null;
+        // init the MeasureInstance Cache first
+        getMeasureManager();
+
         CubeInstance cube = update.getCubeInstance();
         logger.info("Updating cube instance '{}'", cube.getName());
 
@@ -394,6 +399,11 @@ public class CubeManager implements IRealizationProvider {
         //this is a duplicate call to take care of scenarios where REST cache service unavailable
         ProjectManager.getInstance(cube.getConfig()).clearL2Cache(cube.getProject());
 
+        logger.info("Update MeasureInstance of cube instance: " + cube.getName());
+        if (isNewCube) {
+            getMeasureManager().createMeasuresOnCube(cube);
+        }
+        getMeasureManager().updateSegmentsOnCube(cube, update);
         return cube;
     }
 
@@ -495,6 +505,9 @@ public class CubeManager implements IRealizationProvider {
 
             // delete cube instance and cube desc
             CubeInstance cube = getCube(cubeName);
+
+            logger.info("Drop measure on cube first");
+            getMeasureManager().deleteByCube(cube.getProject(), cube.getName());
 
             // remove cube and update cache
             crud.delete(cube);
@@ -1228,5 +1241,9 @@ public class CubeManager implements IRealizationProvider {
             }
         }
         return cube;
+    }
+
+    public MeasureManager getMeasureManager() {
+        return MeasureManager.getInstance(this.config);
     }
 }

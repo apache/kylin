@@ -1,0 +1,9 @@
+{
+  "uuid" : "fd30eda2-8207-1fe0-81b3-98c223e89449",
+  "last_modified" : 1556584529262,
+  "version" : "2.6.0.20500",
+  "name" : "_COUNT_",
+  "cube_name" : "ssb_cube3",
+  "segments_name" : [ ],
+  "online" : true
+}

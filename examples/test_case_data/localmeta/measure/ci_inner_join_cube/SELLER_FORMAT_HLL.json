@@ -1,0 +1,9 @@
+{
+  "uuid" : "26142ef0-72b2-7566-9704-67dd05c33e78",
+  "last_modified" : 1556584529140,
+  "version" : "2.6.0.20500",
+  "name" : "SELLER_FORMAT_HLL",
+  "cube_name" : "ci_inner_join_cube",
+  "segments_name" : [ ],
+  "online" : true
+}
