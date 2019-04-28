@@ -1,0 +1,9 @@
+{
+  "uuid" : "87478106-6125-9eb0-3333-14728c4f8384",
+  "last_modified" : 1556980985995,
+  "version" : "2.6.0.20500",
+  "name" : "GMV_MIN",
+  "cube_name" : "ut_jdbc_shard",
+  "segments_name" : [ ],
+  "online" : true
+}

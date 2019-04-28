@@ -1,0 +1,9 @@
+{
+  "uuid" : "0ed4b930-f590-70c4-d91e-2f27b57da613",
+  "last_modified" : 1556584529589,
+  "version" : "2.6.0.20500",
+  "name" : "GMV_SUM",
+  "cube_name" : "test_streaming_join_table_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

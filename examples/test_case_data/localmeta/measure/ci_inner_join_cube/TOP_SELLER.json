@@ -1,0 +1,9 @@
+{
+  "uuid" : "859659a1-706a-006a-e5e3-b4807341a883",
+  "last_modified" : 1556584529142,
+  "version" : "2.6.0.20500",
+  "name" : "TOP_SELLER",
+  "cube_name" : "ci_inner_join_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

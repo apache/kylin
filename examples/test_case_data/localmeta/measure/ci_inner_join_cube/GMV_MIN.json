@@ -1,0 +1,9 @@
+{
+  "uuid" : "c61ea582-0a33-77b8-35e0-cdefdec3b628",
+  "last_modified" : 1556584529130,
+  "version" : "2.6.0.20500",
+  "name" : "GMV_MIN",
+  "cube_name" : "ci_inner_join_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

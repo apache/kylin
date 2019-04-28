@@ -1,0 +1,9 @@
+{
+  "uuid" : "d7c59527-f762-43e8-644e-f37fa02d2b5f",
+  "last_modified" : 1556584529512,
+  "version" : "2.6.0.20500",
+  "name" : "LEAF_CATEG_ID_RAW",
+  "cube_name" : "test_kylin_cube_without_slr_left_join_ready",
+  "segments_name" : [ "2accs32a-a33e-4b69-83dd-xxe8b1f8dddd" ],
+  "online" : true
+}

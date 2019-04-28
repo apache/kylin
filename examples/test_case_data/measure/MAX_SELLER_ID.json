@@ -1,0 +1,11 @@
+{
+  "name": "MAX_SELLER_ID",
+  "function": {
+    "expression": "MAX",
+    "parameter": {
+      "type": "column",
+      "value": "TEST_KYLIN_FACT.SELLER_ID"
+    },
+    "returntype": "decimal(19,4)"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "uuid" : "7cdc1c1d-9cd2-30bd-1679-0e27c383c764",
+  "last_modified" : 1556584529457,
+  "version" : "2.6.0.20500",
+  "name" : "SELLER_CNT_BITMAP",
+  "cube_name" : "test_kylin_cube_without_slr_left_join_empty",
+  "segments_name" : [ ],
+  "online" : true
+}

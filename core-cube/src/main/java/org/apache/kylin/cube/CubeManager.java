@@ -44,6 +44,7 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.RandomUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.measure.MeasureManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.SnapshotTableDesc;
 import org.apache.kylin.dict.DictionaryInfo;
@@ -238,7 +239,7 @@ public class CubeManager implements IRealizationProvider {
 
             ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName,
                     owner);
-
+            getMeasureManager().createMeasuresOnCube(cube);
             return cube;
         }
     }
@@ -253,7 +254,7 @@ public class CubeManager implements IRealizationProvider {
 
             ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cube.getName(),
                     projectName, owner);
-
+            getMeasureManager().createMeasuresOnCube(cube);
             return cube;
         }
     }
@@ -278,9 +279,23 @@ public class CubeManager implements IRealizationProvider {
     // try minimize the use of this method, use udpateCubeXXX() instead
     public CubeInstance updateCube(CubeUpdate update) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            boolean needToUpdateSegments = needToUpdateSegments(update);
+            if (needToUpdateSegments) {
+                // init MeasurManager first
+                getMeasureManager().getMeasuresInCube(update.getCubeInstance().getProject(), update.getCubeInstance().getName());
+            }
             CubeInstance cube = updateCubeWithRetry(update, 0);
+            if (needToUpdateSegments) {
+                getMeasureManager().updateSegmentsOnCube(cube, update);
+            }
             return cube;
         }
+    }
+
+    private boolean needToUpdateSegments(CubeUpdate update) {
+        return (update.getToAddSegs() != null && update.getToAddSegs().length > 0)
+                || (update.getToUpdateSegs() != null && update.getToUpdateSegs().length > 0)
+                || (update.getToRemoveSegs() != null && update.getToRemoveSegs().length > 0);
     }
 
     public CubeInstance updateCubeStatus(CubeInstance cube, RealizationStatusEnum newStatus) throws IOException {
@@ -495,6 +510,9 @@ public class CubeManager implements IRealizationProvider {
 
             // delete cube instance and cube desc
             CubeInstance cube = getCube(cubeName);
+
+            logger.info("Drop measure on cube first");
+            getMeasureManager().deleteByCube(cube.getProject(), cube.getName());
 
             // remove cube and update cache
             crud.delete(cube);
@@ -1228,5 +1246,9 @@ public class CubeManager implements IRealizationProvider {
             }
         }
         return cube;
+    }
+
+    public MeasureManager getMeasureManager() {
+        return MeasureManager.getInstance(this.config);
     }
 }

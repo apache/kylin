@@ -2184,4 +2184,32 @@ public abstract class KylinConfigBase implements Serializable {
     public String getLocalStorageImpl() {
         return getOptional("kylin.stream.settled.storage", null);
     }
+
+    public String getHBaseColumnQualifierPrefix() {
+        return getOptional("kylin.metadata.hbase-column-qualifier-prefix", "M");
+    }
+
+    public String getHBaseColumnFamilyNamePrefix() {
+        return getOptional("kylin.metadata.hbase-column-family-name-prefix", "F");
+    }
+
+    public boolean isAutoHBaseMappingEnable() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.is-auto-hbase-mapping-enable", "false"));
+    }
+
+    public int getMaxMeasureNumberInOneColumn() {
+        return Integer.parseInt(getOptional("kylin.metadata.max-measure-number-in-one-column", "10"));
+    }
+
+    public int getMaxColumnFamilyNumber() {
+        return Integer.parseInt(getOptional("kylin.metadata.max-column-family-number", "10"));
+    }
+
+    public boolean isEditableMetricCube() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.is-editable-metric-cube", "false"));
+    }
+
+    public String getAutoHBaseColumnFamilyMapper() {
+        return getOptional("kylin.metadata.auto-hbase-column-family-mapper", "org.apache.kylin.cube.adapter.MemoryHungryHBaseMappingAdapter");
+    }
 }

@@ -1,0 +1,9 @@
+{
+  "uuid" : "64629cc9-674d-f5ba-0598-0b07c6e5a49d",
+  "last_modified" : 1556980986018,
+  "version" : "2.6.0.20500",
+  "name" : "BUYER_CONTACT",
+  "cube_name" : "ut_jdbc_shard",
+  "segments_name" : [ ],
+  "online" : true
+}

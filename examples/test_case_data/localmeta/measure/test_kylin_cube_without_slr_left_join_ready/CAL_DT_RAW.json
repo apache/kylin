@@ -1,0 +1,9 @@
+{
+  "uuid" : "c32b5fe7-b588-863a-f482-e28dbba29aca",
+  "last_modified" : 1556584529506,
+  "version" : "2.6.0.20500",
+  "name" : "CAL_DT_RAW",
+  "cube_name" : "test_kylin_cube_without_slr_left_join_ready",
+  "segments_name" : [ "2accs32a-a33e-4b69-83dd-xxe8b1f8dddd" ],
+  "online" : true
+}
