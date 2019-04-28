@@ -1,0 +1,9 @@
+{
+  "uuid" : "f7f7e92d-99e4-c41b-2a80-123b26b88a75",
+  "last_modified" : 1556584529632,
+  "version" : "2.6.0.20500",
+  "name" : "COUNTDISTINCT_LID",
+  "cube_name" : "test_streaming_v2_user_info_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

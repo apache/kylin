@@ -1,0 +1,9 @@
+{
+  "uuid" : "16490392-e3c9-5ea6-cddd-057e4ab15f9d",
+  "last_modified" : 1557191165614,
+  "version" : "2.6.0.20500",
+  "name" : "GMV_SUM",
+  "cube_name" : "kylin_sales_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

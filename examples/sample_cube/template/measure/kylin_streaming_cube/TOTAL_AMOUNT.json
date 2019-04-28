@@ -1,0 +1,9 @@
+{
+  "uuid" : "c804c0e9-d1c5-c677-e324-bc4d1fbba074",
+  "last_modified" : 1557191165679,
+  "version" : "2.6.0.20500",
+  "name" : "TOTAL_AMOUNT",
+  "cube_name" : "kylin_streaming_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

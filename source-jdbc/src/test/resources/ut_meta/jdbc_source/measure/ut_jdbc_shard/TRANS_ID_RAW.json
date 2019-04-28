@@ -1,0 +1,9 @@
+{
+  "uuid" : "e5f7d731-5860-7a3c-1356-b4d256fc7eb8",
+  "last_modified" : 1556980986024,
+  "version" : "2.6.0.20500",
+  "name" : "TRANS_ID_RAW",
+  "cube_name" : "ut_jdbc_shard",
+  "segments_name" : [ ],
+  "online" : true
+}

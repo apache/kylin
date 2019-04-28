@@ -1,0 +1,9 @@
+{
+  "uuid" : "bfdaf4cb-8e4d-662f-c44e-d1be13156b6a",
+  "last_modified" : 1556584529196,
+  "version" : "2.6.0.20500",
+  "name" : "TEST_COUNT_DISTINCT_BITMAP",
+  "cube_name" : "ci_left_join_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

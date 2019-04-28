@@ -1,0 +1,9 @@
+{
+  "uuid" : "ebc22078-1966-272f-0893-c48f4ef71b2e",
+  "last_modified" : 1556980985991,
+  "version" : "2.6.0.20500",
+  "name" : "GMV_SUM",
+  "cube_name" : "ut_jdbc_shard",
+  "segments_name" : [ ],
+  "online" : true
+}

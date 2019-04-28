@@ -31,6 +31,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.measure.MeasureInstance;
+import org.apache.kylin.measure.MeasureManager;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -38,6 +40,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,12 +82,23 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
         // clean legacy in case last run failed
         store.deleteResource("/cube/a_whole_new_cube.json");
-
+        for (String measureRes : store.collectResourceRecursively("/measure/a_whole_new_cube", ".json")) {
+            store.deleteResource(measureRes);
+        }
         CubeDescManager cubeDescMgr = getCubeDescManager();
         CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
         CubeInstance createdCube = cubeMgr.createCube("a_whole_new_cube", ProjectInstance.DEFAULT_PROJECT_NAME, desc,
                 null);
         assertTrue(createdCube.equals(cubeMgr.getCube("a_whole_new_cube")));
+
+        // test MeasureManager
+        assertTrue(getStore().collectResourceRecursively("/measure/a_whole_new_cube", ".json").size() == createdCube.getMeasures().size());
+        List<MeasureInstance> measuresInCreatedCube = getMeasureManager().getMeasuresInCube(createdCube.getProject(), createdCube.getName());
+        assertTrue(createdCube.getMeasures().size() == measuresInCreatedCube.size());
+        for (MeasureInstance m : measuresInCreatedCube) {
+            assertTrue(createdCube.getMeasures().contains(m.getMeasureDesc()));
+            assertTrue(m.getSegments().size() == 0);
+        }
 
         assertTrue(prjMgr.listAllRealizations(ProjectInstance.DEFAULT_PROJECT_NAME).contains(createdCube));
 
@@ -94,6 +108,10 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertTrue(!prjMgr.listAllRealizations(ProjectInstance.DEFAULT_PROJECT_NAME).contains(droppedCube));
 
         assertNull(CubeManager.getInstance(getTestConfig()).getCube("a_whole_new_cube"));
+
+        List<MeasureInstance> measuresInDroppedCube = getMeasureManager().getMeasuresInCube(droppedCube.getProject(), droppedCube.getName());
+        assertTrue(measuresInDroppedCube.size() == 0);
+        assertTrue(getStore().collectResourceRecursively("/measure/a_whole_new_cube", ".json").size() == 0);
     }
 
     @Test
@@ -109,7 +127,9 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
             // no segment at first
             assertEquals(0, cube.getSegments().size());
-
+            for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getProject(), cube.getName())) {
+                assertTrue(m.getSegmentsName().size() == 0);
+            }
             // append first
             CubeSegment seg1 = mgr.appendSegment(cube, new TSRange(0L, 1000L), null, null, null);
             mgr.updateCubeSegStatus(seg1, SegmentStatusEnum.READY);
@@ -119,10 +139,20 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
             cube = mgr.getCube(cube.getName());
             assertEquals(2, cube.getSegments().size());
+            for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getProject(), cube.getName())) {
+                assertEquals(2, m.getSegmentsName().size());
+            }
 
             SegmentRange mergedSeg = cube.autoMergeCubeSegments();
 
             assertTrue(mergedSeg != null);
+
+            for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getProject(), cube.getName())) {
+                assertEquals(1, m.getSegmentsName().size());
+                assertEquals(1, m.getDateTimeRanges().size());
+                assertTrue(0L == m.getSegments().get(0).getTSRange().start.v);
+                assertTrue(2000L == m.getSegments().get(0).getTSRange().end.v);
+            }
         }
     }
 
@@ -181,6 +211,13 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertTrue(cube.getSegmentById(seg5.getUuid()) != null
                 && cube.getSegmentById(seg5.getUuid()).getStatus() == SegmentStatusEnum.READY);
 
+        for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getProject(), cube.getName())) {
+            assertTrue(m.getSegmentsName().size() == 4);
+            assertEquals(seg1.getName(), m.getSegments().get(0).getName());
+            assertEquals(seg2.getName(), m.getSegments().get(1).getName());
+            assertEquals(seg4.getName(), m.getSegments().get(2).getName());
+            assertEquals(seg5.getName(), m.getSegments().get(3).getName());
+        }
     }
 
     @Test
@@ -246,6 +283,12 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertTrue(cube.getSegmentById(merge2.getUuid()) != null
                 && cube.getSegmentById(merge2.getUuid()).getStatus() == SegmentStatusEnum.NEW);
 
+        for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getProject(), cube.getName())) {
+            assertTrue(m.getSegmentsName().size() == 3);
+            assertEquals(merge1.getName(), m.getSegments().get(0).getName());
+            assertEquals(seg3.getName(), m.getSegments().get(1).getName());
+            assertEquals(seg4.getName(), m.getSegments().get(2).getName());
+        }
     }
 
     @Test
@@ -436,8 +479,29 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertEquals(segment._getDateRangeEnd(), SECOND_BUILD_DATE_END.longValue());
     }
 
+    @Test
+    public void testDeleteSegment() throws IOException {
+        KylinConfig config = getTestConfig();
+        CubeManager cubeMgr = CubeManager.getInstance(config);
+
+        String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
+
+        CubeInstance cube = cubeMgr.getCube(cubeName);
+        int segNumber = cube.getSegments().size();
+
+        CubeSegment toRemoveSeg = cube.getSegment("19691231160000_20131112000000", null);
+        cubeMgr.updateCubeDropSegments(cube, toRemoveSeg);
+
+        int newSegNumber = cubeMgr.getCube(cubeName).getSegments().size();
+
+        Assert.assertTrue(segNumber == newSegNumber + 1);
+    }
 
     public CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getTestConfig());
+    }
+
+    private MeasureManager getMeasureManager() {
+        return MeasureManager.getInstance(getTestConfig());
     }
 }

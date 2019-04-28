@@ -1,0 +1,9 @@
+{
+  "uuid" : "85973492-bcf2-cc86-efd0-b8b208201ccf",
+  "last_modified" : 1556584529400,
+  "version" : "2.6.0.20500",
+  "name" : "GMV_MIN",
+  "cube_name" : "test_kylin_cube_with_slr_ready_3_segments",
+  "segments_name" : [ "19691231160000_20131112000000", "20131112000000_20131212000000" ],
+  "online" : true
+}

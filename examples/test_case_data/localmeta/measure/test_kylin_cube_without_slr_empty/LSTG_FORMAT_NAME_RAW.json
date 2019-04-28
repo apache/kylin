@@ -1,0 +1,9 @@
+{
+  "uuid" : "75fb4890-c688-bab0-483b-ae43c3e96fe0",
+  "last_modified" : 1556584529434,
+  "version" : "2.6.0.20500",
+  "name" : "LSTG_FORMAT_NAME_RAW",
+  "cube_name" : "test_kylin_cube_without_slr_empty",
+  "segments_name" : [ ],
+  "online" : true
+}

@@ -1,0 +1,9 @@
+{
+  "uuid" : "56812a73-a635-0304-d095-22826a9b8d96",
+  "last_modified" : 1556584529621,
+  "version" : "2.6.0.20500",
+  "name" : "MAX_EXPERIENCE",
+  "cube_name" : "test_streaming_v2_user_info_cube",
+  "segments_name" : [ ],
+  "online" : true
+}

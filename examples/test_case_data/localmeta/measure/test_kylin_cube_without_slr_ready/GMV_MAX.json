@@ -1,0 +1,9 @@
+{
+  "uuid" : "ce7b3353-e8fb-4ba9-9d7c-d6462e171ef4",
+  "last_modified" : 1556584529560,
+  "version" : "2.6.0.20500",
+  "name" : "GMV_MAX",
+  "cube_name" : "test_kylin_cube_without_slr_ready",
+  "segments_name" : [ "67f668f6-dcff-4cb6-a89b-77f1119df8fa" ],
+  "online" : true
+}
