@@ -22,7 +22,9 @@ import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 public class StringUtilTest {
     @Test
@@ -63,7 +65,7 @@ public class StringUtilTest {
         stringListNormal.add("bbb");
         stringListNormal.add("ccc");
         String joinedNormal = StringUtil.join(stringListNormal, ",");
-        Assert.assertEquals("aaa,bbb,ccc", joinedNormal);
+        assertEquals("aaa,bbb,ccc", joinedNormal);
 
         stringListEmpty.add("");
         stringListEmpty.add("aa");
@@ -71,6 +73,120 @@ public class StringUtilTest {
         stringListEmpty.add("bb");
         stringListEmpty.add("");
         String joinedEmpty = StringUtil.join(stringListEmpty, ",");
-        Assert.assertEquals(",aa,,bb,", joinedEmpty);
+        assertEquals(",aa,,bb,", joinedEmpty);
     }
+
+  @Test
+  public void testDropSuffixWithNonEmptyString() {
+      assertEquals("", StringUtil.dropSuffix("Oo}T^z88/U", "Oo}T^z88/U"));
+  }
+
+  @Test
+  public void testDropSuffixWithEmptyString() {
+      String string = StringUtil.dropSuffix("", "^Fahs");
+
+      assertEquals("", string);
+  }
+
+  @Test
+  public void testNoBlankWithNull() {
+      assertEquals("%W=U~)O|0'#?,zA", StringUtil.noBlank(null, "%W=U~)O|0'#?,zA"));
+  }
+
+  @Test
+  public void testNoBlankWithNonEmptyString() {
+      assertEquals("N(sg", StringUtil.noBlank("N(sg", "H=!Cp(Ed5gral0qzo"));
+  }
+
+  @Test
+  public void testToUpperCaseArrayWithNonEmptyArray() {
+      String[] stringArray = new String[7];
+      stringArray[0] = "org.apache.kylin.common.util.StringUtil";
+      StringUtil.toUpperCaseArray(stringArray, stringArray);
+
+      assertEquals(7, stringArray.length);
+      assertEquals("[ORG.APACHE.KYLIN.COMMON.UTIL.STRINGUTIL, null, null, null, null, null, null]",
+              Arrays.asList(stringArray).toString()
+      );
+  }
+
+  @Test
+  public void testJoinReturningNonEmptyString() {
+      List<String> arrayList = new ArrayList<String>();
+      LinkedHashSet<String> linkedHashSet = new LinkedHashSet<String>(arrayList);
+      linkedHashSet.add(")'<Mw@ZR0IYF_l%*>");
+      linkedHashSet.add(null);
+      String resultString = StringUtil.join(linkedHashSet, null);
+
+      assertNotNull(resultString);
+      assertEquals(")'<Mw@ZR0IYF_l%*>", resultString);
+
+  }
+
+  @Test
+  public void testJoinOne() {
+      Vector<String> vector = new Vector<>();
+      vector.add(null);
+      String resultString = StringUtil.join(vector, "PB");
+
+      assertNotNull(resultString);
+      assertEquals("", resultString);
+  }
+
+  @Test
+  public void testJoinTwo() {
+      Set<String> set = Locale.CHINESE.getUnicodeLocaleAttributes();
+      String resultString = StringUtil.join(set, "Op");
+
+      assertTrue(set.isEmpty());
+      assertEquals(0, set.size());
+
+      assertNotNull(resultString);
+      assertEquals("", resultString);
+  }
+
+  @Test
+  public void testJoinReturningNull() {
+      String string = StringUtil.join((Iterable<String>) null, ")Y>1v&V0GU6a");
+
+      assertNull(string);
+  }
+
+  @Test
+  public void testTrimSuffixWithEmptyString() {
+      String string = StringUtil.trimSuffix(" 8VKQ&I*pSVr", "");
+
+      assertEquals(" 8VKQ&I*pSVr", string);
+  }
+
+  @Test
+  public void testTrimSuffixWithNonEmptyString() {
+      String string = StringUtil.trimSuffix(",", "5I;.t0F*5HV4");
+
+      assertEquals(",", string);
+  }
+
+  @Test
+  public void testFilterSystemArgsThrowsIllegalArgumentException() {
+      String[] stringArray = new String[4];
+      stringArray[0] = "-D";
+      try {
+        StringUtil.filterSystemArgs(stringArray);
+        fail("Expecting exception: IllegalArgumentException");
+
+      } catch(IllegalArgumentException e) {
+      }
+  }
+
+  @Test
+  public void testFilterSystemArgs() {
+      String[] stringArray = new String[1];
+      stringArray[0] = "J";
+      String[] stringArrayTwo = StringUtil.filterSystemArgs(stringArray);
+
+      assertFalse(stringArrayTwo.equals(stringArray));
+      assertEquals(1, stringArrayTwo.length);
+      assertEquals("J", stringArrayTwo[0]);
+  }
+
 }
