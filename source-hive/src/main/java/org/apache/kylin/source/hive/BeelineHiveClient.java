@@ -18,7 +18,12 @@
 
 package org.apache.kylin.source.hive;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -59,6 +64,17 @@ public class BeelineHiveClient implements IHiveClient {
             }
             if ("-p".equals(splits[i])) {
                 password = stripQuotes(splits[i + 1]);
+            }
+            if ("-w".equals(splits[i])) {
+                File file = new File(splits[i + 1]);
+                BufferedReader br = null;
+                try {
+                    br = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
+                    password = br.readLine();
+                    br.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
         Properties jdbcProperties = SourceConfigurationUtil.loadHiveJDBCProperties();
