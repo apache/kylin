@@ -44,8 +44,8 @@ public class CubeStatsWriter {
     }
 
     public static void writeCuboidStatistics(Configuration conf, Path outputPath, //
-            Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage, long sourceRecordCoun) throws IOException {
-        writeCuboidStatistics(conf, outputPath, cuboidHLLMap, samplingPercentage, 0, 0, sourceRecordCoun);
+            Map<Long, HLLCounter> cuboidHLLMap, int samplingPercentage, long sourceRecordCount) throws IOException {
+        writeCuboidStatistics(conf, outputPath, cuboidHLLMap, samplingPercentage, 0, 0, sourceRecordCount);
     }
 
     public static void writeCuboidStatistics(Configuration conf, Path outputPath, //
