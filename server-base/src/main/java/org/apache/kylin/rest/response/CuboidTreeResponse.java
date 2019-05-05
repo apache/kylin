@@ -21,6 +21,7 @@ package org.apache.kylin.rest.response;
 import java.io.Serializable;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 
@@ -40,6 +41,7 @@ public class CuboidTreeResponse implements Serializable {
 
     public static class NodeInfo {
         @JsonProperty("cuboid_id")
+        @JsonFormat(shape = JsonFormat.Shape.STRING)
         private Long id;
         @JsonProperty("name")
         private String name;
