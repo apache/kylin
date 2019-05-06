@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.NavigableSet;
 import java.util.Set;
 
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ContentReader;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -48,8 +49,8 @@ import com.google.common.collect.Lists;
  */
 public class ExecutableDao {
 
-    private static final Serializer<ExecutablePO> JOB_SERIALIZER = new JsonSerializer<ExecutablePO>(ExecutablePO.class);
-    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(
+    private static final Serializer<ExecutablePO> JOB_SERIALIZER = new JsonSerializer<>(ExecutablePO.class);
+    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<>(
             ExecutableOutputPO.class);
     private static final Logger logger = LoggerFactory.getLogger(ExecutableDao.class);
 
@@ -95,12 +96,7 @@ public class ExecutableDao {
                     }
 
                     // create a digest
-                    ExecutablePO digestExecutablePO = new ExecutablePO();
-                    digestExecutablePO.setUuid(executablePO.getUuid());
-                    digestExecutablePO.setName(executablePO.getName());
-                    digestExecutablePO.setLastModified(executablePO.getLastModified());
-                    digestExecutablePO.setType(executablePO.getType());
-                    digestExecutablePO.setParams(executablePO.getParams());
+                    ExecutablePO digestExecutablePO = (ExecutablePO) SerializationUtils.clone(executablePO);
                     executableDigestMap.putLocal(resourceName(path), digestExecutablePO);
                     return digestExecutablePO;
                 } catch (Exception e) {
@@ -149,10 +145,8 @@ public class ExecutableDao {
                     }
 
                     // create a digest
-                    ExecutableOutputPO digestExecutableOutputPO = new ExecutableOutputPO();
-                    digestExecutableOutputPO.setUuid(executableOutputPO.getUuid());
-                    digestExecutableOutputPO.setLastModified(executableOutputPO.getLastModified());
-                    digestExecutableOutputPO.setStatus(executableOutputPO.getStatus());
+                    ExecutableOutputPO digestExecutableOutputPO = (ExecutableOutputPO) SerializationUtils
+                            .clone(executableOutputPO);
                     executableOutputDigestMap.putLocal(resourceName(path), digestExecutableOutputPO);
                     return digestExecutableOutputPO;
                 } catch (Exception e) {
@@ -330,7 +324,7 @@ public class ExecutableDao {
             }
             ArrayList<String> result = Lists.newArrayListWithExpectedSize(resources.size());
             for (String path : resources) {
-                result.add(path.substring(path.lastIndexOf("/") + 1));
+                result.add(path.substring(path.lastIndexOf('/') + 1));
             }
             return result;
         } catch (IOException e) {

@@ -65,7 +65,7 @@ public class ExecutableManager {
     private final ExecutableDao executableDao;
 
     private ExecutableManager(KylinConfig config) {
-        logger.info("Using metadata url: " + config);
+        logger.info("Using metadata url: {}", config);
         this.config = config;
         this.executableDao = ExecutableDao.getInstance(config);
     }
@@ -316,7 +316,7 @@ public class ExecutableManager {
             final long endTime = job.getEndTime();
             if (endTime != 0) {
                 long interruptTime = System.currentTimeMillis() - endTime + job.getInterruptTime();
-                info = Maps.newHashMap(getOutput(jobId).getExtra());
+                info = Maps.newHashMap(getOutputDigest(jobId).getExtra());
                 info.put(AbstractExecutable.INTERRUPT_TIME, Long.toString(interruptTime));
                 info.remove(AbstractExecutable.END_TIME);
             }
@@ -331,10 +331,10 @@ public class ExecutableManager {
         }
         if (job.getStatus().isFinalState()) {
             if (job.getStatus() != ExecutableState.DISCARDED) {
-                logger.warn("The status of job " + jobId + " is " + job.getStatus().toString()
-                        + ". It's final state and cannot be transfer to be discarded!!!");
+                logger.warn("The status of job {} is {}. It's final state and cannot be transfer to be discarded!!!",
+                        jobId, job.getStatus());
             } else {
-                logger.warn("The job " + jobId + " has been discarded.");
+                logger.warn("The job {} has been discarded.", jobId);
             }
             throw new IllegalStateException(
                 "The job " + job.getId() + " has already been finished and cannot be discarded.");
@@ -360,7 +360,7 @@ public class ExecutableManager {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
                 if (task.getId().compareTo(stepId) >= 0) {
-                    logger.debug("rollback task : " + task);
+                    logger.debug("rollback task : {}", task);
                     updateJobOutput(task.getId(), ExecutableState.READY, Maps.<String, String> newHashMap(), "");
                 }
             }
@@ -396,7 +396,6 @@ public class ExecutableManager {
         updateJobOutput(jobId, ExecutableState.STOPPED, null, null);
     }
 
-
     public void updateJobOutput(String jobId, ExecutableState newStatus, Map<String, String> info, String output) {
         // when 
         if (Thread.currentThread().isInterrupted()) {
@@ -421,9 +420,9 @@ public class ExecutableManager {
                 jobOutput.setContent(output);
             }
             executableDao.updateJobOutput(jobOutput);
-            logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
+            logger.info("job id:{} from {} to {}", jobId, oldStatus, newStatus);
         } catch (PersistentException e) {
-            logger.error("error change job:" + jobId + " to " + newStatus);
+            logger.error("error change job:{} to {}", jobId, newStatus);
             throw new RuntimeException(e);
         }
     }
@@ -508,7 +507,7 @@ public class ExecutableManager {
                 String newTrackingURL = String.format(Locale.ROOT, pattern, info.get(YARN_APP_ID));
                 info.put(YARN_APP_URL, newTrackingURL);
             } catch (IllegalFormatException ife) {
-                logger.error("Illegal tracking url pattern: " + config.getJobTrackingURLPattern());
+                logger.error("Illegal tracking url pattern: {}", config.getJobTrackingURLPattern());
             }
         }
 
@@ -518,7 +517,7 @@ public class ExecutableManager {
             output.getInfo().putAll(info);
             executableDao.updateJobOutput(output);
         } catch (PersistentException e) {
-            logger.error("error update job info, id:" + id + "  info:" + info.toString());
+            logger.error("error update job info, id:{}  info:{}", id, info);
             throw new RuntimeException(e);
         }
     }
@@ -572,7 +571,7 @@ public class ExecutableManager {
             clazz = ClassUtil.forName(type, AbstractExecutable.class);
         } catch (ClassNotFoundException ex) {
             clazz = BrokenExecutable.class;
-            logger.error("Unknown executable type '" + type + "', using BrokenExecutable");
+            logger.error("Unknown executable type '{}', using BrokenExecutable", type);
         }
         try {
             return clazz.getConstructor().newInstance();

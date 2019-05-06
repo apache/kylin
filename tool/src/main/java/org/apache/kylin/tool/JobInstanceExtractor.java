@@ -57,11 +57,15 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
     private static final int DEFAULT_PERIOD = 3;
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify jobs in which project to extract").create("project");
+    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false)
+            .withDescription("Specify jobs in which project to extract").create("project");
     @SuppressWarnings("static-access")
-    private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false).withDescription("Specify jobs related to which cube to extract").create("cube");
+    private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false)
+            .withDescription("Specify jobs related to which cube to extract").create("cube");
     @SuppressWarnings("static-access")
-    private static final Option OPTION_PERIOD = OptionBuilder.withArgName("period").hasArg().isRequired(false).withDescription("specify how many days of kylin jobs to extract. Default " + DEFAULT_PERIOD + ".").create("period");
+    private static final Option OPTION_PERIOD = OptionBuilder.withArgName("period").hasArg().isRequired(false)
+            .withDescription("specify how many days of kylin jobs to extract. Default " + DEFAULT_PERIOD + ".")
+            .create("period");
 
     KylinConfig config;
     ProjectManager projectManager;
@@ -83,7 +87,9 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         String cube = optionsHelper.hasOption(OPTION_CUBE) ? optionsHelper.getOptionValue(OPTION_CUBE) : null;
         String project = optionsHelper.hasOption(OPTION_PROJECT) ? optionsHelper.getOptionValue(OPTION_PROJECT) : null;
-        int period = optionsHelper.hasOption(OPTION_PERIOD) ? Integer.parseInt(optionsHelper.getOptionValue(OPTION_PERIOD)) : DEFAULT_PERIOD;
+        int period = optionsHelper.hasOption(OPTION_PERIOD)
+                ? Integer.parseInt(optionsHelper.getOptionValue(OPTION_PERIOD))
+                : DEFAULT_PERIOD;
 
         long endTime = System.currentTimeMillis();
         long startTime = endTime - period * 24 * 3600 * 1000; // time in Millis
@@ -108,7 +114,8 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
                         shouldExtract = true;
                     } else {
                         ProjectInstance projectInstance = projectManager.getProject(project);
-                        if (projectInstance != null && projectInstance.containsRealization(RealizationType.CUBE, cubeName)) {
+                        if (projectInstance != null
+                                && projectInstance.containsRealization(RealizationType.CUBE, cubeName)) {
                             shouldExtract = true;
                         }
                     }
@@ -126,7 +133,7 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
 
-        Output output = executableManager.getOutput(cubeJob.getId());
+        Output output = executableManager.getOutputDigest(cubeJob.getId());
         final JobInstance result = new JobInstance();
         result.setName(cubeJob.getName());
         result.setProjectName(cubeJob.getProjectName());
@@ -149,10 +156,11 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
         result.setExecStartTime(AbstractExecutable.getStartTime(output));
         result.setExecEndTime(AbstractExecutable.getEndTime(output));
         result.setExecInterruptTime(AbstractExecutable.getInterruptTime(output));
-        result.setDuration(AbstractExecutable.getDuration(AbstractExecutable.getStartTime(output), AbstractExecutable.getEndTime(output), AbstractExecutable.getInterruptTime(output)) / 1000);
+        result.setDuration(AbstractExecutable.getDuration(AbstractExecutable.getStartTime(output),
+                AbstractExecutable.getEndTime(output), AbstractExecutable.getInterruptTime(output)) / 1000);
         for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
             AbstractExecutable task = cubeJob.getTasks().get(i);
-            result.addStep(parseToJobStep(task, i, executableManager.getOutput(task.getId())));
+            result.addStep(parseToJobStep(task, i, executableManager.getOutputDigest(task.getId())));
         }
         return result;
     }
@@ -194,7 +202,9 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
         }
         if (task instanceof MapReduceExecutable) {
             result.setExecCmd(((MapReduceExecutable) task).getMapReduceParams());
-            result.setExecWaitTime(AbstractExecutable.getExtraInfoAsLong(stepOutput, MapReduceExecutable.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
+            result.setExecWaitTime(
+                    AbstractExecutable.getExtraInfoAsLong(stepOutput, MapReduceExecutable.MAP_REDUCE_WAIT_TIME, 0L)
+                            / 1000);
         }
         if (task instanceof HadoopShellExecutable) {
             result.setExecCmd(((HadoopShellExecutable) task).getJobParams());

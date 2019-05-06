@@ -67,13 +67,13 @@ public class JobInfoConverter {
             return null;
         }
         ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
-        Output output = executableManager.getOutput(job.getId());
+        Output output = executableManager.getOutputDigest(job.getId());
         if (output == null) {
             logger.warn("job output is null.");
             return null;
         }
 
-        CubingJob cubeJob = (CubingJob) job;
+        CubingJob cubeJob = job;
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv())
                 .getCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
 
@@ -81,7 +81,8 @@ public class JobInfoConverter {
         result.setName(job.getName());
         result.setProjectName(cubeJob.getProjectName());
         result.setRelatedCube(cube != null ? cube.getName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
-        result.setDisplayCubeName(cube != null ? cube.getDisplayName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
+        result.setDisplayCubeName(
+                cube != null ? cube.getDisplayName() : CubingExecutableUtil.getCubeName(cubeJob.getParams()));
         result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
         result.setLastModified(output.getLastModified());
         result.setSubmitter(job.getSubmitter());
@@ -97,7 +98,7 @@ public class JobInfoConverter {
                 result.getExecInterruptTime()) / 1000);
         for (int i = 0; i < job.getTasks().size(); ++i) {
             AbstractExecutable task = job.getTasks().get(i);
-            result.addStep(parseToJobStep(task, i, executableManager.getOutput(task.getId())));
+            result.addStep(parseToJobStep(task, i, executableManager.getOutputDigest(task.getId())));
         }
         return result;
     }
@@ -108,7 +109,7 @@ public class JobInfoConverter {
             return null;
         }
         ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
-        Output output = executableManager.getOutput(job.getId());
+        Output output = executableManager.getOutputDigest(job.getId());
         if (output == null) {
             logger.warn("job output is null.");
             return null;
@@ -132,7 +133,7 @@ public class JobInfoConverter {
                 result.getExecInterruptTime()) / 1000);
         for (int i = 0; i < job.getTasks().size(); ++i) {
             AbstractExecutable task = job.getTasks().get(i);
-            result.addStep(parseToJobStep(task, i, executableManager.getOutput(task.getId())));
+            result.addStep(parseToJobStep(task, i, executableManager.getOutputDigest(task.getId())));
         }
         return result;
     }
@@ -215,7 +216,7 @@ public class JobInfoConverter {
             return null;
         }
         ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
-        Output output = executableManager.getOutput(job.getId());
+        Output output = executableManager.getOutputDigest(job.getId());
         if (output == null) {
             logger.warn("job output is null.");
             return null;
