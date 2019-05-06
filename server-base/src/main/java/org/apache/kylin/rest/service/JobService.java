@@ -30,8 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
@@ -61,6 +59,7 @@ import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -74,7 +73,6 @@ import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.source.SourcePartition;
-import org.apache.kylin.job.lock.zookeeper.ZookeeperJobLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -83,8 +81,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
@@ -653,10 +649,10 @@ public class JobService extends BasicService implements InitializingBean {
     public void pauseJob(JobInstance job) {
         aclEvaluate.checkProjectOperationPermission(job);
         logger.info("Pause job [" + job.getId() + "] trigger by "
-            + SecurityContextHolder.getContext().getAuthentication().getName());
+                + SecurityContextHolder.getContext().getAuthentication().getName());
         if (job.getStatus().isComplete()) {
-          throw new IllegalStateException(
-              "The job " + job.getId() + " has already been finished and cannot be stopped.");
+            throw new IllegalStateException(
+                    "The job " + job.getId() + " has already been finished and cannot be stopped.");
         }
         getExecutableManager().pauseJob(job.getId());
     }
