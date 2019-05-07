@@ -492,7 +492,7 @@ public abstract class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.dictionary.use-forest-trie", TRUE));
     }
 
-    public int getTrieDictionaryForestMaxTrieSizeMB() {
+    public long getTrieDictionaryForestMaxTrieSizeMB() {
         return Integer.parseInt(getOptional("kylin.dictionary.forest-trie-max-mb", "500"));
     }
 
