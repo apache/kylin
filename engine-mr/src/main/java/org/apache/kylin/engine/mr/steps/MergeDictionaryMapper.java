@@ -133,6 +133,8 @@ public class MergeDictionaryMapper extends KylinMapper<IntWritable, NullWritable
             Map<Long, HLLCounter> cuboidHLLMap = Maps.newHashMap();
             Configuration conf = null;
             int averageSamplingPercentage = 0;
+            long sourceRecordCount = 0;
+            long effectiveTimeRange = 0;
 
             for (CubeSegment cubeSegment : mergingSegments) {
                 String filePath = cubeSegment.getStatisticsResourcePath();
@@ -162,7 +164,14 @@ public class MergeDictionaryMapper extends KylinMapper<IntWritable, NullWritable
                         if (keyW.get() == 0L) {
                             // sampling percentage;
                             averageSamplingPercentage += Bytes.toInt(valueW.getBytes());
-                        } else if (keyW.get() > 0) {
+                        } else if (keyW.get() == -3) {
+                            long perSourceRecordCount = Bytes.toLong(valueW.getBytes());
+                            if (perSourceRecordCount > 0) {
+                                sourceRecordCount += perSourceRecordCount;
+                                CubeSegment iSegment = cubeInstance.getSegmentById(segmentId);
+                                effectiveTimeRange += iSegment.getTSRange().duration();
+                            }
+                        }  else if (keyW.get() > 0) {
                             HLLCounter hll = new HLLCounter(kylinConfig.getCubeStatsHLLPrecision());
                             ByteArray byteArray = new ByteArray(valueW.getBytes());
                             hll.readRegisters(byteArray.asBuffer());
@@ -181,12 +190,13 @@ public class MergeDictionaryMapper extends KylinMapper<IntWritable, NullWritable
                     IOUtils.closeStream(reader);
                 }
             }
-
-            averageSamplingPercentage = averageSamplingPercentage / mergingSegments.size();
-            CubeStatsWriter.writeCuboidStatistics(conf, new Path(statOutputPath), cuboidHLLMap,
-                    averageSamplingPercentage);
+            sourceRecordCount *= effectiveTimeRange == 0 ? 0
+                    : (double) newSegment.getTSRange().duration() / effectiveTimeRange;
             Path statisticsFilePath = new Path(statOutputPath,
                     BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+            averageSamplingPercentage = averageSamplingPercentage / mergingSegments.size();
+            CubeStatsWriter.writeCuboidStatistics(conf, new Path(statOutputPath), cuboidHLLMap,
+                    averageSamplingPercentage, sourceRecordCount);
 
             FileSystem fs = HadoopUtil.getFileSystem(statisticsFilePath, conf);
             FSDataInputStream fis = fs.open(statisticsFilePath);
