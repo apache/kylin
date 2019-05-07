@@ -188,6 +188,11 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    public List<CubeInstance> reloadAndListAllCubes() throws IOException {
+        crud.reloadAll();
+        return listAllCubes();
+    }
+
     public CubeInstance getCube(String cubeName) {
         try (AutoLock lock = cubeMapLock.lockForRead()) {
             return cubeMap.get(cubeName);
