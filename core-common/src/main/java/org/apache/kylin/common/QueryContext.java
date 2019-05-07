@@ -65,6 +65,7 @@ public class QueryContext {
 
     private List<RPCStatistics> rpcStatisticsList = Lists.newCopyOnWriteArrayList();
     private Map<Integer, CubeSegmentStatisticsResult> cubeSegmentStatisticsResultMap = Maps.newConcurrentMap();
+    private List<MissingMeasureSegment> missingMeasureSegments;
 
     QueryContext() {
         this(System.currentTimeMillis());
@@ -573,6 +574,13 @@ public class QueryContext {
             return "CubeSegmentStatistics [cubeName=" + cubeName + ",segmentName=" + segmentName + ",sourceCuboidId="
                     + sourceCuboidId + ",targetCuboidId=" + targetCuboidId + ",filterMask=" + filterMask + "]";
         }
+    }
+
+    public List<MissingMeasureSegment> getMissingMeasureSegments() {
+        if (null == missingMeasureSegments) {
+            missingMeasureSegments = Lists.newArrayListWithCapacity(5);
+        }
+        return missingMeasureSegments;
     }
 
     public static class CubeSegmentStatisticsResult implements Serializable {
