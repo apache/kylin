@@ -25,7 +25,11 @@ import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Stack;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * Unit tests for class {@link SortUtil}.
