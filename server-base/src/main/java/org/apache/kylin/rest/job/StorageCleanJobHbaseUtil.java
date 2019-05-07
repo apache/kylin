@@ -56,8 +56,6 @@ public class StorageCleanJobHbaseUtil {
 
     static List<String> cleanUnusedHBaseTables(HBaseAdmin hbaseAdmin, boolean delete, int deleteTimeout) throws IOException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        CubeManager cubeMgr = CubeManager.getInstance(config);
-        
         // get all kylin hbase tables
         String namespace = config.getHBaseStorageNameSpace();
         String tableNamePrefix = (namespace.equals("default") || namespace.equals(""))
@@ -80,6 +78,8 @@ public class StorageCleanJobHbaseUtil {
             }
         }
 
+        // CubeManager need be inited after listing hbase tabales to be deleted
+        CubeManager cubeMgr = CubeManager.getInstance(config);
         // remove every segment htable from drop list
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
             for (CubeSegment seg : cube.getSegments()) {

@@ -73,7 +73,6 @@ public class MetadataCleanupJob {
 
     // function entrance
     public List<String> cleanup(boolean delete, int jobOutdatedDays) throws Exception {
-        CubeManager cubeManager = CubeManager.getInstance(config);
         ResourceStore store = ResourceStore.getStore(config);
         long newResourceTimeCut = System.currentTimeMillis() - NEW_RESOURCE_THREADSHOLD_MS;
         FileSystem fs = HadoopUtil.getWorkingFileSystem(HadoopUtil.getCurrentConfiguration());
@@ -122,6 +121,8 @@ public class MetadataCleanupJob {
 
         // exclude resources in use
         Set<String> activeResources = Sets.newHashSet();
+        // CubeManager need be inited after listing resources to be deleted
+        CubeManager cubeManager = CubeManager.getInstance(config);
         for (CubeInstance cube : cubeManager.listAllCubes()) {
             activeResources.addAll(cube.getSnapshots().values());
             for (CubeSegment segment : cube.getSegments()) {

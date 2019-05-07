@@ -224,8 +224,6 @@ public class StorageCleanupJob extends AbstractApplication {
     
     private void cleanUnusedHdfsFiles(FileSystem fs, UnusedHdfsFileCollector collector) throws IOException {
         final JobEngineConfig engineConfig = new JobEngineConfig(config);
-        final CubeManager cubeMgr = CubeManager.getInstance(config);
-        
         List<String> allHdfsPathsNeedToBeDeleted = new ArrayList<String>();
         
         try {
@@ -254,7 +252,8 @@ public class StorageCleanupJob extends AbstractApplication {
                         + " with status " + state);
             }
         }
-
+        // CubeManager need be inited after listing hdfs path to be deleted
+        final CubeManager cubeMgr = CubeManager.getInstance(config);
         // remove every segment working dir from deletion list
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
             for (CubeSegment seg : cube.getSegments()) {
