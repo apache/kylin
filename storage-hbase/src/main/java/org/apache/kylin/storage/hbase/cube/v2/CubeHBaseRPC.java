@@ -18,9 +18,10 @@
 
 package org.apache.kylin.storage.hbase.cube.v2;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
@@ -49,6 +50,8 @@ import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRange;
 import org.apache.kylin.gridtable.IGTStorage;
+import org.apache.kylin.measure.MeasureInstance;
+import org.apache.kylin.measure.MeasureManager;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.HBaseConnection;
@@ -202,17 +205,23 @@ public abstract class CubeHBaseRPC implements IGTStorage {
 
         int colBlkIndex = 1;
         int metricOffset = fullGTInfo.getPrimaryKey().trueBitCount();
-
+        Set<String> measuresOnSegment = MeasureManager.getInstance(cubeSeg.getConfig()).getMeasuresOnSegment(cubeSeg.getProject(), cubeSeg.getCubeDesc().getName(), cubeSeg.getName())
+                .stream()
+                .map(MeasureInstance::getName)
+                .collect(Collectors.toSet());
         HBaseMappingDesc hbaseMapping = cubeSeg.getCubeDesc().getHbaseMapping();
         for (HBaseColumnFamilyDesc familyDesc : hbaseMapping.getColumnFamily()) {
             for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
                 if (selectedColBlocks.get(colBlkIndex)) {
                     int[] metricIndexes = hbaseColDesc.getMeasureIndex();
-                    Integer[] gtIndexes = new Integer[metricIndexes.length];
-                    for (int i = 0; i < gtIndexes.length; i++) {
-                        gtIndexes[i] = metricIndexes[i] + metricOffset;
+                    List<Integer> gtIndexList = Lists.newArrayListWithCapacity(metricIndexes.length);
+                    for (int i = 0; i < metricIndexes.length; i++) {
+                        String measureName = cubeSeg.getCubeDesc().getMeasures().get(metricIndexes[i]).getName();
+                        if (measuresOnSegment.contains(measureName)) {
+                            gtIndexList.add(metricIndexes[i] + metricOffset);
+                        }
                     }
-                    ret.add(Arrays.asList(gtIndexes));
+                    ret.add(gtIndexList);
                 }
                 colBlkIndex++;
             }
