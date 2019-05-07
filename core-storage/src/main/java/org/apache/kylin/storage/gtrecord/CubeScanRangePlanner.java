@@ -27,8 +27,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.MissingMeasureSegment;
+import org.apache.kylin.common.QueryContext;
+import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -37,6 +41,7 @@ import org.apache.kylin.cube.common.FuzzyValueCombination;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMappingFilterNullCol;
 import org.apache.kylin.cube.gridtable.RecordComparators;
 import org.apache.kylin.cube.gridtable.ScanRangePlannerBase;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
@@ -48,10 +53,13 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.GTUtil;
 import org.apache.kylin.gridtable.IGTComparator;
+import org.apache.kylin.measure.MeasureInstance;
+import org.apache.kylin.measure.MeasureManager;
 import org.apache.kylin.metadata.expression.TupleExpression;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DynamicFunctionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
@@ -88,7 +96,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         this.cubeDesc = cubeSegment.getCubeDesc();
         this.cuboid = cuboid;
 
-        final CuboidToGridTableMapping mapping = context.getMapping();
+        final CuboidToGridTableMapping mapping = filterNullGTColumn(context.getMapping(), this.cuboid, this.cubeDesc, this.cubeSegment);
 
         this.gtInfo = CubeGridTable.newGTInfo(cuboid, new CubeDimEncMap(cubeSegment), mapping);
 
@@ -385,6 +393,44 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
 
     public void setMaxScanRanges(int maxScanRanges) {
         this.maxScanRanges = maxScanRanges;
+    }
+
+    // filter measures(gtMetric) don't exist in this segment
+    private CuboidToGridTableMapping filterNullGTColumn(CuboidToGridTableMapping mapping, Cuboid cuboid, CubeDesc cubeDesc, CubeSegment cubeSegment) {
+        if (KylinConfig.getInstanceFromEnv().isEditableMetricCube()) {
+            List<FunctionDesc> nullMetrics = getNullMeasure(cubeDesc, cubeSegment);
+            return new CuboidToGridTableMappingFilterNullCol(mapping, nullMetrics);
+        } else {
+            return mapping;
+        }
+    }
+
+    // TODO-yuzhang find null metric according to the timestamp
+    private List<FunctionDesc> getNullMeasure(CubeDesc cubeDesc, CubeSegment cubeSegment) {
+        List<FunctionDesc> nullMetrics = Lists.newArrayListWithCapacity(cubeDesc.getMeasures().size());
+        MeasureManager measureManager = MeasureManager.getInstance(KylinConfig.getInstanceFromEnv());
+        Set<String> measuresOnSegment = measureManager.getMeasuresOnSegment(cubeSegment.getProject(), cubeSegment.getCubeDesc().getName(), cubeSegment.getName())
+                .stream()
+                .map(m -> m.getName())
+                .collect(Collectors.toSet());
+        MissingMeasureSegment mms = new MissingMeasureSegment(cubeDesc.getProject(), cubeDesc.getName(), cubeSegment.getName());
+        for (MeasureDesc measure : cubeDesc.getMeasures()){
+            if (!measuresOnSegment.contains(measure.getName())){
+                MeasureInstance measureInstance = measureManager.getMeasure(cubeDesc.getName(), measure.getName());
+                logger.debug("Current segment[{}-{}] doesn't have measure[{}], you can refresh this segment to caculate this measure. Measure[{}]'s segments: {}",
+                        cubeDesc.getName(), cubeSegment.getName(), measure.getName(), measure.getName(), measureInstance.getSegmentsName());
+                mms.getMissMeasures().add(measureInstance.getName());
+                nullMetrics.add(measure.getFunction());
+            }
+        }
+        if (mms.getMissMeasures().size() > 0) {
+            QueryContext ctx = QueryContextFacade.current();
+            if (ctx != null) {
+                ctx.getMissingMeasureSegments().add(mms);
+            }
+        }
+
+        return nullMetrics;
     }
 
 }

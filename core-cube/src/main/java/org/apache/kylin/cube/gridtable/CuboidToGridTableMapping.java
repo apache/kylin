@@ -56,6 +56,10 @@ public class CuboidToGridTableMapping {
     private int nMetrics;
     private Map<FunctionDesc, Integer> metrics2gt; // because count distinct may have a holistic version
 
+    CuboidToGridTableMapping() {
+        this.cuboid = null;
+    }
+
     public CuboidToGridTableMapping(Cuboid cuboid) {
         this.cuboid = cuboid;
         init();
