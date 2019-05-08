@@ -1,6 +1,6 @@
 package org.apache.kylin.engine.mr.common;
 
-import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.junit.Test;
@@ -33,7 +33,7 @@ public class HadoopJobStatusCheckerTest {
 
     @Test
     public void testCheckStatusWithEmptyJobId() throws IOException {
-        Job job = new Job(new JobConf(false));
+        Job job = Job.getInstance(new Configuration(false));
         StringBuilder stringBuilder = new StringBuilder();
         JobStepStatusEnum jobStepStatusEnum = HadoopJobStatusChecker.checkStatus(job, stringBuilder);
 
