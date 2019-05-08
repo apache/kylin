@@ -24,7 +24,6 @@ __Conferences__
 __Meetup__
 
 - [Apache Kylin Meetup @Chengdu](https://www.huodongxing.com/event/4489409598500), China; 1:00 PM - 5:00 PM, Saturday, 2019-05-25
-
 * [Apache Kylin Meetup @Beijing](https://www.huodongxing.com/event/7484371439700), China; 1:00 PM - 5:30 PM, Saturday, 2019-04-13
 * [Apache Kylin Meetup @Shanghai](http://www.huodongxing.com/event/4476570217900) ([Slides](https://kyligence.io/zh/resource/case-study-zh/)), China; 1:00 PM - 4:30 PM, Saturday, 2019-02-23 
 * [Apache Kylin for Extreme OLAP and Big Data @eBay South Campus](https://www.eventbrite.com/e/thursday-nov-29-meetup-apache-kylin-for-extreme-olap-and-big-data-tickets-52275347973?aff=estw), Sanjose, CA, US; 6:30 PM - 8:30 PM, Thursday, 2018-11-29 
