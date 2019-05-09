@@ -928,8 +928,9 @@ curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/js
 
 For example, to get the job list in project 'learn_kylin' for cube 'kylin_sales_cube' in lastone week: 
 
-`GET: /kylin/api/jobs?cubeName=kylin_sales_cube&limit=15&offset=0&projectName=learn_kylin&timeFilter=1`
-
+```
+GET: /kylin/api/jobs?cubeName=kylin_sales_cube&limit=15&offset=0&projectName=learn_kylin&timeFilter=1
+```
 
 #### Response Sample
 ```
