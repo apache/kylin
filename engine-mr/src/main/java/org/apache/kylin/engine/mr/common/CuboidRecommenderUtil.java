@@ -61,7 +61,7 @@ public class CuboidRecommenderUtil {
 
         String key = cube.getName();
         CuboidStats cuboidStats = new CuboidStats.Builder(key, baseCuboid, cubeStatsReader.getCuboidRowEstimatesHLL(),
-                cubeStatsReader.getCuboidSizeMap()).setMandatoryCuboids(mandatoryCuboids).build();
+                cubeStatsReader.getCuboidSizeMap()).setMandatoryCuboids(mandatoryCuboids).setBPUSMinBenefitRatio(segment.getConfig().getCubePlannerBPUSMinBenefitRatio()).build();
         return CuboidRecommender.getInstance().getRecommendCuboidList(cuboidStats, segment.getConfig(),
                 !mandatoryCuboids.isEmpty());
     }
