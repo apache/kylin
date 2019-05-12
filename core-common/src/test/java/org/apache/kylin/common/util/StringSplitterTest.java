@@ -20,32 +20,31 @@ package org.apache.kylin.common.util;
 
 import org.junit.Test;
 
-import java.util.BitSet;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
-public class BitSetsTest {
-
-    @Test
-    public void basicTest() {
-        BitSet a = BitSets.valueOf(new int[] { 1, 3, 10 });
-        assertEquals(3, a.cardinality());
-        assertTrue(10 < a.size());
-        assertTrue(a.get(3));
-    }
+/**
+ * Unit tests for class {@link StringSplitter}.
+ *
+ * @see StringSplitter
+ *
+ */
+public class StringSplitterTest{
 
   @Test
-  public void testValueOfWithNull() {
-      BitSet bitSet = BitSets.valueOf((int[]) null);
+  public void testSplitReturningNonEmptyArray() {
+      String[] stringArray = StringSplitter.split("Fc8!v~f?aQL", "Fc8!v~f?aQL");
 
-      assertEquals("{}", bitSet.toString());
-      assertEquals(0, bitSet.cardinality());
+      assertEquals(2, stringArray.length);
+      assertEquals("", stringArray[0]);
+      assertEquals("", stringArray[1]);
+  }
 
-      assertEquals(0, bitSet.length());
-      assertTrue(bitSet.isEmpty());
+  @Test
+  public void testSplitWithNonEmptyString() {
+      String[] stringArray = StringSplitter.split("]sZ}gR\"cws,8p#|m", "Fc8!v~f?aQL");
 
-      assertEquals(64, bitSet.size());
+      assertEquals(1, stringArray.length);
+      assertEquals("]sZ}gR\"cws,8p#|m", stringArray[0]);
   }
 
 }

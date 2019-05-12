@@ -20,32 +20,42 @@ package org.apache.kylin.common.util;
 
 import org.junit.Test;
 
-import java.util.BitSet;
+import java.time.Month;
+import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.Stack;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class BitSetsTest {
 
-    @Test
-    public void basicTest() {
-        BitSet a = BitSets.valueOf(new int[] { 1, 3, 10 });
-        assertEquals(3, a.cardinality());
-        assertTrue(10 < a.size());
-        assertTrue(a.get(3));
-    }
+/**
+ * Unit tests for class {@link SortUtil}.
+ *
+ * @see SortUtil
+ *
+ */
+public class SortUtilTest{
 
   @Test
-  public void testValueOfWithNull() {
-      BitSet bitSet = BitSets.valueOf((int[]) null);
+  public void testExtractAndSort() {
+      Stack<Month> stack = new Stack<>();
+      ListIterator<Month> listIterator = stack.listIterator();
+      Iterator<Month> iterator = SortUtil.extractAndSort(listIterator, null);
 
-      assertEquals("{}", bitSet.toString());
-      assertEquals(0, bitSet.cardinality());
+      assertTrue(stack.empty());
+      assertEquals("[]", stack.toString());
 
-      assertEquals(0, bitSet.length());
-      assertTrue(bitSet.isEmpty());
+      assertEquals(10, stack.capacity());
+      assertEquals(0, stack.size());
 
-      assertEquals(64, bitSet.size());
+      assertTrue(stack.isEmpty());
+      assertFalse(listIterator.hasNext());
+
+      assertFalse(listIterator.hasPrevious());
+      assertNotNull(iterator);
   }
 
 }
