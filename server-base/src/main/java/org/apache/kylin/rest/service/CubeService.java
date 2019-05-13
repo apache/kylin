@@ -29,7 +29,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -581,8 +582,9 @@ public class CubeService extends BasicService implements InitializingBean {
                 toDelHDFSPaths.add(JobBuilderSupport.getJobWorkingDir(seg.getConfig().getHdfsWorkingDirectory(),
                         seg.getLastBuildJobID()));
             }
-
-            StorageCleanUtil.dropHTables(new HBaseAdmin(HBaseConnection.getCurrentHBaseConfiguration()), toDropHTables);
+            Connection conn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl());
+            Admin hbaseAdmin = conn.getAdmin();
+            StorageCleanUtil.dropHTables(hbaseAdmin, toDropHTables);
             StorageCleanUtil.deleteHDFSPath(HadoopUtil.getWorkingFileSystem(), toDelHDFSPaths);
         }
     }
@@ -946,7 +948,9 @@ public class CubeService extends BasicService implements InitializingBean {
         return node;
     }
 
-    /** cube planner services */
+    /**
+     * cube planner services
+     */
     public Map<Long, Long> getRecommendCuboidStatistics(CubeInstance cube, Map<Long, Long> hitFrequencyMap,
             Map<Long, Map<Long, Pair<Long, Long>>> rollingUpCountSourceMap) throws IOException {
         aclEvaluate.checkProjectAdminPermission(cube.getProject());
