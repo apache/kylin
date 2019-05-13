@@ -79,6 +79,8 @@ import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.service.QueryService;
+import org.apache.kylin.rest.util.AclEvaluate;
 import org.apache.kylin.rest.util.ValidateUtil;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
@@ -121,6 +123,13 @@ public class CubeController extends BasicController {
     @Autowired
     @Qualifier("projectService")
     private ProjectService projectService;
+
+    @Autowired
+    @Qualifier("queryService")
+    private QueryService queryService;
+
+    @Autowired
+    private AclEvaluate aclEvaluate;
 
     @RequestMapping(value = "/validate/{cubeName}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
@@ -251,7 +260,6 @@ public class CubeController extends BasicController {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
-
     }
 
     @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT }, produces = { "application/json" })
@@ -397,6 +405,33 @@ public class CubeController extends BasicController {
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
+    /**
+     * Send a auto merge cube job
+     *
+     * @param cubeName Cube ID
+     * @return JobInstance of merging cube
+     */
+    @RequestMapping(value = "/{cubeName}/automerge", method = { RequestMethod.PUT })
+    @ResponseBody
+    public JobInstance autoMerge(@PathVariable String cubeName) {
+        try {
+            checkCubeExists(cubeName);
+
+            CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
+            aclEvaluate.checkProjectAdminPermission(cube.getProject());
+
+            String jobID = cubeService.mergeCubeSegment(cubeName);
+            if (jobID == null) {
+                throw new BadRequestException(String.format(Locale.ROOT,
+                    "Cube: %s merging is not supported or no segments to merge", cubeName));
+            }
+            return jobService.getJobInstance(jobID);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage());
         }
     }
 
