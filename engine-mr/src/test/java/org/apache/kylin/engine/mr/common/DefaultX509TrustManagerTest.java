@@ -23,7 +23,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -47,14 +46,5 @@ public class DefaultX509TrustManagerTest{
 
       assertTrue(defaultX509TrustManager.isServerTrusted(null));
   }
-
-    @Test
-    public void testGetAcceptedIssuersUsingNullKeyStore() throws KeyStoreException, NoSuchAlgorithmException {
-        DefaultX509TrustManager defaultX509TrustManager = new DefaultX509TrustManager(null);
-        X509Certificate[] x509CertificateArray = defaultX509TrustManager.getAcceptedIssuers();
-    
-        assertEquals(105, x509CertificateArray.length);
-        assertTrue(defaultX509TrustManager.isServerTrusted(x509CertificateArray));
-    }
 
 }
