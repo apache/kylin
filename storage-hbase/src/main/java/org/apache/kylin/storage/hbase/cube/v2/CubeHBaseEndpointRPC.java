@@ -559,6 +559,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                 BytesUtil.writeVInt(scanRequest.getStorageScanRowNumThreshold(), out);
                 BytesUtil.writeVInt(scanRequest.getStoragePushDownLimit(), out);
                 BytesUtil.writeUTFString(scanRequest.getStorageBehavior(), out);
+                BytesUtil.writeBooleanArray(new boolean[]{storageContext.isExactAggregation()}, out);
                 out.flip();
                 return Bytes.toStringBinary(out.array(), out.position(), out.limit());
             } catch (BufferOverflowException boe) {
