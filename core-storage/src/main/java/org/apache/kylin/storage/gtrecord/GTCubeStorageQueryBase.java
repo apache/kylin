@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.gtrecord;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -266,9 +267,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             if (cubeDesc.isDerived(compFilter.getColumn())) {
                 DeriveInfo hostInfo = cubeDesc.getHostInfo(tblColRef);
                 if (hostInfo.isOneToOne) {
-                    for (TblColRef hostCol : hostInfo.columns) {
-                        resultD.add(hostCol);
-                    }
+                    resultD.addAll(Arrays.asList(hostInfo.columns));
                 }
                 //if not one2one, it will be pruned
             } else {

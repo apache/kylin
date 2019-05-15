@@ -166,7 +166,7 @@ public class MemcachedCacheManager extends AbstractCacheManager {
             MemcachedClientIF cacheClient = (MemcachedClientIF) cache.getNativeCache();
             Collection<SocketAddress> liveServers = cacheClient.getAvailableServers();
             Collection<SocketAddress> deadServers = cacheClient.getUnavailableServers();
-            if (liveServers.size() == 0) {
+            if (liveServers.isEmpty()) {
                 clusterHealth.set(false);
                 logger.error("All the servers in MemcachedCluster is down, UnavailableServers: " + deadServers);
             } else {
