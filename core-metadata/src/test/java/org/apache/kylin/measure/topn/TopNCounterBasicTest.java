@@ -130,4 +130,33 @@ public class TopNCounterBasicTest {
         }
 
     }
+
+    @Test
+    public void testMerge2() {
+
+        TopNCounter<String> vs = new TopNCounter<String>(3);
+        String[] stream = { "AA", "BB", "CC", "AA", "BB", "CC", "DD", "DD" };
+        for (String i : stream) {
+            vs.offer(i);
+        }
+
+        String[] stream2 = { "AA", "BB", "CC", "AA", "BB", "CC" };
+        TopNCounter<String> vs2 = new TopNCounter<String>(3);
+        for (String i : stream2) {
+            vs2.offer(i);
+        }
+        vs.merge(vs2);
+
+        String[] stream3 = { "AA", "BB", "CC", "DD", "DD", "DD" };
+        TopNCounter<String> vs3 = new TopNCounter<String>(3);
+        for (String i : stream3) {
+            vs3.offer(i);
+        }
+
+        vs.merge(vs3);
+
+        List<Counter<String>> topK = vs.topK(1);
+        assertTrue(topK.get(0).getItem().equals("DD"));
+
+    }
 }
