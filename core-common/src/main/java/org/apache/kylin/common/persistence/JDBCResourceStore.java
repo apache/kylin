@@ -128,7 +128,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
                     pstat = connection.prepareStatement(createIndexSql);
                     pstat.executeUpdate();
                 } catch (SQLException ex) {
-                    logger.error("Failed to create index on " + META_TABLE_TS, ex);
+                    logger.error("Failed to create index on {}", META_TABLE_TS, ex);
                 }
             }
 
@@ -171,7 +171,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
 
     @Override
     protected void visitFolderImpl(final String folderPath, final boolean recursive, final VisitFilter filter,
-                                   final boolean loadContent, final Visitor visitor) throws IOException {
+            final boolean loadContent, final Visitor visitor) throws IOException {
 
         try {
             executeSql(new SqlOperation() {
@@ -184,8 +184,8 @@ public class JDBCResourceStore extends PushdownResourceStore {
                         lookForPrefix = filter.pathPrefix;
                     }
 
-                    if (isRootPath(folderPath)){
-                        for (int i=0; i<tableNames.length; i++){
+                    if (isRootPath(folderPath)) {
+                        for (int i = 0; i < tableNames.length; i++) {
                             final String tableName = tableNames[i];
                             JDBCResourceSQL sqls = getJDBCResourceSQL(tableName);
                             String sql = sqls.getAllResourceSqlString(loadContent);
@@ -212,7 +212,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
                                 }
                             }
                         }
-                    }else{
+                    } else {
                         JDBCResourceSQL sqls = getJDBCResourceSQL(getMetaTableName(folderPath));
                         String sql = sqls.getAllResourceSqlString(loadContent);
                         pstat = connection.prepareStatement(sql);
@@ -502,8 +502,7 @@ public class JDBCResourceStore extends PushdownResourceStore {
                                     pushdown.close();
                                 }
                             } else {
-                                pstat2.setBinaryStream(1,
-                                        new BufferedInputStream(new ByteArrayInputStream(content)));
+                                pstat2.setBinaryStream(1, new BufferedInputStream(new ByteArrayInputStream(content)));
                                 pstat2.setString(2, resPath);
                                 pstat2.executeUpdate();
                             }
@@ -514,6 +513,33 @@ public class JDBCResourceStore extends PushdownResourceStore {
                 }
             }
         });
+    }
+
+    @Override
+    protected void updateTimestampImpl(final String resPath, final long timestamp) throws IOException {
+        try {
+            boolean skipHdfs = isJsonMetadata(resPath);
+            JDBCResourceSQL sqls = getJDBCResourceSQL(getMetaTableName(resPath));
+            executeSql(new SqlOperation() {
+                @Override
+                public void execute(Connection connection) throws SQLException {
+                    pstat = connection.prepareStatement(sqls.getReplaceSqlWithoutContent());
+                    pstat.setLong(1, timestamp);
+                    pstat.setString(2, resPath);
+                    pstat.executeUpdate();
+                }
+            });
+
+            if (!skipHdfs) {
+                try {
+                    updateTimestampPushdown(resPath, timestamp);
+                } catch (Throwable e) {
+                    throw new SQLException(e);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
@@ -541,6 +567,14 @@ public class JDBCResourceStore extends PushdownResourceStore {
         } catch (SQLException e) {
             throw new IOException(e);
         }
+    }
+
+    @Override
+    protected void deleteResourceImpl(String resPath, long timestamp) throws IOException {
+        // considering deletePushDown operation, check timestamp at the beginning
+        long origLastModified = getResourceTimestampImpl(resPath);
+        if (checkTimeStampBeforeDelete(origLastModified, timestamp))
+            deleteResourceImpl(resPath);
     }
 
     @Override

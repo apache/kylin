@@ -25,7 +25,7 @@ import static org.apache.kylin.common.util.LocalFileMetadataTestCase.staticCreat
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -42,18 +42,22 @@ public class MetadataCleanupJobTest {
 
     @Test
     public void testCleanUp() throws Exception {
-        staticCreateTestMetadata(false, new ResetTimeHook(1, "src/test/resources/test_meta"));
+        // file resource store may lose timestamp precision with millis second, set last modified as 2000
+        staticCreateTestMetadata(false, new ResetTimeHook(2000, "src/test/resources/test_meta"));
         MetadataCleanupJob metadataCleanupJob = new MetadataCleanupJob();
-        List<String> cleanupList = metadataCleanupJob.cleanup(false, 30);
-        Assert.assertEquals(7, cleanupList.size());
+        Map<String, Long> cleanupMap = metadataCleanupJob.cleanup(false, 30);
+        Assert.assertEquals(7, cleanupMap.size());
+        for (long timestamp : cleanupMap.values()) {
+            Assert.assertEquals(2000, timestamp);
+        }
     }
 
     @Test
     public void testNotCleanUp() throws Exception {
         staticCreateTestMetadata(false, new ResetTimeHook(System.currentTimeMillis(), "src/test/resources/test_meta"));
         MetadataCleanupJob metadataCleanupJob = new MetadataCleanupJob();
-        List<String> cleanupList = metadataCleanupJob.cleanup(false, 30);
-        Assert.assertEquals(0, cleanupList.size());
+        Map<String, Long> cleanupMap = metadataCleanupJob.cleanup(false, 30);
+        Assert.assertEquals(0, cleanupMap.size());
     }
 
     private class ResetTimeHook extends LocalFileMetadataTestCase.OverlayMetaHook {
