@@ -17,29 +17,28 @@
  */
 package org.apache.kylin.engine.mr.common;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.Job;
-import org.junit.Test;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertNull;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.Job;
+import org.junit.Test;
 
 /**
  * Unit tests for class {@link HadoopCmdOutput}.
  *
  * @see HadoopCmdOutput
- *
  */
-public class HadoopCmdOutputTest{
+public class HadoopCmdOutputTest {
 
-  @Test(expected = IllegalStateException.class)
-  public void testGetMrJobIdThrowsIllegalStateException() throws IOException {
-      Job job = Job.getInstance(new Configuration(false));
-      HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(job, new StringBuilder());
+    @Test(expected = IllegalStateException.class)
+    public void testGetMrJobIdThrowsIllegalStateException() throws IOException {
+        Job job = Job.getInstance(new Configuration(false));
+        HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(job, new StringBuilder());
 
-      assertNull(hadoopCmdOutput.getMrJobId());
-  }
+        assertNull(hadoopCmdOutput.getMrJobId());
+    }
 
     @Test
     public void testUpdateJobCounterCatchesEveryInternalException() throws IOException {
