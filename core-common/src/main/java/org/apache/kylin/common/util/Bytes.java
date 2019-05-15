@@ -1964,7 +1964,7 @@ public class Bytes {
      * @param hex
      */
     public static byte[] fromHex(String hex) {
-        checkArgument(hex.length() > 0, LENGTH_MUST_BE_GREATER_THAN_0);
+        checkArgument(!hex.isEmpty(), LENGTH_MUST_BE_GREATER_THAN_0);
         checkArgument(hex.length() % 2 == 0, "length must be a multiple of 2");
         // Make sure letters are upper case
         hex = hex.toUpperCase(Locale.ROOT);
