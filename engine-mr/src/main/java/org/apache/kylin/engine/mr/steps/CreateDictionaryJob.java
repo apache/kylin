@@ -91,13 +91,15 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
                 }
                 FileSystem fs = HadoopUtil.getWorkingFileSystem();
 
-                Path dictFile = HadoopUtil.getFilterOnlyPath(fs, colDir, col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
+                Path dictFile = HadoopUtil.getFilterOnlyPath(fs, colDir,
+                        col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
                 if (dictFile == null) {
-                    logger.info("Dict for '" + col.getName() + "' not pre-built.");
+                    logger.info("Dict for '{}' not pre-built.", col.getName());
                     return null;
                 }
 
-                try (SequenceFile.Reader reader = new SequenceFile.Reader(HadoopUtil.getCurrentConfiguration(), SequenceFile.Reader.file(dictFile))) {
+                try (SequenceFile.Reader reader = new SequenceFile.Reader(HadoopUtil.getCurrentConfiguration(),
+                        SequenceFile.Reader.file(dictFile))) {
                     NullWritable key = NullWritable.get();
                     ArrayPrimitiveWritable value = new ArrayPrimitiveWritable();
                     reader.next(key, value);
@@ -107,7 +109,7 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
                         String dictClassName = is.readUTF();
                         Dictionary<String> dict = (Dictionary<String>) ClassUtil.newInstance(dictClassName);
                         dict.readFields(is);
-                        logger.info("DictionaryProvider read dict from file: " + dictFile);
+                        logger.info("DictionaryProvider read dict from file: {}", dictFile);
                         return dict;
                     }
                 }
