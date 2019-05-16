@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.collect.Sets;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CaseInsensitiveStringSet;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -63,9 +64,24 @@ public class TableACL extends RootPersistentEntity {
         Set<String> tableBlackList = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         tableBlackList.addAll(userTableBlackList.getTableBlackList(username));
         //if user is in group, add group's black list
-        for (String group : groups) {
-            tableBlackList.addAll(groupTableBlackList.getTableBlackList(group));
+        List<Set<String>> tableBlackListForGroups = Lists.newArrayList();
+        Set<String> tableBlackListForGroup = Sets.newHashSet();
+        boolean firstBlackList = true;
+        Set<String> tableBlackLists;
+        for (String groupName : groups) {
+            tableBlackLists = groupTableBlackList.getTableBlackList(groupName);
+            if (tableBlackLists.isEmpty()) {
+                continue;
+            }
+            if (firstBlackList) {
+                tableBlackListForGroups.add(tableBlackLists);
+                tableBlackListForGroup.addAll(tableBlackLists);
+                firstBlackList = false;
+            } else {
+                tableBlackListForGroup.retainAll(tableBlackLists);
+            }
         }
+        tableBlackList.addAll(tableBlackListForGroup);
         return tableBlackList;
     }
 

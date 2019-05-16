@@ -18,14 +18,13 @@
 
 package org.apache.kylin.metadata.acl;
 
-import java.util.HashSet;
-import java.util.Set;
-
+import com.google.common.collect.Sets;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TableACLTest {
     private static Set<String> EMPTY_GROUP_SET = new HashSet<>();
@@ -97,7 +96,86 @@ public class TableACLTest {
         tableACL.add("g1", "t5", MetadataConstants.TYPE_GROUP);
         tableACL.add("g2", "t6", MetadataConstants.TYPE_GROUP);
         Set<String> tableBlackList = tableACL.getTableBlackList("u1", Sets.newHashSet("g1", "g2"));
-        Assert.assertEquals(Sets.newHashSet("t1", "t2", "t3", "t4", "t5", "t6"), tableBlackList);
+        Assert.assertEquals(Sets.newHashSet("t1", "t2"), tableBlackList);
+    }
+
+    @Test
+    public void testGetTableBlackList2() {
+        TableACL tableACL = new TableACL();
+        tableACL.add("g1", "t1", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g1", "t2", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g1", "t3", MetadataConstants.TYPE_GROUP);
+
+        tableACL.add("g2", "t1", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g2", "t2", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g2", "t4", MetadataConstants.TYPE_GROUP);
+        Set<String> tableBlackList = tableACL.getTableBlackList("u1", Sets.newHashSet("g1", "g2"));
+        Assert.assertEquals(Sets.newHashSet("t1", "t2"), tableBlackList);
+    }
+
+    @Test
+    public void testGetTableBlackList3() {
+        TableACL tableACL = new TableACL();
+        tableACL.add("g1", "t1", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g1", "t2", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g1", "t3", MetadataConstants.TYPE_GROUP);
+
+        tableACL.add("g2", "t1", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g2", "t2", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g2", "t3", MetadataConstants.TYPE_GROUP);
+        Set<String> tableBlackList = tableACL.getTableBlackList("u1", Sets.newHashSet("g1", "g2"));
+        Assert.assertEquals(Sets.newHashSet("t1", "t2", "t3"), tableBlackList);
+    }
+
+    @Test
+    public void testGetTableBlackList4() {
+        TableACL tableACL = new TableACL();
+        tableACL.add("u1", "t1", MetadataConstants.TYPE_USER);
+        tableACL.add("u1", "t2", MetadataConstants.TYPE_USER);
+
+        tableACL.add("g1", "t1", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g1", "t2", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g1", "t3", MetadataConstants.TYPE_GROUP);
+
+        tableACL.add("g2", "t1", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g2", "t2", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g2", "t3", MetadataConstants.TYPE_GROUP);
+        Set<String> tableBlackList = tableACL.getTableBlackList("u1", Sets.newHashSet("g1", "g2"));
+        Assert.assertEquals(Sets.newHashSet("t1", "t2", "t3"), tableBlackList);
+    }
+
+    @Test
+    public void testGetTableBlackList5() {
+        TableACL tableACL = new TableACL();
+        tableACL.add("u1", "t4", MetadataConstants.TYPE_USER);
+        tableACL.add("u1", "t5", MetadataConstants.TYPE_USER);
+
+        tableACL.add("g1", "t1", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g1", "t2", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g1", "t3", MetadataConstants.TYPE_GROUP);
+
+        tableACL.add("g2", "t1", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g2", "t2", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g2", "t3", MetadataConstants.TYPE_GROUP);
+        Set<String> tableBlackList = tableACL.getTableBlackList("u1", Sets.newHashSet("g1", "g2"));
+        Assert.assertEquals(Sets.newHashSet("t1", "t2", "t3", "t4", "t5"), tableBlackList);
+    }
+
+    @Test
+    public void testGetTableBlackList6() {
+        TableACL tableACL = new TableACL();
+        tableACL.add("u1", "t4", MetadataConstants.TYPE_USER);
+        tableACL.add("u1", "t5", MetadataConstants.TYPE_USER);
+
+        tableACL.add("g1", "t1", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g1", "t2", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g1", "t3", MetadataConstants.TYPE_GROUP);
+
+        tableACL.add("g2", "t1", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g2", "t2", MetadataConstants.TYPE_GROUP);
+        tableACL.add("g2", "t3", MetadataConstants.TYPE_GROUP);
+        Set<String> tableBlackList = tableACL.getTableBlackList("u1", Sets.newHashSet("g1", "g2", "g3"));
+        Assert.assertEquals(Sets.newHashSet("t1", "t2", "t3", "t4", "t5"), tableBlackList);
     }
 
     @Test
