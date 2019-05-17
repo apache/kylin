@@ -14,12 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.stream.source.kafka;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -62,6 +63,8 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
     private List<TblColRef> allColumns;
     private boolean formatTs = false;//not used
     private String tsColName = "timestamp";
+    private String tsParser = null;
+    private AbstractTimeParser streamTimeParser;
 
     /**
      * the path of {"user" : {"name": "kite", "sex":"female"}}
@@ -88,6 +91,21 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
                 }
                 logger.info("Using parser field mapping by {}", parserInfo.getColumnToSourceFieldMapping());
             }
+            this.tsParser = parserInfo.getTsParser();
+
+            if (!StringUtils.isEmpty(tsParser)) {
+                try {
+                    Class clazz = Class.forName(tsParser);
+                    Constructor constructor = clazz.getConstructor(MessageParserInfo.class);
+                    streamTimeParser = (AbstractTimeParser) constructor.newInstance(parserInfo);
+                } catch (Exception e) {
+                    throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", tsPattern " + parserInfo.getTsPattern() + ".", e);
+                }
+            } else {
+                parserInfo.setTsParser("org.apache.kylin.stream.source.kafka.LongTimeParser");
+                parserInfo.setTsPattern("MS");
+                streamTimeParser = new LongTimeParser(parserInfo);
+            }
         }
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         mapper.disable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE);
@@ -108,7 +126,7 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
             if (StringUtils.isEmpty(tsStr)) {
                 t = 0;
             } else {
-                t = Long.valueOf(tsStr);
+                t = streamTimeParser.parseTime(tsStr);
             }
             ArrayList<String> result = Lists.newArrayList();
 
@@ -133,7 +151,7 @@ public final class TimedJsonStreamParser implements IStreamingMessageParser<Cons
             }
 
             return new StreamingMessage(result, new KafkaPartitionPosition(record.partition(), record.offset()), t,
-                    Collections.<String, Object> emptyMap());
+                    Collections.<String, Object>emptyMap());
         } catch (IOException e) {
             logger.error("error", e);
             throw new RuntimeException(e);
