@@ -28,11 +28,10 @@ import org.junit.Test;
  * Unit tests for class {@link StorageContext}.
  *
  * @see StorageContext
- *
  */
-public class StorageContextTest{
+public class StorageContextTest {
 
-  
+
     @Test
     public void testSetLimit() {
         StorageContext storageContext = new StorageContext();
