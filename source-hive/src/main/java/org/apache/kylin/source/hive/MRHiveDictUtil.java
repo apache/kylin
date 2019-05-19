@@ -18,14 +18,33 @@
 
 package org.apache.kylin.source.hive;
 
+import com.google.common.collect.ImmutableList;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.ContentSummary;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.livy.LivyRestBuilder;
+import org.apache.kylin.common.livy.LivyRestExecutor;
+import org.apache.kylin.common.livy.LivyTypeEnum;
 import org.apache.kylin.job.JoinedFlatTable;
+import org.apache.kylin.job.common.PatternedLogger;
+import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class MRHiveDictUtil {
     private static final Logger logger = LoggerFactory.getLogger(MRHiveDictUtil.class);
+    protected static final Pattern HDFS_LOCATION = Pattern.compile("LOCATION \'(.*)\';");
+
 
     public enum DictHiveType {
         GroupBy("group_by"), MrDictLockPath("/mr_dict_lock/");
@@ -105,6 +124,42 @@ public class MRHiveDictUtil {
 
     public static void appendJoinStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql) {
         sql.append("FROM " + flatDesc.getTableName() + "\n");
+    }
+
+    public static void runLivySqlJob(PatternedLogger stepLogger, KylinConfig config, ImmutableList<String> sqls, ExecutableManager executableManager, String jobId) throws Exception{
+        final LivyRestBuilder livyRestBuilder = new LivyRestBuilder();
+        livyRestBuilder.overwriteHiveProps(config.getHiveConfigOverride());
+        String sqlCmd = livyRestBuilder.parseProps();
+        for (String sql : sqls) {
+            sqlCmd += sql;
+        }
+        livyRestBuilder.addArgs(sqlCmd);
+
+        stepLogger.log("Create and distribute table. ");
+        livyRestBuilder.setLivyTypeEnum(LivyTypeEnum.sql);
+
+        LivyRestExecutor executor = new LivyRestExecutor();
+        executor.execute(livyRestBuilder, stepLogger);
+
+        Map<String, String> info = stepLogger.getInfo();
+        //get the flat Hive table size
+        Matcher matcher = MRHiveDictUtil.HDFS_LOCATION.matcher(sqlCmd);
+        if (matcher.find()) {
+            String hiveFlatTableHdfsUrl = matcher.group(1);
+            long size = MRHiveDictUtil.getFileSize(hiveFlatTableHdfsUrl);
+            info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, "" + size);
+            logger.info("HDFS_Bytes_Writen: " + size);
+        }
+        executableManager.addJobInfo(jobId, info);
+    }
+
+    public static long getFileSize(String hdfsUrl) throws IOException {
+        Configuration configuration = new Configuration();
+        Path path = new Path(hdfsUrl);
+        FileSystem fs = path.getFileSystem(configuration);
+        ContentSummary contentSummary = fs.getContentSummary(path);
+        long length = contentSummary.getLength();
+        return length;
     }
 
 }

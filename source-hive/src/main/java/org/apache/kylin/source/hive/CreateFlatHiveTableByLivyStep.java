@@ -19,27 +19,16 @@
 package org.apache.kylin.source.hive;
 
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.ContentSummary;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import com.google.common.collect.ImmutableList;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.livy.LivyRestBuilder;
-import org.apache.kylin.common.livy.LivyRestExecutor;
-import org.apache.kylin.common.livy.LivyTypeEnum;
 import org.apache.kylin.job.common.PatternedLogger;
-import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  *
@@ -47,39 +36,12 @@ import java.util.regex.Pattern;
 public class CreateFlatHiveTableByLivyStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(CreateFlatHiveTableByLivyStep.class);
     protected final PatternedLogger stepLogger = new PatternedLogger(logger);
-    private static final Pattern HDFS_LOCATION = Pattern.compile("LOCATION \'(.*)\';");
-
 
     protected void createFlatHiveTable(KylinConfig config) throws Exception {
-        final LivyRestBuilder livyRestBuilder = new LivyRestBuilder();
-        livyRestBuilder.overwriteHiveProps(config.getHiveConfigOverride());
-        livyRestBuilder.addArgs(livyRestBuilder.parseProps() + getInitStatement() + getCreateTableStatement());
-
-        stepLogger.log("Create and distribute table. ");
-        livyRestBuilder.setLivyTypeEnum(LivyTypeEnum.sql);
-
-        LivyRestExecutor executor = new LivyRestExecutor();
-        executor.execute(livyRestBuilder, stepLogger);
-
-        Map<String, String> info = stepLogger.getInfo();
-        //get the flat Hive table size
-        Matcher matcher = HDFS_LOCATION.matcher(getCreateTableStatement());
-        if (matcher.find()) {
-            String hiveFlatTableHdfsUrl = matcher.group(1);
-            long size = getFileSize(hiveFlatTableHdfsUrl);
-            info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, "" + size);
-            logger.info("HDFS_Bytes_Writen: " + size);
-        }
-        getManager().addJobInfo(getId(), info);
-    }
-
-    private long getFileSize(String hdfsUrl) throws IOException {
-        Configuration configuration = new Configuration();
-        Path path = new Path(hdfsUrl);
-        FileSystem fs = path.getFileSystem(configuration);
-        ContentSummary contentSummary = fs.getContentSummary(path);
-        long length = contentSummary.getLength();
-        return length;
+        ImmutableList<String> sqls = ImmutableList.of(getInitStatement(), getCreateTableStatement());
+        ExecutableManager executableManager = getManager();
+        String jobId = getId();
+        MRHiveDictUtil.runLivySqlJob(stepLogger, config, sqls, executableManager, jobId);
     }
 
     @Override
