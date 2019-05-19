@@ -18,6 +18,7 @@
 package org.apache.kylin.source.hive;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.util.HiveCmdBuilder;
@@ -30,6 +31,7 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -124,10 +126,17 @@ public class CreateMrHiveDictStep extends AbstractExecutable {
 
             stepLogger.log("MR-Hive dict, cmd: " + cmd);
 
-            Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
-            getManager().addJobInfo(getId(), stepLogger.getInfo());
-            if (response.getFirst() != 0) {
-                throw new RuntimeException("Failed to create mr hive dict, error code " + response.getFirst());
+            CubeManager manager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+            CubeInstance cube = manager.getCube(getCubeName());
+
+            if (config.isLivyEnabled() && cube.getEngineType() == IEngineAware.ID_SPARK) {
+                MRHiveDictUtil.runLivySqlJob(stepLogger, config, ImmutableList.copyOf(hiveCmdBuilder.getStatements()), getManager(), getId());
+            } else {
+                Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
+                if (response.getFirst() != 0) {
+                    throw new RuntimeException("Failed to create mr hive dict, error code " + response.getFirst());
+                }
+                getManager().addJobInfo(getId(), stepLogger.getInfo());
             }
             if (getIsLock()) {
                 String pathName = getLockPathName();
