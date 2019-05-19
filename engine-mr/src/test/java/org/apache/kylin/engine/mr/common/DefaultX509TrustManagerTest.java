@@ -17,34 +17,33 @@
  */
 package org.apache.kylin.engine.mr.common;
 
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Unit tests for class {@link DefaultX509TrustManager}.
  *
  * @see DefaultX509TrustManager
- *
  */
-public class DefaultX509TrustManagerTest{
+public class DefaultX509TrustManagerTest {
 
-  @Test(expected = NullPointerException.class)
-  public void testIsServerTrustedThrowsNullPointerException() throws KeyStoreException, NoSuchAlgorithmException {
-      DefaultX509TrustManager defaultX509TrustManager = new DefaultX509TrustManager(null);
+    @Test(expected = NullPointerException.class)
+    public void testIsServerTrustedThrowsNullPointerException() throws KeyStoreException, NoSuchAlgorithmException {
+        DefaultX509TrustManager defaultX509TrustManager = new DefaultX509TrustManager(null);
 
-      defaultX509TrustManager.isServerTrusted(new X509Certificate[1]);
-  }
+        defaultX509TrustManager.isServerTrusted(new X509Certificate[1]);
+    }
 
-  @Test
-  public void testIsServerTrustedWithNull() throws KeyStoreException, NoSuchAlgorithmException {
-      DefaultX509TrustManager defaultX509TrustManager = new DefaultX509TrustManager(null);
+    @Test
+    public void testIsServerTrustedWithNull() throws KeyStoreException, NoSuchAlgorithmException {
+        DefaultX509TrustManager defaultX509TrustManager = new DefaultX509TrustManager(null);
 
-      assertTrue(defaultX509TrustManager.isServerTrusted(null));
-  }
+        assertTrue(defaultX509TrustManager.isServerTrusted(null));
+    }
 
 }
