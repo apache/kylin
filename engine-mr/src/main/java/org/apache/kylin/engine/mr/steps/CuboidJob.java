@@ -148,7 +148,7 @@ public class CuboidJob extends AbstractHadoopJob {
             configureMapperInputFormat(segment);
 
             // set output
-            IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(segment).getOuputFormat();
+            IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(segment).getOutputFormat();
             outputFormat.configureJobOutput(job, output, segment, cuboidScheduler, nCuboidLevel);
 
             // set job configuration
@@ -174,7 +174,7 @@ public class CuboidJob extends AbstractHadoopJob {
             flatTableInputFormat.configureJob(job);
         } else {
             // n-dimension cuboid case
-            IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(cubeSeg).getOuputFormat();
+            IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(cubeSeg).getOutputFormat();
             outputFormat.configureJobInput(job, input);
             FileInputFormat.setInputPaths(job, new Path(input));
         }

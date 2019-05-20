@@ -206,7 +206,7 @@ public class SparkExecutableLivy extends SparkExecutable {
                 // done, update all properties
                 Map<String, String> joblogInfo = patternedLogger.getInfo();
                 // read counter from hdfs
-                String counterOutput = getParam(BatchConstants.ARG_COUNTER_OUPUT);
+                String counterOutput = getParam(BatchConstants.ARG_COUNTER_OUTPUT);
                 if (counterOutput != null) {
                     if (HadoopUtil.getWorkingFileSystem().exists(new Path(counterOutput))) {
                         Map<String, String> counterMap = HadoopUtil.readFromSequenceFile(counterOutput);

@@ -108,7 +108,7 @@ public interface BatchConstants {
     String ARG_META_URL = "metadataUrl";
     String ARG_HBASE_CONF_PATH = "hbaseConfPath";
     String ARG_SHRUNKEN_DICT_PATH = "shrunkenDictPath";
-    String ARG_COUNTER_OUPUT = "counterOutput";
+    String ARG_COUNTER_OUTPUT = "counterOutput";
 
     /**
      * logger and counter
