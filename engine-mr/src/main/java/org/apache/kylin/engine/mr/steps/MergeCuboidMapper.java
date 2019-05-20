@@ -60,7 +60,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         // decide which source segment
         FileSplit fileSplit = (FileSplit) context.getInputSplit();
         IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(mergedCubeSegment)
-                .getOuputFormat();
+                .getOutputFormat();
         CubeSegment sourceCubeSegment = outputFormat.findSourceSegment(fileSplit, cube);
         reEncoder = new SegmentReEncoder(cubeDesc, sourceCubeSegment, mergedCubeSegment, config);
     }

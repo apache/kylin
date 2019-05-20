@@ -91,8 +91,8 @@ public class SparkCubeHFile extends AbstractApplication implements Serializable 
             .isRequired(true).withDescription("Cuboid files PATH").create(BatchConstants.ARG_INPUT);
     public static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder.withArgName(BatchConstants.ARG_PARTITION)
             .hasArg().isRequired(true).withDescription("Partition file path.").create(BatchConstants.ARG_PARTITION);
-    public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUPUT).hasArg()
-            .isRequired(true).withDescription("counter output path").create(BatchConstants.ARG_COUNTER_OUPUT);
+    public static final Option OPTION_COUNTER_PATH = OptionBuilder.withArgName(BatchConstants.ARG_COUNTER_OUTPUT).hasArg()
+            .isRequired(true).withDescription("counter output path").create(BatchConstants.ARG_COUNTER_OUTPUT);
 
     private Options options;
 

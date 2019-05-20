@@ -116,7 +116,7 @@ public class SparkBatchCubingJobBuilder2 extends JobBuilderSupport {
 
         sparkExecutable.setJobId(jobId);
         sparkExecutable.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
-        sparkExecutable.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES, getCounterOuputPath(jobId));
+        sparkExecutable.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES, getCounterOutputPath(jobId));
 
         StringBuilder jars = new StringBuilder();
 
