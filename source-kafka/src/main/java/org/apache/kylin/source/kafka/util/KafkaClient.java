@@ -29,6 +29,7 @@ import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
+import org.apache.kylin.source.kafka.config.KafkaConsumerProperties;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +42,11 @@ public class KafkaClient {
 
     private KafkaClient() {
         throw new IllegalStateException("Class KafkaClient is an utility class !");
+    }
+
+    public static KafkaConsumer getKafkaConsumer(String brokers, String consumerGroup) {
+        Properties properties = KafkaConsumerProperties.getInstanceFromEnv().extractKafkaConfigToProperties();
+        return getKafkaConsumer(brokers, consumerGroup, properties);
     }
 
     public static KafkaConsumer getKafkaConsumer(String brokers, String consumerGroup, Properties properties) {
@@ -107,7 +113,7 @@ public class KafkaClient {
         final String topic = kafkaConfig.getTopic();
 
         Map<Integer, Long> startOffsets = Maps.newHashMap();
-        try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName(), null)) {
+        try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName())) {
             final List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
             for (PartitionInfo partitionInfo : partitionInfos) {
                 long latest = getLatestOffset(consumer, topic, partitionInfo.partition());
@@ -125,7 +131,7 @@ public class KafkaClient {
         final String topic = kafkaConfig.getTopic();
 
         Map<Integer, Long> startOffsets = Maps.newHashMap();
-        try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName(), null)) {
+        try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName())) {
             final List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
             for (PartitionInfo partitionInfo : partitionInfos) {
                 long latest = getEarliestOffset(consumer, topic, partitionInfo.partition());
