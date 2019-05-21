@@ -511,7 +511,7 @@ public class StreamingServer implements ReplicaSetLeaderSelector.LeaderChangeLis
     public void remoteSegmentBuildComplete(String cubeName, String segmentName) {
         StreamingSegmentManager segmentManager = getStreamingSegmentManager(cubeName);
         List<String> removedSegments = segmentManager.remoteSegmentBuildComplete(segmentName);
-        if (removedSegments.size() > 0) {
+        if (!removedSegments.isEmpty()) {
             resumeConsumerIfPaused(cubeName);
         }
     }

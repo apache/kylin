@@ -56,7 +56,7 @@ public class KylinResultSet extends AvaticaResultSet {
         List<Object> paramValues = null;
         if (!(statement instanceof KylinPreparedStatement)) {
             params = null;
-        } else if (params != null && params.size() > 0) {
+        } else if (params != null && !params.isEmpty()) {
             paramValues = ((KylinPreparedStatement) statement).getParameterJDBCValues();
         }
 
