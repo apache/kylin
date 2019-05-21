@@ -86,22 +86,15 @@ public class KylinMeta extends MetaImpl {
     @Override
     @Deprecated
     public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, PrepareCallback callback) {
-        try {
-            synchronized (callback.getMonitor()) {
-                callback.clear();
-                sh.signature = connection().mockPreparedSignature(sql);
-                callback.assign(sh.signature, null, -1);
-            }
-            callback.execute();
-            final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
-            return new ExecuteResult(Collections.singletonList(metaResultSet));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return getPreparedExecuteResult(sh, sql, callback);
     }
 
     @Override
     public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) throws NoSuchStatementException {
+        return getPreparedExecuteResult(sh, sql, callback);
+    }
+
+    private ExecuteResult getPreparedExecuteResult(StatementHandle sh, String sql, PrepareCallback callback) {
         try {
             synchronized (callback.getMonitor()) {
                 callback.clear();
