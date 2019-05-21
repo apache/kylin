@@ -72,7 +72,7 @@ public class JobEngineConfig {
 
     /**
      *
-     * @param jobType job config file suffix name; if be null, will use the default job conf
+     * @param jobType job config file suffix name; if is null, will use the default job conf
      * @return the job config file path
      * @throws IOException
      */
