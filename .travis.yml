@@ -28,7 +28,7 @@ cache:
     - $HOME/.m2
 
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 before_script:
   - echo "MAVEN_OPTS='-Xms1024m -Xmx3072m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m'" > ~/.mavenrc
