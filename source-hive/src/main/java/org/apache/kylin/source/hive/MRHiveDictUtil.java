@@ -45,7 +45,6 @@ public class MRHiveDictUtil {
     private static final Logger logger = LoggerFactory.getLogger(MRHiveDictUtil.class);
     protected static final Pattern HDFS_LOCATION = Pattern.compile("LOCATION \'(.*)\';");
 
-
     public enum DictHiveType {
         GroupBy("group_by"), MrDictLockPath("/mr_dict_lock/");
         private String name;
@@ -96,8 +95,9 @@ public class MRHiveDictUtil {
         }
 
         if (index == flatDesc.getAllColumns().size()) {
-            // dictColumn not in flatDesc,need throw Exception
-            index = -1;
+            String msg = "Can not find correct column for " + dictColumn + ", please check 'kylin.dictionary.mr-hive.columns'";
+            logger.error(msg);
+            throw new IllegalArgumentException(msg);
         }
 
         TblColRef col = flatDesc.getAllColumns().get(index);
@@ -114,7 +114,6 @@ public class MRHiveDictUtil {
                 + sql + ";\n";
     }
 
-
     public static String getHiveTableName(IJoinedFlatTableDesc flatDesc, DictHiveType dictHiveType) {
         StringBuffer table = new StringBuffer(flatDesc.getTableName());
         table.append("__");
@@ -126,14 +125,17 @@ public class MRHiveDictUtil {
         sql.append("FROM " + flatDesc.getTableName() + "\n");
     }
 
-    public static void runLivySqlJob(PatternedLogger stepLogger, KylinConfig config, ImmutableList<String> sqls, ExecutableManager executableManager, String jobId) throws Exception{
+    public static void runLivySqlJob(PatternedLogger stepLogger, KylinConfig config, ImmutableList<String> sqls,
+            ExecutableManager executableManager, String jobId) throws IOException {
         final LivyRestBuilder livyRestBuilder = new LivyRestBuilder();
         livyRestBuilder.overwriteHiveProps(config.getHiveConfigOverride());
-        String sqlCmd = livyRestBuilder.parseProps();
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(livyRestBuilder.parseProps());
         for (String sql : sqls) {
-            sqlCmd += sql;
+            stringBuilder.append(sql);
         }
-        livyRestBuilder.addArgs(sqlCmd);
+        String args = stringBuilder.toString();
+        livyRestBuilder.addArgs(args);
 
         stepLogger.log("Create and distribute table. ");
         livyRestBuilder.setLivyTypeEnum(LivyTypeEnum.sql);
@@ -143,23 +145,21 @@ public class MRHiveDictUtil {
 
         Map<String, String> info = stepLogger.getInfo();
         //get the flat Hive table size
-        Matcher matcher = MRHiveDictUtil.HDFS_LOCATION.matcher(sqlCmd);
+        Matcher matcher = HDFS_LOCATION.matcher(args);
         if (matcher.find()) {
             String hiveFlatTableHdfsUrl = matcher.group(1);
-            long size = MRHiveDictUtil.getFileSize(hiveFlatTableHdfsUrl);
+            long size = getFileSize(hiveFlatTableHdfsUrl);
             info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, "" + size);
-            logger.info("HDFS_Bytes_Writen: " + size);
+            logger.info("HDFS_Bytes_Writen: {}", size);
         }
         executableManager.addJobInfo(jobId, info);
     }
 
-    public static long getFileSize(String hdfsUrl) throws IOException {
+    private static long getFileSize(String hdfsUrl) throws IOException {
         Configuration configuration = new Configuration();
         Path path = new Path(hdfsUrl);
         FileSystem fs = path.getFileSystem(configuration);
         ContentSummary contentSummary = fs.getContentSummary(path);
-        long length = contentSummary.getLength();
-        return length;
+        return contentSummary.getLength();
     }
-
 }
