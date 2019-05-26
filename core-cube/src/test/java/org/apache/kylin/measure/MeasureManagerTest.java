@@ -53,7 +53,7 @@ public class MeasureManagerTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setUp() throws Exception {
-        BasicConfigurator.configure();
+        // BasicConfigurator.configure();
         this.createTestMetadata();
     }
 
