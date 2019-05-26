@@ -174,7 +174,15 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
         for (String[] row : rowCollection) {
             context.getCounter(RawDataCounter.BYTES).increment(countSizeInBytes(row));
             for (int i = 0; i < allCols.size(); i++) {
-                String fieldValue = row[columnIndex[i]];
+                int colIndex = columnIndex[i];
+                int rowSize = row.length;
+                String fieldValue = " ";
+                if (colIndex <= rowSize - 1) {
+                    fieldValue = row[colIndex];
+                } else {
+                    logger.debug(
+                            "colIndex:" + colIndex + " is more than rowSize: " + rowSize + " -1, so set empty value.");
+                }
                 if (fieldValue == null)
                     continue;
 
