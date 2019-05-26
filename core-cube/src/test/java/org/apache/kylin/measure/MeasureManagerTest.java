@@ -32,7 +32,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.log4j.BasicConfigurator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,7 +52,7 @@ public class MeasureManagerTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setUp() throws Exception {
-        BasicConfigurator.configure();
+        // BasicConfigurator.configure();
         this.createTestMetadata();
     }
 

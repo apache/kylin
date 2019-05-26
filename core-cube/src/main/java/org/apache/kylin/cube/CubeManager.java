@@ -1248,4 +1248,9 @@ public class CubeManager implements IRealizationProvider {
     public MeasureManager getMeasureManager() {
         return MeasureManager.getInstance(this.config);
     }
+
+    public AutoReadWriteLock getLock() {
+        return cubeMapLock;
+    }
+
 }
