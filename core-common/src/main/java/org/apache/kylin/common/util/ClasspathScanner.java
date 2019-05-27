@@ -239,11 +239,11 @@ public class ClasspathScanner {
         File[] files;
         while (!queue.isEmpty()) {
             dirPath = (String) queue.remove(queue.size() - 1);
-            dirFile = dirPath.length() == 0 ? dir : new File(dir, dirPath);
+            dirFile = dirPath.isEmpty() ? dir : new File(dir, dirPath);
             files = dirFile.listFiles();
             for (int i = 0; files != null && i < files.length; i++) {
                 f = files[i];
-                path = dirPath + (dirPath.length() == 0 ? "" : "/") + f.getName();
+                path = dirPath + (dirPath.isEmpty() ? "" : "/") + f.getName();
                 if (f.isDirectory()) {
                     // cut off excluded dir early
                     if (scanFiles_isIncluded(path, null, excludes))

@@ -79,9 +79,7 @@ public class LookupExecutableUtil {
         if (ids != null) {
             final String[] splitted = StringUtils.split(ids, ",");
             ArrayList<String> result = Lists.newArrayListWithExpectedSize(splitted.length);
-            for (String id : splitted) {
-                result.add(id);
-            }
+            Collections.addAll(result, splitted);
             return result;
         } else {
             return Collections.emptyList();

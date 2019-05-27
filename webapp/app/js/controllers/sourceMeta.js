@@ -965,6 +965,8 @@ KylinApp
             dataTypeArr: tableConfig.dataTypes,
             TSColumnArr: [],
             TSColumnSelected: '',
+            TSParser: 'org.apache.kylin.stream.source.kafka.LongTimeParser',
+            TSPattern: 'MS',
             errMsg: ''
           };
           $scope.tableData = {
@@ -1020,6 +1022,8 @@ KylinApp
         dataTypeArr: tableConfig.dataTypes,
         TSColumnArr: [],
         TSColumnSelected: '',
+        TSParser: '',
+        TSPattern: '',
         errMsg: '',
         lambda: false
       };
@@ -1251,7 +1255,9 @@ KylinApp
         }
         // Set ts column
         $scope.streamingConfig.parser_info.ts_col_name = $scope.streaming.TSColumnSelected;
-        $scope.streamingConfig.parser_info.field_mapping = {}
+        $scope.streamingConfig.parser_info.ts_parser = $scope.streaming.TSParser;
+        $scope.streamingConfig.parser_info.ts_pattern = $scope.streaming.TSPattern;
+        $scope.streamingConfig.parser_info.field_mapping = {};
         $scope.tableData.columns.forEach(function(col) {
           if (col.comment) {
             $scope.streamingConfig.parser_info.field_mapping[col.name] = col.comment.replace(/\|/g, '.') || ''

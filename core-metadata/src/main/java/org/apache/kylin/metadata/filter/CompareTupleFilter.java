@@ -38,6 +38,9 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
         AlwaysTrue, AlwaysFalse, Unknown
     }
 
+    // if the two children are both CompareTupleFilter, isNormal will be false
+    private boolean isNormal = true;
+
     // operand 1 is either a column or a function
     private TblColRef column;
     private FunctionTupleFilter function;
@@ -74,6 +77,9 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
 
     @Override
     public void addChild(TupleFilter child) {
+        if (child instanceof CompareTupleFilter) {
+            child = optimizeChildCompareTupleFilter((CompareTupleFilter) child);
+        }
         super.addChild(child);
         if (child instanceof ColumnTupleFilter) {
             ColumnTupleFilter columnFilter = (ColumnTupleFilter) child;
@@ -234,7 +240,7 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
 
     @Override
     public boolean isEvaluable() {
-        return (column != null || (function != null && function.isEvaluable())) //
+        return isNormal && (column != null || (function != null && function.isEvaluable())) //
                 && (!conditionValues.isEmpty() || operator == FilterOperatorEnum.ISNOTNULL || operator == FilterOperatorEnum.ISNULL) //
                 && secondColumn == null;
     }
@@ -281,6 +287,20 @@ public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupl
     @Override
     public TupleFilter acceptOptimizeTransformer(FilterOptimizeTransformer transformer) {
         return transformer.visit(this);
+    }
+
+    private TupleFilter optimizeChildCompareTupleFilter(CompareTupleFilter child) {
+        FilterOptimizeTransformer transformer = new FilterOptimizeTransformer();
+        TupleFilter result = child.acceptOptimizeTransformer(transformer);
+        if (result == ConstantTupleFilter.TRUE) {
+            // use string instead of boolean since it's encoded as string
+            result = new ConstantTupleFilter("true");
+        } else if (result == ConstantTupleFilter.FALSE) {
+            result = new ConstantTupleFilter("false");
+        } else {
+            this.isNormal = false;
+        }
+        return result;
     }
 
     @Override

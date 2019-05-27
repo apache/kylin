@@ -120,7 +120,7 @@ public class MergeStatisticsWithOldStep extends AbstractExecutable {
 
             String resultDir = CubingExecutableUtil.getMergedStatisticsPath(this.getParams());
             CubeStatsWriter.writeCuboidStatistics(conf, new Path(resultDir), resultCuboidHLLMap,
-                    averageSamplingPercentage);
+                    averageSamplingPercentage, oldSegmentStatsReader.getSourceRowCount());
 
             try (FSDataInputStream mergedStats = hdfs
                     .open(new Path(resultDir, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME))) {

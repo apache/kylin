@@ -147,7 +147,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
 
     @Override
     protected void visitFolderImpl(String folderPath, final boolean recursive, VisitFilter filter,
-                                   final boolean loadContent, final Visitor visitor) throws IOException {
+            final boolean loadContent, final Visitor visitor) throws IOException {
 
         visitFolder(folderPath, filter, loadContent, new FolderVisitor() {
             @Override
@@ -167,7 +167,8 @@ public class HBaseResourceStore extends PushdownResourceStore {
         });
     }
 
-    private void visitFolder(String folderPath, VisitFilter filter, boolean loadContent, FolderVisitor visitor) throws IOException {
+    private void visitFolder(String folderPath, VisitFilter filter, boolean loadContent, FolderVisitor visitor)
+            throws IOException {
         assert folderPath.startsWith("/");
 
         String folderPrefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
@@ -244,7 +245,7 @@ public class HBaseResourceStore extends PushdownResourceStore {
                     CompareFilter.CompareOp.LESS, Bytes.toBytes(visitFilter.lastModEndExclusive));
             filterList.addFilter(timeEndFilter);
         }
-        return filterList.getFilters().size() == 0 ? null : filterList;
+        return filterList.getFilters().isEmpty() ? null : filterList;
     }
 
     private InputStream getInputStream(String resPath, Result r) throws IOException {
@@ -352,17 +353,39 @@ public class HBaseResourceStore extends PushdownResourceStore {
     }
 
     @Override
+    protected void updateTimestampImpl(String resPath, long timestamp) throws IOException {
+        Table table = getConnection().getTable(TableName.valueOf(tableName));
+        try {
+            boolean hdfsResourceExist = isHdfsResourceExist(table, resPath);
+            long oldTS = getResourceLastModified(table, resPath);
+
+            byte[] bOldTS = oldTS == 0 ? null : Bytes.toBytes(oldTS);
+            byte[] row = Bytes.toBytes(resPath);
+            Put put = new Put(row);
+            put.addColumn(B_FAMILY, B_COLUMN_TS, Bytes.toBytes(timestamp));
+
+            boolean ok = table.checkAndPut(row, B_FAMILY, B_COLUMN_TS, bOldTS, put);
+            logger.trace("Update row {} from oldTs: {}, to newTs: {}, operation result: {}", resPath, oldTS, timestamp,
+                    ok);
+            if (!ok) {
+                long real = getResourceTimestampImpl(resPath);
+                throw new WriteConflictException(
+                        "Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but it is " + real);
+            }
+
+            if (hdfsResourceExist) { // update timestamp in hdfs
+                updateTimestampPushdown(resPath, timestamp);
+            }
+        } finally {
+            IOUtils.closeQuietly(table);
+        }
+    }
+
+    @Override
     protected void deleteResourceImpl(String resPath) throws IOException {
         Table table = getConnection().getTable(TableName.valueOf(tableName));
         try {
-            boolean hdfsResourceExist = false;
-            Result result = internalGetFromHTable(table, resPath, true, false);
-            if (result != null) {
-                byte[] value = result.getValue(B_FAMILY, B_COLUMN);
-                if (value != null && value.length == 0) {
-                    hdfsResourceExist = true;
-                }
-            }
+            boolean hdfsResourceExist = isHdfsResourceExist(table, resPath);
 
             Delete del = new Delete(Bytes.toBytes(resPath));
             table.delete(del);
@@ -373,6 +396,43 @@ public class HBaseResourceStore extends PushdownResourceStore {
         } finally {
             IOUtils.closeQuietly(table);
         }
+    }
+
+    @Override
+    protected void deleteResourceImpl(String resPath, long timestamp) throws IOException {
+        Table table = getConnection().getTable(TableName.valueOf(tableName));
+        try {
+            boolean hdfsResourceExist = isHdfsResourceExist(table, resPath);
+            long origLastModified = getResourceLastModified(table, resPath);
+            if (checkTimeStampBeforeDelete(origLastModified, timestamp)) {
+                Delete del = new Delete(Bytes.toBytes(resPath));
+                table.delete(del);
+
+                if (hdfsResourceExist) { // remove hdfs cell value
+                    deletePushdown(resPath);
+                }
+            }
+        } finally {
+            IOUtils.closeQuietly(table);
+        }
+    }
+
+    // to avoid get Table twice time to improve delete performance
+    private long getResourceLastModified(Table table, String resPath) throws IOException {
+        return getTimestamp(internalGetFromHTable(table, resPath, false, true));
+    }
+
+    private boolean isHdfsResourceExist(Table table, String resPath) throws IOException {
+        boolean hdfsResourceExist = false;
+        Result result = internalGetFromHTable(table, resPath, true, false);
+        if (result != null) {
+            byte[] contentVal = result.getValue(B_FAMILY, B_COLUMN);
+            if (contentVal != null && contentVal.length == 0) {
+                hdfsResourceExist = true;
+            }
+        }
+
+        return hdfsResourceExist;
     }
 
     @Override

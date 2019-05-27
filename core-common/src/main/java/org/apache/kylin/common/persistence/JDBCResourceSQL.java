@@ -30,7 +30,8 @@ public class JDBCResourceSQL {
     final private String metaTableTs;
     final private String metaTableContent;
 
-    public JDBCResourceSQL(String dialect, String tableName, String metaTableKey, String metaTableTs, String metaTableContent) {
+    public JDBCResourceSQL(String dialect, String tableName, String metaTableKey, String metaTableTs,
+            String metaTableContent) {
         this.format = JDBCSqlQueryFormatProvider.createJDBCSqlQueriesFormat(dialect);
         this.tableName = tableName;
         this.metaTableKey = metaTableKey;
@@ -96,8 +97,7 @@ public class JDBCResourceSQL {
         return sql;
     }
 
-    @SuppressWarnings("unused")
-    private String getReplaceSqlWithoutContent() {
+    public String getReplaceSqlWithoutContent() {
         final String sql = new MessageFormat(format.getReplaceSqlWithoutContent(), Locale.ROOT)
                 .format(new Object[] { tableName, metaTableTs, metaTableKey }, new StringBuffer(), new FieldPosition(0))
                 .toString();
