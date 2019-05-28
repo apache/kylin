@@ -24,6 +24,7 @@ import java.util.Random;
 import java.util.concurrent.Executor;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
@@ -69,7 +70,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
 
     // ============================================================================
 
-    final CuratorFramework curator;
+    private CuratorFramework curator;
     final String client;
     final byte[] clientBytes;
 
@@ -90,6 +91,11 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     @Override
     public boolean lock(String lockPath) {
         logger.debug("{} trying to lock {}", client, lockPath);
+
+        // curator closed in some case(like Expired),restart it
+        if (curator.getState() != CuratorFrameworkState.STARTED) {
+            curator = ZKUtil.getZookeeperClient(KylinConfig.getInstanceFromEnv());
+        }
 
         try {
             curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(lockPath, clientBytes);
