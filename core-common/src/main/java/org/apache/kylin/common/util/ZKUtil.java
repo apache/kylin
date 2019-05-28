@@ -84,7 +84,7 @@ public class ZKUtil {
                         logger.error("Error at closing " + curator, ex);
                     }
                 }
-            }).expireAfterWrite(1, TimeUnit.DAYS).build();
+            }).expireAfterWrite(10000, TimeUnit.DAYS).build();//never expired
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
