@@ -382,6 +382,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
           if(rowkey.encoding.substr(0,3)=='int' && (rowkey.encoding.substr(4)<1 || rowkey.encoding.substr(4)>8)){
             errors.push("int encoding column length should between 1 and 8.");
           }
+          if(rowkey.encoding.substr(0, 5) == 'fixed' && (!/^[1-9]\d*$/.test(rowkey.encoding.split(':')[1]))) {
+            errors.push("fixed encoding need a valid length.")
+          }
         })
         if(shardRowkeyList.length >1){
           errors.push("At most one 'shard by' column is allowed.");
