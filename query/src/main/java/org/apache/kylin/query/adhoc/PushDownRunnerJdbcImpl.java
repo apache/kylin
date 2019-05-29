@@ -32,6 +32,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 public class PushDownRunnerJdbcImpl extends AbstractPushdownRunner {
 
@@ -246,7 +247,7 @@ public class PushDownRunnerJdbcImpl extends AbstractPushdownRunner {
             return Types.DATE;
         } else if ("timestamp".equalsIgnoreCase(type)) {
             return Types.TIMESTAMP;
-        } else if ("decimal".equalsIgnoreCase(type)) {
+        } else if (type.toLowerCase(Locale.ROOT).startsWith("decimal")) {
             return Types.DECIMAL;
         } else if ("binary".equalsIgnoreCase(type)) {
             return Types.BINARY;
