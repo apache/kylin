@@ -18,13 +18,14 @@
 
 package org.apache.kylin.metadata.acl;
 
-import com.google.common.collect.Sets;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.kylin.metadata.MetadataConstants;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.google.common.collect.Sets;
 
 public class TableACLTest {
     private static Set<String> EMPTY_GROUP_SET = new HashSet<>();

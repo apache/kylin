@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.google.common.collect.Sets;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.CaseInsensitiveStringSet;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -35,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
@@ -64,7 +64,6 @@ public class TableACL extends RootPersistentEntity {
         Set<String> tableBlackList = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         tableBlackList.addAll(userTableBlackList.getTableBlackList(username));
         //if user is in group, add group's black list
-        List<Set<String>> tableBlackListForGroups = Lists.newArrayList();
         Set<String> tableBlackListForGroup = Sets.newHashSet();
         boolean firstBlackList = true;
         Set<String> tableBlackLists;
@@ -74,7 +73,6 @@ public class TableACL extends RootPersistentEntity {
                 continue;
             }
             if (firstBlackList) {
-                tableBlackListForGroups.add(tableBlackLists);
                 tableBlackListForGroup.addAll(tableBlackLists);
                 firstBlackList = false;
             } else {
