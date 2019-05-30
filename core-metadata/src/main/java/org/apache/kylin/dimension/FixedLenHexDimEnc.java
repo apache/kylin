@@ -112,6 +112,16 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new FixedLenHexDimEnc(Integer.parseInt(args[0]));
         }
+
+        @Override
+        public boolean isValidDimensionEncoding(String encodingName, String[] args) {
+            try {
+                int length = Integer.parseInt(args[0]);
+                return length >= 1;
+            } catch (Exception e) {
+                return false;
+            }
+        }
     }
 
     // ============================================================================

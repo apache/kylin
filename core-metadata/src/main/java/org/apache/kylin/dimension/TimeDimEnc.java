@@ -40,6 +40,11 @@ public class TimeDimEnc extends AbstractDateDimEnc implements Serializable {
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new TimeDimEnc();
         }
+
+        @Override
+        public boolean isValidDimensionEncoding(String encodingName, String[] args) {
+            return true;
+        }
     };
 
     public TimeDimEnc() {
