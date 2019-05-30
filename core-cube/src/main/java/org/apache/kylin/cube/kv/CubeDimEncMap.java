@@ -18,7 +18,8 @@
 
 package org.apache.kylin.cube.kv;
 
-import com.google.common.collect.Maps;
+import java.util.Map;
+
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -32,7 +33,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import com.google.common.collect.Maps;
 
 public class CubeDimEncMap implements IDimensionEncodingMap, java.io.Serializable {
 
@@ -70,12 +71,8 @@ public class CubeDimEncMap implements IDimensionEncodingMap, java.io.Serializabl
                     result = new DictionaryDimEnc(dict);
                 }
             } else {
-                try {
-                    // normal case
-                    result = DimensionEncodingFactory.create(colDesc.getEncodingName(), colDesc.getEncodingArgs(), colDesc.getEncodingVersion());
-                } catch (Exception e) {
-                    throw new IllegalArgumentException("Illegal column desc: " + colDesc, e);
-                }
+                // normal case
+                result = DimensionEncodingFactory.create(colDesc.getEncodingName(), colDesc.getEncodingArgs(), colDesc.getEncodingVersion());
             }
             encMap.put(col, result);
         }

@@ -60,6 +60,11 @@ public class BooleanDimEnc extends DimensionEncoding implements Serializable{
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new BooleanDimEnc();
         }
+
+        @Override
+        public boolean isValidDimensionEncoding(String encodingName, String[] args) {
+            return true;
+        }
     };
 
     // ============================================================================
