@@ -29,6 +29,7 @@ import java.util.Properties;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
@@ -57,22 +58,30 @@ public class HiveProducer {
 
     private static final int CACHE_MAX_SIZE = 10;
 
+    private String metricType;
     private final HiveConf hiveConf;
-    private final FileSystem hdfs;
+    private final FileSystem fs;
     private final LoadingCache<Pair<String, String>, Pair<String, List<FieldSchema>>> tableFieldSchemaCache;
-    private final String CONTENT_FILE_NAME;
+    private final String CONTENT_FILE_PREFIX;
 
-    public HiveProducer(Properties props) throws Exception {
-        this(props, new HiveConf());
+    private String prePartitionPath;
+    private Path curPartitionContentPath;
+    private int id = 0;
+    private FSDataOutputStream fout;
+
+
+    public HiveProducer(String metricType, Properties props) throws Exception {
+        this(metricType, props, new HiveConf());
     }
 
-    HiveProducer(Properties props, HiveConf hiveConfig) throws Exception {
+    HiveProducer(String metricType, Properties props, HiveConf hiveConfig) throws Exception {
+        this.metricType = metricType;
         hiveConf = hiveConfig;
         for (Map.Entry<Object, Object> e : props.entrySet()) {
             hiveConf.set(e.getKey().toString(), e.getValue().toString());
         }
 
-        hdfs = FileSystem.get(hiveConf);
+        fs = FileSystem.get(hiveConf);
 
         tableFieldSchemaCache = CacheBuilder.newBuilder().removalListener(new RemovalListener<Pair<String, String>, Pair<String, List<FieldSchema>>>() {
             @Override
@@ -96,7 +105,7 @@ public class HiveProducer {
         } catch (UnknownHostException e) {
             hostName = "UNKNOWN";
         }
-        CONTENT_FILE_NAME = hostName + "-part-0000";
+        CONTENT_FILE_PREFIX = hostName + "-" + System.currentTimeMillis() + "-part-";
     }
 
     public void close() {
@@ -134,7 +143,7 @@ public class HiveProducer {
             sb.append(e.getValue());
         }
         Path partitionPath = new Path(sb.toString());
-        if (!hdfs.exists(partitionPath)) {
+        if (!fs.exists(partitionPath)) {
             StringBuilder hql = new StringBuilder();
             hql.append("ALTER TABLE ");
             hql.append(recordKey.database() + "." + recordKey.table());
@@ -155,27 +164,62 @@ public class HiveProducer {
             driver.run(hql.toString());
             driver.close();
         }
-        Path partitionContentPath = new Path(partitionPath, CONTENT_FILE_NAME);
-        if (!hdfs.exists(partitionContentPath)) {
+
+        if (fout == null || prePartitionPath == null || prePartitionPath.compareTo(partitionPath.toString()) != 0) {
+          if (fout != null) {
+            closeFout();
+          }
+
+          Path partitionContentPath = new Path(partitionPath, CONTENT_FILE_PREFIX + String.format(Locale.ROOT, "%04d", id));
+          logger.info("Try to use new partition content path: " + partitionContentPath.toString() + " for metric: " + metricType);
+          if (!fs.exists(partitionContentPath)) {
             int nRetry = 0;
-            while (!hdfs.createNewFile(partitionContentPath) && nRetry++ < 5) {
-                if (hdfs.exists(partitionContentPath)) {
-                    break;
-                }
-                Thread.sleep(500L * nRetry);
+            while (!fs.createNewFile(partitionContentPath) && nRetry++ < 5) {
+              if (fs.exists(partitionContentPath)) {
+                break;
+              }
+              Thread.sleep(500L * nRetry);
             }
-            if (!hdfs.exists(partitionContentPath)) {
-                throw new RuntimeException("Fail to create HDFS file: " + partitionContentPath + " after " + nRetry + " retries");
+            if (!fs.exists(partitionContentPath)) {
+              throw new RuntimeException("Fail to create HDFS file: " + partitionContentPath + " after " + nRetry + " retries");
             }
+          }
+          fout = fs.append(partitionContentPath);
+          prePartitionPath = partitionPath.toString();
+          curPartitionContentPath = partitionContentPath;
+          id = (id + 1) % 10;
         }
-        try (FSDataOutputStream fout = hdfs.append(partitionContentPath)) {
+
+        try {
+            int count = 0;
             for (HiveProducerRecord elem : recordItr) {
                 fout.writeBytes(elem.valueToString() + "\n");
+                count++;
             }
+            logger.info("Success to write " + count + " metrics(" + metricType + ") to file " + curPartitionContentPath.toString());
         } catch (IOException e) {
-            System.out.println("Fails to write metrics to file " + partitionContentPath.toString() + " due to " + e);
-            logger.error("Fails to write metrics to file " + partitionContentPath.toString() + " due to " + e);
+            logger.error("Fails to write metrics(" + metricType + ") to file " + curPartitionContentPath.toString() + " due to ", e);
+            closeFout();
         }
+    }
+
+    private void closeFout() {
+      if (fout != null) {
+        try {
+          fout.close();
+        } catch (Exception e) {
+          logger.error("Close the path: " + curPartitionContentPath + " failed", e);
+          if (fs instanceof DistributedFileSystem) {
+            DistributedFileSystem hdfs = (DistributedFileSystem) fs;
+            try {
+              boolean recovered = hdfs.recoverLease(curPartitionContentPath);
+            } catch (Exception e1) {
+              logger.error("Recover lease for path: " + curPartitionContentPath + " failed", e1);
+            }
+          }
+        }
+      }
+      fout = null;
     }
 
     private HiveProducerRecord convertTo(Record record) throws Exception {

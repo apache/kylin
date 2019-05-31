@@ -33,6 +33,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 public class BlockingReservoir extends AbstractActiveReservoir {
 
     private static final Logger logger = LoggerFactory.getLogger(BlockingReservoir.class);
+    private static final int MAX_QUEUE_SIZE = 50000;
 
     private final BlockingQueue<Record> recordsQueue;
     private final Thread scheduledReporter;
@@ -42,7 +43,7 @@ public class BlockingReservoir extends AbstractActiveReservoir {
     private List<Record> records;
 
     public BlockingReservoir() {
-        this(1, 100);
+        this(100, 500);
     }
 
     public BlockingReservoir(int minReportSize, int maxReportSize) {
@@ -54,7 +55,7 @@ public class BlockingReservoir extends AbstractActiveReservoir {
         this.MIN_REPORT_SIZE = minReportSize;
         this.MAX_REPORT_TIME = MAX_REPORT_TIME * 60 * 1000L;
 
-        this.recordsQueue = new LinkedBlockingQueue<>();
+        this.recordsQueue = new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
         this.listeners = Lists.newArrayList();
 
         this.records = Lists.newArrayListWithExpectedSize(MAX_REPORT_SIZE);
@@ -72,6 +73,8 @@ public class BlockingReservoir extends AbstractActiveReservoir {
             recordsQueue.put(record);
         } catch (InterruptedException e) {
             logger.warn("Thread is interrupted during putting value to blocking queue. \n" + e.toString());
+        } catch (IllegalArgumentException e) {
+            logger.warn("The record queue may be full");
         }
     }
 
@@ -93,7 +96,7 @@ public class BlockingReservoir extends AbstractActiveReservoir {
             if (!notifyListenerOfUpdatedRecord(listener, records)) {
                 ifSucceed = false;
                 logger.warn("It fails to notify listener " + listener.toString() + " of updated records "
-                        + records.toString());
+                        + records.size());
             }
         }
         if (!ifSucceed) {
@@ -106,7 +109,7 @@ public class BlockingReservoir extends AbstractActiveReservoir {
     }
 
     private boolean notifyListenerHAOfUpdatedRecord(List<Record> records) {
-        logger.info("The HA listener " + listenerHA.toString() + " for updated records " + records.toString()
+        logger.info("The HA listener " + listenerHA.toString() + " for updated records " + records.size()
                 + " will be started");
         if (!notifyListenerOfUpdatedRecord(listenerHA, records)) {
             logger.error("The HA listener also fails!!!");
