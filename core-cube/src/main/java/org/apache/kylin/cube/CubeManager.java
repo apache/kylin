@@ -509,7 +509,7 @@ public class CubeManager implements IRealizationProvider {
             CubeInstance cube = getCube(cubeName);
 
             logger.info("Drop measure on cube first");
-            getMeasureManager().deleteByCube(cube.getProject(), cube.getName());
+            getMeasureManager().deleteByCube(cube.getName());
 
             // remove cube and update cache
             crud.delete(cube);

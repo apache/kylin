@@ -93,7 +93,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
         // test MeasureManager
         assertTrue(getStore().collectResourceRecursively("/measure/a_whole_new_cube", ".json").size() == createdCube.getMeasures().size());
-        List<MeasureInstance> measuresInCreatedCube = getMeasureManager().getMeasuresInCube(createdCube.getProject(), createdCube.getName());
+        List<MeasureInstance> measuresInCreatedCube = getMeasureManager().getMeasuresInCube(createdCube.getName());
         assertTrue(createdCube.getMeasures().size() == measuresInCreatedCube.size());
         for (MeasureInstance m : measuresInCreatedCube) {
             assertTrue(createdCube.getMeasures().contains(m.getMeasureDesc()));
@@ -109,7 +109,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
         assertNull(CubeManager.getInstance(getTestConfig()).getCube("a_whole_new_cube"));
 
-        List<MeasureInstance> measuresInDroppedCube = getMeasureManager().getMeasuresInCube(droppedCube.getProject(), droppedCube.getName());
+        List<MeasureInstance> measuresInDroppedCube = getMeasureManager().getMeasuresInCube(droppedCube.getName());
         assertTrue(measuresInDroppedCube.size() == 0);
         assertTrue(getStore().collectResourceRecursively("/measure/a_whole_new_cube", ".json").size() == 0);
     }
@@ -127,7 +127,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
             // no segment at first
             assertEquals(0, cube.getSegments().size());
-            for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getProject(), cube.getName())) {
+            for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getName())) {
                 assertTrue(m.getSegmentsName().size() == 0);
             }
             // append first
@@ -139,7 +139,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
             cube = mgr.getCube(cube.getName());
             assertEquals(2, cube.getSegments().size());
-            for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getProject(), cube.getName())) {
+            for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getName())) {
                 assertEquals(2, m.getSegmentsName().size());
             }
 
@@ -147,7 +147,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
             assertTrue(mergedSeg != null);
 
-            for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getProject(), cube.getName())) {
+            for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getName())) {
                 assertEquals(1, m.getSegmentsName().size());
                 assertEquals(1, m.getDateTimeRanges().size());
                 assertTrue(0L == m.getSegments().get(0).getTSRange().start.v);
@@ -211,7 +211,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertTrue(cube.getSegmentById(seg5.getUuid()) != null
                 && cube.getSegmentById(seg5.getUuid()).getStatus() == SegmentStatusEnum.READY);
 
-        for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getProject(), cube.getName())) {
+        for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getName())) {
             assertTrue(m.getSegmentsName().size() == 4);
             assertEquals(seg1.getName(), m.getSegments().get(0).getName());
             assertEquals(seg2.getName(), m.getSegments().get(1).getName());
@@ -283,7 +283,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertTrue(cube.getSegmentById(merge2.getUuid()) != null
                 && cube.getSegmentById(merge2.getUuid()).getStatus() == SegmentStatusEnum.NEW);
 
-        for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getProject(), cube.getName())) {
+        for (MeasureInstance m : getMeasureManager().getMeasuresInCube(cube.getName())) {
             assertTrue(m.getSegmentsName().size() == 3);
             assertEquals(merge1.getName(), m.getSegments().get(0).getName());
             assertEquals(seg3.getName(), m.getSegments().get(1).getName());
