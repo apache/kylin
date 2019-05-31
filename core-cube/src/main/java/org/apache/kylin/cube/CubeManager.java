@@ -220,6 +220,10 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    public List<String> getErrorCubes() {
+        return crud.getLoadFailedEntities();
+    }
+
     /**
      * Get related Cubes by cubedesc name. By default, the desc name will be
      * translated into upper case.

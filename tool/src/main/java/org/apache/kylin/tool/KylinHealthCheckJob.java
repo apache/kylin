@@ -15,23 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.common.util;
 
-import org.slf4j.helpers.FormattingTuple;
-import org.slf4j.helpers.MessageFormatter;
+package org.apache.kylin.tool;
 
-/**
- */
-public class SoutLogger implements Logger {
+import java.io.IOException;
 
-    @Override
-    public void log(String message) {
-        System.out.println(message);
-    }
-
-    @Override
-    public void log(String message, Object... arguments) {
-        FormattingTuple ft = MessageFormatter.arrayFormat(message, arguments);
-        log(ft.getMessage());
+public class KylinHealthCheckJob {
+    public static void main(String[] args) throws IOException {
+        org.apache.kylin.rest.job.KylinHealthCheckJob cli = new org.apache.kylin.rest.job.KylinHealthCheckJob();
+        cli.execute(args);
     }
 }

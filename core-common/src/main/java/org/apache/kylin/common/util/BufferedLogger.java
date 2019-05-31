@@ -18,6 +18,9 @@
 
 package org.apache.kylin.common.util;
 
+import org.slf4j.helpers.FormattingTuple;
+import org.slf4j.helpers.MessageFormatter;
+
 /**
  * A Logger that remembers all the logged message.
  *
@@ -39,6 +42,12 @@ public class BufferedLogger implements Logger {
         if (buffer.length() < MAX_BUFFER_SIZE) {
             buffer.append(message).append("\n");
         }
+    }
+
+    @Override
+    public void log(String message, Object... arguments) {
+        FormattingTuple ft = MessageFormatter.arrayFormat(message, arguments);
+        log(ft.getMessage());
     }
 
     public String getBufferedLog() {

@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -48,6 +49,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
     final private SingleValueCache<String, T> cache;
 
     private boolean checkCopyOnWrite;
+    final private List<String> loadErrors = new ArrayList<>();
 
     public CachedCrudAssist(ResourceStore store, String resourceRootPath, Class<T> entityType,
             SingleValueCache<String, T> cache) {
@@ -118,6 +120,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         logger.debug("Reloading " + entityType.getSimpleName() + " from " + store.getReadableResourcePath(resRootPath));
 
         cache.clear();
+        loadErrors.clear();
 
         List<String> paths = store.collectResourceRecursively(resRootPath, resPathSuffix);
         for (String path : paths) {
@@ -125,7 +128,7 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
         }
 
         logger.debug("Loaded " + cache.size() + " " + entityType.getSimpleName() + "(s) out of " + paths.size()
-                + " resource");
+                + " resource with " + loadErrors.size() + " errors");
     }
 
     public T reload(String resourceName) {
@@ -141,8 +144,13 @@ abstract public class CachedCrudAssist<T extends RootPersistentEntity> {
             return reloadAt(path);
         } catch (Exception ex) {
             logger.error("Error loading " + entityType.getSimpleName() + " at " + path, ex);
+            loadErrors.add(path);
             return null;
         }
+    }
+
+    public List<String> getLoadFailedEntities() {
+        return loadErrors;
     }
 
     public T reloadAt(String path) {
