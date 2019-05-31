@@ -138,7 +138,7 @@ public class ProjectController extends BasicController {
         try {
             createdProj = projectService.createProject(projectDesc);
         } catch (Exception e) {
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
 
         return createdProj;
@@ -169,7 +169,7 @@ public class ProjectController extends BasicController {
             }
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
 
         return updatedProj;
