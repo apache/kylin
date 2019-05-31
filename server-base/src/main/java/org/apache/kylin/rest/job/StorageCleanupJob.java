@@ -256,7 +256,7 @@ public class StorageCleanupJob extends AbstractApplication {
         }
 
         // remove every segment working dir from deletion list
-        for (CubeInstance cube : cubeMgr.listAllCubes()) {
+        for (CubeInstance cube : cubeMgr.reloadAndListAllCubes()) {
             for (CubeSegment seg : cube.getSegments()) {
                 String jobUuid = seg.getLastBuildJobID();
                 if (jobUuid != null && jobUuid.equals("") == false) {

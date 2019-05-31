@@ -182,10 +182,26 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
+    /**
+     * List all cubes from cache. Note the metadata may be out of date
+     * @return
+     */
     public List<CubeInstance> listAllCubes() {
         try (AutoLock lock = cubeMapLock.lockForRead()) {
             return new ArrayList<CubeInstance>(cubeMap.values());
         }
+    }
+
+    /**
+     * Reload the cubes from database and list all cubes
+     * @return
+     * @throws IOException
+     */
+    public List<CubeInstance> reloadAndListAllCubes() throws IOException {
+        try (AutoLock lock = cubeMapLock.lockForWrite()) {
+            crud.reloadAll();
+        }
+        return listAllCubes();
     }
 
     public CubeInstance getCube(String cubeName) {
