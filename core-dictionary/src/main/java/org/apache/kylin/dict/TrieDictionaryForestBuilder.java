@@ -89,7 +89,7 @@ public class TrieDictionaryForestBuilder<T> {
             if (comp > 0) {
                 logger.info("values not in ascending order, previous '{}', current '{}'", previousValue, valueByteArray);
                 isOrdered = false;
-                if (trees.size() > 0) {
+                if (!trees.isEmpty()) {
                     throw new IllegalStateException("Invalid input data. Unordered data cannot be split into multi trees");
                 }
             }

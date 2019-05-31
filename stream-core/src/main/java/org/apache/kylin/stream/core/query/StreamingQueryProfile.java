@@ -187,7 +187,8 @@ public class StreamingQueryProfile {
                 builder.append(properties.toString());
             }
             builder.append("    ");
-            builder.append(duration + "ms");
+            builder.append(duration);
+            builder.append("ms");
             return builder.toString();
         }
     }
