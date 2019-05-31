@@ -91,7 +91,7 @@ public class ModelController extends BasicController {
             return modelService.getModels(modelName, projectName, limit, offset);
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage(), e);
         }
     }
 
@@ -129,7 +129,7 @@ public class ModelController extends BasicController {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage(), e);
         }
 
         modelRequest.setUuid(modelDesc.getUuid());
@@ -150,7 +150,7 @@ public class ModelController extends BasicController {
             throw new ForbiddenException("You don't have right to update this model.");
         } catch (Exception e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage(), e);
         }
 
         if (modelDesc.getError().isEmpty()) {
