@@ -205,7 +205,7 @@ public abstract class CubeHBaseRPC implements IGTStorage {
 
         int colBlkIndex = 1;
         int metricOffset = fullGTInfo.getPrimaryKey().trueBitCount();
-        Set<String> measuresOnSegment = MeasureManager.getInstance(cubeSeg.getConfig()).getMeasuresOnSegment(cubeSeg.getProject(), cubeSeg.getCubeDesc().getName(), cubeSeg.getName())
+        Set<String> measuresOnSegment = MeasureManager.getInstance(cubeSeg.getConfig()).getMeasuresOnSegment(cubeSeg.getCubeDesc().getName(), cubeSeg.getName())
                 .stream()
                 .map(MeasureInstance::getName)
                 .collect(Collectors.toSet());

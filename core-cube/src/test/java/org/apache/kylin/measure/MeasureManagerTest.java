@@ -73,7 +73,7 @@ public class MeasureManagerTest extends LocalFileMetadataTestCase {
         for (CubeInstance cube : allCubes) {
             Set<MeasureDesc> measureFromCubeDesc = Sets.newHashSet(cube.getMeasures());
             Set<MeasureDesc> measureFromCache = getMeasureManager()
-                    .getMeasuresInCube(cube.getProject(), cube.getName())
+                    .getMeasuresInCube(cube.getName())
                     .stream()
                     .map(m -> m.getMeasureDesc())
                     .collect(Collectors.toSet());
@@ -89,7 +89,7 @@ public class MeasureManagerTest extends LocalFileMetadataTestCase {
         MeasureDesc newMeasure = getMAX_SELLER_ID();
         CubeDesc updatedCubeDesc = addMeasure(cubeDesc, newMeasure);
         getCubeDescManager().updateCubeDesc(updatedCubeDesc);
-        List<MeasureInstance> measuresInsInCube = getMeasureManager().getMeasuresInCube(cubeInstance.getProject(), cubeInstance.getName());
+        List<MeasureInstance> measuresInsInCube = getMeasureManager().getMeasuresInCube(cubeInstance.getName());
         List<MeasureDesc> measuresInCube = measuresInsInCube
                 .stream()
                 .map(m -> m.getMeasureDesc())
@@ -107,7 +107,7 @@ public class MeasureManagerTest extends LocalFileMetadataTestCase {
         MeasureDesc needDeleteMeasure = cubeDesc.getMeasures().get(cubeDesc.getMeasures().size() >> 1);
         CubeDesc updatedCubeDesc = deleteMeasure(cubeDesc, needDeleteMeasure);
         getCubeDescManager().updateCubeDesc(updatedCubeDesc);
-        List<MeasureInstance> measuresInsInCube = getMeasureManager().getMeasuresInCube(cubeInstance.getProject(), cubeInstance.getName());
+        List<MeasureInstance> measuresInsInCube = getMeasureManager().getMeasuresInCube(cubeInstance.getName());
         List<MeasureDesc> measuresInCube = measuresInsInCube
                 .stream()
                 .map(m -> m.getMeasureDesc())
@@ -121,7 +121,7 @@ public class MeasureManagerTest extends LocalFileMetadataTestCase {
     public void testAddMeasureOnBuiltCube() throws IOException {
         CubeInstance cubeInstance = getCubeManager().getCube("test_kylin_cube_with_slr_ready_2_segments");
 
-        List<MeasureInstance> measuresInsInCubeBeforeAdd = getMeasureManager().getMeasuresInCube(cubeInstance.getProject(), cubeInstance.getName());
+        List<MeasureInstance> measuresInsInCubeBeforeAdd = getMeasureManager().getMeasuresInCube(cubeInstance.getName());
 
         measuresInsInCubeBeforeAdd.forEach(m -> assertTrue(m.getSegments().size() == cubeInstance.getSegments(SegmentStatusEnum.READY).size()));
 
@@ -130,7 +130,7 @@ public class MeasureManagerTest extends LocalFileMetadataTestCase {
         CubeDesc updatedCubeDesc = addMeasure(cubeDesc, newMeasure);
         getCubeDescManager().updateCubeDesc(updatedCubeDesc);
 
-        List<MeasureInstance> measuresInsInCubeAfterAdd = getMeasureManager().getMeasuresInCube(cubeInstance.getProject(), cubeInstance.getName());
+        List<MeasureInstance> measuresInsInCubeAfterAdd = getMeasureManager().getMeasuresInCube(cubeInstance.getName());
         List<MeasureDesc> measuresInCube = measuresInsInCubeAfterAdd
                 .stream()
                 .map(m -> m.getMeasureDesc())
@@ -154,7 +154,7 @@ public class MeasureManagerTest extends LocalFileMetadataTestCase {
         CubeSegment firstSegment = cubeInstance.getFirstSegment();
         CubeInstance cubeAfterDelete = getCubeManager().updateCubeDropSegments(cubeInstance, firstSegment);
 
-        List<MeasureInstance> measuresInCube = getMeasureManager().getMeasuresInCube(cubeInstance.getProject(), cubeInstance.getName());
+        List<MeasureInstance> measuresInCube = getMeasureManager().getMeasuresInCube(cubeInstance.getName());
         for (MeasureInstance m : measuresInCube) {
             assertTrue(m.getSegments().size() == cubeAfterDelete.getSegments(SegmentStatusEnum.READY).size());
             assertTrue(!m.getSegments().contains(firstSegment));

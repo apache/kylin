@@ -409,7 +409,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
     private List<FunctionDesc> getNullMeasure(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         List<FunctionDesc> nullMetrics = Lists.newArrayListWithCapacity(cubeDesc.getMeasures().size());
         MeasureManager measureManager = MeasureManager.getInstance(KylinConfig.getInstanceFromEnv());
-        Set<String> measuresOnSegment = measureManager.getMeasuresOnSegment(cubeSegment.getProject(), cubeSegment.getCubeDesc().getName(), cubeSegment.getName())
+        Set<String> measuresOnSegment = measureManager.getMeasuresOnSegment(cubeSegment.getCubeDesc().getName(), cubeSegment.getName())
                 .stream()
                 .map(m -> m.getName())
                 .collect(Collectors.toSet());

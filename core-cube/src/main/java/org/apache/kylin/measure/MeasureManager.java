@@ -181,13 +181,13 @@ public class MeasureManager {
         }
     }
 
-    public List<MeasureInstance> getMeasuresOnSegment(String projectName, String cubeName, String segmentName) {
+    public List<MeasureInstance> getMeasuresOnSegment(String cubeName, String segmentName) {
         try (AutoLock lock = cubeMapLock.lockForRead()) {
             return cubeL2Cache.getMeasuresOf(cubeName, segmentName);
         }
     }
 
-    public List<MeasureInstance> getMeasuresInCube(String projectName, String cubeName) {
+    public List<MeasureInstance> getMeasuresInCube(String cubeName) {
         try (AutoLock lock = cubeMapLock.lockForRead()) {
             return cubeL2Cache.getMeasuresOnCube(cubeName);
         }
@@ -311,10 +311,10 @@ public class MeasureManager {
         }
     }
 
-    public List<MeasureInstance> deleteByCube(String projectName, String cubeName) throws IOException {
+    public List<MeasureInstance> deleteByCube(String cubeName) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             // delete meta data
-            List<MeasureInstance> needDrop = deleteInStoreByCube(projectName, cubeName);
+            List<MeasureInstance> needDrop = deleteInStoreByCube(cubeName);
             if (null != needDrop && needDrop.size() > 0) {
                 // announce delete cube measure
                 announceCubeMeasureEvent(DROP, cubeName);
@@ -377,13 +377,12 @@ public class MeasureManager {
 
     /**
      * just delete meta data in store, don't broadcast
-     * @param projectName
      * @param cubeName
      * @return
      */
-    private List<MeasureInstance> deleteInStoreByCube(String projectName, String cubeName) throws IOException {
+    private List<MeasureInstance> deleteInStoreByCube(String cubeName) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
-            List<MeasureInstance> needDrop = getMeasuresInCube(projectName, cubeName);
+            List<MeasureInstance> needDrop = getMeasuresInCube(cubeName);
             ResourceStore store = getStore();
             for (MeasureInstance m : needDrop) {
                 store.deleteResource(getResourcePath(m));
@@ -400,7 +399,7 @@ public class MeasureManager {
     }
 
     private List<MeasureInstance> deleteSegInMeasure(CubeInstance cube, String segmentName) {
-        List<MeasureInstance> measuresOnSegment = getMeasuresOnSegment(cube.getProject(), cube.getName(), segmentName);
+        List<MeasureInstance> measuresOnSegment = getMeasuresOnSegment(cube.getName(), segmentName);
         if (measuresOnSegment.size() <= 0) {
             return measuresOnSegment;
         }
@@ -418,7 +417,7 @@ public class MeasureManager {
     }
 
     private List<MeasureInstance> batchDeleteSegInMeasure(CubeInstance cube, List<String> segmentsName) {
-        List<MeasureInstance> measuresOnCube = getMeasuresInCube(cube.getProject(), cube.getName());
+        List<MeasureInstance> measuresOnCube = getMeasuresInCube(cube.getName());
         if (measuresOnCube.size() <= 0) {
             return measuresOnCube;
         }
@@ -558,19 +557,18 @@ public class MeasureManager {
 
             reloadByCubeQuietly(cube.getName());
 
-            return getMeasuresInCube(cube.getProject(), cube.getName());
+            return getMeasuresInCube(cube.getName());
         }
     }
 
     /**
      *
-     * @param project
      * @param cubeName
      * @param updatedMeasures
      * @return
      * @throws IOException
      */
-    public List<MeasureInstance> updateMeasures(String project, String cubeName, List<MeasureInstance> updatedMeasures) throws IOException {
+    public List<MeasureInstance> updateMeasures(String cubeName, List<MeasureInstance> updatedMeasures) throws IOException {
         try (AutoLock lock = cubeMapLock.lockForWrite()) {
             return batchSaveCubeMeasure(updatedMeasures, cubeName, true);
         }
