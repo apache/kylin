@@ -34,11 +34,21 @@ source ${dir}/set-java-home.sh
 
 function retrieveDependency() {
     #retrive $hive_dependency and $hbase_dependency
-    source ${dir}/find-hive-dependency.sh
-    source ${dir}/find-hbase-dependency.sh
-    source ${dir}/find-hadoop-conf-dir.sh
-    source ${dir}/find-kafka-dependency.sh
-    source ${dir}/find-spark-dependency.sh
+    if [[ -z $reload_dependency && `ls -1 ${dir}/cached-* 2>/dev/null | wc -l` -eq 5 ]]
+    then
+        echo "Using cached dependency..."
+        source ${dir}/cached-hive-dependency.sh
+        source ${dir}/cached-hbase-dependency.sh
+        source ${dir}/cached-hadoop-conf-dir.sh
+        source ${dir}/cached-kafka-dependency.sh
+        source ${dir}/cached-spark-dependency.sh
+    else
+        source ${dir}/find-hive-dependency.sh
+        source ${dir}/find-hbase-dependency.sh
+        source ${dir}/find-hadoop-conf-dir.sh
+        source ${dir}/find-kafka-dependency.sh
+        source ${dir}/find-spark-dependency.sh
+    fi
 
     #retrive $KYLIN_EXTRA_START_OPTS
     if [ -f "${dir}/setenv.sh" ]; then
@@ -125,6 +135,11 @@ function retrieveStartCommand() {
     -Dspring.profiles.active=${spring_profile} \
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start"
 }
+
+if [ "$2" == "--reload-dependency" ]
+then
+    reload_dependency=1
+fi
 
 # start command
 if [ "$1" == "start" ]
