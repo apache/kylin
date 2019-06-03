@@ -220,7 +220,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(hdfsBaseLocation, level);
         final SerializableConfiguration sConf = new SerializableConfiguration(job.getConfiguration());
 
-        IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(cubeSeg).getOuputFormat();
+        IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(cubeSeg).getOutputFormat();
         outputFormat.configureJobOutput(job, cuboidOutputPath, cubeSeg, cubeSeg.getCuboidScheduler(), level);
 
         prepareOutput(rdd, kylinConfig, cubeSeg, level).mapToPair(

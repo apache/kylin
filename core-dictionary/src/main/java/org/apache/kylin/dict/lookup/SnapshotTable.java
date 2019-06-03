@@ -233,7 +233,7 @@ public class SnapshotTable extends RootPersistentEntity implements IReadableTabl
 
     void writeData(DataOutput out) throws IOException {
         out.writeInt(rowIndices.size());
-        if (rowIndices.size() > 0) {
+        if (!rowIndices.isEmpty()) {
             int n = rowIndices.get(0).length;
             out.writeInt(n);
 

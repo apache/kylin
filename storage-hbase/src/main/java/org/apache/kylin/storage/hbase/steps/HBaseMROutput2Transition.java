@@ -87,7 +87,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             }
 
             @Override
-            public IMROutputFormat getOuputFormat() {
+            public IMROutputFormat getOutputFormat() {
                 return new HBaseMROutputFormat();
             }
         };
@@ -152,7 +152,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             }
 
             @Override
-            public IMRMergeOutputFormat getOuputFormat() {
+            public IMRMergeOutputFormat getOutputFormat() {
                 return new HBaseMergeMROutputFormat();
             }
         };

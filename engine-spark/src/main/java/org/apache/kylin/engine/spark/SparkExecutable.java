@@ -88,7 +88,7 @@ public class SparkExecutable extends AbstractExecutable {
 
     public void setCounterSaveAs(String value, String counterOutputPath) {
         this.setParam(COUNTER_SAVE_AS, value);
-        this.setParam(BatchConstants.ARG_COUNTER_OUPUT, counterOutputPath);
+        this.setParam(BatchConstants.ARG_COUNTER_OUTPUT, counterOutputPath);
     }
 
     public String getCounterSaveAs() {
@@ -326,7 +326,7 @@ public class SparkExecutable extends AbstractExecutable {
                     // done, update all properties
                     Map<String, String> joblogInfo = patternedLogger.getInfo();
                     // read counter from hdfs
-                    String counterOutput = getParam(BatchConstants.ARG_COUNTER_OUPUT);
+                    String counterOutput = getParam(BatchConstants.ARG_COUNTER_OUTPUT);
                     if (counterOutput != null) {
                         if (HadoopUtil.getWorkingFileSystem().exists(new Path(counterOutput))) {
                             Map<String, String> counterMap = HadoopUtil.readFromSequenceFile(counterOutput);
@@ -440,8 +440,7 @@ public class SparkExecutable extends AbstractExecutable {
     }
 
     private void attachSegmentsMetadataWithDict(List<CubeSegment> segments) throws IOException {
-        Set<String> dumpList = new LinkedHashSet<>();
-        dumpList.addAll(JobRelatedMetaUtil.collectCubeMetadata(segments.get(0).getCubeInstance()));
+        Set<String> dumpList = new LinkedHashSet<>(JobRelatedMetaUtil.collectCubeMetadata(segments.get(0).getCubeInstance()));
         ResourceStore rs = ResourceStore.getStore(segments.get(0).getConfig());
         for (CubeSegment segment : segments) {
             dumpList.addAll(segment.getDictionaryPaths());

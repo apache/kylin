@@ -19,6 +19,7 @@
 package org.apache.kylin.stream.server.rest.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -106,9 +107,7 @@ public class QueryUtil {
     static {
         for (String q : tableauTestQueries) {
             HashSet<String> temp = new HashSet<String>();
-            for (String token : q.split("[\r\n\t \\(\\)]")) {
-                temp.add(token);
-            }
+            Collections.addAll(temp, q.split("[\r\n\t \\(\\)]"));
             temp.add("");
             tableauTestQueriesInToken.add(temp);
         }

@@ -344,7 +344,7 @@ public class JobBuilderSupport {
         return getJobWorkingDir(jobId) + "/hbase-conf.xml";
     }
 
-    public String getCounterOuputPath(String jobId) {
+    public String getCounterOutputPath(String jobId) {
         return getRealizationRootPath(jobId) + "/counter";
     }
 

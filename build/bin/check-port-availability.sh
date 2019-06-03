@@ -27,7 +27,7 @@ kylin_port=`grep "<Connector port=" ${KYLIN_HOME}/tomcat/conf/server.xml |grep p
 if isMacosX; then
     kylin_port_in_use=`lsof -nP -iTCP:"${kylin_port}" | grep LISTEN`
 else
-    kylin_port_in_use=`netstat -tlpn | grep "\b${kylin_port}\b"`
+    kylin_port_in_use=`netstat -tln | grep "\b${kylin_port}\b"`
 fi
 
 # if not available, prompt error messeage

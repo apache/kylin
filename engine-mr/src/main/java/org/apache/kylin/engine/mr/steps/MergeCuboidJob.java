@@ -77,7 +77,7 @@ public class MergeCuboidJob extends CuboidJob {
             job.setOutputValueClass(Text.class);
 
             // set inputs
-            IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(cubeSeg).getOuputFormat();
+            IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(cubeSeg).getOutputFormat();
             outputFormat.configureJobInput(job, input);
             addInputDirs(input, job);
 

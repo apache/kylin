@@ -45,6 +45,7 @@ import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.engine.mr.common.CuboidStatsReaderUtil;
 import org.apache.kylin.job.JobInstance;
@@ -624,6 +625,16 @@ public class CubeController extends BasicController {
         if (cubeDesc.getMeasures().size() != columnFamilyMetricsSet.size()) {
             throw new BadRequestException(
                     "the number of input measure and the number of measure defined in cubedesc are not consistent");
+        }
+
+        for (RowKeyColDesc rowKeyColDesc : cubeDesc.getRowkey().getRowKeyColumns()) {
+            Object[] encodingConf = DimensionEncoding.parseEncodingConf(rowKeyColDesc.getEncoding());
+            String encodingName = (String) encodingConf[0];
+            String[] encodingArgs = (String[]) encodingConf[1];
+
+            if (!DimensionEncodingFactory.isValidEncoding(encodingName, encodingArgs, rowKeyColDesc.getEncodingVersion())) {
+                throw new BadRequestException("Illegal row key column desc: " + rowKeyColDesc);
+            }
         }
     }
 

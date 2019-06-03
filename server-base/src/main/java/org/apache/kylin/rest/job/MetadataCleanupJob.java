@@ -132,7 +132,7 @@ public class MetadataCleanupJob {
 
         // exclude resources in use
         Set<String> activeResources = Sets.newHashSet();
-        for (CubeInstance cube : cubeManager.listAllCubes()) {
+        for (CubeInstance cube : cubeManager.reloadAndListAllCubes()) {
             activeResources.addAll(cube.getSnapshots().values());
             for (CubeSegment segment : cube.getSegments()) {
                 activeResources.addAll(segment.getSnapshotPaths());

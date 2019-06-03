@@ -158,7 +158,7 @@ public class TableExtDesc extends RootPersistentEntity {
 
         String[] cardi = cardinality.split(",");
 
-        if (0 == this.columnStats.size()) {
+        if (this.columnStats.isEmpty()) {
             for (int i = 0; i < cardi.length; i++) {
                 ColumnStats columnStat = new ColumnStats();
                 columnStat.setCardinality(Long.parseLong(cardi[i]));

@@ -113,7 +113,7 @@ public class AppendDictNode {
         AppendDictNode p = this;
         while (true) {
             bytes.write(p.part, 0, p.part.length);
-            if (p.isEndOfValue || p.children.size() == 0) {
+            if (p.isEndOfValue || p.children.isEmpty()) {
                 break;
             }
             p = p.children.get(0);

@@ -38,12 +38,8 @@ public class RawRecord {
         if (another.getDimensions().length != dimensions.length || another.getMetrics().length != metrics.length) {
             throw new IllegalStateException("cannot copy record with different schema");
         }
-        for (int i = 0; i < another.dimensions.length; i++) {
-            this.dimensions[i] = another.dimensions[i];
-        }
-        for (int i = 0; i < another.metrics.length; i++) {
-            this.metrics[i] = another.metrics[i];
-        }
+        System.arraycopy(another.dimensions, 0, this.dimensions, 0, another.dimensions.length);
+        System.arraycopy(another.metrics, 0, this.metrics, 0, another.metrics.length);
     }
 
     public RawRecord clone() {

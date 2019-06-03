@@ -121,7 +121,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             flatTableInputFormat.configureJob(job);
 
             // set output
-            IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(segment).getOuputFormat();
+            IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(segment).getOutputFormat();
             outputFormat.configureJobOutput(job, output, segment, segment.getCuboidScheduler(), 0);
 
             return waitForCompletion(job);

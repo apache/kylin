@@ -81,7 +81,7 @@ public class StorageCleanJobHbaseUtil {
         }
 
         // remove every segment htable from drop list
-        for (CubeInstance cube : cubeMgr.listAllCubes()) {
+        for (CubeInstance cube : cubeMgr.reloadAndListAllCubes()) {
             for (CubeSegment seg : cube.getSegments()) {
                 String tablename = seg.getStorageLocationIdentifier();
                 if (allTablesNeedToBeDropped.contains(tablename)) {
