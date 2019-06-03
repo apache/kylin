@@ -411,7 +411,11 @@ public class HBaseResourceStore extends PushdownResourceStore {
                 if (hdfsResourceExist) { // remove hdfs cell value
                     deletePushdown(resPath);
                 }
+            } else {
+                throw new IOException("Resource " + resPath + " timestamp not match, [originLastModified: "
+                        + origLastModified + ", timestampToDelete: " + timestamp + "]");
             }
+
         } finally {
             IOUtils.closeQuietly(table);
         }

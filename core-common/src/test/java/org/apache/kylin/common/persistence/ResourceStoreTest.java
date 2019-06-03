@@ -208,10 +208,14 @@ public class ResourceStoreTest {
         assertTrue(list == null || !list.contains(path2));
 
         long origLastModified = store.getResourceTimestamp(path3);
-        long beforeLastModified = origLastModified - 100;
+        long beforeLastModified = origLastModified - 1000;
 
         //  beforeLastModified < origLastModified  ==> not delete expected
-        store.deleteResource(path3, beforeLastModified);
+        try {
+            store.deleteResource(path3, beforeLastModified);
+        } catch (Exception e) {
+            assertTrue(e instanceof IOException);
+        }
         assertTrue(store.exists(path3));
         list = store.listResources(dir3);
         assertTrue(list != null && list.contains(path3));
@@ -230,7 +234,7 @@ public class ResourceStoreTest {
         assertEquals(content3, t);
 
         origLastModified = store.getResourceTimestamp(path3);
-        long afterLastModified = origLastModified + 100;
+        long afterLastModified = origLastModified + 1000;
 
         // afterLastModified > origLastModified ==> delete expected
         store.deleteResource(path3, afterLastModified);

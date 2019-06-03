@@ -208,8 +208,12 @@ public class FileResourceStore extends ResourceStore {
         try {
             if (f.exists()) {
                 long origLastModified = getResourceTimestampImpl(resPath);
-                if (checkTimeStampBeforeDelete(origLastModified, timestamp))
+                if (checkTimeStampBeforeDelete(origLastModified, timestamp)) {
                     FileUtils.forceDelete(f);
+                } else {
+                    throw new IOException("Resource " + resPath + " timestamp not match, [originLastModified: "
+                            + origLastModified + ", timestampToDelete: " + timestamp + "]");
+                }
             }
         } catch (FileNotFoundException e) {
             // FileNotFoundException is not a problem in case of delete

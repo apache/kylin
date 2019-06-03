@@ -573,8 +573,12 @@ public class JDBCResourceStore extends PushdownResourceStore {
     protected void deleteResourceImpl(String resPath, long timestamp) throws IOException {
         // considering deletePushDown operation, check timestamp at the beginning
         long origLastModified = getResourceTimestampImpl(resPath);
-        if (checkTimeStampBeforeDelete(origLastModified, timestamp))
+        if (checkTimeStampBeforeDelete(origLastModified, timestamp)) {
             deleteResourceImpl(resPath);
+        } else {
+            throw new IOException("Resource " + resPath + " timestamp not match, [originLastModified: "
+                    + origLastModified + ", timestampToDelete: " + timestamp + "]");
+        }
     }
 
     @Override

@@ -478,6 +478,12 @@ abstract public class ResourceStore {
         deleteResourceCheckpoint(norm(resPath));
     }
 
+    /**
+     * Delete a resource with comparing its timestamp
+     * Success to delete if resource lastModified < timestamp + 1000 (considering timestamp precision loose)
+     * throw an IOException when the resource lastModified >= timestamp + 1000
+     * See  https://issues.apache.org/jira/browse/KYLIN-4030
+     */
     final public void deleteResource(String resPath, long timestamp) throws IOException {
         logger.trace("Deleting resource {} within timestamp {} (Store {})", resPath, timestamp,
                 kylinConfig.getMetadataUrl());
@@ -523,7 +529,16 @@ abstract public class ResourceStore {
     protected boolean checkTimeStampBeforeDelete(long originLastModified, long timestamp) {
         // note here is originLastModified may be 0
         // 0 means resource doesn't exists in general, it's safe to pass the check
-        boolean passCheck = originLastModified <= timestamp;
+        boolean passCheck = false;
+        if (originLastModified > timestamp) {
+            // file system may loose time precision with milliseconds
+            // because of the new born resource time, so here if time diff less than 1000 ms, we will treat it the same
+            long timeDiff = originLastModified - timestamp;
+            passCheck = timeDiff < 1000;
+        } else {
+            // if timestamp >= originLastModified, it's safe to delete
+            passCheck = true;
+        }
         logger.trace("check timestamp before delete: {}, [originLastModified: {}, timestamp: {}]", passCheck,
                 originLastModified, timestamp);
         return passCheck;

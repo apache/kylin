@@ -277,8 +277,13 @@ public class HDFSResourceStore extends ResourceStore {
             Path p = getRealHDFSPath(resPath);
             if (fs.exists(p)) {
                 long origLastModified = fs.getFileStatus(p).getModificationTime();
-                if (checkTimeStampBeforeDelete(origLastModified, timestamp))
+                if (checkTimeStampBeforeDelete(origLastModified, timestamp)) {
                     fs.delete(p, true);
+                } else {
+                    throw new IOException("Resource " + resPath + " timestamp not match, [originLastModified: "
+                            + origLastModified + ", timestampToDelete: " + timestamp + "]");
+                }
+
             }
         } catch (Exception e) {
             throw new IOException("Delete resource fail", e);
