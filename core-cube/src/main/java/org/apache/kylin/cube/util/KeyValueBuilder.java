@@ -61,6 +61,10 @@ public class KeyValueBuilder implements Serializable {
     }
 
     private String getCell(int i, String[] flatRow) {
+        if (i >= flatRow.length) {
+            return null;
+        }
+
         if (isNull(flatRow[i]))
             return null;
         else

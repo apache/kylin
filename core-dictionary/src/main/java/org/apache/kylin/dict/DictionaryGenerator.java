@@ -92,7 +92,9 @@ public class DictionaryGenerator {
 
         // build
         Dictionary<String> dict = builder.build();
-
+        logger.debug("Dictionary cardinality: " + dict.getSize());
+        logger.debug("Dictionary builder class: " + builder.getClass().getName());
+        logger.debug("Dictionary class: " + dict.getClass().getName());
         // log a few samples
         StringBuilder buf = new StringBuilder();
         for (String s : samples) {
@@ -102,9 +104,7 @@ public class DictionaryGenerator {
             buf.append(s.toString()).append("=>").append(dict.getIdFromValue(s));
         }
         logger.debug("Dictionary value samples: " + buf.toString());
-        logger.debug("Dictionary cardinality: " + dict.getSize());
-        logger.debug("Dictionary builder class: " + builder.getClass().getName());
-        logger.debug("Dictionary class: " + dict.getClass().getName());
+
         return dict;
     }
 
