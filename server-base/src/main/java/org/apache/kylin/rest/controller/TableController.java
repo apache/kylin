@@ -81,7 +81,7 @@ public class TableController extends BasicController {
             return tableService.getTableDescByProject(project, withExt);
         } catch (IOException e) {
             logger.error("Failed to get Hive Tables", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -127,7 +127,7 @@ public class TableController extends BasicController {
             }
         } catch (Throwable e) {
             logger.error("Failed to load Hive Table", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
         return result;
     }
@@ -149,7 +149,7 @@ public class TableController extends BasicController {
             }
         } catch (Throwable e) {
             logger.error("Failed to unload Hive Table", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
         result.put("result.unload.success", (String[]) unLoadSuccess.toArray(new String[unLoadSuccess.size()]));
         result.put("result.unload.fail", (String[]) unLoadFail.toArray(new String[unLoadFail.size()]));
@@ -176,7 +176,7 @@ public class TableController extends BasicController {
             }
         } catch (IOException e) {
             logger.error("Failed to calculate cardinality", e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
         return request;
     }
@@ -195,7 +195,7 @@ public class TableController extends BasicController {
             return tableService.getSourceDbNames(project);
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -213,7 +213,7 @@ public class TableController extends BasicController {
             return tableService.getSourceTableNames(project, database);
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 

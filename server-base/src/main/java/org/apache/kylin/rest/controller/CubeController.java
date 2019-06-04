@@ -249,7 +249,7 @@ public class CubeController extends BasicController {
             cubeService.updateCubeNotifyList(cube, notifyList);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
 
     }
@@ -284,7 +284,7 @@ public class CubeController extends BasicController {
             return cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -306,7 +306,7 @@ public class CubeController extends BasicController {
                     submitter);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -331,7 +331,7 @@ public class CubeController extends BasicController {
             return cubeService.deleteSegment(cube, segmentName);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -424,7 +424,7 @@ public class CubeController extends BasicController {
             throw new BadRequestException(e.getLocalizedMessage());
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -452,7 +452,7 @@ public class CubeController extends BasicController {
             throw new BadRequestException(e.getLocalizedMessage());
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
-            throw new InternalErrorException(e.getLocalizedMessage());
+            throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
 
@@ -688,7 +688,7 @@ public class CubeController extends BasicController {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage(), e);
         }
 
         if (desc.isBroken()) {
@@ -857,7 +857,7 @@ public class CubeController extends BasicController {
             writer.write(JsonUtil.writeValueAsString(dimensionSetList));
         } catch (IOException e) {
             logger.error("", e);
-            throw new InternalErrorException("Failed to write: " + e.getLocalizedMessage());
+            throw new InternalErrorException("Failed to write: " + e.getLocalizedMessage(), e);
         }
     }
 
