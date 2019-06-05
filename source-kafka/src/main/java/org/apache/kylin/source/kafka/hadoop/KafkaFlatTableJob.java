@@ -158,7 +158,6 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
         job.setOutputKeyClass(BytesWritable.class);
         job.setOutputValueClass(Text.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
-        job.setNumReduceTasks(0);
     }
 
     private static void appendKafkaOverrideProperties(final KylinConfig kylinConfig, Configuration conf) {
