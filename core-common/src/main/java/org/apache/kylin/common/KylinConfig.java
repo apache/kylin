@@ -133,7 +133,7 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
-    public static KylinConfig getInstanceFromEnv() {
+    public static KylinConfig getInstanceFromEnv(boolean allowConfigFileNoExist) {
         synchronized (KylinConfig.class) {
             KylinConfig config = THREAD_ENV_INSTANCE.get();
             if (config != null) {
@@ -147,7 +147,15 @@ public class KylinConfig extends KylinConfigBase {
                     buildDefaultOrderedProperties();
 
                     config = new KylinConfig();
-                    config.reloadKylinConfig(buildSiteProperties());
+                    try {
+                        config.reloadKylinConfig(buildSiteProperties());
+                    } catch (KylinConfigCannotInitException e) {
+                        logger.info("Kylin Config Can not Init Exception");
+                        if (!allowConfigFileNoExist) {
+                            throw e;
+                        }
+                    }
+
                     VersionUtil.loadKylinVersion();
                     logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
                             + System.identityHashCode(config));
@@ -158,6 +166,10 @@ public class KylinConfig extends KylinConfigBase {
             }
             return SYS_ENV_INSTANCE;
         }
+    }
+
+    public static KylinConfig getInstanceFromEnv() {
+        return getInstanceFromEnv(false);
     }
 
     // Only used in test cases!!!
