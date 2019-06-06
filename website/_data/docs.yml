@@ -41,6 +41,7 @@
   - tutorial/cube_build_job
   - tutorial/sql_reference
   - tutorial/project_level_acl
+  - tutorial/table_level_acl
   - tutorial/cube_spark
   - tutorial/cube_streaming
   - tutorial/cube_build_performance
