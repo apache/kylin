@@ -1430,6 +1430,10 @@ public abstract class KylinConfigBase implements Serializable {
     public boolean isSparkFactDistinctEnable() {
         return Boolean.parseBoolean(getOptional("kylin.engine.spark-fact-distinct", "false"));
     }
+
+    public boolean isSparkCardinality(){
+        return Boolean.parseBoolean(getOptional("kylin.engin.spark-cardinality", "false"));
+    }
     
     // ============================================================================
     // ENGINE.LIVY

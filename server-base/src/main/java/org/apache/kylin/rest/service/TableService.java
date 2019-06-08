@@ -45,6 +45,8 @@ import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
+import org.apache.kylin.engine.spark.SparkColumnCardinality;
+import org.apache.kylin.engine.spark.SparkExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -227,6 +229,7 @@ public class TableService extends BasicService {
     /**
      * table may referenced by several projects, and kylin only keep one copy of meta for each table,
      * that's why we have two if statement here.
+     *
      * @param tableName
      * @param project
      * @return
@@ -269,7 +272,6 @@ public class TableService extends BasicService {
     }
 
     /**
-     *
      * @param project
      * @return
      * @throws Exception
@@ -281,7 +283,6 @@ public class TableService extends BasicService {
     }
 
     /**
-     *
      * @param project
      * @param database
      * @return
@@ -336,7 +337,7 @@ public class TableService extends BasicService {
     public void calculateCardinalityIfNotPresent(String[] tables, String submitter, String prj) throws Exception {
         // calculate cardinality for Hive source
         ProjectInstance projectInstance = getProjectManager().getProject(prj);
-        if (projectInstance == null || projectInstance.getSourceType() != ISourceAware.ID_HIVE){
+        if (projectInstance == null || projectInstance.getSourceType() != ISourceAware.ID_HIVE) {
             return;
         }
         TableMetadataManager metaMgr = getTableManager();
@@ -485,14 +486,23 @@ public class TableService extends BasicService {
 
         String outPath = getConfig().getHdfsWorkingDirectory() + "cardinality/" + job.getId() + "/" + tableName;
         String param = "-table " + tableName + " -output " + outPath + " -project " + prj;
-
-        MapReduceExecutable step1 = new MapReduceExecutable();
-
-        step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
-        step1.setMapReduceParams(param);
-        step1.setParam("segmentId", tableName);
-
-        job.addTask(step1);
+        logger.info("test spark cardinality value=" + getConfig().isSparkCardinality());
+        if (getConfig().isSparkCardinality()) { // use spark engine to calculate cardinality
+            logger.info("test spark here");
+            SparkExecutable step1 = new SparkExecutable();
+            step1.setClassName(SparkColumnCardinality.class.getName());
+            step1.setParam(SparkColumnCardinality.OPTION_OUTPUT.getOpt(), outPath);
+            step1.setParam(SparkColumnCardinality.OPTION_PRJ.getOpt(), prj);
+            step1.setParam(SparkColumnCardinality.OPTION_TABLE_NAME.getOpt(), tableName);
+            step1.setParam(SparkColumnCardinality.OPTION_COLUMN_COUNT.getOpt(), String.valueOf(table.getColumnCount()));
+            job.addTask(step1);
+        } else {
+            MapReduceExecutable step1 = new MapReduceExecutable();
+            step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
+            step1.setMapReduceParams(param);
+            step1.setParam("segmentId", tableName);
+            job.addTask(step1);
+        }
 
         HadoopShellExecutable step2 = new HadoopShellExecutable();
 
