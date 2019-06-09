@@ -486,8 +486,8 @@ public class TableService extends BasicService {
 
         String outPath = getConfig().getHdfsWorkingDirectory() + "cardinality/" + job.getId() + "/" + tableName;
         String param = "-table " + tableName + " -output " + outPath + " -project " + prj;
-        logger.info("test spark cardinality value=" + getConfig().isSparkCardinality());
-        if (getConfig().isSparkCardinality()) { // use spark engine to calculate cardinality
+        logger.info("test spark cardinality value=" + getConfig().isSparkCardinalityEnabled());
+        if (getConfig().isSparkCardinalityEnabled()) { // use spark engine to calculate cardinality
             logger.info("test spark here");
             SparkExecutable step1 = new SparkExecutable();
             step1.setClassName(SparkColumnCardinality.class.getName());
