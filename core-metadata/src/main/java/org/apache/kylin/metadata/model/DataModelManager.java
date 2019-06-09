@@ -106,7 +106,7 @@ public class DataModelManager {
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
             //clean up the current project's table desc
             TableMetadataManager.getInstance(config).resetProjectSpecificTableDesc(project);
-
+            logger.info("Update models in project: " + project);
             try (AutoLock lock = modelMapLock.lockForWrite()) {
                 for (String model : ProjectManager.getInstance(config).getProject(project).getModels()) {
                     crud.reloadQuietly(model);
@@ -128,6 +128,10 @@ public class DataModelManager {
                 broadcaster.notifyProjectSchemaUpdate(prj.getName());
             }
         }
+    }
+
+    public List<String> getErrorModels() {
+        return crud.getLoadFailedEntities();
     }
 
     private Class<DataModelDesc> getDataModelImplClass() {
