@@ -22,24 +22,13 @@ import org.apache.flink.configuration.TaskManagerOptions;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Unit test for {@link FlinkOnYarnConfigMapping}.
  */
 public class FlinkOnYarnConfigMappingTest {
-
-    private static List<String> flinkOnYarnConfigOptionKeys;
-
-    static {
-        flinkOnYarnConfigOptionKeys = new ArrayList<>();
-        flinkOnYarnConfigOptionKeys.add("-yjm");
-        flinkOnYarnConfigOptionKeys.add("-ytm");
-        flinkOnYarnConfigOptionKeys.add("-ys");
-    }
 
     @Test
     public void testFlinkOnYarnJMMemOption() {
@@ -113,13 +102,6 @@ public class FlinkOnYarnConfigMappingTest {
 
                 Assert.assertTrue(matchedAnyOne);
             }
-        }
-    }
-
-    @Test
-    public void testFlinkOnYarnConfigOptionKeySet() {
-        for (String flinkOnYarnCnfigOptionKey : FlinkOnYarnConfigMapping.flinkOnYarnConfigMap.values()) {
-            Assert.assertTrue(flinkOnYarnConfigOptionKeys.contains(flinkOnYarnCnfigOptionKey));
         }
     }
 
