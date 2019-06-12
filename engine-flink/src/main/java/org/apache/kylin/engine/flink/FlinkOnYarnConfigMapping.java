@@ -64,6 +64,16 @@ public class FlinkOnYarnConfigMapping {
                 flinkOnYarnConfigMap.put(deprecatedKeyIterator.next(), "-ys");
             }
         }
+
+        ConfigOption<Boolean> tmMemoryPreallocate = TaskManagerOptions.MANAGED_MEMORY_PRE_ALLOCATE;
+        flinkOnYarnConfigMap.put(tmMemoryPreallocate.key(), "-yD taskmanager.memory.preallocate");
+        if (taskSlotNumOption.hasDeprecatedKeys()) {
+            Iterator<String> deprecatedKeyIterator = tmMemoryPreallocate.deprecatedKeys().iterator();
+            while (deprecatedKeyIterator.hasNext()) {
+                flinkOnYarnConfigMap.put(deprecatedKeyIterator.next(), "-yD taskmanager.memory.preallocate");
+            }
+        }
+
     }
 
 }
