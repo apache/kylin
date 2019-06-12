@@ -94,16 +94,6 @@ public class FlinkUtil {
         return env.createInput(HadoopInputs.readSequenceFile(keyClass, valueClass, StringUtil.join(inputFolders, ",")));
     }
 
-
-    public static int estimateLayerPartitionNum(int level, CubeStatsReader statsReader, KylinConfig kylinConfig) {
-        double baseCuboidSize = statsReader.estimateLayerSize(level);
-        float partitionCutMB = kylinConfig.getFlinkPartitionCutMB();
-        int partition = (int) (baseCuboidSize / partitionCutMB);
-        partition = Math.max(kylinConfig.getFlinkMinPartition(), partition);
-        partition = Math.min(kylinConfig.getFlinkMaxPartition(), partition);
-        return partition;
-    }
-
     public static int estimateTotalPartitionNum(CubeStatsReader statsReader, KylinConfig kylinConfig) {
         double totalSize = 0;
         for (double x: statsReader.getCuboidSizeMap().values()) {
