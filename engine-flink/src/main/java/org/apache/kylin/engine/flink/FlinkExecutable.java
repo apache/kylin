@@ -188,20 +188,34 @@ public class FlinkExecutable extends AbstractExecutable {
                 flinkSpecificConfs.putAll(flinkConfs);
             }
 
+            int parallelism = 1;
             for (Map.Entry<String, String> entry : flinkConfs.entrySet()) {
-                if (!FlinkOnYarnConfigMapping.flinkOnYarnConfigMap.containsKey(entry.getKey())) {
-                    logger.warn("Unsupported Flink configuration pair : key[%s], value[%s]", entry.getKey(), entry.getValue());
+                if (!(FlinkOnYarnConfigMapping.flinkOnYarnConfigMap.containsKey(entry.getKey())
+                        || entry.getKey().startsWith("program") || entry.getKey().startsWith("job"))) {
+                    logger.error("Unsupported Flink configuration pair : key[%s], value[%s]", entry.getKey(), entry.getValue());
                     throw new IllegalArgumentException("Unsupported Flink configuration pair : key["
                             + entry.getKey() + "], value[" + entry.getValue() + "]");
                 }
 
-                String onYarnConfigOptionKey = FlinkOnYarnConfigMapping.flinkOnYarnConfigMap.get(entry.getKey());
-                sb.append(" ").append(onYarnConfigOptionKey).append(" ").append(entry.getValue());
+                if (entry.getKey().equals("job.parallelism")) {
+                    parallelism = Integer.parseInt(entry.getValue());
+                } else if (entry.getKey().startsWith("program.")) {
+                    getParams().put(entry.getKey().replaceAll("program.", ""), entry.getValue());
+                } else {
+                    String configOptionKey = FlinkOnYarnConfigMapping.flinkOnYarnConfigMap.get(entry.getKey());
+                    //flink on yarn specific option (pattern : -yn 1)
+                    if (configOptionKey.startsWith("-y")) {
+                        sb.append(" ").append(configOptionKey).append(" ").append(entry.getValue());
+                    } else {
+                        //flink on yarn specific option (pattern : -yD taskmanager.network.memory.min=536346624)
+                        sb.append(" ").append(configOptionKey).append("=").append(entry.getValue());
+                    }
+                }
             }
 
-            sb.append(" -c org.apache.kylin.common.util.FlinkEntry %s %s ");
+            sb.append(" -c org.apache.kylin.common.util.FlinkEntry -p %s %s %s ");
             final String cmd = String.format(Locale.ROOT, sb.toString(), hadoopConf, hadoopClasspathEnv,
-                    KylinConfig.getFlinkHome(), jars, formatArgs());
+                    KylinConfig.getFlinkHome(), parallelism, jars, formatArgs());
             logger.info("cmd: " + cmd);
             final ExecutorService executorService = Executors.newSingleThreadExecutor();
             final CliCommandExecutor exec = new CliCommandExecutor();

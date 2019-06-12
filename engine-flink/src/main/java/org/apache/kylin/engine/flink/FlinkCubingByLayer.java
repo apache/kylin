@@ -90,6 +90,8 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
             .withDescription("Hive Intermediate Table").create("hiveTable");
     public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
             .isRequired(true).withDescription("Hive Intermediate Table PATH").create(BatchConstants.ARG_INPUT);
+    public static final Option OPTION_ENABLE_OBJECT_REUSE = OptionBuilder.withArgName("enableObjectReuse").hasArg()
+            .isRequired(true).withDescription("Enable object reuse").create("enableObjectReuse");
 
     private Options options;
 
@@ -101,6 +103,7 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_META_URL);
         options.addOption(OPTION_OUTPUT_PATH);
+        options.addOption(OPTION_ENABLE_OBJECT_REUSE);
     }
 
     @Override
@@ -116,6 +119,12 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
         String cubeName = optionsHelper.getOptionValue(OPTION_CUBE_NAME);
         String segmentId = optionsHelper.getOptionValue(OPTION_SEGMENT_ID);
         String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
+        String enableObjectReuseOptValue = optionsHelper.getOptionValue(OPTION_ENABLE_OBJECT_REUSE);
+
+        boolean enableObjectReuse = false;
+        if (enableObjectReuseOptValue != null && !enableObjectReuseOptValue.isEmpty()) {
+            enableObjectReuse = true;
+        }
 
         Job job = Job.getInstance();
 
@@ -155,6 +164,9 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
         boolean isSequenceFile = JoinedFlatTable.SEQUENCEFILE.equalsIgnoreCase(envConfig.getFlatTableStorageFormat());
 
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+        if (enableObjectReuse) {
+            env.getConfig().enableObjectReuse();
+        }
         env.getConfig().registerKryoType(PercentileCounter.class);
         env.getConfig().registerTypeWithKryoSerializer(PercentileCounter.class, PercentileCounterSerializer.class);
 
@@ -178,19 +190,16 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
         final int totalLevels = cubeSegment.getCuboidScheduler().getBuildLevel();
         DataSet<Tuple2<ByteArray, Object[]>>[] allDataSets = new DataSet[totalLevels + 1];
         int level = 0;
-        int partition = FlinkUtil.estimateLayerPartitionNum(level, cubeStatsReader, envConfig);
 
         // aggregate to calculate base cuboid
-        allDataSets[0] = encodedBaseDataSet.groupBy(0).reduce(baseCuboidReducerFunction).setParallelism(partition);
+        allDataSets[0] = encodedBaseDataSet.groupBy(0).reduce(baseCuboidReducerFunction);
 
         sinkToHDFS(allDataSets[0], metaUrl, cubeName, cubeSegment, outputPath, 0, Job.getInstance(), envConfig);
 
         CuboidFlatMapFunction flatMapFunction = new CuboidFlatMapFunction(cubeName, segmentId, metaUrl, sConf);
 
         for (level = 1; level <= totalLevels; level++) {
-            partition = FlinkUtil.estimateLayerPartitionNum(level, cubeStatsReader, envConfig);
-
-            allDataSets[level] = allDataSets[level - 1].flatMap(flatMapFunction).groupBy(0).reduce(reducerFunction).setParallelism(partition);
+            allDataSets[level] = allDataSets[level - 1].flatMap(flatMapFunction).groupBy(0).reduce(reducerFunction);
             if (envConfig.isFlinkSanityCheckEnabled()) {
                 sanityCheck(allDataSets[level], totalCount, level, cubeStatsReader, countMeasureIndex);
             }
