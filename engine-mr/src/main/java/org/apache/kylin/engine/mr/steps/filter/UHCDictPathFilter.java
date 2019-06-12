@@ -20,6 +20,7 @@ package org.apache.kylin.engine.mr.steps.filter;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.kylin.engine.mr.steps.FactDistinctColumnsReducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,16 +31,14 @@ import java.util.regex.Pattern;
 public class UHCDictPathFilter implements PathFilter {
     private static final Logger logger = LoggerFactory.getLogger(UHCDictPathFilter.class);
 
-    private static final String DCIFILE_POSTFIX = ".dci";
-
     @Override
     public boolean accept(Path path) {
 
-        Pattern pattern = Pattern.compile(DCIFILE_POSTFIX);
+        Pattern pattern = Pattern.compile(FactDistinctColumnsReducer.DIMENSION_COL_INFO_FILE_POSTFIX);
         Matcher matcher = pattern.matcher(path.getName().toLowerCase(Locale.ROOT));
 
         if (matcher.find()) {
-            logger.info("filter file: " + path.getName());
+            logger.info("filter dict file: " + path.getName());
             return false;
         }
 
