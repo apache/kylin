@@ -81,6 +81,8 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
             .isRequired(true).withDescription("HFile output path").create(BatchConstants.ARG_OUTPUT);
     public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
             .isRequired(true).withDescription("Cuboid files PATH").create(BatchConstants.ARG_INPUT);
+    public static final Option OPTION_ENABLE_OBJECT_REUSE = OptionBuilder.withArgName("enableObjectReuse").hasArg()
+            .isRequired(true).withDescription("Enable object reuse").create("enableObjectReuse");
 
     private Options options;
 
@@ -94,6 +96,7 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_INPUT_PATH);
         options.addOption(OPTION_OUTPUT_PATH);
+        options.addOption(OPTION_ENABLE_OBJECT_REUSE);
     }
 
     @Override
@@ -108,6 +111,12 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
         final String inputPath = optionsHelper.getOptionValue(OPTION_INPUT_PATH);
         final String segmentId = optionsHelper.getOptionValue(OPTION_SEGMENT_ID);
         final String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
+        String enableObjectReuseOptValue = optionsHelper.getOptionValue(OPTION_ENABLE_OBJECT_REUSE);
+
+        boolean enableObjectReuse = false;
+        if (enableObjectReuseOptValue != null && !enableObjectReuseOptValue.isEmpty()) {
+            enableObjectReuse = true;
+        }
 
         Job job = Job.getInstance();
         FlinkUtil.modifyFlinkHadoopConfiguration(job); // set dfs.replication=2 and enable compress
@@ -127,6 +136,9 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
         FlinkUtil.setHadoopConfForCuboid(job, cubeSegment, metaUrl);
 
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+        if (enableObjectReuse) {
+            env.getConfig().enableObjectReuse();
+        }
         env.getConfig().registerKryoType(PercentileCounter.class);
         env.getConfig().registerTypeWithKryoSerializer(PercentileCounter.class, PercentileCounterSerializer.class);
 
