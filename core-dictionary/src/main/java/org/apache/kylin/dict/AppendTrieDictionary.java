@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheStats;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
@@ -73,6 +74,8 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
     transient private GlobalDictMetadata metadata;
     transient private LoadingCache<AppendDictSliceKey, AppendDictSlice> dictCache;
 
+    private int evictionThreshold = 0;
+
     public void init(String baseDir) throws IOException {
         this.baseDir = convertToAbsolutePath(baseDir);
         final GlobalDictStore globalDictStore = new GlobalDictHDFSStore(this.baseDir);
@@ -87,7 +90,15 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         final Path latestVersionPath = globalDictStore.getVersionDir(latestVersion);
         this.metadata = globalDictStore.getMetadata(latestVersion);
         this.bytesConvert = metadata.bytesConverter;
-        this.dictCache = CacheBuilder.newBuilder().softValues()
+
+        // see: https://github.com/google/guava/wiki/CachesExplained
+        CacheBuilder cacheBuilder = CacheBuilder.newBuilder().softValues().recordStats();
+        int cacheMaximumSize = KylinConfig.getInstanceFromEnv().getCachedDictMaxSize();
+        if (cacheMaximumSize > 0) {
+            cacheBuilder = cacheBuilder.maximumSize(cacheMaximumSize);
+            logger.info("Set dict cache maximum size to " + cacheMaximumSize);
+        }
+        this.dictCache = cacheBuilder
                 .removalListener(new RemovalListener<AppendDictSliceKey, AppendDictSlice>() {
                     @Override
                     public void onRemoval(RemovalNotification<AppendDictSliceKey, AppendDictSlice> notification) {
@@ -104,6 +115,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
                         return slice;
                     }
                 });
+        this.evictionThreshold = KylinConfig.getInstanceFromEnv().getDictionarySliceEvicationThreshold();
     }
 
     @Override
@@ -119,7 +131,24 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         } catch (ExecutionException e) {
             throw new IllegalStateException("Failed to load slice with key " + sliceKey, e.getCause());
         }
+        CacheStats stats = dictCache.stats();
+        if (evictionThreshold > 0 && stats.evictionCount() > evictionThreshold * metadata.sliceFileMap.size()
+                && stats.loadCount() > (evictionThreshold + 1) * metadata.sliceFileMap.size()) {
+            logger.warn(
+                    "Too many dict slice evictions and reloads, maybe the memory is not enough to hold all the dictionary");
+            throw new RuntimeException("Too many dict slice evictions: " + stats + " for "
+                    + metadata.sliceFileMap.size() + " dict slices. "
+                    + "Maybe the memory is not enough to hold all the dictionary, try to enlarge the mapreduce/spark executor memory.");
+        }
         return slice.getIdFromValueBytesImpl(value, offset, len, roundingFlag);
+    }
+
+    public CacheStats getCacheStats() {
+        return dictCache.stats();
+    }
+
+    public GlobalDictMetadata getDictMetadata() {
+        return metadata;
     }
 
     @Override
