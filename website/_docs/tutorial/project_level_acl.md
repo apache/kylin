@@ -7,12 +7,12 @@ since: v2.1.0
 ---
 
 
-### Project Level ACL
+## Project Level ACL
 Whether a user can access a project and use some functionalities within the project is determined by project-level access control, there are four types of access permission role set at the project-level in Apache Kylin. They are *ADMIN*, *MANAGEMENT*, *OPERATION* and *QUERY*. Each role defines a list of functionality user may perform in Apache Kylin.
 
 - *QUERY*: designed to be used by analysts who only need access permission to query tables/cubes in the project.
 - *OPERATION*: designed to be used by operation team in a corporate/organization who need permission to maintain the Cube. OPERATION access permission includes QUERY.
-- *MANAGEMENT*: designed to be used by Modeler or Designer who is fully knowledgeable of business meaning of the data/model, Cube will be in charge of Model and Cube design. MANAGEMENT access permission includes OPERATION, and QUERY.
+- *MANAGEMENT*: designed to be used by Modeler who is fully knowledgeable of business meaning of the data/model, Modeler will be in charge of Model and Cube design. MANAGEMENT access permission includes OPERATION, and QUERY.
 - *ADMIN*: Designed to fully manage the project. ADMIN access permission includes MANAGEMENT, OPERATION and QUERY.
 
 Access permissions are independent between different projects.
