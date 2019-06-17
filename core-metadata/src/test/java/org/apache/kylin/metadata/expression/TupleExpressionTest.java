@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import java.math.BigDecimal;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.exception.QueryOnCubeException;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.AfterClass;
@@ -65,8 +66,8 @@ public class TupleExpressionTest extends LocalFileMetadataTestCase {
                 Lists.newArrayList(constTuple2, colTuple2));
         try {
             biTuple2.verify();
-            fail("IllegalArgumentException should be thrown");
-        } catch (IllegalArgumentException e) {
+            fail("QueryOnCubeException should be thrown，That the right side of the BinaryTupleExpression owns columns is not supported for /");
+        } catch (QueryOnCubeException e) {
         }
 
         biTuple2 = new BinaryTupleExpression(TupleExpression.ExpressionOperatorEnum.DIVIDE,
@@ -77,8 +78,8 @@ public class TupleExpressionTest extends LocalFileMetadataTestCase {
                 Lists.<TupleExpression> newArrayList(biTuple1, biTuple2));
         try {
             biTuple.verify();
-            fail("IllegalArgumentException should be thrown");
-        } catch (IllegalArgumentException e) {
+            fail("QueryOnCubeException should be thrown，That both of the two sides of the BinaryTupleExpression own columns is not supported for *");
+        } catch (QueryOnCubeException e) {
         }
     }
 }
