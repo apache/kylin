@@ -592,4 +592,45 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         }
     }
 
+    @Test
+    public void testTooManySliceEvictions() throws IOException {
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.max-cache-size", "3");
+        AppendTrieDictionaryBuilder builder = createBuilder();
+        for (int i = 0 ; i < 100000; i++) {
+            builder.addValue(Integer.toString(i));
+        }
+        AppendTrieDictionary dict = builder.build(0);
+
+        assertEquals(4, dict.getDictMetadata().sliceFileMap.size());
+        assertEquals(1, dict.getIdFromValue("0", 0));
+        assertEquals(0, dict.getCacheStats().evictionCount());
+        assertEquals(1, dict.getCacheStats().loadCount());
+
+
+        List<String> keys = new ArrayList<>(100000);
+        for (int i = 0 ; i < 100000; i++) {
+            keys.add(Integer.toString(i));
+        }
+        Collections.sort(keys);
+        for (String key : keys) {
+            assertEquals(Integer.parseInt(key) + 1, dict.getIdFromValue(key, 0));
+        }
+        assertEquals(1, dict.getCacheStats().evictionCount());
+        assertEquals(4, dict.getCacheStats().loadCount());
+
+        // out of order
+        Collections.shuffle(keys);
+        try {
+            for (String key : keys) {
+                assertEquals(Integer.parseInt(key) + 1, dict.getIdFromValue(key, 0));
+            }
+            assertFalse("Should throw RuntimeException for too many dict slice evictions", true);
+        } catch (RuntimeException e) {
+            assertEquals("Too many dict slice evictions", e.getMessage().substring(0, 29));
+        }
+        assertEquals(22, dict.getCacheStats().evictionCount());
+        assertEquals(25, dict.getCacheStats().loadCount());
+
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.max-cache-size", "-1");
+    }
 }
