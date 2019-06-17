@@ -238,6 +238,15 @@ public class HBaseConnection {
         return fs.makeQualified(path).toString();
     }
 
+    public static FileSystem getFileSystemInHBaseCluster(String inPath) {
+        Path path = new Path(inPath);
+        path = Path.getPathWithoutSchemeAndAuthority(path);
+
+        FileSystem fs = HadoopUtil.getFileSystem(path, getCurrentHBaseConfiguration()); // Must be HBase's FS, not working FS
+        return fs;
+    }
+
+
     // ============================================================================
 
     // returned Connection can be shared by multiple threads and does not require close()

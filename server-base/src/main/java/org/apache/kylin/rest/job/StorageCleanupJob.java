@@ -38,7 +38,6 @@ import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -57,6 +56,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceManager;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +92,7 @@ public class StorageCleanupJob extends AbstractApplication {
 
     public StorageCleanupJob() throws IOException {
         this(KylinConfig.getInstanceFromEnv(), HadoopUtil.getWorkingFileSystem(),
-                HadoopUtil.getWorkingFileSystem(HBaseConfiguration.create()));
+                HBaseConnection.getFileSystemInHBaseCluster(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()));
     }
     
     protected StorageCleanupJob(KylinConfig config, FileSystem defaultFs, FileSystem hbaseFs) {
@@ -217,25 +217,24 @@ public class StorageCleanupJob extends AbstractApplication {
     
     protected void collectUnusedHdfsFiles(UnusedHdfsFileCollector collector) throws IOException {
         if (StringUtils.isNotEmpty(config.getHBaseClusterFs())) {
-            cleanUnusedHdfsFiles(hbaseFs, collector);
+            cleanUnusedHdfsFiles(hbaseFs, collector, true);
         }
-        cleanUnusedHdfsFiles(defaultFs, collector);
+        cleanUnusedHdfsFiles(defaultFs, collector, false);
     }
     
-    private void cleanUnusedHdfsFiles(FileSystem fs, UnusedHdfsFileCollector collector) throws IOException {
+    private void cleanUnusedHdfsFiles(FileSystem fs, UnusedHdfsFileCollector collector, Boolean hbaseFs) throws IOException {
         final JobEngineConfig engineConfig = new JobEngineConfig(config);
         final CubeManager cubeMgr = CubeManager.getInstance(config);
         
         List<String> allHdfsPathsNeedToBeDeleted = new ArrayList<String>();
         
         try {
-            FileStatus[] fStatus = fs.listStatus(new Path(config.getHdfsWorkingDirectory()));
+            FileStatus[] fStatus = fs.listStatus(Path.getPathWithoutSchemeAndAuthority(new Path(config.getHdfsWorkingDirectory())));
             if (fStatus != null) {
                 for (FileStatus status : fStatus) {
                     String path = status.getPath().getName();
                     if (path.startsWith("kylin-")) {
-                        String kylinJobPath = engineConfig.getHdfsWorkingDirectory() + path;
-                        allHdfsPathsNeedToBeDeleted.add(kylinJobPath);
+                        allHdfsPathsNeedToBeDeleted.add(status.getPath().toString());
                     }
                 }
             }
@@ -249,6 +248,13 @@ public class StorageCleanupJob extends AbstractApplication {
             final ExecutableState state = executableManager.getOutput(jobId).getState();
             if (!state.isFinalState()) {
                 String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobId);
+
+                if(hbaseFs) {
+                    path = HBaseConnection.makeQualifiedPathInHBaseCluster(path);
+                }else{//Compatible with local fs, unit tests, mockito
+                    Path p = Path.getPathWithoutSchemeAndAuthority(new Path(path));
+                    path = HadoopUtil.getFileSystem(path).makeQualified(p).toString();
+                }
                 allHdfsPathsNeedToBeDeleted.remove(path);
                 logger.info("Skip " + path + " from deletion list, as the path belongs to job " + jobId
                         + " with status " + state);
@@ -261,6 +267,12 @@ public class StorageCleanupJob extends AbstractApplication {
                 String jobUuid = seg.getLastBuildJobID();
                 if (jobUuid != null && jobUuid.equals("") == false) {
                     String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobUuid);
+                    if(hbaseFs) {
+                        path = HBaseConnection.makeQualifiedPathInHBaseCluster(path);
+                    }else{//Compatible with local fs, unit tests, mockito
+                        Path p = Path.getPathWithoutSchemeAndAuthority(new Path(path));
+                        path = HadoopUtil.getFileSystem(path).makeQualified(p).toString();
+                    }
                     allHdfsPathsNeedToBeDeleted.remove(path);
                     logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg
                             + " of cube " + cube.getName());
