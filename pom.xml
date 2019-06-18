@@ -16,14 +16,15 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>19</version>
-        <relativePath />
+        <relativePath/>
         <!-- no parent resolution -->
     </parent>
 
@@ -123,6 +124,7 @@
         <jetty.version>9.3.22.v20171030</jetty.version>
         <jamm.version>0.3.1</jamm.version>
         <mockito.version>2.7.14</mockito.version>
+        <mockito-all.version>1.9.5</mockito-all.version>
         <powermock.version>1.7.0</powermock.version>
 
         <!-- Commons -->
@@ -130,6 +132,7 @@
         <commons-email.version>1.5</commons-email.version>
         <commons-validator.version>1.4.0</commons-validator.version>
         <commons-compress>1.18</commons-compress>
+        <commons-dbcp.version>1.4</commons-dbcp.version>
 
         <!-- Utility -->
         <log4j.version>1.2.17</log4j.version>
@@ -147,6 +150,8 @@
         <t-digest.version>3.1</t-digest.version>
         <freemarker.version>2.3.23</freemarker.version>
         <rocksdb.version>5.9.2</rocksdb.version>
+        <lz4.version>1.3.0</lz4.version>
+        <mssql-jdbc.version>6.2.2.jre8</mssql-jdbc.version>
         <!--metric-->
         <dropwizard.version>3.1.2</dropwizard.version>
         <!-- REST Service, ref https://github.com/spring-projects/spring-boot/blob/v1.3.8.RELEASE/spring-boot-dependencies/pom.xml -->
@@ -399,6 +404,33 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
+
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-stream-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-stream-coordinator</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-stream-source-kafka</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-storage-stream</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-stream-receiver</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-datasource-sdk</artifactId>
@@ -902,12 +934,6 @@
                 <artifactId>opensaml</artifactId>
                 <version>${opensaml.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.curator</groupId>
-                <artifactId>curator-test</artifactId>
-                <version>2.12.0</version>
-                <scope>test</scope>
-            </dependency>
 
             <!-- Spring Core -->
             <dependency>
@@ -971,17 +997,15 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-server</artifactId>
                 <version>${jetty.version}</version>
-                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
+                <version>${jetty.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-webapp</artifactId>
-                <version>${jetty.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-util</artifactId>
                 <version>${jetty.version}</version>
                 <scope>test</scope>
             </dependency>
@@ -1016,11 +1040,6 @@
                 <version>${scala.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-reflect</artifactId>
-                <version>${scala.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-reflect</artifactId>
@@ -1267,7 +1286,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore />
+                                        <ignore/>
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
