@@ -176,16 +176,19 @@ title: Home
             <a class="sponsor" href="http://www.meituan.com/"> 
                 <img src="/images/logo/meituan.png">
             </a>
+            <a class="sponsor" href="https://kyligence.io/"> 
+                <img style="width: 200px;height: 80px;text-align: left;" src="/images/logo/kyligence.jpg">
+            </a>
             <a class="sponsor" href="https://www.envision-group.com/cn/"> 
                 <img src="/images/logo/envision.png">
             </a>
             <a class="sponsor" href="https://gameforge.com/"> 
                 <img src="/images/logo/gameforge.png">
             </a>
+            <!-- 5 -->
             <a class="sponsor" href="https://www.glispa.com/"> 
                 <img src="/images/logo/glispa.jpg">
             </a>
-            <!-- 5 -->
             <a class="sponsor" href="https://www.sohu.com/"> 
                 <img src="/images/logo/soho.png">
             </a>
@@ -198,10 +201,10 @@ title: Home
             <a class="sponsor" href="http://www.iflytek.com/"> 
                 <img src="/images/logo/iflytek.png">
             </a>
+            <!-- 6 -->
             <a class="sponsor" href="http://www.iqiyi.com/"> 
                 <img src="/images/logo/iqiyi.png">
             </a>
-            <!-- 6 -->
             <a class="sponsor" href="javascript:void(0);">
                 <img src="/images/logo/leeco.png">
             </a>
@@ -214,10 +217,10 @@ title: Home
             <a class="sponsor" href="https://www.qunar.com/"> 
                 <img src="/images/logo/qunar.png">
             </a>
+            <!-- 7 -->
             <a class="sponsor" href="http://www.stratebi.com/"> 
                 <img src="/images/logo/stratebi.png">
             </a>
-            <!-- 7 -->
             <a class="sponsor" href="https://www.toutiao.com/"> 
                 <img src="/images/logo/toutiao.png">
             </a>
@@ -230,10 +233,10 @@ title: Home
             <a class="sponsor" href="http://www.vip.com/"> 
                 <img src="/images/logo/vipcom.png">
             </a>
+            <!-- 8 -->
             <a class="sponsor" href="http://www.wanda.cn/"> 
                 <img src="/images/logo/wanda.png">
             </a>
-            <!-- 8 -->
             <a class="sponsor" href="http://www.zte.com.cn/"> 
                 <img src="/images/logo/zte.png">
             </a>             
@@ -246,10 +249,10 @@ title: Home
             <a class="sponsor" href="https://www.telecoming.com/"> 
                 <img src="/images/logo/telecoming.jpg">
             </a>
+            <!-- 9 -->
             <a class="sponsor" href="http://www.163.com/"> 
                 <img src="/images/logo/netease.png">
             </a>
-            <!-- 9 -->
             <a class="sponsor" href="http://www.mininglamp.com/"> 
                 <img style="width: 200px;height: 80px;margin-bottom: 10px;text-align: left;" src="/images/logo/mininglamp.png">
             </a>

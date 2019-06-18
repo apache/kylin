@@ -9,6 +9,9 @@ Send a quick description of your organization and usage to the [mailing list](ma
 
 __Companies & Organizations__
 
+* [Kyligence](https://kyligence.io/), 2019-06-18
+    * Kyligence provides an AI augmented data platform, powered by Apache Kylin, for analysts and data engineers to build and manage their data services from on-premises to multi-cloud.
+
 * [Telecoming](https://www.telecoming.com/), 2019-01-21
     * Telecoming has adopted Apache Kylin, since it's an extremely useful business intelligence tool. It has encouraged lower consultation time, it has improved report generation and above all it contributes to improving business decisions. Read more at [this blog](http://www.stratebi.com/-/big-data-marketing-telecoming)
 
