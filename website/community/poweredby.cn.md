@@ -9,6 +9,9 @@ __如何贡献案例__
 
 __公司 & 组织__
 
+* [Kyligence](https://kyligence.io/zh/), 2019-06-18
+    * Kyligence 提供一个基于 Apache Kylin 的 AI 增强的数据管理和分析平台，帮助分析师和数据工程师轻松从本地到多云架构上构建受控的数据服务。
+
 * [Telecoming](https://www.telecoming.com/), 2019-01-21
     * Telecoming 采用了 Apache Kylin，因为它是一个非常有用的商业智能工具。Kylin 缩短了查询时间，改进了报表生成，最重要的是它有助于业务决策。关于更多信息，请参考[此页面](http://www.stratebi.com/-/big-data-marketing-telecoming)。
 
