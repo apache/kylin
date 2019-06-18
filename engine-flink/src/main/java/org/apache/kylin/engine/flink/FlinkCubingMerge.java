@@ -82,7 +82,7 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
     public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
             .isRequired(true).withDescription("Cuboid files PATH").create(BatchConstants.ARG_INPUT);
     public static final Option OPTION_ENABLE_OBJECT_REUSE = OptionBuilder.withArgName("enableObjectReuse").hasArg()
-            .isRequired(true).withDescription("Enable object reuse").create("enableObjectReuse");
+            .isRequired(false).withDescription("Enable object reuse").create("enableObjectReuse");
 
     private Options options;
 
@@ -111,7 +111,7 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
         final String inputPath = optionsHelper.getOptionValue(OPTION_INPUT_PATH);
         final String segmentId = optionsHelper.getOptionValue(OPTION_SEGMENT_ID);
         final String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
-        String enableObjectReuseOptValue = optionsHelper.getOptionValue(OPTION_ENABLE_OBJECT_REUSE);
+        final String enableObjectReuseOptValue = optionsHelper.getOptionValue(OPTION_ENABLE_OBJECT_REUSE);
 
         boolean enableObjectReuse = false;
         if (enableObjectReuseOptValue != null && !enableObjectReuseOptValue.isEmpty()) {
@@ -183,7 +183,6 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
                 unionedDataSet
                         .groupBy(0)
                         .reduce(new MeasureReduceFunction(aggregators))
-                        .setParallelism(FlinkUtil.estimateTotalPartitionNum(cubeStatsReader, envConfig))
                         .map(new ConvertTextMapFunction(sConf, metaUrl, cubeName))
                         .output(hadoopOF);
             }
@@ -222,7 +221,6 @@ public class FlinkCubingMerge extends AbstractApplication implements Serializabl
                     unionedDataSet
                             .groupBy(0)
                             .reduce(new MeasureReduceFunction(aggregators))
-                            .setParallelism(FlinkUtil.estimateTotalPartitionNum(cubeStatsReader, envConfig))
                             .map(new ConvertTextMapFunction(sConf, metaUrl, cubeName))
                             .output(hadoopOF);
                 }
