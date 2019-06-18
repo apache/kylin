@@ -90,6 +90,8 @@ public class FlinkMergingDictionary extends AbstractApplication implements Seria
             .isRequired(true).withDescription("merged dictionary resource path").create("dictOutputPath");
     public static final Option OPTION_OUTPUT_PATH_STAT = OptionBuilder.withArgName("statOutputPath").hasArg()
             .isRequired(true).withDescription("merged statistics resource path").create("statOutputPath");
+    public static final Option OPTION_ENABLE_OBJECT_REUSE = OptionBuilder.withArgName("enableObjectReuse").hasArg()
+            .isRequired(false).withDescription("Enable object reuse").create("enableObjectReuse");
 
     private Options options;
 
@@ -101,6 +103,7 @@ public class FlinkMergingDictionary extends AbstractApplication implements Seria
         options.addOption(OPTION_MERGE_SEGMENT_IDS);
         options.addOption(OPTION_OUTPUT_PATH_DICT);
         options.addOption(OPTION_OUTPUT_PATH_STAT);
+        options.addOption(OPTION_ENABLE_OBJECT_REUSE);
     }
 
     @Override
@@ -116,10 +119,20 @@ public class FlinkMergingDictionary extends AbstractApplication implements Seria
         final String segmentIds = optionsHelper.getOptionValue(OPTION_MERGE_SEGMENT_IDS);
         final String dictOutputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH_DICT);
         final String statOutputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH_STAT);
+        final String enableObjectReuseOptValue = optionsHelper.getOptionValue(OPTION_ENABLE_OBJECT_REUSE);
+
+        boolean enableObjectReuse = false;
+        if (enableObjectReuseOptValue != null && !enableObjectReuseOptValue.isEmpty()) {
+            enableObjectReuse = true;
+        }
 
         final Job job = Job.getInstance();
 
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+        if (enableObjectReuse) {
+            env.getConfig().enableObjectReuse();
+        }
+
         HadoopUtil.deletePath(job.getConfiguration(), new Path(dictOutputPath));
 
         final SerializableConfiguration sConf = new SerializableConfiguration(job.getConfiguration());
@@ -143,8 +156,7 @@ public class FlinkMergingDictionary extends AbstractApplication implements Seria
         DataSource<Integer> indexDS = env.fromCollection(indexs);
 
         DataSet<Tuple2<Text, Text>> colToDictPathDS = indexDS.map(new MergeDictAndStatsFunction(cubeName,
-                metaUrl, segmentId, StringUtil.splitByComma(segmentIds), statOutputPath, tblColRefs, sConf))
-                .setParallelism(columnLength + 1);
+                metaUrl, segmentId, StringUtil.splitByComma(segmentIds), statOutputPath, tblColRefs, sConf));
 
         FlinkUtil.setHadoopConfForCuboid(job, null, null);
         HadoopOutputFormat<Text, Text> hadoopOF =
