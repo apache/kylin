@@ -24,8 +24,9 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.BufferedLogger;
@@ -44,6 +45,7 @@ import org.apache.kylin.job.execution.CheckpointExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.model.DataModelManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -198,12 +200,13 @@ public class KylinHealthCheckJob extends AbstractApplication {
 
     private void checkHBaseTables(List<CubeInstance> cubes) throws IOException {
         reporter.log("## Checking HBase Table of segments");
-        HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create());
+        Connection conn = HBaseConnection.get(config.getStorageUrl());
+        Admin hbaseAdmin = conn.getAdmin();
         for (CubeInstance cube : cubes) {
             for (CubeSegment segment : cube.getSegments()) {
                 if (segment.getStatus() != SegmentStatusEnum.NEW) {
                     String tableName = segment.getStorageLocationIdentifier();
-                    if ((!hbaseAdmin.tableExists(tableName)) || (!hbaseAdmin.isTableEnabled(tableName))) {
+                    if ((!hbaseAdmin.tableExists(TableName.valueOf(tableName))) || (!hbaseAdmin.isTableEnabled(TableName.valueOf(tableName)))) {
                         reporter.log("HBase table: {} not exist for segment: {}, project: {}", tableName, segment,
                                 cube.getProject());
                         reporter.log(
