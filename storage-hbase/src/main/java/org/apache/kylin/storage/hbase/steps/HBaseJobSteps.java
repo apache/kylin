@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -241,7 +242,7 @@ public abstract class HBaseJobSteps extends JobBuilderSupport {
         CubeSegment oldSegment = ((CubeInstance)seg.getRealization()).getOriginalSegmentToRefresh(seg);
 
         // refresh segment
-        if (oldSegment != null) {
+        if (oldSegment != null && KylinConfig.getInstanceFromEnv().cleanStorageAfterDelOperation()) {
             // delete old hdfs job
             toDeletePaths.addAll(getRefreshingHDFSPaths());
 
