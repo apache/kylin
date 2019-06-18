@@ -33,14 +33,12 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.source.SourceManager;
 import org.apache.kylin.storage.StorageFactory;
@@ -92,18 +90,6 @@ public class FlinkUtil {
         }
 
         return env.createInput(HadoopInputs.readSequenceFile(keyClass, valueClass, StringUtil.join(inputFolders, ",")));
-    }
-
-    public static int estimateTotalPartitionNum(CubeStatsReader statsReader, KylinConfig kylinConfig) {
-        double totalSize = 0;
-        for (double x: statsReader.getCuboidSizeMap().values()) {
-            totalSize += x;
-        }
-        float partitionCutMB = kylinConfig.getFlinkPartitionCutMB();
-        int partition = (int) (totalSize / partitionCutMB);
-        partition = Math.max(kylinConfig.getFlinkMinPartition(), partition);
-        partition = Math.min(kylinConfig.getFlinkMaxPartition(), partition);
-        return partition;
     }
 
     public static void setHadoopConfForCuboid(Job job, CubeSegment segment, String metaUrl) throws Exception {
