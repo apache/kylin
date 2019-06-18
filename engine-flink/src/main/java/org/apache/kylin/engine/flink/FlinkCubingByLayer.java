@@ -91,7 +91,7 @@ public class FlinkCubingByLayer extends AbstractApplication implements Serializa
     public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg()
             .isRequired(true).withDescription("Hive Intermediate Table PATH").create(BatchConstants.ARG_INPUT);
     public static final Option OPTION_ENABLE_OBJECT_REUSE = OptionBuilder.withArgName("enableObjectReuse").hasArg()
-            .isRequired(true).withDescription("Enable object reuse").create("enableObjectReuse");
+            .isRequired(false).withDescription("Enable object reuse").create("enableObjectReuse");
 
     private Options options;
 
