@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -219,21 +218,17 @@ public class FlinkExecutable extends AbstractExecutable {
             logger.info("cmd: " + cmd);
             final ExecutorService executorService = Executors.newSingleThreadExecutor();
             final CliCommandExecutor exec = new CliCommandExecutor();
-            final PatternedLogger patternedLogger = new PatternedLogger(logger, new PatternedLogger.ILogListener() {
-                @Override
-                public void onLogEvent(String infoKey, Map<String, String> info) {
-                    // only care three properties here
-                    if (ExecutableConstants.FLINK_JOB_ID.equals(infoKey)
-                            || ExecutableConstants.YARN_APP_ID.equals(infoKey)
-                            || ExecutableConstants.YARN_APP_URL.equals(infoKey)) {
-                        getManager().addJobInfo(getId(), info);
-                    }
+            final PatternedLogger patternedLogger = new PatternedLogger(logger, (String infoKey, Map<String, String> info) -> {
+                // only care three properties here
+                if (ExecutableConstants.FLINK_JOB_ID.equals(infoKey)
+                        || ExecutableConstants.YARN_APP_ID.equals(infoKey)
+                        || ExecutableConstants.YARN_APP_URL.equals(infoKey)) {
+                    getManager().addJobInfo(getId(), info);
                 }
             });
 
-            Callable callable = new Callable<Pair<Integer, String>>() {
-                @Override
-                public Pair<Integer, String> call() throws Exception {
+            try {
+                Future<Pair<Integer, String>> future = executorService.submit(() -> {
                     Pair<Integer, String> result;
                     try {
                         result = exec.execute(cmd, patternedLogger);
@@ -242,11 +237,7 @@ public class FlinkExecutable extends AbstractExecutable {
                         result = new Pair<>(-1, e.getMessage());
                     }
                     return result;
-                }
-            };
-
-            try {
-                Future<Pair<Integer, String>> future = executorService.submit(callable);
+                });
                 Pair<Integer, String> result = null;
                 while (!isDiscarded() && !isPaused()) {
                     if (future.isDone()) {
