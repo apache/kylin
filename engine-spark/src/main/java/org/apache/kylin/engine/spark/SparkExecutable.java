@@ -56,6 +56,8 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.model.Segments;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -201,10 +203,21 @@ public class SparkExecutable extends AbstractExecutable {
             return onResumed(sparkJobId, mgr);
         } else {
             String cubeName = this.getParam(SparkCubingByLayer.OPTION_CUBE_NAME.getOpt());
-            CubeInstance cube = CubeManager.getInstance(context.getConfig()).getCube(cubeName);
-            final KylinConfig config = cube.getConfig();
-
-            setAlgorithmLayer();
+            CubeInstance cube;
+            if (cubeName != null) {
+                cube = CubeManager.getInstance(context.getConfig()).getCube(cubeName);
+            } else {  // Cube name can't be got when loading hive table
+                cube = null;
+            }
+            final KylinConfig config;
+            if (cube != null) {
+                config = cube.getConfig();
+            } else {
+                // when loading hive table, we can't get cube name/config, so we get config from project.
+                String projectName = this.getParam(SparkColumnCardinality.OPTION_PRJ.getOpt());
+                ProjectInstance projectInst = ProjectManager.getInstance(context.getConfig()).getProject(projectName);
+                config = projectInst.getConfig();
+            }
 
             if (KylinConfig.getSparkHome() == null) {
                 throw new NullPointerException();
@@ -229,11 +242,13 @@ public class SparkExecutable extends AbstractExecutable {
             if (StringUtils.isEmpty(jars)) {
                 jars = jobJar;
             }
-
-            String segmentID = this.getParam(SparkCubingByLayer.OPTION_SEGMENT_ID.getOpt());
-            CubeSegment segment = cube.getSegmentById(segmentID);
-            Segments<CubeSegment> mergingSeg = cube.getMergingSegments(segment);
-            dumpMetadata(segment, mergingSeg);
+            if (cube != null) {
+                setAlgorithmLayer();
+                String segmentID = this.getParam(SparkCubingByLayer.OPTION_SEGMENT_ID.getOpt());
+                CubeSegment segment = cube.getSegmentById(segmentID);
+                Segments<CubeSegment> mergingSeg = cube.getMergingSegments(segment);
+                dumpMetadata(segment, mergingSeg);
+            }
 
             StringBuilder stringBuilder = new StringBuilder();
             if (Shell.osType == Shell.OSType.OS_TYPE_WIN) {
