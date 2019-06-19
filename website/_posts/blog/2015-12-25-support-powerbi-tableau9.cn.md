@@ -3,7 +3,7 @@ layout: post-blog
 title:  Apache Kylin增加对Tableau 9及微软Excel, Power BI的支持
 date:   2015-12-25 23:23:00
 author: Luke Han
-categories: blog
+categories: cn_blog
 ---
 
 Apache Kylin社区更新了最新的ODBC Driver(v1.2)，增加了对Tableau9.1、Microsoft Excel、Microsoft Power BI 等常用商业分析软件的支持。这次的更新为广大数据分析工作者带来了更多的选择

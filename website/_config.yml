@@ -27,7 +27,7 @@ encoding: UTF-8
 timezone: America/Dawson 
 
 exclude: ["README.md", "Rakefile", "*.scss", "*.haml", "*.sh", "Dockerfile", "Makefile"]
-include: [_docs,_docs20,_docs21,_docs23,_docs24,_docs30,_dev,community]
+include: [_docs,_docs20,_docs21,_docs23,_docs24,_docs30,_dev,community,blog]
 
 # Build settings
 markdown: kramdown
@@ -83,4 +83,8 @@ collections:
   dev-cn:
     output: true
   community:
+    output: true
+  blog:
+    output: true
+  blog-cn:
     output: true

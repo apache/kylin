@@ -3,7 +3,7 @@ layout: post-blog
 title:  Saiku + Kylin 搭建多维 OLAP 平台
 date:   2019-05-23 15:00:00
 author: Gina Zhai
-categories: blog
+categories: cn_blog
 ---
 
 随着数据量的激增，传统的 OLTP 平台已无法满足用户的分析需求。OLAP 平台应运而生，OLAP 平台通常由 OLAP Engine 与用户操作分析页面组成。本文将会以 Saiku + Kylin 的组合方式讲解多维 OLAP 平台的搭建。
