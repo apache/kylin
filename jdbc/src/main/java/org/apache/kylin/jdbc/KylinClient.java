@@ -441,8 +441,8 @@ public class KylinClient implements IRemoteClient {
         StringEntity requestEntity = new StringEntity(postBody, ContentType.create("application/json", "UTF-8"));
         post.setEntity(requestEntity);
 
-        HttpResponse response = httpClient.execute(post);
         try {
+            HttpResponse response = httpClient.execute(post);
             if (response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 201) {
                 throw asIOException(post, response);
             }
