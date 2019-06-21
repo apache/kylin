@@ -158,6 +158,12 @@ You may also need to tune the VM options:
 -Dhdp.version=2.4.0.0-169 -DSPARK_HOME=/usr/local/spark -Dkylin.hadoop.conf.dir=/workspace/kylin/examples/test_case_data/sandbox -Xms800m -Xmx800m -XX:PermSize=64M -XX:MaxNewSize=256m -XX:MaxPermSize=128m
 ```
 
+If you worked with Kerberized Hadoop Cluster, the additional VM options should be set:
+
+```
+-Djava.security.krb5.conf=/etc/krb5.conf -Djava.security.krb5.principal=kylin -Djava.security.krb5.keytab=/path/to/kylin/keytab
+```
+
 And Hadoop environment variable:
 
 ```
