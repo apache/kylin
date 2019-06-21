@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,12 @@
 package org.apache.kylin.dict;
 
 import java.lang.ref.SoftReference;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
 
 /**
@@ -29,35 +32,28 @@ import org.apache.kylin.common.util.Dictionary;
 public abstract class CacheDictionary<T> extends Dictionary<T> {
     private static final long serialVersionUID = 1L;
 
-    private transient SoftReference<ConcurrentHashMap> valueToIdCache;
+    private transient LoadingCache<T, Integer> valueToIdCache;
 
-    private transient SoftReference<Object[]> idToValueCache;
-
-    public transient SoftReference<byte[][]> idToValueByteCache;
+    private transient SoftReference<byte[][]> idToValueByteCache;
 
     protected transient int baseId;
 
     protected BytesConverter<T> bytesConvert;
 
-    public CacheDictionary() {
+    CacheDictionary() {
 
     }
 
     //value --> id
     @Override
     protected final int getIdFromValueImpl(T value, int roundingFlag) {
-        if (this.valueToIdCache != null && roundingFlag == 0) {
-            Map cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
-            if (cache != null) {
-                Integer id;
-                id = (Integer) cache.get(value);
-                if (id != null)
-                    return id.intValue();
-                byte[] valueBytes = bytesConvert.convertToBytes(value);
-                id = getIdFromValueBytesWithoutCache(valueBytes, 0, valueBytes.length, roundingFlag);
-                cache.put(value, id);
-                return id;
+        try {
+            if (this.valueToIdCache != null && roundingFlag == 0) {
+                cacheHitCount++;
+                return valueToIdCache.get(value);
             }
+        } catch (Exception th) {
+            throw new IllegalArgumentException("Error to get Id From Value from Cache", th);
         }
         byte[] valueBytes = bytesConvert.convertToBytes(value);
         return getIdFromValueBytesWithoutCache(valueBytes, 0, valueBytes.length, roundingFlag);
@@ -66,45 +62,35 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
     //id --> value
     @Override
     protected final T getValueFromIdImpl(int id) {
-        if (this.idToValueCache != null) {
-            Object[] cache = idToValueCache.get();
-            if (cache != null) {
-                int seq = calcSeqNoFromId(id);
-                if (cache[seq] != null)
-                    return (T) cache[seq];
-                byte[] valueBytes = getValueBytesFromIdWithoutCache(id);
-                T value = bytesConvert.convertFromBytes(valueBytes, 0, valueBytes.length);
-                cache[seq] = value;
-                return value;
-            }
-        }
-        byte[] valueBytes = getValueBytesFromIdWithoutCache(id);
+        byte[] valueBytes = getValueBytesCacheFromIdImpl(id);
         return bytesConvert.convertFromBytes(valueBytes, 0, valueBytes.length);
+    }
+
+    private byte[] getValueBytesCacheFromIdImpl(int id) {
+        byte[][] bytes = this.idToValueByteCache != null ? idToValueByteCache.get(): null;
+        if (bytes != null) {
+            int seq = calcSeqNoFromId(id);
+            byte[] valueBytes = bytes[seq];
+            if (valueBytes != null) {
+                cacheHitCount++;
+            } else {
+                cacheMissCount++;
+                valueBytes = getValueBytesFromIdWithoutCache(id);
+                //add it to cache
+                bytes[seq] = valueBytes;
+            }
+            return valueBytes;
+        }
+        return getValueBytesFromIdWithoutCache(id);
     }
 
     @Override
     protected byte[] getValueBytesFromIdImpl(int id) {
-        if (idToValueByteCache != null) {
-            byte[][] bytes = idToValueByteCache.get();
-            if (bytes != null) {
-                int seq = calcSeqNoFromId(id);
-                if (bytes[seq] != null) {
-                    cacheHitCount++;
-                    return bytes[seq];
-                }
-                byte[] valueBytes = getValueBytesFromIdWithoutCache(id);
-                byte[] bytes1 = bytesConvert.convertBytesValueFromBytes(valueBytes, 0, valueBytes.length);
-                bytes[seq] = bytes1;
-                cacheMissCount++;
-                return bytes1;
-            }
-        }
-        byte[] valueBytes = getValueBytesFromIdWithoutCache(id);
+        byte[] valueBytes = getValueBytesCacheFromIdImpl(id);
         return bytesConvert.convertBytesValueFromBytes(valueBytes, 0, valueBytes.length);
-
     }
 
-    protected final int calcSeqNoFromId(int id) {
+    final int calcSeqNoFromId(int id) {
         int seq = id - baseId;
         if (seq < 0 || seq >= getSize()) {
             throw new IllegalArgumentException("Not a valid ID: " + id);
@@ -113,21 +99,31 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
     }
 
     public final void enableCache() {
-        if (this.valueToIdCache == null)
-            this.valueToIdCache = new SoftReference<>(new ConcurrentHashMap());
-        if (this.idToValueCache == null)
-            this.idToValueCache = new SoftReference<>(new Object[getSize()]);
+        if (this.valueToIdCache == null) {
+            this.valueToIdCache = CacheBuilder
+                    .newBuilder().softValues().expireAfterAccess(30, TimeUnit.MINUTES)
+                    .maximumSize(KylinConfig.getInstanceFromEnv().getCachedDictionaryMaxEntrySize())
+                    .build(new CacheLoader<T, Integer>() {
+                        @Override
+                        public Integer load(T value) {
+                            cacheMissCount++;
+                            cacheHitCount--;
+                            byte[] valueBytes = bytesConvert.convertToBytes(value);
+                            return getIdFromValueBytesWithoutCache(valueBytes, 0, valueBytes.length, 0);
+                        }
+                    });
+        }
         if (this.idToValueByteCache == null)
             this.idToValueByteCache = new SoftReference<>(new byte[getSize()][]);
     }
 
     public final void disableCache() {
         this.valueToIdCache = null;
-        this.idToValueCache = null;
+        this.idToValueByteCache = null;
     }
 
-    abstract protected byte[] getValueBytesFromIdWithoutCache(int id);
+    protected abstract byte[] getValueBytesFromIdWithoutCache(int id);
 
-    abstract protected int getIdFromValueBytesWithoutCache(byte[] valueBytes, int offset, int length, int roundingFlag);
+    protected abstract int getIdFromValueBytesWithoutCache(byte[] valueBytes, int offset, int length, int roundingFlag);
 
 }
