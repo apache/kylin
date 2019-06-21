@@ -496,8 +496,8 @@ public abstract class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.dictionary.forest-trie-max-mb", "500"));
     }
 
-    public int getCachedDictMaxEntrySize() {
-        return Integer.parseInt(getOptional("kylin.dictionary.max-cache-entry", "3000"));
+    public long getCachedDictMaxEntrySize() {
+        return Long.parseLong(getOptional("kylin.dictionary.max-cache-entry", "3000"));
     }
 
     public boolean isGrowingDictEnabled() {
@@ -506,6 +506,10 @@ public abstract class KylinConfigBase implements Serializable {
 
     public boolean isDictResuable() {
         return Boolean.parseBoolean(this.getOptional("kylin.dictionary.resuable", FALSE));
+    }
+
+    public long getCachedDictionaryMaxEntrySize() {
+        return Long.parseLong(getOptional("kylin.dictionary.cached-dict-max-cache-entry", "50000"));
     }
 
     public int getAppendDictEntrySize() {

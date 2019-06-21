@@ -32,6 +32,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,13 +43,27 @@ import java.util.Random;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 
 public class TrieDictionaryTest {
+    @BeforeClass
+    public static void setUp() {
+        LocalFileMetadataTestCase.staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() {
+        LocalFileMetadataTestCase.staticCleanupTestMetadata();
+    }
 
     public static void main(String[] args) throws Exception {
         int count = (int) (Integer.MAX_VALUE * 0.8 / 64);
@@ -472,5 +488,74 @@ public class TrieDictionaryTest {
     @Test
     public void testRounding() {
         // see NumberDictionaryTest.testRounding();
+    }
+
+    @Test
+    public void testCache() throws Exception {
+        List<String> words = new ArrayList<>();
+
+        TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<String>(new StringBytesConverter());
+        int size = 50;
+        for (int i = 0; i < size; i++) {
+            String word = gen();
+            words.add(word);
+            b.addValue(word);
+        }
+        TrieDictionary<String> dict = b.build(0);
+
+        // test getValueFromId, miss cache
+        String[] wordsInDict = new String[size];
+        for (int i = 0; i < size; i++) {
+            String word = dict.getValueFromId(i);
+            wordsInDict[i] = word;
+            Assert.assertTrue(words.contains(word));
+        }
+        Assert.assertEquals(size, getField(dict, "cacheMissCount"));
+        Assert.assertEquals(0, getField(dict, "cacheHitCount"));
+        dict.printlnStatistics();
+
+        // test containsValue, invoke getIdFromValue, miss cache and then hit cache
+        for (int i = 0; i < size; i++) {
+            Assert.assertTrue(dict.containsValue(wordsInDict[i]));
+            Assert.assertTrue(dict.containsValue(wordsInDict[i]));
+        }
+        Assert.assertEquals(getField(dict, "cacheHitCount"), size);
+        Assert.assertEquals(getField(dict, "cacheMissCount"), size);
+        dict.printlnStatistics();
+
+        // test getValueFromId, hit cache
+        for (int i = 0; i < size; i++) {
+            String word = dict.getValueFromId(i);
+            Assert.assertEquals(wordsInDict[i], word);
+        }
+        Assert.assertEquals(getField(dict, "cacheHitCount"), size);
+        dict.printlnStatistics();
+
+        // test getValueByteFromId, hit cache
+        for (int i = 0; i < size; i++) {
+            byte[] word = dict.getValueByteFromId(i);
+            Assert.assertArrayEquals(wordsInDict[i].getBytes(StandardCharsets.UTF_8), word);
+        }
+        Assert.assertEquals(getField(dict, "cacheHitCount"), size);
+        dict.printlnStatistics();
+
+        // disable cache, miss cache
+        dict.disableCache();
+        for (int i = 0; i < size; i++) {
+            byte[] word = dict.getValueByteFromId(i);
+            Assert.assertArrayEquals(wordsInDict[i].getBytes(StandardCharsets.UTF_8), word);
+        }
+        Assert.assertEquals(0, getField(dict, "cacheHitCount"));
+        dict.printlnStatistics();
+    }
+
+    private static int getField(TrieDictionary<String> dict, String field) throws Exception {
+        Field f = Dictionary.class.getDeclaredField(field);
+        f.setAccessible(true);
+        return (int) f.get(dict);
+    }
+
+    private static String gen() {
+        return RandomStringUtils.randomAlphanumeric(10);
     }
 }
