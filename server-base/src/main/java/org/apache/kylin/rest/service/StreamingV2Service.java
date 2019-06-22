@@ -284,21 +284,25 @@ public class StreamingV2Service extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void createReplicaSet(ReplicaSet rs) {
         getCoordinatorClient().createReplicaSet(rs);
+        clusterStateCache.invalidate("cluster_state");
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void removeReplicaSet(int rsID) {
         getCoordinatorClient().removeReplicaSet(rsID);
+        clusterStateCache.invalidate("cluster_state");
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void addNodeToReplicaSet(Integer replicaSetID, String nodeID) {
         getCoordinatorClient().addNodeToReplicaSet(replicaSetID, nodeID);
+        clusterStateCache.invalidate("cluster_state");
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void removeNodeFromReplicaSet(Integer replicaSetID, String nodeID) {
         getCoordinatorClient().removeNodeFromReplicaSet(replicaSetID, nodeID);
+        clusterStateCache.invalidate("cluster_state");
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
