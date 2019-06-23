@@ -40,9 +40,12 @@ import org.apache.kylin.cube.cuboid.CuboidModeEnum;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.cuboid.TreeCuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.measure.MeasureInstance;
+import org.apache.kylin.measure.MeasureManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
@@ -182,7 +185,29 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public Segments<CubeSegment> getMergingSegments(CubeSegment mergedSegment) {
-        return segments.getMergingSegments(mergedSegment);
+        Segments<CubeSegment> mergingSegments = segments.getMergingSegments(mergedSegment);
+        checkAlignedMeasure(mergingSegments);
+        return mergingSegments;
+    }
+
+    private boolean checkAlignedMeasure(Segments<CubeSegment> mergingSegments) {
+        int maxMeasureNumber = 0;
+        boolean isUnaligned = false;
+        MeasureManager measureManager = MeasureManager.getInstance(getConfig());
+        for (ISegment seg : mergingSegments) {
+            List<MeasureInstance> measuresOnSeg = measureManager.getMeasuresOnSegment(getName(), seg.getName());
+            if (measuresOnSeg.size() > maxMeasureNumber) {
+                if (maxMeasureNumber > 0) {
+                    isUnaligned = true;
+                }
+                maxMeasureNumber = measuresOnSeg.size();
+            }
+        }
+        if (isUnaligned) {
+            throw new UnsupportedOperationException("Can't merge segment, because they have different measure number. Max measure number is "
+                    + maxMeasureNumber + ", you can refresh other segments to make them aligned.");
+        }
+        return true;
     }
 
     public CubeSegment getOriginalSegmentToRefresh(CubeSegment refreshedSegment) {

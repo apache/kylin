@@ -330,9 +330,11 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   $scope.getAssignedMeasureNames = function () {
     var assignedMeasures = [];
     angular.forEach($scope.cubeMetaFrame.hbase_mapping.column_family, function (colFamily, index) {
-      angular.forEach(colFamily.columns[0].measure_refs, function (measure, index) {
-        assignedMeasures.push(measure);
-      });
+      angular.forEach(colFamily.columns, function (column, index) {
+        angular.forEach(column.measure_refs, function (measure, index) {
+            assignedMeasures.push(measure);
+         });
+      })
     });
     return assignedMeasures;
   };
@@ -342,14 +344,20 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     var tmpColumnFamily = $scope.cubeMetaFrame.hbase_mapping.column_family;
 
     for(var j=0;j<$scope.cubeMetaFrame.hbase_mapping.column_family.length; j++) {
-      for (var i=0;i<$scope.cubeMetaFrame.hbase_mapping.column_family[j].columns[0].measure_refs.length; i++){
-        var allIndex = allMeasureNames.indexOf($scope.cubeMetaFrame.hbase_mapping.column_family[j].columns[0].measure_refs[i]);
-        if (allIndex == -1) {
-          tmpColumnFamily[j].columns[0].measure_refs.splice(i, 1);
-          i--
+      for (var k=0; k < $scope.cubeMetaFrame.hbase_mapping.column_family[j].columns.length; k++) {
+        for (var i=0;i<$scope.cubeMetaFrame.hbase_mapping.column_family[j].columns[k].measure_refs.length; i++){
+          var allIndex = allMeasureNames.indexOf($scope.cubeMetaFrame.hbase_mapping.column_family[j].columns[0].measure_refs[i]);
+          if (allIndex == -1) {
+            tmpColumnFamily[j].columns[0].measure_refs.splice(i, 1);
+            i--
+          }
+        }
+        if (tmpColumnFamily[j].columns[k].measure_refs.length == 0) {
+          tmpColumnFamily[j].columns.splice(k, 1);
+          k--
         }
       }
-      if (tmpColumnFamily[j].columns[0].measure_refs.length == 0) {
+      if (tmpColumnFamily[j].columns.length == 0) {
         tmpColumnFamily.splice(j, 1);
         j--
       }
@@ -524,4 +532,12 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   };
 
   $scope.cubeLookups = $scope.getCubeLookups();
+
+  $scope.getCFDisplayString = function (columnFamily) {
+    var columnArr = new Array();
+    for (i = 0; i < columnFamily.columns.length; i++) {
+      columnArr[i] = columnFamily.columns[i].qualifier + ":[" + columnFamily.columns[i].measure_refs + "]"
+    }
+    return columnArr.join(", ");
+  };
 });

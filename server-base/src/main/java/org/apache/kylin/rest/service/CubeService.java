@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -39,10 +41,15 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
+import org.apache.kylin.cube.adapter.AbstractHBaseMappingAdapter;
+import org.apache.kylin.cube.adapter.IWiseHBaseMapper;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
+import org.apache.kylin.cube.model.HBaseMappingDesc;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
@@ -393,6 +400,12 @@ public class CubeService extends BasicService implements InitializingBean {
         }
 
         this.releaseAllSegments(cube);
+        // All measures in a column family are stored in one column will reduce the
+        // complexity in Web UI
+        if (cube.getSegments().size() == 0) {
+            mergeMeasureIntoOneCF(cube.getDescriptor());
+        }
+
         return cube;
     }
 
@@ -606,7 +619,9 @@ public class CubeService extends BasicService implements InitializingBean {
         CubeInstance cubeInstance = CubeManager.getInstance(getConfig()).updateCubeDropSegments(cube, toDelete);
 
         cleanSegmentStorage(Collections.singletonList(toDelete));
-
+        if (cube.getSegments().size() == 0) {
+            mergeMeasureIntoOneCF(cube.getDescriptor());
+        }
         return cubeInstance;
     }
 
@@ -1078,5 +1093,40 @@ public class CubeService extends BasicService implements InitializingBean {
         } catch (IOException e) {
             throw new InternalErrorException("Failed to perform one-click migrating", e);
         }
+    }
+
+    public Pair<List<String>, List<String>> getUpdateMeasures(CubeDesc newDesc, CubeDesc oldDesc) {
+        List<String> oldMeasures = oldDesc.getMeasures().stream().map(MeasureDesc::getName).collect(Collectors.toList());
+        List<String> newMeasures = newDesc.getMeasures().stream().map(MeasureDesc::getName).collect(Collectors.toList());
+
+        List<String> needAdd = Lists.newArrayList(newMeasures);
+        needAdd.removeAll(oldMeasures);
+
+        List<String> needDrop = Lists.newArrayList(oldMeasures);
+        needDrop.removeAll(newMeasures);
+        Pair<List<String>, List<String>> ret = new Pair<>(needAdd, needDrop);
+        return ret;
+    }
+
+    public HBaseMappingDesc getAutoHBaseMapping(CubeDesc desc, List<String> needAddMeasure) {
+        IWiseHBaseMapper mapper = AbstractHBaseMappingAdapter.getHBaseAdapter(getConfig());
+        return mapper.addMeasure(desc, needAddMeasure);
+    }
+
+    private HBaseMappingDesc mergeMeasureIntoOneCF(CubeDesc desc) {
+        HBaseMappingDesc hBaseMappingDesc = desc.getHbaseMapping();
+        for (HBaseColumnFamilyDesc cfDesc : hBaseMappingDesc.getColumnFamily()) {
+            if (cfDesc.getColumns().length < 2) {
+                continue;
+            }
+            List<String> measuresInCF = Lists.newArrayList();
+            for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
+                measuresInCF.addAll(Arrays.asList(colDesc.getMeasureRefs()));
+            }
+            cfDesc.setColumns(new HBaseColumnDesc[]{cfDesc.getColumns()[0]});
+            cfDesc.getColumns()[0].setMeasureRefs(measuresInCF.toArray(new String[0]));
+        }
+
+        return hBaseMappingDesc;
     }
 }

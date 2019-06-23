@@ -22,6 +22,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.ISourceAware;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 
 /**
  */
@@ -46,6 +47,8 @@ public class CubeInstanceResponse extends CubeInstance {
     private long inputRecordCnt;
     @JsonProperty("input_records_size")
     private long inputRecordSizeBytes;
+    @JsonProperty("can_add_measure")
+    private boolean canAddMeasure;
 
     public CubeInstanceResponse(CubeInstance cube, String project) {
 
@@ -81,6 +84,7 @@ public class CubeInstanceResponse extends CubeInstance {
         initSizeKB();
         initInputRecordCount();
         initInputRecordSizeBytes();
+        this.canAddMeasure = checkCanAddMeasure(cube);
     }
 
     protected void setModel(String model) {
@@ -99,4 +103,16 @@ public class CubeInstanceResponse extends CubeInstance {
         this.inputRecordSizeBytes = super.getInputRecordSizeBytes();
     }
 
+    private boolean checkCanAddMeasure(CubeInstance cube) {
+        if (!cube.getConfig().isEditableMetricCube()) {
+            return false;
+        }
+        if (!cube.getStatus().equals(RealizationStatusEnum.DISABLED)) {
+            return false;
+        }
+        if (cube.getSegments().size() == 0) {
+            return false;
+        }
+        return true;
+    }
 }

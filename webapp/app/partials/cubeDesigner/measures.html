@@ -41,7 +41,7 @@
                       <tr ng-repeat="measure in cubeMetaFrame.measures | filter: state.measureFilter track by $index">
                           <td>
                               <!--Name -->
-                              <span tooltip="measure name..">{{measure.name}}</span>
+                              <span tooltip-html-unsafe="{{getTimeRange(measure.name)}}">{{measure.name}}</span>
                           </td>
                           <td>
                               <!--Expression -->
@@ -63,11 +63,13 @@
                           </td>
                           <td ng-if="state.mode=='edit'">
                               <!--Edit Button -->
-                              <button class="btn btn-xs btn-info" ng-click="addNewMeasure(measure, $index)" ng-disabled="instance.status=='READY'">
+                            <!-- In cubeMode 'editExistCube', user shouldn't edit or remove measure if there still have segments under cube -->
+                            <!-- User can only add new measures by click Add Measure in cube list -->
+                              <button class="btn btn-xs btn-info" ng-click="addNewMeasure(measure, $index)" ng-disabled="instance.status=='READY' || (!isMeasureEdit && instance.segments.length > 0)" ng-if="!isMeasureEdit || isNewMeasure(measure)">
                                   <i class="fa fa-pencil"></i>
                               </button>
                               <!--Remove Button -->
-                              <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubeMetaFrame.measures, measure)" ng-disabled="instance.status=='READY'">
+                              <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubeMetaFrame.measures, measure);removeElement(newMeasures, measure)" ng-disabled="instance.status=='READY' || (!isMeasureEdit && instance.segments.length > 0)" ng-if="!isMeasureEdit || isNewMeasure(measure)">
                                   <i class="fa fa-trash-o"></i>
                               </button>
                           </td>
@@ -78,7 +80,7 @@
   </ng-form>
   <!--Add Measures Button-->
   <div class="form-group">
-      <button class="btn btn-sm btn-info" ng-click="addNewMeasure()" ng-show="state.mode=='edit' && !newMeasure" ng-disabled="instance.status=='READY'">
+      <button class="btn btn-sm btn-info" ng-click="addNewMeasure()" ng-show="state.mode=='edit' && !newMeasure" ng-disabled="instance.status=='READY' || (!isMeasureEdit && instance.segments.length > 0)">
           <i class="fa fa-plus"></i> Measure
       </button>
   </div>

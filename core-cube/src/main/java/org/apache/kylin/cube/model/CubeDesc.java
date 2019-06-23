@@ -568,10 +568,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     .append(JsonUtil.writeValueAsString(this.modelName)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.nullStrings)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.dimensions)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.measures)).append("|")//
+                    //.append(JsonUtil.writeValueAsString(this.measures)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.rowkey)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.aggregationGroups)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.hbaseMapping)).append("|")//
+                    //.append(JsonUtil.writeValueAsString(this.hbaseMapping)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.storageType)).append("|");
 
             if (mandatoryDimensionSetList != null && !mandatoryDimensionSetList.isEmpty()) {

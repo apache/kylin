@@ -37,6 +37,20 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.curStep = $scope.wizardSteps[0];
 
+  $scope.findMeasuresStepIndex = function() {
+    for (var i = 0; i < $scope.wizardSteps.length; i++) {
+      if ($scope.wizardSteps[i].title === 'Measures') {
+        return i;
+      }
+    }
+    return 0;
+  }
+
+  if ($scope.isMeasureEdit) {
+    var editMeasureStepIdx = $scope.findMeasuresStepIndex();
+    $scope.curStep = $scope.wizardSteps[editMeasureStepIdx];
+  }
+
   $scope.getTypeVersion=function(typename){
     var searchResult=/\[v(\d+)\]/.exec(typename);
     if(searchResult&&searchResult.length){
@@ -388,12 +402,13 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
 
         var cfMeasures = [];
-        angular.forEach($scope.cubeMetaFrame.hbase_mapping.column_family,function(cf){
-          angular.forEach(cf.columns[0].measure_refs, function (measure, index) {
-            cfMeasures.push(measure);
+        angular.forEach($scope.cubeMetaFrame.hbase_mapping.column_family, function (colFamily, index) {
+          angular.forEach(colFamily.columns, function (column, index) {
+            angular.forEach(column.measure_refs, function(measure) {
+              cfMeasures.push(measure);
+            });
           });
         });
-
         var uniqCfMeasures = _.uniq(cfMeasures);
         if(uniqCfMeasures.length != $scope.cubeMetaFrame.measures.length) {
           errors.push("All measures need to be assigned to column family");
@@ -496,5 +511,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
                 $scope.listAccess(project, 'ProjectInstance');
             });
         });
+    }
+
+    $scope.cancel = function () {
+      $location.path("models");
     }
 });
