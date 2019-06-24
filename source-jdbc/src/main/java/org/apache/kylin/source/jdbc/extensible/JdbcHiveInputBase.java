@@ -94,7 +94,7 @@ public class JdbcHiveInputBase extends org.apache.kylin.source.jdbc.JdbcHiveInpu
                                     .getPartitionTimeColumnRef().getTableAlias().equals(splitTableAlias))) {
                         String quotedPartCond = FlatTableSqlQuoteUtils.quoteIdentifierInSqlExpr(flatDesc,
                                 partitionDesc.getPartitionConditionBuilder().buildDateRangeCondition(partitionDesc,
-                                        flatDesc.getSegment(), segRange));
+                                        flatDesc.getSegment(), segRange, null));
                         bquery += " WHERE " + quotedPartCond;
                     }
                 }
