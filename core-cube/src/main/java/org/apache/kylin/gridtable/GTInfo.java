@@ -205,8 +205,8 @@ public class GTInfo {
         for (int i = 0; i < colBlocks.length; i++) {
             merge = merge.or(colBlocks[i]);
         }
-        if (!merge.equals(colAll))
-            throw new IllegalStateException();
+//        if (!merge.equals(colAll))
+//            throw new IllegalStateException();
 
         // primary key must be the first column block
         if (!primaryKey.equals(colBlocks[0]))

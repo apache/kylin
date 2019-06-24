@@ -569,4 +569,19 @@ KylinApp
                 $scope.chart.data = [];
             }
         }
+
+        $scope.getMissInfo = function(query) {
+          if (query.status != 'success') {
+            return '';
+          }
+          var missMeasureInfo = query.result.missMeasureMessage;
+          if (missMeasureInfo) {
+            var retMsg = "";
+            for (var i = 0; i < missMeasureInfo.length; i++) {
+              retMsg += (i+1) + ". " + missMeasureInfo[i] + "\n";
+            }
+            return retMsg;
+          }
+          return "empty";
+        }
     });

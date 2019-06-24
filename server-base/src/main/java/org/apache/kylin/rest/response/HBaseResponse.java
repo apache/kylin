@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.response;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class HBaseResponse implements Serializable {
     private static final long serialVersionUID = 7263557115683263492L;
@@ -33,6 +34,7 @@ public class HBaseResponse implements Serializable {
     private long sourceOffsetStart;
     private long sourceOffsetEnd;
     private long sourceCount;
+    private List<String> measuresOnSegment;
 
     public HBaseResponse() {
     }
@@ -158,5 +160,13 @@ public class HBaseResponse implements Serializable {
 
     public void setSourceCount(long sourceCount) {
         this.sourceCount = sourceCount;
+    }
+
+    public List<String> getMeasuresOnSegment() {
+        return measuresOnSegment;
+    }
+
+    public void setMeasuresOnSegment(List<String> measuresOnSegment) {
+        this.measuresOnSegment = measuresOnSegment;
     }
 }

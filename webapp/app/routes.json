@@ -48,6 +48,14 @@
     }
   },
   {
+    "url": "/cubes/measure/:cubeName",
+    "params": {
+      "templateUrl": "partials/cubes/cube_edit.html",
+      "tab": "models",
+      "controller": "CubeEditCtrl"
+    }
+  },
+  {
     "url": "/sourceMeta",
     "params": {
       "templateUrl": "partials/tables/source_metadata.html",

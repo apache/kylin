@@ -606,6 +606,10 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
       });
     };
 
+    $scope.addMeasure = function (cube) {
+      $location.path("cubes/measure/" + cube.name);
+    };
+
     $scope.listCubeAccess = function (cube) {
       //check project auth for user
       $scope.cubeProjectEntity = _.find($scope.projectModel.projects, function(project) {return project.name == $scope.projectModel.selectedProject;});
