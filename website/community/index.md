@@ -58,11 +58,11 @@ permalink: /community/index.html
         <div class="col-sm-6 col-md-6">
             <h2> Events and Conferences </h2>
  
-            <td align="left">Events</td>
+            <p>Events</p>
             <p><a href="https://www.huodongxing.com/event/4489409598500">Apache Kylin Meetup @Chengdu</a></p>
             <p><a href="https://www.huodongxing.com/event/7484371439700">Apache Kylin Meetup @Beijing</a></p>
 
-            <td align="left">Conferences</td>
+            <p>Conferences</p>
             <p><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Accelerate big data analytics with Apache Kylin</a></p>
             <p><a href="https://conferences.oreilly.com/strata/strata-ny/public/schedule/speaker/313314">Refactor your data warehouse with mobile analytics products</a></p>
 
