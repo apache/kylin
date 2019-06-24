@@ -14,13 +14,46 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
-package org.apache.kylin.source.jdbc;
+ */
 
-public class JdbcDialect {
-    public static final String DIALECT_VERTICA = "vertica";
-    public static final String DIALECT_ORACLE = "oracle";
-    public static final String DIALECT_MYSQL = "mysql";
-    public static final String DIALECT_HIVE = "hive";
-    public static final String DIALECT_MSSQL = "mssql";
+package org.apache.kylin.common;
+
+/**
+ * Decide sql pattern according to dialect from differenct data source
+ */
+public enum SourceDialect {
+    HIVE("hive"),
+
+    /**
+     * Support MySQL 5.7
+     */
+    MYSQL("mysql"),
+
+    /**
+     * Support Microsoft Sql Server 2017
+     */
+    SQL_SERVER("mssql"),
+
+    VERTICA("vertica"),
+
+    /**
+     * Others
+     */
+    UNKNOWN("unknown");
+
+    String source;
+
+    SourceDialect(String source) {
+        this.source = source;
+    }
+
+    public static SourceDialect getDialect(String name) {
+
+        for (SourceDialect dialect : SourceDialect.values()) {
+            if (dialect.source.equalsIgnoreCase(name)) {
+                return dialect;
+            }
+        }
+        return UNKNOWN;
+    }
 }
