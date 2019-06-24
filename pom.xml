@@ -165,6 +165,7 @@
         <forbiddenapis.version>2.3</forbiddenapis.version>
 
         <!-- Sonar -->
+        <jacoco.version>0.8.0</jacoco.version>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.jacoco.reportPaths>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPaths>
