@@ -107,7 +107,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             for (Long cuboid : buildingCuboids) {
                 Double cuboidSize = cuboidSizeMap.get(cuboid);
                 if (cuboidSize == null) {
-                    logger.warn("{0} cuboid's size is null will replace by 0", cuboid);
+                    logger.warn("{} cuboid's size is null will replace by 0", cuboid);
                     cuboidSize = 0.0;
                 }
                 optimizedCuboidSizeMap.put(cuboid, cuboidSize);
@@ -135,7 +135,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         HTable table = new HTable(hbaseConf, hbaseTableName);
         HFileOutputFormat2.configureIncrementalLoadMap(job, table);
 
-        logger.info("Saving HBase configuration to {0}", hbaseConfPath);
+        logger.info("Saving HBase configuration to {}", hbaseConfPath);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
         FSDataOutputStream out = null;
         try {
@@ -164,7 +164,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         final CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         float cut = cubeDesc.getConfig().getKylinHBaseRegionCut();
 
-        logger.info("Cut for HBase region is {0} GB", String.valueOf(cut));
+        logger.info("Cut for HBase region is {} GB", cut);
 
         double totalSizeInM = 0;
         for (Double cuboidSize : cubeSizeMap.values()) {
@@ -187,22 +187,21 @@ public class CreateHTableJob extends AbstractHadoopJob {
             }
 
             if (nRegion > Short.MAX_VALUE) {
-                logger.info("Too many regions! reduce to {0}" + String.valueOf(Short.MAX_VALUE));
+                logger.info("Too many regions! reduce to {}", Short.MAX_VALUE);
                 nRegion = Short.MAX_VALUE;
             }
 
             if (nRegion != original) {
-                logger.info(
-                        "Region count is adjusted from {0} to {1} to help random sharding", String.valueOf(original), String.valueOf(nRegion));
+                logger.info("Region count is adjusted from {} to {} to help random sharding", original, nRegion);
             }
         }
 
         int mbPerRegion = (int) (totalSizeInM / nRegion);
         mbPerRegion = Math.max(1, mbPerRegion);
 
-        logger.info("Total size {0} M (estimated)", String.valueOf(totalSizeInM));
-        logger.info("Expecting {0} regions.", String.valueOf(nRegion));
-        logger.info("Expecting {0} MB per region.", String.valueOf(mbPerRegion));
+        logger.info("Total size {} M (estimated)", totalSizeInM);
+        logger.info("Expecting {} regions.", nRegion);
+        logger.info("Expecting {} MB per region.", mbPerRegion);
 
         if (cubeSegment.isEnableSharding()) {
             //each cuboid will be split into different number of shards
@@ -244,8 +243,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
             }
 
             for (int i = 0; i < nRegion; ++i) {
-                logger.debug("Region {0}'s estimated size is {1} MB, accounting for {2} percent",
-                                String.valueOf(i), String.valueOf(regionSizes[i]), String.valueOf(100.0 * regionSizes[i] / totalSizeInM));
+                logger.debug("Region {}'s estimated size is {} MB, accounting for {} percent", i, regionSizes[i],
+                        100.0 * regionSizes[i] / totalSizeInM);
             }
 
             CuboidShardUtil.saveCuboidShards(cubeSegment, cuboidShards, nRegion);
@@ -283,7 +282,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
 
         int compactionThreshold = Integer.parseInt(hbaseConf.get("hbase.hstore.compactionThreshold", "3"));
-        logger.info("hbase.hstore.compactionThreshold is {0}", String.valueOf(compactionThreshold));
+        logger.info("hbase.hstore.compactionThreshold is {}", compactionThreshold);
         if (hfileSizeMB > 0.0f && hfileSizeMB * compactionThreshold < mbPerRegion) {
             hfileSizeMB = ((float) mbPerRegion) / compactionThreshold;
         }
@@ -291,7 +290,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         if (hfileSizeMB <= 0f) {
             hfileSizeMB = mbPerRegion;
         }
-        logger.info("hfileSizeMB {0}", String.valueOf(hfileSizeMB));
+        logger.info("hfileSizeMB {}", hfileSizeMB);
         final Path hfilePartitionFile = new Path(outputFolder, "part-r-00000_hfile");
         short regionCount = (short) innerRegionSplits.size();
 
@@ -314,7 +313,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             for (Long cuboid : allCuboids) {
 
                 if (accumulatedSize >= hfileSizeMB) {
-                    logger.debug("Region {0}'s hfile {1} size is {2} mb", String.valueOf(i), String.valueOf(j), String.valueOf(accumulatedSize));
+                    logger.debug("Region {}'s hfile {} size is {} mb", i, j, accumulatedSize);
                     byte[] split = new byte[RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN];
                     BytesUtil.writeUnsigned(i, split, 0, RowConstants.ROWKEY_SHARDID_LEN);
                     System.arraycopy(Bytes.toBytes(cuboid), 0, split, RowConstants.ROWKEY_SHARDID_LEN,

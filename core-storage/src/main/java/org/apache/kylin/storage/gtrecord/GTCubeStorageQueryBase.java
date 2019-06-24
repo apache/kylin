@@ -305,7 +305,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     private long getQueryFilterMask(Set<TblColRef> filterColumnD) {
         long filterMask = 0;
 
-        logger.info("Filter column set for query: %s", filterColumnD);
+        logger.info("Filter column set for query: {}", filterColumnD);
         if (filterColumnD.isEmpty() == false) {
             RowKeyColDesc[] allColumns = cubeDesc.getRowkey().getRowKeyColumns();
             for (int i = 0; i < allColumns.length; i++) {
@@ -314,7 +314,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 }
             }
         }
-        logger.info("Filter mask is: {0}", filterMask);
+        logger.info("Filter mask is: {}", filterMask);
         return filterMask;
     }
 
@@ -430,18 +430,19 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         if (!groupsD.containsAll(cuboid.getColumns().subList(0, size))) {
             storageLimitLevel = StorageLimitLevel.LIMIT_ON_RETURN_SIZE;
             logger.debug(
-                    "storageLimitLevel set to LIMIT_ON_RETURN_SIZE because groupD is not clustered at head, groupsD: {0} with cuboid columns: {1}", groupsD.toString(), cuboid.getColumns().toString());
+                    "storageLimitLevel set to LIMIT_ON_RETURN_SIZE because groupD is not clustered at head, groupsD: {} with cuboid columns: {}",
+                    groupsD, cuboid.getColumns());
         }
 
         if (!dynGroups.isEmpty()) {
             storageLimitLevel = StorageLimitLevel.NO_LIMIT;
-            logger.debug("Storage limit push down is impossible because the query has dynamic groupby {0}", dynGroups);
+            logger.debug("Storage limit push down is impossible because the query has dynamic groupby {}", dynGroups);
         }
 
         // derived aggregation is bad, unless expanded columns are already in group by
         if (!groups.containsAll(derivedPostAggregation)) {
             storageLimitLevel = StorageLimitLevel.NO_LIMIT;
-            logger.debug("storageLimitLevel set to NO_LIMIT because derived column require post aggregation: {0}",
+            logger.debug("storageLimitLevel set to NO_LIMIT because derived column require post aggregation: {}",
                     derivedPostAggregation);
         }
 
@@ -452,7 +453,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
         if (!loosenedColumnD.isEmpty()) { // KYLIN-2173
             storageLimitLevel = StorageLimitLevel.NO_LIMIT;
-            logger.debug("storageLimitLevel set to NO_LIMIT because filter is loosened: {0}", loosenedColumnD);
+            logger.debug("storageLimitLevel set to NO_LIMIT because filter is loosened: {}", loosenedColumnD);
         }
 
         if (context.hasSort()) {
@@ -464,7 +465,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         for (FunctionDesc functionDesc : functionDescs) {
             if (functionDesc.isDimensionAsMetric()) {
                 storageLimitLevel = StorageLimitLevel.NO_LIMIT;
-                logger.debug("storageLimitLevel set to NO_LIMIT because {0} isDimensionAsMetric ", functionDesc);
+                logger.debug("storageLimitLevel set to NO_LIMIT because {} isDimensionAsMetric ", functionDesc);
             }
         }
 
@@ -483,8 +484,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
         if (!shardByInGroups.isEmpty()) {
             enabled = false;
-            logger.debug("Aggregate partition results is not beneficial because shard by columns in groupD: {0}",
-                     shardByInGroups);
+            logger.debug("Aggregate partition results is not beneficial because shard by columns in groupD: {}",
+                    shardByInGroups);
         }
 
         if (!context.isNeedStorageAggregation()) {
@@ -531,7 +532,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             return null;
 
         // OK, push down
-        logger.info("Push down having filter {0}", havingFilter);
+        logger.info("Push down having filter {}", havingFilter);
 
         // convert columns in the filter
         Set<TblColRef> aggrOutCols = new HashSet<>();
@@ -563,20 +564,21 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
 
         if (cuboid.requirePostAggregation()) {
-            logger.info("exactAggregation is false because cuboid {0}=>{1}", cuboid.getInputID(), cuboid.getId());
+            logger.info("exactAggregation is false because cuboid {}=>{}", cuboid.getInputID(), cuboid.getId());
             return false;
         }
 
         // derived aggregation is bad, unless expanded columns are already in group by
         if (!groups.containsAll(derivedPostAggregation)) {
-            logger.info("exactAggregation is false because derived column require post aggregation: {0}",
+            logger.info("exactAggregation is false because derived column require post aggregation: {}",
                     derivedPostAggregation);
             return false;
         }
 
         // other columns (from filter) is bad, unless they are ensured to have single value
         if (!singleValuesD.containsAll(othersD)) {
-            logger.info("exactAggregation is false because some column not on group by: {0} (single value column: {1})", othersD, singleValuesD);
+            logger.info("exactAggregation is false because some column not on group by: {} (single value column: {})",
+                    othersD, singleValuesD);
             return false;
         }
 
@@ -599,7 +601,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         if (partDesc.isPartitioned()) {
             TblColRef col = partDesc.getPartitionDateColumnRef();
             if (!groups.contains(col) && !singleValuesD.contains(col)) {
-                logger.info("exactAggregation is false because cube is partitioned and %s is not on group by", col);
+                logger.info("exactAggregation is false because cube is partitioned and {} is not on group by", col);
                 return false;
             }
         }
@@ -610,7 +612,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             return false;
         }
 
-        logger.info("exactAggregation is true, cuboid id is {0}", String.valueOf(cuboid.getId()));
+        logger.info("exactAggregation is true, cuboid id is {}", cuboid.getId());
         return true;
     }
 
