@@ -62,14 +62,15 @@ permalink: /cn/community/index.html
         <div class="row">
             <div class="col-sm-6 col-md-6">
                 <h2> 活动和会议 </h2>
-                <h4> 活动 </h4>
-                <p><a href="https://www.huodongxing.com/event/4489409598500">Apache Kylin Meetup @Chengdu</a></p>
-                <p><a href="https://www.huodongxing.com/event/7484371439700">Apache Kylin Meetup @Beijing</a></p>
-                <h4> 会议 </h4>
-                <p><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Accelerate big data analytics with Apache Kylin</a></p>
-                <p><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Refactor your data warehouse with mobile analytics products</a></p>
-                <h4> <a href="http://kyligence-apache-kylin.mikecrm.com/SJFewHC">提交话题</a> </h4>
-                <h4> <a href="http://kylin.apache.org/docs/gettingstarted/events.html">更多活动和会议</a> </h4>
+                
+                <td align="left">活动</td>
+                <td align="left"><a href="https://www.huodongxing.com/event/4489409598500">Apache Kylin Meetup @Chengdu</a></td>
+                <td align="left"><a href="https://www.huodongxing.com/event/7484371439700">Apache Kylin Meetup @Beijing</a></td>
+                <td align="left">会议</td>
+                <td align="left"><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Accelerate big data analytics with Apache Kylin</a></td>
+                <td align="left"><a href="https://conferences.oreilly.com/strata/strata-ny/public/schedule/speaker/313314">Refactor your data warehouse with mobile analytics products</a></td>
+                
+                <h6> <a href="http://kyligence-apache-kylin.mikecrm.com/SJFewHC">提交话题</a> </h6>
             </div>
         </div>
 	</div>
