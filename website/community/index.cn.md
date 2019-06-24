@@ -70,7 +70,7 @@ permalink: /cn/community/index.html
             <p><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Accelerate big data analytics with Apache Kylin</a></p>
             <p><a href="https://conferences.oreilly.com/strata/strata-ny/public/schedule/speaker/313314">Refactor your data warehouse with mobile analytics products</a></p>
 
-            <h6> <a href="http://kyligence-apache-kylin.mikecrm.com/SJFewHC">提交话题</a> </h6>
+            <p><a href="http://kyligence-apache-kylin.mikecrm.com/SJFewHC">提交话题</a></p>
         </div>
 	</div>
 
