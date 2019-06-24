@@ -23,7 +23,7 @@ __Conferences__
 
 __Meetup__
 
-- [Apache Kylin Meetup @Chengdu](https://www.huodongxing.com/event/4489409598500), China; 1:00 PM - 5:00 PM, Saturday, 2019-05-25
+* [Apache Kylin Meetup @Chengdu](https://www.huodongxing.com/event/4489409598500), China; 1:00 PM - 5:00 PM, Saturday, 2019-05-25
 * [Apache Kylin Meetup @Beijing](https://www.huodongxing.com/event/7484371439700), China; 1:00 PM - 5:30 PM, Saturday, 2019-04-13
 * [Apache Kylin Meetup @Shanghai](http://www.huodongxing.com/event/4476570217900) ([Slides](https://kyligence.io/zh/resource/case-study-zh/)), China; 1:00 PM - 4:30 PM, Saturday, 2019-02-23 
 * [Apache Kylin for Extreme OLAP and Big Data @eBay South Campus](https://www.eventbrite.com/e/thursday-nov-29-meetup-apache-kylin-for-extreme-olap-and-big-data-tickets-52275347973?aff=estw), Sanjose, CA, US; 6:30 PM - 8:30 PM, Thursday, 2018-11-29 
@@ -34,4 +34,6 @@ __Meetup__
 * [Apache Kylin Meetup @Shenzhen](http://cn.mikecrm.com/rjqPLom), China; 1:00PM - 17:00PM, Saturday, 2018-6-23
 * [Apache Kylin & Alluxio Meetup @Shanghai](http://huiyi.csdn.net/activity/product/goods_list?project_id=3746), in Shanghai, China, 1:00PM - 17:30PM, Sunday, 2018-1-21
 * [Apache Kylin Meetup @Bay Area](http://www.meetup.com/Cloud-at-ebayinc/events/218914395/), in San Jose, US, 6:00PM - 7:30PM, Thursday, 2014-12-04
+
+[__Propose a talk__](http://kyligence-apache-kylin.mikecrm.com/SJFewHC)
 

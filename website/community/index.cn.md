@@ -59,27 +59,43 @@ permalink: /cn/community/index.html
             </table>
 		</div>
 
-		<div class="col-sm-6 col-md-6">
-		    <h2>社区活动报告</h2>
-
-		    <p><a href="https://github.com/apache/kylin/pulse">Git Pulse</a></p>
-		    <p><a href="https://reporter.apache.org/?kylin">Apache 委员会报告</a></p>
-		</div>
+        <div class="row">
+            <div class="col-sm-6 col-md-6">
+                <h2> 活动和会议 </h2>
+                <h4> 活动 </h4>
+                <p><a href="https://www.huodongxing.com/event/4489409598500">Apache Kylin Meetup @Chengdu</a></p>
+                <p><a href="https://www.huodongxing.com/event/7484371439700">Apache Kylin Meetup @Beijing</a></p>
+                <h4> 会议 </h4>
+                <p><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Accelerate big data analytics with Apache Kylin</a></p>
+                <p><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Refactor your data warehouse with mobile analytics products</a></p>
+                <h4> <a href="http://kyligence-apache-kylin.mikecrm.com/SJFewHC">提交话题</a> </h4>
+                <h4> <a href="http://kylin.apache.org/docs/gettingstarted/events.html">更多活动和会议</a> </h4>
+            </div>
+        </div>
 	</div>
 
 	<div class="row">
+        <div class="col-sm-6 col-md-6">
+            <h2>社区活动报告</h2>
+
+            <p><a href="https://github.com/apache/kylin/pulse">Git Pulse</a></p>
+            <p><a href="https://reporter.apache.org/?kylin">Apache 委员会报告</a></p>
+        </div>
+        
 		<div class="col-sm-6 col-md-6">
 		    <h2> 邮件列表档案 </h2>
 		    <p>为方便起见，有一个论坛风格的邮件列表存档，它不是官方 Apache 档案的一部分：</p>
 
 		    <p><a href="http://apache-kylin.74782.x6.nabble.com">Nabble 上的开发者列表档案</a></p>
 		</div>
-
+	</div>
+	
+    <div class="row">
 		<div class="col-sm-6 col-md-6">
 		    <h2>Apache Kylin 开发团队</h2>
 		    <p>一个成功的项目需要很多人扮演不同的角色。一些成员编写代码，提供项目指导或写文档。其他人作为有价值的测试人员，提交补丁和建议。</p>
 		</div>
-	</div>
+	</div>	
 </div>
 
 <div class="kylin-member">

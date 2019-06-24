@@ -54,28 +54,55 @@ permalink: /community/index.html
 		    </table>
 
 		</div>
-
-		<div class="col-sm-6 col-md-6">
-		    <h2>Community Activity Report</h2>
-
-		    <p><a href="https://github.com/apache/kylin/pulse">Git Pulse</a></p>
-		    <p><a href="https://reporter.apache.org/?kylin">Apache Committee Report</a></p>
-		</div>
+	
+        <div class="row">
+            <div class="col-sm-6 col-md-6">
+                <h2> Events and Conferences </h2>
+                <h4> Events </h4>
+                <p><a href="https://www.huodongxing.com/event/4489409598500">Apache Kylin Meetup @Chengdu</a></p>
+                <p><a href="https://www.huodongxing.com/event/7484371439700">Apache Kylin Meetup @Beijing</a></p>
+                <h4> Conferences </h4>
+                <p><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Accelerate big data analytics with Apache Kylin</a></p>
+                <p><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Refactor your data warehouse with mobile analytics products</a></p>
+                <h4> <a href="http://kyligence-apache-kylin.mikecrm.com/SJFewHC">Propose a talk</a> </h4>
+            </div>
+    
+            <div class="col-sm-6 col-md-6">
+                <h2> More Events and Conferences </h2>
+                <h4> Events </h4>
+                <p><a href="https://www.huodongxing.com/event/4489409598500">Apache Kylin Meetup @Chengdu</a></p>
+                <p><a href="https://www.huodongxing.com/event/7484371439700">Apache Kylin Meetup @Beijing</a></p>
+                <h4> Conferences </h4>
+                <p><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Accelerate big data analytics with Apache Kylin</a></p>
+                <p><a href="https://berlinbuzzwords.de/19/session/accelerate-big-data-analytics-apache-kylin">Refactor your data warehouse with mobile analytics products</a></p>
+                <h4> <a href="http://kyligence-apache-kylin.mikecrm.com/SJFewHC">Propose a talk</a> </h4>
+                <h4> <a href="http://kylin.apache.org/docs/gettingstarted/events.html">More Events and Conferences</a> </h4>
+            </div>
+        </div>
 	</div>
 
 	<div class="row">
+        <div class="col-sm-6 col-md-6">
+            <h2>Community Activity Report</h2>
+
+            <p><a href="https://github.com/apache/kylin/pulse">Git Pulse</a></p>
+            <p><a href="https://reporter.apache.org/?kylin">Apache Committee Report</a></p>
+        </div>
+    		
 		<div class="col-sm-6 col-md-6">
 		    <h2> Mailing List Archives </h2>
 		    <p>For convenience, there's a forum style mailing list archives which not part of offical Apache archives:</p>
 
 		    <p><a href="http://apache-kylin.74782.x6.nabble.com">Developer List archive on Nabble</a></p>
 		</div>
-
+	</div>
+	
+    <div class="row">
 		<div class="col-sm-6 col-md-6">
 		    <h2>Apache Kylin Team</h2>
 		    <p>A successful project requires many people to play many roles. Some members write code, provide project mentorship, or author documentation. Others are valuable as testers, submitting patches and suggestions.</p>
 		</div>
-	</div>
+    </div>
 </div>
 
 <div class="kylin-member">
