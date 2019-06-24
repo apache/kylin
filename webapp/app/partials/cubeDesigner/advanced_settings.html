@@ -607,7 +607,7 @@
            <div style="margin-left:42px">
              <div class="box-body">
                <!-- VIEW MODE -->
-               <div class="row"  ng-if="state.mode=='view'&& cubeMetaFrame.hbase_mapping.column_family.length > 0">
+               <div class="row"  ng-if="state.mode=='view' || instance.segments.length > 0 && cubeMetaFrame.hbase_mapping.column_family.length > 0">
                  <table class="table table-striped table-hover">
                    <thead>
                    <tr>
@@ -623,7 +623,7 @@
                      </td>
                      <!--Name -->
                      <td class="col-xs-11">
-                       <span>{{colFamily.columns[0].measure_refs}}</span>
+                       <span>{{getCFDisplayString(colFamily)}}</span>
                      </td>
                    </tr>
                    </tbody>
@@ -631,7 +631,7 @@
                </div>
 
                <!-- EDIT MODE -->
-               <div  ng-if="state.mode=='edit'" class="form-group " style="width: 100%">
+               <div  ng-if="state.mode=='edit' && instance.segments.length == 0" class="form-group " style="width: 100%">
                  <table ng-if="cubeMetaFrame.hbase_mapping.column_family.length > 0"
                         class="table table-hover">
 
@@ -673,7 +673,7 @@
                </div>
 
                <div class="form-group" >
-                 <button class="btn btn-sm btn-info" ng-click="addColumnFamily()" ng-show="state.mode=='edit'">
+                 <button class="btn btn-sm btn-info" ng-click="addColumnFamily()" ng-show="state.mode=='edit' && instance.segments.length == 0">
                    <i class="fa fa-plus"></i> ColumnFamily
                  </button>
                </div>

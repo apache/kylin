@@ -45,6 +45,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -64,6 +65,7 @@ import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.apache.kylin.cache.cachemanager.MemcachedCacheManager;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.MissingMeasureSegment;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContextFacade;
 import org.apache.kylin.common.debug.BackdoorToggles;
@@ -440,7 +442,12 @@ public class QueryService extends BasicService {
             }
             if (sqlResponse.getIsException())
                 throw new InternalErrorException(sqlResponse.getExceptionMessage());
-
+            // add hint about the missing measure within the query
+            List<MissingMeasureSegment> missingMeasureSegmentList = queryContext.getMissingMeasureSegments();
+            List<String> missMeasureMsgs = missingMeasureSegmentList.stream()
+                    .map(mms -> mms.getMissingMsg())
+                    .collect(Collectors.toList());
+            sqlResponse.setMissMeasureMessage(missMeasureMsgs);
             return sqlResponse;
 
         } finally {

@@ -18,10 +18,11 @@
 
 <div class="box box-primary box-2px">
     <div class="box-header widget-header-blue widget-header-flat">
-        <h4 class="box-title text-info">Cube Designer</h4>
+      <h4 class="box-title text-info" ng-if="!isMeasureEdit">Cube Designer</h4>
+      <h4 class="box-title text-info" ng-if="isMeasureEdit">Measure Editor</h4>
     </div>
     <div class="box-body">
-            <div>
+            <div ng-if="!isMeasureEdit">
                 <ul class="wizard-steps">
                     <li ng-repeat="step in wizardSteps"
                         class="{{step==curStep?'active':''}} {{step.isComplete?'complete':''}}">
@@ -42,17 +43,21 @@
                         </div>
                     </div>
                     <div class="col-xs-4">
-                        <button class="btn btn-prev" ng-click="preView()" ng-show="curStep.title!='Cube Info'">
+                        <button class="btn btn-prev" ng-click="preView()" ng-show="!isMeasureEdit && curStep.title!='Cube Info'">
                             <i class="ace-icon fa fa-arrow-left"></i>
                             Prev
                         </button>
+                        <button class="btn btn-prev" ng-click="cancel()" ng-if="isMeasureEdit">
+                          <i class="ace-icon fa fa-arrow-left"></i>
+                          Cancel
+                        </button>
                         <button id="nextButton" class="btn btn-success btn-next"  ng-click="checkCubeForm($index)?nextView():''" ng-disabled="forms[curStep.form].$invalid"
-                                ng-show="curStep.title!='Overview'">
+                                ng-show="!isMeasureEdit && curStep.title!='Overview'">
                             Next
                             <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
                         </button>
                         <button class="btn btn-primary" ng-click="prepareCube();saveCube()" ng-disabled="design_form.$invalid"
-                                ng-if="curStep.title=='Overview' && state.mode=='edit'">
+                                ng-if="(isMeasureEdit || curStep.title=='Overview') && state.mode=='edit'">
                             Save
                         </button>
                     </div>

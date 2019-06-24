@@ -107,7 +107,7 @@
               <h5><b>Segment Number:</b> <span class="red">{{cube.hbase.length}}</span> <b>Total Size:</b> <span class="red">{{cube.totalSize | bytes}}</span></h5>
             </div>
             <div ng-repeat="table in cube.hbase">
-                <h5><b>Segment:</b> {{table.segmentName}}</h5>
+                <h5><b>Segment:</b> <span tooltip-html-unsafe="<div style='text-align:left'>Measure Count: {{table.measuresOnSegment.length}}<br/>Measures:<br/>{{table.measuresOnSegment.join('<br/>')}}</div>">{{table.segmentName}}</span></h5>
                 <ul>
                     <li ng-if="cube.streaming">Status: <span class="red">{{table.segmentStatus}}</span></li>
                     <li ng-if="cube.model.partition_desc.partition_date_column">Start Time: <span class="red">{{table.dateRangeStart | reverseToGMT0}}</span></li>

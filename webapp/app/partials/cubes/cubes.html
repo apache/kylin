@@ -103,7 +103,7 @@
                         <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="purge(cube)">Purge</a></li>
                         <li ng-if="cube.status!='DESCBROKEN' && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="cloneCube(cube)">Clone</a></li>
                         <li ng-if="cube.status=='READY' && isAutoMigrateCubeEnabled() && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask)) "><a ng-click="migrateCube(cube)">Migrate</a></li>
-
+                        <li ng-if="cube.can_add_measure && (userService.hasRole('ROLE_ADMIN') || hasPermission('cube',cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"><a ng-click="addMeasure(cube)">Add Measure</a></li>
                     </ul>
                     <ul ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission('cube', cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)) && cube.streamingV2 && actionLoaded" class="dropdown-menu" role="menu" style="right:0;left:auto;">
                         <li ng-if="cube.status!='DISABLED' && cube.consumeState=='RUNNING'"><a ng-click="pauseCube(cube, $index);">Pause</a></li>

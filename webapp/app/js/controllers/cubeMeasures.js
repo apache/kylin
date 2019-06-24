@@ -18,10 +18,11 @@
 
 'use strict';
 
-KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel,cubeConfig,modelsManager,kylinConfig) {
+KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel,cubeConfig,modelsManager,kylinConfig,MeasureService) {
   $scope.num=0;
   $scope.convertedColumns=[];
   $scope.groupby=[];
+  $scope.newMeasures=[];
   $scope.initUpdateMeasureStatus = function(){
     $scope.updateMeasureStatus = {
       isEdit:false,
@@ -250,9 +251,16 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
 
     if($scope.updateMeasureStatus.isEdit == true){
       $scope.cubeMetaFrame.measures[$scope.updateMeasureStatus.editIndex] = $scope.newMeasure;
+      if ($scope.isMeasureEdit) {
+        $scope.removeElement($scope.newMeasures, $scope.cubeMetaFrame.measures[$scope.updateMeasureStatus.editIndex]);
+        $scope.newMeasures.push($scope.newMeasure);
+      }
     }
     else {
       $scope.cubeMetaFrame.measures.push($scope.newMeasure);
+      if ($scope.isMeasureEdit) {
+        $scope.newMeasures.push($scope.newMeasure);
+      }
     }
 
     $scope.newMeasure = null;
@@ -504,6 +512,43 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     }
   }
 
+  $scope.isNewMeasure = function(measure) {
+    for (var i = 0; i < $scope.newMeasures.length; i++) {
+      if ($scope.newMeasures[i].name === measure.name) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  $scope.measureTimeRange = {};
+  $scope.$watch('cubeMetaFrame.name', function(newValue, oldValue) {
+    if (newValue) {
+      MeasureService.get({segment: "segment", cube: $scope.cubeMetaFrame.name}, {}, function (result) {
+          $scope.measureTimeRange = result;
+        }, function(e) {
+            if (e.data && e.data.exception) {
+              var message = e.data.exception;
+              var msg = !!(message) ? message : 'Failed to take action.';
+              SweetAlert.swal('Oops...', msg, 'error');
+            } else {
+              SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+            }
+        });
+    }
+  })
+
+  $scope.getTimeRange = function(measureName) {
+    var tr = $scope.measureTimeRange[measureName];
+    if (tr) {
+      return "<div style='text-align:left'>"
+        + "Segment Count: " + tr.segment_count + "<br/>"
+        + "Time Range: <br/>" + tr.time_ranges.join("<br/>")
+        + "</div>";
+    } else {
+      return "empty";
+    }
+  }
 });
 
 var NextParameterModalCtrl = function ($scope, scope,para,$modalInstance,cubeConfig, CubeService, MessageService, $location, SweetAlert,ProjectModel, loadingRequest,ModelService) {

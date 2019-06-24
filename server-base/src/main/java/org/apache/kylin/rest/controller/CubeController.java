@@ -44,6 +44,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
+import org.apache.kylin.cube.model.HBaseMappingDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.engine.mr.common.CuboidStatsReaderUtil;
@@ -55,6 +56,7 @@ import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentRange;
 import org.apache.kylin.metadata.model.SegmentRange.TSRange;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -77,6 +79,7 @@ import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
+import org.apache.kylin.rest.service.MeasureService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.util.ValidateUtil;
 import org.apache.kylin.source.kafka.util.KafkaClient;
@@ -120,6 +123,10 @@ public class CubeController extends BasicController {
     @Autowired
     @Qualifier("projectService")
     private ProjectService projectService;
+
+    @Autowired
+    @Qualifier("measureMgmtService")
+    public MeasureService measureService;
 
     @RequestMapping(value = "/validate/{cubeName}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
@@ -653,6 +660,12 @@ public class CubeController extends BasicController {
                 updateRequest(cubeRequest, false, error);
                 return cubeRequest;
             }
+            Pair<List<String>, List<String>> updateMeasures = cubeService.getUpdateMeasures(desc, cubeService.getCubeDescManager().getCubeDesc(desc.getName()));
+            if (cube.getSegments().size() > 0 && updateMeasures.getFirst().size() > 0) {
+                // add dynamic measure to HBase column family mapping
+                HBaseMappingDesc newHBaseMapping = cubeService.getAutoHBaseMapping(desc, updateMeasures.getFirst());
+                desc.setHbaseMapping(newHBaseMapping);
+            }
 
             validateColumnFamily(desc);
 
@@ -734,6 +747,13 @@ public class CubeController extends BasicController {
             if (segment.isOffsetCube()) {
                 hr.setSourceOffsetStart((Long) segment.getSegRange().start.v);
                 hr.setSourceOffsetEnd((Long) segment.getSegRange().end.v);
+            }
+            // add info about Measure on this segment
+            if (hr.getSegmentStatus().equals(SegmentStatusEnum.READY.toString())) {
+                List<String> measuresOnSegment = measureService.getMeasuresOnSegment(cubeName, hr.getSegmentName());
+                hr.setMeasuresOnSegment(measuresOnSegment);
+            } else {
+                hr.setMeasuresOnSegment(Collections.EMPTY_LIST);
             }
             hbase.add(hr);
         }

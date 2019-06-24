@@ -83,6 +83,9 @@ public class SQLResponse implements Serializable {
     // indicating the lazy query start time, -1 indicating not enabled
     protected long lazyQueryStartTime = -1L;
 
+    // show the missing Measure within the query scope
+    protected List<String> missMeasureMessage;
+
     public SQLResponse() {
     }
 
@@ -256,5 +259,13 @@ public class SQLResponse implements Serializable {
             logger.warn("Error while serialize queryStatistics due to " + e);
             this.queryStatistics = null;
         }
+    }
+
+    public List<String> getMissMeasureMessage() {
+        return missMeasureMessage;
+    }
+
+    public void setMissMeasureMessage(List<String> missMeasureMessage) {
+        this.missMeasureMessage = missMeasureMessage;
     }
 }

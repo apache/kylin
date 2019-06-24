@@ -28,6 +28,7 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -128,6 +129,19 @@ public class CuboidToGridTableMappingFilterNullCol extends CuboidToGridTableMapp
         Map<TblColRef, Integer> result = Maps.newHashMap(internalMapping.getDim2gt());
         nullDimensions.stream().forEach(d -> result.remove(d));
         return result;
+    }
+
+    @Override
+    public ImmutableBitSet makeGridTableColumns(Collection<? extends FunctionDesc> metrics) {
+        BitSet result = new BitSet();
+        for (FunctionDesc metric : metrics) {
+            int idx = getIndexOf(metric);
+            if (idx < 0) {
+                continue;
+            }
+            result.set(idx);
+        }
+        return new ImmutableBitSet(result);
     }
 
     @Override

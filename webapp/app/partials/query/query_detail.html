@@ -59,14 +59,18 @@
             <span class="label label-lg label-info" ng-if="curQuery.status=='executing'">
                 <i class="fa fa-cog fa-spin"></i> Executing...</span>
         </li>
-        <li class="col-md-5 " style="display: inline">
+        <li class="col-md-2 " style="display: inline">
             <label>Project: &nbsp;</label>
             <span>{{curQuery.project}}</span>
         </li>
-        <li class="col-md-5 " style="display: inline">
+        <li class="col-md-4 " style="display: inline">
             <label>Cubes: &nbsp;</label>
             <span>{{curQuery.result.cube | limitTo:30}}<span ng-if="curQuery.result.cube.length > 30">...  <i class="fa fa-list text-aqua" style="cursor: pointer;" popover-placement="left" popover="{{curQuery.result.cube | formatCubeName}}" popover-title="Cube Info Details"></i></span></span>
         </li>
+        <li class="col-md-4 " style="display: inline">
+        <label>Miss: &nbsp;</label>
+        <span>{{getMissInfo(curQuery) | limitTo:30}}<span ng-if="getMissInfo(curQuery).length > 0">...  <i class="fa fa-list text-aqua" style="cursor: pointer;" popover-placement="left" popover="{{getMissInfo(curQuery)}}" popover-title="Miss Info Details"></i></span></span>
+      </li>
     </ul>
 </div>
 

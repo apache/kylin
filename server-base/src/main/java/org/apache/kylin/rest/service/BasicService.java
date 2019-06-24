@@ -24,6 +24,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.execution.ExecutableManager;
+import org.apache.kylin.measure.MeasureManager;
 import org.apache.kylin.metadata.TableMetadataManager;
 import org.apache.kylin.metadata.acl.TableACLManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
@@ -97,5 +98,9 @@ public abstract class BasicService {
 
     public MetricsManager getMetricsManager() {
         return MetricsManager.getInstance();
+    }
+
+    public MeasureManager getMeasureManager() {
+        return MeasureManager.getInstance(getConfig());
     }
 }
