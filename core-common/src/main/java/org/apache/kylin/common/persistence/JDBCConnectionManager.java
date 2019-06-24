@@ -62,7 +62,7 @@ public class JDBCConnectionManager {
             dataSource = BasicDataSourceFactory.createDataSource(getDbcpProperties());
             Connection conn = getConn();
             DatabaseMetaData mdm = conn.getMetaData();
-            logger.info("Connected to {0} {1}", mdm.getDatabaseProductName(), mdm.getDatabaseProductVersion());
+            logger.info("Connected to {} {}", mdm.getDatabaseProductName(), mdm.getDatabaseProductVersion());
             closeQuietly(conn);
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
@@ -89,7 +89,7 @@ public class JDBCConnectionManager {
             ret.remove("passwordEncrypted");
         }
 
-        logger.info("Connecting to Jdbc with url:{0} by user {1}", ret.get("url"), ret.get("username"));
+        logger.info("Connecting to Jdbc with url:{} by user {}", ret.get("url"), ret.get("username"));
 
         putIfMissing(ret, "driverClassName", "com.mysql.jdbc.Driver");
         putIfMissing(ret, "maxActive", "5");
