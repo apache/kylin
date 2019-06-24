@@ -18,7 +18,6 @@
 package org.apache.kylin.source.jdbc;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -35,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.SourceDialect;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -83,7 +83,7 @@ public class JdbcExplorerTest extends LocalFileMetadataTestCase {
         PowerMockito.stub(PowerMockito.method(SqlUtil.class, "getConnection")).toReturn(connection);
         PowerMockito.mockStatic(JdbcMetadataFactory.class);
 
-        when(JdbcMetadataFactory.getJdbcMetadata(anyString(), any(DBConnConf.class))).thenReturn(jdbcMetadata);
+        when(JdbcMetadataFactory.getJdbcMetadata(any(SourceDialect.class), any(DBConnConf.class))).thenReturn(jdbcMetadata);
         when(connection.getMetaData()).thenReturn(dbmd);
 
         jdbcExplorer = spy(JdbcExplorer.class);

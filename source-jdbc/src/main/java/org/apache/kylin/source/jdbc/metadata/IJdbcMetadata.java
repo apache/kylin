@@ -17,12 +17,16 @@
 */
 package org.apache.kylin.source.jdbc.metadata;
 
+import org.apache.kylin.common.SourceDialect;
+
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
 public interface IJdbcMetadata {
+    SourceDialect getDialect();
+
     List<String> listDatabases() throws SQLException;
 
     List<String> listTables(String database) throws SQLException;
