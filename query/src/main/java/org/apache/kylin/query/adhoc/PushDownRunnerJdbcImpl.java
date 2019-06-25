@@ -214,6 +214,9 @@ public class PushDownRunnerJdbcImpl extends AbstractPushdownRunner {
             // Fall back to default value
         }
 
+        columnLabel = columnLabel.toUpperCase(Locale.ROOT);
+        columnName = columnName.toUpperCase(Locale.ROOT);
+
         SelectedColumnMeta columnMeta = new SelectedColumnMeta(isAutoIncrement, isCaseSensitive, isSearchable,
                 isCurrency, isNullable, isSigned, columnDisplaySize, columnLabel, columnName, schemaName, catelogName,
                 tableName, precision, scale, columnType, columnTypeName, isReadOnly, isWritable, isDefinitelyWritable);
@@ -240,7 +243,7 @@ public class PushDownRunnerJdbcImpl extends AbstractPushdownRunner {
             return Types.TINYINT;
         } else if ("smallint".equalsIgnoreCase(type)) {
             return Types.SMALLINT;
-        } else if ("int".equalsIgnoreCase(type)) {
+        } else if ("int".equalsIgnoreCase(type) || "INTEGER".equalsIgnoreCase(type)) {
             return Types.INTEGER;
         } else if ("bigint".equalsIgnoreCase(type)) {
             return Types.BIGINT;
